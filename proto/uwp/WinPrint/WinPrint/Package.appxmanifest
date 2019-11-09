@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4" 
+  xmlns:iot2="http://schemas.microsoft.com/appx/manifest/iot/windows10/2" 
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:genTemplate="http://schemas.microsoft.com/appx/developer/windowsTemplateStudio"
+  IgnorableNamespaces="uap mp genTemplate">
+
+  <Identity
+    Name="A6AB3EB6-EE37-4446-8096-5322094AEFC4"
+    Publisher="CN=ckindel"
+    Version="1.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="A6AB3EB6-EE37-4446-8096-5322094AEFC4" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>WinPrint</DisplayName>
+    <PublisherDisplayName>ckindel</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      desktop4:SupportsMultipleInstances="true"
+      iot2:SupportsMultipleInstances="true"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="WinPrint.App">
+      <uap:VisualElements
+        DisplayName="ms-resource:AppDisplayName"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        Description="ms-resource:AppDescription"
+        BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+          <uap5:Extension
+            Category="windows.appExecutionAlias"
+            Executable="WinPrint.exe"
+            EntryPoint="WinPrint.App">
+            <uap5:AppExecutionAlias>
+              <uap5:ExecutionAlias Alias="WinPrint.exe" />
+            </uap5:AppExecutionAlias>
+          </uap5:Extension>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="wtsapp">
+            <uap:Logo>Assets\Icon.png</uap:Logo>
+            <uap:DisplayName>WinPrint</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+
+  <genTemplate:Metadata>
+    <genTemplate:Item Name="generator" Value="Windows Template Studio"/>
+    <genTemplate:Item Name="wizardVersion" Version="v3.5.19310.1" />
+    <genTemplate:Item Name="templatesVersion" Version="v3.5.19310.1" />
+    <genTemplate:Item Name="projectType" Value="Blank" />
+    <genTemplate:Item Name="framework" Value="MVVMBasic" />
+    <genTemplate:Item Name="platform" Value="Uwp" />
+  </genTemplate:Metadata>
+</Package>
