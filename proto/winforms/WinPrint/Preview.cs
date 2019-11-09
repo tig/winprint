@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace WinPrint
     public partial class Preview : Form
     {
         private PrintDocument printDoc = new PrintDocument();
+        private PageSettings pageSettings;
 
         private PrintPreview printPreview ;
 
@@ -28,6 +30,7 @@ namespace WinPrint
             printPreview.Margin = this.dummyButton.Margin;
             printPreview.Name = "printPreview";
             printPreview.Size = this.dummyButton.Size;
+            printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
             {
                 this.Controls.Remove(this.dummyButton);
@@ -41,11 +44,13 @@ namespace WinPrint
                 if (printDoc.PrinterSettings.IsDefaultPrinter)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
+
+            landscapeCheckbox.Checked = printDoc.PrinterSettings.DefaultPageSettings.Landscape;
 //            PageSizeChanged();
             SizePreview();
         }
 
-        internal void PageSizeChagned()
+        internal void PageSettingsChanged()
         {
             // Set the paper size based upon the selection in the combo box.
             if (paperSizesCB.SelectedIndex != -1)
@@ -67,13 +72,27 @@ namespace WinPrint
             //    printDoc.DefaultPageSettings.PrinterResolution =
             //        printDoc.PrinterSettings.PrinterResolutions[comboPrintResolution.SelectedIndex];
             //}
+
+
+            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            printPreview.PageSettings = printDoc.DefaultPageSettings;
+            PageSizeChagned();
+        }
+
+        internal void PageSizeChagned()
+        {
+            Debug.WriteLine("PageSizeChagned()");
+            printPreview.Invalidate(true);
+            printPreview.Refresh();
+            SizePreview();
         }
 
         internal void SizePreview()
         {
+            Debug.WriteLine("SizePreview()");
             // Get aspect ratio of currently selected paper size (e.g. 8.5x11).
             // Keep Content Area that aspect
-            double aspectRatio = (double)printDoc.DefaultPageSettings.PaperSize.Width / (double)printDoc.DefaultPageSettings.PaperSize.Height;
+            double aspectRatio = (double)printPreview.PageSettings.PaperSize.Width / (double)printPreview.PageSettings.PaperSize.Height;
 
             Size size = this.ClientSize;
             size.Height -= printPreview.Margin.All;
@@ -119,14 +138,17 @@ namespace WinPrint
 
             paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString() ;
 
-            PageSizeChagned();
-            SizePreview();
+            PageSettingsChanged();
         }
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            PageSizeChagned();
-            SizePreview();
+            PageSettingsChanged();
+        }
+
+        private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            PageSettingsChanged();
         }
     }
 }
