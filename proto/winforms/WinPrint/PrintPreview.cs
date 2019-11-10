@@ -6,16 +6,20 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing.Printing;
+using System.Drawing.Drawing2D;
+using System.IO;
 
 namespace WinPrint
 {
     public partial class PrintPreview : Control
     {
         internal PrintDocument printDocument;
-        private PageSettings pageSettings;
-        private PaperSize paperSize;
-        private bool landscape;
-        private PrinterResolution printerResolution;
+        private Page page = new Page();
+        public Page Page => page;
+
+        public string File { get => file; set => file = value; }
+
+        private string file;
 
         public PrintPreview()
         {
@@ -30,19 +34,14 @@ namespace WinPrint
             pageSettings = (PageSettings)printDocument.DefaultPageSettings.Clone();
         }
 
-        internal PageSettings PageSettings
+        private PageSettings pageSettings;
+
+        public void SetPageSettings(PageSettings pageSettings)
         {
-            get => pageSettings; set
-            {
-                pageSettings = (PageSettings)value.Clone();
-                printableArea = pageSettings.PrintableArea;
-                paperSize = pageSettings.PaperSize;
-                landscape = pageSettings.Landscape;
-                printerResolution = pageSettings.PrinterResolution;
-            }
+            page.PageSettings = (PageSettings)pageSettings;
         }
 
-        private RectangleF printableArea;
+
 
         protected override void OnResize(EventArgs e)
         {
@@ -52,36 +51,33 @@ namespace WinPrint
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            // Don't do anything if the window's been shrunk too far or GDI+ will crash
+            if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return; 
             base.OnPaint(e);
 
+            Page.PaintRules(e.Graphics);
 
-            // Scale to window size
-            e.Graphics.PageScale = (float)this.Width / (float)paperSize.Width;
-            // Draw rectangle showing printable area
-            if ((printableArea.Width != paperSize.Width) ||
-                (printableArea.Height != paperSize.Height))
-                using (System.Drawing.Pen myPen = new System.Drawing.Pen(Color.Black))
-                    e.Graphics.DrawRectangles(myPen, new RectangleF[] { printableArea });
-
-            // scale to page resolution
-            int xRes = printerResolution.X * paperSize.Width  / 100;
-            int yRes = printerResolution.Y * paperSize.Height / 100;
-
-            // 	 (1pt = 1/72 of 1in) 
-            float xResPt = paperSize.Width / 100F * 72F;
-            float yResPt = paperSize.Height / 100F * 72F;
-
-            e.Graphics.PageScale = (float)this.Width / (float)xRes;
-
-            float pt = 10F;
-            float pix = pt * printerResolution.Y / 72; 
-
-            Font font = new Font(FontFamily.GenericSansSerif, pix, GraphicsUnit.Pixel);
-            string text = $"{xRes}x{yRes} {pt}pt";
-            SizeF textSize = e.Graphics.MeasureString(text, font);
-         
-            e.Graphics.DrawString(text, font, Brushes.Red, xRes / 2F - textSize.Width / 2F, yRes/ 2F - textSize.Height / 2F);
+            try
+            {
+                StreamReader streamToPrint = new StreamReader(File);
+                try
+                {
+                    PrintPageEventArgs ev = new PrintPageEventArgs(e.Graphics, 
+                        new Rectangle(page.Margins.Left, page.Margins.Top, page.Bounds.Width - page.Margins.Left - page.Margins.Right, 
+                            page.Bounds.Height - page.Margins.Top - page.Margins.Bottom), page.Bounds, pageSettings);
+                    Page.PaintContent(ev, streamToPrint);
+                }
+                finally
+                {
+                    streamToPrint.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
+       
     }
 }
