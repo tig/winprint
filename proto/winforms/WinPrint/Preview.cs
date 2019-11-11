@@ -22,7 +22,7 @@ namespace WinPrint
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-        private string file = "..\\..\\..\\Page.cs";
+        private string file = "..\\..\\..\\PrintPreview.cs";
 
         public Preview()
         {
@@ -92,7 +92,7 @@ namespace WinPrint
 
 
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            printDoc.DefaultPageSettings.Margins = new Margins(30, 50, 75, 50);
+            printDoc.DefaultPageSettings.Margins = new Margins(50,75, 100,125);
             printPreview.SetPageSettings(printDoc.DefaultPageSettings);
             PageSizeChagned();
         }

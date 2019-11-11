@@ -9,8 +9,9 @@ namespace WinPrint
 {
     public class Page
     {
-        private PaperSize paperSize;
+        private Size paperSize;
         private bool landscape;
+        private int landscapeAngle;
         private PrinterResolution printerResolution;
         private RectangleF printableArea;
         private Margins margins;
@@ -19,8 +20,9 @@ namespace WinPrint
         private Font contentFont;
         private Font rulesFont;
 
-        public PaperSize PaperSize { get => paperSize; set => paperSize = value; }
+        public Size PaperSize { get => paperSize; set => paperSize = value; }
         public bool Landscape { get => landscape; set => landscape = value; }
+        public int LandscapeAngle { get => landscapeAngle; set => landscapeAngle = value; }
         public PrinterResolution PrinterResolution { get => printerResolution; set => printerResolution = value; }
         public RectangleF PrintableArea { get => printableArea; set => printableArea = value; }
         public Margins Margins { get => margins; set => margins = value; }
@@ -33,17 +35,55 @@ namespace WinPrint
             set
             {
                 var pageSettings = (PageSettings)value;
-                PrintableArea = pageSettings.PrintableArea;
-                PaperSize = pageSettings.PaperSize;
                 Landscape = pageSettings.Landscape;
-                PrinterResolution = pageSettings.PrinterResolution;
-                Margins = pageSettings.Margins;
-                Bounds = pageSettings.Bounds;
-                HardMarginX = pageSettings.HardMarginX;
-                HardMarginY = pageSettings.HardMarginY;
-                //Bounds.Offset((int)-HardMarginX, (int)-HardMarginY);
+                LandscapeAngle = pageSettings.PrinterSettings.LandscapeAngle;
+
+
+                // 0 degrees
+                //          Top
+                //  Left            Right
+                //          Bottom
+                //
+                // 90 degrees
+                //          Left
+                //  Bottom          Top
+                //          Right
+                //
+                // 270 degress
+                //          Right
+                //  Top             Bottom
+                //          Left
+
+                if (landscape)
+                {
+                    printableArea.X = pageSettings.PrintableArea.Y;
+                    printableArea.Y = pageSettings.PrintableArea.X;
+                    printableArea.Width = pageSettings.PrintableArea.Height;
+                    printableArea.Height = pageSettings.PrintableArea.Width;
+                    paperSize.Height = pageSettings.PaperSize.Width;
+                    paperSize.Width = pageSettings.PaperSize.Height;
+                    PrinterResolution = pageSettings.PrinterResolution;
+
+                    Margins = (Margins)pageSettings.Margins.Clone();
+
+                    Bounds = pageSettings.Bounds;
+                    HardMarginX = pageSettings.HardMarginY;
+                    HardMarginY = pageSettings.HardMarginX;
+                }
+                else
+                {
+                    PrintableArea = pageSettings.PrintableArea;
+                    paperSize.Width = pageSettings.PaperSize.Width;
+                    paperSize.Height = pageSettings.PaperSize.Height;
+                    PrinterResolution = pageSettings.PrinterResolution;
+                    Margins = pageSettings.Margins;
+                    Bounds = pageSettings.Bounds;
+                    HardMarginX = pageSettings.HardMarginX;
+                    HardMarginY = pageSettings.HardMarginY;
+                }
             }
         }
+
 
         public Page()
         {
@@ -64,37 +104,24 @@ namespace WinPrint
             else
             {
                 font = new Font(rulesFont.FontFamily, (rulesFont.SizeInPoints / 72F) * 100F, rulesFont.Style, GraphicsUnit.Pixel);
-                if (landscape)
-                    g.PageScale = (float)g.VisibleClipBounds.Height / (float)paperSize.Height;
-                else
-                    g.PageScale = (float)g.VisibleClipBounds.Width / (float)paperSize.Width;
+
+                double scalingX, scalingY;
+                // TODO: Deal with 90 v 270 degree landscape modes
+                scalingX = (double)g.VisibleClipBounds.Width / (double)paperSize.Width;
+                scalingY = (double)g.VisibleClipBounds.Height / (double)paperSize.Height;
+                g.PageScale = (float)Math.Min(scalingY, scalingX);
             }
 
             //float pt = 10F;
             //float pix = pt * 72F / 100F;
             // Draw paper size
-            if (landscape)
-            {
-                DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Height / 4, 0), new Point(PaperSize.Height / 4, PaperSize.Width), 4F, preview);
-                DrawRule(g, font, Color.Gray, $"{(float)PaperSize.Height / 100F}\"x{(float)PaperSize.Width / 100F}\"", new Point(0, PaperSize.Width / 4), new Point(PaperSize.Height, PaperSize.Width / 4), 4F, preview);
-            }
-            else
-            {
-                DrawRule(g, font, Color.LightGray, $"", new Point(PaperSize.Width / 4, 0), new Point(PaperSize.Width / 4, PaperSize.Height), 4F, preview);
-                DrawRule(g, font, Color.LightGray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"", new Point(0, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F, preview);
-            }
+            DrawRule(g, font, Color.LightGray, $"", new Point(PaperSize.Width / 4, 0), new Point(PaperSize.Width / 4, PaperSize.Height), 4F, preview);
+            DrawRule(g, font, Color.LightGray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"", new Point(0, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F, preview);
+
             // Printable area
             if ((PrintableArea.Width != PaperSize.Width) || (PrintableArea.Height != PaperSize.Height))
             {
                 RectangleF rect = PrintableArea;
-                if (landscape)
-                {
-                    rect.X = printableArea.Y;
-                    rect.Y = printableArea.X;
-                    rect.Width = rect.Height;
-                    rect.Height = rect.Width;
-                }
-
                 if (!preview)
                 {
                     rect.Offset(-HardMarginX, -HardMarginY);
@@ -117,14 +144,44 @@ namespace WinPrint
             DrawRule(g, font, Color.Blue, $"Bottom Margin - {Margins.Bottom / 100F}\"", new Point(Margins.Left, PaperSize.Height - Margins.Bottom), new Point(PaperSize.Width - Margins.Right, PaperSize.Height - Margins.Bottom), 2F, preview);
 
             // Hard Margins
+            if (landscape)
+            {
+                g.DrawString($"Landscape Angle = {landscapeAngle}°", font, new SolidBrush(Color.Red), HardMarginX, HardMarginY);
+                if (landscapeAngle == 270)
+                {
+                    // 270 degrees - marginX is on bottom and marginY is left
+                    DrawRule(g, font, Color.OrangeRed, $"HardMarginX - {HardMarginX / 100F}\"", new Point(Margins.Left, PaperSize.Height - (int)HardMarginX), new Point(PaperSize.Width - Margins.Right, PaperSize.Height - (int)HardMarginX), 5F, preview);
+                    DrawRule(g, font, Color.OrangeRed, $"HardMarginY - {HardMarginY / 100F}\"", new Point((int)HardMarginY, Margins.Top), new Point((int)HardMarginY, PaperSize.Height - Margins.Bottom), 5F, preview);
+                }
+                else
+                {
+                    // 90 degrees - marginX is on top and marginY is on right
+                    DrawRule(g, font, Color.OrangeRed, $"HardMarginX - {HardMarginX / 100F}\"", new Point(Margins.Left, (int)HardMarginX), new Point(PaperSize.Width - Margins.Right, (int)HardMarginX), 5F, preview);
+                    DrawRule(g, font, Color.OrangeRed, $"HardMarginY - {HardMarginY / 100F}\"", new Point(PaperSize.Width - (int)HardMarginY, Margins.Top), new Point(PaperSize.Width - (int)HardMarginY, PaperSize.Height - Margins.Bottom), 5F, preview);
+                }
+            }
+            else
+            {
+                // 0 degrees - marginX is left and marginY is top
+                DrawRule(g, font, Color.OrangeRed, $"HardMarginX - {HardMarginX / 100F}\"", new Point((int)HardMarginX, Margins.Top), new Point((int)HardMarginX, PaperSize.Height - Margins.Bottom), 5F, preview);
+                DrawRule(g, font, Color.OrangeRed, $"HardMarginY - {HardMarginY / 100F}\"", new Point(Margins.Left, (int)HardMarginY), new Point(PaperSize.Width - Margins.Right, (int)HardMarginY), 5F, preview);
+            }
         }
 
         private void DrawRule(Graphics g, Font font, Color color, string text, Point start, Point end, float labelDiv, bool preview)
         {
             if (!preview)
             {
-                start.Offset((int)-HardMarginX, (int)-HardMarginY);
-                end.Offset((int)-HardMarginX, (int)-HardMarginY);
+                if (landscape)
+                {
+                    start.Offset((int)-HardMarginY, (int)-HardMarginX);
+                    end.Offset((int)-HardMarginY, (int)-HardMarginX);
+                }
+                else
+                {
+                    start.Offset((int)-HardMarginX, (int)-HardMarginY);
+                    end.Offset((int)-HardMarginX, (int)-HardMarginY);
+                }
             }
             g.DrawLine(new Pen(color), start, end);
             SizeF textSize = g.MeasureString(text, font);
@@ -173,9 +230,17 @@ namespace WinPrint
             // Convert font to pixel units if we're in preview
             if (!preview)
             {
+                if (!landscape)
+                {
+                    leftMargin -= HardMarginX;
+                    topMargin -= HardMarginY;
+                }
+                else
+                {
+                    topMargin -= HardMarginX;
+                    leftMargin -= HardMarginY;
+                }
                 font = contentFont;
-                leftMargin -= HardMarginX;
-                topMargin -= HardMarginY;
                 fontHeight = font.GetHeight(ev.Graphics);
                 Debug.WriteLine($"Real font: {fontHeight}");
             }

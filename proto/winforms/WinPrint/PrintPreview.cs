@@ -16,9 +16,7 @@ namespace WinPrint
         internal PrintDocument printDocument;
         private Page page = new Page();
         public Page Page => page;
-
         public string File { get => file; set => file = value; }
-
         private string file;
 
         public PrintPreview()
@@ -41,8 +39,6 @@ namespace WinPrint
             page.PageSettings = (PageSettings)pageSettings;
         }
 
-
-
         protected override void OnResize(EventArgs e)
         {
             this.Invalidate();
@@ -54,9 +50,7 @@ namespace WinPrint
             // Don't do anything if the window's been shrunk too far or GDI+ will crash
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return; 
             base.OnPaint(e);
-
             Page.PaintRules(e.Graphics);
-
             try
             {
                 StreamReader streamToPrint = new StreamReader(File);
@@ -77,7 +71,5 @@ namespace WinPrint
                 MessageBox.Show(ex.Message);
             }
         }
-
-       
     }
 }
