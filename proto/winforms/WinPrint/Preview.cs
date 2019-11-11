@@ -16,7 +16,6 @@ namespace WinPrint
     public partial class Preview : Form
     {
         private PrintDocument printDoc = new PrintDocument();
-        private PageSettings pageSettings;
 
         private PrintPreview printPreview;
 
@@ -94,10 +93,14 @@ namespace WinPrint
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             printDoc.DefaultPageSettings.Margins = new Margins(50,75, 100,125);
             printPreview.SetPageSettings(printDoc.DefaultPageSettings);
-            PageSizeChagned();
+            printPreview.Page.RulesFont = new Font(FontFamily.GenericSansSerif, 10);
+            printPreview.Page.ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
+            printPreview.Page.Header.Text = "Header";
+            printPreview.Page.Footer.Text = "Footer";
+            PageSizeChanged();
         }
 
-        internal void PageSizeChagned()
+        internal void PageSizeChanged()
         {
             Debug.WriteLine("PageSizeChagned()");
             printPreview.Invalidate(true);
@@ -170,7 +173,6 @@ namespace WinPrint
             PageSettingsChanged();
         }
 
-        private Font printFont;
         private StreamReader streamToPrint;
 
         private void previewButton_Click(object sender, EventArgs e)
@@ -256,23 +258,27 @@ namespace WinPrint
         // The PrintPage event is raised for each page to be printed.
         private void pd_PrintPage(object sender, PrintPageEventArgs ev)
         {
+            bool hasMorePages;
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages)
             {
                 while (curPage < fromPage)
                 {
                     // Blow through pages up to fromPage
-                    Page pg = new Page();
-                    pg.PageSettings = ev.PageSettings;
-                    pg.PaintContent(ev, streamToPrint);
+                    printPreview.Page.PageSettings = ev.PageSettings;
+                    printPreview.Page.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
                     curPage++;
                 }
                 ev.Graphics.Clear(Color.White);
             }
 
-            Page page = new Page();
-            page.PageSettings = ev.PageSettings;
-            page.PaintRules(ev.Graphics);
-            page.PaintContent(ev, streamToPrint);
+            printPreview.Page.PageSettings = ev.PageSettings;
+            printPreview.Page.Header.Text = "Header";
+            printPreview.Page.Footer.Text = "Footer";
+            printPreview.Page.PaintRules(ev.Graphics);
+            printPreview.Page.Header.Paint(ev.Graphics);
+            printPreview.Page.Footer.Paint(ev.Graphics);
+            printPreview.Page.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
+            ev.HasMorePages = hasMorePages;
         }
 
         // Declare the PrintPreviewControl object and the 

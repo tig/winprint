@@ -14,7 +14,7 @@ namespace WinPrint
     public partial class PrintPreview : Control
     {
         internal PrintDocument printDocument;
-        private Page page = new Page();
+        private Page page;
         public Page Page => page;
         public string File { get => file; set => file = value; }
         private string file;
@@ -36,6 +36,7 @@ namespace WinPrint
 
         public void SetPageSettings(PageSettings pageSettings)
         {
+            page = new Page();
             page.PageSettings = (PageSettings)pageSettings;
         }
 
@@ -51,6 +52,8 @@ namespace WinPrint
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return; 
             base.OnPaint(e);
             Page.PaintRules(e.Graphics);
+            page.Header.Paint(e.Graphics);
+            page.Footer.Paint(e.Graphics);
             try
             {
                 StreamReader streamToPrint = new StreamReader(File);
@@ -59,7 +62,9 @@ namespace WinPrint
                     PrintPageEventArgs ev = new PrintPageEventArgs(e.Graphics, 
                         new Rectangle(page.Margins.Left, page.Margins.Top, page.Bounds.Width - page.Margins.Left - page.Margins.Right, 
                             page.Bounds.Height - page.Margins.Top - page.Margins.Bottom), page.Bounds, pageSettings);
-                    Page.PaintContent(ev, streamToPrint);
+                    bool f;
+
+                    Page.PaintContent(ev.Graphics, streamToPrint, out f);
                 }
                 finally
                 {
