@@ -53,19 +53,21 @@ namespace WinPrint
             // 
             // printersCB
             // 
+            this.printersCB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.printersCB.FormattingEnabled = true;
             this.printersCB.Location = new System.Drawing.Point(10, 10);
             this.printersCB.Name = "printersCB";
-            this.printersCB.Size = new System.Drawing.Size(450, 23);
+            this.printersCB.Size = new System.Drawing.Size(450, 28);
             this.printersCB.TabIndex = 1;
             this.printersCB.SelectedIndexChanged += new System.EventHandler(this.printersCB_SelectedIndexChanged);
             // 
             // paperSizesCB
             // 
+            this.paperSizesCB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.paperSizesCB.FormattingEnabled = true;
             this.paperSizesCB.Location = new System.Drawing.Point(10, 39);
             this.paperSizesCB.Name = "paperSizesCB";
-            this.paperSizesCB.Size = new System.Drawing.Size(450, 23);
+            this.paperSizesCB.Size = new System.Drawing.Size(450, 28);
             this.paperSizesCB.TabIndex = 2;
             this.paperSizesCB.SelectedIndexChanged += new System.EventHandler(this.paperSizesCB_SelectedIndexChanged);
             // 
@@ -74,7 +76,7 @@ namespace WinPrint
             this.landscapeCheckbox.AutoSize = true;
             this.landscapeCheckbox.Location = new System.Drawing.Point(10, 73);
             this.landscapeCheckbox.Name = "landscapeCheckbox";
-            this.landscapeCheckbox.Size = new System.Drawing.Size(82, 19);
+            this.landscapeCheckbox.Size = new System.Drawing.Size(101, 24);
             this.landscapeCheckbox.TabIndex = 3;
             this.landscapeCheckbox.Text = "Landscape";
             this.landscapeCheckbox.UseVisualStyleBackColor = true;
@@ -94,7 +96,7 @@ namespace WinPrint
             // 
             this.previewButton.Location = new System.Drawing.Point(15, 128);
             this.previewButton.Name = "previewButton";
-            this.previewButton.Size = new System.Drawing.Size(75, 23);
+            this.previewButton.Size = new System.Drawing.Size(75, 28);
             this.previewButton.TabIndex = 4;
             this.previewButton.Text = "P&review...";
             this.previewButton.UseVisualStyleBackColor = true;
@@ -102,7 +104,7 @@ namespace WinPrint
             // 
             // Preview
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDark;
             this.ClientSize = new System.Drawing.Size(1024, 1024);
@@ -112,6 +114,7 @@ namespace WinPrint
             this.Controls.Add(this.paperSizesCB);
             this.Controls.Add(this.printersCB);
             this.Controls.Add(this.dummyButton);
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Preview";
             this.Text = "Preview";
             this.Layout += new System.Windows.Forms.LayoutEventHandler(this.Preview_Layout);

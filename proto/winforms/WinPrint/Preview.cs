@@ -11,20 +11,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace WinPrint
-{
-    public partial class Preview : Form
-    {
+namespace WinPrint {
+    public partial class Preview : Form {
+
+        // The WinPrint document
+       // private Document document = new Document();
+
+        // The Windows printer document
         private PrintDocument printDoc = new PrintDocument();
 
+        // Print Preview control
         private PrintPreview printPreview;
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
         private string file = "..\\..\\..\\PrintPreview.cs";
 
-        public Preview()
-        {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
+        public Preview() {
             InitializeComponent();
 
             printPreview = new PrintPreview(printDoc);
@@ -36,19 +40,19 @@ namespace WinPrint
             printPreview.Name = "printPreview";
             printPreview.Size = this.dummyButton.Size;
             printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
-            if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
-            {
+            if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 this.Controls.Remove(this.dummyButton);
                 this.Controls.Add(this.printPreview);
             }
 
 
-            foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters)
-            {
+            foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
                 printersCB.Items.Add(printer);
                 if (printDoc.PrinterSettings.IsDefaultPrinter)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
+
+            printersCB.Text = "OneNote";
 
             landscapeCheckbox.Checked = printDoc.PrinterSettings.DefaultPageSettings.Landscape;
             //            PageSizeChanged();
@@ -62,15 +66,12 @@ namespace WinPrint
             printDoc.EndPrint += new PrintEventHandler(this.pd_EndPrint);
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.pd_QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.pd_PrintPage);
-
         }
 
 
-        internal void PageSettingsChanged()
-        {
+        internal void PageSettingsChanged() {
             // Set the paper size based upon the selection in the combo box.
-            if (paperSizesCB.SelectedIndex != -1)
-            {
+            if (paperSizesCB.SelectedIndex != -1) {
                 printDoc.DefaultPageSettings.PaperSize =
                     printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
             }
@@ -89,35 +90,36 @@ namespace WinPrint
             //        printDoc.PrinterSettings.PrinterResolutions[comboPrintResolution.SelectedIndex];
             //}
 
-
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            printDoc.DefaultPageSettings.Margins = new Margins(50,75, 100,125);
-            printPreview.SetPageSettings(printDoc.DefaultPageSettings);
-            printPreview.Page.RulesFont = new Font(FontFamily.GenericSansSerif, 10);
-            printPreview.Page.ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
-            printPreview.Page.Header.Text = "Header";
-            printPreview.Page.Footer.Text = "Footer";
+            printDoc.DefaultPageSettings.Margins = new Margins(50, 75, 100, 125);
+
+            printPreview.Document.File = file;
+            printPreview.Document.Pages[0].SetPageSettings(printDoc.DefaultPageSettings);
+            printPreview.Document.Pages[0].RulesFont = new Font(FontFamily.GenericSansSerif, 10);
+            printPreview.Document.Pages[0].ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
+            printPreview.Document.Pages[0].Header.Font = new Font("Lucida Sans", 8, FontStyle.Italic, GraphicsUnit.Point);
+            printPreview.Document.Pages[0].Footer.Font = new Font("Lucida Sans", 14, FontStyle.Italic, GraphicsUnit.Point);
+            printPreview.Document.Pages[0].Header.Text = "{FilePath}\t{FileName}\t{DateRevised:D}}}";
+            printPreview.Document.Pages[0].Footer.Text = "{Page} of {NumPages}\tKindel Systems Confidential\t{Page:03}/{NumPages}";
             PageSizeChanged();
         }
 
-        internal void PageSizeChanged()
-        {
+        internal void PageSizeChanged() {
             Debug.WriteLine("PageSizeChagned()");
             printPreview.Invalidate(true);
             printPreview.Refresh();
             SizePreview();
         }
 
-        internal void SizePreview()
-        {
+        internal void SizePreview() {
             Debug.WriteLine("SizePreview()");
 
             Size size = this.ClientSize;
             size.Height -= printPreview.Margin.All;
             size.Width -= printPreview.Margin.All;
 
-            double w = printPreview.Page.Bounds.Width;
-            double h = printPreview.Page.Bounds.Height;
+            double w = printPreview.Document.Pages[0].Bounds.Width;
+            double h = printPreview.Document.Pages[0].Bounds.Height;
 
             var scalingX = (double)size.Width / (double)w;
             var scalingY = (double)size.Height / (double)h;
@@ -133,28 +135,23 @@ namespace WinPrint
                 (ClientSize.Height / 2) - (printPreview.Height / 2));
         }
 
-        private void Preview_Layout(object sender, LayoutEventArgs e)
-        {
+        private void Preview_Layout(object sender, LayoutEventArgs e) {
             // This event is raised once at startup with the AffectedControl
             // and AffectedProperty properties on the LayoutEventArgs as null. 
             // The event provides size preferences for that case.
-            if ((e.AffectedControl != null) && (e.AffectedProperty != null))
-            {
+            if ((e.AffectedControl != null) && (e.AffectedProperty != null)) {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
-                if (e.AffectedProperty.ToString() == "Bounds")
-                {
+                if (e.AffectedProperty.ToString() == "Bounds") {
                     SizePreview();
                 }
             }
         }
 
-        private void printersCB_SelectedIndexChanged(object sender, EventArgs e)
-        {
+        private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
             printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
             paperSizesCB.Items.Clear();
-            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
-            {
+            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
                 paperSizesCB.Items.Add(ps);
             }
 
@@ -163,30 +160,26 @@ namespace WinPrint
             PageSettingsChanged();
         }
 
-        private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e)
-        {
+        private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
             PageSettingsChanged();
         }
 
-        private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
+        private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
             PageSettingsChanged();
         }
 
         private StreamReader streamToPrint;
 
-        private void previewButton_Click(object sender, EventArgs e)
-        {
+        private void previewButton_Click(object sender, EventArgs e) {
             PrintPreviewDialog1.Document = printDoc;
             fromPage = 1;
             toPage = 0;
             PrintPreviewDialog1.ShowDialog();
         }
 
-        private void printButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
+        private void printButton_Click(object sender, EventArgs e) {
+            try {
                 //Allow the user to choose the page range he or she would
                 // like to print.
                 PrintDialog1.AllowSomePages = true;
@@ -205,11 +198,9 @@ namespace WinPrint
                 DialogResult result = PrintDialog1.ShowDialog();
 
                 //If the result is OK then print the document.
-                if (result == DialogResult.OK)
-                {
+                if (result == DialogResult.OK) {
                     toPage = fromPage = 0;
-                    if (PrintDialog1.PrinterSettings.PrintRange == PrintRange.SomePages)
-                    {
+                    if (PrintDialog1.PrinterSettings.PrintRange == PrintRange.SomePages) {
                         toPage = PrintDialog1.PrinterSettings.ToPage;
                         fromPage = PrintDialog1.PrinterSettings.FromPage;
                     }
@@ -217,30 +208,26 @@ namespace WinPrint
                     printDoc.Print();
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show(ex.Message);
             }
 
         }
 
-        private void pd_BeginPrint(object sender, PrintEventArgs ev)
-        {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
+        private void pd_BeginPrint(object sender, PrintEventArgs ev) {
             Debug.WriteLine($"pd_BeginPrint {curPage}");
-            try
-            {
+
+            try {
                 streamToPrint = new StreamReader(file);
                 curPage = 1;
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show(ex.Message);
             }
         }
-        private void pd_EndPrint(object sender, PrintEventArgs ev)
-        {
-            if (streamToPrint != null)
-            {
+        private void pd_EndPrint(object sender, PrintEventArgs ev) {
+            if (streamToPrint != null) {
                 streamToPrint.Close();
                 streamToPrint = null;
             }
@@ -251,33 +238,27 @@ namespace WinPrint
         private int toPage;
 
         // Occurs immediately before each PrintPage event.
-        private void pd_QueryPageSettings(object sender, QueryPageSettingsEventArgs e)
-        {
+        private void pd_QueryPageSettings(object sender, QueryPageSettingsEventArgs e) {
+
         }
 
         // The PrintPage event is raised for each page to be printed.
-        private void pd_PrintPage(object sender, PrintPageEventArgs ev)
-        {
+        private void pd_PrintPage(object sender, PrintPageEventArgs ev) {
             bool hasMorePages;
-            if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages)
-            {
-                while (curPage < fromPage)
-                {
+            if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
+                while (curPage < fromPage) {
                     // Blow through pages up to fromPage
-                    printPreview.Page.PageSettings = ev.PageSettings;
-                    printPreview.Page.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
+                    printPreview.Document.Pages[0].SetPageSettings(ev.PageSettings);
+                    printPreview.Document.Pages[0].PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
                     curPage++;
                 }
-                ev.Graphics.Clear(Color.White);
+  //              ev.Graphics.Clear(Color.White);
             }
 
-            printPreview.Page.PageSettings = ev.PageSettings;
-            printPreview.Page.Header.Text = "Header";
-            printPreview.Page.Footer.Text = "Footer";
-            printPreview.Page.PaintRules(ev.Graphics);
-            printPreview.Page.Header.Paint(ev.Graphics);
-            printPreview.Page.Footer.Paint(ev.Graphics);
-            printPreview.Page.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
+            // TODO: 
+            printPreview.Document.Pages[0].SetPageSettings(ev.PageSettings);
+            printPreview.Document.Pages[0].Paint(ev.Graphics);
+            printPreview.Document.Pages[0].PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
             ev.HasMorePages = hasMorePages;
         }
 
@@ -285,8 +266,7 @@ namespace WinPrint
         // PrintDocument object.
         internal PrintPreviewControl PrintPreviewControl1;
 
-        private void InitializePrintPreviewControl()
-        {
+        private void InitializePrintPreviewControl() {
             // Construct the PrintPreviewControl.
             this.PrintPreviewControl1 = new PrintPreviewControl();
 
@@ -318,8 +298,7 @@ namespace WinPrint
         internal PrintPreviewDialog PrintPreviewDialog1;
 
         // Initalize the dialog.
-        private void InitializePrintPreviewDialog()
-        {
+        private void InitializePrintPreviewDialog() {
 
             // Create a new PrintPreviewDialog using constructor.
             this.PrintPreviewDialog1 = new PrintPreviewDialog();
