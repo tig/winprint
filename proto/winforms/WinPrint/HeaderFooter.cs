@@ -18,17 +18,22 @@ namespace WinPrint {
     ///  $
     ///     Three segement
     ///         Left Aligned       Centered          Right Aligned
+    ///
+    /// Format: Left/Centered/Right can be delimited with either tab char (\t) or |
+    /// {FullyQualifiedPath}|Modified: {FileDate:F}|{Page:D3}/{NumPages}
+    /// {FullyQualifiedPath}\tModified: {FileDate:F}\t{Page:D3}/{NumPages}
+    /// 
     ///     Macros
-    ///         Print Date
-    ///         File Date
-    ///         Page Number
-    ///         Num Pages
-    ///         File Name
-    ///         File Path
-    ///         Fully Qualified Path
-    ///         Document Title
-    ///         Author
-    ///         Language
+    ///         DatePrinted
+    ///         DateRevised
+    ///         Page
+    ///         NumPages
+    ///         FileName
+    ///         FilePath
+    ///         FullyQualifiedPath
+    ///         FileExtension
+    ///         FileTYpe
+    ///         Title
     ///     Options
     ///         Top padding
     ///         Bottom padding
@@ -39,50 +44,59 @@ namespace WinPrint {
     ///         border color
     ///         font
     /// 
-    /// {FullFilePath}\tModified: {FileDate:F}\t{Page:003}/{NumPages}
-    /// \t{Kindel Systems Confidential
     /// 
-    /// How to deal with clipping
+    /// TODO: How to deal with clipping
     /// 1) Order of print - Left, Right, Center (center wins)
     /// 2) Elipsis - different based on macro. E.g. FullFilePath is "Start...FileName" where FileName is truncated last.
     /// 3) Clipped (never overwritten - ugly)
     /// 4) Wrapped (post MLP)
     ///         
     /// </summary>
-    public abstract class HeaderFooter {
+    public abstract class HeaderFooter : IDisposable {
+        private readonly Macros macros;
+        public string Text { get; set; }
+        public Font Font { get; set; }
+        public bool LeftBorder { get; set; }
+        public bool TopBorder { get; set; }
+        public bool RightBorder { get; set; }
+        public bool BottomBorder { get; set; }
+        public Rectangle Bounds => CalcBounds();
 
-        private Macros macros;
+        public bool Enabled { get; set; }
 
-        public float GetFontHeight() {
-            return font.GetHeight(100);
+        internal Document containingDocument;
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        public string Text { get => text; set => text = value; }
-        public Font Font { get => font; set => font = value; }
-        public bool LeftBorder { get => leftBorder; set => leftBorder = value; }
-        public bool TopBorder { get => topBorder; set => topBorder = value; }
-        public bool RightBorder { get => rightBorder; set => rightBorder = value; }
-        public bool BottomBorder { get => bottomBorder; set => bottomBorder = value; }
-        public Rectangle Bounds { get => bounds; set => bounds = value; }
+        // Protected implementation of Dispose pattern.
+        // Flag: Has Dispose already been called?
+        bool disposed = false;
+        protected virtual void Dispose(bool disposing) {
+            if (disposed)
+                return;
 
-        private Font font;
+            if (disposing) {
+                if (Font != null) Font.Dispose();
+            }
+            disposed = true;
+        }
 
-        private string text;
+        /// <summary>
+        /// Calcuate the Header or Footer bounds (position and size on page) based on containing document and font size.
+        /// </summary>
+        /// <returns></returns>
+        internal abstract Rectangle CalcBounds();
 
-        internal Page containingPage;
+        public void Paint(Graphics g, int pageNum) {
+            if (!Enabled) return;
 
-        internal Rectangle bounds = new Rectangle();
-
-        // Borders
-        bool leftBorder, topBorder, rightBorder, bottomBorder;
-
-        public abstract void SetBounds();
-
-        public void Paint(Graphics g) {
             if (g is null) throw new ArgumentNullException(nameof(g));
             if (Text is null) throw new InvalidOperationException($"{nameof(Text)} can't be null");
 
-            GraphicsState state = containingPage.AdjustPrintOrPreview(g);
+            GraphicsState state = containingDocument.AdjustPrintOrPreview(g);
 
             Font tempFont;
             if (g.PageUnit == GraphicsUnit.Display) {
@@ -90,65 +104,81 @@ namespace WinPrint {
             }
             else {
                 // Convert font to pixel units if we're in preview
-                tempFont = new Font(Font.FontFamily, Font.SizeInPoints / 72F * 100F, Font.Style, GraphicsUnit.Pixel);
+                tempFont = new Font(Font.FontFamily, Font.SizeInPoints / 72F * 96F, Font.Style, GraphicsUnit.Pixel);
             }
-            if (leftBorder)
+            if (LeftBorder)
                 g.DrawLine(Pens.DarkGray, Bounds.Left, Bounds.Top, Bounds.Left, Bounds.Bottom);
 
-            if (topBorder)
+            if (TopBorder)
                 g.DrawLine(Pens.DarkGray, Bounds.Left, Bounds.Top, Bounds.Right, Bounds.Top);
 
-            if (rightBorder)
+            if (RightBorder)
                 g.DrawLine(Pens.DarkGray, Bounds.Right, Bounds.Top, Bounds.Right, Bounds.Bottom);
 
-            if (bottomBorder)
+            if (BottomBorder)
                 g.DrawLine(Pens.DarkGray, Bounds.Left, Bounds.Bottom, Bounds.Right, Bounds.Bottom);
 
             // Left\tCenter\tRight
-            string[] parts = macros.ReplaceMacro(Text).Split("\t");
+            string[] parts = macros.ReplaceMacro(Text, pageNum).Split('\t', '|');
+
+            using StringFormat fmt = new StringFormat(StringFormat.GenericTypographic) {
+                LineAlignment = StringAlignment.Near
+            };
+
+            // Center goes first - it has priority - ensure it gets drawn completely where
+            // Left & Right can be clipped
+            SizeF sizeCenter = new SizeF(0, 0);
+            if (parts.Length > 1) {
+                sizeCenter = g.MeasureString(parts[1], tempFont);
+                //g.DrawRectangle(Pens.DarkOrange, Bounds.X, Bounds.Y, Bounds.Width, tempFont.GetHeight(100));
+                g.DrawString(parts[1], tempFont, Brushes.Black, Bounds.X + ((Bounds.Width / 2) - (int)(sizeCenter.Width / 2)), Bounds.Y, fmt);
+            }
+
+            //g.DrawString(parts[0], tempFont, Brushes.Black, Bounds.Left, Bounds.Top, fmt);
 
             // Left
-            g.DrawString(parts[0], tempFont, Brushes.Black, Bounds.Left, Bounds.Top, StringFormat.GenericDefault);
-
-            // Center
-            if (parts.Length > 1) {
-                SizeF size = g.MeasureString(parts[1], tempFont);
-                g.DrawString(parts[1], tempFont, Brushes.Black, Bounds.Left + (Bounds.Width/2) - (size.Width/2), Bounds.Top, StringFormat.GenericDefault);
-            }
+            //fmt.Alignment = StringAlignment.Near;
+            //fmt.Trimming = StringTrimming.EllipsisPath;
+            g.DrawString(parts[0], tempFont, Brushes.Black, Bounds.X, Bounds.Y, fmt);
 
             //Right
             if (parts.Length > 2) {
-                SizeF size = g.MeasureString(parts[2], tempFont);
-                g.DrawString(parts[2], tempFont, Brushes.Black, Bounds.Right - (int)size.Width, Bounds.Top, StringFormat.GenericDefault);
+                fmt.Alignment = StringAlignment.Near;
+                SizeF sizeRight = g.MeasureString(parts[2], tempFont);
+                g.DrawString(parts[2], tempFont, Brushes.Black, Bounds.Right - sizeRight.Width, Bounds.Y, fmt);
             }
 
             tempFont.Dispose();
             g.Restore(state);
         }
 
-        public HeaderFooter(Page containingPage) {
+        public HeaderFooter(Document containingDocument) {
+            if (containingDocument is null) throw new ArgumentNullException(nameof(containingDocument));
             macros = new Macros(this);
-            leftBorder = rightBorder = topBorder = bottomBorder = true;
-            this.containingPage = containingPage;
-            Font = new Font("Lucida Sans", 8, FontStyle.Italic, GraphicsUnit.Point);
+            LeftBorder = RightBorder = TopBorder = BottomBorder = true;
+            this.containingDocument = containingDocument;
+            Font = (Font)containingDocument.ContentFont.Clone();
         }
     }
 
     public class Header : HeaderFooter {
 
-        public Header(Page containingPage) : base(containingPage) {
+        public Header(Document containingDocument) : base(containingDocument) {
         }
 
-        public override void SetBounds() {
-            bounds.X = containingPage.Bounds.Left + containingPage.Margins.Left;
-            bounds.Y = containingPage.Bounds.Top + containingPage.Margins.Top;
-            bounds.Width = containingPage.Bounds.Width - containingPage.Margins.Left - containingPage.Margins.Right;
-            bounds.Height = (int)GetFontHeight();
+        internal override Rectangle CalcBounds() {
+            if (Enabled)
+                return new Rectangle(containingDocument.Bounds.Left + containingDocument.Margins.Left,
+                            containingDocument.Bounds.Top + containingDocument.Margins.Top,
+                            containingDocument.Bounds.Width - containingDocument.Margins.Left - containingDocument.Margins.Right,
+                            (int)Font.GetHeight(100));
+            else
+                return new Rectangle(0, 0, 0, 0);
         }
 
         //public new void Paint(Graphics g) {
         //    if (g is null) throw new ArgumentNullException(nameof(g));
-        //    GraphicsState state = containingPage.AdjustPrintOrPreview(g);
+        //    GraphicsState state = containingDocument.AdjustPrintOrPreview(g);
         //    // Draw borders
         //    base.Paint(g);
         //    g.Restore(state);
@@ -156,44 +186,43 @@ namespace WinPrint {
     }
     public class Footer : HeaderFooter {
 
-        public Footer(Page containingPage) : base(containingPage) {
+        public Footer(Document containingDocument) : base(containingDocument) {
         }
 
+        internal override Rectangle CalcBounds() {
+            if (Enabled)
+                return new Rectangle(containingDocument.Bounds.Left + containingDocument.Margins.Left,
+                                containingDocument.Bounds.Bottom - containingDocument.Margins.Bottom - (int)Font.GetHeight(100),
+                                containingDocument.Bounds.Width - containingDocument.Margins.Left - containingDocument.Margins.Right,
+                                (int)Font.GetHeight(100));
+            else            
+                return new Rectangle(0, 0, 0, 0);
 
-        public override void SetBounds() {
-            //if (containingPage is null) throw new InvalidOperationException(nameof(containingPage));
-
-            bounds.X = containingPage.Bounds.Left + containingPage.Margins.Left;
-            bounds.Y = containingPage.Bounds.Bottom - containingPage.Margins.Bottom - (int)GetFontHeight();
-            bounds.Width = containingPage.Bounds.Width - containingPage.Margins.Left - containingPage.Margins.Right;
-            bounds.Height = (int)GetFontHeight();
         }
 
         //public new void Paint(Graphics g) {
         //    if (g is null) throw new ArgumentNullException(nameof(g));
-        //    GraphicsState state = containingPage.AdjustPrintOrPreview(g);
+        //    GraphicsState state = containingDocument.AdjustPrintOrPreview(g);
         //    // Draw borders
         //    base.Paint(g);
         //    g.Restore(state);
         //}
     }
 
-    internal class Macros {
+    sealed internal class Macros {
         public HeaderFooter headerFooter;
-        private string regex;
 
-        // Each Property is exposed as a {Macro}.
-        public int Page { get { return headerFooter.containingPage.PageNum; } }
-        public int NumPages { get { return headerFooter.containingPage.NumPages; } }
-        public string FileExtension { get { return Path.GetExtension(headerFooter.containingPage.Document.File); } }
-        public string FileName { get { return Path.GetFileName(headerFooter.containingPage.Document.File); } }
+        public int NumPages { get { return headerFooter.containingDocument.NumPages; } }
+        public string FileExtension { get { return Path.GetExtension(headerFooter.containingDocument.File); } }
+        public string FileName { get { return Path.GetFileName(headerFooter.containingDocument.File); } }
         public string FilePath { get { return Path.GetDirectoryName(FullyQualifiedPath); } }
-        public string FullyQualifiedPath { get { return Path.GetFullPath(headerFooter.containingPage.Document.File); } }
+        public string FullyQualifiedPath { get { return Path.GetFullPath(headerFooter.containingDocument.File); } }
         public DateTime DatePrinted { get { return DateTime.Now; } }
-        public DateTime DateRevised { get { return File.GetLastWriteTime(headerFooter.containingPage.Document.File); } }
-       // TODO: implement - via registry??
-        public string FileType { get {
-                return "not impl"; } }
+        public DateTime DateRevised { get { return File.GetLastWriteTime(headerFooter.containingDocument.File); } }
+        public string FileType { get { return headerFooter.containingDocument.Type; } }
+        public string Title { get { return headerFooter.containingDocument.Title; } }
+
+        public int Page { get; set; }
 
         internal Macros(HeaderFooter hf) {
             headerFooter = hf;
@@ -206,7 +235,7 @@ namespace WinPrint {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        internal string ReplaceMacro(string value) {
+        internal string ReplaceMacro(string value, int pageNum) {
             return Regex.Replace(value, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match => {
                 var p = System.Linq.Expressions.Expression.Parameter(typeof(Macros), "Macros");
 
@@ -215,6 +244,9 @@ namespace WinPrint {
                 Group formatGroup = match.Groups["format"];
                 Group endGroup = match.Groups["end"];
 
+                // TODO: BUGBUG: As written this is not thread-safe. We have to figure out a way
+                // of passing pageNum through to the macro parser in a threadsafe way
+                Page = pageNum;
                 LambdaExpression e;
                 try {
                     e = DynamicExpressionParser.ParseLambda(new[] { p }, null, propertyGroup.Value);
@@ -223,8 +255,8 @@ namespace WinPrint {
                     // Non-existant Property or other parse error
                     return propertyGroup.Value;
                 }
-                if (formatGroup.Success)
-                    return (string.Format("{0" + formatGroup.Value + "}", e.Compile().DynamicInvoke(this)));
+                if (formatGroup.Success) 
+                    return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", e.Compile().DynamicInvoke(this));
                 else
                     return (e.Compile().DynamicInvoke(this) ?? "").ToString();
             });

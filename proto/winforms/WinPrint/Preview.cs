@@ -15,7 +15,7 @@ namespace WinPrint {
     public partial class Preview : Form {
 
         // The WinPrint document
-       // private Document document = new Document();
+        private Document document ;
 
         // The Windows printer document
         private PrintDocument printDoc = new PrintDocument();
@@ -25,13 +25,14 @@ namespace WinPrint {
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-        private string file = "..\\..\\..\\PrintPreview.cs";
+        private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public Preview() {
             InitializeComponent();
+            WindowState = FormWindowState.Maximized;
 
-            printPreview = new PrintPreview(printDoc);
+            printPreview = new PrintPreview();
             printPreview.File = file;
             printPreview.Anchor = this.dummyButton.Anchor;
             printPreview.BackColor = this.dummyButton.BackColor;
@@ -39,37 +40,96 @@ namespace WinPrint {
             printPreview.Margin = this.dummyButton.Margin;
             printPreview.Name = "printPreview";
             printPreview.Size = this.dummyButton.Size;
-            printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
+            //printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
+            printPreview.KeyPress += PrintPreview_KeyPress;
+
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 this.Controls.Remove(this.dummyButton);
                 this.Controls.Add(this.printPreview);
+                printersCB.Enabled = false;
+                paperSizesCB.Enabled = false;
             }
+        }
 
+        // Flag: Has Dispose already been called?
+        bool disposed = false;
+        // Protected implementation of Dispose pattern.
+        /// <summary>
+        ///  Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing) {
+            if (disposed)
+                return;
 
-            foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
-                printersCB.Items.Add(printer);
-                if (printDoc.PrinterSettings.IsDefaultPrinter)
-                    printersCB.Text = printDoc.PrinterSettings.PrinterName;
+            if (disposing && (components != null)) {
+                components.Dispose();
+
+                if (streamToPrint != null) streamToPrint.Dispose();
+
+                if (printDoc != null) printDoc.Dispose();
+
+                if (printPreview != null) printPreview.Dispose();
+
+                if (PrintDialog1 != null) PrintDialog1.Dispose();
             }
+            disposed = true;
+            base.Dispose(disposing);
+        }
 
-            printersCB.Text = "OneNote";
+        private Document CreateTestDocument() {
+            Document doc = new Document();
+            doc.File = file;
+            doc.Title = "WinPrint Test";
+            doc.RulesFont = new Font(FontFamily.GenericSansSerif, 10);
+           // doc.ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
+            doc.ContentFont = new Font("Lucida Sans", 7, FontStyle.Regular, GraphicsUnit.Point);
+            doc.Header.Font = new Font("Lucida Sans", 8, FontStyle.Italic, GraphicsUnit.Point);
+            doc.Footer.Font = new Font("Lucida Sans", 14, FontStyle.Italic, GraphicsUnit.Point);
+            doc.Header.Text = "{FullyQualifiedPath}\t{FileName}.{FileExtension}\t{DateRevised:D}}}";
+            doc.Header.Enabled = true;
+            doc.Header.TopBorder = doc.Header.RightBorder = doc.Header.LeftBorder = false;
+            doc.Footer.Text = "Title: {Title}\tFile Type: {FileType}\t{Page:D3}/{NumPages}";
+            doc.Footer.Enabled = true;
+            doc.Initialize(printDoc.DefaultPageSettings);
+            return doc;
+        }
 
+        private void Preview_Load(object sender, EventArgs e) {
             landscapeCheckbox.Checked = printDoc.PrinterSettings.DefaultPageSettings.Landscape;
-            //            PageSizeChanged();
-            SizePreview();
-
-            // Add the control to the form.
-            //InitializePrintPreviewControl();
-            InitializePrintPreviewDialog();
 
             printDoc.BeginPrint += new PrintEventHandler(this.pd_BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.pd_EndPrint);
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.pd_QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.pd_PrintPage);
+
+            //InitializePrintPreviewControl();
+            InitializePrintPreviewDialog();
+
+            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
+
+            printPreview.Document = CreateTestDocument();
+
+            headerTextBox.Text = printPreview.Document.Header.Text;
+
+            printersCB.Enabled = true;
+            paperSizesCB.Enabled = true;
+            foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
+                printersCB.Items.Add(printer);
+                //printersCB.Text = "OneNote";
+                if (printDoc.PrinterSettings.IsDefaultPrinter)
+                    printersCB.Text = printDoc.PrinterSettings.PrinterName;
+            }
         }
 
+        private void PrintPreview_KeyPress(object sender, KeyPressEventArgs e) {
+            throw new NotImplementedException();
+        }
 
         internal void PageSettingsChanged() {
+            Debug.WriteLine("PageSettingsChangned()");
+
             // Set the paper size based upon the selection in the combo box.
             if (paperSizesCB.SelectedIndex != -1) {
                 printDoc.DefaultPageSettings.PaperSize =
@@ -91,21 +151,9 @@ namespace WinPrint {
             //}
 
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            printDoc.DefaultPageSettings.Margins = new Margins(50, 75, 100, 125);
-
-            printPreview.Document.File = file;
-            printPreview.Document.Pages[0].SetPageSettings(printDoc.DefaultPageSettings);
-            printPreview.Document.Pages[0].RulesFont = new Font(FontFamily.GenericSansSerif, 10);
-            printPreview.Document.Pages[0].ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
-            printPreview.Document.Pages[0].Header.Font = new Font("Lucida Sans", 8, FontStyle.Italic, GraphicsUnit.Point);
-            printPreview.Document.Pages[0].Footer.Font = new Font("Lucida Sans", 14, FontStyle.Italic, GraphicsUnit.Point);
-            printPreview.Document.Pages[0].Header.Text = "{FilePath}\t{FileName}\t{DateRevised:D}}}";
-            printPreview.Document.Pages[0].Footer.Text = "{Page} of {NumPages}\tKindel Systems Confidential\t{Page:03}/{NumPages}";
-            PageSizeChanged();
-        }
-
-        internal void PageSizeChanged() {
-            Debug.WriteLine("PageSizeChagned()");
+            //printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
+            printPreview.Document.Initialize(printDoc.DefaultPageSettings);
+ 
             printPreview.Invalidate(true);
             printPreview.Refresh();
             SizePreview();
@@ -115,11 +163,11 @@ namespace WinPrint {
             Debug.WriteLine("SizePreview()");
 
             Size size = this.ClientSize;
-            size.Height -= printPreview.Margin.All;
-            size.Width -= printPreview.Margin.All;
+            size.Height -= headerTextBox.Height *3;
+            size.Width -= headerTextBox.Height;
 
-            double w = printPreview.Document.Pages[0].Bounds.Width;
-            double h = printPreview.Document.Pages[0].Bounds.Height;
+            double w = printPreview.Document.Bounds.Width;
+            double h = printPreview.Document.Bounds.Height;
 
             var scalingX = (double)size.Width / (double)w;
             var scalingY = (double)size.Height / (double)h;
@@ -149,32 +197,36 @@ namespace WinPrint {
         }
 
         private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
-            printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
-            paperSizesCB.Items.Clear();
-            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
-                paperSizesCB.Items.Add(ps);
+            if (printersCB.Enabled) {
+                printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
+                paperSizesCB.Items.Clear();
+                foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
+                    paperSizesCB.Items.Add(ps);
+                }
+
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+
+                //PageSettingsChanged();
             }
-
-            paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
-
-            PageSettingsChanged();
         }
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
-            PageSettingsChanged();
+            if (printersCB.Enabled) 
+                PageSettingsChanged();
         }
 
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
-            PageSettingsChanged();
+            if (printersCB.Enabled) 
+                PageSettingsChanged();
         }
 
         private StreamReader streamToPrint;
 
         private void previewButton_Click(object sender, EventArgs e) {
-            PrintPreviewDialog1.Document = printDoc;
+            printPreviewDialog.Document = printDoc;
             fromPage = 1;
             toPage = 0;
-            PrintPreviewDialog1.ShowDialog();
+            printPreviewDialog.ShowDialog();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
@@ -204,28 +256,36 @@ namespace WinPrint {
                         toPage = PrintDialog1.PrinterSettings.ToPage;
                         fromPage = PrintDialog1.PrinterSettings.FromPage;
                     }
+                    streamToPrint = new StreamReader(file);
+
+                    Document doc = CreateTestDocument();
+ 
                     curPage = 1;
                     printDoc.Print();
                 }
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show($"printButton_Click: {ex.Message}");
             }
 
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
+        // Occurs when the Print() method is called and before the first page of the document prints.
         private void pd_BeginPrint(object sender, PrintEventArgs ev) {
             Debug.WriteLine($"pd_BeginPrint {curPage}");
 
             try {
                 streamToPrint = new StreamReader(file);
                 curPage = 1;
+                document = CreateTestDocument();
             }
             catch (Exception ex) {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show($"pd_BeginPrint: {ex.Message}");
             }
         }
+
+        // Occurs when the last page of the document has printed.
         private void pd_EndPrint(object sender, PrintEventArgs ev) {
             if (streamToPrint != null) {
                 streamToPrint.Close();
@@ -244,69 +304,68 @@ namespace WinPrint {
 
         // The PrintPage event is raised for each page to be printed.
         private void pd_PrintPage(object sender, PrintPageEventArgs ev) {
-            bool hasMorePages;
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
                 while (curPage < fromPage) {
                     // Blow through pages up to fromPage
-                    printPreview.Document.Pages[0].SetPageSettings(ev.PageSettings);
-                    printPreview.Document.Pages[0].PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
+//                    printPreview.Document.SetPageSettings(ev.PageSettings);
+//                    printPreview.Document.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
                     curPage++;
                 }
-  //              ev.Graphics.Clear(Color.White);
+                //              ev.Graphics.Clear(Color.White);
             }
 
             // TODO: 
-            printPreview.Document.Pages[0].SetPageSettings(ev.PageSettings);
-            printPreview.Document.Pages[0].Paint(ev.Graphics);
-            printPreview.Document.Pages[0].PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
-            ev.HasMorePages = hasMorePages;
+            // document.SetPageSettings(ev.PageSettings);
+            document.Paint(ev.Graphics, curPage);
+            curPage++;
+            ev.HasMorePages = curPage <= document.Pages.Count;
         }
 
         // Declare the PrintPreviewControl object and the 
         // PrintDocument object.
-        internal PrintPreviewControl PrintPreviewControl1;
+        //internal PrintPreviewControl PrintPreviewControl1;
 
-        private void InitializePrintPreviewControl() {
-            // Construct the PrintPreviewControl.
-            this.PrintPreviewControl1 = new PrintPreviewControl();
+        //private void InitializePrintPreviewControl() {
+        //    // Construct the PrintPreviewControl.
+        //    this.PrintPreviewControl1 = new PrintPreviewControl();
 
-            // Set location, name, and dock style for PrintPreviewControl1.
-            this.PrintPreviewControl1.Location = new Point(88, 80);
-            this.PrintPreviewControl1.Name = "PrintPreviewControl1";
-            this.PrintPreviewControl1.Dock = DockStyle.Fill;
+        //    // Set location, name, and dock style for PrintPreviewControl1.
+        //    this.PrintPreviewControl1.Location = new Point(88, 80);
+        //    this.PrintPreviewControl1.Name = "PrintPreviewControl1";
+        //    this.PrintPreviewControl1.Dock = DockStyle.Fill;
 
-            // Set the Document property to the PrintDocument 
-            // for which the PrintPage event has been handled.
-            this.PrintPreviewControl1.Document = printDoc;
+        //    // Set the Document property to the PrintDocument 
+        //    // for which the PrintPage event has been handled.
+        //    this.PrintPreviewControl1.Document = printDoc;
 
-            // Set the zoom to 25 percent.
-            this.PrintPreviewControl1.Zoom = 1;
+        //    // Set the zoom to 25 percent.
+        //    this.PrintPreviewControl1.Zoom = 1;
 
-            // Set the document name. This will show be displayed when 
-            // the document is loading into the control.
-            this.PrintPreviewControl1.Document.DocumentName = file;
+        //    // Set the document name. This will show be displayed when 
+        //    // the document is loading into the control.
+        //    this.PrintPreviewControl1.Document.DocumentName = file;
 
-            // Set the UseAntiAlias property to true so fonts are smoothed
-            // by the operating system.
-            this.PrintPreviewControl1.UseAntiAlias = true;
+        //    // Set the UseAntiAlias property to true so fonts are smoothed
+        //    // by the operating system.
+        //    this.PrintPreviewControl1.UseAntiAlias = true;
 
-            // Add the control to the form.
-            this.Controls.Add(this.PrintPreviewControl1);
-        }
+        //    // Add the control to the form.
+        //    this.Controls.Add(this.PrintPreviewControl1);
+        //}
 
         // Declare the dialog.
-        internal PrintPreviewDialog PrintPreviewDialog1;
+        internal PrintPreviewDialog printPreviewDialog;
 
         // Initalize the dialog.
         private void InitializePrintPreviewDialog() {
 
             // Create a new PrintPreviewDialog using constructor.
-            this.PrintPreviewDialog1 = new PrintPreviewDialog();
+            this.printPreviewDialog = new PrintPreviewDialog();
 
             //Set the size, location, and name.
-            this.PrintPreviewDialog1.ClientSize = new System.Drawing.Size(1000, 900);
-            this.PrintPreviewDialog1.Location = new System.Drawing.Point(29, 29);
-            this.PrintPreviewDialog1.Name = "PrintPreviewDialog1";
+            this.printPreviewDialog.ClientSize = new System.Drawing.Size(1000, 900);
+            this.printPreviewDialog.Location = new System.Drawing.Point(29, 29);
+            this.printPreviewDialog.Name = "Print Preview";
 
             // Associate the event-handling method with the 
             // document's PrintPage event.
@@ -315,11 +374,28 @@ namespace WinPrint {
             //    (pd_PrintPage);
 
             // Set the minimum size the dialog can be resized to.
-            this.PrintPreviewDialog1.MinimumSize = new System.Drawing.Size(375, 250);
+            this.printPreviewDialog.MinimumSize = new System.Drawing.Size(375, 250);
 
             // Set the UseAntiAlias property to true, which will allow the 
             // operating system to smooth fonts.
-            this.PrintPreviewDialog1.UseAntiAlias = true;
+            this.printPreviewDialog.UseAntiAlias = true;
+        }
+
+        private void pageUp_Click(object sender, EventArgs e) {
+            if (printPreview.CurrentPage > 1)
+                printPreview.CurrentPage--;
+            printPreview.Invalidate(true);
+        }
+
+        private void pageDown_Click(object sender, EventArgs e) {
+            if (printPreview.CurrentPage < printPreview.Document.Pages.Count)
+                printPreview.CurrentPage++;
+            printPreview.Invalidate(true);
+        }
+
+        private void headerTextBox_TextChanged(object sender, EventArgs e) {
+            printPreview.Document.Header.Text = headerTextBox.Text;
+            printPreview.Invalidate(true);
         }
     }
 }

@@ -13,11 +13,13 @@ namespace WinPrint
         /// </summary>
         [STAThread]
         static void Main()
-        {
+       {
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+#pragma warning disable CA2000 // Dispose objects before losing scope
             Application.Run(new Preview());
+#pragma warning restore CA2000 // Dispose objects before losing scope
         }
     }
 }
