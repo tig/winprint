@@ -42,6 +42,7 @@ namespace WinPrint
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
             this.dummyButton.UseVisualStyleBackColor = false;
+
             // 
             // printersCB
             // 
@@ -50,7 +51,7 @@ namespace WinPrint
             this.printersCB.Location = new System.Drawing.Point(10, 72);
             this.printersCB.Name = "printersCB";
             this.printersCB.Size = new System.Drawing.Size(450, 23);
-            this.printersCB.TabIndex = 1;
+            this.printersCB.TabIndex = 2;
             this.printersCB.SelectedIndexChanged += new System.EventHandler(this.printersCB_SelectedIndexChanged);
             // 
             // paperSizesCB
@@ -60,7 +61,7 @@ namespace WinPrint
             this.paperSizesCB.Location = new System.Drawing.Point(10, 101);
             this.paperSizesCB.Name = "paperSizesCB";
             this.paperSizesCB.Size = new System.Drawing.Size(450, 23);
-            this.paperSizesCB.TabIndex = 2;
+            this.paperSizesCB.TabIndex = 3;
             this.paperSizesCB.SelectedIndexChanged += new System.EventHandler(this.paperSizesCB_SelectedIndexChanged);
             // 
             // landscapeCheckbox
@@ -69,7 +70,7 @@ namespace WinPrint
             this.landscapeCheckbox.Location = new System.Drawing.Point(10, 135);
             this.landscapeCheckbox.Name = "landscapeCheckbox";
             this.landscapeCheckbox.Size = new System.Drawing.Size(82, 19);
-            this.landscapeCheckbox.TabIndex = 3;
+            this.landscapeCheckbox.TabIndex = 4;
             this.landscapeCheckbox.Text = "&Landscape";
             this.landscapeCheckbox.UseVisualStyleBackColor = true;
             this.landscapeCheckbox.CheckedChanged += new System.EventHandler(this.landscapeCheckbox_CheckedChanged);
@@ -79,7 +80,7 @@ namespace WinPrint
             this.printButton.Location = new System.Drawing.Point(10, 165);
             this.printButton.Name = "printButton";
             this.printButton.Size = new System.Drawing.Size(75, 26);
-            this.printButton.TabIndex = 4;
+            this.printButton.TabIndex = 5;
             this.printButton.Text = "&Print...";
             this.printButton.UseVisualStyleBackColor = true;
             this.printButton.Click += new System.EventHandler(this.printButton_Click);
@@ -89,7 +90,7 @@ namespace WinPrint
             this.previewButton.Location = new System.Drawing.Point(91, 164);
             this.previewButton.Name = "previewButton";
             this.previewButton.Size = new System.Drawing.Size(75, 28);
-            this.previewButton.TabIndex = 4;
+            this.previewButton.TabIndex = 6;
             this.previewButton.Text = "P&review...";
             this.previewButton.UseVisualStyleBackColor = true;
             this.previewButton.Click += new System.EventHandler(this.previewButton_Click);
@@ -100,7 +101,7 @@ namespace WinPrint
             this.pageUp.Location = new System.Drawing.Point(349, 970);
             this.pageUp.Name = "pageUp";
             this.pageUp.Size = new System.Drawing.Size(94, 29);
-            this.pageUp.TabIndex = 5;
+            this.pageUp.TabIndex = 9;
             this.pageUp.Text = "Page &up";
             this.pageUp.UseVisualStyleBackColor = true;
             this.pageUp.Click += new System.EventHandler(this.pageUp_Click);
@@ -111,7 +112,7 @@ namespace WinPrint
             this.pageDown.Location = new System.Drawing.Point(444, 970);
             this.pageDown.Name = "pageDown";
             this.pageDown.Size = new System.Drawing.Size(94, 29);
-            this.pageDown.TabIndex = 5;
+            this.pageDown.TabIndex = 10;
             this.pageDown.Text = "Page &down";
             this.pageDown.UseVisualStyleBackColor = true;
             this.pageDown.Click += new System.EventHandler(this.pageDown_Click);
@@ -122,7 +123,7 @@ namespace WinPrint
             this.headerTextBox.Location = new System.Drawing.Point(0, 0);
             this.headerTextBox.Name = "headerTextBox";
             this.headerTextBox.Size = new System.Drawing.Size(994, 23);
-            this.headerTextBox.TabIndex = 6;
+            this.headerTextBox.TabIndex = 7;
             this.headerTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.headerTextBox.TextChanged += new System.EventHandler(this.headerTextBox_TextChanged);
             // 
@@ -132,7 +133,7 @@ namespace WinPrint
             this.footerTextBox.Location = new System.Drawing.Point(0, 976);
             this.footerTextBox.Name = "footerTextBox";
             this.footerTextBox.Size = new System.Drawing.Size(994, 23);
-            this.footerTextBox.TabIndex = 7;
+            this.footerTextBox.TabIndex = 8;
             this.footerTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // Preview

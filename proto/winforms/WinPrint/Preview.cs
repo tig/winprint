@@ -40,6 +40,8 @@ namespace WinPrint {
             printPreview.Margin = this.dummyButton.Margin;
             printPreview.Name = "printPreview";
             printPreview.Size = this.dummyButton.Size;
+            printPreview.TabIndex = 1;// this.dummyButton.TabIndex;
+            printPreview.TabStop = true;
             //printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
             printPreview.KeyPress += PrintPreview_KeyPress;
 
@@ -157,6 +159,7 @@ namespace WinPrint {
             printPreview.Invalidate(true);
             printPreview.Refresh();
             SizePreview();
+            printPreview.Select();
         }
 
         internal void SizePreview() {

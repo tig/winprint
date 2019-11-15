@@ -37,6 +37,32 @@ namespace WinPrint {
             base.OnResize(e);
         }
 
+        protected override void OnClick(EventArgs e) {
+            base.OnClick(e);
+            Select();
+            Invalidate();
+        }
+
+        protected override void OnLostFocus(EventArgs e) {
+            base.OnLostFocus(e);
+            Invalidate();
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e) {
+            base.OnKeyUp(e);
+            if (e.KeyCode == Keys.PageDown)
+                if (CurrentPage < Document.Pages.Count) {
+                    CurrentPage++;
+                    Invalidate();
+                }
+            if (e.KeyCode == Keys.PageUp)
+                if (CurrentPage > 1) {
+                    CurrentPage--;
+                    Invalidate();
+                }
+
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) throw new ArgumentNullException(nameof(e));
@@ -44,9 +70,13 @@ namespace WinPrint {
 
             // Don't do anything if the window's been shrunk too far or GDI+ will crash
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return;
-           
+
             // Paint rules, header, and footer
             Document.Paint(e.Graphics, CurrentPage);
+
+            // Draw focus rect
+            if (Focused)
+                ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(ClientRectangle, -5, -5));
         }
 
     }
