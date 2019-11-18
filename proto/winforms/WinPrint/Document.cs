@@ -61,8 +61,8 @@ namespace WinPrint {
         public float HardMarginY { get; set; }
         public Rectangle ContentBounds { get => contentBounds; private set => contentBounds = value; }
                 
-        public Header Header { get; set; }
-        public Footer Footer { get; set; }
+        public HeaderView Header { get; set; }
+        public FooterView Footer { get; set; }
         // TODO: ContentFont should be moved to Content class
         public Font ContentFont { get; set; }
         public Font RulesFont { get; set; }
@@ -73,8 +73,8 @@ namespace WinPrint {
             RulesFont = new Font(FontFamily.GenericSansSerif, 10);
             ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
             // Header & Footer - Must be created before contentBounds is set!
-            Header = new Header(this);
-            Footer = new Footer(this);
+            Header = new HeaderView(this);
+            Footer = new FooterView(this);
         }
 
         /// <summary>

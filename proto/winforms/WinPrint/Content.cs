@@ -70,7 +70,7 @@ namespace WinPrint {
             while (NextPage(streamToPrint, out page)) {
                 pages.Add(page);
                 page.PageNum = pages.Count;
-                Debug.WriteLine($"Added Page {page.PageNum}");
+                //Debug.WriteLine($"Added Page {page.PageNum}");
             }
             return pages;
         }
@@ -91,8 +91,8 @@ namespace WinPrint {
             // Print each line of the file.
             int startLine = (int)((float)contentHeight / font.GetHeight(100)) * 0;
             int endLine = startLine + linesPerPage;
-            Debug.WriteLine($"NextPage - Height: {contentHeight}, lines: {linesPerPage}");
-            Debug.WriteLine($"startLine - {startLine}, endLine - {endLine}");
+            //Debug.WriteLine($"NextPage - Height: {contentHeight}, lines: {linesPerPage}");
+            //Debug.WriteLine($"startLine - {startLine}, endLine - {endLine}");
 
             minCharWidth = MeasureString(null, "W").Width;
             int minLineLen = (int)((float)((containingDocument.ContentBounds.Width - lineNumberWidth) / minCharWidth) );
@@ -102,7 +102,7 @@ namespace WinPrint {
                 float height = MeasureString(null, line, out charsFitted, out linesFilled).Height;
                 if (linesFilled > 1) {
                     // Figure out how much bigger and break line apart
-                    Debug.WriteLine("multi-line line");
+                    //Debug.WriteLine("multi-line line");
                     //while (--linesFilled > 0) {
                     // Starting at minLineLen into the line, keep trying until it wraps again
                     int start = 0;

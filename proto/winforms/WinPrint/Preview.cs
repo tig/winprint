@@ -10,12 +10,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint {
     public partial class Preview : Form {
 
         // The WinPrint document
-        private Document document ;
+        private Document document;
 
         // The Windows printer document
         private PrintDocument printDoc = new PrintDocument();
@@ -25,7 +27,9 @@ namespace WinPrint {
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-        private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
+        //        private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
+
+        private SettingsService settingsService = ServiceLocator.Current.SettingsService;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public Preview() {
@@ -33,7 +37,6 @@ namespace WinPrint {
             WindowState = FormWindowState.Maximized;
 
             printPreview = new PrintPreview();
-            printPreview.File = file;
             printPreview.Anchor = this.dummyButton.Anchor;
             printPreview.BackColor = this.dummyButton.BackColor;
             printPreview.Location = this.dummyButton.Location;
@@ -51,6 +54,9 @@ namespace WinPrint {
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
+
+            //settingsService.Load();
+
         }
 
         // Flag: Has Dispose already been called?
@@ -81,20 +87,56 @@ namespace WinPrint {
 
         private Document CreateTestDocument() {
             Document doc = new Document();
-            doc.File = file;
-            doc.Title = "WinPrint Test";
-            doc.RulesFont = new Font(FontFamily.GenericSansSerif, 10);
-           // doc.ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
-            doc.ContentFont = new Font("Lucida Sans", 7, FontStyle.Regular, GraphicsUnit.Point);
-            doc.Header.Font = new Font("Lucida Sans", 8, FontStyle.Italic, GraphicsUnit.Point);
-            doc.Footer.Font = new Font("Lucida Sans", 14, FontStyle.Italic, GraphicsUnit.Point);
-            doc.Header.Text = "{FullyQualifiedPath}\t{FileName}.{FileExtension}\t{DateRevised:D}}}";
-            doc.Header.Enabled = true;
-            doc.Header.TopBorder = doc.Header.RightBorder = doc.Header.LeftBorder = false;
-            doc.Footer.Text = "Title: {Title}\tFile Type: {FileType}\t{Page:D3}/{NumPages}";
-            doc.Footer.Enabled = true;
+
+
+            ModelLocator.Current.Document.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
+                Debug.WriteLine($"Document.PropertyChanged: {e.PropertyName}");
+                if (e.PropertyName == "Landscape") {
+                    Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Document.Landscape}");
+                    landscapeCheckbox.Checked = printPreview.Document.Landscape = ModelLocator.Current.Document.Landscape;
+                    PageSettingsChanged();
+                }
+            }));
+
+            ModelLocator.Current.Document.Font.PropertyChanged += (s, e) => {
+                Debug.WriteLine($"Font.PropertyChanged: {e.PropertyName}");
+
+            };
+
+            ModelLocator.Current.Document.Header.PropertyChanged += (s, e) => {
+                Debug.WriteLine($"Header.PropertyChanged : {e.PropertyName}");
+                if (e.PropertyName == "Text") {
+                    headerTextBox.Text = printPreview.Document.Header.Text = ModelLocator.Current.Document.Header.Text;
+                    PageSettingsChanged();
+                }
+            };
+
+            printPreview.File = doc.File = ModelLocator.Current.Document.File;
+            doc.Title = ModelLocator.Current.Document.Title;
+            doc.Landscape = ModelLocator.Current.Document.Landscape;
+            doc.RulesFont = ModelLocator.Current.Document.RulesFont.Create();
+            // doc.ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
+            doc.ContentFont = ModelLocator.Current.Document.Font.Create();
+            doc.Footer.Font = ModelLocator.Current.Document.Header.Font.Create();
+            doc.Header.Font = ModelLocator.Current.Document.Footer.Font.Create();
+            doc.Header.Text = ModelLocator.Current.Document.Header.Text;
+
+            doc.Header.Enabled = ModelLocator.Current.Document.Header.Enabled;
+            doc.Header.TopBorder = ModelLocator.Current.Document.Header.TopBorder;
+
+            doc.Footer.Text = ModelLocator.Current.Document.Footer.Text; ;
+            doc.Footer.Enabled = ModelLocator.Current.Document.Header.Enabled;
+
+            ModelLocator.Current.Document.Font.Family = "Courier New";
+            //ModelLocator.Current.Document.Header.Text = "blarg";
             doc.Initialize(printDoc.DefaultPageSettings);
             return doc;
+        }
+
+        private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
+            Debug.WriteLine($"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}");
+            if (printersCB.Enabled)
+                ModelLocator.Current.Document.Landscape = landscapeCheckbox.Checked;
         }
 
         private void Preview_Load(object sender, EventArgs e) {
@@ -123,10 +165,12 @@ namespace WinPrint {
                 if (printDoc.PrinterSettings.IsDefaultPrinter)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
+
+
         }
 
         private void PrintPreview_KeyPress(object sender, KeyPressEventArgs e) {
-            throw new NotImplementedException();
+            //   throw new NotImplementedException();
         }
 
         internal void PageSettingsChanged() {
@@ -155,7 +199,7 @@ namespace WinPrint {
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             //printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
             printPreview.Document.Initialize(printDoc.DefaultPageSettings);
- 
+
             printPreview.Invalidate(true);
             printPreview.Refresh();
             SizePreview();
@@ -166,7 +210,7 @@ namespace WinPrint {
             Debug.WriteLine("SizePreview()");
 
             Size size = this.ClientSize;
-            size.Height -= headerTextBox.Height *3;
+            size.Height -= headerTextBox.Height * 3;
             size.Width -= headerTextBox.Height;
 
             double w = printPreview.Document.Bounds.Width;
@@ -214,14 +258,10 @@ namespace WinPrint {
         }
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
-            if (printersCB.Enabled) 
+            if (printersCB.Enabled)
                 PageSettingsChanged();
         }
 
-        private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
-            if (printersCB.Enabled) 
-                PageSettingsChanged();
-        }
 
         private StreamReader streamToPrint;
 
@@ -259,10 +299,10 @@ namespace WinPrint {
                         toPage = PrintDialog1.PrinterSettings.ToPage;
                         fromPage = PrintDialog1.PrinterSettings.FromPage;
                     }
-                    streamToPrint = new StreamReader(file);
+                    streamToPrint = new StreamReader(ModelLocator.Current.Document.File);
 
                     Document doc = CreateTestDocument();
- 
+
                     curPage = 1;
                     printDoc.Print();
                 }
@@ -279,7 +319,7 @@ namespace WinPrint {
             Debug.WriteLine($"pd_BeginPrint {curPage}");
 
             try {
-                streamToPrint = new StreamReader(file);
+                streamToPrint = new StreamReader(ModelLocator.Current.Document.File);
                 curPage = 1;
                 document = CreateTestDocument();
             }
@@ -310,8 +350,8 @@ namespace WinPrint {
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
                 while (curPage < fromPage) {
                     // Blow through pages up to fromPage
-//                    printPreview.Document.SetPageSettings(ev.PageSettings);
-//                    printPreview.Document.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
+                    //                    printPreview.Document.SetPageSettings(ev.PageSettings);
+                    //                    printPreview.Document.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
                     curPage++;
                 }
                 //              ev.Graphics.Clear(Color.White);
@@ -397,8 +437,9 @@ namespace WinPrint {
         }
 
         private void headerTextBox_TextChanged(object sender, EventArgs e) {
-            printPreview.Document.Header.Text = headerTextBox.Text;
+            ModelLocator.Current.Document.Header.Text = headerTextBox.Text;
             printPreview.Invalidate(true);
+
         }
     }
 }

@@ -12,6 +12,9 @@ using System.IO;
 namespace WinPrint {
     /// <summary>
     /// WinPrint Print Preview control. Previews a single page.
+    /// This is the View in the Model-View-View Model pattern. 
+    /// Document (etc.) is the Model
+    /// DocumentViewModel is the VM?
     /// </summary>
     public partial class PrintPreview : Control {
         private string file;

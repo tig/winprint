@@ -52,8 +52,9 @@ namespace WinPrint {
     /// 4) Wrapped (post MLP)
     ///         
     /// </summary>
-    public abstract class HeaderFooter : IDisposable {
+    public abstract class HeaderFooterView : IDisposable {
         private readonly Macros macros;
+
         public string Text { get; set; }
         public Font Font { get; set; }
         public bool LeftBorder { get; set; }
@@ -152,7 +153,7 @@ namespace WinPrint {
             g.Restore(state);
         }
 
-        public HeaderFooter(Document containingDocument) {
+        public HeaderFooterView(Document containingDocument) {
             if (containingDocument is null) throw new ArgumentNullException(nameof(containingDocument));
             macros = new Macros(this);
             LeftBorder = RightBorder = TopBorder = BottomBorder = true;
@@ -161,9 +162,9 @@ namespace WinPrint {
         }
     }
 
-    public class Header : HeaderFooter {
+    public class HeaderView : HeaderFooterView {
 
-        public Header(Document containingDocument) : base(containingDocument) {
+        public HeaderView(Document containingDocument) : base(containingDocument) {
         }
 
         internal override Rectangle CalcBounds() {
@@ -184,9 +185,9 @@ namespace WinPrint {
         //    g.Restore(state);
         //}
     }
-    public class Footer : HeaderFooter {
+    public class FooterView : HeaderFooterView {
 
-        public Footer(Document containingDocument) : base(containingDocument) {
+        public FooterView(Document containingDocument) : base(containingDocument) {
         }
 
         internal override Rectangle CalcBounds() {
@@ -210,7 +211,7 @@ namespace WinPrint {
     }
 
     sealed internal class Macros {
-        public HeaderFooter headerFooter;
+        public HeaderFooterView headerFooter;
 
         public int NumPages { get { return headerFooter.containingDocument.NumPages; } }
         public string FileExtension { get { return Path.GetExtension(headerFooter.containingDocument.File); } }
@@ -224,7 +225,7 @@ namespace WinPrint {
 
         public int Page { get; set; }
 
-        internal Macros(HeaderFooter hf) {
+        internal Macros(HeaderFooterView hf) {
             headerFooter = hf;
         }
 
