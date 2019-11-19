@@ -4,50 +4,46 @@ using System.Drawing;
 using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
-    public class Font : ObservableObject, IDisposable {
+    public class Font : ModelBase, IDisposable {
 
-        private string family;
-        private FontStyle style;
-        private float size;
+        private string family = "sansserif";
+        private FontStyle style = FontStyle.Regular;
+        private float size = 8F;
 
-        public string Family { get => font.Name.ToString(); set {
+        public string Family { get => family; set {
                 //Debug.WriteLine("Setting Family: {value}");
-                System.Drawing.Font newfont = new System.Drawing.Font(value, Size, Style, GraphicsUnit.Point);
-                font.Dispose();
-                font = newfont;
+                //System.Drawing.Font newfont = new System.Drawing.Font(value, Size, Style, GraphicsUnit.Point);
+                //font.Dispose();
+                //font = newfont;
                 Set(ref family, value);
             }
         }
-        public FontStyle Style { get => font.Style; set {
+        public FontStyle Style { get => style; set {
                 if (!Enum.IsDefined(typeof(FontStyle), value))
                     value = FontStyle.Regular;
-                System.Drawing.Font newfont = new System.Drawing.Font(Family, Size, value, GraphicsUnit.Point);
-                font.Dispose();
-                font = newfont;
+                //System.Drawing.Font newfont = new System.Drawing.Font(Family, Size, value, GraphicsUnit.Point);
+                //font.Dispose();
+                //font = newfont;
                 Set(ref style, value);
             }
         }
         public float Size {
-            get => font.Size;
+            get => size;
             set {
-                System.Drawing.Font newfont = new System.Drawing.Font(Family, value, Style, GraphicsUnit.Point);
-                font.Dispose();
-                font = newfont;
+                //System.Drawing.Font newfont = new System.Drawing.Font(Family, value, Style, GraphicsUnit.Point);
+                //font.Dispose();
+                //font = newfont;
                 Set(ref size, value);
             }
         }
 
-        private System.Drawing.Font font;
+        //private System.Drawing.Font font;
 
         public System.Drawing.Font Create() {
-            font = new System.Drawing.Font(Family, Size, Style, GraphicsUnit.Point);
-            return font;
+            return new System.Drawing.Font(Family, Size, Style, GraphicsUnit.Point);
         }
 
         public Font() {
-            // Create Default
-            font = new System.Drawing.Font(FontFamily.GenericSansSerif, 8F, FontStyle.Regular, GraphicsUnit.Point);
-
         }
         public void Dispose() {
             Dispose(true);
@@ -62,7 +58,7 @@ namespace WinPrint.Core.Models {
                 return;
 
             if (disposing) {
-                if (font != null) font.Dispose();
+                //if (font != null) font.Dispose();
             }
             disposed = true;
         }

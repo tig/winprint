@@ -23,10 +23,10 @@ namespace WinPrint {
         public string File {
             get => file; set {
                 file = value;
-                if (Document != null) Document.File = file;
+                if (DocViewModel != null) DocViewModel.File = file;
             }
         }
-        public Document Document { get; set; } = new Document();
+        public DocumentViewModel DocViewModel { get; set; } = new DocumentViewModel();
         public int CurrentPage { get; set; }
 
         public PrintPreview() {
@@ -54,7 +54,7 @@ namespace WinPrint {
         protected override void OnKeyUp(KeyEventArgs e) {
             base.OnKeyUp(e);
             if (e.KeyCode == Keys.PageDown)
-                if (CurrentPage < Document.Pages.Count) {
+                if (CurrentPage < DocViewModel.Pages.Count) {
                     CurrentPage++;
                     Invalidate();
                 }
@@ -69,13 +69,13 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) throw new ArgumentNullException(nameof(e));
-            if (Document is null) return;
+            if (DocViewModel is null) return;
 
             // Don't do anything if the window's been shrunk too far or GDI+ will crash
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return;
 
             // Paint rules, header, and footer
-            Document.Paint(e.Graphics, CurrentPage);
+            DocViewModel.Paint(e.Graphics, CurrentPage);
 
             // Draw focus rect
             if (Focused)

@@ -46,7 +46,7 @@ namespace WinPrint.Core.Models {
     /// 4) Wrapped (post MLP)
     ///         
     /// </summary>
-    public abstract class HeaderFooter : ObservableObject {
+    public abstract class HeaderFooter : ModelBase {
         private string text;
         private Font font;
         private bool leftBorder;

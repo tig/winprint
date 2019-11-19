@@ -14,10 +14,10 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
 namespace WinPrint {
-    public partial class Preview : Form {
+    public partial class MainWindow : Form {
 
         // The WinPrint document
-        private Document document;
+        private DocumentViewModel docViewModelForPrint = new DocumentViewModel();
 
         // The Windows printer document
         private PrintDocument printDoc = new PrintDocument();
@@ -27,12 +27,12 @@ namespace WinPrint {
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-        //        private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
+        private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
 
         private SettingsService settingsService = ServiceLocator.Current.SettingsService;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
-        public Preview() {
+        public MainWindow() {
             InitializeComponent();
             WindowState = FormWindowState.Maximized;
 
@@ -46,7 +46,7 @@ namespace WinPrint {
             printPreview.TabIndex = 1;// this.dummyButton.TabIndex;
             printPreview.TabStop = true;
             //printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
-            printPreview.KeyPress += PrintPreview_KeyPress;
+            printPreview.KeyPress += PrintMainWindow_KeyPress;
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 this.Controls.Remove(this.dummyButton);
@@ -85,77 +85,91 @@ namespace WinPrint {
             base.Dispose(disposing);
         }
 
-        private Document CreateTestDocument() {
-            Document doc = new Document();
+        private DocumentViewModel CreateTestDocument() {
+            Debug.WriteLine("CreateTestDocumennt");
+            DocumentViewModel doc = new DocumentViewModel();
 
-
+            Debug.WriteLine("First reference to ModelLocator.Current.Document");
+            // This causes Document instance to be created!
+            Debug.WriteLine("Setting Document.PropertyChanged");
             ModelLocator.Current.Document.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"Document.PropertyChanged: {e.PropertyName}");
                 if (e.PropertyName == "Landscape") {
                     Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Document.Landscape}");
-                    landscapeCheckbox.Checked = printPreview.Document.Landscape = ModelLocator.Current.Document.Landscape;
+                    landscapeCheckbox.Checked = printPreview.DocViewModel.Landscape = ModelLocator.Current.Document.Landscape;
                     PageSettingsChanged();
                 }
             }));
 
-            ModelLocator.Current.Document.Font.PropertyChanged += (s, e) => {
+            Debug.WriteLine("Setting Document.Font.PropertyChanged");
+            ModelLocator.Current.Document.Font.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"Font.PropertyChanged: {e.PropertyName}");
+                printPreview.DocViewModel.ContentFont = ModelLocator.Current.Document.Font.Create();
+                PageSettingsChanged();
+            }));
 
-            };
-
-            ModelLocator.Current.Document.Header.PropertyChanged += (s, e) => {
+            Debug.WriteLine("Setting Document.Header.PropertyChanged");
+            ModelLocator.Current.Document.Header.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"Header.PropertyChanged : {e.PropertyName}");
                 if (e.PropertyName == "Text") {
-                    headerTextBox.Text = printPreview.Document.Header.Text = ModelLocator.Current.Document.Header.Text;
+                    headerTextBox.Text = printPreview.DocViewModel.Header.Text = ModelLocator.Current.Document.Header.Text;
                     PageSettingsChanged();
                 }
-            };
+            }));
 
-            printPreview.File = doc.File = ModelLocator.Current.Document.File;
+            // TODO: Batch Print
+            if (ModelLocator.Current.Options.Files != null &&
+                ModelLocator.Current.Options.Files.Any() &&
+                ModelLocator.Current.Options.Files.ToList<string>()[0] != "") {
+                List<string> list = ModelLocator.Current.Options.Files.ToList();
+                file = list[0];
+            }
+
+            this.Text = printPreview.File = doc.File = file;
+            // TODO: Move this into DocViewModel as an initializer with property subscripiton
+
             doc.Title = ModelLocator.Current.Document.Title;
-            doc.Landscape = ModelLocator.Current.Document.Landscape;
-            doc.RulesFont = ModelLocator.Current.Document.RulesFont.Create();
-            // doc.ContentFont = new Font("Delugia Nerd Font", 7, FontStyle.Regular, GraphicsUnit.Point);
-            doc.ContentFont = ModelLocator.Current.Document.Font.Create();
-            doc.Footer.Font = ModelLocator.Current.Document.Header.Font.Create();
-            doc.Header.Font = ModelLocator.Current.Document.Footer.Font.Create();
-            doc.Header.Text = ModelLocator.Current.Document.Header.Text;
+            landscapeCheckbox.Checked = ModelLocator.Current.Document.Landscape;
 
+            doc.RulesFont = ModelLocator.Current.Document.RulesFont.Create();
+            doc.ContentFont = ModelLocator.Current.Document.Font.Create();
+
+            doc.Header.Font = ModelLocator.Current.Document.Footer.Font.Create();
+            headerTextBox.Text = doc.Header.Text = ModelLocator.Current.Document.Header.Text;
             doc.Header.Enabled = ModelLocator.Current.Document.Header.Enabled;
             doc.Header.TopBorder = ModelLocator.Current.Document.Header.TopBorder;
 
+            doc.Footer.Font = ModelLocator.Current.Document.Header.Font.Create();
             doc.Footer.Text = ModelLocator.Current.Document.Footer.Text; ;
             doc.Footer.Enabled = ModelLocator.Current.Document.Header.Enabled;
 
-            ModelLocator.Current.Document.Font.Family = "Courier New";
+            // ModelLocator.Current.Document.Font.Family = "Courier New";
             //ModelLocator.Current.Document.Header.Text = "blarg";
-            doc.Initialize(printDoc.DefaultPageSettings);
             return doc;
         }
 
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
             Debug.WriteLine($"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}");
-            if (printersCB.Enabled)
-                ModelLocator.Current.Document.Landscape = landscapeCheckbox.Checked;
+            if (printersCB.Enabled) {
+                ModelLocator.Current.Document.Landscape = printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            }
         }
 
-        private void Preview_Load(object sender, EventArgs e) {
-            landscapeCheckbox.Checked = printDoc.PrinterSettings.DefaultPageSettings.Landscape;
+        private void MainWindow_Load(object sender, EventArgs e) {
+            //landscapeCheckbox.Checked = printDoc.PrinterSettings.DefaultPageSettings.Landscape;
 
             printDoc.BeginPrint += new PrintEventHandler(this.pd_BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.pd_EndPrint);
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.pd_QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.pd_PrintPage);
 
+
             //InitializePrintPreviewControl();
             InitializePrintPreviewDialog();
 
-            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
+            //printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
 
-            printPreview.Document = CreateTestDocument();
-
-            headerTextBox.Text = printPreview.Document.Header.Text;
+            printPreview.DocViewModel = CreateTestDocument();
 
             printersCB.Enabled = true;
             paperSizesCB.Enabled = true;
@@ -166,10 +180,55 @@ namespace WinPrint {
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
 
+            printPreview.Select();
+
+            PageSettingsChanged();
+
+            if (ModelLocator.Current.Options.Files != null &&
+                  ModelLocator.Current.Options.Files.Any() &&
+                  ModelLocator.Current.Options.Files.ToList<string>()[0] != "") {
+                List<string> list = ModelLocator.Current.Options.Files.ToList();
+                file = list[0];
+                // Batch (non-GUI mode)
+
+
+
+                // PrintPreview for now
+                PrintPreview(file);
+                PrintMainWindow_KeyPress(null, null);
+                return;
+            }
 
         }
 
-        private void PrintPreview_KeyPress(object sender, KeyPressEventArgs e) {
+        private void PrintPreview(string file) {
+            docViewModelForPrint.File = file;
+            // printDoc.PrinterSettings;
+
+            docViewModelForPrint.Title = ModelLocator.Current.Document.Title;
+            landscapeCheckbox.Checked = ModelLocator.Current.Document.Landscape;
+
+            docViewModelForPrint.RulesFont = ModelLocator.Current.Document.RulesFont.Create();
+            docViewModelForPrint.ContentFont = ModelLocator.Current.Document.Font.Create();
+
+            docViewModelForPrint.Header.Font = ModelLocator.Current.Document.Footer.Font.Create();
+            docViewModelForPrint.Header.Text = ModelLocator.Current.Document.Header.Text;
+            docViewModelForPrint.Header.Enabled = ModelLocator.Current.Document.Header.Enabled;
+            docViewModelForPrint.Header.TopBorder = ModelLocator.Current.Document.Header.TopBorder;
+
+            docViewModelForPrint.Footer.Font = ModelLocator.Current.Document.Header.Font.Create();
+            docViewModelForPrint.Footer.Text = ModelLocator.Current.Document.Footer.Text; ;
+            docViewModelForPrint.Footer.Enabled = ModelLocator.Current.Document.Header.Enabled;
+
+            docViewModelForPrint.Initialize(printDoc.DefaultPageSettings);
+            printPreviewDialog.Document = printDoc;
+            curPage = 1;
+            fromPage = 1;
+            toPage = docViewModelForPrint.Pages.Count;
+            printPreviewDialog.ShowDialog();
+        }
+
+        private void PrintMainWindow_KeyPress(object sender, KeyPressEventArgs e) {
             //   throw new NotImplementedException();
         }
 
@@ -196,14 +255,13 @@ namespace WinPrint {
             //        printDoc.PrinterSettings.PrinterResolutions[comboPrintResolution.SelectedIndex];
             //}
 
-            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             //printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
-            printPreview.Document.Initialize(printDoc.DefaultPageSettings);
+
+            printPreview.DocViewModel.Initialize(printDoc.DefaultPageSettings);
 
             printPreview.Invalidate(true);
-            printPreview.Refresh();
+            //printPreview.Refresh();
             SizePreview();
-            printPreview.Select();
         }
 
         internal void SizePreview() {
@@ -213,8 +271,8 @@ namespace WinPrint {
             size.Height -= headerTextBox.Height * 3;
             size.Width -= headerTextBox.Height;
 
-            double w = printPreview.Document.Bounds.Width;
-            double h = printPreview.Document.Bounds.Height;
+            double w = printPreview.DocViewModel.Bounds.Width;
+            double h = printPreview.DocViewModel.Bounds.Height;
 
             var scalingX = (double)size.Width / (double)w;
             var scalingY = (double)size.Height / (double)h;
@@ -230,7 +288,7 @@ namespace WinPrint {
                 (ClientSize.Height / 2) - (printPreview.Height / 2));
         }
 
-        private void Preview_Layout(object sender, LayoutEventArgs e) {
+        private void MainWindow_Layout(object sender, LayoutEventArgs e) {
             // This event is raised once at startup with the AffectedControl
             // and AffectedProperty properties on the LayoutEventArgs as null. 
             // The event provides size preferences for that case.
@@ -266,14 +324,10 @@ namespace WinPrint {
         private StreamReader streamToPrint;
 
         private void previewButton_Click(object sender, EventArgs e) {
-            printPreviewDialog.Document = printDoc;
-            fromPage = 1;
-            toPage = 0;
-            printPreviewDialog.ShowDialog();
+            PrintPreview(file);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-        private void printButton_Click(object sender, EventArgs e) {
+        private void Print(string file) {
             try {
                 //Allow the user to choose the page range he or she would
                 // like to print.
@@ -288,23 +342,23 @@ namespace WinPrint {
                 //dialog, either this property or the PrinterSettings property
                 //must be set
 
-                PrintDialog1.Document = printDoc;
-
+                docViewModelForPrint.File = file;
+ 
                 DialogResult result = PrintDialog1.ShowDialog();
 
                 //If the result is OK then print the document.
                 if (result == DialogResult.OK) {
-                    toPage = fromPage = 0;
+                    toPage = fromPage = 1;
                     if (PrintDialog1.PrinterSettings.PrintRange == PrintRange.SomePages) {
-                        toPage = PrintDialog1.PrinterSettings.ToPage;
                         fromPage = PrintDialog1.PrinterSettings.FromPage;
+                        toPage = PrintDialog1.PrinterSettings.ToPage;
                     }
-                    streamToPrint = new StreamReader(ModelLocator.Current.Document.File);
+                    streamToPrint = new StreamReader(docViewModelForPrint.File);
 
-                    Document doc = CreateTestDocument();
+                    docViewModelForPrint.Initialize(printDoc.DefaultPageSettings);
+                    PrintDialog1.Document = printDoc;
 
-                    curPage = 1;
-                    printDoc.Print();
+                    PrintDialog1.Document.Print();
                 }
             }
             catch (Exception ex) {
@@ -314,14 +368,19 @@ namespace WinPrint {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
+        private void printButton_Click(object sender, EventArgs e) {
+            Print(file);
+
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void pd_BeginPrint(object sender, PrintEventArgs ev) {
             Debug.WriteLine($"pd_BeginPrint {curPage}");
 
             try {
-                streamToPrint = new StreamReader(ModelLocator.Current.Document.File);
-                curPage = 1;
-                document = CreateTestDocument();
+                streamToPrint = new StreamReader(file);
+                curPage = fromPage;
             }
             catch (Exception ex) {
                 MessageBox.Show($"pd_BeginPrint: {ex.Message}");
@@ -359,9 +418,10 @@ namespace WinPrint {
 
             // TODO: 
             // document.SetPageSettings(ev.PageSettings);
-            document.Paint(ev.Graphics, curPage);
+            if (curPage <= toPage)
+                docViewModelForPrint.Paint(ev.Graphics, curPage);
             curPage++;
-            ev.HasMorePages = curPage <= document.Pages.Count;
+            ev.HasMorePages = curPage <= docViewModelForPrint.Pages.Count;
         }
 
         // Declare the PrintPreviewControl object and the 
@@ -431,7 +491,7 @@ namespace WinPrint {
         }
 
         private void pageDown_Click(object sender, EventArgs e) {
-            if (printPreview.CurrentPage < printPreview.Document.Pages.Count)
+            if (printPreview.CurrentPage < printPreview.DocViewModel.Pages.Count)
                 printPreview.CurrentPage++;
             printPreview.Invalidate(true);
         }

@@ -12,15 +12,15 @@ namespace WinPrint {
     /// Knows how to paint a page (TODO: Separate view/models).
     /// </summary>
     sealed public class Page {
-        private Document containingDocument;
-        public Document Document { get => containingDocument; }
+        private DocumentViewModel containingDocument;
+        public DocumentViewModel Document { get => containingDocument; }
         public int PageNum { get; internal set; }
         /// <summary>
         /// An object holding the content for this page to be printed. 
         /// Typically a string for a Text based file
         /// </summary>
 
-        public Page(Document document) {
+        public Page(DocumentViewModel document) {
 
             containingDocument = document;
         }

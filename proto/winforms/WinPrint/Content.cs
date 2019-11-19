@@ -13,7 +13,7 @@ namespace WinPrint {
     /// These classes know how to parse and paint the file type's content
     /// </summary>
     sealed class Content : IDisposable {
-        private readonly Document containingDocument;
+        private readonly DocumentViewModel containingDocument;
 
         // private int linesPerPage;
         private Font font;
@@ -24,7 +24,7 @@ namespace WinPrint {
         private float lineNumberWidth;
         private float minCharWidth;
 
-        public Content(Document doc) {
+        public Content(DocumentViewModel doc) {
             containingDocument = doc;
         }
 

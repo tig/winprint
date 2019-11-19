@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace WinPrint
 {
-    partial class Preview
+    partial class MainWindow
     {
         /// <summary>
         ///  Required designer variable.
@@ -155,8 +155,8 @@ namespace WinPrint
             this.Margin = new System.Windows.Forms.Padding(30);
             this.Name = "Preview";
             this.Text = "Preview";
-            this.Load += new System.EventHandler(this.Preview_Load);
-            this.Layout += new System.Windows.Forms.LayoutEventHandler(this.Preview_Layout);
+            this.Load += new System.EventHandler(this.MainWindow_Load);
+            this.Layout += new System.Windows.Forms.LayoutEventHandler(this.MainWindow_Layout);
 
         }
 

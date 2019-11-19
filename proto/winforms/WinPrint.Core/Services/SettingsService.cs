@@ -39,11 +39,12 @@ namespace WinPrint.Core.Services {
                 //Logger.Instance.Log4.Info($"Loading user-defined commands from {userCommandsFile}.");
                 fs = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read);
                 jsonString = File.ReadAllText(settingsFileName);
+                Debug.WriteLine($"ReadSettings: Deserializing from {settingsFileName} ");
                 doc = JsonSerializer.Deserialize<Document>(jsonString, jsonOptions);
 
             }
             catch (FileNotFoundException) {
-                Debug.WriteLine($"Commands: {settingsFileName} was not found; creating it.");
+                Debug.WriteLine($"ReadSettings: {settingsFileName} was not found; creating it.");
 
                 //// If .config file is not found, create it based on resources
                 //Stream uc = Assembly.GetExecutingAssembly().GetManifestResourceStream("WinPrint.Resources.WinPrint.config");
@@ -77,12 +78,12 @@ namespace WinPrint.Core.Services {
                 // watch .command file for changes
                 watcher = new FileWatcher(Path.GetFullPath(settingsFileName));
                 watcher.ChangedEvent += (o, a) => {
-                    Debug.WriteLine($"ReadSettings changed event");
                     jsonString = File.ReadAllText(settingsFileName);
+                    Debug.WriteLine($"ReadSettings: Changed. Re-Deserializing...");
                     Document changedDoc = JsonSerializer.Deserialize<Document>(jsonString, jsonOptions);
-                    ExtesnionClasses.CopyPropertiesTo<Document, Document>(changedDoc, ModelLocator.Current.Document);
-                    //CopyPropertiesTo<Document, Document>(doc.Header, ModelLocator.Current.Document);
 
+                    // CopyPropertiesTo does a deep, property-by property copy from the passed instance
+                    ModelLocator.Current.Document.CopyPropertiesFrom(changedDoc);
                 };
             }
 
@@ -126,23 +127,5 @@ namespace WinPrint.Core.Services {
             return ServiceLocator.Current.SettingsService.ReadSettkngs();
         }
 
-    }
-
-    public static class ExtesnionClasses {
-        public static void CopyPropertiesTo<T, TU>(this T source, TU dest) {
-            var sourceProps = typeof(T).GetProperties().Where(x => x.CanRead).ToList();
-            var destProps = typeof(TU).GetProperties()
-                    .Where(x => x.CanWrite)
-                    .ToList();
-
-            foreach (var sourceProp in sourceProps) {
-                if (destProps.Any(x => x.Name == sourceProp.Name)) {
-                    var p = destProps.First(x => x.Name == sourceProp.Name);
-                    if (p.CanWrite) { // check if the property can be set or no.
-                        p.SetValue(dest, sourceProp.GetValue(source, null), null);
-                    }
-                }
-            }
-        }
     }
 }

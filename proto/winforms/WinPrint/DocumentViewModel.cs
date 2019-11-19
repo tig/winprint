@@ -9,9 +9,10 @@ using System.Drawing.Printing;
 
 namespace WinPrint {
     /// <summary>
-    /// Represents a document to be printed. Holds document specific data.
+    /// The WinPrint Document ViewModel - knows how to paint a document, independent of platform
+    /// (assuming System.Drawing and System.Printing). Works with Models.Document, etc...
     /// </summary>
-    public class Document {
+    public class DocumentViewModel {
 
         public bool Initialized { get; set; }
         public string File { get; set; }
@@ -67,7 +68,7 @@ namespace WinPrint {
         public Font ContentFont { get; set; }
         public Font RulesFont { get; set; }
 
-        public Document() {
+        public DocumentViewModel() {
             Content = new Content(this);
             // Defaults
             RulesFont = new Font(FontFamily.GenericSansSerif, 10);
@@ -88,7 +89,6 @@ namespace WinPrint {
 
             StreamReader streamToPrint = new StreamReader(File);
             try {
-                //Graphics g = Graphics.FromImage();
                 Pages = Content.GetPages(streamToPrint);
             }
             finally {
@@ -105,6 +105,14 @@ namespace WinPrint {
         public void Initialize(PageSettings pageSettings) {
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
             var ps = (PageSettings)pageSettings.Clone();
+
+            // The following elements of PageSettings are dependent
+            // Landscape
+            // LandscapeAngle (Landscape)
+            // PrintableArea (Landscape)
+            // PaperSize (Landscape)
+            // HardMarginX, HardMarginY (Landscape, LandscapeAngle)
+            
             Landscape = ps.Landscape;
             LandscapeAngle = ps.PrinterSettings.LandscapeAngle;
 
@@ -132,7 +140,6 @@ namespace WinPrint {
                 printableArea.Height = ps.PrintableArea.Width;
                 paperSize.Height = ps.PaperSize.Width;
                 paperSize.Width = ps.PaperSize.Height;
-                PrinterResolution = ps.PrinterResolution;
                 HardMarginX = ps.HardMarginY;
                 HardMarginY = ps.HardMarginX;
             }
@@ -140,10 +147,11 @@ namespace WinPrint {
                 PrintableArea = ps.PrintableArea;
                 paperSize.Width = ps.PaperSize.Width;
                 paperSize.Height = ps.PaperSize.Height;
-                PrinterResolution = ps.PrinterResolution;
                 HardMarginX = ps.HardMarginX;
                 HardMarginY = ps.HardMarginY;
             }
+            PrinterResolution = ps.PrinterResolution;
+
             // Bounds represents printable area, auto adjusted for landscape
             Bounds = ps.Bounds;
 

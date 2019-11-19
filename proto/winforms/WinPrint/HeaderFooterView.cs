@@ -65,7 +65,7 @@ namespace WinPrint {
 
         public bool Enabled { get; set; }
 
-        internal Document containingDocument;
+        internal DocumentViewModel containingDocument;
 
         public void Dispose() {
             Dispose(true);
@@ -153,7 +153,7 @@ namespace WinPrint {
             g.Restore(state);
         }
 
-        public HeaderFooterView(Document containingDocument) {
+        public HeaderFooterView(DocumentViewModel containingDocument) {
             if (containingDocument is null) throw new ArgumentNullException(nameof(containingDocument));
             macros = new Macros(this);
             LeftBorder = RightBorder = TopBorder = BottomBorder = true;
@@ -164,7 +164,7 @@ namespace WinPrint {
 
     public class HeaderView : HeaderFooterView {
 
-        public HeaderView(Document containingDocument) : base(containingDocument) {
+        public HeaderView(DocumentViewModel containingDocument) : base(containingDocument) {
         }
 
         internal override Rectangle CalcBounds() {
@@ -187,7 +187,7 @@ namespace WinPrint {
     }
     public class FooterView : HeaderFooterView {
 
-        public FooterView(Document containingDocument) : base(containingDocument) {
+        public FooterView(DocumentViewModel containingDocument) : base(containingDocument) {
         }
 
         internal override Rectangle CalcBounds() {

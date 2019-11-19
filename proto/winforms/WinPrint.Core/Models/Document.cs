@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.Linq;
 using GalaSoft.MvvmLight;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Core.Models {
-    public class Document : ObservableObject {
-        private string file = "";
-        private string type = "";
+    public class Document : ModelBase {
         private string title = "";
 
         private bool landscape; 
 
-        private Header header;
-        private Footer footer;
+        private Header header = new Header();
+        private Footer footer = new Footer();
 
         // TOOD: These should go on printPreview model?
-        private Font font;
-        private Font rulesFont;
+        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
+        private Font rulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
 
         private bool previewPrintableArea = true;
         private bool printPrintableArea = true;
@@ -35,12 +34,12 @@ namespace WinPrint.Core.Models {
         private bool printHeaderFooterBounds = false;
         private bool previewHeaderFooterBounds = false;
 
-        public string File { get => file; set => Set(ref file, value); }
-        public string Type { get => type; set => Set(ref type, value); }
         public string Title { get => title; set => Set(ref title, value); }
         public bool Landscape { get => landscape; set => Set(ref landscape, value); }
 
         public Font Font { get => font; set => Set(ref font, value); }
+        public Margins Margins { get; set; }
+
         public Font RulesFont { get => rulesFont; set => Set(ref rulesFont, value); }
         public Header Header { get => header; set => Set(ref header, value); }
         public Footer Footer { get => footer; set => Set(ref footer, value); }
@@ -58,7 +57,7 @@ namespace WinPrint.Core.Models {
         public bool PreviewContentBounds { get => previewContentBounds; set => Set(ref previewContentBounds, value); }
         public bool PrintHeaderFooterBounds { get => printHeaderFooterBounds; set => Set(ref printHeaderFooterBounds, value); }
         public bool PreviewHeaderFooterBounds { get => previewHeaderFooterBounds; set => Set(ref previewHeaderFooterBounds, value); }
-
+ 
         //// Copy all properties from the passed instance to the cached singleton instance
         //internal void CopyFrom(Document doc) {
         //    CopyPropertiesTo<Document, Document>(doc, ModelLocator.Current.Document);
@@ -71,12 +70,8 @@ namespace WinPrint.Core.Models {
         public Document() {
             Debug.WriteLine("Document()");
 
-            header = new Header();
-            footer = new Footer();
-
-            Font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
-            RulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
-
+            Margins = new Margins(50, 50, 50, 50);
+ 
         }
     }
 }

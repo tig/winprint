@@ -36,11 +36,9 @@ namespace WinPrint.Tests {
             Core.Models.Document doc = new Core.Models.Document();
             Assert.IsNotNull(doc, "doc should not be null");
 
-            System.Drawing.Font defaultMonosapceFont = new System.Drawing.Font("monospace", 8, FontStyle.Regular, GraphicsUnit.Point);
-            Assert.AreEqual(defaultMonosapceFont.Name, doc.Font.Family);
+            Assert.AreEqual("monospace", doc.Font.Family);
 
-            System.Drawing.Font defaultSansSerifFont = new System.Drawing.Font("sanserif", 8, FontStyle.Regular, GraphicsUnit.Point);
-            Assert.AreEqual(defaultSansSerifFont.Name, doc.Font.Family);
+            Assert.AreEqual("sansserif", doc.RulesFont.Family);
 
             doc.Font.Family = "Cascadia Code";
             Assert.AreEqual("Cascadia Code", doc.Font.Family);
@@ -67,8 +65,8 @@ namespace WinPrint.Tests {
             Core.Models.Document doc = new Core.Models.Document();
 
             // Use the name of the test file as the Document.File property
-            doc.File = "WinPrint.Test.New.json";
-            Assert.AreEqual("WinPrint.Test.New.json", doc.File);
+            string file = "WinPrint.Test.New.json";
+            Assert.AreEqual("WinPrint.Test.New.json", file);
 
             string jsonString = JsonSerializer.Serialize(doc, jsonOptions); ;
 
@@ -76,7 +74,7 @@ namespace WinPrint.Tests {
             var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
 
             // Use the name of the test file as the Document.File property
-            using (FileStream fs = File.Create(doc.File))
+            using (FileStream fs = File.Create(file))
 
             using (var writer = new Utf8JsonWriter(fs, options: writerOptions))
             using (JsonDocument document = JsonDocument.Parse(jsonString, documentOptions)) {
@@ -98,8 +96,11 @@ namespace WinPrint.Tests {
                 writer.Flush();
             }
 
-            var doc2 = DeserializeFromFile(doc.File);
-            Assert.AreEqual(doc.File, doc2.File, $"File property of {doc.File} should have been {doc.File}");
+            var docCopy = DeserializeFromFile(file);
+            string jsonCopy = JsonSerializer.Serialize(docCopy, jsonOptions);
+            Assert.IsNotNull(jsonCopy);
+
+            Assert.AreEqual(jsonCopy, jsonString);
         }
 
         [Test]
@@ -107,7 +108,7 @@ namespace WinPrint.Tests {
             string file = "TestFiles\\WinPrint.Test.json";
             // Test with a default file
             var doc = DeserializeFromFile(file);
-            Assert.AreEqual("", doc.File, $"File property of {file} should have been {file}");
+            Assert.AreEqual("", doc.Title, $"File property of {file} should have been \"\"");
 
 
             TestHeaderFooter(doc);
@@ -118,7 +119,7 @@ namespace WinPrint.Tests {
             string file = "TestFiles\\WinPrint.EveryPropertySet.json";
             // Test with a file with all properties cahnged
             var doc = DeserializeFromFile(file);
-            Assert.AreEqual("Test.txt", doc.File, $"File property of {file} should have been {file}");
+            //Assert.AreEqual("Test.txt", doc., $"File property of {file} should have been {file}");
         }
 
         public Core.Models.Document DeserializeFromFile(string file) {
@@ -132,14 +133,7 @@ namespace WinPrint.Tests {
             Assert.IsNotNull(doc.Header, "Header should not be null");
             Assert.AreEqual("|{FullyQualifiedPath}", doc.Header.Text);
             // Default font
-            Assert.IsNotNull(doc.Header.Font);
-
-            // Default header footer font is sanserif bold
-            System.Drawing.Font defaultSansSerifFont = new System.Drawing.Font("sanserif", 8, FontStyle.Bold, GraphicsUnit.Point);
-            Assert.AreEqual(defaultSansSerifFont.Name, doc.Header.Font.Family);
-            Assert.AreEqual(defaultSansSerifFont.Size, doc.Header.Font.Size);
-            Assert.AreEqual(defaultSansSerifFont.Style, doc.Header.Font.Style);
-
+            Assert.IsNotNull(doc.Header.Font); 
 
             Assert.IsNotNull(doc.Header, "Footer should not be null");
             Assert.AreEqual("|{Page}/{NumPages}", doc.Footer.Text);
@@ -176,7 +170,7 @@ namespace WinPrint.Tests {
             Core.Models.Font font = new Core.Models.Font();
             Assert.AreEqual(8, font.Size);
             Assert.AreEqual(FontStyle.Regular, font.Style);
-            //Assert.AreEqual("GenericSansSerif", font.Family);
+            Assert.AreEqual("sansserif", font.Family);
         }
 
         [Test]
