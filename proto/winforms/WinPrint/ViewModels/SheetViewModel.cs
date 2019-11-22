@@ -18,11 +18,28 @@ namespace WinPrint {
 
         private WinPrint.Core.Models.Sheet sheet;
 
-        // These properties are all defined by user
+        // These properties are all defined by user and sync'd with the Sheet model
+        private string title;
+        public string Title { get => title; set => SetField(ref title, value); }
+
+        private Margins margins;
+        public Margins Margins { get => margins; set => SetField(ref margins, value); }
+
+        private bool landscape;
+        public bool Landscape { get => landscape; set => SetField(ref landscape, value); }
+
+        private Core.Models.Font font;
+        public Core.Models.Font Font { get => font; set => SetField(ref font, value); }
+
+        private Core.Models.Font rulesFont;
+        public Core.Models.Font RulesFont { get => rulesFont; set => SetField(ref rulesFont, value); }
+
+
         private HeaderViewModel headerVM;
         public HeaderViewModel Header { get => headerVM; set => SetField(ref headerVM, value); }
 
         private FooterViewModel footerVM;
+        public FooterViewModel Footer { get => footerVM; set => SetField(ref footerVM, value); }
 
         private string file;
         public string File { get => file; set => SetField(ref file, value); }
@@ -58,18 +75,6 @@ namespace WinPrint {
         public float HardMarginY { get; set; }
         public Rectangle ContentBounds { get => contentBounds; private set => contentBounds = value; }
 
-        private Margins margins;
-        public Margins Margins { get => margins; set => SetField(ref margins, value); }
-
-        private bool landscape;
-        public bool Landscape { get => landscape; set => SetField(ref landscape, value); }
-
-        private Core.Models.Font font;
-        public Core.Models.Font Font { get => font; set => SetField(ref font, value); }
-
-        private Core.Models.Font rulesFont;
-        public Core.Models.Font RulesFont { get => rulesFont; set => SetField(ref rulesFont, value); }
-
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
         protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
@@ -83,12 +88,14 @@ namespace WinPrint {
             if (sheet is null) throw new ArgumentNullException(nameof(sheet));
 
             this.sheet = sheet;
+            Landscape = sheet.Landscape;
+            Font = (Core.Models.Font)sheet.Font.Clone();
+            RulesFont = (Core.Models.Font)sheet.Font.Clone();
             Content = new TextFileContent(this);
             margins = (Margins)sheet.Margins.Clone();
-            // Header & Footer - Must be created before contentBounds is set!
             headerVM = new HeaderViewModel(this, sheet.Header);
             footerVM = new FooterViewModel(this, sheet.Footer);
-            Landscape = sheet.Landscape;
+ 
 
             // Subscribe to all settings properties
             sheet.PropertyChanged += (s, e) => {
@@ -114,6 +121,10 @@ namespace WinPrint {
 
                     case "RulesFont":
                         RulesFont = sheet.RulesFont;
+                        break;
+
+                    case "Title":
+                        Title = sheet.Title;
                         break;
 
                     default:

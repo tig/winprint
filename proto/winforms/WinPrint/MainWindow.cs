@@ -55,7 +55,8 @@ namespace WinPrint {
                 paperSizesCB.Enabled = false;
             }
 
-            //settingsService.Load();
+            //this.Size = ModelLocator.Current.Settings.Size;
+            //this.Location = ModelLocator.Current.Settings.Location;
 
         }
 
@@ -90,19 +91,19 @@ namespace WinPrint {
 
 
             SheetViewModel svm = new SheetViewModel();
-            Debug.WriteLine("First reference to ModelLocator.Current.Sheet");
-            svm.SetSettings(ModelLocator.Current.Sheet);
+            Debug.WriteLine("First reference to ModelLocator.Current.Settings");
+            svm.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
 
-            landscapeCheckbox.Checked = ModelLocator.Current.Sheet.Landscape;
+            landscapeCheckbox.Checked = ModelLocator.Current.Settings.Sheets[0].Landscape;
 
-            headerTextBox.Text = ModelLocator.Current.Sheet.Header.Text;
+            headerTextBox.Text = ModelLocator.Current.Settings.Sheets[0].Header.Text;
 
 
             svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "Landscape":
-                        Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Sheet.Landscape}");
+                        Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets[0].Landscape}");
                         landscapeCheckbox.Checked = svm.Landscape;
                         break;
 
@@ -147,7 +148,7 @@ namespace WinPrint {
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
             Debug.WriteLine($"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}");
             if (printersCB.Enabled) {
-                ModelLocator.Current.Sheet.Landscape = printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+                printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
                 PageSettingsChanged();
             }
         }
@@ -275,7 +276,7 @@ namespace WinPrint {
 
         private void PrintPreview(string file) {
             sheetViewModelForPrint.File = file;
-            sheetViewModelForPrint.SetSettings(ModelLocator.Current.Sheet);
+            sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
             sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
             printPreviewDialog.Document = printDoc;
             curPage = 1;
@@ -317,7 +318,7 @@ namespace WinPrint {
                         toPage = PrintDialog1.PrinterSettings.ToPage;
                     }
                     sheetViewModelForPrint.File = file;
-                    sheetViewModelForPrint.SetSettings(ModelLocator.Current.Sheet);
+                    sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
                     sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
 
                     PrintDialog1.Document = printDoc;
@@ -460,7 +461,7 @@ namespace WinPrint {
         }
 
         private void headerTextBox_TextChanged(object sender, EventArgs e) {
-            ModelLocator.Current.Sheet.Header.Text = headerTextBox.Text;
+            ModelLocator.Current.Settings.Sheets[0].Header.Text = headerTextBox.Text;
             printPreview.Invalidate(true);
 
         }

@@ -37,11 +37,23 @@ namespace WinPrint.Core.Models {
             let destProp = destProps.First(x => x.Name == sourceProp.Name)
             where destProp.CanWrite
             select (sourceProp, destProp)) {
-                if (sourceProp.PropertyType.IsSubclassOf(typeof(ModelBase)))
-                    // Property is subclass of ModelBase - Recurse through sub-objects
-                    ((ModelBase)destProp.GetValue(this)).CopyPropertiesFrom((ModelBase)sourceProp.GetValue(source, null));
-                else
-                    destProp.SetValue(this, sourceProp.GetValue(source, null), null);
+                // "System.Collections.Generic.IList`
+                if (sourceProp.Name != "Sheets") {
+                    if (sourceProp.PropertyType.IsSubclassOf(typeof(ModelBase)))
+                        // Property is subclass of ModelBase - Recurse through sub-objects
+                        ((ModelBase)destProp.GetValue(this)).CopyPropertiesFrom((ModelBase)sourceProp.GetValue(source, null));
+                    else
+                        destProp.SetValue(this, sourceProp.GetValue(source, null), null);
+                }
+                else {
+                    IList<Sheet> sourceList = (IList<Sheet>)sourceProp.GetValue(source);
+                    IList<Sheet> destList = (IList<Sheet>)destProp.GetValue(this);
+                    // Copy list item by item. If source ha more than dest, ...
+                    for (int i = 0; i < sourceList.Count; i++) {
+                        if (i > destList.Count - 1) destList.Add(new Sheet());
+                        destList[i].CopyPropertiesFrom((Sheet)sourceList[i]);
+                    }
+                }
             }
         }
     }

@@ -59,8 +59,8 @@ namespace WinPrint {
         /// <returns></returns>
         internal List<Page> GetPages(StreamReader streamToPrint) {
             // Calculate the number of lines per page.
-            font = new System.Drawing.Font(ModelLocator.Current.Sheet.Font.Family, 
-                ModelLocator.Current.Sheet.Font.Size / 72F * 96F, ModelLocator.Current.Sheet.Font.Style, GraphicsUnit.Pixel); // World?
+            font = new System.Drawing.Font(containingSheet.Font.Family, 
+                containingSheet.Font.Size / 72F * 96F, containingSheet.Font.Style, GraphicsUnit.Pixel); // World?
             lineHeight = font.GetHeight(100);
             linesPerPage = (int)((float)containingSheet.ContentBounds.Height / lineHeight);
             //// BUGBUG: This will be too narrow if font is not fixed-pitch

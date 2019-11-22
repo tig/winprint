@@ -270,19 +270,19 @@ namespace WinPrint.Tests {
         [Test]
         public void TestSave() {
 
-            WinPrint.Core.Models.Sheet doc = new WinPrint.Core.Models.Sheet();
+            WinPrint.Core.Models.Settings settings = new WinPrint.Core.Models.Settings();
             SettingsService settingsService = new SettingsService();
 
-            settingsService.SaveSettings(doc);
+            settingsService.SaveSettings(settings);
 
-            Core.Models.Sheet docCopy = settingsService.ReadSettkngs();
+            Core.Models.Settings settingsCopy = settingsService.ReadSettkngs();
 
-            Assert.IsNotNull(docCopy);
+            Assert.IsNotNull(settingsCopy);
 
-            string jsonOrig = JsonSerializer.Serialize(doc, jsonOptions);
+            string jsonOrig = JsonSerializer.Serialize(settings, jsonOptions);
             Assert.IsNotNull(jsonOrig);
 
-            string jsonCopy = JsonSerializer.Serialize(docCopy, jsonOptions);
+            string jsonCopy = JsonSerializer.Serialize(settingsCopy, jsonOptions);
             Assert.IsNotNull(jsonCopy);
 
             Assert.AreEqual(jsonCopy, jsonOrig);

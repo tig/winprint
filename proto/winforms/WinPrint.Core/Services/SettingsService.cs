@@ -30,8 +30,8 @@ namespace WinPrint.Core.Services {
             jsonOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
-        public Sheet ReadSettkngs() {
-            Sheet doc = null;
+        public Settings ReadSettkngs() {
+            Settings settings = null;
             string jsonString;
             FileStream fs = null;
 
@@ -40,7 +40,7 @@ namespace WinPrint.Core.Services {
                 fs = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read);
                 jsonString = File.ReadAllText(settingsFileName);
                 Debug.WriteLine($"ReadSettings: Deserializing from {settingsFileName} ");
-                doc = JsonSerializer.Deserialize<Sheet>(jsonString, jsonOptions);
+                settings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
             }
             catch (FileNotFoundException) {
@@ -62,11 +62,13 @@ namespace WinPrint.Core.Services {
                 //    if (ucFS != null) ucFS.Close();
                 //}
 
-                doc = new Sheet();
-                SaveSettings(doc);
+                settings = new Settings();
+                settings.DefaultSheet = Uuid.DefaultSheet;
+                settings.Sheets = new System.Collections.ObjectModel.ObservableCollection<Sheet>() { new Sheet() { ID = settings.DefaultSheet } };
+                SaveSettings(settings);
             }
             catch (Exception ex) {
-                Debug.WriteLine($"Settingsservice: No commands loaded. Error with {settingsFileName}. {ex.Message}");
+                Debug.WriteLine($"Settingsservice: Error with {settingsFileName}. {ex.Message}");
                 //ExceptionUtils.DumpException(ex);
             }
             finally {
@@ -74,24 +76,24 @@ namespace WinPrint.Core.Services {
             }
             
             // Enable file watcher
-            if (doc != null) {
+            if (settings != null) {
                 // watch .command file for changes
                 watcher = new FileWatcher(Path.GetFullPath(settingsFileName));
                 watcher.ChangedEvent += (o, a) => {
                     jsonString = File.ReadAllText(settingsFileName);
                     Debug.WriteLine($"ReadSettings: Changed. Re-Deserializing...");
-                    Sheet changedDoc = JsonSerializer.Deserialize<Sheet>(jsonString, jsonOptions);
+                    Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
                     // CopyPropertiesTo does a deep, property-by property copy from the passed instance
-                    ModelLocator.Current.Sheet.CopyPropertiesFrom(changedDoc);
+                    ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
                 };
             }
 
-            return doc;
+            return settings;
         }
 
-        public void SaveSettings(Models.Sheet doc) {
-            string jsonString = JsonSerializer.Serialize(doc, jsonOptions); ;
+        public void SaveSettings(Models.Settings settings) {
+            string jsonString = JsonSerializer.Serialize(settings, jsonOptions); ;
 
             var writerOptions = new JsonWriterOptions { Indented = true };
             var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
@@ -121,7 +123,7 @@ namespace WinPrint.Core.Services {
         }
 
         // Factory - creates 
-        static public Sheet Create() {
+        static public Settings Create() {
             // 
             Debug.WriteLine("SettingsService.Create()");
             return ServiceLocator.Current.SettingsService.ReadSettkngs();

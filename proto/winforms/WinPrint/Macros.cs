@@ -22,7 +22,7 @@ namespace WinPrint {
         public DateTime DateRevised { get { return File.GetLastWriteTime(svm.File); } }
         public string FileType { get { return svm.Type; } }
         // BUGBUG: Single-instance
-        public string Title { get { return ModelLocator.Current.Sheet.Title; } }
+        public string Title { get { return ModelLocator.Current.Settings.Sheets[0].Title; } }
 
         public int Page { get; set; }
 

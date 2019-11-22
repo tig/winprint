@@ -23,8 +23,8 @@ namespace WinPrint.Core.Models {
         private Footer footer = new Footer();
 
         // TOOD: These should go on printPreview model?
-        private Font font;// = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
-        private Font rulesFont;// = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
+        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
+        private Font rulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
 
         private bool previewPrintableArea = true;
         private bool printPrintableArea = true;
@@ -121,8 +121,7 @@ namespace WinPrint.Core.Models {
             Debug.WriteLine("Document()");
 
             // TODO: Don't specify defaults in constructor; do it through default settings
-            Margins = new Margins(50, 50, 50, 50);
- 
-        }
+            Margins = new Margins(30, 30, 30, 30);
+         }
     }
 }
