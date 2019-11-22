@@ -30,8 +30,8 @@ namespace WinPrint.Core.Services {
             jsonOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
-        public Document ReadSettkngs() {
-            Document doc = null;
+        public Sheet ReadSettkngs() {
+            Sheet doc = null;
             string jsonString;
             FileStream fs = null;
 
@@ -40,7 +40,7 @@ namespace WinPrint.Core.Services {
                 fs = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read);
                 jsonString = File.ReadAllText(settingsFileName);
                 Debug.WriteLine($"ReadSettings: Deserializing from {settingsFileName} ");
-                doc = JsonSerializer.Deserialize<Document>(jsonString, jsonOptions);
+                doc = JsonSerializer.Deserialize<Sheet>(jsonString, jsonOptions);
 
             }
             catch (FileNotFoundException) {
@@ -62,7 +62,7 @@ namespace WinPrint.Core.Services {
                 //    if (ucFS != null) ucFS.Close();
                 //}
 
-                doc = new Document();
+                doc = new Sheet();
                 SaveSettings(doc);
             }
             catch (Exception ex) {
@@ -80,17 +80,17 @@ namespace WinPrint.Core.Services {
                 watcher.ChangedEvent += (o, a) => {
                     jsonString = File.ReadAllText(settingsFileName);
                     Debug.WriteLine($"ReadSettings: Changed. Re-Deserializing...");
-                    Document changedDoc = JsonSerializer.Deserialize<Document>(jsonString, jsonOptions);
+                    Sheet changedDoc = JsonSerializer.Deserialize<Sheet>(jsonString, jsonOptions);
 
                     // CopyPropertiesTo does a deep, property-by property copy from the passed instance
-                    ModelLocator.Current.Document.CopyPropertiesFrom(changedDoc);
+                    ModelLocator.Current.Sheet.CopyPropertiesFrom(changedDoc);
                 };
             }
 
             return doc;
         }
 
-        public void SaveSettings(Models.Document doc) {
+        public void SaveSettings(Models.Sheet doc) {
             string jsonString = JsonSerializer.Serialize(doc, jsonOptions); ;
 
             var writerOptions = new JsonWriterOptions { Indented = true };
@@ -121,7 +121,7 @@ namespace WinPrint.Core.Services {
         }
 
         // Factory - creates 
-        static public Document Create() {
+        static public Sheet Create() {
             // 
             Debug.WriteLine("SettingsService.Create()");
             return ServiceLocator.Current.SettingsService.ReadSettkngs();

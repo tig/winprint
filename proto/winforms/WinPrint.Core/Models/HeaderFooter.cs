@@ -55,16 +55,40 @@ namespace WinPrint.Core.Models {
         private bool bottomBorder;
         private bool enabled;
 
-        public string Text { get => text; set => Set(ref text, value); }
-        public Font Font { get => font; set => Set(ref font, value); }
-        public bool LeftBorder { get => leftBorder; set => Set(ref leftBorder, value); }
-        public bool TopBorder { get => topBorder; set => Set(ref topBorder, value); }
-        public bool RightBorder { get => rightBorder; set => Set(ref rightBorder, value); }
-        public bool BottomBorder { get => bottomBorder; set => Set(ref bottomBorder, value); }
-        public bool Enabled { get => enabled; set => Set(ref enabled, value); }
+        /// <summary>
+        /// Header text. May contain macros (e.g. {FileName} or {Page}
+        /// </summary>
+        public string Text { get => text; set => SetField(ref text, value); }
+
+        /// <summary>
+        /// Font used for header or footer text
+        /// </summary>
+        public Font Font { get => font; set => SetField(ref font, value); }
+
+        /// <summary>
+        /// Enables or disables printing of left border of heder/footer
+        /// </summary>
+        public bool LeftBorder { get => leftBorder; set => SetField(ref leftBorder, value); }
+        /// <summary>
+        /// Enables or disables printing of Top border of heder/footer
+        /// </summary>
+        public bool TopBorder { get => topBorder; set => SetField(ref topBorder, value); }
+        /// <summary>
+        /// Enables or disables printing of Right border of heder/footer
+        /// </summary>
+        public bool RightBorder { get => rightBorder; set => SetField(ref rightBorder, value); }
+        /// <summary>
+        /// Enables or disables printing of Bottom border of heder/footer
+        /// </summary>
+        public bool BottomBorder { get => bottomBorder; set => SetField(ref bottomBorder, value); }
+
+        /// <summary>
+        /// Enable or disable header/footer
+        /// </summary>
+        public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
 
         public HeaderFooter() {
-            Font = new Font() { Family = "Microsft Sans Serif", Size = 8F, Style = FontStyle.Bold };
+            font = new Font() { Family = "Microsft Sans Serif", Size = 8F, Style = FontStyle.Bold };
         }
     }
     public class Header : HeaderFooter {

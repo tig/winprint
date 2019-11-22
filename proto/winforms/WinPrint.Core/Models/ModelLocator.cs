@@ -14,11 +14,11 @@ namespace WinPrint.Core.Models {
 
         private ModelLocator() {
             // Register the Document model via the SettingsService Factory
-            SimpleIoc.Default.Register<Document>(SettingsService.Create);
+            SimpleIoc.Default.Register<Sheet>(SettingsService.Create);
             SimpleIoc.Default.Register<Options>();
         }
 
-        public Models.Document Document => SimpleIoc.Default.GetInstance<Models.Document>();
+        public Models.Sheet Sheet => SimpleIoc.Default.GetInstance<Models.Sheet>();
         public Models.Options Options => SimpleIoc.Default.GetInstance<Models.Options>();
 
         public void Register<VM, V>()

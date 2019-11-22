@@ -6,26 +6,31 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using WinPrint.Core.Models;
 
 namespace WinPrint {
     /// <summary>
+    /// Implements generic text file type support. 
+    /// TODO: Wrap with a base-class that enables multiple content types
     /// Base class for WinPrint content types. Each file type may have a Content type
-    /// These classes know how to parse and paint the file type's content
+    /// These classes know how to parse and paint the file type's content.
     /// </summary>
-    sealed class Content : IDisposable {
-        private readonly DocumentViewModel containingDocument;
+    sealed class TextFileContent : IDisposable {
+        private readonly SheetViewModel containingSheet;
 
         // private int linesPerPage;
-        private Font font;
-        public object DocumentContent { get; set; }
+        private System.Drawing.Font font;
+
+        // All of the lines of the text file, after reflow/line-wrap
+        private List<string> lines;
 
         private float lineHeight;
         private int linesPerPage;
         private float lineNumberWidth;
         private float minCharWidth;
 
-        public Content(DocumentViewModel doc) {
-            containingDocument = doc;
+        public TextFileContent(SheetViewModel sheet) {
+            containingSheet = sheet;
         }
 
         public void Dispose() {
@@ -42,7 +47,7 @@ namespace WinPrint {
 
             if (disposing) {
                 if (font != null) font.Dispose();
-                DocumentContent = null;
+                lines = null;
             }
             disposed = true;
         }
@@ -54,17 +59,17 @@ namespace WinPrint {
         /// <returns></returns>
         internal List<Page> GetPages(StreamReader streamToPrint) {
             // Calculate the number of lines per page.
-            font = new Font(containingDocument.ContentFont.FontFamily,
-                (containingDocument.ContentFont.SizeInPoints / 72F) * 96F, containingDocument.ContentFont.Style, GraphicsUnit.World);
+            font = new System.Drawing.Font(ModelLocator.Current.Sheet.Font.Family, 
+                ModelLocator.Current.Sheet.Font.Size / 72F * 96F, ModelLocator.Current.Sheet.Font.Style, GraphicsUnit.Pixel); // World?
             lineHeight = font.GetHeight(100);
-            linesPerPage = (int)((float)containingDocument.ContentBounds.Height / lineHeight);
+            linesPerPage = (int)((float)containingSheet.ContentBounds.Height / lineHeight);
             //// BUGBUG: This will be too narrow if font is not fixed-pitch
             //lineNumberWidth = MeasureString(null, $"{((List<string>)DocumentContent).Count}0").Width;
             // TODO: Figure out how to make this right
             lineNumberWidth = MeasureString(null, $"{1234}0").Width;
 
             List<Page> pages = new List<Page>();
-            DocumentContent = new List<string>();
+            lines = new List<string>();
 
             Page page;
             while (NextPage(streamToPrint, out page)) {
@@ -82,12 +87,12 @@ namespace WinPrint {
         /// <param name="page"></param>
         /// <returns></returns>
         private bool NextPage(StreamReader streamToPrint, out Page page) {
-            page = new Page(containingDocument);
+            page = new Page(containingSheet);
 
             string line = null;
 
             int charsFitted, linesFilled;
-            float contentHeight = containingDocument.ContentBounds.Height;
+            float contentHeight = containingSheet.ContentBounds.Height;
             // Print each line of the file.
             int startLine = (int)((float)contentHeight / font.GetHeight(100)) * 0;
             int endLine = startLine + linesPerPage;
@@ -95,7 +100,7 @@ namespace WinPrint {
             //Debug.WriteLine($"startLine - {startLine}, endLine - {endLine}");
 
             minCharWidth = MeasureString(null, "W").Width;
-            int minLineLen = (int)((float)((containingDocument.ContentBounds.Width - lineNumberWidth) / minCharWidth) );
+            int minLineLen = (int)((float)((containingSheet.ContentBounds.Width - lineNumberWidth) / minCharWidth) );
 
             int curLine = 0;
             while (curLine < endLine && (line = streamToPrint.ReadLine()) != null) {
@@ -112,11 +117,11 @@ namespace WinPrint {
                         height = MeasureString(null, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
                         if (linesFilled2 > 1) {
                             // It overflowed, so add line
-                            ((List<string>)DocumentContent).Add(line.Substring(start, i - 1));
+                            lines.Add(line.Substring(start, i - 1));
                             curLine++;
                             start = start + i - 1;
                             c = line.Substring(start, line.Length - start).Length;
-                            ((List<string>)DocumentContent).Add(line.Substring(start, c));
+                            lines.Add(line.Substring(start, c));
                             curLine++;
                             i = line.Length;
                         }
@@ -124,7 +129,7 @@ namespace WinPrint {
                     //}
                 }
                 else {
-                    ((List<string>)DocumentContent).Add(line);
+                    lines.Add(line);
                     curLine++;
                 }
             }
@@ -148,7 +153,7 @@ namespace WinPrint {
 
             // determine width     
             float fontHeight = lineHeight;
-            SizeF proposedSize = new SizeF(containingDocument.ContentBounds.Width - lineNumberWidth, lineHeight * linesPerPage);
+            SizeF proposedSize = new SizeF(containingSheet.ContentBounds.Width - lineNumberWidth, lineHeight * linesPerPage);
             SizeF size = g.MeasureString(text, font, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
         }
@@ -170,15 +175,14 @@ namespace WinPrint {
         //}
 
         internal void Paint(Graphics g, int pageNum) {
-            GraphicsState state = containingDocument.AdjustPrintOrPreview(g);
+            GraphicsState state = containingSheet.AdjustPrintOrPreview(g);
 
-            float leftMargin = containingDocument.ContentBounds.Left;
+            float leftMargin = containingSheet.ContentBounds.Left;
 
-            List<string> lines = (List<string>)DocumentContent;
             int charsFitted, linesFilled;
 
             // MeasureString(null, "Ay", out charsFitted, out linesFilled).Height;
-            float contentHeight = containingDocument.ContentBounds.Height;
+            float contentHeight = containingSheet.ContentBounds.Height;
             // Print each line of the file.
             int startLine = (int)((float)contentHeight / lineHeight) * (pageNum - 1);
             int endLine = (int)(startLine + ((float)contentHeight / lineHeight));
@@ -189,7 +193,7 @@ namespace WinPrint {
 
                 if (lineInDocument < lines.Count && lineInDocument >= startLine && lineInDocument < endLine) {
                     float xPos = leftMargin + lineNumberWidth;
-                    float yPos = containingDocument.ContentBounds.Top + (lineOnPage * lineHeight);
+                    float yPos = containingSheet.ContentBounds.Top + (lineOnPage * lineHeight);
                     g.DrawString(lines[lineInDocument], font, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
                     //SizeF proposedSize = new SizeF(containingDocument.ContentBounds.Width - lineNumberWidth, lineHeight * linesPerPage);
                     //g.DrawRectangle(Pens.Green, xPos, yPos, proposedSize.Width, lineHeight);
@@ -203,9 +207,9 @@ namespace WinPrint {
         internal void PaintLineNumber(Graphics g, int lineNumber) {
             if (lineNumberWidth != 0) {
                 int lineOnPage = lineNumber % linesPerPage;
-                float yPos = containingDocument.ContentBounds.Top + ((lineOnPage) * lineHeight);
+                float yPos = containingSheet.ContentBounds.Top + ((lineOnPage) * lineHeight);
                 //g.DrawString($"{lineOnPage}", font, Brushes.Black, containingDocument.ContentBounds.Left - (lineNumberWidth), yPos, StringFormat.GenericDefault);
-                g.DrawString($"{lineNumber + 1}", font, Brushes.Black, containingDocument.ContentBounds.Left, yPos, StringFormat.GenericDefault);
+                g.DrawString($"{lineNumber + 1}", font, Brushes.Black, containingSheet.ContentBounds.Left, yPos, StringFormat.GenericDefault);
             }
         }
     }

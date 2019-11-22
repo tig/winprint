@@ -20,13 +20,13 @@ namespace WinPrint {
         private string file;
         static public PrintPreview Instance = null;
 
-        public string File {
-            get => file; set {
-                file = value;
-                if (DocViewModel != null) DocViewModel.File = file;
-            }
-        }
-        public DocumentViewModel DocViewModel { get; set; } = new DocumentViewModel();
+        private SheetViewModel svm;
+        public SheetViewModel SheetViewModel { get => svm;  set {
+                // Wire up notificatins?
+                svm = value;
+           
+            } 
+        } 
         public int CurrentPage { get; set; }
 
         public PrintPreview() {
@@ -53,12 +53,12 @@ namespace WinPrint {
 
         protected override void OnKeyUp(KeyEventArgs e) {
             base.OnKeyUp(e);
-            if (e.KeyCode == Keys.PageDown)
-                if (CurrentPage < DocViewModel.Pages.Count) {
+            if (e.KeyCode == Keys.PageDown || e.KeyCode == Keys.Down)
+                if (CurrentPage < svm.Pages.Count) {
                     CurrentPage++;
                     Invalidate();
                 }
-            if (e.KeyCode == Keys.PageUp)
+            if (e.KeyCode == Keys.PageUp || e.KeyCode == Keys.Up)
                 if (CurrentPage > 1) {
                     CurrentPage--;
                     Invalidate();
@@ -69,13 +69,13 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) throw new ArgumentNullException(nameof(e));
-            if (DocViewModel is null) return;
+            if (svm is null) return;
 
             // Don't do anything if the window's been shrunk too far or GDI+ will crash
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return;
 
             // Paint rules, header, and footer
-            DocViewModel.Paint(e.Graphics, CurrentPage);
+            svm.Paint(e.Graphics, CurrentPage);
 
             // Draw focus rect
             if (Focused)
