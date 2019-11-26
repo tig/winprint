@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -27,7 +28,8 @@ namespace WinPrint {
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-        private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
+        //private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
+        private string file = @"C:\Users\ckindel\source\winprint\proto\winforms\WinPrint\MainWindow.cs";
 
         private SettingsService settingsService = ServiceLocator.Current.SettingsService;
 
@@ -92,7 +94,8 @@ namespace WinPrint {
 
             SheetViewModel svm = new SheetViewModel();
             Debug.WriteLine("First reference to ModelLocator.Current.Settings");
-            svm.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
+            Debug.WriteLine($"Loading sheet ID {ModelLocator.Current.Settings.DefaultSheet}");
+            svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
             landscapeCheckbox.Checked = svm.Landscape;
 
@@ -103,7 +106,7 @@ namespace WinPrint {
                 Debug.WriteLine($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "Landscape":
-                        Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets[0].Landscape}");
+                        Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
                         landscapeCheckbox.Checked = svm.Landscape;
                         break;
 
@@ -150,7 +153,7 @@ namespace WinPrint {
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instnace and set the property on this, not
                 // the model
-                ModelLocator.Current.Settings.Sheets[0].Landscape = printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape = printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
 
                 // We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel
                 //SheetSettingsChanged();
@@ -282,7 +285,7 @@ namespace WinPrint {
 
         private void PrintPreview(string file) {
             sheetViewModelForPrint.File = file;
-            sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
+            sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
             sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
             printPreviewDialog.Document = printDoc;
             curSheet = 1;
@@ -324,7 +327,7 @@ namespace WinPrint {
                         toSheet = PrintDialog1.PrinterSettings.ToPage;
                     }
                     sheetViewModelForPrint.File = file;
-                    sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
+                    sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
                     sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
 
                     PrintDialog1.Document = printDoc;
@@ -467,7 +470,7 @@ namespace WinPrint {
         }
 
         private void headerTextBox_TextChanged(object sender, EventArgs e) {
-            ModelLocator.Current.Settings.Sheets[0].Header.Text = headerTextBox.Text;
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
             printPreview.Invalidate(true);
 
         }

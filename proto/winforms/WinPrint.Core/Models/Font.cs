@@ -25,7 +25,7 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public FontStyle Style { get => style; set {
                 if (!Enum.IsDefined(typeof(FontStyle), value))
-                    value = FontStyle.Regular;
+                    value = FontStyle.Bold | FontStyle.Italic;
                 style = value;
 //                SetField(ref style, value);
 

@@ -89,6 +89,7 @@ namespace WinPrint {
         /// <returns></returns>
         // TODO: Deal with PageFeeds
         // TODO: Support different forms of linewrap (truncate/clip, word, line)
+        // TODO: Support custom line wrap symbol
         private bool NextPage(StreamReader streamToPrint, out Page page) {
             page = new Page(containingSheet);
 
@@ -195,6 +196,8 @@ namespace WinPrint {
             }
         }
 
+        // TODO: Allow a different (non-monospace) font for line numbers
+        // TODO: Option to turn on/off line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (lineNumberWidth != 0) {
                 int lineOnPage = lineNumber % linesPerPage;

@@ -9,9 +9,8 @@ using WinPrint.Core.Services;
 namespace WinPrint.Core.Models {
     public class Sheet : ModelBase {
 
-        private Guid id;
+        //private Guid id;
         private string name = "";
-        private string title = "";
         private int rows = 1;
         private int columns = 1;
         private int padding = 0;
@@ -24,7 +23,7 @@ namespace WinPrint.Core.Models {
         private Footer footer = new Footer();
 
         // TOOD: These should go on printPreview model?
-        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
+        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Bold | FontStyle.Italic };
         private Font rulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
 
         private bool previewPrintableArea = false;
@@ -48,17 +47,12 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Unique identifier for this Sheet definition.
         /// </summary>
-        public Guid ID { get => id; set => SetField(ref id, value); }
+        //public Guid ID { get => id; set => SetField(ref id, value); }
 
         /// <summary>
         /// Sheet name (e.g. "2up Landscape")
         /// </summary>
         public string Name { get => name; set => SetField(ref name, value); }
-
-        /// <summary>
-        /// Sheet title (used for {TItle} macro in header/footers)
-        /// </summary>
-        public string Title { get => title; set => SetField(ref title, value); }
 
         /// <summary>
         /// Landscae or Portrait layout

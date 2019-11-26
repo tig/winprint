@@ -139,10 +139,6 @@ namespace WinPrint {
                         RulesFont = sheet.RulesFont;
                         break;
 
-                    case "Title":
-                        Title = sheet.Title;
-                        break;
-
                     case "Rows":
                         Rows = sheet.Rows;
                         reflow = true;

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.Exceptions;
 using System.Linq.Expressions;
-using System.Text;
 using System.Text.RegularExpressions;
-using WinPrint.Core.Models;
 
 namespace WinPrint {
 
@@ -21,8 +18,6 @@ namespace WinPrint {
         public DateTime DatePrinted { get { return DateTime.Now; } }
         public DateTime DateRevised { get { return string.IsNullOrEmpty(svm.File) ? DateTime.Now :  File.GetLastWriteTime(svm.File); } }
         public string FileType { get { return string.IsNullOrEmpty(svm.File) ? "" : svm.Type; } }
-        // BUGBUG: Single-instance
-        public string Title { get { return ModelLocator.Current.Settings.Sheets[0].Title; } }
 
         public int Page { get; set; }
 

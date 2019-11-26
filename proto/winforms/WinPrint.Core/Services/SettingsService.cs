@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core.Services {
-
     // TODO: Implement settings validation with appropriate alerting
     public class SettingsService {
         private JsonSerializerOptions jsonOptions;
         private readonly string settingsFileName = "WinPrint.config";
         private FileWatcher watcher;
-
 
         public SettingsService() {
             Debug.WriteLine("SettingsService()");
@@ -48,35 +45,21 @@ namespace WinPrint.Core.Services {
             catch (FileNotFoundException) {
                 Debug.WriteLine($"ReadSettings: {settingsFileName} was not found; creating it.");
 
-                //// If .config file is not found, create it based on resources
-                //Stream uc = Assembly.GetExecutingAssembly().GetManifestResourceStream("WinPrint.Resources.WinPrint.config");
-                //FileStream ucFS = null;
-                //try {
-                //    ucFS = new FileStream(settingsFileName, FileMode.Create, FileAccess.ReadWrite);
-                //    uc.CopyTo(ucFS);
-                //}
-                //catch (Exception e) {
-                //    Logger.Instance.Log4.Info($"Commands: Could not create user-defined commands file {userCommandsFile}. {e.Message}");
-                //    ExceptionUtils.DumpException(e);
-                //}
-                //finally {
-                //    if (uc != null) uc.Close();
-                //    if (ucFS != null) ucFS.Close();
-                //}
-
                 settings = new Settings();
                 settings.DefaultSheet = Uuid.DefaultSheet;
-                settings.Sheets = new System.Collections.ObjectModel.ObservableCollection<Sheet>() { new Sheet() { ID = settings.DefaultSheet } };
+                settings.Sheets = new Dictionary<string, Sheet>();
+                settings.Sheets.Add(Uuid.DefaultSheet.ToString(), new Sheet());
                 SaveSettings(settings);
             }
             catch (Exception ex) {
+                // TODO: Graceful error handling for .config file 
                 Debug.WriteLine($"Settingsservice: Error with {settingsFileName}. {ex.Message}");
                 //ExceptionUtils.DumpException(ex);
             }
             finally {
                 if (fs != null) fs.Close();
             }
-            
+
             // Enable file watcher
             if (settings != null) {
                 // watch .command file for changes
