@@ -8,7 +8,8 @@ using WinPrint.Core.Models;
 namespace WinPrint {
     /// <summary>
     /// Knows how to paint a header or footer.
-      /// </summary>
+    /// </summary>
+    // TODO: Add a Padding property to provide padding below bottom of header/above top of footer
     public abstract class HeaderFooterViewModel : ViewModels.ViewModelBase, IDisposable {
 
         private string text;
@@ -191,7 +192,7 @@ namespace WinPrint {
     }
 
     public class HeaderViewModel : HeaderFooterViewModel {
-        public HeaderViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) {}
+        public HeaderViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) { }
 
         internal override Rectangle CalcBounds() {
             if (Enabled)
@@ -204,7 +205,7 @@ namespace WinPrint {
         }
     }
     public class FooterViewModel : HeaderFooterViewModel {
-        public FooterViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) {}
+        public FooterViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) { }
 
         internal override Rectangle CalcBounds() {
             float h = SheetViewModel.GetFontHeight(Font);

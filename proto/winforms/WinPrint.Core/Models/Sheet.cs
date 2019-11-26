@@ -101,10 +101,10 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public Header Header { get => header; set => SetField(ref header, value); }
 
-    /// <summary>
-    /// Footer printed at top of each sheet
-    /// </summary>
-    public Footer Footer { get => footer; set => SetField(ref footer, value); }
+        /// <summary>
+        /// Footer printed at top of each sheet
+        /// </summary>
+        public Footer Footer { get => footer; set => SetField(ref footer, value); }
 
         /// <summary>
         /// Diagnostic settings
@@ -131,6 +131,6 @@ namespace WinPrint.Core.Models {
 
             // TODO: Don't specify defaults in constructor; do it through default settings
             Margins = new Margins(30, 30, 30, 30);
-         }
+        }
     }
 }

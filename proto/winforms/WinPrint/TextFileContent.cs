@@ -11,10 +11,10 @@ using WinPrint.Core.Models;
 namespace WinPrint {
     /// <summary>
     /// Implements generic text file type support. 
-    /// TODO: Wrap with a base-class that enables multiple content types
     /// Base class for WinPrint content types. Each file type may have a Content type
     /// These classes know how to parse and paint the file type's content.
     /// </summary>
+    // TODO: Wrap with a base-class that enables multiple content types
     sealed class TextFileContent : IDisposable {
         private readonly SheetViewModel containingSheet;
 
@@ -87,7 +87,8 @@ namespace WinPrint {
         /// <param name="streamToPrint"></param>
         /// <param name="page"></param>
         /// <returns></returns>
-        /// TODO: Deal with PageFeeds
+        // TODO: Deal with PageFeeds
+        // TODO: Support different forms of linewrap (truncate/clip, word, line)
         private bool NextPage(StreamReader streamToPrint, out Page page) {
             page = new Page(containingSheet);
 

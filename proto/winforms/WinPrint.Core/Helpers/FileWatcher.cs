@@ -86,13 +86,6 @@ namespace WinPrint.Core.Helpers {
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~CommandTable()
-        // {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
         public void Dispose() {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);

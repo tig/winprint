@@ -37,15 +37,12 @@ namespace WinPrint.Core.Models {
     ///         border pen style
     ///         border color
     ///         font
-    /// 
-    /// 
-    /// TODO: How to deal with clipping
-    /// 1) Order of print - Left, Right, Center (center wins)
-    /// 2) Elipsis - different based on macro. E.g. FullFilePath is "Start...FileName" where FileName is truncated last.
-    /// 3) Clipped (never overwritten - ugly)
-    /// 4) Wrapped (post MLP)
-    ///         
     /// </summary>
+    // TODO: How to deal with clipping
+    // 1) Order of print - Left, Right, Center (center wins)
+    // 2) Elipsis - different based on macro. E.g. FullFilePath is "Start...FileName" where FileName is truncated last.
+    // 3) Clipped (never overwritten - ugly)
+    // 4) Wrapped (post MLP)
     public abstract class HeaderFooter : ModelBase {
         private string text;
         private Font font;

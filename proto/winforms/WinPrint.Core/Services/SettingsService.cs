@@ -11,6 +11,8 @@ using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core.Services {
+
+    // TODO: Implement settings validation with appropriate alerting
     public class SettingsService {
         private JsonSerializerOptions jsonOptions;
         private readonly string settingsFileName = "WinPrint.config";
