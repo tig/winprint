@@ -50,11 +50,6 @@ namespace WinPrint {
         public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
 
         /// <summary>
-        /// Sheet (parent) Margins
-        /// </summary>
-        public Margins Margins { get => margins; set => SetField(ref margins, value); }
-
-        /// <summary>
         /// Header/Footer bounds (page minus margins)
         /// </summary>
         public Rectangle Bounds => CalcBounds();
@@ -80,31 +75,28 @@ namespace WinPrint {
         }
 
         /// <summary>
-        /// Calcuate the Header or Footer bounds (position and size on page) based on containing document and font size.
+        /// Calcuate the Header or Footer bounds (position and size on sheet) based on containing document and font size.
         /// </summary>
         /// <returns></returns>
         internal abstract Rectangle CalcBounds();
 
-        public void Paint(Graphics g, int pageNum) {
+        public void Paint(Graphics g, int sheetNum) {
             if (!Enabled) return;
-
             if (g is null) throw new ArgumentNullException(nameof(g));
 
             Rectangle bounds = CalcBounds();
 
-            GraphicsState state = svm.AdjustPrintOrPreview(g);
-
             if (LeftBorder)
-                g.DrawLine(Pens.DarkGray, bounds.Left, bounds.Top, bounds.Left, bounds.Bottom);
+                g.DrawLine(Pens.Black, bounds.Left, bounds.Top, bounds.Left, bounds.Bottom);
 
             if (TopBorder)
-                g.DrawLine(Pens.DarkGray, bounds.Left, bounds.Top, bounds.Right, bounds.Top);
+                g.DrawLine(Pens.Black, bounds.Left, bounds.Top, bounds.Right, bounds.Top);
 
             if (RightBorder)
-                g.DrawLine(Pens.DarkGray, bounds.Right, bounds.Top, bounds.Right, bounds.Bottom);
+                g.DrawLine(Pens.Black, bounds.Right, bounds.Top, bounds.Right, bounds.Bottom);
 
             if (BottomBorder)
-                g.DrawLine(Pens.DarkGray, bounds.Left, bounds.Bottom, bounds.Right, bounds.Bottom);
+                g.DrawLine(Pens.Black, bounds.Left, bounds.Bottom, bounds.Right, bounds.Bottom);
 
             if (!string.IsNullOrEmpty(Text)) {
 
@@ -119,7 +111,7 @@ namespace WinPrint {
 
                 // Left\tCenter\tRight
                 Macros macros = new Macros(svm);
-                string[] parts = macros.ReplaceMacro(Text, pageNum).Split('\t', '|');
+                string[] parts = macros.ReplaceMacro(Text, sheetNum).Split('\t', '|');
 
                 using StringFormat fmt = new StringFormat(StringFormat.GenericTypographic) {
                     LineAlignment = StringAlignment.Near
@@ -150,7 +142,6 @@ namespace WinPrint {
 
                 tempFont.Dispose();
             }
-            g.Restore(state);
         }
 
         // if bool is true, reflow. Otherwise just paint
@@ -180,7 +171,7 @@ namespace WinPrint {
             //};
 
             // TODO: Margins is not observable
-            Margins = svm.Margins;
+            //Margins = svm.Margins;
 
             // Wire up changes from Header / Footer models
             hf.PropertyChanged += (s, e) => {
@@ -204,9 +195,9 @@ namespace WinPrint {
 
         internal override Rectangle CalcBounds() {
             if (Enabled)
-                return new Rectangle(svm.Bounds.Left + Margins.Left,
-                            svm.Bounds.Top + Margins.Top,
-                            svm.Bounds.Width - Margins.Left - Margins.Right,
+                return new Rectangle(svm.Bounds.Left + svm.Margins.Left,
+                            svm.Bounds.Top + svm.Margins.Top,
+                            svm.Bounds.Width - svm.Margins.Left - svm.Margins.Right,
                             (int)SheetViewModel.GetFontHeight(Font));
             else
                 return new Rectangle(0, 0, 0, 0);
@@ -218,9 +209,9 @@ namespace WinPrint {
         internal override Rectangle CalcBounds() {
             float h = SheetViewModel.GetFontHeight(Font);
             if (Enabled)
-                return new Rectangle(svm.Bounds.Left + Margins.Left,
-                                svm.Bounds.Bottom - Margins.Bottom - (int)h,
-                                svm.Bounds.Width - Margins.Left - Margins.Right,
+                return new Rectangle(svm.Bounds.Left + svm.Margins.Left,
+                                svm.Bounds.Bottom - svm.Margins.Bottom - (int)h,
+                                svm.Bounds.Width - svm.Margins.Left - svm.Margins.Right,
                                 (int)h);
             else
                 return new Rectangle(0, 0, 0, 0);

@@ -27,12 +27,12 @@ namespace WinPrint {
            
             } 
         } 
-        public int CurrentPage { get; set; }
+        public int CurrentSheet { get; set; }
 
         public PrintPreview() {
             Instance = this;
             InitializeComponent();
-            CurrentPage = 1;
+            CurrentSheet = 1;
         }
 
         protected override void OnResize(EventArgs e) {
@@ -54,13 +54,13 @@ namespace WinPrint {
         protected override void OnKeyUp(KeyEventArgs e) {
             base.OnKeyUp(e);
             if (e.KeyCode == Keys.PageDown || e.KeyCode == Keys.Down)
-                if (CurrentPage < svm.Pages.Count) {
-                    CurrentPage++;
+                if (CurrentSheet < svm.NumSheets) {
+                    CurrentSheet++;
                     Invalidate();
                 }
             if (e.KeyCode == Keys.PageUp || e.KeyCode == Keys.Up)
-                if (CurrentPage > 1) {
-                    CurrentPage--;
+                if (CurrentSheet > 1) {
+                    CurrentSheet--;
                     Invalidate();
                 }
 
@@ -75,7 +75,7 @@ namespace WinPrint {
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return;
 
             // Paint rules, header, and footer
-            svm.Paint(e.Graphics, CurrentPage);
+            svm.Paint(e.Graphics, CurrentSheet);
 
             // Draw focus rect
             if (Focused)

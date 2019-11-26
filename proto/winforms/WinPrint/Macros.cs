@@ -13,14 +13,14 @@ namespace WinPrint {
     sealed internal class Macros {
         public SheetViewModel svm;
 
-        public int NumPages { get { return svm.NumPages; } }
-        public string FileExtension { get { return Path.GetExtension(svm.File); } }
-        public string FileName { get { return Path.GetFileName(svm.File); } }
-        public string FilePath { get { return Path.GetDirectoryName(FullyQualifiedPath); } }
-        public string FullyQualifiedPath { get { return Path.GetFullPath(svm.File); } }
+        public int NumPages { get { return svm.NumSheets; } }
+        public string FileExtension { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File); } }
+        public string FileName { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileName(svm.File); } }
+        public string FilePath { get { return string.IsNullOrEmpty(svm.File) ? "" :  Path.GetDirectoryName(FullyQualifiedPath); } }
+        public string FullyQualifiedPath { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFullPath(svm.File); } }
         public DateTime DatePrinted { get { return DateTime.Now; } }
-        public DateTime DateRevised { get { return File.GetLastWriteTime(svm.File); } }
-        public string FileType { get { return svm.Type; } }
+        public DateTime DateRevised { get { return string.IsNullOrEmpty(svm.File) ? DateTime.Now :  File.GetLastWriteTime(svm.File); } }
+        public string FileType { get { return string.IsNullOrEmpty(svm.File) ? "" : svm.Type; } }
         // BUGBUG: Single-instance
         public string Title { get { return ModelLocator.Current.Settings.Sheets[0].Title; } }
 
@@ -37,7 +37,7 @@ namespace WinPrint {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        internal string ReplaceMacro(string value, int pageNum) {
+        internal string ReplaceMacro(string value, int sheetNum) {
             return Regex.Replace(value, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match => {
                 var p = System.Linq.Expressions.Expression.Parameter(typeof(Macros), "Macros");
 
@@ -48,7 +48,7 @@ namespace WinPrint {
 
                 // TODO: BUGBUG: As written this is not thread-safe. We have to figure out a way
                 // of passing pageNum through to the macro parser in a threadsafe way
-                Page = pageNum;
+                Page = sheetNum;
                 LambdaExpression e;
                 try {
                     e = DynamicExpressionParser.ParseLambda(new[] { p }, null, propertyGroup.Value);

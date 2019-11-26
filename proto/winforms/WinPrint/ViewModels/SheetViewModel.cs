@@ -41,6 +41,18 @@ namespace WinPrint {
         private FooterViewModel footerVM;
         public FooterViewModel Footer { get => footerVM; set => SetField(ref footerVM, value); }
 
+        public int Rows { get => rows; set => SetField(ref rows, value); }
+        private int rows;
+
+        public int Columns { get => cols; set => SetField(ref cols, value); }
+        private int cols;
+
+        public int Padding { get => padding; set => SetField(ref padding, value); }
+        private int padding;
+
+        public bool PageSepartor { get => pageSepartor; set => SetField(ref pageSepartor, value); }
+        private bool pageSepartor; 
+
         private string file;
         public string File { get => file; set => SetField(ref file, value); }
 
@@ -48,10 +60,10 @@ namespace WinPrint {
 
         // TODO: Make observablecollection
         public List<Page> Pages { get; private set; }
-        public int NumPages {
+        public int NumSheets {
             get {
                 if (Pages is null) return 0;
-                return Pages.Count;
+                return (Pages.Count) / (Rows * Columns) + 1;
             }
         }
 
@@ -91,11 +103,15 @@ namespace WinPrint {
             Landscape = sheet.Landscape;
             Font = (Core.Models.Font)sheet.Font.Clone();
             RulesFont = (Core.Models.Font)sheet.Font.Clone();
+            Rows = sheet.Rows;
+            Columns = sheet.Columns;
+            Padding = sheet.Padding;
+            PageSepartor = sheet.PageSeparator;
             Content = new TextFileContent(this);
             margins = (Margins)sheet.Margins.Clone();
             headerVM = new HeaderViewModel(this, sheet.Header);
             footerVM = new FooterViewModel(this, sheet.Footer);
- 
+
 
             // Subscribe to all settings properties
             sheet.PropertyChanged += (s, e) => {
@@ -127,12 +143,31 @@ namespace WinPrint {
                         Title = sheet.Title;
                         break;
 
+                    case "Rows":
+                        Rows = sheet.Rows;
+                        reflow = true;
+                        break;
+
+                    case "Columns":
+                        Columns = sheet.Columns;
+                        reflow = true;
+                        break;
+
+                    case "Padding":
+                        Padding = sheet.Padding;
+                        reflow = true;
+                        break;
+
+                    case "PageSeparator":
+                        PageSepartor = sheet.PageSeparator;
+                        break;
+
                     default:
                         // Print/Preview Rule Settings.
-                        if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
-                            // Repaint view (no reflow needed)
-                            Debug.WriteLine($"Rules Changed");
-                        }
+                        //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
+                        //    // Repaint view (no reflow needed)
+                        //    Debug.WriteLine($"Rules Changed");
+                        //}
                         break;
                 }
 
@@ -220,6 +255,12 @@ namespace WinPrint {
                     if (streamToPrint != null) streamToPrint.Close();
                 }
             }
+            else {
+                // For Preview when there's no file specified
+                Pages = new List<Page>();
+                Pages.Add(new Page(this));
+
+            }
         }
 
         // When in preview mode we need to adjust scaling.
@@ -232,12 +273,11 @@ namespace WinPrint {
                 g.RenderingOrigin = new Point(g.RenderingOrigin.X - (int)HardMarginX, g.RenderingOrigin.Y - (int)HardMarginY);
             }
             else {
-                // in preview mode adjust page scale to deal with zoom
+                // in preview mode adjust page scale to deal with Display unit and zoom
                 double scalingX, scalingY;
                 scalingX = (double)g.VisibleClipBounds.Width / (double)PaperSize.Width;
                 scalingY = (double)g.VisibleClipBounds.Height / (double)PaperSize.Height;
                 g.PageScale = (float)Math.Min(scalingY, scalingX);
-                //g.PageUnit = GraphicsUnit.Display;
             }
             return state;
         }
@@ -249,42 +289,103 @@ namespace WinPrint {
             return h;
         }
 
-        //internal Rectangle GetHeaderBounds() {
-        //    if (headerVM.Enabled)
-        //        return new Rectangle(Bounds.Left + sheet.Margins.Left,
-        //                    Bounds.Top + sheet.Margins.Top,
-        //                    Bounds.Width - sheet.Margins.Left - sheet.Margins.Right,
-        //                    (int)GetFontHeight(headerVM.Font));
-        //    else
-        //        return new Rectangle(0, 0, 0, 0);
-        //}
+        public int GetPageColumn(int n) { return (n - 1) % Columns; }
+        public int GetPageRow(int n) { return ((n - 1) % (Rows * Columns)) / Columns; }
 
-        //internal Rectangle GetFooterBounds() {
-        //    float h = GetFontHeight(footerVM.Font);
-        //    if (footerVM.Enabled)
-        //        return new Rectangle(Bounds.Left + sheet.Margins.Left,
-        //                        Bounds.Bottom - sheet.Margins.Bottom - (int)h,
-        //                        Bounds.Width - sheet.Margins.Left - sheet.Margins.Right,
-        //                        (int)h);
-        //    else
-        //        return new Rectangle(0, 0, 0, 0);
-        //}
+        internal float GetXPadding(int n) { return GetPageColumn(n) == 0 ? 0F : (padding / (Columns)); }
+        internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (padding / (Rows)); }
 
-        internal void Paint(Graphics g, int pageNum) {
- 
-            PaintRules(g);
-            headerVM.Paint(g, pageNum);
-            footerVM.Paint(g, pageNum);
-
-            if (NumPages == 0) return;
-
-            Content.Paint(g, pageNum);
+        public float GetPageX(int n) {
+            float f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
+            f += Padding * GetPageColumn(n);
+            return f;
+        }
+        public float GetPageY(int n) {
+            float f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
+            f += Padding * GetPageRow(n);
+            return f;
         }
 
-        // PaintRules is for debugging. 
-        internal void PaintRules(Graphics g) {
+        // If Columns == 1 there's no padding. But if Columns > 1 padding applies. Width is width - (padding/columns-1) (10/2 = 5)
+        public float GetPageWidth() { return (ContentBounds.Width / Columns) - (Padding * (Columns - 1) / Columns); }
+        public float GetPageHeight() { return (ContentBounds.Height / Rows) - (Padding * (Rows - 1) / Rows); }
+
+        /// <summary>
+        /// Paints the content of a single Sheet. 
+        /// </summary>
+        /// <param name="g">Graphics to print on. Can be either a Preview window or a Printer canvas.</param>
+        /// <param name="sheetNum">Sheet to print</param>
+        internal void Paint(Graphics g, int sheetNum) {
             GraphicsState state = AdjustPrintOrPreview(g);
 
+
+            PaintRules(g);
+            headerVM.Paint(g, sheetNum);
+            footerVM.Paint(g, sheetNum);
+
+            if (NumSheets == 0) return;
+
+            int pagesPerSheet = rows * cols;
+            // 1-based; assume 4-up...
+            int startPage = (sheetNum - 1) * pagesPerSheet + 1;
+            int endPage = startPage + pagesPerSheet - 1;
+
+            for (int pageOnSheet = startPage; pageOnSheet <= endPage; pageOnSheet++) {
+                float xPos = GetPageX(pageOnSheet);
+                float yPos = GetPageY(pageOnSheet);
+                float w = GetPageWidth();
+                float h = GetPageHeight();
+
+                // Move origin to page's x & y
+                g.TranslateTransform(xPos, yPos);
+                // TODO: clip by GetHeight/Width
+                PaintPageNum(g, pageOnSheet);
+
+                if (pageSepartor) {
+
+                    // If there will be a page to the left of this page, draw vert separator
+                    if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns-1))
+                        g.DrawLine(Pens.Black, w + (Padding / 2), Padding/2, w + (Padding / 2), h - Padding);
+
+                    // If there will be a page below this one, draw a horz separator
+                    if (Rows > 1 && GetPageRow(pageOnSheet) < (Rows - 1))
+                        g.DrawLine(Pens.Black, Padding / 2, h + (Padding / 2), w - Padding, h + (Padding / 2));
+                }
+                Content.PaintPage(g, pageOnSheet);
+                // Translate back
+                g.TranslateTransform(-xPos, -yPos);
+            }
+            g.Restore(state);
+        }
+        /// <summary>
+        /// Paint a diagnostic page number centered on sheet.
+        /// </summary>
+        /// <param name="g"></param>
+        /// <param name="pageNum"></param>
+        internal void PaintPageNum(Graphics g, int pageNum) {
+            if (!sheet.PrintPageBounds && !sheet.PreviewPageBounds) return;
+
+            System.Drawing.Font font = new System.Drawing.Font(FontFamily.GenericSansSerif, 48, FontStyle.Bold, GraphicsUnit.Point);
+            float xPos = 0; // GetPageX(pageNum);
+            float yPos = 0; // GetPageY(pageNum);
+
+            g.DrawRectangle(Pens.DarkGray, xPos, yPos, GetPageWidth(), GetPageHeight());
+
+            // Draw row,col in top, left
+            // % (Rows * Columns)
+            //g.DrawString($"{GetPageColumn(pageNum)},{GetPageRow(pageNum)}", font, Brushes.Orange, xPos, yPos, StringFormat.GenericTypographic);
+
+            // Draw page # in center
+            SizeF size = g.MeasureString($"{pageNum}", font);
+            g.DrawString($"{pageNum}", font, Brushes.DarkGray, xPos + (GetPageWidth() / 2 - size.Width / 2), yPos + (GetPageHeight() / 2 - size.Height / 2), StringFormat.GenericTypographic);
+            font.Dispose();
+        }
+
+        /// <summary>
+        /// Paint diagnostic rules
+        /// </summary>
+        /// <param name="g"></param>
+        internal void PaintRules(Graphics g) {
             System.Drawing.Font font;
             if (g.PageUnit == GraphicsUnit.Display) {
                 font = new System.Drawing.Font(sheet.RulesFont.Family, sheet.RulesFont.Size, sheet.RulesFont.Style, GraphicsUnit.Point);
@@ -295,7 +396,7 @@ namespace WinPrint {
             }
 
             // PaperSize
-            if (sheet.PrintPageSize || sheet.PreviewPageSize) {
+            if (sheet.PrintPaperSize || sheet.PreviewPaperSize) {
                 // Draw paper size
                 DrawRule(g, font, Color.LightGray, $"", new Point(PaperSize.Width / 4, 0), new Point(PaperSize.Width / 4, PaperSize.Height), 4F);
                 DrawRule(g, font, Color.LightGray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"", new Point(0, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F);
@@ -355,7 +456,6 @@ namespace WinPrint {
             }
 
             font.Dispose();
-            g.Restore(state);
         }
 
         internal static void DrawRule(Graphics g, System.Drawing.Font font, Color color, string text, Point start, Point end, float labelDiv) {
@@ -364,7 +464,6 @@ namespace WinPrint {
             using Brush brush = new SolidBrush(color);
             if (start.X == end.X) {
                 // Vertical
-                GraphicsState state = g.Save();
                 g.ResetTransform();
 
                 g.RotateTransform(90);
@@ -376,7 +475,6 @@ namespace WinPrint {
                 g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
                 g.DrawString(text, font, brush, 0, 0);
 
-                g.Restore(state);
             }
             else {
                 // Horizontal

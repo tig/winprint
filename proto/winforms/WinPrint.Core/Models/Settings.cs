@@ -24,9 +24,10 @@ namespace WinPrint.Core.Models {
         public Guid DefaultSheet { get => defaultSheet; set => SetField(ref defaultSheet, value); }
         private Guid defaultSheet;
 
+        // TODO: Make this a Dictionary<Guid, Sheet>
         public IList<Sheet> Sheets { get; set; }
 
-        public void Setttings() {
+        public Settings() {
         }
 
 

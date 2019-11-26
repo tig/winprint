@@ -12,9 +12,10 @@ namespace WinPrint.Core.Models {
         private Guid id;
         private string name = "";
         private string title = "";
-        private int rows;
-        private int columns;
-        private float padding;
+        private int rows = 1;
+        private int columns = 1;
+        private int padding = 0;
+        private bool pageSeparator = true;
         private Margins margins;
 
         private bool landscape;
@@ -26,20 +27,23 @@ namespace WinPrint.Core.Models {
         private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
         private Font rulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
 
-        private bool previewPrintableArea = true;
-        private bool printPrintableArea = true;
-        private bool previewPageSize = true;
-        private bool printPageSize = true;
-        private bool previewMargins = true;
+        private bool previewPrintableArea = false;
+        private bool printPrintableArea = false;
+        private bool previewPageSize = false;
+        private bool printPageSize = false;
+        private bool previewMargins = false;
         private bool printMargins = false;
         private bool previewHardMargins = false;
         private bool printHardMargins = false;
         private bool printBounds = false;
-        private bool previewBounds = true;
+        private bool previewBounds = false;
         private bool printContentBounds = false;
-        private bool previewContentBounds = true;
+        private bool previewContentBounds = false;
         private bool printHeaderFooterBounds = false;
         private bool previewHeaderFooterBounds = false;
+        private bool printPageBounds = false;
+        private bool previewPageBounds = false;
+
 
         /// <summary>
         /// Unique identifier for this Sheet definition.
@@ -69,10 +73,13 @@ namespace WinPrint.Core.Models {
         /// Number of columns of pages per sheet
         /// </summary>
         public int Columns { get => columns; set => SetField(ref columns, value); }
+
         /// <summary>
         /// Padding between rows and columns of pages on sheet in 100ths of an inch.
         /// </summary>
-        public float Padding { get => padding; set => SetField(ref padding, value); }
+        public int Padding { get => padding; set => SetField(ref padding, value); }
+
+        public bool PageSeparator { get => pageSeparator; set => SetField(ref pageSeparator, value); }
 
         /// <summary>
         /// Sheet margins in 100ths of an inch. Impacts headers, footers, and content. 
@@ -104,8 +111,8 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public bool PreviewPrintableArea { get => previewPrintableArea; set => SetField(ref previewPrintableArea, value); }
         public bool PrintPrintableArea { get => printPrintableArea; set => SetField(ref printPrintableArea, value); }
-        public bool PreviewPageSize { get => previewPageSize; set => SetField(ref previewPageSize, value); }
-        public bool PrintPageSize { get => printPageSize; set => SetField(ref printPageSize, value); }
+        public bool PreviewPaperSize { get => previewPageSize; set => SetField(ref previewPageSize, value); }
+        public bool PrintPaperSize { get => printPageSize; set => SetField(ref printPageSize, value); }
         public bool PreviewMargins { get => previewMargins; set => SetField(ref previewMargins, value); }
         public bool PrintMargins { get => printMargins; set => SetField(ref printMargins, value); }
         public bool PreviewHardMargins { get => previewHardMargins; set => SetField(ref previewHardMargins, value); }
@@ -116,6 +123,8 @@ namespace WinPrint.Core.Models {
         public bool PreviewContentBounds { get => previewContentBounds; set => SetField(ref previewContentBounds, value); }
         public bool PrintHeaderFooterBounds { get => printHeaderFooterBounds; set => SetField(ref printHeaderFooterBounds, value); }
         public bool PreviewHeaderFooterBounds { get => previewHeaderFooterBounds; set => SetField(ref previewHeaderFooterBounds, value); }
+        public bool PreviewPageBounds { get => previewPageBounds; set => SetField(ref previewPageBounds, value); }
+        public bool PrintPageBounds { get => printPageBounds; set => SetField(ref printPageBounds, value); }
 
         public Sheet() {
             Debug.WriteLine("Document()");

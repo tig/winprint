@@ -25,14 +25,7 @@ namespace WinPrint {
             this.svm = svm;
         }
 
-        /// <summary>
-        /// Paints a page worth of content.
-        /// </summary>
-        /// <param name="g"></param>
-        /// <param name="streamToPrint"></param>
-        /// <param name="hasMorePages"></param>
-        internal void PaintContent(Graphics g, int pageNum) {
-            svm.Content.Paint(g, pageNum);
-        }
-    }
+    } 
 }
+
+

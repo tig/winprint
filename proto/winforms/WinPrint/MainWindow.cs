@@ -94,9 +94,9 @@ namespace WinPrint {
             Debug.WriteLine("First reference to ModelLocator.Current.Settings");
             svm.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
 
-            landscapeCheckbox.Checked = ModelLocator.Current.Settings.Sheets[0].Landscape;
+            landscapeCheckbox.Checked = svm.Landscape;
 
-            headerTextBox.Text = ModelLocator.Current.Settings.Sheets[0].Header.Text;
+            headerTextBox.Text = svm.Header.Text;
 
 
             svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
@@ -108,7 +108,7 @@ namespace WinPrint {
                         break;
 
                     case "Header":
-                        //headerTextBox.Text = svm.Header.Text;
+                        headerTextBox.Text = svm.Header.Text;
                         break;
                 }
             }));
@@ -116,7 +116,7 @@ namespace WinPrint {
             svm.SettingsChanged += (s, reflow) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"SheetViewModel.SettingsChanged: {reflow}");
                 if (reflow)
-                    PageSettingsChanged();
+                    SheetSettingsChanged();
                 else
                     printPreview.Invalidate(true);
             }));
@@ -148,8 +148,12 @@ namespace WinPrint {
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
             Debug.WriteLine($"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}");
             if (printersCB.Enabled) {
-                printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-                PageSettingsChanged();
+                // TODO: This should find the Preview SheetViewModel instnace and set the property on this, not
+                // the model
+                ModelLocator.Current.Settings.Sheets[0].Landscape = printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+
+                // We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel
+                //SheetSettingsChanged();
             }
         }
 
@@ -180,7 +184,7 @@ namespace WinPrint {
 
             printPreview.Select();
 
-            PageSettingsChanged();
+            SheetSettingsChanged();
 
             if (ModelLocator.Current.Options.Files != null &&
                   ModelLocator.Current.Options.Files.Any() &&
@@ -203,14 +207,16 @@ namespace WinPrint {
             //   throw new NotImplementedException();
         }
 
-        internal void PageSettingsChanged() {
-            Debug.WriteLine("PageSettingsChangned()");
+        internal void SheetSettingsChanged() {
+            Debug.WriteLine("SheetSettingsChangned()");
 
             // Set the paper size based upon the selection in the combo box.
             if (paperSizesCB.SelectedIndex != -1) {
                 printDoc.DefaultPageSettings.PaperSize =
                     printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
             }
+            // Set landscape. This causes other DefaultPageSettings to change
+            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);
             printPreview.Invalidate(true);
             //printPreview.Refresh();
@@ -219,7 +225,7 @@ namespace WinPrint {
 
         internal void SizePreview() {
             Debug.WriteLine("SizePreview()");
-
+            if (printPreview == null || printPreview.SheetViewModel == null) return;
             Size size = this.ClientSize;
             size.Height -= headerTextBox.Height * 3;
             size.Width -= headerTextBox.Height;
@@ -249,7 +255,7 @@ namespace WinPrint {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
                 if (e.AffectedProperty.ToString() == "Bounds") {
-                    //SizePreview();
+                    SizePreview();
                 }
             }
         }
@@ -264,13 +270,13 @@ namespace WinPrint {
 
                 paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
 
-                //PageSettingsChanged();
+                //SheetSettingsChanged();
             }
         }
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled)
-                PageSettingsChanged();
+                SheetSettingsChanged();
         }
 
 
@@ -279,9 +285,9 @@ namespace WinPrint {
             sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
             sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
             printPreviewDialog.Document = printDoc;
-            curPage = 1;
-            fromPage = 1;
-            toPage = sheetViewModelForPrint.Pages.Count;
+            curSheet = 1;
+            fromSheet = 1;
+            toSheet = sheetViewModelForPrint.NumSheets;
             printPreviewDialog.ShowDialog();
         }
 
@@ -312,10 +318,10 @@ namespace WinPrint {
 
                 //If the result is OK then print the document.
                 if (result == DialogResult.OK) {
-                    toPage = fromPage = 1;
+                    toSheet = fromSheet = 1;
                     if (PrintDialog1.PrinterSettings.PrintRange == PrintRange.SomePages) {
-                        fromPage = PrintDialog1.PrinterSettings.FromPage;
-                        toPage = PrintDialog1.PrinterSettings.ToPage;
+                        fromSheet = PrintDialog1.PrinterSettings.FromPage;
+                        toSheet = PrintDialog1.PrinterSettings.ToPage;
                     }
                     sheetViewModelForPrint.File = file;
                     sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets[0]);
@@ -340,11 +346,11 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void pd_BeginPrint(object sender, PrintEventArgs ev) {
-            Debug.WriteLine($"pd_BeginPrint {curPage}");
+            Debug.WriteLine($"pd_BeginPrint {curSheet}");
 
             try {
                 streamToPrint = new StreamReader(file);
-                curPage = fromPage;
+                curSheet = fromSheet;
             }
             catch (Exception ex) {
                 MessageBox.Show($"pd_BeginPrint: {ex.Message}");
@@ -359,9 +365,9 @@ namespace WinPrint {
             }
         }
 
-        private int curPage = 0;
-        private int fromPage;
-        private int toPage;
+        private int curSheet = 0;
+        private int fromSheet;
+        private int toSheet;
 
         // Occurs immediately before each PrintPage event.
         private void pd_QueryPageSettings(object sender, QueryPageSettingsEventArgs e) {
@@ -371,21 +377,21 @@ namespace WinPrint {
         // The PrintPage event is raised for each page to be printed.
         private void pd_PrintPage(object sender, PrintPageEventArgs ev) {
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
-                while (curPage < fromPage) {
+                while (curSheet < fromSheet) {
                     // Blow through pages up to fromPage
                     //                    printPreview.Document.SetPageSettings(ev.PageSettings);
                     //                    printPreview.Document.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
-                    curPage++;
+                    curSheet++;
                 }
                 //              ev.Graphics.Clear(Color.White);
             }
 
             // TODO: 
             // document.SetPageSettings(ev.PageSettings);
-            if (curPage <= toPage)
-                sheetViewModelForPrint.Paint(ev.Graphics, curPage);
-            curPage++;
-            ev.HasMorePages = curPage <= sheetViewModelForPrint.Pages.Count;
+            if (curSheet <= toSheet)
+                sheetViewModelForPrint.Paint(ev.Graphics, curSheet);
+            curSheet++;
+            ev.HasMorePages = curSheet <= sheetViewModelForPrint.NumSheets;
         }
 
         // Declare the PrintPreviewControl object and the 
@@ -449,14 +455,14 @@ namespace WinPrint {
         }
 
         private void pageUp_Click(object sender, EventArgs e) {
-            if (printPreview.CurrentPage > 1)
-                printPreview.CurrentPage--;
+            if (printPreview.CurrentSheet > 1)
+                printPreview.CurrentSheet--;
             printPreview.Invalidate(true);
         }
 
         private void pageDown_Click(object sender, EventArgs e) {
-            if (printPreview.CurrentPage < printPreview.SheetViewModel.Pages.Count)
-                printPreview.CurrentPage++;
+            if (printPreview.CurrentSheet < printPreview.SheetViewModel.NumSheets)
+                printPreview.CurrentSheet++;
             printPreview.Invalidate(true);
         }
 
