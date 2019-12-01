@@ -23,7 +23,7 @@ namespace WinPrint.Core.Models {
         private Footer footer = new Footer();
 
         // TOOD: These should go on printPreview model?
-        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Bold | FontStyle.Italic };
+        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
         private Font rulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
 
         private bool previewPrintableArea = false;

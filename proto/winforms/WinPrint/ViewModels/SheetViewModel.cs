@@ -9,6 +9,7 @@ using System.Diagnostics;
 using GalaSoft.MvvmLight;
 using static WinPrint.HeaderFooterViewModel;
 using Microsoft.Win32;
+using WinPrint.Core.Services;
 
 namespace WinPrint {
     /// <summary>
@@ -29,12 +30,8 @@ namespace WinPrint {
         private bool landscape;
         public bool Landscape { get => landscape; set => SetField(ref landscape, value); }
 
-        private Core.Models.Font font;
-        public Core.Models.Font Font { get => font; set => SetField(ref font, value); }
-
         private Core.Models.Font rulesFont;
         public Core.Models.Font RulesFont { get => rulesFont; set => SetField(ref rulesFont, value); }
-
 
         private HeaderViewModel headerVM;
         public HeaderViewModel Header { get => headerVM; set => SetField(ref headerVM, value); }
@@ -52,7 +49,7 @@ namespace WinPrint {
         private int padding;
 
         public bool PageSepartor { get => pageSepartor; set => SetField(ref pageSepartor, value); }
-        private bool pageSepartor; 
+        private bool pageSepartor;
 
         private string file;
         public string File { get => file; set => SetField(ref file, value); }
@@ -100,7 +97,6 @@ namespace WinPrint {
 
             this.sheet = sheet;
             Landscape = sheet.Landscape;
-            Font = (Core.Models.Font)sheet.Font.Clone();
             RulesFont = (Core.Models.Font)sheet.Font.Clone();
             Rows = sheet.Rows;
             Columns = sheet.Columns;
@@ -110,68 +106,12 @@ namespace WinPrint {
             headerVM = new HeaderViewModel(this, sheet.Header);
             footerVM = new FooterViewModel(this, sheet.Footer);
 
-
             // Subscribe to all settings properties
-            sheet.PropertyChanged += (s, e) => {
-                Debug.WriteLine($"sheet.PropertyChanged: {e.PropertyName}");
-
-                bool reflow = false;
-
-                switch (e.PropertyName) {
-                    case "Landscape":
-                        Landscape = sheet.Landscape;
-                        reflow = true;
-                        break;
-
-                    case "Margins":
-                        Margins = sheet.Margins;
-                        reflow = true;
-                        break;
-
-                    case "Font":
-                        Font = sheet.Font;
-                        reflow = true;
-                        break;
-
-                    case "RulesFont":
-                        RulesFont = sheet.RulesFont;
-                        break;
-
-                    case "Rows":
-                        Rows = sheet.Rows;
-                        reflow = true;
-                        break;
-
-                    case "Columns":
-                        Columns = sheet.Columns;
-                        reflow = true;
-                        break;
-
-                    case "Padding":
-                        Padding = sheet.Padding;
-                        reflow = true;
-                        break;
-
-                    case "PageSeparator":
-                        PageSepartor = sheet.PageSeparator;
-                        break;
-
-                    default:
-                        // Print/Preview Rule Settings.
-                        //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
-                        //    // Repaint view (no reflow needed)
-                        //    Debug.WriteLine($"Rules Changed");
-                        //}
-                        break;
-                }
-
-                OnSettingsChanged(reflow);
-            };
-
+            sheet.PropertyChanged -= OnSheetPropertyChanged();
+            sheet.PropertyChanged += OnSheetPropertyChanged();
 
             headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
             footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
-
         }
 
         /// <summary>
@@ -241,13 +181,15 @@ namespace WinPrint {
                 try {
                     streamToPrint = new StreamReader(File);
                     if (Type == "Text")
-                        Content = new WinPrint.Core.ContentTypes.TextFileContent();
+                        Content = ModelLocator.Current.Settings.TextFileSettings;
                     else if (Type == "text/html")
-                        Content = new WinPrint.Core.ContentTypes.HtmlFileContent();
+                        Content = ModelLocator.Current.Settings.HtmlFileSettings;
                     else
-                        Content = new WinPrint.Core.ContentTypes.TextFileContent();
+                        Content = ModelLocator.Current.Settings.TextFileSettings;
 
-                    Content.Font = font;
+                    Content.PropertyChanged -= OnContentPropertyChanged();
+                    Content.PropertyChanged += OnContentPropertyChanged();
+
                     Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
                     Content.CountPages(streamToPrint);
                 }
@@ -261,10 +203,74 @@ namespace WinPrint {
             else {
                 // Create a dummmy for preview with no file
                 Content = new WinPrint.Core.ContentTypes.TextFileContent();
-                Content.Font = font;
                 Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
             }
+
         }
+
+        private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
+            bool reflow = false;
+            Debug.WriteLine($"sheet.PropertyChanged: {e.PropertyName}");
+            switch (e.PropertyName) {
+                case "Landscape":
+                    Landscape = sheet.Landscape;
+                    reflow = true;
+                    break;
+
+                case "Margins":
+                    Margins = sheet.Margins;
+                    reflow = true;
+                    break;
+
+
+                case "RulesFont":
+                    RulesFont = sheet.RulesFont;
+                    break;
+
+                case "Rows":
+                    Rows = sheet.Rows;
+                    reflow = true;
+                    break;
+
+                case "Columns":
+                    Columns = sheet.Columns;
+                    reflow = true;
+                    break;
+
+                case "Padding":
+                    Padding = sheet.Padding;
+                    reflow = true;
+                    break;
+
+                case "PageSeparator":
+                    PageSepartor = sheet.PageSeparator;
+                    break;
+
+                default:
+                    // Print/Preview Rule Settings.
+                    //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
+                    //    // Repaint view (no reflow needed)
+                    //    Debug.WriteLine($"Rules Changed");
+                    //}
+                    break;
+            }
+            OnSettingsChanged(reflow);
+        };
+
+        private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() => (s, e) => {
+            bool reflow = false;
+            Debug.WriteLine($"Content.PropertyChanged: {e.PropertyName}");
+            switch (e.PropertyName) {
+                case "Font":
+                    reflow = true;
+                    break;
+
+                case "LineNumbers":
+                    reflow = true;
+                    break;
+            }
+            OnSettingsChanged(reflow);
+        };
 
         // When in preview mode we need to adjust scaling.
         // When in print mode we need to adjust origin
@@ -347,8 +353,8 @@ namespace WinPrint {
                 if (pageSepartor) {
 
                     // If there will be a page to the left of this page, draw vert separator
-                    if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns-1))
-                        g.DrawLine(Pens.Black, w + (Padding / 2), Padding/2, w + (Padding / 2), h - Padding);
+                    if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns - 1))
+                        g.DrawLine(Pens.Black, w + (Padding / 2), Padding / 2, w + (Padding / 2), h - Padding);
 
                     // If there will be a page below this one, draw a horz separator
                     if (Rows > 1 && GetPageRow(pageOnSheet) < (Rows - 1))

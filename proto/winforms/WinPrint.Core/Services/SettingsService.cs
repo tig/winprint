@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using WinPrint.Core.ContentTypes;
 using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 
@@ -46,6 +47,8 @@ namespace WinPrint.Core.Services {
                 Debug.WriteLine($"ReadSettings: {settingsFileName} was not found; creating it.");
 
                 settings = new Settings();
+                settings.TextFileSettings = new TextFileContent();
+                settings.HtmlFileSettings = new HtmlFileContent();
                 settings.DefaultSheet = Uuid.DefaultSheet;
                 settings.Sheets = new Dictionary<string, Sheet>();
                 settings.Sheets.Add(Uuid.DefaultSheet.ToString(), new Sheet());

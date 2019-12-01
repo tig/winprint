@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.ContentTypes {
     /// <summary>
@@ -11,19 +12,23 @@ namespace WinPrint.Core.ContentTypes {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextFileContent : ContentBase, IDisposable {
-        public override string GetType() {
-            return "text/plain";
+
+        public static string Type = "text/plain";
+        public TextFileContent() {
+            Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
 
-        // All of the lines of the text file, after reflow/line-wrap
-        private List<string> lines;
-
+    // All of the lines of the text file, after reflow/line-wrap
+    private List<string> lines;
         private float lineHeight;
         private int linesPerPage;
         private float lineNumberWidth;
         private float minCharWidth;
+        private System.Drawing.Font cachedFont;
 
-        private System.Drawing.Font font;
+        // Publics
+        public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
+        private bool lineNumbers = true;
 
         public void Dispose() {
             Dispose(true);
@@ -38,7 +43,7 @@ namespace WinPrint.Core.ContentTypes {
                 return;
 
             if (disposing) {
-                if (font != null) font.Dispose();
+                if (cachedFont != null) cachedFont.Dispose();
                 lines = null;
             }
             disposed = true;
@@ -51,14 +56,14 @@ namespace WinPrint.Core.ContentTypes {
         /// <returns></returns>
         public override int CountPages(StreamReader streamToPrint) {
             // Calculate the number of lines per page.
-            font = new System.Drawing.Font(Font.Family,
+            cachedFont = new System.Drawing.Font(Font.Family,
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
-            lineHeight = font.GetHeight(100);
+            lineHeight = cachedFont.GetHeight(100);
             linesPerPage = (int)(PageSize.Height / lineHeight);
             //// BUGBUG: This will be too narrow if font is not fixed-pitch
             //lineNumberWidth = MeasureString(null, $"{((List<string>)DocumentContent).Count}0").Width;
             // TODO: Figure out how to make this right
-            lineNumberWidth = MeasureString(null, $"{1234}0").Width;
+            lineNumberWidth = LineNumbers ? MeasureString(null, $"{1234}0").Width : 0;
 
             //List<Page> pages = new List<Page>();
             lines = new List<string>();
@@ -88,7 +93,7 @@ namespace WinPrint.Core.ContentTypes {
             int charsFitted, linesFilled;
             float contentHeight = PageSize.Height;
             // Print each line of the file.
-            int startLine = (int)((float)contentHeight / font.GetHeight(100)) * 0;
+            int startLine = (int)((float)contentHeight / cachedFont.GetHeight(100)) * 0;
             int endLine = startLine + linesPerPage;
             //Debug.WriteLine($"NextPage - Height: {contentHeight}, lines: {linesPerPage}");
             //Debug.WriteLine($"startLine - {startLine}, endLine - {endLine}");
@@ -149,7 +154,7 @@ namespace WinPrint.Core.ContentTypes {
             // determine width     
             float fontHeight = lineHeight;
             SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
-            SizeF size = g.MeasureString(text, font, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
+            SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
         }
 
@@ -177,7 +182,7 @@ namespace WinPrint.Core.ContentTypes {
                     float xPos = leftMargin + lineNumberWidth;
                     //float yPos = containingSheet.GetPageY(pageNum) + (lineOnPage * lineHeight);
                     float yPos = lineOnPage * lineHeight;
-                    g.DrawString(lines[lineInDocument], font, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
+                    g.DrawString(lines[lineInDocument], cachedFont, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
                     //SizeF proposedSize = new SizeF(containingDocument.ContentBounds.Width - lineNumberWidth, lineHeight * linesPerPage);
                     //g.DrawRectangle(Pens.Green, xPos, yPos, proposedSize.Width, lineHeight);
                     //SizeF s = g.MeasureString(lines[lineInDocument], font, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
@@ -189,13 +194,13 @@ namespace WinPrint.Core.ContentTypes {
         // TODO: Allow a different (non-monospace) font for line numbers
         // TODO: Option to turn on/off line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
-            if (lineNumberWidth != 0) {
+            if (LineNumbers == true && lineNumberWidth != 0) {
                 int lineOnPage = lineNumber % linesPerPage;
                 //float yPos = containingSheet.GetPageY(pageNum) + ((lineOnPage) * lineHeight);
                 float yPos = ((lineOnPage) * lineHeight);
                 //g.DrawString($"{lineOnPage}", font, Brushes.Black, containingDocument.ContentBounds.Left - (lineNumberWidth), yPos, StringFormat.GenericDefault);
                 //g.DrawString($"{lineNumber + 1}", font, Brushes.Black, containingSheet.GetPageX(pageNum), yPos, StringFormat.GenericDefault);
-                g.DrawString($"{lineNumber + 1}", font, Brushes.Black, 0, yPos, StringFormat.GenericDefault);
+                g.DrawString($"{lineNumber + 1}", cachedFont, Brushes.Black, 0, yPos, StringFormat.GenericDefault);
             }
         }
     }

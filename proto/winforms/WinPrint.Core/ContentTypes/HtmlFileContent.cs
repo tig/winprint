@@ -10,6 +10,11 @@ namespace WinPrint.Core.ContentTypes {
     /// </summary>
     public class HtmlFileContent : ContentBase, IDisposable  {
 
+        public static string Type = "text/html";
+
+        //public HtmlFileContent() {
+        //    type = "text/html";
+        //}
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -88,10 +93,6 @@ namespace WinPrint.Core.ContentTypes {
 
             SizeF renderedSize = HtmlRender.RenderGdiPlus(g, html, new PointF(0, 0), size );
             
-        }
-
-        public override string GetType() {
-            return "text/html";
         }
     }
 }

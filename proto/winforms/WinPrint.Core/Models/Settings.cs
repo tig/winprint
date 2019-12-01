@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Text;
 using System.Text.Json.Serialization;
+using WinPrint.Core.ContentTypes;
 
 namespace WinPrint.Core.Models {
 
@@ -53,17 +54,21 @@ namespace WinPrint.Core.Models {
         /// Content type
         /// </summary>
         public string Type { get => type; set => SetField(ref type, value); }
-        private string type = "Text";
+        private string type = "text/html";
+
+
+        /// <summary>
+        /// Content type handlers
+        /// </summary>
+//        public Dictionary<string, ContentBase> ContentTypes { get; set; }
+        public TextFileContent TextFileSettings {get; set;}
+        public HtmlFileContent HtmlFileSettings { get; set; }
+
 
         /// <summary>
         /// Sheet definitons
         /// </summary>
         public Dictionary<string, Sheet> Sheets { get; set; }
-
-        /// <summary>
-        /// Content type handlers
-        /// </summary>
-        public Dictionary<string, object> ContentTypes { get; set; }
 
         public Settings() {
             size = new WindowSize(0, 0);
