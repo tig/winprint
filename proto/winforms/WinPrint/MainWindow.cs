@@ -37,7 +37,6 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public MainWindow() {
             InitializeComponent();
-            WindowState = FormWindowState.Maximized;
 
             printPreview = new PrintPreview();
             printPreview.Anchor = this.dummyButton.Anchor;
@@ -48,8 +47,6 @@ namespace WinPrint {
             printPreview.Size = this.dummyButton.Size;
             printPreview.TabIndex = 1;// this.dummyButton.TabIndex;
             printPreview.TabStop = true;
-            //printPreview.Font = new Font(FontFamily.GenericSansSerif, 500.0F, GraphicsUnit.Pixel);
-            printPreview.KeyPress += PrintMainWindow_KeyPress;
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 this.Controls.Remove(this.dummyButton);
@@ -57,10 +54,6 @@ namespace WinPrint {
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
-
-            //this.Size = ModelLocator.Current.Settings.Size;
-            //this.Location = ModelLocator.Current.Settings.Location;
-
         }
 
         // Flag: Has Dispose already been called?
@@ -162,7 +155,6 @@ namespace WinPrint {
         }
 
         private void MainWindow_Load(object sender, EventArgs e) {
-            //landscapeCheckbox.Checked = printDoc.PrinterSettings.DefaultPageSettings.Landscape;
 
             printDoc.BeginPrint += new PrintEventHandler(this.pd_BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.pd_EndPrint);
@@ -201,15 +193,13 @@ namespace WinPrint {
 
                 // PrintPreview for now
                 PrintPreview(file);
-                PrintMainWindow_KeyPress(null, null);
                 return;
             }
-
+            this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+            this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+            this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
         }
 
-        private void PrintMainWindow_KeyPress(object sender, KeyPressEventArgs e) {
-            //   throw new NotImplementedException();
-        }
 
         internal void SheetSettingsChanged() {
             Debug.WriteLine("SheetSettingsChangned()");
@@ -243,8 +233,7 @@ namespace WinPrint {
             // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
             var scale = Math.Min(scalingY, scalingX);
 
-            printPreview.Width = (int)(w * scale);
-            printPreview.Height = (int)(h * scale);
+            printPreview.Size = new Size((int)(w * scale), (int)(h * scale));
 
             // Now center
             printPreview.Location = new Point((ClientSize.Width / 2) - (printPreview.Width / 2),
@@ -458,22 +447,18 @@ namespace WinPrint {
             this.printPreviewDialog.UseAntiAlias = true;
         }
 
-        private void pageUp_Click(object sender, EventArgs e) {
-            if (printPreview.CurrentSheet > 1)
-                printPreview.CurrentSheet--;
-            printPreview.Invalidate(true);
-        }
-
-        private void pageDown_Click(object sender, EventArgs e) {
-            if (printPreview.CurrentSheet < printPreview.SheetViewModel.NumSheets)
-                printPreview.CurrentSheet++;
-            printPreview.Invalidate(true);
-        }
-
         private void headerTextBox_TextChanged(object sender, EventArgs e) {
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
             printPreview.Invalidate(true);
 
+        }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
+            // Save Window state
+            ModelLocator.Current.Settings.Size = new WinPrint.Core.Models.WindowSize(this.Size.Width, this.Size.Height);
+            ModelLocator.Current.Settings.Location = new WinPrint.Core.Models.WindowLocation(this.Location.X, this.Location.Y);
+            ModelLocator.Current.Settings.WindowState = (WinPrint.Core.Models.FormWindowState)this.WindowState;
+            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
         }
     }
 }

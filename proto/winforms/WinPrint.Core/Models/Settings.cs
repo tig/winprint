@@ -8,6 +8,24 @@ using WinPrint.Core.ContentTypes;
 
 namespace WinPrint.Core.Models {
 
+    //
+    // Summary:
+    //     Specifies how a form window is displayed.
+    public enum FormWindowState {
+        //
+        // Summary:
+        //     A default sized window.
+        Normal = 0,
+        //
+        // Summary:
+        //     A minimized window.
+        Minimized = 1,
+        //
+        // Summary:
+        //     A maximized window.
+        Maximized = 2
+    }
+
     public class WindowSize {
 
         public WindowSize() { }
@@ -43,6 +61,9 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public WindowSize Size { get => size; set => SetField(ref size, value); }
         private WindowSize size;
+
+        public FormWindowState WindowState { get => windowState; set => SetField(ref windowState, value); }
+        private FormWindowState windowState;
 
         /// <summary>
         /// Default sheet (guid)

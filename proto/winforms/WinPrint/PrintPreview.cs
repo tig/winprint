@@ -43,7 +43,7 @@ namespace WinPrint {
         protected override void OnClick(EventArgs e) {
             base.OnClick(e);
             Select();
-            Invalidate();
+            //Invalidate();
         }
 
         protected override void OnLostFocus(EventArgs e) {

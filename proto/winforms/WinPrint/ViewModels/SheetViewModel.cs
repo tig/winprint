@@ -88,8 +88,8 @@ namespace WinPrint {
         protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
 
         public SheetViewModel() {
-            SetSettings(new Sheet());
-            Reflow(new PageSettings());
+            //SetSettings(new Sheet());
+            //Reflow(new PageSettings());
         }
 
         public void SetSettings(Sheet sheet) {
@@ -351,7 +351,6 @@ namespace WinPrint {
                 PaintPageNum(g, pageOnSheet);
 
                 if (pageSepartor) {
-
                     // If there will be a page to the left of this page, draw vert separator
                     if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns - 1))
                         g.DrawLine(Pens.Black, w + (Padding / 2), Padding / 2, w + (Padding / 2), h - Padding);
