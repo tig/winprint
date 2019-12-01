@@ -11,4 +11,13 @@
     <PackageReference Include="System.Drawing.Common" Version="4.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="HtmlRenderer">
+      <HintPath>..\..\..\..\HTML-Renderer\Source\HtmlRenderer.WinForms\bin\DebugNet20\HtmlRenderer.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlRenderer.WinForms">
+      <HintPath>..\..\..\..\HTML-Renderer\Source\HtmlRenderer.WinForms\bin\DebugNet20\HtmlRenderer.WinForms.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

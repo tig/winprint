@@ -1,25 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
-using System.Text;
-using System.Windows.Forms;
-using WinPrint.Core.Models;
 
-namespace WinPrint {
+namespace WinPrint.Core.ContentTypes {
     /// <summary>
     /// Implements generic text file type support. 
     /// Base class for WinPrint content types. Each file type may have a Content type
     /// These classes know how to parse and paint the file type's content.
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
-    sealed class TextFileContent : ContentBase, IDisposable {
-        private readonly SheetViewModel containingSheet;
-
-        // private int linesPerPage;
-        private System.Drawing.Font font;
+    public class TextFileContent : ContentBase, IDisposable {
+        public override string GetType() {
+            return "text/plain";
+        }
 
         // All of the lines of the text file, after reflow/line-wrap
         private List<string> lines;
@@ -29,9 +23,7 @@ namespace WinPrint {
         private float lineNumberWidth;
         private float minCharWidth;
 
-        public TextFileContent(SheetViewModel sheet) {
-            containingSheet = sheet;
-        }
+        private System.Drawing.Font font;
 
         public void Dispose() {
             Dispose(true);
@@ -57,28 +49,26 @@ namespace WinPrint {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        internal override List<Page> GetPages(StreamReader streamToPrint) {
+        public override int CountPages(StreamReader streamToPrint) {
             // Calculate the number of lines per page.
-            font = new System.Drawing.Font(containingSheet.Font.Family,
-                containingSheet.Font.Size / 72F * 96F, containingSheet.Font.Style, GraphicsUnit.Pixel); // World?
+            font = new System.Drawing.Font(Font.Family,
+                Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
             lineHeight = font.GetHeight(100);
-            linesPerPage = (int)((float)containingSheet.GetPageHeight() / lineHeight);
+            linesPerPage = (int)(PageSize.Height / lineHeight);
             //// BUGBUG: This will be too narrow if font is not fixed-pitch
             //lineNumberWidth = MeasureString(null, $"{((List<string>)DocumentContent).Count}0").Width;
             // TODO: Figure out how to make this right
             lineNumberWidth = MeasureString(null, $"{1234}0").Width;
 
-            List<Page> pages = new List<Page>();
+            //List<Page> pages = new List<Page>();
             lines = new List<string>();
 
-            Page page;
-            while (NextPage(streamToPrint, out page)) {
-                pages.Add(page);
-                page.PageNum = pages.Count;
-                //Debug.WriteLine($"Added Page {page.PageNum}");
+            numPages = 0;
+            while (NextPage(streamToPrint)) {
+                numPages++;
             }
 
-            return pages;
+            return numPages;
         }
 
         /// <summary>
@@ -90,13 +80,13 @@ namespace WinPrint {
         // TODO: Deal with PageFeeds
         // TODO: Support different forms of linewrap (truncate/clip, word, line)
         // TODO: Support custom line wrap symbol
-        private bool NextPage(StreamReader streamToPrint, out Page page) {
-            page = new Page(containingSheet);
+        private bool NextPage(StreamReader streamToPrint) {
+            //page = new Page(containingSheet);
 
             string line = null;
 
             int charsFitted, linesFilled;
-            float contentHeight = containingSheet.GetPageHeight();
+            float contentHeight = PageSize.Height;
             // Print each line of the file.
             int startLine = (int)((float)contentHeight / font.GetHeight(100)) * 0;
             int endLine = startLine + linesPerPage;
@@ -104,7 +94,7 @@ namespace WinPrint {
             //Debug.WriteLine($"startLine - {startLine}, endLine - {endLine}");
 
             minCharWidth = MeasureString(null, "W").Width;
-            int minLineLen = (int)((float)((containingSheet.GetPageWidth() - lineNumberWidth) / minCharWidth));
+            int minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
             int curLine = 0;
             while (curLine < endLine && (line = streamToPrint.ReadLine()) != null) {
@@ -158,7 +148,7 @@ namespace WinPrint {
 
             // determine width     
             float fontHeight = lineHeight;
-            SizeF proposedSize = new SizeF(containingSheet.GetPageWidth() - lineNumberWidth, lineHeight * linesPerPage);
+            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
             SizeF size = g.MeasureString(text, font, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
         }
@@ -168,12 +158,12 @@ namespace WinPrint {
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
-        internal override void PaintPage(Graphics g, int pageNum) {
+        public override void PaintPage(Graphics g, int pageNum) {
              float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 
             int charsFitted, linesFilled;
 
-            float contentHeight = containingSheet.GetPageHeight();
+            float contentHeight = PageSize.Height;
 
             // Print each line of the file.
             int startLine = (int)((float)contentHeight / lineHeight) * (pageNum - 1);

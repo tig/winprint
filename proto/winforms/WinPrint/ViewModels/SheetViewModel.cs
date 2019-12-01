@@ -59,17 +59,15 @@ namespace WinPrint {
 
         public string Type { get => GetDocType(); }
 
-        // TODO: Make observablecollection
-        public List<Page> Pages { get; private set; }
         public int NumSheets {
             get {
-                if (Pages is null) return 0;
-                return (Pages.Count) / (Rows * Columns) + 1;
+                if (Content.GetNumPages() == 0) return 0;
+                return (int)Math.Ceiling((double)Content.GetNumPages() / (Rows * Columns));
             }
         }
 
         // TOOD: Hold an abstract base-type to enable mulitple content types
-        internal ContentBase Content { get; set; }
+        internal WinPrint.Core.ContentTypes.ContentBase Content { get; set; }
 
         private Size paperSize;
         private RectangleF printableArea;
@@ -243,12 +241,15 @@ namespace WinPrint {
                 try {
                     streamToPrint = new StreamReader(File);
                     if (Type == "Text")
-                        Content = new TextFileContent(this);
+                        Content = new WinPrint.Core.ContentTypes.TextFileContent();
                     else if (Type == "text/html")
-                        Content = new HtmlFileContent(this);
+                        Content = new WinPrint.Core.ContentTypes.HtmlFileContent();
                     else
-                        Content = new TextFileContent(this);
-                    Pages = Content.GetPages(streamToPrint);
+                        Content = new WinPrint.Core.ContentTypes.TextFileContent();
+
+                    Content.Font = font;
+                    Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+                    Content.CountPages(streamToPrint);
                 }
                 catch (System.IO.FileNotFoundException e) {
                     Debug.WriteLine($"Reflow {File} - {e.Message}");
@@ -258,10 +259,10 @@ namespace WinPrint {
                 }
             }
             else {
-                // For Preview when there's no file specified
-                Pages = new List<Page>();
-                Pages.Add(new Page(this));
-
+                // Create a dummmy for preview with no file
+                Content = new WinPrint.Core.ContentTypes.TextFileContent();
+                Content.Font = font;
+                Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
             }
         }
 

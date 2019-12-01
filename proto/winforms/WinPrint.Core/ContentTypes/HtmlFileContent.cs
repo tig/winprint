@@ -1,25 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Text;
-using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using WinPrint.Core.Models;
 
-namespace WinPrint {
+namespace WinPrint.Core.ContentTypes {
     /// <summary>
     /// Implements generic HTML file type support. 
     /// </summary>
-    sealed class HtmlFileContent : ContentBase, IDisposable  {
-        private readonly SheetViewModel containingSheet;
-
-        public HtmlFileContent(SheetViewModel sheet) {
-            containingSheet = sheet;
-        }
+    public class HtmlFileContent : ContentBase, IDisposable  {
 
         public void Dispose() {
             Dispose(true);
@@ -46,27 +35,20 @@ namespace WinPrint {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        internal override List<Page> GetPages(StreamReader streamToPrint) {
-            List<Page> pages = new List<Page>();
-
-            Page page = null;
-
+        public override int CountPages(StreamReader streamToPrint) {
             html = streamToPrint.ReadToEnd();
             using Bitmap bitmap = new Bitmap(1, 1);
             Graphics g = Graphics.FromImage(bitmap);
             //g.PageUnit = GraphicsUnit.Document;
 
-            SizeF size = HtmlRender.MeasureGdiPlus(g, html, containingSheet.GetPageWidth());
+            SizeF size = HtmlRender.MeasureGdiPlus(g, html, PageSize.Width);
             
-            int numPages = (int)(size.Height / containingSheet.GetPageHeight());
+            int maxPages = (int)(size.Height / PageSize.Height);
+            for (numPages = 0; numPages < maxPages; numPages++) { 
 
-            for (int i = 0; i < numPages; i++) { 
-                page = new Page(containingSheet);
-                pages.Add(page);
-                page.PageNum = pages.Count;
             }
 
-            return pages;
+            return numPages;
         }
 
         /// <summary>
@@ -98,14 +80,18 @@ namespace WinPrint {
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
-        internal override void PaintPage(Graphics g, int pageNum) {
+        public override void PaintPage(Graphics g, int pageNum) {
             float leftMargin = 0;
-            float contentHeight = containingSheet.GetPageHeight();
+            float contentHeight = PageSize.Height;
 
-            SizeF size = new SizeF(containingSheet.GetPageWidth(), containingSheet.GetPageHeight());
+            SizeF size = new SizeF(PageSize.Width, PageSize.Height);
 
             SizeF renderedSize = HtmlRender.RenderGdiPlus(g, html, new PointF(0, 0), size );
             
+        }
+
+        public override string GetType() {
+            return "text/html";
         }
     }
 }

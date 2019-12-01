@@ -55,7 +55,15 @@ namespace WinPrint.Core.Models {
         public string Type { get => type; set => SetField(ref type, value); }
         private string type = "Text";
 
+        /// <summary>
+        /// Sheet definitons
+        /// </summary>
         public Dictionary<string, Sheet> Sheets { get; set; }
+
+        /// <summary>
+        /// Content type handlers
+        /// </summary>
+        public Dictionary<string, object> ContentTypes { get; set; }
 
         public Settings() {
             size = new WindowSize(0, 0);
