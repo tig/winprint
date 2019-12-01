@@ -192,7 +192,6 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         // TODO: Allow a different (non-monospace) font for line numbers
-        // TODO: Option to turn on/off line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (LineNumbers == true && lineNumberWidth != 0) {
                 int lineOnPage = lineNumber % linesPerPage;
