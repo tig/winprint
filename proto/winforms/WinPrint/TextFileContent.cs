@@ -14,8 +14,8 @@ namespace WinPrint {
     /// Base class for WinPrint content types. Each file type may have a Content type
     /// These classes know how to parse and paint the file type's content.
     /// </summary>
-    // TODO: Wrap with a base-class that enables multiple content types
-    sealed class TextFileContent : IDisposable {
+    // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
+    sealed class TextFileContent : ContentBase, IDisposable {
         private readonly SheetViewModel containingSheet;
 
         // private int linesPerPage;
@@ -57,7 +57,7 @@ namespace WinPrint {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        internal List<Page> GetPages(StreamReader streamToPrint) {
+        internal override List<Page> GetPages(StreamReader streamToPrint) {
             // Calculate the number of lines per page.
             font = new System.Drawing.Font(containingSheet.Font.Family,
                 containingSheet.Font.Size / 72F * 96F, containingSheet.Font.Style, GraphicsUnit.Pixel); // World?
@@ -168,7 +168,7 @@ namespace WinPrint {
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
-        internal void PaintPage(Graphics g, int pageNum) {
+        internal override void PaintPage(Graphics g, int pageNum) {
              float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 
             int charsFitted, linesFilled;

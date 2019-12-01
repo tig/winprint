@@ -4,11 +4,29 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
+    <StartupObject>WinPrint.Program</StartupObject>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CefSharp.WinForms" Version="75.1.143" />
+
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.7">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -18,6 +36,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="HtmlRenderer">
+      <HintPath>..\..\..\..\HTML-Renderer\Source\HtmlRenderer.WinForms\bin\DebugNet20\HtmlRenderer.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlRenderer.WinForms">
+      <HintPath>..\..\..\..\HTML-Renderer\Source\HtmlRenderer.WinForms\bin\DebugNet20\HtmlRenderer.WinForms.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

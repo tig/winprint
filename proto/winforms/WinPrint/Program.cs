@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CefSharp;
+using CefSharp.WinForms;
 using CommandLine;
 using GalaSoft.MvvmLight.Ioc;
 using WinPrint.Core.Models;
@@ -20,6 +22,10 @@ namespace WinPrint {
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
+            //var settings = new CefSettings();
+            //settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";
+            //Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);
+
             if (args.Length > 0) {
 
                 // BUGBUG: This is a hack. See

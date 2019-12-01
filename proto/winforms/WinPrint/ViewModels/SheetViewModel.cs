@@ -8,6 +8,7 @@ using WinPrint.Core.Models;
 using System.Diagnostics;
 using GalaSoft.MvvmLight;
 using static WinPrint.HeaderFooterViewModel;
+using Microsoft.Win32;
 
 namespace WinPrint {
     /// <summary>
@@ -68,7 +69,7 @@ namespace WinPrint {
         }
 
         // TOOD: Hold an abstract base-type to enable mulitple content types
-        internal TextFileContent Content { get; set; }
+        internal ContentBase Content { get; set; }
 
         private Size paperSize;
         private RectangleF printableArea;
@@ -107,7 +108,6 @@ namespace WinPrint {
             Columns = sheet.Columns;
             Padding = sheet.Padding;
             PageSepartor = sheet.PageSeparator;
-            Content = new TextFileContent(this);
             margins = (Margins)sheet.Margins.Clone();
             headerVM = new HeaderViewModel(this, sheet.Header);
             footerVM = new FooterViewModel(this, sheet.Footer);
@@ -242,6 +242,12 @@ namespace WinPrint {
                 StreamReader streamToPrint = null;
                 try {
                     streamToPrint = new StreamReader(File);
+                    if (Type == "Text")
+                        Content = new TextFileContent(this);
+                    else if (Type == "text/html")
+                        Content = new HtmlFileContent(this);
+                    else
+                        Content = new TextFileContent(this);
                     Pages = Content.GetPages(streamToPrint);
                 }
                 catch (System.IO.FileNotFoundException e) {
@@ -494,20 +500,20 @@ namespace WinPrint {
             //Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
             //Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
 
-            return Native.FileExtentionInfo(Native.AssocStr.FriendlyDocName, ext);
+            //return Native.FileExtentionInfo(Native.AssocStr.FriendlyDocName, ext);
 
-            //string mimeType = "application/unknown";
+            string mimeType = "application/unknown";
 
-            //RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(Path.GetExtension(file).ToLower());
+            RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(Path.GetExtension(file).ToLower());
 
-            //if (regKey != null) {
-            //    object contentType = regKey.GetValue("Content Type");
+            if (regKey != null) {
+                object contentType = regKey.GetValue("Content Type");
 
-            //    if (contentType != null)
-            //        mimeType = contentType.ToString();
-            //}
+                if (contentType != null)
+                    mimeType = contentType.ToString();
+            }
 
-            //return mimeType;
+            return mimeType;
         }
 
 

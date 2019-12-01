@@ -49,7 +49,12 @@ namespace WinPrint.Core.Models {
         public Guid DefaultSheet { get => defaultSheet; set => SetField(ref defaultSheet, value); }
         private Guid defaultSheet;
 
-        // TODO: Make this a Dictionary<Guid, Sheet>
+        /// <summary>
+        /// Content type
+        /// </summary>
+        public string Type { get => type; set => SetField(ref type, value); }
+        private string type = "Text";
+
         public Dictionary<string, Sheet> Sheets { get; set; }
 
         public Settings() {
