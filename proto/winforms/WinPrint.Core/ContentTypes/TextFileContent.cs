@@ -5,6 +5,11 @@ using System.IO;
 using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.ContentTypes {
+
+    internal struct Line {
+        internal string text;
+        internal int lineNumber; // 0 if wrapped
+    }
     /// <summary>
     /// Implements generic text file type support. 
     /// Base class for WinPrint content types. Each file type may have a Content type
@@ -19,7 +24,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         // All of the lines of the text file, after reflow/line-wrap
-        private List<string> lines;
+        private List<Line> lines;
         private float lineHeight;
         private int linesPerPage;
         private float lineNumberWidth;
@@ -69,74 +74,61 @@ namespace WinPrint.Core.ContentTypes {
             lineNumberWidth = LineNumbers ? MeasureString(null, $"{1234}0").Width : 0;
 
             //List<Page> pages = new List<Page>();
-            lines = new List<string>();
+            lines = MeasureLines(streamToPrint); // new List<string>();
 
             numPages = 0;
-            while (NextPage(streamToPrint)) {
-                numPages++;
-            }
+            //while (NextPage(streamToPrint)) {
+            //    numPages++;
+            //}
+            numPages = (lines.Count / linesPerPage) + 1;
 
             return numPages;
         }
 
-        /// <summary>
-        /// Gets next page from stream. Returns false if no more pages
-        /// </summary>
-        /// <param name="streamToPrint"></param>
-        /// <param name="page"></param>
-        /// <returns></returns>
-        // TODO: Deal with PageFeeds
-        // TODO: Support different forms of linewrap (truncate/clip, word, line)
-        // TODO: Support custom line wrap symbol
-        private bool NextPage(StreamReader streamToPrint) {
-            //page = new Page(containingSheet);
-
-            string line = null;
-
-            int charsFitted, linesFilled;
-            float contentHeight = PageSize.Height;
-            // Print each line of the file.
-            int startLine = (int)((float)contentHeight / cachedFont.GetHeight(100)) * 0;
-            int endLine = startLine + linesPerPage;
-            //Debug.WriteLine($"NextPage - Height: {contentHeight}, lines: {linesPerPage}");
-            //Debug.WriteLine($"startLine - {startLine}, endLine - {endLine}");
+        private List<Line> MeasureLines(StreamReader streamToPrint) {
+            var list = new List<Line>();
 
             minCharWidth = MeasureString(null, "W").Width;
             int minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
-            int curLine = 0;
-            while (curLine < endLine && (line = streamToPrint.ReadLine()) != null) {
-                float height = MeasureString(null, line, out charsFitted, out linesFilled).Height;
-                // TODO: This only wraps once - needs to recurse
-                if (linesFilled > 1) {
-                    // Figure out how much bigger and break line apart
-                    //Debug.WriteLine("multi-line line");
-                    //while (--linesFilled > 0) {
-                    // Starting at minLineLen into the line, keep trying until it wraps again
-                    int start = 0;
-                    int c = minLineLen;
-                    for (int i = minLineLen; i < line.Length; i++) {
-                        int linesFilled2;
-                        height = MeasureString(null, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
-                        if (linesFilled2 > 1) {
-                            // It overflowed, so add line
-                            lines.Add(line.Substring(start, i - 1));
-                            curLine++;
-                            start = start + i - 1;
-                            c = line.Substring(start, line.Length - start).Length;
-                            lines.Add(line.Substring(start, c));
-                            curLine++;
-                            i = line.Length;
-                        }
+            string line;
+            int lineCount = 0;
+            while ((line = streamToPrint.ReadLine()) != null) {
+                AddLine(list, line, minLineLen, ++lineCount);
+            }
+
+            return list;
+        }
+
+        private void AddLine(List<Line> list, string line, int minLineLen, int lineCount) {
+            int charsFitted, linesFilled;
+
+            float height = MeasureString(null, line, out charsFitted, out linesFilled).Height;
+            if (linesFilled > 1) {
+                // This line wraps. Figure out by how much.
+                // Starting at minLineLen into the line, keep trying until it wraps again
+                int start = 0;
+                int c = minLineLen;
+                for (int i = minLineLen; i < line.Length; i++) {
+                    int linesFilled2;
+                    height = MeasureString(null, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
+                    if (linesFilled2 > 1) {
+                        // It's too big again, so add it, minus extra
+                        list.Add(new Line() { text = line.Substring(start, i - 1), lineNumber = lineCount } );
+                        start = start + i - 1;
+                        c = line.Substring(start, line.Length - start).Length;
+
+                        // Recurse
+                        AddLine(list, line.Substring(start, c), minLineLen, 0);
+
+                        // exit for loop
+                        i = line.Length;
                     }
-                    //}
-                }
-                else {
-                    lines.Add(line);
-                    curLine++;
                 }
             }
-            return curLine != 0;
+            else {
+                list.Add(new Line() { text = line, lineNumber = lineCount });
+            }
         }
 
         private SizeF MeasureString(Graphics g, string text) {
@@ -183,11 +175,12 @@ namespace WinPrint.Core.ContentTypes {
                 int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
 
                 if (lineInDocument < lines.Count && lineInDocument >= startLine && lineInDocument < endLine) {
-                    PaintLineNumber(g, pageNum, lineInDocument);
+                    if (lines[lineInDocument].lineNumber > 0)
+                        PaintLineNumber(g, pageNum, lineInDocument);
                     float xPos = leftMargin + lineNumberWidth;
                     //float yPos = containingSheet.GetPageY(pageNum) + (lineOnPage * lineHeight);
                     float yPos = lineOnPage * lineHeight;
-                    g.DrawString(lines[lineInDocument], cachedFont, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
+                    g.DrawString(lines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
                     //SizeF proposedSize = new SizeF(containingDocument.ContentBounds.Width - lineNumberWidth, lineHeight * linesPerPage);
                     //g.DrawRectangle(Pens.Green, xPos, yPos, proposedSize.Width, lineHeight);
                     //SizeF s = g.MeasureString(lines[lineInDocument], font, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
@@ -198,7 +191,7 @@ namespace WinPrint.Core.ContentTypes {
 
         private void PaintLineNumberSeparator(Graphics g) {
             if (LineNumbers && LineNumberSeparator && lineNumberWidth != 0) {
-                g.DrawLine(Pens.Black, lineNumberWidth-2, 0, lineNumberWidth-2, PageSize.Height);
+                g.DrawLine(Pens.Black, lineNumberWidth - 2, 0, lineNumberWidth - 2, PageSize.Height);
             }
         }
 
@@ -206,8 +199,9 @@ namespace WinPrint.Core.ContentTypes {
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (LineNumbers == true && lineNumberWidth != 0) {
                 int lineOnPage = lineNumber % linesPerPage;
-                int x = LineNumberSeparator ? (int)(lineNumberWidth - 8 - MeasureString(g, $"{lineNumber + 1}").Width) : 0;
-                g.DrawString($"{lineNumber + 1}", cachedFont, Brushes.Black, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
+                // TOOD: Figure out how to make the spacig around separator more dynamic
+                int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lines[lineNumber].lineNumber}").Width) : 0;
+                g.DrawString($"{lines[lineNumber].lineNumber}", cachedFont, Brushes.Black, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
             }
         }
     }
