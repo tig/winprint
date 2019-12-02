@@ -41,6 +41,9 @@ namespace WinPrint.Core.ContentTypes {
         public int TabSpaces { get => tabSpaces; set => SetField(ref tabSpaces, value); }
         private int tabSpaces = 4;
 
+        public bool NewPageOnFormFeed { get => newPageOnFormFeed; set => SetField(ref newPageOnFormFeed, value); }
+        private bool newPageOnFormFeed = false;
+
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -76,14 +79,15 @@ namespace WinPrint.Core.ContentTypes {
             // TODO: Figure out how to make this right
             lineNumberWidth = LineNumbers ? MeasureString(null, $"{1234}0").Width : 0;
 
-            //List<Page> pages = new List<Page>();
+            numPages = 0;
+
+            // Note, MeasureLines may increment numPages due to form feeds
             lines = MeasureLines(streamToPrint); // new List<string>();
 
-            numPages = 0;
             //while (NextPage(streamToPrint)) {
             //    numPages++;
             //}
-            numPages = (lines.Count / linesPerPage) + 1;
+            numPages += (lines.Count / linesPerPage) + 1;
 
             return numPages;
         }
@@ -101,10 +105,40 @@ namespace WinPrint.Core.ContentTypes {
                 if (tabSpaces > 0)
                     line = line.Replace("\t", new String(' ', tabSpaces));
 
-                AddLine(list, line, minLineLen, ++lineCount);
+                // Form feeds
+                // treat a FF the same as the end of a line; next line is first line of next page
+                // FF at start of line - That line should be at top of next page
+                // FF in middle of line - Text up to FF should be on current page, text after should be at top of
+                // next page
+                // FF at end of line - Next line should be top of next page
+
+                if (newPageOnFormFeed && line.Contains("\f"))
+                    ExpandFormFeeds(list, line, minLineLen, ++lineCount);
+                else
+                    AddLine(list, line, minLineLen, ++lineCount);
             }
 
             return list;
+        }
+
+        private void ExpandFormFeeds(List<Line> list, string line, int minLineLen, int lineCount) {
+            string outLine = "";
+
+            foreach (var c in line) {
+                if (c == '\f') {
+                    if (outLine.Length > 0)
+                        AddLine(list, outLine, minLineLen, lineCount);
+                    outLine = "";
+
+                    while (list.Count % linesPerPage != 0)
+                        list.Add(new Line() { text = "", lineNumber = 0 });
+                }
+                else {
+                    outLine += c;
+                }
+            }
+            if (outLine.Length > 0)
+                AddLine(list, outLine, minLineLen, 0);
         }
 
         private void AddLine(List<Line> list, string line, int minLineLen, int lineCount) {
@@ -121,7 +155,7 @@ namespace WinPrint.Core.ContentTypes {
                     height = MeasureString(null, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
                     if (linesFilled2 > 1) {
                         // It's too big again, so add it, minus extra
-                        list.Add(new Line() { text = line.Substring(start, i - 1), lineNumber = lineCount } );
+                        list.Add(new Line() { text = line.Substring(start, i - 1), lineNumber = lineCount });
                         start = start + i - 1;
                         c = line.Substring(start, line.Length - start).Length;
 

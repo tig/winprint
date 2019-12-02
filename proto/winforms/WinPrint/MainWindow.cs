@@ -28,7 +28,8 @@ namespace WinPrint {
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-        private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
+        private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";
+//        private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
         //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
         //private string file = @"C:\Users\ckindel\source\winprint\proto\winforms\WinPrint\MainWindow.cs";
 
