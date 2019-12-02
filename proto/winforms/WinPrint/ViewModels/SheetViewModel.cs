@@ -268,6 +268,10 @@ namespace WinPrint {
                 case "LineNumbers":
                     reflow = true;
                     break;
+
+                case "LineNumberSeparator":
+                    reflow = true;
+                    break;
             }
             OnSettingsChanged(reflow);
         };
@@ -326,8 +330,6 @@ namespace WinPrint {
         /// <param name="sheetNum">Sheet to print</param>
         internal void Paint(Graphics g, int sheetNum) {
             GraphicsState state = AdjustPrintOrPreview(g);
-
-
             PaintRules(g);
             headerVM.Paint(g, sheetNum);
             footerVM.Paint(g, sheetNum);

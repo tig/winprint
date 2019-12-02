@@ -126,6 +126,7 @@ namespace WinPrint
             this.footerTextBox.Size = new System.Drawing.Size(994, 27);
             this.footerTextBox.TabIndex = 8;
             this.footerTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.footerTextBox.TextChanged += new System.EventHandler(this.footerTextBox_TextChanged);
             // 
             // MainWindow
             // 

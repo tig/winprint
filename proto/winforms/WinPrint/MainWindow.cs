@@ -28,7 +28,7 @@ namespace WinPrint {
 
         private PrintDialog PrintDialog1 = new PrintDialog();
 
-       // private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
+        // private string file = "..\\..\\..\\..\\..\\..\\specs\\TEST.TXT";
         //private string file = @"C:\Users\ckindel\source\winprint\specs\test.html";
         private string file = @"C:\Users\ckindel\source\winprint\proto\winforms\WinPrint\MainWindow.cs";
 
@@ -69,13 +69,9 @@ namespace WinPrint {
 
             if (disposing && (components != null)) {
                 components.Dispose();
-
                 if (streamToPrint != null) streamToPrint.Dispose();
-
                 if (printDoc != null) printDoc.Dispose();
-
                 if (printPreview != null) printPreview.Dispose();
-
                 if (PrintDialog1 != null) PrintDialog1.Dispose();
             }
             disposed = true;
@@ -84,17 +80,14 @@ namespace WinPrint {
 
         private SheetViewModel CreatePreviewSheetViewModel() {
             Debug.WriteLine("CreateSheetViewModel");
-
-
             SheetViewModel svm = new SheetViewModel();
             Debug.WriteLine("First reference to ModelLocator.Current.Settings");
             Debug.WriteLine($"Loading sheet ID {ModelLocator.Current.Settings.DefaultSheet}");
             svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
             landscapeCheckbox.Checked = svm.Landscape;
-
             headerTextBox.Text = svm.Header.Text;
-
+            footerTextBox.Text = svm.Footer.Text;
 
             svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"SheetViewModel.PropertyChanged: {e.PropertyName}");
@@ -107,6 +100,10 @@ namespace WinPrint {
                     case "Header":
                         headerTextBox.Text = svm.Header.Text;
                         break;
+
+                    case "Footer":
+                        footerTextBox.Text = svm.Footer.Text;
+                        break;
                 }
             }));
 
@@ -115,19 +112,10 @@ namespace WinPrint {
                 if (reflow)
                     SheetSettingsChanged();
                 else
-                    printPreview.Invalidate(true);
+                    printPreview.Invalidate(false);
             }));
 
             printPreview.SheetViewModel = svm;
-
-            //Debug.WriteLine("Setting Document.Header.PropertyChanged");
-            //ModelLocator.Current.Document.Header.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
-            //    Debug.WriteLine($"Header.PropertyChanged : {e.PropertyName}");
-            //    if (e.PropertyName == "Text") {
-            //        headerTextBox.Text = printPreview.SheetViewModel.Header.Text = ModelLocator.Current.Document.Header.Text;
-            //        PageSettingsChanged();
-            //    }
-            //}));
 
             // TODO: Batch Print
             if (ModelLocator.Current.Options.Files != null &&
@@ -138,16 +126,18 @@ namespace WinPrint {
             }
 
             this.Text = svm.File = file;
- 
+
             return svm;
         }
 
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
             Debug.WriteLine($"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}");
             if (printersCB.Enabled) {
-                // TODO: This should find the Preview SheetViewModel instnace and set the property on this, not
+                // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
-                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape = printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape = 
+                    printDoc.DefaultPageSettings.Landscape = 
+                    landscapeCheckbox.Checked;
 
                 // We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel
                 //SheetSettingsChanged();
@@ -155,12 +145,10 @@ namespace WinPrint {
         }
 
         private void MainWindow_Load(object sender, EventArgs e) {
-
             printDoc.BeginPrint += new PrintEventHandler(this.pd_BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.pd_EndPrint);
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.pd_QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.pd_PrintPage);
-
 
             //InitializePrintPreviewControl();
             InitializePrintPreviewDialog();
@@ -189,8 +177,6 @@ namespace WinPrint {
                 file = list[0];
                 // Batch (non-GUI mode)
 
-
-
                 // PrintPreview for now
                 PrintPreview(file);
                 return;
@@ -200,6 +186,19 @@ namespace WinPrint {
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
         }
 
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
+            // Save Window state
+            if (this.WindowState == System.Windows.Forms.FormWindowState.Normal) {
+                ModelLocator.Current.Settings.Size = new WinPrint.Core.Models.WindowSize(this.Size.Width, this.Size.Height);
+                ModelLocator.Current.Settings.Location = new WinPrint.Core.Models.WindowLocation(this.Location.X, this.Location.Y);
+            }
+            else {
+                ModelLocator.Current.Settings.Size = new WinPrint.Core.Models.WindowSize(this.RestoreBounds.Width, this.RestoreBounds.Height);
+                ModelLocator.Current.Settings.Location = new WinPrint.Core.Models.WindowLocation(this.RestoreBounds.X, this.RestoreBounds.Y);
+            }
+            ModelLocator.Current.Settings.WindowState = (WinPrint.Core.Models.FormWindowState)this.WindowState;
+            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
+        }
 
         internal void SheetSettingsChanged() {
             Debug.WriteLine("SheetSettingsChangned()");
@@ -253,6 +252,16 @@ namespace WinPrint {
             }
         }
 
+        private void headerTextBox_TextChanged(object sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+                ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
+        }
+
+        private void footerTextBox_TextChanged(object sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+                ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Text = footerTextBox.Text;
+        }
+
         private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled) {
                 printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
@@ -260,10 +269,7 @@ namespace WinPrint {
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
                     paperSizesCB.Items.Add(ps);
                 }
-
                 paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
-
-                //SheetSettingsChanged();
             }
         }
 
@@ -333,14 +339,12 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void printButton_Click(object sender, EventArgs e) {
             Print(file);
-
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void pd_BeginPrint(object sender, PrintEventArgs ev) {
             Debug.WriteLine($"pd_BeginPrint {curSheet}");
-
             try {
                 streamToPrint = new StreamReader(file);
                 curSheet = fromSheet;
@@ -387,38 +391,6 @@ namespace WinPrint {
             ev.HasMorePages = curSheet <= sheetViewModelForPrint.NumSheets;
         }
 
-        // Declare the PrintPreviewControl object and the 
-        // PrintDocument object.
-        //internal PrintPreviewControl PrintPreviewControl1;
-
-        //private void InitializePrintPreviewControl() {
-        //    // Construct the PrintPreviewControl.
-        //    this.PrintPreviewControl1 = new PrintPreviewControl();
-
-        //    // Set location, name, and dock style for PrintPreviewControl1.
-        //    this.PrintPreviewControl1.Location = new Point(88, 80);
-        //    this.PrintPreviewControl1.Name = "PrintPreviewControl1";
-        //    this.PrintPreviewControl1.Dock = DockStyle.Fill;
-
-        //    // Set the Document property to the PrintDocument 
-        //    // for which the PrintPage event has been handled.
-        //    this.PrintPreviewControl1.Document = printDoc;
-
-        //    // Set the zoom to 25 percent.
-        //    this.PrintPreviewControl1.Zoom = 1;
-
-        //    // Set the document name. This will show be displayed when 
-        //    // the document is loading into the control.
-        //    this.PrintPreviewControl1.Document.DocumentName = file;
-
-        //    // Set the UseAntiAlias property to true so fonts are smoothed
-        //    // by the operating system.
-        //    this.PrintPreviewControl1.UseAntiAlias = true;
-
-        //    // Add the control to the form.
-        //    this.Controls.Add(this.PrintPreviewControl1);
-        //}
-
         // Declare the dialog.
         internal PrintPreviewDialog printPreviewDialog;
 
@@ -447,18 +419,5 @@ namespace WinPrint {
             this.printPreviewDialog.UseAntiAlias = true;
         }
 
-        private void headerTextBox_TextChanged(object sender, EventArgs e) {
-            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
-            printPreview.Invalidate(true);
-
-        }
-
-        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
-            // Save Window state
-            ModelLocator.Current.Settings.Size = new WinPrint.Core.Models.WindowSize(this.Size.Width, this.Size.Height);
-            ModelLocator.Current.Settings.Location = new WinPrint.Core.Models.WindowLocation(this.Location.X, this.Location.Y);
-            ModelLocator.Current.Settings.WindowState = (WinPrint.Core.Models.FormWindowState)this.WindowState;
-            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
-        }
     }
 }

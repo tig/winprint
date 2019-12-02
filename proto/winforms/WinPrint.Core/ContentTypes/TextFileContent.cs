@@ -18,8 +18,8 @@ namespace WinPrint.Core.ContentTypes {
             Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
 
-    // All of the lines of the text file, after reflow/line-wrap
-    private List<string> lines;
+        // All of the lines of the text file, after reflow/line-wrap
+        private List<string> lines;
         private float lineHeight;
         private int linesPerPage;
         private float lineNumberWidth;
@@ -29,6 +29,9 @@ namespace WinPrint.Core.ContentTypes {
         // Publics
         public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
         private bool lineNumbers = true;
+
+        public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
+        private bool lineNumberSeparator = true;
 
         public void Dispose() {
             Dispose(true);
@@ -164,11 +167,13 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
+            float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 
             int charsFitted, linesFilled;
 
             float contentHeight = PageSize.Height;
+
+            PaintLineNumberSeparator(g);
 
             // Print each line of the file.
             int startLine = (int)((float)contentHeight / lineHeight) * (pageNum - 1);
@@ -191,15 +196,18 @@ namespace WinPrint.Core.ContentTypes {
             }
         }
 
+        private void PaintLineNumberSeparator(Graphics g) {
+            if (LineNumbers && LineNumberSeparator && lineNumberWidth != 0) {
+                g.DrawLine(Pens.Black, lineNumberWidth-2, 0, lineNumberWidth-2, PageSize.Height);
+            }
+        }
+
         // TODO: Allow a different (non-monospace) font for line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (LineNumbers == true && lineNumberWidth != 0) {
                 int lineOnPage = lineNumber % linesPerPage;
-                //float yPos = containingSheet.GetPageY(pageNum) + ((lineOnPage) * lineHeight);
-                float yPos = ((lineOnPage) * lineHeight);
-                //g.DrawString($"{lineOnPage}", font, Brushes.Black, containingDocument.ContentBounds.Left - (lineNumberWidth), yPos, StringFormat.GenericDefault);
-                //g.DrawString($"{lineNumber + 1}", font, Brushes.Black, containingSheet.GetPageX(pageNum), yPos, StringFormat.GenericDefault);
-                g.DrawString($"{lineNumber + 1}", cachedFont, Brushes.Black, 0, yPos, StringFormat.GenericDefault);
+                int x = LineNumberSeparator ? (int)(lineNumberWidth - 8 - MeasureString(g, $"{lineNumber + 1}").Width) : 0;
+                g.DrawString($"{lineNumber + 1}", cachedFont, Brushes.Black, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
             }
         }
     }
