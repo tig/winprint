@@ -38,6 +38,9 @@ namespace WinPrint.Core.ContentTypes {
         public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
         private bool lineNumberSeparator = true;
 
+        public int TabSpaces { get => tabSpaces; set => SetField(ref tabSpaces, value); }
+        private int tabSpaces = 4;
+
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -94,6 +97,10 @@ namespace WinPrint.Core.ContentTypes {
             string line;
             int lineCount = 0;
             while ((line = streamToPrint.ReadLine()) != null) {
+                // Expand tabs
+                if (tabSpaces > 0)
+                    line = line.Replace("\t", new String(' ', tabSpaces));
+
                 AddLine(list, line, minLineLen, ++lineCount);
             }
 

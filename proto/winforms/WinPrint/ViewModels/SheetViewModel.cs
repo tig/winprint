@@ -272,6 +272,13 @@ namespace WinPrint {
                 case "LineNumberSeparator":
                     reflow = true;
                     break;
+
+                case "TabSpaces":
+                    reflow = true;
+                    break;
+
+                default:
+                    break;
             }
             OnSettingsChanged(reflow);
         };

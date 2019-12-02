@@ -20,8 +20,13 @@ namespace WinPrint.Core.ContentTypes {
             if (EqualityComparer<T>.Default.Equals(field, value)) return false;
             field = value;
             OnPropertyChanged(propertyName);
+            OnSettingsChanged(true);
             return true;
         }
+
+        // if bool is true, reflow. Otherwise just paint
+        public event EventHandler<bool> SettingsChanged;
+        protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
 
         //public string Type { get => type; set => type = value; }
         //internal string type = "none";
