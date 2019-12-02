@@ -28,7 +28,10 @@ namespace WinPrint.Core.Models {
 
     public class WindowSize {
 
-        public WindowSize() { }
+        public WindowSize() {
+            Width = 1024;
+            Height = 800;
+        }
         public WindowSize(int width, int height) {
             Width = width;
             Height = height;
@@ -39,7 +42,10 @@ namespace WinPrint.Core.Models {
     }
 
     public class WindowLocation {
-        public WindowLocation() { }
+        public WindowLocation() {
+            X = 100;
+            Y = 100;
+        }
         public WindowLocation(int x, int y) {
             X = x;
             Y = y;
