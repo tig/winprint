@@ -3,12 +3,17 @@
 Line 3 - Form Feed at end:
 Line 4
 Line 5
-Line 6 - Form Feed at begingging
+Line 6 - Form Feed at beginning
 Line 7
 Line 8
 Line 9
-Line 10 has a page feed here:This is just after the page feed.
-Line 11
+Line 10 has a page feed here:This is just after the page feed (should be line 11)
+Line 12
+Line 13
+Line 14
+Line 15 has a page here:(This should be Line 16) and here:and this is after the 2nd one (this shoudl be Line 17)
+Line 18
+Line 19
 -----------------------
 ***********************
-Line 200 - End of File
+End of File

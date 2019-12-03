@@ -74,6 +74,7 @@ namespace WinPrint.Core.ContentTypes {
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
             lineHeight = cachedFont.GetHeight(100);
             linesPerPage = (int)(PageSize.Height / lineHeight);
+
             //// BUGBUG: This will be too narrow if font is not fixed-pitch
             //lineNumberWidth = MeasureString(null, $"{((List<string>)DocumentContent).Count}0").Width;
             // TODO: Figure out how to make this right
@@ -84,9 +85,6 @@ namespace WinPrint.Core.ContentTypes {
             // Note, MeasureLines may increment numPages due to form feeds
             lines = MeasureLines(streamToPrint); // new List<string>();
 
-            //while (NextPage(streamToPrint)) {
-            //    numPages++;
-            //}
             numPages += (lines.Count / linesPerPage) + 1;
 
             return numPages;
@@ -105,43 +103,52 @@ namespace WinPrint.Core.ContentTypes {
                 if (tabSpaces > 0)
                     line = line.Replace("\t", new String(' ', tabSpaces));
 
-                // Form feeds
-                // treat a FF the same as the end of a line; next line is first line of next page
-                // FF at start of line - That line should be at top of next page
-                // FF in middle of line - Text up to FF should be on current page, text after should be at top of
-                // next page
-                // FF at end of line - Next line should be top of next page
-
+                ++lineCount;
                 if (newPageOnFormFeed && line.Contains("\f"))
-                    ExpandFormFeeds(list, line, minLineLen, ++lineCount);
+                    lineCount = ExpandFormFeeds(list, line, minLineLen, lineCount);
                 else
-                    AddLine(list, line, minLineLen, ++lineCount);
+                    lineCount = AddLine(list, line, minLineLen, lineCount);
             }
 
             return list;
         }
 
-        private void ExpandFormFeeds(List<Line> list, string line, int minLineLen, int lineCount) {
-            string outLine = "";
+        private int ExpandFormFeeds(List<Line> list, string line, int minLineLen, int lineCount) {
+            // Form feeds
+            // treat a FF the same as the end of a line; next line is first line of next page
+            // FF at start of line - That line should be at top of next page
+            // FF in middle of line - Text up to FF should be on current page, text after should be at top of
+            // next page
+            // FF at end of line - Next line should be top of next page
 
-            foreach (var c in line) {
-                if (c == '\f') {
-                    if (outLine.Length > 0)
-                        AddLine(list, outLine, minLineLen, lineCount);
-                    outLine = "";
+            string lineToAdd = "";
 
+            for (int i = 0; i < line.Length; i++) {
+                if (line[i] == '\f') {
+                    if (lineToAdd.Length > 0) {
+                        // FF was NOT at start of line. Add it.
+                        AddLine(list, lineToAdd, minLineLen, lineCount);
+                        // if we're not at the end of the line t increment line #
+                        if (i < line.Length-1) lineCount++;
+                    }
+
+                    // Add blank lines to get to next page
                     while (list.Count % linesPerPage != 0)
                         list.Add(new Line() { text = "", lineNumber = 0 });
+
+                    // Now on next line
+                    lineToAdd = "";
                 }
                 else {
-                    outLine += c;
+                    lineToAdd += line[i];
                 }
             }
-            if (outLine.Length > 0)
-                AddLine(list, outLine, minLineLen, 0);
+            if (lineToAdd.Length > 0)
+                AddLine(list, lineToAdd, minLineLen, lineCount);
+            return lineCount;
         }
 
-        private void AddLine(List<Line> list, string line, int minLineLen, int lineCount) {
+        private int AddLine(List<Line> list, string line, int minLineLen, int lineCount) {
             int charsFitted, linesFilled;
 
             float height = MeasureString(null, line, out charsFitted, out linesFilled).Height;
@@ -159,7 +166,7 @@ namespace WinPrint.Core.ContentTypes {
                         start = start + i - 1;
                         c = line.Substring(start, line.Length - start).Length;
 
-                        // Recurse
+                        // Recurse wrapped lines
                         AddLine(list, line.Substring(start, c), minLineLen, 0);
 
                         // exit for loop
@@ -170,6 +177,7 @@ namespace WinPrint.Core.ContentTypes {
             else {
                 list.Add(new Line() { text = line, lineNumber = lineCount });
             }
+            return lineCount;
         }
 
         private SizeF MeasureString(Graphics g, string text) {
