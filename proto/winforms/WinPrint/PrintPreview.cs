@@ -75,6 +75,7 @@ namespace WinPrint {
             if (ClientSize.Width <= Margin.Left + Margin.Right || ClientSize.Height <= Margin.Top + Margin.Bottom) return;
 
             // Paint rules, header, and footer
+            // TODO: Cache pages as bitmaps for fast painting
             svm.Paint(e.Graphics, CurrentSheet);
 
             // Draw focus rect

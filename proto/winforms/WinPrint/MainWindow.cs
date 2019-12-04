@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -29,7 +25,8 @@ namespace WinPrint {
         private PrintDialog PrintDialog1 = new PrintDialog();
 
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";
-        private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
+        //private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
+        private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
         //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
         //private string file = @"C:\Users\ckindel\source\winprint\proto\winforms\WinPrint\MainWindow.cs";
 
@@ -127,7 +124,6 @@ namespace WinPrint {
             }
 
             this.Text = svm.File = file;
-
             return svm;
         }
 
@@ -154,8 +150,6 @@ namespace WinPrint {
             //InitializePrintPreviewControl();
             InitializePrintPreviewDialog();
 
-            //printDoc.DefaultPageSettings.Margins = new Margins(200, 200, 100, 100);
-
             printPreview.SheetViewModel = CreatePreviewSheetViewModel();
 
             printersCB.Enabled = true;
@@ -166,10 +160,6 @@ namespace WinPrint {
                 if (printDoc.PrinterSettings.IsDefaultPrinter)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
-
-            printPreview.Select();
-
-            SheetSettingsChanged();
 
             if (ModelLocator.Current.Options.Files != null &&
                   ModelLocator.Current.Options.Files.Any() &&
@@ -182,6 +172,8 @@ namespace WinPrint {
                 PrintPreview(file);
                 return;
             }
+
+            printPreview.Select();
             this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
             this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
@@ -202,19 +194,16 @@ namespace WinPrint {
         }
 
         internal void SheetSettingsChanged() {
-            Debug.WriteLine("SheetSettingsChangned()");
+            Debug.WriteLine("SheetSettingsChanged()");
 
-            // Set the paper size based upon the selection in the combo box.
-            if (paperSizesCB.SelectedIndex != -1) {
-                printDoc.DefaultPageSettings.PaperSize =
-                    printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
-            }
+            this.Cursor = Cursors.WaitCursor;
             // Set landscape. This causes other DefaultPageSettings to change
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);
             printPreview.Invalidate(true);
-            //printPreview.Refresh();
             SizePreview();
+
+            this.Cursor = Cursors.Default;
         }
 
         internal void SizePreview() {
@@ -248,6 +237,7 @@ namespace WinPrint {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
                 if (e.AffectedProperty.ToString() == "Bounds") {
+                    Debug.WriteLine("MainWindow_Layout bounds changed");
                     SizePreview();
                 }
             }
@@ -265,6 +255,7 @@ namespace WinPrint {
 
         private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled) {
+                Debug.WriteLine("printersCB_SelectedIndexChanged");
                 printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
                 paperSizesCB.Items.Clear();
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
@@ -275,10 +266,16 @@ namespace WinPrint {
         }
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
-            if (printersCB.Enabled)
+            if (printersCB.Enabled) {
+                Debug.WriteLine("paperSizesCB_SelectedIndexChanged");
+                // Set the paper size based upon the selection in the combo box.
+                if (paperSizesCB.SelectedIndex != -1) {
+                    printDoc.DefaultPageSettings.PaperSize =
+                        printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
+                }
                 SheetSettingsChanged();
+            }
         }
-
 
         private void PrintPreview(string file) {
             sheetViewModelForPrint.File = file;

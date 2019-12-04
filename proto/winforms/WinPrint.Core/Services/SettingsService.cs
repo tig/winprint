@@ -56,7 +56,7 @@ namespace WinPrint.Core.Services {
             }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
-                Debug.WriteLine($"Settingsservice: Error with {settingsFileName}. {ex.Message}");
+                Debug.WriteLine($"SettingsService: Error with {settingsFileName}. {ex.Message}");
                 //ExceptionUtils.DumpException(ex);
             }
             finally {
@@ -69,11 +69,11 @@ namespace WinPrint.Core.Services {
                 watcher = new FileWatcher(Path.GetFullPath(settingsFileName));
                 watcher.ChangedEvent += (o, a) => {
                     jsonString = File.ReadAllText(settingsFileName);
-                    Debug.WriteLine($"ReadSettings: Changed. Re-Deserializing...");
                     Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
                     // CopyPropertiesTo does a deep, property-by property copy from the passed instance
                     ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
+                    Debug.WriteLine($"ReadSettings: Done Copying Properties!");
                 };
             }
 

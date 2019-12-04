@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.ContentTypes {
 
+    /// <summary>
+    /// This struct us keep track of which lines are 'real' and thus get a printed line number
+    /// and which are the result of wrapping.
+    /// </summary>
     internal struct Line {
         internal string text;
         internal int lineNumber; // 0 if wrapped
@@ -17,7 +22,6 @@ namespace WinPrint.Core.ContentTypes {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextFileContent : ContentBase, IDisposable {
-
         public static string Type = "text/plain";
         public TextFileContent() {
             Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
@@ -69,16 +73,17 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public override int CountPages(StreamReader streamToPrint) {
+            Debug.WriteLine("TextFileContent.CountPages");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
             lineHeight = cachedFont.GetHeight(100);
-            linesPerPage = (int)(PageSize.Height / lineHeight);
+            linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
 
-            //// BUGBUG: This will be too narrow if font is not fixed-pitch
-            //lineNumberWidth = MeasureString(null, $"{((List<string>)DocumentContent).Count}0").Width;
-            // TODO: Figure out how to make this right
-            lineNumberWidth = LineNumbers ? MeasureString(null, $"{1234}0").Width : 0;
+            // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
+            // TODO: Make line number width dynamic
+            // Note, Measure string is actually dependent on lineNumberWidth!
+            lineNumberWidth = LineNumbers ? MeasureString(null, new string('0', 4)).Width : 0;
 
             numPages = 0;
 
@@ -87,10 +92,13 @@ namespace WinPrint.Core.ContentTypes {
 
             numPages += (lines.Count / linesPerPage) + 1;
 
+            Debug.WriteLine($"{lines.Count} lines across {numPages} pages.");
             return numPages;
         }
 
+        // TODO: Profile for performance
         private List<Line> MeasureLines(StreamReader streamToPrint) {
+            Debug.WriteLine("TextFileContent.MeasureLines");
             var list = new List<Line>();
 
             minCharWidth = MeasureString(null, "W").Width;
@@ -148,6 +156,7 @@ namespace WinPrint.Core.ContentTypes {
             return lineCount;
         }
 
+        // TODO: Profile AddLine for performance
         private int AddLine(List<Line> list, string line, int minLineLen, int lineCount) {
             int charsFitted, linesFilled;
 
@@ -185,6 +194,14 @@ namespace WinPrint.Core.ContentTypes {
             return MeasureString(g, text, out charsFitted, out linesFilled);
         }
 
+        /// <summary>
+        /// Measures how much width a string will take, given current page settings (including line numbers)
+        /// </summary>
+        /// <param name="g"></param>
+        /// <param name="text"></param>
+        /// <param name="charsFitted"></param>
+        /// <param name="linesFilled"></param>
+        /// <returns></returns>
         private SizeF MeasureString(Graphics g, string text, out int charsFitted, out int linesFilled) {
             if (g is null) {
                 // define context used for determining glyph metrics.        
@@ -192,11 +209,11 @@ namespace WinPrint.Core.ContentTypes {
                 g = Graphics.FromImage(bitmap);
                 //g = Graphics.FromHwnd(PrintPreview.Instance.Handle);
                 g.PageUnit = GraphicsUnit.Document;
-
             }
 
             // determine width     
             float fontHeight = lineHeight;
+            // Use page settings including lineNumberWidth
             SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
             SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
@@ -209,31 +226,22 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
-
             int charsFitted, linesFilled;
-
-            float contentHeight = PageSize.Height;
 
             PaintLineNumberSeparator(g);
 
             // Print each line of the file.
-            int startLine = (int)((float)contentHeight / lineHeight) * (pageNum - 1);
-            int endLine = (int)(startLine + ((float)contentHeight / lineHeight));
+            int startLine = linesPerPage * (pageNum - 1);
+            int endLine = startLine + linesPerPage;
             int lineOnPage;
             for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
                 int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
-
-                if (lineInDocument < lines.Count && lineInDocument >= startLine && lineInDocument < endLine) {
+                if (lineInDocument < lines.Count && lineInDocument >= startLine && lineInDocument <= endLine) {
                     if (lines[lineInDocument].lineNumber > 0)
                         PaintLineNumber(g, pageNum, lineInDocument);
                     float xPos = leftMargin + lineNumberWidth;
-                    //float yPos = containingSheet.GetPageY(pageNum) + (lineOnPage * lineHeight);
                     float yPos = lineOnPage * lineHeight;
                     g.DrawString(lines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
-                    //SizeF proposedSize = new SizeF(containingDocument.ContentBounds.Width - lineNumberWidth, lineHeight * linesPerPage);
-                    //g.DrawRectangle(Pens.Green, xPos, yPos, proposedSize.Width, lineHeight);
-                    //SizeF s = g.MeasureString(lines[lineInDocument], font, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
-                    //g.DrawRectangle(Pens.Red, xPos, yPos, s.Width, s.Height);
                 }
             }
         }

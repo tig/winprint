@@ -81,11 +81,6 @@ namespace WinPrint.Core.Models {
         public Margins Margins { get => margins; set => SetField(ref margins, value); }
 
         /// <summary>
-        /// Font used for page content
-        /// </summary>
-        public Font Font { get => font; set => SetField(ref font, value); }
-
-        /// <summary>
         /// Font used for diagnostic rules
         /// </summary>
         public Font RulesFont { get => rulesFont; set => SetField(ref rulesFont, value); }

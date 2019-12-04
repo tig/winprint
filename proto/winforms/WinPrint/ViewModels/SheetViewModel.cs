@@ -97,7 +97,7 @@ namespace WinPrint {
 
             this.sheet = sheet;
             Landscape = sheet.Landscape;
-            RulesFont = (Core.Models.Font)sheet.Font.Clone();
+            RulesFont = (Core.Models.Font)sheet.RulesFont.Clone();
             Rows = sheet.Rows;
             Columns = sheet.Columns;
             Padding = sheet.Padding;
@@ -120,6 +120,7 @@ namespace WinPrint {
         /// </summary>
         /// <param name="pageSettings"></param>
         public void Reflow(PageSettings pageSettings) {
+            
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
             var ps = (PageSettings)pageSettings.Clone();
 
@@ -481,7 +482,6 @@ namespace WinPrint {
             using Brush brush = new SolidBrush(color);
             if (start.X == end.X) {
                 // Vertical
-                g.ResetTransform();
 
                 g.RotateTransform(90);
                 Single x = start.X + (textSize.Height / 2F);
@@ -491,6 +491,7 @@ namespace WinPrint {
                 RectangleF textRect = new RectangleF(new PointF(0, 0), textSize);
                 g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
                 g.DrawString(text, font, brush, 0, 0);
+                g.ResetTransform();
 
             }
             else {
