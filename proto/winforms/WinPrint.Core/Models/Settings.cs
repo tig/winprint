@@ -29,8 +29,6 @@ namespace WinPrint.Core.Models {
     public class WindowSize {
 
         public WindowSize() {
-            Width = 1024;
-            Height = 800;
         }
         public WindowSize(int width, int height) {
             Width = width;
@@ -43,8 +41,6 @@ namespace WinPrint.Core.Models {
 
     public class WindowLocation {
         public WindowLocation() {
-            X = 100;
-            Y = 100;
         }
         public WindowLocation(int x, int y) {
             X = x;
@@ -98,8 +94,8 @@ namespace WinPrint.Core.Models {
         public Dictionary<string, Sheet> Sheets { get; set; }
 
         public Settings() {
-            size = new WindowSize(0, 0);
-            location = new WindowLocation(0, 0);
+            size = new WindowSize(1024, 800);
+            location = new WindowLocation(100,100);
         }
     }
 }

@@ -13,8 +13,8 @@ namespace WinPrint.Core.Models {
         private string name = "";
         private int rows = 1;
         private int columns = 1;
-        private int padding = 0;
-        private bool pageSeparator = true;
+        private int padding = 3;
+        private bool pageSeparator;
         private Margins margins;
 
         private bool landscape;
@@ -120,6 +120,11 @@ namespace WinPrint.Core.Models {
 
             // TODO: Don't specify defaults in constructor; do it through default settings
             Margins = new Margins(30, 30, 30, 30);
+            header.Enabled = true;
+            footer.Enabled = true;
+            landscape = true;
+            columns = 2;
+            pageSeparator = false;
         }
     }
 }
