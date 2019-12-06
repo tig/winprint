@@ -21,7 +21,7 @@ namespace WinPrint {
         private bool bottomBorder;
         private bool enabled;
         // TODO: Make settable
-        internal float verticalPadding = 0; // Vertical padding below/above header/footer in 100ths of inch
+        internal float verticalPadding = 6; // Vertical padding below/above header/footer in 100ths of inch
 
         public string Text { get => text; set => SetField(ref text, value); }
 
@@ -89,21 +89,21 @@ namespace WinPrint {
             if (!Enabled) return;
             if (g is null) throw new ArgumentNullException(nameof(g));
 
-            RectangleF bounds = CalcBounds();
-
-            //bounds.Height -= verticalPadding;
+            RectangleF boundsHF = CalcBounds();
+            boundsHF.Y += IsAlignTop() ? 0 : verticalPadding;
+            boundsHF.Height -= verticalPadding;
 
             if (LeftBorder)
-                g.DrawLine(Pens.Black, bounds.Left, bounds.Top, bounds.Left, bounds.Bottom);
+                g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
 
             if (TopBorder)
-                g.DrawLine(Pens.Black, bounds.Left, bounds.Top, bounds.Right, bounds.Top);
+                g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Right, boundsHF.Top);
 
             if (RightBorder)
-                g.DrawLine(Pens.Black, bounds.Right, bounds.Top, bounds.Right, bounds.Bottom);
+                g.DrawLine(Pens.Black, boundsHF.Right, boundsHF.Top, boundsHF.Right, boundsHF.Bottom);
 
             if (BottomBorder)
-                g.DrawLine(Pens.Black, bounds.Left, bounds.Bottom, bounds.Right, bounds.Bottom);
+                g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
 
             Macros macros = new Macros(svm);
             string[] parts = macros.ReplaceMacro(Text, sheetNum).Split('\t', '|');
@@ -121,18 +121,15 @@ namespace WinPrint {
                 // Convert font to pixel units if we're in preview
                 tempFont = new System.Drawing.Font(Font.Family, Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel);
             }
+
             using StringFormat fmt = new StringFormat(StringFormat.GenericTypographic) {
-                LineAlignment = StringAlignment.Near,
-                Trimming = StringTrimming.EllipsisPath,
-                FormatFlags = StringFormatFlags.NoWrap | StringFormatFlags.FitBlackBox 
+                Trimming = StringTrimming.None,
+                // BUGBUG: This is a work around for https://stackoverflow.com/questions/59159919/stringformat-trimming-changes-vertical-placement-of-text
+                //         (turning on NoWrap). 
+                FormatFlags = StringFormatFlags.FitBlackBox | StringFormatFlags.LineLimit | StringFormatFlags.NoWrap
             };
 
-            // BUGBUG: This is a hot mess. LineAlignment.Near does not appear to work correctly. 
-            // See https://stackoverflow.com/questions/59159919/stringformat-triming-changes-vertical-placement-of-text
             fmt.LineAlignment = IsAlignTop() ? StringAlignment.Near : StringAlignment.Far;
-
-            // This works around the problem. All other settings of TextRenderingHint cause it to flare up
-            g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
             // Center goes first - it has priority - ensure it gets drawn completely where
             // Left & Right can be trimmed
@@ -140,36 +137,30 @@ namespace WinPrint {
 
             if (parts.Length > 1) {
                 fmt.Alignment = StringAlignment.Center;
-                sizeCenter = g.MeasureString(parts[1], tempFont, (int)bounds.Width, fmt);
-                //g.DrawRectangle(Pens.Purple, bounds.X, bounds.Y, bounds.Width, bounds.Height);
-                g.DrawString(parts[1], tempFont, Brushes.Black, bounds, fmt);
+                sizeCenter = g.MeasureString(parts[1], tempFont, (int)boundsHF.Width, fmt);
+                g.DrawRectangle(Pens.Purple, boundsHF.X, boundsHF.Y, boundsHF.Width, boundsHF.Height);
+                g.DrawString(parts[1], tempFont, Brushes.Black, boundsHF, fmt);
             }
 
-            bounds = CalcBounds();
-
             // Left
-            SizeF sizeLeft = g.MeasureString(parts[0], tempFont, (int)bounds.Width, fmt);
             // Remove the space taken up by the center from the bounds
-            bounds.Width = (bounds.Width - sizeCenter.Width) / 2;
-            if (bounds.Width < 0) 
-                bounds = CalcBounds();
+            float textCenterBounds = (boundsHF.Width - sizeCenter.Width) / 2;
 
-            //fmt.Trimming = StringTrimming.EllipsisPath;
+            RectangleF boundsLeft = new RectangleF(boundsHF.X, boundsHF.Y, textCenterBounds, boundsHF.Height);
+            SizeF sizeLeft = g.MeasureString(parts[0], tempFont, (int)textCenterBounds, fmt);
+
             fmt.Alignment = StringAlignment.Near;
-            //g.DrawRectangle(Pens.Orange, bounds.X, bounds.Y, bounds.Width, bounds.Height);
-            g.DrawString(parts[0], tempFont, Brushes.Black, bounds, fmt);
-
-            bounds = CalcBounds();
-
-            // Remove the space taken up by the center from the rigth bounds
-            bounds.X = bounds.X + ((bounds.Width - sizeCenter.Width) / 2) + sizeCenter.Width;
-            bounds.Width = (bounds.Width - sizeCenter.Width) / 2;
+            fmt.Trimming = StringTrimming.None;
+            g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
+            g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
 
             //Right
+            RectangleF boundsRight = new RectangleF(boundsHF.X + (boundsHF.Width - textCenterBounds), boundsHF.Y, textCenterBounds, boundsHF.Height);
             if (parts.Length > 2) {
                 fmt.Alignment = StringAlignment.Far;
-                //g.DrawRectangle(Pens.Blue, bounds.X, bounds.Y, bounds.Width, bounds.Height);
-                g.DrawString(parts[2], tempFont, Brushes.Black, bounds, fmt);
+                fmt.Trimming = StringTrimming.None;
+                g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
+                g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
             }
             tempFont.Dispose();
         }

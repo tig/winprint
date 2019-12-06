@@ -123,7 +123,8 @@ namespace WinPrint {
                 file = list[0];
             }
 
-            this.Text = svm.File = file;
+            svm.File = file;
+            this.Text = $"WinPrint - {file}";
             return svm;
         }
 
