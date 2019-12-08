@@ -32,14 +32,26 @@ namespace WinPrint
             this.footerTextBox = new System.Windows.Forms.TextBox();
             this.enableFooter = new System.Windows.Forms.CheckBox();
             this.panelLeft = new System.Windows.Forms.Panel();
-            this.panelRight = new System.Windows.Forms.Panel();
-            this.labelPaper = new System.Windows.Forms.Label();
-            this.labelPrinter = new System.Windows.Forms.Label();
-            this.comboBoxSheet = new System.Windows.Forms.ComboBox();
+            this.labelRight = new System.Windows.Forms.Label();
+            this.labelTop = new System.Windows.Forms.Label();
+            this.topMargin = new System.Windows.Forms.NumericUpDown();
+            this.labelLeft = new System.Windows.Forms.Label();
+            this.leftMargin = new System.Windows.Forms.NumericUpDown();
+            this.rightMargin = new System.Windows.Forms.NumericUpDown();
+            this.labelBottom = new System.Windows.Forms.Label();
+            this.bottomMargin = new System.Windows.Forms.NumericUpDown();
             this.labelSheet = new System.Windows.Forms.Label();
+            this.comboBoxSheet = new System.Windows.Forms.ComboBox();
+            this.labelPrinter = new System.Windows.Forms.Label();
+            this.labelPaper = new System.Windows.Forms.Label();
+            this.panelRight = new System.Windows.Forms.Panel();
             this.headerTextBox.SuspendLayout();
             this.footerTextBox.SuspendLayout();
             this.panelLeft.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.topMargin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.leftMargin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.rightMargin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bottomMargin)).BeginInit();
             this.panelRight.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -182,7 +194,14 @@ namespace WinPrint
             // panelLeft
             // 
             this.panelLeft.BackColor = System.Drawing.SystemColors.Control;
-            this.panelLeft.Controls.Add(this.previewButton);
+            this.panelLeft.Controls.Add(this.labelRight);
+            this.panelLeft.Controls.Add(this.labelTop);
+            this.panelLeft.Controls.Add(this.topMargin);
+            this.panelLeft.Controls.Add(this.labelLeft);
+            this.panelLeft.Controls.Add(this.leftMargin);
+            this.panelLeft.Controls.Add(this.rightMargin);
+            this.panelLeft.Controls.Add(this.labelBottom);
+            this.panelLeft.Controls.Add(this.bottomMargin);
             this.panelLeft.Controls.Add(this.paperSizesCB);
             this.panelLeft.Controls.Add(this.printersCB);
             this.panelLeft.Controls.Add(this.labelSheet);
@@ -191,12 +210,164 @@ namespace WinPrint
             this.panelLeft.Controls.Add(this.labelPrinter);
             this.panelLeft.Controls.Add(this.labelPaper);
             this.panelLeft.Controls.Add(this.printButton);
+            this.panelLeft.Controls.Add(this.previewButton);
             this.panelLeft.Dock = System.Windows.Forms.DockStyle.Left;
             this.panelLeft.ForeColor = System.Drawing.Color.Black;
             this.panelLeft.Location = new System.Drawing.Point(0, 0);
             this.panelLeft.Name = "panelLeft";
             this.panelLeft.Size = new System.Drawing.Size(252, 749);
             this.panelLeft.TabIndex = 9;
+            // 
+            // labelRight
+            // 
+            this.labelRight.AutoSize = true;
+            this.labelRight.Location = new System.Drawing.Point(142, 126);
+            this.labelRight.Name = "labelRight";
+            this.labelRight.Size = new System.Drawing.Size(38, 15);
+            this.labelRight.TabIndex = 10;
+            this.labelRight.Text = "&Right:";
+            // 
+            // labelTop
+            // 
+            this.labelTop.AutoSize = true;
+            this.labelTop.Location = new System.Drawing.Point(64, 90);
+            this.labelTop.Name = "labelTop";
+            this.labelTop.Size = new System.Drawing.Size(29, 15);
+            this.labelTop.TabIndex = 10;
+            this.labelTop.Text = "&Top:";
+            // 
+            // topMargin
+            // 
+            this.topMargin.DecimalPlaces = 2;
+            this.topMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.topMargin.Location = new System.Drawing.Point(107, 90);
+            this.topMargin.Name = "topMargin";
+            this.topMargin.Size = new System.Drawing.Size(53, 23);
+            this.topMargin.TabIndex = 11;
+            this.topMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.topMargin.ValueChanged += new System.EventHandler(this.topMargin_ValueChanged);
+            // 
+            // labelLeft
+            // 
+            this.labelLeft.AutoSize = true;
+            this.labelLeft.Location = new System.Drawing.Point(13, 126);
+            this.labelLeft.Name = "labelLeft";
+            this.labelLeft.Size = new System.Drawing.Size(30, 15);
+            this.labelLeft.TabIndex = 10;
+            this.labelLeft.Text = "&Left:";
+            // 
+            // leftMargin
+            // 
+            this.leftMargin.DecimalPlaces = 2;
+            this.leftMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.leftMargin.Location = new System.Drawing.Point(49, 124);
+            this.leftMargin.Name = "leftMargin";
+            this.leftMargin.Size = new System.Drawing.Size(49, 23);
+            this.leftMargin.TabIndex = 11;
+            this.leftMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.leftMargin.ValueChanged += new System.EventHandler(this.leftMargin_ValueChanged);
+            // 
+            // rightMargin
+            // 
+            this.rightMargin.DecimalPlaces = 2;
+            this.rightMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.rightMargin.Location = new System.Drawing.Point(186, 124);
+            this.rightMargin.Name = "rightMargin";
+            this.rightMargin.Size = new System.Drawing.Size(53, 23);
+            this.rightMargin.TabIndex = 11;
+            this.rightMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.rightMargin.ValueChanged += new System.EventHandler(this.rightMargin_ValueChanged);
+            // 
+            // labelBottom
+            // 
+            this.labelBottom.AutoSize = true;
+            this.labelBottom.Location = new System.Drawing.Point(49, 164);
+            this.labelBottom.Name = "labelBottom";
+            this.labelBottom.Size = new System.Drawing.Size(50, 15);
+            this.labelBottom.TabIndex = 10;
+            this.labelBottom.Text = "&Bottom:";
+            // 
+            // bottomMargin
+            // 
+            this.bottomMargin.DecimalPlaces = 2;
+            this.bottomMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.bottomMargin.Location = new System.Drawing.Point(107, 162);
+            this.bottomMargin.Name = "bottomMargin";
+            this.bottomMargin.Size = new System.Drawing.Size(53, 23);
+            this.bottomMargin.TabIndex = 11;
+            this.bottomMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.bottomMargin.ValueChanged += new System.EventHandler(this.bottomMargin_ValueChanged);
+            // 
+            // labelSheet
+            // 
+            this.labelSheet.AutoSize = true;
+            this.labelSheet.Location = new System.Drawing.Point(12, 17);
+            this.labelSheet.Name = "labelSheet";
+            this.labelSheet.Size = new System.Drawing.Size(78, 15);
+            this.labelSheet.TabIndex = 9;
+            this.labelSheet.Text = "&Sheet Design:";
+            // 
+            // comboBoxSheet
+            // 
+            this.comboBoxSheet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSheet.FormattingEnabled = true;
+            this.comboBoxSheet.Location = new System.Drawing.Point(12, 35);
+            this.comboBoxSheet.Name = "comboBoxSheet";
+            this.comboBoxSheet.Size = new System.Drawing.Size(227, 23);
+            this.comboBoxSheet.TabIndex = 8;
+            this.comboBoxSheet.SelectedIndexChanged += new System.EventHandler(this.comboBoxSheet_SelectedIndexChanged);
+            // 
+            // labelPrinter
+            // 
+            this.labelPrinter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelPrinter.AutoSize = true;
+            this.labelPrinter.Location = new System.Drawing.Point(13, 613);
+            this.labelPrinter.Name = "labelPrinter";
+            this.labelPrinter.Size = new System.Drawing.Size(45, 15);
+            this.labelPrinter.TabIndex = 7;
+            this.labelPrinter.Text = "&Printer:";
+            // 
+            // labelPaper
+            // 
+            this.labelPaper.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelPaper.AutoSize = true;
+            this.labelPaper.Location = new System.Drawing.Point(13, 655);
+            this.labelPaper.Name = "labelPaper";
+            this.labelPaper.Size = new System.Drawing.Size(40, 15);
+            this.labelPaper.TabIndex = 7;
+            this.labelPaper.Text = "P&aper:";
             // 
             // panelRight
             // 
@@ -209,45 +380,6 @@ namespace WinPrint
             this.panelRight.Size = new System.Drawing.Size(618, 749);
             this.panelRight.TabIndex = 10;
             this.panelRight.Resize += new System.EventHandler(this.panelRight_Resize);
-            // 
-            // labelPaper
-            // 
-            this.labelPaper.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelPaper.AutoSize = true;
-            this.labelPaper.Location = new System.Drawing.Point(13, 655);
-            this.labelPaper.Name = "labelPaper";
-            this.labelPaper.Size = new System.Drawing.Size(40, 15);
-            this.labelPaper.TabIndex = 7;
-            this.labelPaper.Text = "P&aper:";
-            // 
-            // labelPrinter
-            // 
-            this.labelPrinter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelPrinter.AutoSize = true;
-            this.labelPrinter.Location = new System.Drawing.Point(13, 613);
-            this.labelPrinter.Name = "labelPrinter";
-            this.labelPrinter.Size = new System.Drawing.Size(45, 15);
-            this.labelPrinter.TabIndex = 7;
-            this.labelPrinter.Text = "&Printer:";
-            // 
-            // comboBoxSheet
-            // 
-            this.comboBoxSheet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSheet.FormattingEnabled = true;
-            this.comboBoxSheet.Location = new System.Drawing.Point(12, 35);
-            this.comboBoxSheet.Name = "comboBoxSheet";
-            this.comboBoxSheet.Size = new System.Drawing.Size(227, 23);
-            this.comboBoxSheet.TabIndex = 8;
-            this.comboBoxSheet.SelectedIndexChanged += new System.EventHandler(this.comboBoxSheet_SelectedIndexChanged);
-            // 
-            // labelSheet
-            // 
-            this.labelSheet.AutoSize = true;
-            this.labelSheet.Location = new System.Drawing.Point(12, 17);
-            this.labelSheet.Name = "labelSheet";
-            this.labelSheet.Size = new System.Drawing.Size(78, 15);
-            this.labelSheet.TabIndex = 9;
-            this.labelSheet.Text = "&Sheet Design:";
             // 
             // MainWindow
             // 
@@ -269,6 +401,10 @@ namespace WinPrint
             this.footerTextBox.PerformLayout();
             this.panelLeft.ResumeLayout(false);
             this.panelLeft.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.topMargin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.leftMargin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.rightMargin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bottomMargin)).EndInit();
             this.panelRight.ResumeLayout(false);
             this.panelRight.PerformLayout();
             this.ResumeLayout(false);
@@ -295,6 +431,14 @@ namespace WinPrint
         private ComboBox comboBoxSheet;
         private Label labelPrinter;
         private Label labelPaper;
+        private Label labelTop;
+        private NumericUpDown topMargin;
+        private Label labelLeft;
+        private NumericUpDown leftMargin;
+        private Label labelRight;
+        private NumericUpDown rightMargin;
+        private Label labelBottom;
+        private NumericUpDown bottomMargin;
     }
 }
 

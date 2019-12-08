@@ -28,7 +28,7 @@ namespace WinPrint {
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
         //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
-        private string file = @"..\\..\\..\\..\\..\\..\\proto\winforms\WinPrint\Program.cs";
+        private string file = @"..\\..\\..\\..\\..\\..\\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";
 
         private SettingsService settingsService = ServiceLocator.Current.SettingsService;
 
@@ -89,6 +89,12 @@ namespace WinPrint {
             enableFooter.Checked = svm.Footer.Enabled;
             footerTextBox.Text = svm.Footer.Text;
 
+            topMargin.Value = svm.Margins.Top / 100M;
+            leftMargin.Value = svm.Margins.Left / 100M;
+            rightMargin.Value = svm.Margins.Right / 100M;
+            bottomMargin.Value = svm.Margins.Bottom / 100M;
+
+
             svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
@@ -103,6 +109,13 @@ namespace WinPrint {
 
                     case "Footer":
                         footerTextBox.Text = svm.Footer.Text;
+                        break;
+
+                    case "Margins":
+                        topMargin.Value = svm.Margins.Top / 100M;
+                        leftMargin.Value = svm.Margins.Left / 100M;
+                        rightMargin.Value = svm.Margins.Right / 100M;
+                        bottomMargin.Value = svm.Margins.Bottom / 100M;
                         break;
                 }
             }));
@@ -494,6 +507,30 @@ namespace WinPrint {
                 ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
                 //ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);
             }
+        }
+
+        private void topMargin_ValueChanged(object sender, EventArgs e) {
+            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Top = (int)(topMargin.Value * 100M);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        private void leftMargin_ValueChanged(object sender, EventArgs e) {
+            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Left = (int)(leftMargin.Value * 100M);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        private void rightMargin_ValueChanged(object sender, EventArgs e) {
+            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Right = (int)(rightMargin.Value * 100M);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        private void bottomMargin_ValueChanged(object sender, EventArgs e) {
+            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Bottom = (int)(bottomMargin.Value * 100M);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
         }
     }
 }
