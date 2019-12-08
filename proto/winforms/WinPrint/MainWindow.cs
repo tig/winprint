@@ -94,6 +94,10 @@ namespace WinPrint {
             rightMargin.Value = svm.Margins.Right / 100M;
             bottomMargin.Value = svm.Margins.Bottom / 100M;
 
+            pageSeparator.Checked = svm.PageSepartor;
+            rows.Value = svm.Rows;
+            columns.Value = svm.Columns;
+            padding.Value = svm.Padding / 100M;
 
             svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"SheetViewModel.PropertyChanged: {e.PropertyName}");
@@ -116,6 +120,22 @@ namespace WinPrint {
                         leftMargin.Value = svm.Margins.Left / 100M;
                         rightMargin.Value = svm.Margins.Right / 100M;
                         bottomMargin.Value = svm.Margins.Bottom / 100M;
+                        break;
+
+                    case "PageSeparator":
+                        pageSeparator.Checked = svm.PageSepartor;
+                        break;
+
+                    case "Rows":
+                        rows.Value = svm.Rows;
+                        break;
+
+                    case "Columns":
+                        columns.Value = svm.Columns;
+                        break;
+
+                    case "Padding":
+                        padding.Value = svm.Padding / 100M;
                         break;
                 }
             }));
@@ -531,6 +551,23 @@ namespace WinPrint {
             Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
             margins.Bottom = (int)(bottomMargin.Value * 100M);
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        private void pageSeparator_CheckedChanged(object sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).PageSeparator = pageSeparator.Checked;
+        }
+
+        private void rows_ValueChanged(object sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Rows = (int)rows.Value;
+        }
+
+        private void columns_ValueChanged(object sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Columns = (int)columns.Value;
+
+        }
+
+        private void padding_ValueChanged(object sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = (int)(padding.Value * 100M);
         }
     }
 }

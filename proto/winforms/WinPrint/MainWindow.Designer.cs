@@ -32,14 +32,23 @@ namespace WinPrint
             this.footerTextBox = new System.Windows.Forms.TextBox();
             this.enableFooter = new System.Windows.Forms.CheckBox();
             this.panelLeft = new System.Windows.Forms.Panel();
-            this.labelRight = new System.Windows.Forms.Label();
-            this.labelTop = new System.Windows.Forms.Label();
-            this.topMargin = new System.Windows.Forms.NumericUpDown();
-            this.labelLeft = new System.Windows.Forms.Label();
-            this.leftMargin = new System.Windows.Forms.NumericUpDown();
-            this.rightMargin = new System.Windows.Forms.NumericUpDown();
+            this.groupPages = new System.Windows.Forms.GroupBox();
+            this.pageSeparator = new System.Windows.Forms.CheckBox();
+            this.labelPadding = new System.Windows.Forms.Label();
+            this.padding = new System.Windows.Forms.NumericUpDown();
+            this.labelRows = new System.Windows.Forms.Label();
+            this.labelColumns = new System.Windows.Forms.Label();
+            this.columns = new System.Windows.Forms.NumericUpDown();
+            this.rows = new System.Windows.Forms.NumericUpDown();
+            this.groupMargins = new System.Windows.Forms.GroupBox();
             this.labelBottom = new System.Windows.Forms.Label();
             this.bottomMargin = new System.Windows.Forms.NumericUpDown();
+            this.leftMargin = new System.Windows.Forms.NumericUpDown();
+            this.labelLeft = new System.Windows.Forms.Label();
+            this.rightMargin = new System.Windows.Forms.NumericUpDown();
+            this.labelTop = new System.Windows.Forms.Label();
+            this.labelRight = new System.Windows.Forms.Label();
+            this.topMargin = new System.Windows.Forms.NumericUpDown();
             this.labelSheet = new System.Windows.Forms.Label();
             this.comboBoxSheet = new System.Windows.Forms.ComboBox();
             this.labelPrinter = new System.Windows.Forms.Label();
@@ -48,10 +57,15 @@ namespace WinPrint
             this.headerTextBox.SuspendLayout();
             this.footerTextBox.SuspendLayout();
             this.panelLeft.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.topMargin)).BeginInit();
+            this.groupPages.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.padding)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.columns)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.rows)).BeginInit();
+            this.groupMargins.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bottomMargin)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.leftMargin)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.rightMargin)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bottomMargin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.topMargin)).BeginInit();
             this.panelRight.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -94,7 +108,7 @@ namespace WinPrint
             // landscapeCheckbox
             // 
             this.landscapeCheckbox.AutoSize = true;
-            this.landscapeCheckbox.Location = new System.Drawing.Point(23, 63);
+            this.landscapeCheckbox.Location = new System.Drawing.Point(12, 64);
             this.landscapeCheckbox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.landscapeCheckbox.Name = "landscapeCheckbox";
             this.landscapeCheckbox.Size = new System.Drawing.Size(82, 19);
@@ -194,18 +208,12 @@ namespace WinPrint
             // panelLeft
             // 
             this.panelLeft.BackColor = System.Drawing.SystemColors.Control;
-            this.panelLeft.Controls.Add(this.labelRight);
-            this.panelLeft.Controls.Add(this.labelTop);
-            this.panelLeft.Controls.Add(this.topMargin);
-            this.panelLeft.Controls.Add(this.labelLeft);
-            this.panelLeft.Controls.Add(this.leftMargin);
-            this.panelLeft.Controls.Add(this.rightMargin);
-            this.panelLeft.Controls.Add(this.labelBottom);
-            this.panelLeft.Controls.Add(this.bottomMargin);
+            this.panelLeft.Controls.Add(this.groupPages);
+            this.panelLeft.Controls.Add(this.groupMargins);
+            this.panelLeft.Controls.Add(this.landscapeCheckbox);
             this.panelLeft.Controls.Add(this.paperSizesCB);
             this.panelLeft.Controls.Add(this.printersCB);
             this.panelLeft.Controls.Add(this.labelSheet);
-            this.panelLeft.Controls.Add(this.landscapeCheckbox);
             this.panelLeft.Controls.Add(this.comboBoxSheet);
             this.panelLeft.Controls.Add(this.labelPrinter);
             this.panelLeft.Controls.Add(this.labelPaper);
@@ -218,94 +226,131 @@ namespace WinPrint
             this.panelLeft.Size = new System.Drawing.Size(252, 749);
             this.panelLeft.TabIndex = 9;
             // 
-            // labelRight
+            // groupPages
             // 
-            this.labelRight.AutoSize = true;
-            this.labelRight.Location = new System.Drawing.Point(142, 126);
-            this.labelRight.Name = "labelRight";
-            this.labelRight.Size = new System.Drawing.Size(38, 15);
-            this.labelRight.TabIndex = 10;
-            this.labelRight.Text = "&Right:";
+            this.groupPages.Controls.Add(this.pageSeparator);
+            this.groupPages.Controls.Add(this.labelPadding);
+            this.groupPages.Controls.Add(this.padding);
+            this.groupPages.Controls.Add(this.labelRows);
+            this.groupPages.Controls.Add(this.labelColumns);
+            this.groupPages.Controls.Add(this.columns);
+            this.groupPages.Controls.Add(this.rows);
+            this.groupPages.Location = new System.Drawing.Point(12, 202);
+            this.groupPages.Name = "groupPages";
+            this.groupPages.Size = new System.Drawing.Size(229, 135);
+            this.groupPages.TabIndex = 15;
+            this.groupPages.TabStop = false;
+            this.groupPages.Text = "&Multiple Pages Up";
             // 
-            // labelTop
+            // pageSeparator
             // 
-            this.labelTop.AutoSize = true;
-            this.labelTop.Location = new System.Drawing.Point(64, 90);
-            this.labelTop.Name = "labelTop";
-            this.labelTop.Size = new System.Drawing.Size(29, 15);
-            this.labelTop.TabIndex = 10;
-            this.labelTop.Text = "&Top:";
+            this.pageSeparator.AutoSize = true;
+            this.pageSeparator.Location = new System.Drawing.Point(20, 105);
+            this.pageSeparator.Name = "pageSeparator";
+            this.pageSeparator.Size = new System.Drawing.Size(105, 19);
+            this.pageSeparator.TabIndex = 16;
+            this.pageSeparator.Text = "Page &Separator";
+            this.pageSeparator.UseVisualStyleBackColor = true;
+            this.pageSeparator.CheckedChanged += new System.EventHandler(this.pageSeparator_CheckedChanged);
             // 
-            // topMargin
+            // labelPadding
             // 
-            this.topMargin.DecimalPlaces = 2;
-            this.topMargin.Increment = new decimal(new int[] {
+            this.labelPadding.AutoSize = true;
+            this.labelPadding.Location = new System.Drawing.Point(15, 78);
+            this.labelPadding.Name = "labelPadding";
+            this.labelPadding.Size = new System.Drawing.Size(54, 15);
+            this.labelPadding.TabIndex = 14;
+            this.labelPadding.Text = "&Padding:";
+            // 
+            // padding
+            // 
+            this.padding.DecimalPlaces = 2;
+            this.padding.Increment = new decimal(new int[] {
             1,
             0,
             0,
             131072});
-            this.topMargin.Location = new System.Drawing.Point(107, 90);
-            this.topMargin.Name = "topMargin";
-            this.topMargin.Size = new System.Drawing.Size(53, 23);
-            this.topMargin.TabIndex = 11;
-            this.topMargin.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
-            this.topMargin.ValueChanged += new System.EventHandler(this.topMargin_ValueChanged);
+            this.padding.Location = new System.Drawing.Point(75, 76);
+            this.padding.Name = "padding";
+            this.padding.Size = new System.Drawing.Size(54, 23);
+            this.padding.TabIndex = 15;
+            this.padding.ValueChanged += new System.EventHandler(this.padding_ValueChanged);
             // 
-            // labelLeft
+            // labelRows
             // 
-            this.labelLeft.AutoSize = true;
-            this.labelLeft.Location = new System.Drawing.Point(13, 126);
-            this.labelLeft.Name = "labelLeft";
-            this.labelLeft.Size = new System.Drawing.Size(30, 15);
-            this.labelLeft.TabIndex = 10;
-            this.labelLeft.Text = "&Left:";
+            this.labelRows.AutoSize = true;
+            this.labelRows.Location = new System.Drawing.Point(31, 19);
+            this.labelRows.Name = "labelRows";
+            this.labelRows.Size = new System.Drawing.Size(38, 15);
+            this.labelRows.TabIndex = 12;
+            this.labelRows.Text = "&Rows:";
             // 
-            // leftMargin
+            // labelColumns
             // 
-            this.leftMargin.DecimalPlaces = 2;
-            this.leftMargin.Increment = new decimal(new int[] {
+            this.labelColumns.AutoSize = true;
+            this.labelColumns.Location = new System.Drawing.Point(11, 48);
+            this.labelColumns.Name = "labelColumns";
+            this.labelColumns.Size = new System.Drawing.Size(58, 15);
+            this.labelColumns.TabIndex = 12;
+            this.labelColumns.Text = "&Columns:";
+            // 
+            // columns
+            // 
+            this.columns.Location = new System.Drawing.Point(75, 46);
+            this.columns.Minimum = new decimal(new int[] {
             1,
             0,
             0,
-            131072});
-            this.leftMargin.Location = new System.Drawing.Point(49, 124);
-            this.leftMargin.Name = "leftMargin";
-            this.leftMargin.Size = new System.Drawing.Size(49, 23);
-            this.leftMargin.TabIndex = 11;
-            this.leftMargin.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
-            this.leftMargin.ValueChanged += new System.EventHandler(this.leftMargin_ValueChanged);
-            // 
-            // rightMargin
-            // 
-            this.rightMargin.DecimalPlaces = 2;
-            this.rightMargin.Increment = new decimal(new int[] {
+            0});
+            this.columns.Name = "columns";
+            this.columns.Size = new System.Drawing.Size(41, 23);
+            this.columns.TabIndex = 13;
+            this.columns.Value = new decimal(new int[] {
             1,
             0,
             0,
-            131072});
-            this.rightMargin.Location = new System.Drawing.Point(186, 124);
-            this.rightMargin.Name = "rightMargin";
-            this.rightMargin.Size = new System.Drawing.Size(53, 23);
-            this.rightMargin.TabIndex = 11;
-            this.rightMargin.Value = new decimal(new int[] {
-            25,
+            0});
+            this.columns.ValueChanged += new System.EventHandler(this.columns_ValueChanged);
+            // 
+            // rows
+            // 
+            this.rows.Location = new System.Drawing.Point(75, 17);
+            this.rows.Minimum = new decimal(new int[] {
+            1,
             0,
             0,
-            131072});
-            this.rightMargin.ValueChanged += new System.EventHandler(this.rightMargin_ValueChanged);
+            0});
+            this.rows.Name = "rows";
+            this.rows.Size = new System.Drawing.Size(41, 23);
+            this.rows.TabIndex = 13;
+            this.rows.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.rows.ValueChanged += new System.EventHandler(this.rows_ValueChanged);
+            // 
+            // groupMargins
+            // 
+            this.groupMargins.Controls.Add(this.labelBottom);
+            this.groupMargins.Controls.Add(this.bottomMargin);
+            this.groupMargins.Controls.Add(this.leftMargin);
+            this.groupMargins.Controls.Add(this.labelLeft);
+            this.groupMargins.Controls.Add(this.rightMargin);
+            this.groupMargins.Controls.Add(this.labelTop);
+            this.groupMargins.Controls.Add(this.labelRight);
+            this.groupMargins.Controls.Add(this.topMargin);
+            this.groupMargins.Location = new System.Drawing.Point(10, 88);
+            this.groupMargins.Name = "groupMargins";
+            this.groupMargins.Size = new System.Drawing.Size(229, 108);
+            this.groupMargins.TabIndex = 14;
+            this.groupMargins.TabStop = false;
+            this.groupMargins.Text = "&Margins";
             // 
             // labelBottom
             // 
             this.labelBottom.AutoSize = true;
-            this.labelBottom.Location = new System.Drawing.Point(49, 164);
+            this.labelBottom.Location = new System.Drawing.Point(38, 80);
             this.labelBottom.Name = "labelBottom";
             this.labelBottom.Size = new System.Drawing.Size(50, 15);
             this.labelBottom.TabIndex = 10;
@@ -319,7 +364,7 @@ namespace WinPrint
             0,
             0,
             131072});
-            this.bottomMargin.Location = new System.Drawing.Point(107, 162);
+            this.bottomMargin.Location = new System.Drawing.Point(93, 78);
             this.bottomMargin.Name = "bottomMargin";
             this.bottomMargin.Size = new System.Drawing.Size(53, 23);
             this.bottomMargin.TabIndex = 11;
@@ -329,6 +374,90 @@ namespace WinPrint
             0,
             131072});
             this.bottomMargin.ValueChanged += new System.EventHandler(this.bottomMargin_ValueChanged);
+            // 
+            // leftMargin
+            // 
+            this.leftMargin.DecimalPlaces = 2;
+            this.leftMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.leftMargin.Location = new System.Drawing.Point(49, 48);
+            this.leftMargin.Name = "leftMargin";
+            this.leftMargin.Size = new System.Drawing.Size(49, 23);
+            this.leftMargin.TabIndex = 11;
+            this.leftMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.leftMargin.ValueChanged += new System.EventHandler(this.leftMargin_ValueChanged);
+            // 
+            // labelLeft
+            // 
+            this.labelLeft.AutoSize = true;
+            this.labelLeft.Location = new System.Drawing.Point(13, 50);
+            this.labelLeft.Name = "labelLeft";
+            this.labelLeft.Size = new System.Drawing.Size(30, 15);
+            this.labelLeft.TabIndex = 10;
+            this.labelLeft.Text = "&Left:";
+            // 
+            // rightMargin
+            // 
+            this.rightMargin.DecimalPlaces = 2;
+            this.rightMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.rightMargin.Location = new System.Drawing.Point(167, 48);
+            this.rightMargin.Name = "rightMargin";
+            this.rightMargin.Size = new System.Drawing.Size(53, 23);
+            this.rightMargin.TabIndex = 11;
+            this.rightMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.rightMargin.ValueChanged += new System.EventHandler(this.rightMargin_ValueChanged);
+            // 
+            // labelTop
+            // 
+            this.labelTop.AutoSize = true;
+            this.labelTop.Location = new System.Drawing.Point(59, 19);
+            this.labelTop.Name = "labelTop";
+            this.labelTop.Size = new System.Drawing.Size(29, 15);
+            this.labelTop.TabIndex = 10;
+            this.labelTop.Text = "&Top:";
+            // 
+            // labelRight
+            // 
+            this.labelRight.AutoSize = true;
+            this.labelRight.Location = new System.Drawing.Point(123, 50);
+            this.labelRight.Name = "labelRight";
+            this.labelRight.Size = new System.Drawing.Size(38, 15);
+            this.labelRight.TabIndex = 10;
+            this.labelRight.Text = "&Right:";
+            // 
+            // topMargin
+            // 
+            this.topMargin.DecimalPlaces = 2;
+            this.topMargin.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.topMargin.Location = new System.Drawing.Point(93, 17);
+            this.topMargin.Name = "topMargin";
+            this.topMargin.Size = new System.Drawing.Size(53, 23);
+            this.topMargin.TabIndex = 11;
+            this.topMargin.Value = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.topMargin.ValueChanged += new System.EventHandler(this.topMargin_ValueChanged);
             // 
             // labelSheet
             // 
@@ -401,10 +530,17 @@ namespace WinPrint
             this.footerTextBox.PerformLayout();
             this.panelLeft.ResumeLayout(false);
             this.panelLeft.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.topMargin)).EndInit();
+            this.groupPages.ResumeLayout(false);
+            this.groupPages.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.padding)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.columns)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.rows)).EndInit();
+            this.groupMargins.ResumeLayout(false);
+            this.groupMargins.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bottomMargin)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.leftMargin)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.rightMargin)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bottomMargin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.topMargin)).EndInit();
             this.panelRight.ResumeLayout(false);
             this.panelRight.PerformLayout();
             this.ResumeLayout(false);
@@ -439,6 +575,15 @@ namespace WinPrint
         private NumericUpDown rightMargin;
         private Label labelBottom;
         private NumericUpDown bottomMargin;
+        private Label labelRows;
+        private NumericUpDown rows;
+        private Label labelColumns;
+        private NumericUpDown columns;
+        private GroupBox groupMargins;
+        private GroupBox groupPages;
+        private CheckBox pageSeparator;
+        private Label labelPadding;
+        private NumericUpDown padding;
     }
 }
 
