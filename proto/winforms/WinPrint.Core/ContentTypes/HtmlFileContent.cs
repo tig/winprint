@@ -86,11 +86,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            float leftMargin = 0;
-            float contentHeight = PageSize.Height;
-
             SizeF size = new SizeF(PageSize.Width, PageSize.Height);
-
             SizeF renderedSize = HtmlRender.RenderGdiPlus(g, html, new PointF(0, 0), size );
             
         }

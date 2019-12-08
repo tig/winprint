@@ -30,11 +30,11 @@ namespace WinPrint {
         //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
         private string file = @"..\\..\\..\\..\\..\\..\\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";
 
-        private SettingsService settingsService = ServiceLocator.Current.SettingsService;
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public MainWindow() {
             InitializeComponent();
+
+            Icon = Resources.printer_and_fax_w;
 
             printPreview = new PrintPreview();
             printPreview.Anchor = this.dummyButton.Anchor;
@@ -153,7 +153,7 @@ namespace WinPrint {
             // TODO: Batch Print
             if (ModelLocator.Current.Options.Files != null &&
                 ModelLocator.Current.Options.Files.Any() &&
-                ModelLocator.Current.Options.Files.ToList<string>()[0] != "") {
+                !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList()[0])) {
                 List<string> list = ModelLocator.Current.Options.Files.ToList();
                 file = list[0];
             }
@@ -263,14 +263,14 @@ namespace WinPrint {
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
             // Save Window state
             if (this.WindowState == System.Windows.Forms.FormWindowState.Normal) {
-                ModelLocator.Current.Settings.Size = new WinPrint.Core.Models.WindowSize(this.Size.Width, this.Size.Height);
-                ModelLocator.Current.Settings.Location = new WinPrint.Core.Models.WindowLocation(this.Location.X, this.Location.Y);
+                ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(this.Size.Width, this.Size.Height);
+                ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation(this.Location.X, this.Location.Y);
             }
             else {
-                ModelLocator.Current.Settings.Size = new WinPrint.Core.Models.WindowSize(this.RestoreBounds.Width, this.RestoreBounds.Height);
-                ModelLocator.Current.Settings.Location = new WinPrint.Core.Models.WindowLocation(this.RestoreBounds.X, this.RestoreBounds.Y);
+                ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(this.RestoreBounds.Width, this.RestoreBounds.Height);
+                ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation(this.RestoreBounds.X, this.RestoreBounds.Y);
             }
-            ModelLocator.Current.Settings.WindowState = (WinPrint.Core.Models.FormWindowState)this.WindowState;
+            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)this.WindowState;
             ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
         }
 
@@ -317,7 +317,7 @@ namespace WinPrint {
             if ((e.AffectedControl != null) && (e.AffectedProperty != null)) {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
-                if (e.AffectedProperty.ToString() == "Bounds") {
+                if (e.AffectedProperty.ToString().Equals("Bounds")) {
                     Debug.WriteLine("MainWindow_Layout bounds changed");
                 }
             }

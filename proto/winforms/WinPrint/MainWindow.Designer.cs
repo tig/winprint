@@ -514,13 +514,14 @@ namespace WinPrint
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(870, 749);
             this.Controls.Add(this.panelRight);
             this.Controls.Add(this.panelLeft);
+            this.HelpButton = true;
             this.Margin = new System.Windows.Forms.Padding(26, 22, 26, 22);
             this.Name = "MainWindow";
-            this.Text = "Winprint";
+            this.Text = "WinPrint";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.MainWindow_Load);
             this.Layout += new System.Windows.Forms.LayoutEventHandler(this.MainWindow_Layout);

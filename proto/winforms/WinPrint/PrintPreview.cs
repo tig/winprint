@@ -17,7 +17,6 @@ namespace WinPrint {
     /// DocumentViewModel is the VM?
     /// </summary>
     public partial class PrintPreview : Control {
-        private string file;
         static public PrintPreview Instance = null;
 
         private SheetViewModel svm;

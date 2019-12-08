@@ -18,7 +18,7 @@ namespace WinPrint {
     /// </summary>
     public class SheetViewModel : ViewModels.ViewModelBase {
 
-        private WinPrint.Core.Models.Sheet sheet;
+        private Sheet sheet;
 
         // These properties are all defined by user and sync'd with the Sheet model
         private string title;
@@ -64,7 +64,7 @@ namespace WinPrint {
         }
 
         // TOOD: Hold an abstract base-type to enable mulitple content types
-        internal WinPrint.Core.ContentTypes.ContentBase Content { get; set; }
+        internal Core.ContentTypes.ContentBase Content { get; set; }
 
         private Size paperSize;
         private RectangleF printableArea;
@@ -213,7 +213,7 @@ namespace WinPrint {
             }
             else {
                 // Create a dummmy for preview with no file
-                Content = new WinPrint.Core.ContentTypes.TextFileContent();
+                Content = new Core.ContentTypes.TextFileContent();
                 Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
             }
 
@@ -546,7 +546,7 @@ namespace WinPrint {
         }
 
         internal static void DrawRule(Graphics g, System.Drawing.Font font, Color color, string text, Point start, Point end, float labelDiv, bool arrow = false) {
-            Pen pen = new Pen(color);
+            using Pen pen = new Pen(color);
 
             if (arrow) {
                 pen.Width = 3;
@@ -576,8 +576,8 @@ namespace WinPrint {
                 float x = ((start.X + end.X) / labelDiv) - (textSize.Width / 2F);
                 float y = start.Y - (textSize.Height / 2F);
                 RectangleF textRect = new RectangleF(new PointF(x, y), textSize);
-                g.FillRectangles(new SolidBrush(Color.White), new RectangleF[] { textRect });
-                g.DrawString(text, font, new SolidBrush(color), x, y);
+                g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
+                g.DrawString(text, font, brush, x, y);
             }
         }
 

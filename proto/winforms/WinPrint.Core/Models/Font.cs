@@ -78,7 +78,7 @@ namespace WinPrint.Core.Models {
             return "[Font"
                 + " Family=" + Family
                 + " Size=" + Size.ToString(CultureInfo.InvariantCulture)
-                + " Style=" + Style.ToString(CultureInfo.InvariantCulture)
+                + " Style=" + Style.ToString()
                 + "]";
         }
 
