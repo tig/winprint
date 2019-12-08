@@ -9,82 +9,77 @@ using WinPrint.Core.Models;
 
 namespace WinPrint {
     internal class Print : IDisposable {
-        private readonly PrintDialog printDialog = new PrintDialog();
-        private readonly PrintPreviewDialog printPreviewDialog = new PrintPreviewDialog();
-
         // The WinPrint "document"
         private SheetViewModel svm = new SheetViewModel();
         // The Windows printer document
-        private readonly PrintDocument printDoc = new PrintDocument();
-        private StreamReader streamToPrint;
+        private PrintDocument printDoc;
 
-        private bool printPreview = false;
         private int curSheet = 0;
         private int fromSheet;
         private int toSheet;
 
-
         public Print() {
+            printDoc = new PrintDocument();
             printDoc.BeginPrint += new PrintEventHandler(this.BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.EndPrint);
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.PrintPage);
-
-            // Initalize Print Dialog
-            //Allow the user to choose the page range he or she would
-            // like to print.
-            printDialog.AllowSomePages = true;
-            printDialog.ShowHelp = true;
-            // printDialog.AllowSelection = true;
-
-            // Initialize PrintPreview Dialog
-            //Set the size, location, and name.
-            printPreviewDialog.ClientSize = new System.Drawing.Size(1000, 900);
-            printPreviewDialog.Location = new System.Drawing.Point(29, 29);
-            printPreviewDialog.Name = "WinPrint Print Preview";
-
-            // Set the minimum size the dialog can be resized to.
-            this.printPreviewDialog.MinimumSize = new System.Drawing.Size(375, 250);
-
-            // Set the UseAntiAlias property to true, which will allow the 
-            // operating system to smooth fonts.
-            this.printPreviewDialog.UseAntiAlias = true;
         }
 
         internal void Go(string file, PageSettings pageSettings, Sheet sheetSettings, bool showPrintDialog = true) {
             try {
                 printDoc.DefaultPageSettings = pageSettings;
                 printDoc.PrinterSettings = pageSettings.PrinterSettings;
+                printDoc.DocumentName = file;
                 svm.File = file;
                 svm.SetSettings(sheetSettings);
-                svm.Reflow(printDoc.DefaultPageSettings);
+                svm.Reflow(pageSettings);
 
                 if (PrintPreview) {
+                    using PrintPreviewDialog printPreviewDialog = new PrintPreviewDialog();
+
+                    // Initialize PrintPreview Dialog
+                    //Set the size, location, and name.
+                    printPreviewDialog.ClientSize = new System.Drawing.Size(1000, 900);
+                    printPreviewDialog.Location = new System.Drawing.Point(100, 100);
+                    printPreviewDialog.Name = "WinPrint Print Preview";
+
+                    // Set the minimum size the dialog can be resized to.
+                    printPreviewDialog.MinimumSize = new System.Drawing.Size(375, 250);
+
+                    // Set the UseAntiAlias property to true, which will allow the 
+                    // operating system to smooth fonts.
+                    printPreviewDialog.UseAntiAlias = true;
+
                     printPreviewDialog.Document = printDoc;
                     fromSheet = 1;
                     toSheet = svm.NumSheets;
                     curSheet = 1;
-                    printPreviewDialog.Show();
+                    printPreviewDialog.ShowDialog();
                 }
                 else {
                     if (showPrintDialog) {
+                        using PrintDialog printDialog = new PrintDialog();
+                        // Initalize Print Dialog
+                        //Allow the user to choose the page range he or she would
+                        // like to print.
+                        printDialog.AllowSomePages = true;
+                        printDialog.ShowHelp = true;
+                        // printDialog.AllowSelection = true;
+
                         printDialog.Document = printDoc;
                         printDialog.PrinterSettings.FromPage = fromSheet = 1;
                         printDialog.PrinterSettings.ToPage = toSheet = svm.NumSheets;
                         curSheet = 1;
-
                         DialogResult result = printDialog.ShowDialog();
-
                         //If the result is OK then print the document.
                         if (result == DialogResult.OK) {
                             if (printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
                                 curSheet = fromSheet = printDialog.PrinterSettings.FromPage;
                                 toSheet = printDialog.PrinterSettings.ToPage;
                             }
-
                             // TODO: Add logic to only reflow if something actually changed
                             svm.Reflow(printDialog.PrinterSettings.DefaultPageSettings);
-
                             printDialog.Document.Print();
                         }
                     }
@@ -103,23 +98,12 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void BeginPrint(object sender, PrintEventArgs ev) {
-            //Debug.WriteLine($"Print.BeginPrint {curSheet}");
-            //try {
-            //    streamToPrint = new StreamReader(file);
-            //    curSheet = fromSheet;
-            //}
-            //catch (Exception ex) {
-            //    MessageBox.Show($"pd_BeginPrint: {ex.Message}");
-            //}
+            Debug.WriteLine($"Print.BeginPrint");
         }
 
         // Occurs when the last page of the document has printed.
         private void EndPrint(object sender, PrintEventArgs ev) {
             Debug.WriteLine($"Print.EndPrint");
-            if (streamToPrint != null) {
-                streamToPrint.Close();
-                streamToPrint = null;
-            }
             // Reset so PrintPreviewDialog Print button works
             curSheet = fromSheet;
         }
@@ -135,16 +119,11 @@ namespace WinPrint {
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
                 while (curSheet < fromSheet) {
                     // Blow through pages up to fromPage
-                    //                    printPreview.Document.SetPageSettings(ev.PageSettings);
-                    //                    printPreview.Document.PaintContent(ev.Graphics, streamToPrint, out hasMorePages);
                     curSheet++;
                 }
-                //              ev.Graphics.Clear(Color.White);
             }
-
-            if (curSheet <= toSheet) {
+            if (curSheet <= toSheet)
                 svm.Paint(ev.Graphics, curSheet);
-            }
             curSheet++;
             ev.HasMorePages = curSheet <= toSheet;
         }
@@ -158,17 +137,14 @@ namespace WinPrint {
         // Flag: Has Dispose already been called?
         bool disposed = false;
 
-        public bool PrintPreview { get => printPreview; set => printPreview = value; }
+        public bool PrintPreview { get; set; } = false;
 
         protected virtual void Dispose(bool disposing) {
             if (disposed)
                 return;
 
             if (disposing) {
-                //if (streamToPrint != null) streamToPrint.Dispose();
                 if (printDoc != null) printDoc.Dispose();
-                //if (printPreview != null) printPreview.Dispose();
-                if (printDialog != null) printDialog.Dispose();
             }
             disposed = true;
         }
