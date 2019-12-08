@@ -118,7 +118,7 @@ namespace WinPrint {
         /// for performance (and for platform independence). 
         /// </summary>
         /// <param name="pageSettings"></param>
-        public void Reflow(PageSettings pageSettings, bool originAtMargins) {
+        public void Reflow(PageSettings pageSettings) {
 
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
             var ps = (PageSettings)pageSettings.Clone();
@@ -349,7 +349,7 @@ namespace WinPrint {
         /// Paints the content of a single Sheet. 
         /// </summary>
         /// <param name="g">Graphics to print on. Can be either a Preview window or a Printer canvas.</param>
-        /// <param name="sheetNum">Sheet to print</param>
+        /// <param name="sheetNum">Sheet to print. 1-based.</param>
         internal void Paint(Graphics g, int sheetNum) {
             GraphicsState state = AdjustPrintOrPreview(g);
             PaintRules(g);
