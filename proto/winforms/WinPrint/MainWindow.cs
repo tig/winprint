@@ -26,9 +26,9 @@ namespace WinPrint {
 
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
-        private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
+        //private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
         //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
-        //private string file = @"C:\Users\ckindel\source\winprint\proto\winforms\WinPrint\MainWindow.cs";
+        private string file = @"..\\..\\..\\..\\..\\..\\proto\winforms\WinPrint\Program.cs";
 
         private SettingsService settingsService = ServiceLocator.Current.SettingsService;
 
@@ -46,9 +46,10 @@ namespace WinPrint {
             printPreview.TabIndex = 1;// this.dummyButton.TabIndex;
             printPreview.TabStop = true;
 
+
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
-                this.Controls.Remove(this.dummyButton);
-                this.Controls.Add(this.printPreview);
+                this.panelRight.Controls.Remove(this.dummyButton);
+                this.panelRight.Controls.Add(this.printPreview);
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
@@ -79,12 +80,13 @@ namespace WinPrint {
         private SheetViewModel CreatePreviewSheetViewModel() {
             Debug.WriteLine("CreateSheetViewModel");
             SheetViewModel svm = new SheetViewModel();
-            Debug.WriteLine("First reference to ModelLocator.Current.Settings");
-            Debug.WriteLine($"Loading sheet ID {ModelLocator.Current.Settings.DefaultSheet}");
+
             svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
             landscapeCheckbox.Checked = svm.Landscape;
+            enableHeader.Checked = svm.Header.Enabled;
             headerTextBox.Text = svm.Header.Text;
+            enableFooter.Checked = svm.Footer.Enabled;
             footerTextBox.Text = svm.Footer.Text;
 
             svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
@@ -133,7 +135,7 @@ namespace WinPrint {
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
-                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape = 
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =
                     printDoc.DefaultPageSettings.Landscape = 
                     landscapeCheckbox.Checked;
 
@@ -143,24 +145,60 @@ namespace WinPrint {
         }
 
         private void MainWindow_Load(object sender, EventArgs e) {
+            this.Cursor = Cursors.WaitCursor;
+
             printDoc.BeginPrint += new PrintEventHandler(this.pd_BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.pd_EndPrint);
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.pd_QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.pd_PrintPage);
+            printDoc.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+            //printDoc.OriginAtMargins = true;
+
+            // Load settings
+            Debug.WriteLine("First reference to ModelLocator.Current.Settings");
+            var sheets = ModelLocator.Current.Settings.Sheets;
+
+            ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
+                Debug.WriteLine($"Settings.PropertyChanged: {e.PropertyName}");
+                switch (e.PropertyName) {
+                    case "DefaultSheet":
+                        comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
+                        ChangeSheet();
+                        break;
+                }
+            }));
+
+            comboBoxSheet.DisplayMember = "Value";
+            comboBoxSheet.ValueMember = "Key";
+            foreach (var s in sheets) {
+                comboBoxSheet.Items.Add(new KeyValuePair<string, string>(s.Key, s.Value.Name));
+            }
 
             //InitializePrintPreviewControl();
             InitializePrintPreviewDialog();
 
-            printPreview.SheetViewModel = CreatePreviewSheetViewModel();
-
-            printersCB.Enabled = true;
-            paperSizesCB.Enabled = true;
+            // Select default printer and paper size
             foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
                 printersCB.Items.Add(printer);
                 //printersCB.Text = "OneNote";
                 if (printDoc.PrinterSettings.IsDefaultPrinter)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
+            printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
+            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
+                paperSizesCB.Items.Add(ps);
+            }
+            paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+
+            // We kept these disabled during load
+            printersCB.Enabled = true;
+            paperSizesCB.Enabled = true;
+
+            // Select default Sheet 
+            comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
+
+            // Go!
+            ChangeSheet();
 
             if (ModelLocator.Current.Options.Files != null &&
                   ModelLocator.Current.Options.Files.Any() &&
@@ -178,6 +216,15 @@ namespace WinPrint {
             this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
             this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+
+            this.Cursor = Cursors.Default;
+        }
+
+        private void ChangeSheet() {
+            this.Cursor = Cursors.WaitCursor;
+            printPreview.SheetViewModel = CreatePreviewSheetViewModel();
+            this.Cursor = Cursors.Default;
+            SheetSettingsChanged();
         }
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
@@ -200,7 +247,7 @@ namespace WinPrint {
             this.Cursor = Cursors.WaitCursor;
             // Set landscape. This causes other DefaultPageSettings to change
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);
+            printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings, printDoc.OriginAtMargins);
             printPreview.Invalidate(true);
             SizePreview();
 
@@ -210,7 +257,7 @@ namespace WinPrint {
         internal void SizePreview() {
             Debug.WriteLine("SizePreview()");
             if (printPreview == null || printPreview.SheetViewModel == null) return;
-            Size size = this.ClientSize;
+            Size size = panelRight.Size;
             size.Height -= headerTextBox.Height * 3;
             size.Width -= headerTextBox.Height;
 
@@ -226,8 +273,8 @@ namespace WinPrint {
             printPreview.Size = new Size((int)(w * scale), (int)(h * scale));
 
             // Now center
-            printPreview.Location = new Point((ClientSize.Width / 2) - (printPreview.Width / 2),
-                (ClientSize.Height / 2) - (printPreview.Height / 2));
+            printPreview.Location = new Point((panelRight.Width / 2) - (printPreview.Width / 2),
+                (panelRight.Height / 2) - (printPreview.Height / 2));
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
@@ -239,7 +286,6 @@ namespace WinPrint {
                 // of the form.
                 if (e.AffectedProperty.ToString() == "Bounds") {
                     Debug.WriteLine("MainWindow_Layout bounds changed");
-                    SizePreview();
                 }
             }
         }
@@ -271,8 +317,7 @@ namespace WinPrint {
                 Debug.WriteLine("paperSizesCB_SelectedIndexChanged");
                 // Set the paper size based upon the selection in the combo box.
                 if (paperSizesCB.SelectedIndex != -1) {
-                    printDoc.DefaultPageSettings.PaperSize =
-                        printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
+                    printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
                 }
                 SheetSettingsChanged();
             }
@@ -281,7 +326,7 @@ namespace WinPrint {
         private void PrintPreview(string file) {
             sheetViewModelForPrint.File = file;
             sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
-            sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
+            sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings, printDoc.OriginAtMargins);
             printPreviewDialog.Document = printDoc;
             curSheet = 1;
             fromSheet = 1;
@@ -323,7 +368,7 @@ namespace WinPrint {
                     }
                     sheetViewModelForPrint.File = file;
                     sheetViewModelForPrint.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
-                    sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings);
+                    sheetViewModelForPrint.Reflow(printDoc.DefaultPageSettings, printDoc.OriginAtMargins);
 
                     PrintDialog1.Document = printDoc;
 
@@ -418,5 +463,37 @@ namespace WinPrint {
             this.printPreviewDialog.UseAntiAlias = true;
         }
 
+        private void panelRight_Resize(object sender, EventArgs e) {
+            SizePreview();
+        }
+
+        private void enableHeader_CheckedChanged(object sender, EventArgs e) {
+            Debug.WriteLine($"enableHeader_CheckedChanged: {enableHeader.Checked}");
+            if (printersCB.Enabled) {
+                // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
+                // the model
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Enabled =
+                    enableHeader.Checked;
+            }
+        }
+
+        private void enableFooter_CheckedChanged(object sender, EventArgs e) {
+            Debug.WriteLine($"enableFooter_CheckedChanged: {enableFooter.Checked}");
+            if (printersCB.Enabled) {
+                // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
+                // the model
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Enabled =
+                    enableFooter.Checked;
+            }
+        }
+
+        private void comboBoxSheet_SelectedIndexChanged(object sender, EventArgs e) {
+            KeyValuePair<string, string> si = (KeyValuePair<string, string>)comboBoxSheet.SelectedItem;
+            Debug.WriteLine($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
+            if (printersCB.Enabled) {
+                ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
+                //ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);
+            }
+        }
     }
 }

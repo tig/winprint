@@ -21,7 +21,7 @@ namespace WinPrint {
         private bool bottomBorder;
         private bool enabled;
         // TODO: Make settable
-        internal float verticalPadding = 6; // Vertical padding below/above header/footer in 100ths of inch
+        internal float verticalPadding = 0; // Vertical padding below/above header/footer in 100ths of inch
 
         public string Text { get => text; set => SetField(ref text, value); }
 
@@ -138,7 +138,7 @@ namespace WinPrint {
             if (parts.Length > 1) {
                 fmt.Alignment = StringAlignment.Center;
                 sizeCenter = g.MeasureString(parts[1], tempFont, (int)boundsHF.Width, fmt);
-                g.DrawRectangle(Pens.Purple, boundsHF.X, boundsHF.Y, boundsHF.Width, boundsHF.Height);
+                //g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
                 g.DrawString(parts[1], tempFont, Brushes.Black, boundsHF, fmt);
             }
 
@@ -151,7 +151,7 @@ namespace WinPrint {
 
             fmt.Alignment = StringAlignment.Near;
             fmt.Trimming = StringTrimming.None;
-            g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
+            //g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
             g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
 
             //Right
@@ -159,7 +159,7 @@ namespace WinPrint {
             if (parts.Length > 2) {
                 fmt.Alignment = StringAlignment.Far;
                 fmt.Trimming = StringTrimming.None;
-                g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
+                //g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
                 g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
             }
             tempFont.Dispose();
