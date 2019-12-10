@@ -246,9 +246,10 @@ namespace WinPrint.Core.ContentTypes {
             }
         }
 
+        // TODO: Support setting color of line #s and separator
         private void PaintLineNumberSeparator(Graphics g) {
             if (LineNumbers && LineNumberSeparator && lineNumberWidth != 0) {
-                g.DrawLine(Pens.Black, lineNumberWidth - 2, 0, lineNumberWidth - 2, PageSize.Height);
+                g.DrawLine(Pens.Gray, lineNumberWidth - 2, 0, lineNumberWidth - 2, PageSize.Height);
             }
         }
 
@@ -258,7 +259,7 @@ namespace WinPrint.Core.ContentTypes {
                 int lineOnPage = lineNumber % linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
                 int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lines[lineNumber].lineNumber}").Width) : 0;
-                g.DrawString($"{lines[lineNumber].lineNumber}", cachedFont, Brushes.Black, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
+                g.DrawString($"{lines[lineNumber].lineNumber}", cachedFont, Brushes.Gray, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
             }
         }
     }

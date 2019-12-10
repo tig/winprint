@@ -237,7 +237,7 @@ namespace WinPrint {
                     
                     openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source";
                     openFileDialog.Filter = "code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                    openFileDialog.FilterIndex = 2;
+                    openFileDialog.FilterIndex = 1;
                     openFileDialog.RestoreDirectory = true;
                     if (openFileDialog.ShowDialog() == DialogResult.OK) {
                         file = openFileDialog.FileNames.ToList<string>()[0];
