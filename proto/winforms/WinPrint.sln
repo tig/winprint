@@ -12,6 +12,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.Tests", "WinPrint.
 		{78B6744F-DF3E-4D86-ACE5-18854A0AF54E} = {78B6744F-DF3E-4D86-ACE5-18854A0AF54E}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPrint Console", "WinPrint Console\WinPrint Console.csproj", "{A82F3B2B-5E3A-49B8-8552-983D06081186}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,18 @@ Global
 		{DE9EE5E6-7A28-4CFF-8066-FDCCCCDB42C3}.Release|x64.Build.0 = Release|x64
 		{DE9EE5E6-7A28-4CFF-8066-FDCCCCDB42C3}.Release|x86.ActiveCfg = Release|x86
 		{DE9EE5E6-7A28-4CFF-8066-FDCCCCDB42C3}.Release|x86.Build.0 = Release|x86
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Debug|x64.Build.0 = Debug|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Debug|x86.Build.0 = Debug|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Release|x64.ActiveCfg = Release|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Release|x64.Build.0 = Release|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Release|x86.ActiveCfg = Release|Any CPU
+		{A82F3B2B-5E3A-49B8-8552-983D06081186}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>WinPrintConsole</RootNamespace>
+    <Copyright>Copyright (C) 2020 Kindel Systems, LLC - https://kindel.com/winprint</Copyright>
+    <Company>Kindel Systems, LLC</Company>
+    <Version>1.0.0-beta</Version>
+    <AssemblyTitle>winprint</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+  </ItemGroup>
+
+</Project>

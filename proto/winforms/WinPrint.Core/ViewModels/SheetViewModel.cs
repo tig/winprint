@@ -7,7 +7,7 @@ using WinPrint.Core.Models;
 using System.Diagnostics;
 using Microsoft.Win32;
 
-namespace WinPrint {
+namespace WinPrint.Core {
     /// <summary>
     /// The WinPrint Document ViewModel - knows how to paint a document, independent of platform
     /// (assuming System.Drawing and System.Printing). Works with Models.Document, etc...
@@ -184,35 +184,25 @@ namespace WinPrint {
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
 
             if (!string.IsNullOrEmpty(File)) {
-                StreamReader streamToPrint = null;
-                try {
-                    streamToPrint = new StreamReader(File);
-                    if (Type == "Text")
-                        Content = ModelLocator.Current.Settings.TextFileSettings;
-                    else if (Type == "text/html")
-                        Content = ModelLocator.Current.Settings.HtmlFileSettings;
-                    else
-                        Content = ModelLocator.Current.Settings.TextFileSettings;
+                using StreamReader streamToPrint = new StreamReader(File);
+                if (Type == "Text")
+                    Content = ModelLocator.Current.Settings.TextFileSettings;
+                else if (Type == "text/html")
+                    Content = ModelLocator.Current.Settings.HtmlFileSettings;
+                else
+                    Content = ModelLocator.Current.Settings.TextFileSettings;
 
-                    Content.PropertyChanged -= OnContentPropertyChanged();
-                    Content.PropertyChanged += OnContentPropertyChanged();
+                Content.PropertyChanged -= OnContentPropertyChanged();
+                Content.PropertyChanged += OnContentPropertyChanged();
 
-                    Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                    Content.CountPages(streamToPrint);
-                }
-                catch (System.IO.FileNotFoundException e) {
-                    Debug.WriteLine($"Reflow {File} - {e.Message}");
-                }
-                finally {
-                    if (streamToPrint != null) streamToPrint.Close();
-                }
+                Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+                Content.CountPages(streamToPrint);
             }
             else {
                 // Create a dummmy for preview with no file
                 Content = new Core.ContentTypes.TextFileContent();
                 Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
             }
-
         }
 
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
@@ -386,7 +376,7 @@ namespace WinPrint {
 
             // If margins are too big, warn by printing a red border
             if (g.PageUnit != GraphicsUnit.Display) {
-                using Pen errorPen = new Pen(Color.Gray); 
+                using Pen errorPen = new Pen(Color.Gray);
                 errorPen.DashStyle = DashStyle.Dash;
                 errorPen.Width = 4;
 
@@ -413,9 +403,9 @@ namespace WinPrint {
 
                     // Draw hatch outside printable area
                     g.SetClip(bounds);
-                    Rectangle r = new Rectangle((int)Math.Floor(printableArea.Left), (int)Math.Floor(printableArea.Top), (int)Math.Ceiling(printableArea.Width)+1, (int)Math.Ceiling(printableArea.Height)+1);
+                    Rectangle r = new Rectangle((int)Math.Floor(printableArea.Left), (int)Math.Floor(printableArea.Top), (int)Math.Ceiling(printableArea.Width) + 1, (int)Math.Ceiling(printableArea.Height) + 1);
                     g.ExcludeClip(r);
-                    using HatchBrush brush =  new HatchBrush(HatchStyle.LightUpwardDiagonal, Color.Gray, Color.White);
+                    using HatchBrush brush = new HatchBrush(HatchStyle.LightUpwardDiagonal, Color.Gray, Color.White);
                     g.FillRectangle(brush, bounds);
 
                 }
@@ -465,9 +455,9 @@ namespace WinPrint {
             // PaperSize
             if ((sheet.PrintPaperSize && !preview) || (sheet.PreviewPaperSize && preview)) {
                 // Draw paper size
-                DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Width / 4, preview ? 0 : (int)-printableArea.Y), 
+                DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Width / 4, preview ? 0 : (int)-printableArea.Y),
                     new Point(PaperSize.Width / 4, PaperSize.Height), 4F, true);
-                DrawRule(g, font, Color.Gray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"", 
+                DrawRule(g, font, Color.Gray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"",
                     new Point(preview ? 0 : (int)-printableArea.X, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F, true);
             }
 
