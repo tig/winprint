@@ -24,7 +24,6 @@ namespace WinPrint
             this.paperSizesCB = new System.Windows.Forms.ComboBox();
             this.landscapeCheckbox = new System.Windows.Forms.CheckBox();
             this.printButton = new System.Windows.Forms.Button();
-            this.previewButton = new System.Windows.Forms.Button();
             this.pageUp = new System.Windows.Forms.Button();
             this.pageDown = new System.Windows.Forms.Button();
             this.headerTextBox = new System.Windows.Forms.TextBox();
@@ -129,18 +128,6 @@ namespace WinPrint
             this.printButton.UseVisualStyleBackColor = true;
             this.printButton.Click += new System.EventHandler(this.printButton_Click);
             // 
-            // previewButton
-            // 
-            this.previewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.previewButton.Location = new System.Drawing.Point(140, 710);
-            this.previewButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.previewButton.Name = "previewButton";
-            this.previewButton.Size = new System.Drawing.Size(99, 28);
-            this.previewButton.TabIndex = 6;
-            this.previewButton.Text = "P&review...";
-            this.previewButton.UseVisualStyleBackColor = true;
-            this.previewButton.Click += new System.EventHandler(this.previewButton_Click);
-            // 
             // pageUp
             // 
             this.pageUp.Location = new System.Drawing.Point(0, 0);
@@ -218,7 +205,6 @@ namespace WinPrint
             this.panelLeft.Controls.Add(this.labelPrinter);
             this.panelLeft.Controls.Add(this.labelPaper);
             this.panelLeft.Controls.Add(this.printButton);
-            this.panelLeft.Controls.Add(this.previewButton);
             this.panelLeft.Dock = System.Windows.Forms.DockStyle.Left;
             this.panelLeft.ForeColor = System.Drawing.Color.Black;
             this.panelLeft.Location = new System.Drawing.Point(0, 0);
@@ -555,7 +541,6 @@ namespace WinPrint
         private ComboBox paperSizesCB;
         private CheckBox landscapeCheckbox;
         private Button printButton;
-        private Button previewButton;
         private Button pageUp;
         private Button pageDown;
         private TextBox headerTextBox;

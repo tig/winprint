@@ -27,10 +27,10 @@ namespace WinPrint.Core.Models {
         [Option('z', "paper-size", HelpText = "Paper size name.")]
         public string PaperSize { get; set; }
 
-        [Option('f', "from-page", Default = 1, HelpText = "Number of first page to print (may be used with --to-page).")]
+        [Option('f', "from-page", Default = 0, HelpText = "Number of first page to print (may be used with --to-page).")]
         public int FromPage { get; set; }
 
-        [Option('t', "to-page", Default = 1, HelpText = "Number of last page to print (may be used with --from-page).")]
+        [Option('t', "to-page", Default = 0, HelpText = "Number of last page to print (may be used with --from-page).")]
         public int ToPage { get; set; }
 
         [Option('c', "count-pages", Default = false, Required = false, HelpText = "Exit code is set to numer of pages that would be printed. Use --verbose to diplsay the count.")]

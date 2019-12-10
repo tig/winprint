@@ -7,6 +7,7 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -23,7 +24,7 @@ namespace WinPrint {
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
         //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
-        private string file = @"..\\..\\..\\..\\..\\..\\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";
+        private string file = ""; //@"..\..\..\..\..\..\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public MainWindow() {
@@ -166,7 +167,7 @@ namespace WinPrint {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
                 ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =
-                    printDoc.DefaultPageSettings.Landscape = 
+                    printDoc.DefaultPageSettings.Landscape =
                     landscapeCheckbox.Checked;
 
                 // We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel
@@ -216,19 +217,12 @@ namespace WinPrint {
             // Select default Sheet 
             comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
 
-            // Go!
-            ChangeSheet();
-
-            if (ModelLocator.Current.Options.Files != null &&
-                  ModelLocator.Current.Options.Files.Any() &&
-                  ModelLocator.Current.Options.Files.ToList<string>()[0] != "") {
-                List<string> list = ModelLocator.Current.Options.Files.ToList();
-                file = list[0];
-                // Batch (non-GUI mode)
-
-                // PrintPreview for now
-                //PrintPreview(file);
-                return;
+            if (ModelLocator.Current.Options.Files != null)
+                //&&
+                //  ModelLocator.Current.Options.Files.Any() &&
+                //  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList<string>()[0])) 
+            {
+                file = ModelLocator.Current.Options.Files.ToList()[0];
             }
 
             printPreview.Select();
@@ -237,6 +231,22 @@ namespace WinPrint {
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
             this.Cursor = Cursors.Default;
+
+            if (string.IsNullOrEmpty(file)) {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                    
+                    openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source";
+                    openFileDialog.Filter = "code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                    openFileDialog.FilterIndex = 2;
+                    openFileDialog.RestoreDirectory = true;
+                    if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                        file = openFileDialog.FileNames.ToList<string>()[0];
+                    }
+                }
+            }
+            // Go!
+            ChangeSheet();
+
         }
 
         private void ChangeSheet() {
@@ -303,7 +313,7 @@ namespace WinPrint {
             if ((e.AffectedControl != null) && (e.AffectedProperty != null)) {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
-                if (e.AffectedProperty.ToString().Equals("Bounds")) {
+                if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {
                     Debug.WriteLine("MainWindow_Layout bounds changed");
                 }
             }
@@ -342,15 +352,39 @@ namespace WinPrint {
             }
         }
 
-        private void previewButton_Click(object sender, EventArgs e) {
-            using var print = new Print() { PrintPreview = true };
-            print.Go(file, printDoc.DefaultPageSettings, ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
-        }
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void printButton_Click(object sender, EventArgs e) {
-            using var print = new Print() { PrintPreview = false };
-            print.Go(file, printDoc.DefaultPageSettings, ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+            using var print = new Core.Print();
+            // TODO: It's hokey that Landscape is the only printer setting that's treated specially
+            // 
+            print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            print.SheetVM.File = file;
+            print.SheetVM.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+            print.SetPrinter(printDoc.PrinterSettings.PrinterName);
+            print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
+
+            // TODO: Decide how to make showing the print dialog a setting (or if needed at all)
+            // the only reason I can think of now is from/to page support.
+            bool showPrintDialog = true;
+            if (showPrintDialog) {
+                using PrintDialog printDialog = new PrintDialog();
+                printDialog.AllowSomePages = true;
+                printDialog.ShowHelp = true;
+                // printDialog.AllowSelection = true;
+
+                printDialog.Document = print.PrintDocument;
+                printDialog.PrinterSettings.FromPage = 1;
+                // Ideally we'd get NumSheets from print.SheetSVM but that would cause a
+                // un-needed Reflow. So use the printPreview VM.
+                printDialog.PrinterSettings.ToPage = printPreview.SheetViewModel.NumSheets;
+                //If the result is OK then print the document.
+                if (printDialog.ShowDialog() == DialogResult.OK && printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
+                    print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
+                    print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
+                    print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
+                }
+            }
+            print.DoPrint();
         }
 
         private void panelRight_Resize(object sender, EventArgs e) {

@@ -69,17 +69,14 @@ namespace WinPrint.Core {
             return svm.NumSheets;
         }
 
-        public void DoPrint(int fromSheet = 1, int toSheet = 0, bool showPrintDialog = true) {
+        public void DoPrint() {
             printDoc.DocumentName = SheetVM.File;
             SheetVM.Reflow(PrintDocument.DefaultPageSettings);
 
-            if (toSheet == 0)
-                toSheet = SheetVM.NumSheets;
-            printDoc.PrinterSettings.FromPage = fromSheet;
-            printDoc.PrinterSettings.ToPage = toSheet;
-            curSheet = fromSheet;
+            curSheet = PrintDocument.PrinterSettings.ToPage;
+            if (PrintDocument.PrinterSettings.PrintRange == PrintRange.SomePages)
+                curSheet = PrintDocument.PrinterSettings.FromPage;
             printDoc.Print();
-
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.

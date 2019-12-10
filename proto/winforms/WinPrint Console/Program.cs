@@ -72,7 +72,14 @@ namespace WinPrintConsole {
                     System.Environment.Exit(n);
                 }
 
-                print.DoPrint(fromSheet: opts.FromPage, toSheet: opts.ToPage);
+                if (opts.FromPage != 0)
+                    print.PrintDocument.PrinterSettings.FromPage = opts.FromPage;
+
+                if (opts.ToPage != 0) {
+                    print.PrintDocument.PrinterSettings.ToPage = opts.ToPage;
+                }
+
+                print.DoPrint();
             }
             catch (System.IO.FileNotFoundException fnfe) {
                 Console.WriteLine($"{fnfe.Message}");
