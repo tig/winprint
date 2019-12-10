@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,8 +6,9 @@
     <RootNamespace>WinPrintConsole</RootNamespace>
     <Copyright>Copyright (C) 2020 Kindel Systems, LLC - https://kindel.com/winprint</Copyright>
     <Company>Kindel Systems, LLC</Company>
-    <Version>1.0.0-beta</Version>
-    <AssemblyTitle>winprint</AssemblyTitle>
+    <Version>2.0.0-beta</Version>
+    <AssemblyTitle>WinPrint</AssemblyTitle>
+    <AssemblyName>winprint</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

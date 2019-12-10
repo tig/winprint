@@ -8,6 +8,12 @@
     <StartupObject>WinPrint.Program</StartupObject>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <ApplicationIcon>Document.ico</ApplicationIcon>
+    
+    <Copyright>Copyright (C) 2020 Kindel Systems, LLC - https://kindel.com/winprint</Copyright>
+    <Company>Kindel Systems, LLC</Company>
+    <Version>2.0.0-beta</Version>
+    <AssemblyTitle>WinPrint GUI</AssemblyTitle>
+    <AssemblyName>winprint</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

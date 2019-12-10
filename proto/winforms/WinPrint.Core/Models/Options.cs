@@ -8,20 +8,20 @@ namespace WinPrint.Core.Models {
     public class Options {
 
         // Files
-        [Value(1, Required = true, MetaName = "Files", HelpText = "Files to be printed.")]
+        [Value(0, Required = false, MetaName = "<files>", HelpText = "One or more files to be printed.")]
         public IEnumerable<string> Files { get; set; }
 
         // Print options
         [Option('s', "sheet", Required = false, Default = "default", HelpText = "Sheet defintion to use for formatting. Use sheet ID or friendly name.")]
         public string Sheet { get; set; }
 
-        [Option('l', "landscape", Required = false, Default = false, HelpText = "Force printing in landscape mode.")]
+        [Option('l', "landscape", Required = false, Default = false, HelpText = "Force landscape orientation.")]
         public bool Landscape { get; set; }
 
-        [Option('r', "portrait", Required = false, Default = false, HelpText = "Force printing in portrait mode.")]
+        [Option('r', "portrait", Required = false, Default = false, HelpText = "Force portrait orientation.")]
         public bool Portrait { get; set; }
 
-        [Option('p', "printer",  HelpText = "Printer name.")]
+        [Option('p', "printer", HelpText = "Printer name.")]
         public string Printer { get; set; }
 
         [Option('z', "paper-size", HelpText = "Paper size name.")]
@@ -40,22 +40,32 @@ namespace WinPrint.Core.Models {
         [Option('v', "verbose", Default = false, HelpText = "Verbose console output.")]
         public bool Verbose { get; set; }
 
-        [Option('g', "gui", Default = false, SetName = "gui", HelpText = "Show WinPrint GUI App. Priting will automatically start.")]
+        [Option('g', "gui", Default = false, SetName = "gui", HelpText = "Show WinPrint GUI (to preview or change sheet settings).")]
         public bool Gui { get; set; }
-
-        [Option('x', "exit", Required = false, Default = true, SetName = "gui", HelpText = "Exit GUI App when done printing. Valid only with --gui.")]
-        public bool Exit { get; set; }
-
 
         [Usage(ApplicationAlias = "winprint")]
         public static IEnumerable<Example> Examples {
             get {
-                IEnumerable<string> list = new List<string>() { { "Program.cs" } };
                 return new List<Example>() {
-                    new Example("Print a single file in landscape mode", new Options {
-                        Files = list,
+                    new Example("Print Program.cs in landscape mode", new Options {
+                        Files = new List<string>() { { "Program.cs" } },
                         Landscape = true
+                    }),
+                    new Example("Print all .cs files on a specific printer with a specific paper size", new Options {
+                        Files = new List<string>() { { "*.cs" } },
+                        Printer = "Fabricam 535",
+                        PaperSize = "A4"
+                    }),                    
+                    new Example("Print the first two pages of Program.cs", new Options {
+                        Files = new List<string>() { { "Program.cs" } },
+                        FromPage = 1,
+                        ToPage = 2
+                    }),
+                    new Example("Print Program.cs using the 2 Up sheet defintion", new Options {
+                        Files = new List<string>() { { "Program.cs" } },
+                        Sheet = "2 Up"
                     })
+
               };
             }
         }

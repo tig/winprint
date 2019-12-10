@@ -199,9 +199,10 @@ namespace WinPrint.Core {
                 Content.CountPages(streamToPrint);
             }
             else {
-                // Create a dummmy for preview with no file
-                Content = new Core.ContentTypes.TextFileContent();
-                Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+                //    // Create a dummmy for preview with no file
+                //    Content = new Core.ContentTypes.TextFileContent();
+                //    Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+                throw new Exception("No filename provided.");
             }
         }
 
