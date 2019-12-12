@@ -235,9 +235,9 @@ namespace WinPrint {
             if (string.IsNullOrEmpty(file)) {
                 using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                     
-                    openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source";
+                    openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
                     openFileDialog.Filter = "code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                    openFileDialog.FilterIndex = 1;
+                    openFileDialog.FilterIndex = 3;
                     openFileDialog.RestoreDirectory = true;
                     if (openFileDialog.ShowDialog() == DialogResult.OK) {
                         file = openFileDialog.FileNames.ToList<string>()[0];

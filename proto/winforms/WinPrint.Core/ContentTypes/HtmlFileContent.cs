@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
@@ -8,9 +10,11 @@ namespace WinPrint.Core.ContentTypes {
     /// <summary>
     /// Implements generic HTML file type support. 
     /// </summary>
-    public class HtmlFileContent : ContentBase, IDisposable  {
+    public class HtmlFileContent : ContentBase, IDisposable {
 
         public static string Type = "text/html";
+        private Bitmap htmlBitmap;
+        //private Image htmlImage;
 
         //public HtmlFileContent() {
         //    type = "text/html";
@@ -28,6 +32,8 @@ namespace WinPrint.Core.ContentTypes {
                 return;
 
             if (disposing) {
+                if (htmlBitmap != null)
+                    htmlBitmap.Dispose();
             }
             disposed = true;
         }
@@ -40,16 +46,34 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int CountPages(StreamReader streamToPrint) {
+        public override int CountPages(StreamReader streamToPrint, System.Drawing.Printing.PrinterResolution printerResolution) {
             html = streamToPrint.ReadToEnd();
-            using Bitmap bitmap = new Bitmap(1, 1);
-            Graphics g = Graphics.FromImage(bitmap);
-            //g.PageUnit = GraphicsUnit.Document;
 
-            SizeF size = HtmlRender.MeasureGdiPlus(g, html, PageSize.Width);
+            //// Do this in pixel units
+            var htmlBitmap = new Bitmap(10000, 10000);
+            htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
+            var g = Graphics.FromImage(htmlBitmap);
+            Debug.WriteLine($"HtmlFileContent.CountPages - sizing htmlBitmap is {htmlBitmap.Width}x{htmlBitmap.Height}");
+
+            g.PageUnit = GraphicsUnit.Pixel;
+            float measureWidth = PageSize.Width / 100 * printerResolution.X;
+            Debug.WriteLine($"HtmlFileContent.CountPages - measure width: {measureWidth}");
+            SizeF size = HtmlRender.MeasureGdiPlus(g, html, measureWidth);
+            Debug.WriteLine($"HtmlFileContent.CountPages - size is {size.Width}x{size.Height}.");
+            //htmlBitmap = new Bitmap((int)size.Width, (int)size.Height);
+            //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
+
+            //g = Graphics.FromImage(htmlBitmap);
+            //g.PageUnit = GraphicsUnit.Pixel;
+            //htmlImage = HtmlRender.RenderToImageGdiPlus(html, maxWidth: (int)size.Width);
+            SizeF renderedSize = HtmlRender.RenderGdiPlus(g, html, new PointF(0, 0), size);
             
-            int maxPages = (int)(size.Height / PageSize.Height);
-            for (numPages = 0; numPages < maxPages; numPages++) { 
+            Debug.WriteLine($"HtmlFileContent.CountPages - htmlImage is {htmlBitmap.Width}x{htmlBitmap.Height} pixels.");
+
+            // PageSize is in 100ths of inch. 
+            int maxPages = (int)(htmlBitmap.Height / (PageSize.Height)) + 1;
+            Debug.WriteLine($"HtmlFileContent.CountPages - {maxPages} pages.");
+            for (numPages = 0; numPages < maxPages; numPages++) {
 
             }
 
@@ -86,9 +110,32 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            SizeF size = new SizeF(PageSize.Width, PageSize.Height);
-            SizeF renderedSize = HtmlRender.RenderGdiPlus(g, html, new PointF(0, 0), size );
-            
+            SizeF pagesizeInPixels;
+            if (g.PageUnit == GraphicsUnit.Display) {
+                // Print
+                pagesizeInPixels = new SizeF(PageSize.Width, PageSize.Height);
+            }
+            else {
+                // Preview
+                pagesizeInPixels = new SizeF(PageSize.Width / 100 * g.DpiX, PageSize.Height / 100 * g.DpiY);
+            }
+
+
+            int yPosInBitmap = (pageNum - 1) * (int)(htmlBitmap.Height / numPages);
+            Debug.WriteLine($"HtmlFileContent.PaintPage {pageNum} - yPos is {yPosInBitmap}.");
+
+
+            var state = g.Save();
+            //g.PageUnit = GraphicsUnit.Pixel;
+
+            g.DrawImage(htmlBitmap, new Rectangle(0, 0, (int)PageSize.Width, (int)PageSize.Height),
+                0, yPosInBitmap,
+                (int)(htmlBitmap.Width), (int)(htmlBitmap.Height / numPages),
+                GraphicsUnit.Pixel);
+
+            g.Restore(state);
+            g.DrawRectangle(Pens.Red, new Rectangle(0, 0, (int)PageSize.Width, (int)PageSize.Height));
+
         }
     }
 }

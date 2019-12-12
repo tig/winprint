@@ -73,9 +73,7 @@ namespace WinPrint.Core {
             printDoc.DocumentName = SheetVM.File;
             SheetVM.Reflow(PrintDocument.DefaultPageSettings);
 
-            curSheet = PrintDocument.PrinterSettings.ToPage;
-            if (PrintDocument.PrinterSettings.PrintRange == PrintRange.SomePages)
-                curSheet = PrintDocument.PrinterSettings.FromPage;
+            curSheet = PrintDocument.PrinterSettings.FromPage;
             printDoc.Print();
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]

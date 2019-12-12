@@ -198,7 +198,7 @@ namespace WinPrint {
                     Content.PropertyChanged += OnContentPropertyChanged();
 
                     Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                    Content.CountPages(streamToPrint);
+                    Content.CountPages(streamToPrint, PrinterResolution);
                 }
                 catch (System.IO.FileNotFoundException e) {
                     Debug.WriteLine($"Reflow {File} - {e.Message}");

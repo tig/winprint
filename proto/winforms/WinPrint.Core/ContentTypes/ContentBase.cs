@@ -53,7 +53,7 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public abstract int CountPages(StreamReader streamToPrint);
+        public abstract int CountPages(StreamReader streamToPrint, System.Drawing.Printing.PrinterResolution printerResolution);
 
         /// <summary>
         /// Paints a single page

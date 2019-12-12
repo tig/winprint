@@ -196,7 +196,7 @@ namespace WinPrint.Core {
                 Content.PropertyChanged += OnContentPropertyChanged();
 
                 Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                Content.CountPages(streamToPrint);
+                Content.CountPages(streamToPrint, PrinterResolution);
             }
             else {
                 //    // Create a dummmy for preview with no file

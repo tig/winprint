@@ -72,7 +72,7 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int CountPages(StreamReader streamToPrint) {
+        public override int CountPages(StreamReader streamToPrint, System.Drawing.Printing.PrinterResolution printerResolution) {
             Debug.WriteLine("TextFileContent.CountPages");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
