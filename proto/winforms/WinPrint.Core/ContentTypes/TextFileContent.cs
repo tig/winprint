@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.ContentTypes {
 
     /// <summary>
-    /// This struct us keep track of which lines are 'real' and thus get a printed line number
+    /// This struct keeps track of which lines are 'real' and thus get a printed line number
     /// and which are the result of wrapping.
     /// </summary>
     internal struct Line {
@@ -226,8 +225,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
-            int charsFitted, linesFilled;
-
+ 
             PaintLineNumberSeparator(g);
 
             // Print each line of the file.
@@ -247,6 +245,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         // TODO: Support setting color of line #s and separator
+        // TODO: Only paint Line Number Separator if there's an actual line
         private void PaintLineNumberSeparator(Graphics g) {
             if (LineNumbers && LineNumberSeparator && lineNumberWidth != 0) {
                 g.DrawLine(Pens.Gray, lineNumberWidth - 2, 0, lineNumberWidth - 2, PageSize.Height);
