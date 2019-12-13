@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+using WinPrint.WinForms;
 
 namespace WinPrint {
     public partial class MainWindow : Form {

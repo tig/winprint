@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint", "WinPrint\WinPrint.csproj", "{6DEA2A6F-7ECA-411C-B25A-2B7293AFD336}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.WinForms", "WinPrint\WinPrint.WinForms.csproj", "{6DEA2A6F-7ECA-411C-B25A-2B7293AFD336}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.Core", "WinPrint.Core\WinPrint.Core.csproj", "{78B6744F-DF3E-4D86-ACE5-18854A0AF54E}"
 EndProject
@@ -12,7 +12,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.Tests", "WinPrint.
 		{78B6744F-DF3E-4D86-ACE5-18854A0AF54E} = {78B6744F-DF3E-4D86-ACE5-18854A0AF54E}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPrint Console", "WinPrint Console\WinPrint Console.csproj", "{A82F3B2B-5E3A-49B8-8552-983D06081186}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint Console", "WinPrint Console\WinPrint Console.csproj", "{A82F3B2B-5E3A-49B8-8552-983D06081186}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

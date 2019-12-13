@@ -10,12 +10,14 @@ using WinPrint.Core.Models;
 
 namespace WinPrintConsole {
     class Program {
+        private static ParserResult<Options> result;
         static void Main(string[] args) {
             var parser = new Parser(with => {
                 with.EnableDashDash = true;
                 with.HelpWriter = null;
             });
-            var result = parser.ParseArguments<Options>(args);
+
+            result = parser.ParseArguments<Options>(args);
             result
                 .WithParsed(opts => Go(opts))
                 .WithNotParsed((errs) => DisplayHelp(result, errs));
@@ -87,6 +89,15 @@ namespace WinPrintConsole {
             }
             catch (Exception e) {
                 Console.WriteLine($"{e.Message}");
+                //var result = new ParserResult<Options>();
+                var helpText = HelpText.AutoBuild(result, h => {
+                    h.AutoHelp = true;
+                    h.AutoVersion = true;
+                    //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
+                    return HelpText.DefaultParsingErrorsHandler(result, h);
+                }, e => e);
+                Console.WriteLine(helpText);
+                
                 System.Environment.Exit(-1);
             }
         }
