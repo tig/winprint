@@ -304,7 +304,7 @@ namespace WinPrint.Core {
             return state;
         }
 
-        internal static float GetFontHeight(Core.Models.Font font) {
+        public static float GetFontHeight(Core.Models.Font font) {
             System.Drawing.Font f = new System.Drawing.Font(font.Family, font.Size, font.Style, GraphicsUnit.Point);
             float h = f.GetHeight(100);
             f.Dispose();
@@ -337,7 +337,7 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="g">Graphics to print on. Can be either a Preview window or a Printer canvas.</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
-        internal void Paint(Graphics g, int sheetNum) {
+        public void Paint(Graphics g, int sheetNum) {
             GraphicsState state = AdjustPrintOrPreview(g);
             PaintRules(g);
             headerVM.Paint(g, sheetNum);

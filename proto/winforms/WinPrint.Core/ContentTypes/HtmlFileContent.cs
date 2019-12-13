@@ -50,7 +50,7 @@ namespace WinPrint.Core.ContentTypes {
             html = streamToPrint.ReadToEnd();
 
             //// Do this in pixel units
-            var htmlBitmap = new Bitmap(10000, 10000);
+            htmlBitmap = new Bitmap(10000, 10000);
             htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
             var g = Graphics.FromImage(htmlBitmap);
             Debug.WriteLine($"HtmlFileContent.CountPages - sizing htmlBitmap is {htmlBitmap.Width}x{htmlBitmap.Height}");

@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Drawing.Printing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using WinPrint.Core;
 
 namespace WinPrint {
     /// <summary>

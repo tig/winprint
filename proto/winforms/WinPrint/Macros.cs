@@ -4,6 +4,7 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.Exceptions;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using WinPrint.Core;
 
 namespace WinPrint {
 
