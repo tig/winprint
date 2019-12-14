@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPrint", "WinPrint\WinPri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPrint.Tests.MSTest", "WinPrint.Tests.MSTest\WinPrint.Tests.MSTest.csproj", "{B4C54B72-F0FC-4852-8D5B-94337C46C048}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.Core", "WinPrint.Core\WinPrint.Core.csproj", "{D1FD5AC4-94EA-42EF-BF32-6B92A96597A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.UWPCore", "WinPrint.Core\WinPrint.UWPCore.csproj", "{D1FD5AC4-94EA-42EF-BF32-6B92A96597A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

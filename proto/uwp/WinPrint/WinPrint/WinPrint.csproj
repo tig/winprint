@@ -222,9 +222,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj">
+    <ProjectReference Include="..\WinPrint.Core\WinPrint.UWPCore.csproj">
       <Project>{D1FD5AC4-94EA-42EF-BF32-6B92A96597A2}</Project>
-      <Name>WinPrint.Core</Name>
+      <Name>WinPrint.UWPCore</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

@@ -19,7 +19,7 @@
         <Grid x:Name="PagePreviewContainer"
             Grid.Row="1" 
             Background="{ThemeResource SystemControlPageBackgroundChromeLowBrush}" SizeChanged="SizeChanged">
-            <Rectangle x:Name="PagePreview" HorizontalAlignment="Center" Height="417" Stroke="{ThemeResource SystemControlPageBackgroundChromeLowBrush}" StrokeThickness="50" Fill="White" VerticalAlignment="Center" Width="547" Visibility="Visible" />
+            <Canvas x:Name="PagePreview" HorizontalAlignment="Center" Height="417" VerticalAlignment="Center" Width="547" Visibility="Visible" />
             <!--
                 The SystemControlPageBackgroundChromeLowBrush background reprsesents where you should place your content. 
                 Place your content here.

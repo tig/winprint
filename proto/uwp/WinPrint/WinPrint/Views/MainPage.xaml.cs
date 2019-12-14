@@ -35,39 +35,39 @@ namespace WinPrint.Views
             //
         }
 
-        public static PrintCapabilities GetPrinterPageInfo(String printerName)
-        {
-            PrinterSettings settings;
+        //public static PrintCapabilities GetPrinterPageInfo(String printerName)
+        //{
+        //    PrinterSettings settings;
 
-            // If printer name is not set, look for default printer
-            if (String.IsNullOrEmpty(printerName))
-            {
-                foreach (var printer in PrinterSettings.InstalledPrinters)
-                {
-                    settings = new PrinterSettings();
+        //    // If printer name is not set, look for default printer
+        //    if (String.IsNullOrEmpty(printerName))
+        //    {
+        //        foreach (var printer in PrinterSettings.InstalledPrinters)
+        //        {
+        //            settings = new PrinterSettings();
 
-                    settings.PrinterName = printer.ToString();
+        //            settings.PrinterName = printer.ToString();
 
-                    if (settings.IsDefaultPrinter)
-                        return settings.DefaultPageSettings;
-                }
+        //            if (settings.IsDefaultPrinter)
+        //                return settings.DefaultPageSettings;
+        //        }
 
-                return null; // <- No default printer  
-            }
+        //        return null; // <- No default printer  
+        //    }
 
-            // printer by its name 
-            settings = new PrinterSettings();
+        //    // printer by its name 
+        //    settings = new PrinterSettings();
 
-            settings.PrinterName = printerName;
+        //    settings.PrinterName = printerName;
 
-            return settings.DefaultPageSettings;
-        }
+        //    return settings.DefaultPageSettings;
+        //}
 
-        // Default printer default page info
-        public static PageSettings GetPrinterPageInfo()
-        {
-            return GetPrinterPageInfo(null);
-        }
+        //// Default printer default page info
+        //public static PageSettings GetPrinterPageInfo()
+        //{
+        //    return GetPrinterPageInfo(null);
+        //}
 
         /// <summary>
         /// Display a message to the user.
