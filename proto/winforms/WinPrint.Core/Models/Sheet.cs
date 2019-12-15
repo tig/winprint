@@ -7,6 +7,9 @@ using GalaSoft.MvvmLight;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Core.Models {
+    /// <summary>
+    /// Defines the settings for a Sheet (Sheet Definition)
+    /// </summary>
     public class Sheet : ModelBase {
 
         //private Guid id;

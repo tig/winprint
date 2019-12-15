@@ -34,13 +34,15 @@ namespace WinPrint {
             Icon = Resources.printer_and_fax_w;
 
             printPreview = new PrintPreview();
+            printPreview.Dock = this.dummyButton.Dock ;
             printPreview.Anchor = this.dummyButton.Anchor;
             printPreview.BackColor = this.dummyButton.BackColor;
             printPreview.Location = this.dummyButton.Location;
             printPreview.Margin = this.dummyButton.Margin;
             printPreview.Name = "printPreview";
             printPreview.Size = this.dummyButton.Size;
-            printPreview.TabIndex = 1;// this.dummyButton.TabIndex;
+            printPreview.MinimumSize = new Size(0,0);
+            printPreview.TabIndex = 1;
             printPreview.TabStop = true;
 
 
@@ -285,26 +287,27 @@ namespace WinPrint {
         }
 
         internal void SizePreview() {
-            Debug.WriteLine("SizePreview()");
-            if (printPreview == null || printPreview.SheetViewModel == null) return;
-            Size size = panelRight.Size;
-            size.Height -= headerTextBox.Height * 3;
-            size.Width -= headerTextBox.Height;
+            //Debug.WriteLine("SizePreview()");
+            //if (printPreview == null || printPreview.SheetViewModel == null) return;
+            //Size size = panelRight.Size;
+            //size.Height -= headerTextBox.Height * 3;
+            //size.Width -= headerTextBox.Height;
 
-            double w = printPreview.SheetViewModel.Bounds.Width;
-            double h = printPreview.SheetViewModel.Bounds.Height;
+            //double w = printPreview.SheetViewModel.Bounds.Width;
+            //double h = printPreview.SheetViewModel.Bounds.Height;
 
-            var scalingX = (double)size.Width / (double)w;
-            var scalingY = (double)size.Height / (double)h;
+            //var scalingX = (double)size.Width / (double)w;
+            //var scalingY = (double)size.Height / (double)h;
 
-            // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
-            var scale = Math.Min(scalingY, scalingX);
+            //// Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
+            //var scale = Math.Min(scalingY, scalingX);
 
-            printPreview.Size = new Size((int)(w * scale), (int)(h * scale));
+            //printPreview.Size = new Size((int)(w * scale), (int)(h * scale));
 
-            // Now center
-            printPreview.Location = new Point((panelRight.Width / 2) - (printPreview.Width / 2),
-                (panelRight.Height / 2) - (printPreview.Height / 2));
+            //// Now center
+            //printPreview.Location = new Point((panelRight.Width / 2) - (printPreview.Width / 2),
+            //    (panelRight.Height / 2) - (printPreview.Height / 2));
+
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {

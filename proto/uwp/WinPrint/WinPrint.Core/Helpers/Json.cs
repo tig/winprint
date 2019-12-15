@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
-namespace WinPrint.Core.Helpers
+namespace WinPrint.UWPCore.Helpers
 {
     public static class Json
     {

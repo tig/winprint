@@ -6,6 +6,7 @@ using System.Drawing.Printing;
 using WinPrint.Core.Models;
 using System.Diagnostics;
 using Microsoft.Win32;
+using System.Collections.Generic;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -80,7 +81,13 @@ namespace WinPrint.Core {
 
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
-        protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
+        protected void OnSettingsChanged(bool reflow) {
+            ClearCache();
+            SettingsChanged?.Invoke(this, reflow);
+        }
+
+        // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
+        private List<Image> cachedSheets = new List<Image>();
 
         public SheetViewModel() {
             //SetSettings(new Sheet());
@@ -115,8 +122,10 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="pageSettings"></param>
         public void Reflow(PageSettings pageSettings) {
-
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
+
+            ClearCache();
+
             var ps = (PageSettings)pageSettings.Clone();
 
             // The following elements of PageSettings are dependent
@@ -206,6 +215,14 @@ namespace WinPrint.Core {
             }
         }
 
+        private void ClearCache() {
+            Debug.WriteLine("SheetViewModel.ClearCache");
+            foreach (var i in cachedSheets) {
+                i.Dispose();
+            }
+            cachedSheets.Clear();
+        }
+
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
             bool reflow = false;
             Debug.WriteLine($"sheet.PropertyChanged: {e.PropertyName}");
@@ -281,29 +298,6 @@ namespace WinPrint.Core {
             OnSettingsChanged(reflow);
         };
 
-        // When in preview mode we need to adjust scaling.
-        // When in print mode we need to adjust origin
-        // This function saves the Graphics state so subsequent callers get non-adjusted Graphics
-        internal GraphicsState AdjustPrintOrPreview(Graphics g) {
-            GraphicsState state = g.Save();
-            if (g.PageUnit == GraphicsUnit.Display) {
-                // In print mode, adjust origin to account for hard margins
-                // In print mode, 0,0 is top, left - hard margins
-                g.TranslateTransform(-printableArea.Left, -printableArea.Top);
-            }
-            else {
-                // in preview mode adjust page scale to deal with Display unit and zoom
-                double scalingX, scalingY;
-                scalingX = (double)g.VisibleClipBounds.Width / (double)PaperSize.Width;
-                scalingY = (double)g.VisibleClipBounds.Height / (double)PaperSize.Height;
-                g.PageScale = (float)Math.Min(scalingY, scalingX);
-
-                //Rectangle r = new Rectangle((int)Math.Floor(printableArea.Left), (int)Math.Floor(printableArea.Top), (int)Math.Ceiling(printableArea.Width)+1, (int)Math.Ceiling(printableArea.Height)+1);
-                //g.SetClip(r);
-            }
-            return state;
-        }
-
         public static float GetFontHeight(Core.Models.Font font) {
             System.Drawing.Font f = new System.Drawing.Font(font.Family, font.Size, font.Style, GraphicsUnit.Point);
             float h = f.GetHeight(100);
@@ -333,17 +327,58 @@ namespace WinPrint.Core {
         public float GetPageHeight() { return (ContentBounds.Height / Rows) - (Padding * (Rows - 1) / Rows); }
 
         /// <summary>
-        /// Paints the content of a single Sheet. 
+        /// Prints the content of a single Sheet to a Graphics.
         /// </summary>
-        /// <param name="g">Graphics to print on. Can be either a Preview window or a Printer canvas.</param>
+        /// <param name="g">Graphics to print on</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
-        public void Paint(Graphics g, int sheetNum) {
-            GraphicsState state = AdjustPrintOrPreview(g);
+        public void PrintSheet(Graphics graphics, int sheetNum) {
+            if (NumSheets == 0) return;
+            GraphicsState state = graphics.Save();
+
+            if (graphics.PageUnit == GraphicsUnit.Display) {
+                // In print mode, adjust origin to account for hard margins
+                // In print mode, 0,0 is top, left - hard margins
+                graphics.TranslateTransform(-printableArea.Left, -printableArea.Top);
+                PaintSheet(graphics, sheetNum);
+                graphics.Restore(state);
+            }
+            else {
+                PaintSheet(graphics, sheetNum);
+            }
+        }
+
+        /// <summary>
+        /// Returns an Image with the specified sheet painted on it. Image will be of the size & resolution of the selected printer.
+        /// </summary>
+        /// <param name="sheetNum">Sheet to print. 1-based.</param>
+        /// <returns></returns>
+        public Image GetSheet(int sheetNum) {
+            const int dpiMultiplier = 1;
+            if (cachedSheets.Count < sheetNum) {
+                // Create a new bitmap object with the resolution of a printer page
+                Bitmap bmp = new Bitmap((int)(PrintableArea.Width / 100 * PrinterResolution.X * dpiMultiplier), (int)(PrintableArea.Height / 100 * PrinterResolution.Y * dpiMultiplier));
+                bmp.SetResolution(PrinterResolution.X * dpiMultiplier, PrinterResolution.Y * dpiMultiplier);
+
+                // Obtain a Graphics object from that bitmap
+                Graphics g = Graphics.FromImage(bmp);
+                g.PageUnit = GraphicsUnit.Pixel;
+
+                PaintSheet(g, sheetNum);
+
+                cachedSheets.Add(bmp);
+                
+            }
+
+            Debug.WriteLine($"SheetViewModel.GetSheet({sheetNum}) returinging image.");
+            return cachedSheets[sheetNum - 1];
+        }
+
+        private void PaintSheet(Graphics g, int sheetNum) {
+            // This is needed for image scaling to work right
+            g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
             PaintRules(g);
             headerVM.Paint(g, sheetNum);
             footerVM.Paint(g, sheetNum);
-
-            if (NumSheets == 0) return;
 
             int pagesPerSheet = rows * cols;
             // 1-based; assume 4-up...
@@ -411,8 +446,8 @@ namespace WinPrint.Core {
 
                 }
             }
-            g.Restore(state);
         }
+
         /// <summary>
         /// Paint a diagnostic page number centered on sheet.
         /// </summary>
@@ -421,7 +456,16 @@ namespace WinPrint.Core {
         internal void PaintPageNum(Graphics g, int pageNum) {
             if (!sheet.PrintPageBounds && !sheet.PreviewPageBounds) return;
 
-            System.Drawing.Font font = new System.Drawing.Font(FontFamily.GenericSansSerif, 48, FontStyle.Bold, GraphicsUnit.Point);
+            System.Drawing.Font font;
+
+            if (g.PageUnit == GraphicsUnit.Display) {
+                font = new System.Drawing.Font(sheet.RulesFont.Family, 48, sheet.RulesFont.Style, GraphicsUnit.Point);
+            }
+            else {
+                // Convert font to pixel units if we're in preview
+                font = new System.Drawing.Font(sheet.RulesFont.Family, 48 / 72F * 96F, sheet.RulesFont.Style, GraphicsUnit.Pixel);
+            }
+
             float xPos = 0; // GetPageX(pageNum);
             float yPos = 0; // GetPageY(pageNum);
 
@@ -550,10 +594,13 @@ namespace WinPrint.Core {
                 g.RotateTransform(90);
                 Single x = start.X + (textSize.Height / 2F);
                 Single y = (start.Y + end.Y) / labelDiv - (textSize.Width / 2F);
-                g.TranslateTransform(x, y, MatrixOrder.Append);
+
+                // Weird hack - If we're zoomed, we need to multiply by the zoom factor (element[1]).
+                using var tx = g.Transform;
+                g.TranslateTransform(x * tx.Elements[1], y * tx.Elements[1], MatrixOrder.Append);
 
                 RectangleF textRect = new RectangleF(new PointF(0, 0), textSize);
-                g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
+                g.FillRectangles(Brushes.Yellow, new RectangleF[] { textRect });
                 g.DrawString(text, font, brush, 0, 0);
                 g.Restore(state);
 

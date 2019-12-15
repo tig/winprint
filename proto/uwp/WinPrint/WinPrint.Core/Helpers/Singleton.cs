@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace WinPrint.Core.Helpers
+namespace WinPrint.UWPCore.Helpers
 {
     public static class Singleton<T>
         where T : new()

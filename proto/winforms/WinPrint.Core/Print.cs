@@ -104,7 +104,7 @@ namespace WinPrint.Core {
                 }
             }
             if (curSheet <= printDoc.PrinterSettings.ToPage)
-                SheetVM.Paint(ev.Graphics, curSheet);
+                SheetVM.PrintSheet(ev.Graphics, curSheet);
             curSheet++;
             ev.HasMorePages = curSheet <= printDoc.PrinterSettings.ToPage;
         }
