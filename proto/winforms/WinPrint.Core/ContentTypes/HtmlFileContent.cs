@@ -50,24 +50,26 @@ namespace WinPrint.Core.ContentTypes {
             html = streamToPrint.ReadToEnd();
 
             //// Do this in pixel units
-            htmlBitmap = new Bitmap(10000, 10000);
+            htmlBitmap = new Bitmap((int)(printerResolution.X * PageSize.Width / 100), (int)(printerResolution.Y * PageSize.Height / 100));
             htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
             var g = Graphics.FromImage(htmlBitmap);
+            g.PageUnit = GraphicsUnit.Pixel;
             Debug.WriteLine($"HtmlFileContent.CountPages - sizing htmlBitmap is {htmlBitmap.Width}x{htmlBitmap.Height}");
 
-            g.PageUnit = GraphicsUnit.Pixel;
-            float measureWidth = PageSize.Width / 100 * printerResolution.X;
-            Debug.WriteLine($"HtmlFileContent.CountPages - measure width: {measureWidth}");
-            SizeF size = HtmlRender.MeasureGdiPlus(g, html, measureWidth);
+            SizeF size = HtmlRender.Measure(g, html, htmlBitmap.Width);
+            size.Height = size.Height;
             Debug.WriteLine($"HtmlFileContent.CountPages - size is {size.Width}x{size.Height}.");
-            //htmlBitmap = new Bitmap((int)size.Width, (int)size.Height);
-            //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
 
-            //g = Graphics.FromImage(htmlBitmap);
-            //g.PageUnit = GraphicsUnit.Pixel;
+            htmlBitmap = new Bitmap((int)htmlBitmap.Width, (int)size.Height);
+            htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
+
+            g = Graphics.FromImage(htmlBitmap);
+            g.PageUnit = GraphicsUnit.Pixel;
             //htmlImage = HtmlRender.RenderToImageGdiPlus(html, maxWidth: (int)size.Width);
-            SizeF renderedSize = HtmlRender.RenderGdiPlus(g, html, new PointF(0, 0), size);
-            
+            g.FillRectangle(Brushes.LightYellow, 0, 0, htmlBitmap.Width, htmlBitmap.Height);
+            SizeF renderedSize = HtmlRender.Render(g, html, 0, 0, htmlBitmap.Width);
+            Debug.WriteLine($"HtmlFileContent.CountPages - renderSize is {renderedSize.Width}x{renderedSize.Height} pixels.");
+
             Debug.WriteLine($"HtmlFileContent.CountPages - htmlImage is {htmlBitmap.Width}x{htmlBitmap.Height} pixels.");
 
             // PageSize is in 100ths of inch. 
@@ -128,10 +130,13 @@ namespace WinPrint.Core.ContentTypes {
             var state = g.Save();
             //g.PageUnit = GraphicsUnit.Pixel;
 
-            g.DrawImage(htmlBitmap, new Rectangle(0, 0, (int)PageSize.Width, (int)PageSize.Height),
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.DrawImage(htmlBitmap, new Rectangle(0, 0, (int)(PageSize.Width / 100 * 96), (int)(PageSize.Height / 100 * 96)),
                 0, yPosInBitmap,
-                (int)(htmlBitmap.Width), (int)(htmlBitmap.Height / numPages),
+                (int)(PageSize.Width), (int)(PageSize.Height),
                 GraphicsUnit.Pixel);
+
+            g.DrawImage(htmlBitmap, 0, 0);
 
             g.Restore(state);
             g.DrawRectangle(Pens.Red, new Rectangle(0, 0, (int)PageSize.Width, (int)PageSize.Height));

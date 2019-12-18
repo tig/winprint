@@ -46,15 +46,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="HtmlRenderer">
-      <HintPath>..\..\..\..\HTML-Renderer\Source\HtmlRenderer.WinForms\bin\DebugNet20\HtmlRenderer.dll</HintPath>
-    </Reference>
-    <Reference Include="HtmlRenderer.WinForms">
-      <HintPath>..\..\..\..\HTML-Renderer\Source\HtmlRenderer.WinForms\bin\DebugNet20\HtmlRenderer.WinForms.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
