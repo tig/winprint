@@ -7,6 +7,7 @@ using System.IO;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace WinPrint.Core.ContentTypes {
+
     /// <summary>
     /// Implements generic HTML file type support. 
     /// </summary>
