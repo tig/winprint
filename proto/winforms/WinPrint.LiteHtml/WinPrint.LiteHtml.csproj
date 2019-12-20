@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -10,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="master.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="master.css" />
+  </ItemGroup>
+
+    <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
@@ -17,8 +24,11 @@
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\..\LiteHtmlSharp\LiteHtmlSharp\LiteHtmlSharp.csproj" />
+    </ItemGroup>
+
+    <Import Project="..\..\..\..\LiteHtmlSharp\LiteHtmlSharp.Shared\LiteHtmlSharp.Shared.projitems" Label="Shared" />
+
 
 </Project>

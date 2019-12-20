@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.config": "jsonc",
+        "PAGE.C": "cpp",
+        "WINPRINT.C": "cpp",
+        "KERNEL.C": "cpp"
+    }
+}

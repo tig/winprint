@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using TheArtOfDev.HtmlRenderer.WinForms;
+using LiteHtmlSharp;
+using WinPrint.LiteHtml;
 
 namespace WinPrint.Core.ContentTypes {
 
@@ -14,8 +13,8 @@ namespace WinPrint.Core.ContentTypes {
     public class HtmlFileContent : ContentBase, IDisposable {
 
         public static string Type = "text/html";
-        private Bitmap htmlBitmap;
-        //private Image htmlImage;
+
+        private GDIPlusContainer litehtml;
 
         //public HtmlFileContent() {
         //    type = "text/html";
@@ -33,8 +32,8 @@ namespace WinPrint.Core.ContentTypes {
                 return;
 
             if (disposing) {
-                if (htmlBitmap != null)
-                    htmlBitmap.Dispose();
+                //if (litehtml != null)
+                    //litehtml.Dispose();
             }
             disposed = true;
         }
@@ -50,31 +49,29 @@ namespace WinPrint.Core.ContentTypes {
         public override int CountPages(StreamReader streamToPrint, System.Drawing.Printing.PrinterResolution printerResolution) {
             html = streamToPrint.ReadToEnd();
 
-            //// Do this in pixel units
-            htmlBitmap = new Bitmap((int)(printerResolution.X * PageSize.Width / 100), (int)(printerResolution.Y * PageSize.Height / 100));
+            int width = (int)(printerResolution.X * PageSize.Width / 100);
+            int height = (int)(printerResolution.Y * PageSize.Height / 100);
+
+            litehtml = new GDIPlusContainer(IncludedMasterCss.CssString, LibInterop.Instance);
+            litehtml.Size = new LiteHtmlSize(width, height);
+            //            litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(PageSize.Width, height));
+
+            var htmlBitmap = new Bitmap(width, height);
             htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Pixel;
+            g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
             Debug.WriteLine($"HtmlFileContent.CountPages - sizing htmlBitmap is {htmlBitmap.Width}x{htmlBitmap.Height}");
+            litehtml.Graphics = g;
+            litehtml.Document.CreateFromString(html);
+            litehtml.Document.OnMediaChanged();
 
-            SizeF size = HtmlRender.Measure(g, html, htmlBitmap.Width);
-            size.Height = size.Height;
-            Debug.WriteLine($"HtmlFileContent.CountPages - size is {size.Width}x{size.Height}.");
+            // TODO: Use return of Render() to get "best width"
+            litehtml.Render();
 
-            htmlBitmap = new Bitmap((int)htmlBitmap.Width, (int)size.Height);
-            htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
+            Debug.WriteLine($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()}");
 
-            g = Graphics.FromImage(htmlBitmap);
-            g.PageUnit = GraphicsUnit.Pixel;
-            //htmlImage = HtmlRender.RenderToImageGdiPlus(html, maxWidth: (int)size.Width);
-            g.FillRectangle(Brushes.LightYellow, 0, 0, htmlBitmap.Width, htmlBitmap.Height);
-            SizeF renderedSize = HtmlRender.Render(g, html, 0, 0, htmlBitmap.Width);
-            Debug.WriteLine($"HtmlFileContent.CountPages - renderSize is {renderedSize.Width}x{renderedSize.Height} pixels.");
-
-            Debug.WriteLine($"HtmlFileContent.CountPages - htmlImage is {htmlBitmap.Width}x{htmlBitmap.Height} pixels.");
-
-            // PageSize is in 100ths of inch. 
-            int maxPages = (int)(htmlBitmap.Height / (PageSize.Height)) + 1;
+            int maxPages = (int)(litehtml.Document.Height() / (PageSize.Height)) + 1;
             Debug.WriteLine($"HtmlFileContent.CountPages - {maxPages} pages.");
             for (numPages = 0; numPages < maxPages; numPages++) {
 
@@ -82,6 +79,8 @@ namespace WinPrint.Core.ContentTypes {
 
             return numPages;
         }
+
+
 
         /// <summary>
         /// Gets next page from stream. Returns false if no more pages
@@ -123,24 +122,32 @@ namespace WinPrint.Core.ContentTypes {
                 pagesizeInPixels = new SizeF(PageSize.Width / 100 * g.DpiX, PageSize.Height / 100 * g.DpiY);
             }
 
-
-            int yPosInBitmap = (pageNum - 1) * (int)(htmlBitmap.Height / numPages);
-            Debug.WriteLine($"HtmlFileContent.PaintPage {pageNum} - yPos is {yPosInBitmap}.");
-
-
             var state = g.Save();
+
+            litehtml.Graphics = g;
+            litehtml.Document.OnMediaChanged();
+
+            int yPos = (pageNum - 1) * (int)PageSize.Height; // (litehtml.Document.Height() / numPages);
+
+            litehtml.SetViewport(new LiteHtmlPoint(0, yPos), new LiteHtmlSize(PageSize.Width, PageSize.Height));
+            //litehtml.Render();
+            litehtml.Draw();
+
+
+            //int yPosInBitmap = (pageNum - 1) * (int)(htmlBitmap.Height / numPages);
+            //Debug.WriteLine($"HtmlFileContent.PaintPage {pageNum} - yPos is {yPosInBitmap}.");
             //g.PageUnit = GraphicsUnit.Pixel;
 
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            g.DrawImage(htmlBitmap, new Rectangle(0, 0, (int)(PageSize.Width / 100 * 96), (int)(PageSize.Height / 100 * 96)),
-                0, yPosInBitmap,
-                (int)(PageSize.Width), (int)(PageSize.Height),
-                GraphicsUnit.Pixel);
+            //g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            //g.DrawImage(htmlBitmap, new Rectangle(0, 0, (int)(PageSize.Width / 100 * 96), (int)(PageSize.Height / 100 * 96)),
+            //    0, yPosInBitmap,
+            //    (int)(PageSize.Width), (int)(PageSize.Height),
+            //    GraphicsUnit.Pixel);
 
-            g.DrawImage(htmlBitmap, 0, 0);
+           // g.DrawImage(htmlBitmap, 0, 0);
 
             g.Restore(state);
-            g.DrawRectangle(Pens.Red, new Rectangle(0, 0, (int)PageSize.Width, (int)PageSize.Height));
+            //g.DrawRectangle(Pens.Red, new Rectangle(0, 0, (int)PageSize.Width, (int)PageSize.Height));
 
         }
     }
