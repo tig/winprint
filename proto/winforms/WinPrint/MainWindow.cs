@@ -21,12 +21,6 @@ namespace WinPrint {
         // Winprint Print Preview control
         private PrintPreview printPreview;
 
-        //private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";
-        //private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
-        //private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
-        //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
-        private string file = ""; //@"..\..\..\..\..\..\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public MainWindow() {
             InitializeComponent();
@@ -44,6 +38,14 @@ namespace WinPrint {
             printPreview.MinimumSize = new Size(0,0);
             printPreview.TabIndex = 1;
             printPreview.TabStop = true;
+
+            printPreview.KeyUp += (s, e) => {
+                switch (e.KeyCode) {
+                    case Keys.F5:
+                        SheetSettingsChanged();
+                        break;
+                }
+            };
 
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
@@ -76,7 +78,7 @@ namespace WinPrint {
         }
 
         private SheetViewModel CreatePreviewSheetViewModel() {
-            Debug.WriteLine("CreateSheetViewModel");
+            Debug.WriteLine("CreateSheetViewModel()");
             SheetViewModel svm = new SheetViewModel();
 
             svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
@@ -138,6 +140,11 @@ namespace WinPrint {
                     case "Padding":
                         padding.Value = svm.Padding / 100M;
                         break;
+
+                    case "File":
+                        this.Text = $"WinPrint - {svm.File}";
+                        SheetSettingsChanged();
+                        break;
                 }
             }));
 
@@ -156,11 +163,8 @@ namespace WinPrint {
                 ModelLocator.Current.Options.Files.Any() &&
                 !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList()[0])) {
                 List<string> list = ModelLocator.Current.Options.Files.ToList();
-                file = list[0];
+                svm.File = list[0];
             }
-
-            svm.File = file;
-            this.Text = $"WinPrint - {file}";
             return svm;
         }
 
@@ -189,7 +193,7 @@ namespace WinPrint {
                 switch (e.PropertyName) {
                     case "DefaultSheet":
                         comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
-                        ChangeSheet();
+                        SheetChanged();
                         break;
                 }
             }));
@@ -220,39 +224,48 @@ namespace WinPrint {
             // Select default Sheet 
             comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
 
+            // Create our sheet view model.
+            printPreview.SheetViewModel = CreatePreviewSheetViewModel();
+
             if (ModelLocator.Current.Options.Files != null)
                 //&&
                 //  ModelLocator.Current.Options.Files.Any() &&
                 //  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList<string>()[0])) 
             {
-                file = ModelLocator.Current.Options.Files.ToList()[0];
+                printPreview.SheetViewModel.File = ModelLocator.Current.Options.Files.ToList()[0];
             }
 
-            printPreview.Select();
             this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
             this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
+            //printPreview.Select();
+            printPreview.Focus();
+
             this.Cursor = Cursors.Default;
+            if (string.IsNullOrEmpty(printPreview.SheetViewModel.File)) 
+                ShowFilesDialog();
 
-            if (string.IsNullOrEmpty(file)) {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                    
-                    openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
-                    openFileDialog.Filter = "code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                    openFileDialog.FilterIndex = 3;
-                    openFileDialog.RestoreDirectory = true;
-                    if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                        file = openFileDialog.FileNames.ToList<string>()[0];
-                    }
-                }
-            }
             // Go!
-            ChangeSheet();
-
+ 
         }
 
-        private void ChangeSheet() {
+        private void ShowFilesDialog() {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+
+                openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
+                openFileDialog.Filter = $"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 3;
+                openFileDialog.RestoreDirectory = true;
+                if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                    printPreview.SheetViewModel.File = openFileDialog.FileNames.ToList<string>()[0];
+                }
+            }
+        }
+
+        private void SheetChanged() {
+            Debug.WriteLine("SheetChanged()");
+
             this.Cursor = Cursors.WaitCursor;
             printPreview.SheetViewModel = CreatePreviewSheetViewModel();
             this.Cursor = Cursors.Default;
@@ -281,33 +294,8 @@ namespace WinPrint {
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);
             printPreview.Invalidate(true);
-            SizePreview();
-
+ 
             this.Cursor = Cursors.Default;
-        }
-
-        internal void SizePreview() {
-            //Debug.WriteLine("SizePreview()");
-            //if (printPreview == null || printPreview.SheetViewModel == null) return;
-            //Size size = panelRight.Size;
-            //size.Height -= headerTextBox.Height * 3;
-            //size.Width -= headerTextBox.Height;
-
-            //double w = printPreview.SheetViewModel.Bounds.Width;
-            //double h = printPreview.SheetViewModel.Bounds.Height;
-
-            //var scalingX = (double)size.Width / (double)w;
-            //var scalingY = (double)size.Height / (double)h;
-
-            //// Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
-            //var scale = Math.Min(scalingY, scalingX);
-
-            //printPreview.Size = new Size((int)(w * scale), (int)(h * scale));
-
-            //// Now center
-            //printPreview.Location = new Point((panelRight.Width / 2) - (printPreview.Width / 2),
-            //    (panelRight.Height / 2) - (printPreview.Height / 2));
-
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
@@ -362,7 +350,7 @@ namespace WinPrint {
             // TODO: It's hokey that Landscape is the only printer setting that's treated specially
             // 
             print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            print.SheetVM.File = file;
+            print.SheetVM.File = printPreview.SheetViewModel.File;
             print.SheetVM.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
@@ -392,7 +380,7 @@ namespace WinPrint {
         }
 
         private void panelRight_Resize(object sender, EventArgs e) {
-            SizePreview();
+            //SizePreview();
         }
 
         private void enableHeader_CheckedChanged(object sender, EventArgs e) {
@@ -463,6 +451,10 @@ namespace WinPrint {
 
         private void padding_ValueChanged(object sender, EventArgs e) {
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = (int)(padding.Value * 100M);
+        }
+
+        private void fileButton_Click(object sender, EventArgs e) {
+            ShowFilesDialog();
         }
     }
 }

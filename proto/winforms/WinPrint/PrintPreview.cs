@@ -136,9 +136,9 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) throw new ArgumentNullException(nameof(e));
-            if (svm is null) return;
+            if (svm is null || string.IsNullOrEmpty(svm.File)) return;
 
-            base.OnPaint(e);
+            //base.OnPaint(e);
 
             // Paint background
             using var backBrush = new SolidBrush(BackColor);

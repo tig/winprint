@@ -12,11 +12,11 @@ namespace WinPrint.Core.ContentTypes {
     /// base class for Content/File types
     /// </summary>
     public abstract class ContentBase : ModelBase, INotifyPropertyChanged {
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
+        public new event PropertyChangedEventHandler PropertyChanged;
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null) {
+        protected new bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null) {
             if (EqualityComparer<T>.Default.Equals(field, value)) return false;
             field = value;
             OnPropertyChanged(propertyName);

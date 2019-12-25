@@ -49,7 +49,11 @@ namespace WinPrint.Core {
         private bool pageSepartor;
 
         private string file;
-        public string File { get => file; set => SetField(ref file, value); }
+        public string File { get => file; set { 
+                SetField(ref file, value);
+                Debug.WriteLine($"SheetViewModel.File set {file}");
+            }
+        }
 
         public string Type { get => GetDocType(); }
 
@@ -366,7 +370,7 @@ namespace WinPrint.Core {
                 PaintSheet(g, sheetNum);
 
                 cachedSheets.Add(bmp);
-                
+
             }
 
             Debug.WriteLine($"SheetViewModel.GetSheet({sheetNum}) returinging image.");

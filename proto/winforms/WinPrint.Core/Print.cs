@@ -73,6 +73,9 @@ namespace WinPrint.Core {
             printDoc.DocumentName = SheetVM.File;
             SheetVM.Reflow(PrintDocument.DefaultPageSettings);
 
+            PrintDocument.PrinterSettings.FromPage = PrintDocument.PrinterSettings.FromPage == 0 ? 1 : PrintDocument.PrinterSettings.FromPage;
+            PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetVM.NumSheets : PrintDocument.PrinterSettings.ToPage ;
+
             curSheet = PrintDocument.PrinterSettings.FromPage;
             printDoc.Print();
         }

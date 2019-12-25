@@ -21,7 +21,7 @@ namespace WinPrint.Core.ContentTypes {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextFileContent : ContentBase, IDisposable {
-        public static string Type = "text/plain";
+        public static new string Type = "text/plain";
         public TextFileContent() {
             Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }

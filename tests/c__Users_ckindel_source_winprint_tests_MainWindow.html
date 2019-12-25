@@ -98,7 +98,8 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 .hljs-strong {
   font-weight: bold;
 }
-/*
+
+/*
 
 Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 
@@ -108,7 +109,7 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  background: #F0F0F0;
+  background: #ffffff;
 }
 
 
@@ -201,485 +202,960 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 
 /* Line numbers */
 
+
 table {
   border: none;
+  border-width: 0px;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-top-width: 0px;
   border-collapse: collapse;
 }
+td{
+  border: none;
+  border-width: 0px;
+}
 .line-number {
-  border-right: thin solid silver;
+  border-right: 1px solid silver;
   padding-right: 0.3em;
   text-align: right;
   vertical-align: top;
 }
 .line-text {
+  border: none;
   margin-left: 0.7em;
   padding-bottom: 0em;
   white-space: pre-wrap;
 }
 
 .hljs { max-width:100%; width:100%; font-family: Consolas, monospace; font-size: 10pt; }
-</style></head><body onload = "window.print();" onafterprint="window.close();"><table class="hljs"><tr><td class="line-number">1</td><td class="line-text"><span class="hljs-keyword">using</span> System;</td></tr>
-<tr><td class="line-number">2</td><td class="line-text"><span class="hljs-keyword">using</span> System.Collections.Generic;</td></tr>
-<tr><td class="line-number">3</td><td class="line-text"><span class="hljs-keyword">using</span> System.ComponentModel;</td></tr>
-<tr><td class="line-number">4</td><td class="line-text"><span class="hljs-keyword">using</span> System.Diagnostics;</td></tr>
-<tr><td class="line-number">5</td><td class="line-text"><span class="hljs-keyword">using</span> System.Drawing;</td></tr>
-<tr><td class="line-number">6</td><td class="line-text"><span class="hljs-keyword">using</span> System.Drawing.Printing;</td></tr>
-<tr><td class="line-number">7</td><td class="line-text"><span class="hljs-keyword">using</span> System.IO;</td></tr>
-<tr><td class="line-number">8</td><td class="line-text"><span class="hljs-keyword">using</span> System.Linq;</td></tr>
-<tr><td class="line-number">9</td><td class="line-text"><span class="hljs-keyword">using</span> System.Windows.Forms;</td></tr>
-<tr><td class="line-number">10</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core;</td></tr>
-<tr><td class="line-number">11</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core.Models;</td></tr>
-<tr><td class="line-number">12</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core.Services;</td></tr>
-<tr><td class="line-number">13</td><td class="line-text"></td></tr>
-<tr><td class="line-number">14</td><td class="line-text"><span class="hljs-keyword">namespace</span> <span class="hljs-title">WinPrint</span> {</td></tr>
-<tr><td class="line-number">15</td><td class="line-text">    <span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MainWindow</span> : <span class="hljs-title">Form</span> {</td></tr>
-<tr><td class="line-number">16</td><td class="line-text"></td></tr>
-<tr><td class="line-number">17</td><td class="line-text">        <span class="hljs-comment">// The Windows printer document</span></td></tr>
-<tr><td class="line-number">18</td><td class="line-text">        <span class="hljs-keyword">private</span> PrintDocument printDoc = <span class="hljs-keyword">new</span> PrintDocument();</td></tr>
-<tr><td class="line-number">19</td><td class="line-text"></td></tr>
-<tr><td class="line-number">20</td><td class="line-text">        <span class="hljs-comment">// Winprint Print Preview control</span></td></tr>
-<tr><td class="line-number">21</td><td class="line-text">        <span class="hljs-keyword">private</span> PrintPreview printPreview;</td></tr>
-<tr><td class="line-number">22</td><td class="line-text"></td></tr>
-<tr><td class="line-number">23</td><td class="line-text">        <span class="hljs-comment">//private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";</span></td></tr>
-<tr><td class="line-number">24</td><td class="line-text">        <span class="hljs-comment">//private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";</span></td></tr>
-<tr><td class="line-number">25</td><td class="line-text">        <span class="hljs-comment">//private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";</span></td></tr>
-<tr><td class="line-number">26</td><td class="line-text">        <span class="hljs-comment">//private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";</span></td></tr>
-<tr><td class="line-number">27</td><td class="line-text">        <span class="hljs-keyword">private</span> <span class="hljs-keyword">string</span> file = <span class="hljs-string">""</span>; <span class="hljs-comment">//@"..\..\..\..\..\..\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";</span></td></tr>
-<tr><td class="line-number">28</td><td class="line-text"></td></tr>
-<tr><td class="line-number">29</td><td class="line-text">        [<span class="hljs-meta">System.Diagnostics.CodeAnalysis.SuppressMessage(<span class="hljs-meta-string">"Globalization"</span>, <span class="hljs-meta-string">"CA1303:Do not pass literals as localized parameters"</span>, Justification = <span class="hljs-meta-string">"&lt;Pending&gt;"</span>)</span>]</td></tr>
-<tr><td class="line-number">30</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">MainWindow</span>(<span class="hljs-params"></span>)</span> {</td></tr>
-<tr><td class="line-number">31</td><td class="line-text">            InitializeComponent();</td></tr>
-<tr><td class="line-number">32</td><td class="line-text"></td></tr>
-<tr><td class="line-number">33</td><td class="line-text">            Icon = Resources.printer_and_fax_w;</td></tr>
-<tr><td class="line-number">34</td><td class="line-text"></td></tr>
-<tr><td class="line-number">35</td><td class="line-text">            printPreview = <span class="hljs-keyword">new</span> PrintPreview();</td></tr>
-<tr><td class="line-number">36</td><td class="line-text">            printPreview.Anchor = <span class="hljs-keyword">this</span>.dummyButton.Anchor;</td></tr>
-<tr><td class="line-number">37</td><td class="line-text">            printPreview.BackColor = <span class="hljs-keyword">this</span>.dummyButton.BackColor;</td></tr>
-<tr><td class="line-number">38</td><td class="line-text">            printPreview.Location = <span class="hljs-keyword">this</span>.dummyButton.Location;</td></tr>
-<tr><td class="line-number">39</td><td class="line-text">            printPreview.Margin = <span class="hljs-keyword">this</span>.dummyButton.Margin;</td></tr>
-<tr><td class="line-number">40</td><td class="line-text">            printPreview.Name = <span class="hljs-string">"printPreview"</span>;</td></tr>
-<tr><td class="line-number">41</td><td class="line-text">            printPreview.Size = <span class="hljs-keyword">this</span>.dummyButton.Size;</td></tr>
-<tr><td class="line-number">42</td><td class="line-text">            printPreview.TabIndex = <span class="hljs-number">1</span>;<span class="hljs-comment">// this.dummyButton.TabIndex;</span></td></tr>
-<tr><td class="line-number">43</td><td class="line-text">            printPreview.TabStop = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">44</td><td class="line-text"></td></tr>
-<tr><td class="line-number">45</td><td class="line-text"></td></tr>
-<tr><td class="line-number">46</td><td class="line-text">            <span class="hljs-keyword">if</span> (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {</td></tr>
-<tr><td class="line-number">47</td><td class="line-text">                <span class="hljs-keyword">this</span>.panelRight.Controls.Remove(<span class="hljs-keyword">this</span>.dummyButton);</td></tr>
-<tr><td class="line-number">48</td><td class="line-text">                <span class="hljs-keyword">this</span>.panelRight.Controls.Add(<span class="hljs-keyword">this</span>.printPreview);</td></tr>
-<tr><td class="line-number">49</td><td class="line-text">                printersCB.Enabled = <span class="hljs-literal">false</span>;</td></tr>
-<tr><td class="line-number">50</td><td class="line-text">                paperSizesCB.Enabled = <span class="hljs-literal">false</span>;</td></tr>
-<tr><td class="line-number">51</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">52</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">53</td><td class="line-text"></td></tr>
-<tr><td class="line-number">54</td><td class="line-text">        <span class="hljs-comment">// Flag: Has Dispose already been called?</span></td></tr>
-<tr><td class="line-number">55</td><td class="line-text">        <span class="hljs-keyword">bool</span> disposed = <span class="hljs-literal">false</span>;</td></tr>
-<tr><td class="line-number">56</td><td class="line-text">        <span class="hljs-comment">// Protected implementation of Dispose pattern.</span></td></tr>
-<tr><td class="line-number">57</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;summary&gt;</span></span></td></tr>
-<tr><td class="line-number">58</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span>  Clean up any resources being used.</span></td></tr>
-<tr><td class="line-number">59</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;/summary&gt;</span></span></td></tr>
-<tr><td class="line-number">60</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;param name="disposing"&gt;</span>true if managed resources should be disposed; otherwise, false.<span class="hljs-doctag">&lt;/param&gt;</span></span></td></tr>
-<tr><td class="line-number">61</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Dispose</span>(<span class="hljs-params"><span class="hljs-keyword">bool</span> disposing</span>)</span> {</td></tr>
-<tr><td class="line-number">62</td><td class="line-text">            <span class="hljs-keyword">if</span> (disposed)</td></tr>
-<tr><td class="line-number">63</td><td class="line-text">                <span class="hljs-keyword">return</span>;</td></tr>
-<tr><td class="line-number">64</td><td class="line-text"></td></tr>
-<tr><td class="line-number">65</td><td class="line-text">            <span class="hljs-keyword">if</span> (disposing &amp;&amp; (components != <span class="hljs-literal">null</span>)) {</td></tr>
-<tr><td class="line-number">66</td><td class="line-text">                components.Dispose();</td></tr>
-<tr><td class="line-number">67</td><td class="line-text">                <span class="hljs-comment">//if (streamToPrint != null) streamToPrint.Dispose();</span></td></tr>
-<tr><td class="line-number">68</td><td class="line-text">                <span class="hljs-keyword">if</span> (printDoc != <span class="hljs-literal">null</span>) printDoc.Dispose();</td></tr>
-<tr><td class="line-number">69</td><td class="line-text">                <span class="hljs-keyword">if</span> (printPreview != <span class="hljs-literal">null</span>) printPreview.Dispose();</td></tr>
-<tr><td class="line-number">70</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">71</td><td class="line-text">            disposed = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">72</td><td class="line-text">            <span class="hljs-keyword">base</span>.Dispose(disposing);</td></tr>
-<tr><td class="line-number">73</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">74</td><td class="line-text"></td></tr>
-<tr><td class="line-number">75</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> SheetViewModel <span class="hljs-title">CreatePreviewSheetViewModel</span>(<span class="hljs-params"></span>)</span> {</td></tr>
-<tr><td class="line-number">76</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"CreateSheetViewModel"</span>);</td></tr>
-<tr><td class="line-number">77</td><td class="line-text">            SheetViewModel svm = <span class="hljs-keyword">new</span> SheetViewModel();</td></tr>
-<tr><td class="line-number">78</td><td class="line-text"></td></tr>
-<tr><td class="line-number">79</td><td class="line-text">            svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));</td></tr>
-<tr><td class="line-number">80</td><td class="line-text"></td></tr>
-<tr><td class="line-number">81</td><td class="line-text">            landscapeCheckbox.Checked = svm.Landscape;</td></tr>
-<tr><td class="line-number">82</td><td class="line-text">            enableHeader.Checked = svm.Header.Enabled;</td></tr>
-<tr><td class="line-number">83</td><td class="line-text">            headerTextBox.Text = svm.Header.Text;</td></tr>
-<tr><td class="line-number">84</td><td class="line-text">            enableFooter.Checked = svm.Footer.Enabled;</td></tr>
-<tr><td class="line-number">85</td><td class="line-text">            footerTextBox.Text = svm.Footer.Text;</td></tr>
-<tr><td class="line-number">86</td><td class="line-text"></td></tr>
-<tr><td class="line-number">87</td><td class="line-text">            topMargin.Value = svm.Margins.Top / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">88</td><td class="line-text">            leftMargin.Value = svm.Margins.Left / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">89</td><td class="line-text">            rightMargin.Value = svm.Margins.Right / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">90</td><td class="line-text">            bottomMargin.Value = svm.Margins.Bottom / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">91</td><td class="line-text"></td></tr>
-<tr><td class="line-number">92</td><td class="line-text">            pageSeparator.Checked = svm.PageSepartor;</td></tr>
-<tr><td class="line-number">93</td><td class="line-text">            rows.Value = svm.Rows;</td></tr>
-<tr><td class="line-number">94</td><td class="line-text">            columns.Value = svm.Columns;</td></tr>
-<tr><td class="line-number">95</td><td class="line-text">            padding.Value = svm.Padding / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">96</td><td class="line-text"></td></tr>
-<tr><td class="line-number">97</td><td class="line-text">            svm.PropertyChanged += (s, e) =&gt; BeginInvoke((Action)(() =&gt; {</td></tr>
-<tr><td class="line-number">98</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">$"SheetViewModel.PropertyChanged: <span class="hljs-subst">{e.PropertyName}</span>"</span>);</td></tr>
-<tr><td class="line-number">99</td><td class="line-text">                <span class="hljs-keyword">switch</span> (e.PropertyName) {</td></tr>
-<tr><td class="line-number">100</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Landscape"</span>:</td></tr>
-<tr><td class="line-number">101</td><td class="line-text">                        Debug.WriteLine(<span class="hljs-string">$"  Checking checkbox: <span class="hljs-subst">{ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}</span>"</span>);</td></tr>
-<tr><td class="line-number">102</td><td class="line-text">                        landscapeCheckbox.Checked = svm.Landscape;</td></tr>
-<tr><td class="line-number">103</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">104</td><td class="line-text"></td></tr>
-<tr><td class="line-number">105</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Header"</span>:</td></tr>
-<tr><td class="line-number">106</td><td class="line-text">                        headerTextBox.Text = svm.Header.Text;</td></tr>
-<tr><td class="line-number">107</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">108</td><td class="line-text"></td></tr>
-<tr><td class="line-number">109</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Footer"</span>:</td></tr>
-<tr><td class="line-number">110</td><td class="line-text">                        footerTextBox.Text = svm.Footer.Text;</td></tr>
-<tr><td class="line-number">111</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">112</td><td class="line-text"></td></tr>
-<tr><td class="line-number">113</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Margins"</span>:</td></tr>
-<tr><td class="line-number">114</td><td class="line-text">                        topMargin.Value = svm.Margins.Top / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">115</td><td class="line-text">                        leftMargin.Value = svm.Margins.Left / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">116</td><td class="line-text">                        rightMargin.Value = svm.Margins.Right / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">117</td><td class="line-text">                        bottomMargin.Value = svm.Margins.Bottom / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">118</td><td class="line-text"></td></tr>
-<tr><td class="line-number">119</td><td class="line-text">                        <span class="hljs-comment">// Keep PrintDocument updated for WinForms.PrintPreview</span></td></tr>
-<tr><td class="line-number">120</td><td class="line-text">                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)svm.Margins.Clone();</td></tr>
-<tr><td class="line-number">121</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">122</td><td class="line-text"></td></tr>
-<tr><td class="line-number">123</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"PageSeparator"</span>:</td></tr>
-<tr><td class="line-number">124</td><td class="line-text">                        pageSeparator.Checked = svm.PageSepartor;</td></tr>
-<tr><td class="line-number">125</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">126</td><td class="line-text"></td></tr>
-<tr><td class="line-number">127</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Rows"</span>:</td></tr>
-<tr><td class="line-number">128</td><td class="line-text">                        rows.Value = svm.Rows;</td></tr>
-<tr><td class="line-number">129</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">130</td><td class="line-text"></td></tr>
-<tr><td class="line-number">131</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Columns"</span>:</td></tr>
-<tr><td class="line-number">132</td><td class="line-text">                        columns.Value = svm.Columns;</td></tr>
-<tr><td class="line-number">133</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">134</td><td class="line-text"></td></tr>
-<tr><td class="line-number">135</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Padding"</span>:</td></tr>
-<tr><td class="line-number">136</td><td class="line-text">                        padding.Value = svm.Padding / <span class="hljs-number">100</span>M;</td></tr>
-<tr><td class="line-number">137</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">138</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">139</td><td class="line-text">            }));</td></tr>
-<tr><td class="line-number">140</td><td class="line-text"></td></tr>
-<tr><td class="line-number">141</td><td class="line-text">            svm.SettingsChanged += (s, reflow) =&gt; BeginInvoke((Action)(() =&gt; {</td></tr>
-<tr><td class="line-number">142</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">$"SheetViewModel.SettingsChanged: <span class="hljs-subst">{reflow}</span>"</span>);</td></tr>
-<tr><td class="line-number">143</td><td class="line-text">                <span class="hljs-keyword">if</span> (reflow)</td></tr>
-<tr><td class="line-number">144</td><td class="line-text">                    SheetSettingsChanged();</td></tr>
-<tr><td class="line-number">145</td><td class="line-text">                <span class="hljs-keyword">else</span></td></tr>
-<tr><td class="line-number">146</td><td class="line-text">                    printPreview.Invalidate(<span class="hljs-literal">false</span>);</td></tr>
-<tr><td class="line-number">147</td><td class="line-text">            }));</td></tr>
-<tr><td class="line-number">148</td><td class="line-text"></td></tr>
-<tr><td class="line-number">149</td><td class="line-text">            printPreview.SheetViewModel = svm;</td></tr>
-<tr><td class="line-number">150</td><td class="line-text"></td></tr>
-<tr><td class="line-number">151</td><td class="line-text">            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Batch Print</span></td></tr>
-<tr><td class="line-number">152</td><td class="line-text">            <span class="hljs-keyword">if</span> (ModelLocator.Current.Options.Files != <span class="hljs-literal">null</span> &amp;&amp;</td></tr>
-<tr><td class="line-number">153</td><td class="line-text">                ModelLocator.Current.Options.Files.Any() &amp;&amp;</td></tr>
-<tr><td class="line-number">154</td><td class="line-text">                !<span class="hljs-keyword">string</span>.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList()[<span class="hljs-number">0</span>])) {</td></tr>
-<tr><td class="line-number">155</td><td class="line-text">                List&lt;<span class="hljs-keyword">string</span>&gt; list = ModelLocator.Current.Options.Files.ToList();</td></tr>
-<tr><td class="line-number">156</td><td class="line-text">                file = list[<span class="hljs-number">0</span>];</td></tr>
-<tr><td class="line-number">157</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">158</td><td class="line-text"></td></tr>
-<tr><td class="line-number">159</td><td class="line-text">            svm.File = file;</td></tr>
-<tr><td class="line-number">160</td><td class="line-text">            <span class="hljs-keyword">this</span>.Text = <span class="hljs-string">$"WinPrint - <span class="hljs-subst">{file}</span>"</span>;</td></tr>
-<tr><td class="line-number">161</td><td class="line-text">            <span class="hljs-keyword">return</span> svm;</td></tr>
-<tr><td class="line-number">162</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">163</td><td class="line-text"></td></tr>
-<tr><td class="line-number">164</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">landscapeCheckbox_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">165</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"landscapeCheckbox_CheckedChanged: <span class="hljs-subst">{landscapeCheckbox.Checked}</span>"</span>);</td></tr>
-<tr><td class="line-number">166</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {</td></tr>
-<tr><td class="line-number">167</td><td class="line-text">                <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> This should find the Preview SheetViewModel instance and set the property on this, not</span></td></tr>
-<tr><td class="line-number">168</td><td class="line-text">                <span class="hljs-comment">// the model</span></td></tr>
-<tr><td class="line-number">169</td><td class="line-text">                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =</td></tr>
-<tr><td class="line-number">170</td><td class="line-text">                    printDoc.DefaultPageSettings.Landscape =</td></tr>
-<tr><td class="line-number">171</td><td class="line-text">                    landscapeCheckbox.Checked;</td></tr>
-<tr><td class="line-number">172</td><td class="line-text"></td></tr>
-<tr><td class="line-number">173</td><td class="line-text">                <span class="hljs-comment">// We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel</span></td></tr>
-<tr><td class="line-number">174</td><td class="line-text">                <span class="hljs-comment">//SheetSettingsChanged();</span></td></tr>
-<tr><td class="line-number">175</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">176</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">177</td><td class="line-text"></td></tr>
-<tr><td class="line-number">178</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MainWindow_Load</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">179</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.WaitCursor;</td></tr>
-<tr><td class="line-number">180</td><td class="line-text">            <span class="hljs-comment">// Load settings</span></td></tr>
-<tr><td class="line-number">181</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"First reference to ModelLocator.Current.Settings"</span>);</td></tr>
-<tr><td class="line-number">182</td><td class="line-text">            <span class="hljs-keyword">var</span> sheets = ModelLocator.Current.Settings.Sheets;</td></tr>
-<tr><td class="line-number">183</td><td class="line-text"></td></tr>
-<tr><td class="line-number">184</td><td class="line-text">            ModelLocator.Current.Settings.PropertyChanged += (s, e) =&gt; BeginInvoke((Action)(() =&gt; {</td></tr>
-<tr><td class="line-number">185</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">$"Settings.PropertyChanged: <span class="hljs-subst">{e.PropertyName}</span>"</span>);</td></tr>
-<tr><td class="line-number">186</td><td class="line-text">                <span class="hljs-keyword">switch</span> (e.PropertyName) {</td></tr>
-<tr><td class="line-number">187</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"DefaultSheet"</span>:</td></tr>
-<tr><td class="line-number">188</td><td class="line-text">                        comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;</td></tr>
-<tr><td class="line-number">189</td><td class="line-text">                        ChangeSheet();</td></tr>
-<tr><td class="line-number">190</td><td class="line-text">                        <span class="hljs-keyword">break</span>;</td></tr>
-<tr><td class="line-number">191</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">192</td><td class="line-text">            }));</td></tr>
-<tr><td class="line-number">193</td><td class="line-text"></td></tr>
-<tr><td class="line-number">194</td><td class="line-text">            comboBoxSheet.DisplayMember = <span class="hljs-string">"Value"</span>;</td></tr>
-<tr><td class="line-number">195</td><td class="line-text">            comboBoxSheet.ValueMember = <span class="hljs-string">"Key"</span>;</td></tr>
-<tr><td class="line-number">196</td><td class="line-text">            <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> s <span class="hljs-keyword">in</span> sheets) {</td></tr>
-<tr><td class="line-number">197</td><td class="line-text">                comboBoxSheet.Items.Add(<span class="hljs-keyword">new</span> KeyValuePair&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt;(s.Key, s.Value.Name));</td></tr>
-<tr><td class="line-number">198</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">199</td><td class="line-text"></td></tr>
-<tr><td class="line-number">200</td><td class="line-text">            <span class="hljs-comment">// Select default printer and paper size</span></td></tr>
-<tr><td class="line-number">201</td><td class="line-text">            <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">string</span> printer <span class="hljs-keyword">in</span> System.Drawing.Printing.PrinterSettings.InstalledPrinters) {</td></tr>
-<tr><td class="line-number">202</td><td class="line-text">                printersCB.Items.Add(printer);</td></tr>
-<tr><td class="line-number">203</td><td class="line-text">                <span class="hljs-comment">//printersCB.Text = "OneNote";</span></td></tr>
-<tr><td class="line-number">204</td><td class="line-text">                <span class="hljs-keyword">if</span> (printDoc.PrinterSettings.IsDefaultPrinter)</td></tr>
-<tr><td class="line-number">205</td><td class="line-text">                    printersCB.Text = printDoc.PrinterSettings.PrinterName;</td></tr>
-<tr><td class="line-number">206</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">207</td><td class="line-text">            printDoc.PrinterSettings.PrinterName = (<span class="hljs-keyword">string</span>)printersCB.SelectedItem;</td></tr>
-<tr><td class="line-number">208</td><td class="line-text">            <span class="hljs-keyword">foreach</span> (PaperSize ps <span class="hljs-keyword">in</span> printDoc.PrinterSettings.PaperSizes) {</td></tr>
-<tr><td class="line-number">209</td><td class="line-text">                paperSizesCB.Items.Add(ps);</td></tr>
-<tr><td class="line-number">210</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">211</td><td class="line-text">            paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();</td></tr>
-<tr><td class="line-number">212</td><td class="line-text"></td></tr>
-<tr><td class="line-number">213</td><td class="line-text">            <span class="hljs-comment">// We kept these disabled during load</span></td></tr>
-<tr><td class="line-number">214</td><td class="line-text">            printersCB.Enabled = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">215</td><td class="line-text">            paperSizesCB.Enabled = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">216</td><td class="line-text"></td></tr>
-<tr><td class="line-number">217</td><td class="line-text">            <span class="hljs-comment">// Select default Sheet </span></td></tr>
-<tr><td class="line-number">218</td><td class="line-text">            comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;</td></tr>
-<tr><td class="line-number">219</td><td class="line-text"></td></tr>
-<tr><td class="line-number">220</td><td class="line-text">            <span class="hljs-keyword">if</span> (ModelLocator.Current.Options.Files != <span class="hljs-literal">null</span>)</td></tr>
-<tr><td class="line-number">221</td><td class="line-text">                <span class="hljs-comment">//&amp;&amp;</span></td></tr>
-<tr><td class="line-number">222</td><td class="line-text">                <span class="hljs-comment">//  ModelLocator.Current.Options.Files.Any() &amp;&amp;</span></td></tr>
-<tr><td class="line-number">223</td><td class="line-text">                <span class="hljs-comment">//  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList&lt;string&gt;()[0])) </span></td></tr>
-<tr><td class="line-number">224</td><td class="line-text">            {</td></tr>
-<tr><td class="line-number">225</td><td class="line-text">                file = ModelLocator.Current.Options.Files.ToList()[<span class="hljs-number">0</span>];</td></tr>
-<tr><td class="line-number">226</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">227</td><td class="line-text"></td></tr>
-<tr><td class="line-number">228</td><td class="line-text">            printPreview.Select();</td></tr>
-<tr><td class="line-number">229</td><td class="line-text">            <span class="hljs-keyword">this</span>.Size = <span class="hljs-keyword">new</span> Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);</td></tr>
-<tr><td class="line-number">230</td><td class="line-text">            <span class="hljs-keyword">this</span>.Location = <span class="hljs-keyword">new</span> Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);</td></tr>
-<tr><td class="line-number">231</td><td class="line-text">            <span class="hljs-keyword">this</span>.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;</td></tr>
-<tr><td class="line-number">232</td><td class="line-text"></td></tr>
-<tr><td class="line-number">233</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.Default;</td></tr>
-<tr><td class="line-number">234</td><td class="line-text"></td></tr>
-<tr><td class="line-number">235</td><td class="line-text">            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">string</span>.IsNullOrEmpty(file)) {</td></tr>
-<tr><td class="line-number">236</td><td class="line-text">                <span class="hljs-keyword">using</span> (OpenFileDialog openFileDialog = <span class="hljs-keyword">new</span> OpenFileDialog()) {</td></tr>
-<tr><td class="line-number">237</td><td class="line-text">                    </td></tr>
-<tr><td class="line-number">238</td><td class="line-text">                    openFileDialog.InitialDirectory = <span class="hljs-string">$"<span class="hljs-subst">{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}</span>\\source\\winprint\\tests"</span>;</td></tr>
-<tr><td class="line-number">239</td><td class="line-text">                    openFileDialog.Filter = <span class="hljs-string">"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*"</span>;</td></tr>
-<tr><td class="line-number">240</td><td class="line-text">                    openFileDialog.FilterIndex = <span class="hljs-number">3</span>;</td></tr>
-<tr><td class="line-number">241</td><td class="line-text">                    openFileDialog.RestoreDirectory = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">242</td><td class="line-text">                    <span class="hljs-keyword">if</span> (openFileDialog.ShowDialog() == DialogResult.OK) {</td></tr>
-<tr><td class="line-number">243</td><td class="line-text">                        file = openFileDialog.FileNames.ToList&lt;<span class="hljs-keyword">string</span>&gt;()[<span class="hljs-number">0</span>];</td></tr>
-<tr><td class="line-number">244</td><td class="line-text">                    }</td></tr>
-<tr><td class="line-number">245</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">246</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">247</td><td class="line-text">            <span class="hljs-comment">// Go!</span></td></tr>
-<tr><td class="line-number">248</td><td class="line-text">            ChangeSheet();</td></tr>
-<tr><td class="line-number">249</td><td class="line-text"></td></tr>
-<tr><td class="line-number">250</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">251</td><td class="line-text"></td></tr>
-<tr><td class="line-number">252</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ChangeSheet</span>(<span class="hljs-params"></span>)</span> {</td></tr>
-<tr><td class="line-number">253</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.WaitCursor;</td></tr>
-<tr><td class="line-number">254</td><td class="line-text">            printPreview.SheetViewModel = CreatePreviewSheetViewModel();</td></tr>
-<tr><td class="line-number">255</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.Default;</td></tr>
-<tr><td class="line-number">256</td><td class="line-text">            SheetSettingsChanged();</td></tr>
-<tr><td class="line-number">257</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">258</td><td class="line-text"></td></tr>
-<tr><td class="line-number">259</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MainWindow_FormClosing</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, FormClosingEventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">260</td><td class="line-text">            <span class="hljs-comment">// Save Window state</span></td></tr>
-<tr><td class="line-number">261</td><td class="line-text">            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.WindowState == System.Windows.Forms.FormWindowState.Normal) {</td></tr>
-<tr><td class="line-number">262</td><td class="line-text">                ModelLocator.Current.Settings.Size = <span class="hljs-keyword">new</span> Core.Models.WindowSize(<span class="hljs-keyword">this</span>.Size.Width, <span class="hljs-keyword">this</span>.Size.Height);</td></tr>
-<tr><td class="line-number">263</td><td class="line-text">                ModelLocator.Current.Settings.Location = <span class="hljs-keyword">new</span> Core.Models.WindowLocation(<span class="hljs-keyword">this</span>.Location.X, <span class="hljs-keyword">this</span>.Location.Y);</td></tr>
-<tr><td class="line-number">264</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">265</td><td class="line-text">            <span class="hljs-keyword">else</span> {</td></tr>
-<tr><td class="line-number">266</td><td class="line-text">                ModelLocator.Current.Settings.Size = <span class="hljs-keyword">new</span> Core.Models.WindowSize(<span class="hljs-keyword">this</span>.RestoreBounds.Width, <span class="hljs-keyword">this</span>.RestoreBounds.Height);</td></tr>
-<tr><td class="line-number">267</td><td class="line-text">                ModelLocator.Current.Settings.Location = <span class="hljs-keyword">new</span> Core.Models.WindowLocation(<span class="hljs-keyword">this</span>.RestoreBounds.X, <span class="hljs-keyword">this</span>.RestoreBounds.Y);</td></tr>
-<tr><td class="line-number">268</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">269</td><td class="line-text">            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)<span class="hljs-keyword">this</span>.WindowState;</td></tr>
-<tr><td class="line-number">270</td><td class="line-text">            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);</td></tr>
-<tr><td class="line-number">271</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">272</td><td class="line-text"></td></tr>
-<tr><td class="line-number">273</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">internal</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SheetSettingsChanged</span>(<span class="hljs-params"></span>)</span> {</td></tr>
-<tr><td class="line-number">274</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"SheetSettingsChanged()"</span>);</td></tr>
-<tr><td class="line-number">275</td><td class="line-text"></td></tr>
-<tr><td class="line-number">276</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.WaitCursor;</td></tr>
-<tr><td class="line-number">277</td><td class="line-text">            <span class="hljs-comment">// Set landscape. This causes other DefaultPageSettings to change</span></td></tr>
-<tr><td class="line-number">278</td><td class="line-text">            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;</td></tr>
-<tr><td class="line-number">279</td><td class="line-text">            printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);</td></tr>
-<tr><td class="line-number">280</td><td class="line-text">            printPreview.Invalidate(<span class="hljs-literal">true</span>);</td></tr>
-<tr><td class="line-number">281</td><td class="line-text">            SizePreview();</td></tr>
-<tr><td class="line-number">282</td><td class="line-text"></td></tr>
-<tr><td class="line-number">283</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.Default;</td></tr>
-<tr><td class="line-number">284</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">285</td><td class="line-text"></td></tr>
-<tr><td class="line-number">286</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">internal</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SizePreview</span>(<span class="hljs-params"></span>)</span> {</td></tr>
-<tr><td class="line-number">287</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"SizePreview()"</span>);</td></tr>
-<tr><td class="line-number">288</td><td class="line-text">            <span class="hljs-keyword">if</span> (printPreview == <span class="hljs-literal">null</span> || printPreview.SheetViewModel == <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span>;</td></tr>
-<tr><td class="line-number">289</td><td class="line-text">            Size size = panelRight.Size;</td></tr>
-<tr><td class="line-number">290</td><td class="line-text">            size.Height -= headerTextBox.Height * <span class="hljs-number">3</span>;</td></tr>
-<tr><td class="line-number">291</td><td class="line-text">            size.Width -= headerTextBox.Height;</td></tr>
-<tr><td class="line-number">292</td><td class="line-text"></td></tr>
-<tr><td class="line-number">293</td><td class="line-text">            <span class="hljs-keyword">double</span> w = printPreview.SheetViewModel.Bounds.Width;</td></tr>
-<tr><td class="line-number">294</td><td class="line-text">            <span class="hljs-keyword">double</span> h = printPreview.SheetViewModel.Bounds.Height;</td></tr>
-<tr><td class="line-number">295</td><td class="line-text"></td></tr>
-<tr><td class="line-number">296</td><td class="line-text">            <span class="hljs-keyword">var</span> scalingX = (<span class="hljs-keyword">double</span>)size.Width / (<span class="hljs-keyword">double</span>)w;</td></tr>
-<tr><td class="line-number">297</td><td class="line-text">            <span class="hljs-keyword">var</span> scalingY = (<span class="hljs-keyword">double</span>)size.Height / (<span class="hljs-keyword">double</span>)h;</td></tr>
-<tr><td class="line-number">298</td><td class="line-text"></td></tr>
-<tr><td class="line-number">299</td><td class="line-text">            <span class="hljs-comment">// Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.</span></td></tr>
-<tr><td class="line-number">300</td><td class="line-text">            <span class="hljs-keyword">var</span> scale = Math.Min(scalingY, scalingX);</td></tr>
-<tr><td class="line-number">301</td><td class="line-text"></td></tr>
-<tr><td class="line-number">302</td><td class="line-text">            printPreview.Size = <span class="hljs-keyword">new</span> Size((<span class="hljs-keyword">int</span>)(w * scale), (<span class="hljs-keyword">int</span>)(h * scale));</td></tr>
-<tr><td class="line-number">303</td><td class="line-text"></td></tr>
-<tr><td class="line-number">304</td><td class="line-text">            <span class="hljs-comment">// Now center</span></td></tr>
-<tr><td class="line-number">305</td><td class="line-text">            printPreview.Location = <span class="hljs-keyword">new</span> Point((panelRight.Width / <span class="hljs-number">2</span>) - (printPreview.Width / <span class="hljs-number">2</span>),</td></tr>
-<tr><td class="line-number">306</td><td class="line-text">                (panelRight.Height / <span class="hljs-number">2</span>) - (printPreview.Height / <span class="hljs-number">2</span>));</td></tr>
-<tr><td class="line-number">307</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">308</td><td class="line-text"></td></tr>
-<tr><td class="line-number">309</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MainWindow_Layout</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, LayoutEventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">310</td><td class="line-text">            <span class="hljs-comment">// This event is raised once at startup with the AffectedControl</span></td></tr>
-<tr><td class="line-number">311</td><td class="line-text">            <span class="hljs-comment">// and AffectedProperty properties on the LayoutEventArgs as null. </span></td></tr>
-<tr><td class="line-number">312</td><td class="line-text">            <span class="hljs-comment">// The event provides size preferences for that case.</span></td></tr>
-<tr><td class="line-number">313</td><td class="line-text">            <span class="hljs-keyword">if</span> ((e.AffectedControl != <span class="hljs-literal">null</span>) &amp;&amp; (e.AffectedProperty != <span class="hljs-literal">null</span>)) {</td></tr>
-<tr><td class="line-number">314</td><td class="line-text">                <span class="hljs-comment">// Ensure that the affected property is the Bounds property</span></td></tr>
-<tr><td class="line-number">315</td><td class="line-text">                <span class="hljs-comment">// of the form.</span></td></tr>
-<tr><td class="line-number">316</td><td class="line-text">                <span class="hljs-keyword">if</span> (e.AffectedProperty.ToString().Equals(<span class="hljs-string">"Bounds"</span>, StringComparison.InvariantCultureIgnoreCase)) {</td></tr>
-<tr><td class="line-number">317</td><td class="line-text">                    Debug.WriteLine(<span class="hljs-string">"MainWindow_Layout bounds changed"</span>);</td></tr>
-<tr><td class="line-number">318</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">319</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">320</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">321</td><td class="line-text"></td></tr>
-<tr><td class="line-number">322</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">headerTextBox_TextChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">323</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(</td></tr>
-<tr><td class="line-number">324</td><td class="line-text">                ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;</td></tr>
-<tr><td class="line-number">325</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">326</td><td class="line-text"></td></tr>
-<tr><td class="line-number">327</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">footerTextBox_TextChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">328</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(</td></tr>
-<tr><td class="line-number">329</td><td class="line-text">                ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Text = footerTextBox.Text;</td></tr>
-<tr><td class="line-number">330</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">331</td><td class="line-text"></td></tr>
-<tr><td class="line-number">332</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">printersCB_SelectedIndexChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">333</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {</td></tr>
-<tr><td class="line-number">334</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">"printersCB_SelectedIndexChanged"</span>);</td></tr>
-<tr><td class="line-number">335</td><td class="line-text">                printDoc.PrinterSettings.PrinterName = (<span class="hljs-keyword">string</span>)printersCB.SelectedItem;</td></tr>
-<tr><td class="line-number">336</td><td class="line-text">                paperSizesCB.Items.Clear();</td></tr>
-<tr><td class="line-number">337</td><td class="line-text">                <span class="hljs-keyword">foreach</span> (PaperSize ps <span class="hljs-keyword">in</span> printDoc.PrinterSettings.PaperSizes) {</td></tr>
-<tr><td class="line-number">338</td><td class="line-text">                    paperSizesCB.Items.Add(ps);</td></tr>
-<tr><td class="line-number">339</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">340</td><td class="line-text">                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();</td></tr>
-<tr><td class="line-number">341</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">342</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">343</td><td class="line-text"></td></tr>
-<tr><td class="line-number">344</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">paperSizesCB_SelectedIndexChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">345</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {</td></tr>
-<tr><td class="line-number">346</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">"paperSizesCB_SelectedIndexChanged"</span>);</td></tr>
-<tr><td class="line-number">347</td><td class="line-text">                <span class="hljs-comment">// Set the paper size based upon the selection in the combo box.</span></td></tr>
-<tr><td class="line-number">348</td><td class="line-text">                <span class="hljs-keyword">if</span> (paperSizesCB.SelectedIndex != <span class="hljs-number">-1</span>) {</td></tr>
-<tr><td class="line-number">349</td><td class="line-text">                    printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];</td></tr>
-<tr><td class="line-number">350</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">351</td><td class="line-text">                SheetSettingsChanged();</td></tr>
-<tr><td class="line-number">352</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">353</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">354</td><td class="line-text"></td></tr>
-<tr><td class="line-number">355</td><td class="line-text">        [<span class="hljs-meta">System.Diagnostics.CodeAnalysis.SuppressMessage(<span class="hljs-meta-string">"Design"</span>, <span class="hljs-meta-string">"CA1031:Do not catch general exception types"</span>, Justification = <span class="hljs-meta-string">"&lt;Pending&gt;"</span>)</span>]</td></tr>
-<tr><td class="line-number">356</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">printButton_Click</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">357</td><td class="line-text">            <span class="hljs-keyword">using</span> <span class="hljs-keyword">var</span> print = <span class="hljs-keyword">new</span> Core.Print();</td></tr>
-<tr><td class="line-number">358</td><td class="line-text">            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> It's hokey that Landscape is the only printer setting that's treated specially</span></td></tr>
-<tr><td class="line-number">359</td><td class="line-text">            <span class="hljs-comment">// </span></td></tr>
-<tr><td class="line-number">360</td><td class="line-text">            print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;</td></tr>
-<tr><td class="line-number">361</td><td class="line-text">            print.SheetVM.File = file;</td></tr>
-<tr><td class="line-number">362</td><td class="line-text">            print.SheetVM.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));</td></tr>
-<tr><td class="line-number">363</td><td class="line-text">            print.SetPrinter(printDoc.PrinterSettings.PrinterName);</td></tr>
-<tr><td class="line-number">364</td><td class="line-text">            print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);</td></tr>
-<tr><td class="line-number">365</td><td class="line-text"></td></tr>
-<tr><td class="line-number">366</td><td class="line-text">            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Decide how to make showing the print dialog a setting (or if needed at all)</span></td></tr>
-<tr><td class="line-number">367</td><td class="line-text">            <span class="hljs-comment">// the only reason I can think of now is from/to page support.</span></td></tr>
-<tr><td class="line-number">368</td><td class="line-text">            <span class="hljs-keyword">bool</span> showPrintDialog = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">369</td><td class="line-text">            <span class="hljs-keyword">if</span> (showPrintDialog) {</td></tr>
-<tr><td class="line-number">370</td><td class="line-text">                <span class="hljs-keyword">using</span> PrintDialog printDialog = <span class="hljs-keyword">new</span> PrintDialog();</td></tr>
-<tr><td class="line-number">371</td><td class="line-text">                printDialog.AllowSomePages = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">372</td><td class="line-text">                printDialog.ShowHelp = <span class="hljs-literal">true</span>;</td></tr>
-<tr><td class="line-number">373</td><td class="line-text">                <span class="hljs-comment">// printDialog.AllowSelection = true;</span></td></tr>
-<tr><td class="line-number">374</td><td class="line-text"></td></tr>
-<tr><td class="line-number">375</td><td class="line-text">                printDialog.Document = print.PrintDocument;</td></tr>
-<tr><td class="line-number">376</td><td class="line-text">                printDialog.PrinterSettings.FromPage = <span class="hljs-number">1</span>;</td></tr>
-<tr><td class="line-number">377</td><td class="line-text">                <span class="hljs-comment">// Ideally we'd get NumSheets from print.SheetSVM but that would cause a</span></td></tr>
-<tr><td class="line-number">378</td><td class="line-text">                <span class="hljs-comment">// un-needed Reflow. So use the printPreview VM.</span></td></tr>
-<tr><td class="line-number">379</td><td class="line-text">                printDialog.PrinterSettings.ToPage = printPreview.SheetViewModel.NumSheets;</td></tr>
-<tr><td class="line-number">380</td><td class="line-text">                <span class="hljs-comment">//If the result is OK then print the document.</span></td></tr>
-<tr><td class="line-number">381</td><td class="line-text">                <span class="hljs-keyword">if</span> (printDialog.ShowDialog() == DialogResult.OK &amp;&amp; printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {</td></tr>
-<tr><td class="line-number">382</td><td class="line-text">                    print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;</td></tr>
-<tr><td class="line-number">383</td><td class="line-text">                    print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;</td></tr>
-<tr><td class="line-number">384</td><td class="line-text">                    print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;</td></tr>
-<tr><td class="line-number">385</td><td class="line-text">                }</td></tr>
-<tr><td class="line-number">386</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">387</td><td class="line-text">            print.DoPrint();</td></tr>
-<tr><td class="line-number">388</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">389</td><td class="line-text"></td></tr>
-<tr><td class="line-number">390</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">panelRight_Resize</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">391</td><td class="line-text">            SizePreview();</td></tr>
-<tr><td class="line-number">392</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">393</td><td class="line-text"></td></tr>
-<tr><td class="line-number">394</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">enableHeader_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">395</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"enableHeader_CheckedChanged: <span class="hljs-subst">{enableHeader.Checked}</span>"</span>);</td></tr>
-<tr><td class="line-number">396</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {</td></tr>
-<tr><td class="line-number">397</td><td class="line-text">                <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> This should find the Preview SheetViewModel instance and set the property on this, not</span></td></tr>
-<tr><td class="line-number">398</td><td class="line-text">                <span class="hljs-comment">// the model</span></td></tr>
-<tr><td class="line-number">399</td><td class="line-text">                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Enabled =</td></tr>
-<tr><td class="line-number">400</td><td class="line-text">                    enableHeader.Checked;</td></tr>
-<tr><td class="line-number">401</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">402</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">403</td><td class="line-text"></td></tr>
-<tr><td class="line-number">404</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">enableFooter_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">405</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"enableFooter_CheckedChanged: <span class="hljs-subst">{enableFooter.Checked}</span>"</span>);</td></tr>
-<tr><td class="line-number">406</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {</td></tr>
-<tr><td class="line-number">407</td><td class="line-text">                <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> This should find the Preview SheetViewModel instance and set the property on this, not</span></td></tr>
-<tr><td class="line-number">408</td><td class="line-text">                <span class="hljs-comment">// the model</span></td></tr>
-<tr><td class="line-number">409</td><td class="line-text">                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Enabled =</td></tr>
-<tr><td class="line-number">410</td><td class="line-text">                    enableFooter.Checked;</td></tr>
-<tr><td class="line-number">411</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">412</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">413</td><td class="line-text"></td></tr>
-<tr><td class="line-number">414</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">comboBoxSheet_SelectedIndexChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">415</td><td class="line-text">            KeyValuePair&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt; si = (KeyValuePair&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt;)comboBoxSheet.SelectedItem;</td></tr>
-<tr><td class="line-number">416</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"comboBoxSheet_SelectedIndexChanged: <span class="hljs-subst">{si.Key}</span>, <span class="hljs-subst">{si.Value}</span>"</span>);</td></tr>
-<tr><td class="line-number">417</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {</td></tr>
-<tr><td class="line-number">418</td><td class="line-text">                ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);</td></tr>
-<tr><td class="line-number">419</td><td class="line-text">                <span class="hljs-comment">//ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);</span></td></tr>
-<tr><td class="line-number">420</td><td class="line-text">            }</td></tr>
-<tr><td class="line-number">421</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">422</td><td class="line-text"></td></tr>
-<tr><td class="line-number">423</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">topMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">424</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();</td></tr>
-<tr><td class="line-number">425</td><td class="line-text">            margins.Top = (<span class="hljs-keyword">int</span>)(topMargin.Value * <span class="hljs-number">100</span>M);</td></tr>
-<tr><td class="line-number">426</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;</td></tr>
-<tr><td class="line-number">427</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">428</td><td class="line-text"></td></tr>
-<tr><td class="line-number">429</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">leftMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">430</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();</td></tr>
-<tr><td class="line-number">431</td><td class="line-text">            margins.Left = (<span class="hljs-keyword">int</span>)(leftMargin.Value * <span class="hljs-number">100</span>M);</td></tr>
-<tr><td class="line-number">432</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;</td></tr>
-<tr><td class="line-number">433</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">434</td><td class="line-text"></td></tr>
-<tr><td class="line-number">435</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">rightMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">436</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();</td></tr>
-<tr><td class="line-number">437</td><td class="line-text">            margins.Right = (<span class="hljs-keyword">int</span>)(rightMargin.Value * <span class="hljs-number">100</span>M);</td></tr>
-<tr><td class="line-number">438</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;</td></tr>
-<tr><td class="line-number">439</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">440</td><td class="line-text"></td></tr>
-<tr><td class="line-number">441</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">bottomMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">442</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();</td></tr>
-<tr><td class="line-number">443</td><td class="line-text">            margins.Bottom = (<span class="hljs-keyword">int</span>)(bottomMargin.Value * <span class="hljs-number">100</span>M);</td></tr>
-<tr><td class="line-number">444</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;</td></tr>
-<tr><td class="line-number">445</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">446</td><td class="line-text"></td></tr>
-<tr><td class="line-number">447</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">pageSeparator_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">448</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).PageSeparator = pageSeparator.Checked;</td></tr>
-<tr><td class="line-number">449</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">450</td><td class="line-text"></td></tr>
-<tr><td class="line-number">451</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">rows_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">452</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Rows = (<span class="hljs-keyword">int</span>)rows.Value;</td></tr>
-<tr><td class="line-number">453</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">454</td><td class="line-text"></td></tr>
-<tr><td class="line-number">455</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">columns_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">456</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Columns = (<span class="hljs-keyword">int</span>)columns.Value;</td></tr>
-<tr><td class="line-number">457</td><td class="line-text"></td></tr>
-<tr><td class="line-number">458</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">459</td><td class="line-text"></td></tr>
-<tr><td class="line-number">460</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">padding_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {</td></tr>
-<tr><td class="line-number">461</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = (<span class="hljs-keyword">int</span>)(padding.Value * <span class="hljs-number">100</span>M);</td></tr>
-<tr><td class="line-number">462</td><td class="line-text">        }</td></tr>
-<tr><td class="line-number">463</td><td class="line-text">    }</td></tr>
-<tr><td class="line-number">464</td><td class="line-text">}</td></tr>
+</style></head><body><table class="hljs"><tr><td class="line-number">1</td><td class="line-text"><span class="hljs-keyword">using</span> System;
+</td></tr>
+<tr><td class="line-number">2</td><td class="line-text"><span class="hljs-keyword">using</span> System.Collections.Generic;
+</td></tr>
+<tr><td class="line-number">3</td><td class="line-text"><span class="hljs-keyword">using</span> System.ComponentModel;
+</td></tr>
+<tr><td class="line-number">4</td><td class="line-text"><span class="hljs-keyword">using</span> System.Diagnostics;
+</td></tr>
+<tr><td class="line-number">5</td><td class="line-text"><span class="hljs-keyword">using</span> System.Drawing;
+</td></tr>
+<tr><td class="line-number">6</td><td class="line-text"><span class="hljs-keyword">using</span> System.Drawing.Printing;
+</td></tr>
+<tr><td class="line-number">7</td><td class="line-text"><span class="hljs-keyword">using</span> System.IO;
+</td></tr>
+<tr><td class="line-number">8</td><td class="line-text"><span class="hljs-keyword">using</span> System.Linq;
+</td></tr>
+<tr><td class="line-number">9</td><td class="line-text"><span class="hljs-keyword">using</span> System.Windows.Forms;
+</td></tr>
+<tr><td class="line-number">10</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core;
+</td></tr>
+<tr><td class="line-number">11</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core.Models;
+</td></tr>
+<tr><td class="line-number">12</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core.Services;
+</td></tr>
+<tr><td class="line-number">13</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">14</td><td class="line-text"><span class="hljs-keyword">namespace</span> <span class="hljs-title">WinPrint</span> {
+</td></tr>
+<tr><td class="line-number">15</td><td class="line-text">    <span class="hljs-keyword">public</span> <span class="hljs-keyword">partial</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MainWindow</span> : <span class="hljs-title">Form</span> {
+</td></tr>
+<tr><td class="line-number">16</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">17</td><td class="line-text">        <span class="hljs-comment">// The Windows printer document</span>
+</td></tr>
+<tr><td class="line-number">18</td><td class="line-text">        <span class="hljs-keyword">private</span> PrintDocument printDoc = <span class="hljs-keyword">new</span> PrintDocument();
+</td></tr>
+<tr><td class="line-number">19</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">20</td><td class="line-text">        <span class="hljs-comment">// Winprint Print Preview control</span>
+</td></tr>
+<tr><td class="line-number">21</td><td class="line-text">        <span class="hljs-keyword">private</span> PrintPreview printPreview;
+</td></tr>
+<tr><td class="line-number">22</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">23</td><td class="line-text">        <span class="hljs-comment">//private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";</span>
+</td></tr>
+<tr><td class="line-number">24</td><td class="line-text">        <span class="hljs-comment">//private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";</span>
+</td></tr>
+<tr><td class="line-number">25</td><td class="line-text">        <span class="hljs-comment">//private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";</span>
+</td></tr>
+<tr><td class="line-number">26</td><td class="line-text">        <span class="hljs-comment">//private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";</span>
+</td></tr>
+<tr><td class="line-number">27</td><td class="line-text">        <span class="hljs-keyword">private</span> <span class="hljs-keyword">string</span> file = <span class="hljs-string">""</span>; <span class="hljs-comment">//@"..\..\..\..\..\..\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";</span>
+</td></tr>
+<tr><td class="line-number">28</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">29</td><td class="line-text">        [<span class="hljs-meta">System.Diagnostics.CodeAnalysis.SuppressMessage(<span class="hljs-meta-string">"Globalization"</span>, <span class="hljs-meta-string">"CA1303:Do not pass literals as localized parameters"</span>, Justification = <span class="hljs-meta-string">"&lt;Pending&gt;"</span>)</span>]
+</td></tr>
+<tr><td class="line-number">30</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">MainWindow</span>(<span class="hljs-params"></span>)</span> {
+</td></tr>
+<tr><td class="line-number">31</td><td class="line-text">            InitializeComponent();
+</td></tr>
+<tr><td class="line-number">32</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">33</td><td class="line-text">            Icon = Resources.printer_and_fax_w;
+</td></tr>
+<tr><td class="line-number">34</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">35</td><td class="line-text">            printPreview = <span class="hljs-keyword">new</span> PrintPreview();
+</td></tr>
+<tr><td class="line-number">36</td><td class="line-text">            printPreview.Anchor = <span class="hljs-keyword">this</span>.dummyButton.Anchor;
+</td></tr>
+<tr><td class="line-number">37</td><td class="line-text">            printPreview.BackColor = <span class="hljs-keyword">this</span>.dummyButton.BackColor;
+</td></tr>
+<tr><td class="line-number">38</td><td class="line-text">            printPreview.Location = <span class="hljs-keyword">this</span>.dummyButton.Location;
+</td></tr>
+<tr><td class="line-number">39</td><td class="line-text">            printPreview.Margin = <span class="hljs-keyword">this</span>.dummyButton.Margin;
+</td></tr>
+<tr><td class="line-number">40</td><td class="line-text">            printPreview.Name = <span class="hljs-string">"printPreview"</span>;
+</td></tr>
+<tr><td class="line-number">41</td><td class="line-text">            printPreview.Size = <span class="hljs-keyword">this</span>.dummyButton.Size;
+</td></tr>
+<tr><td class="line-number">42</td><td class="line-text">            printPreview.TabIndex = <span class="hljs-number">1</span>;<span class="hljs-comment">// this.dummyButton.TabIndex;</span>
+</td></tr>
+<tr><td class="line-number">43</td><td class="line-text">            printPreview.TabStop = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">44</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">45</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">46</td><td class="line-text">            <span class="hljs-keyword">if</span> (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
+</td></tr>
+<tr><td class="line-number">47</td><td class="line-text">                <span class="hljs-keyword">this</span>.panelRight.Controls.Remove(<span class="hljs-keyword">this</span>.dummyButton);
+</td></tr>
+<tr><td class="line-number">48</td><td class="line-text">                <span class="hljs-keyword">this</span>.panelRight.Controls.Add(<span class="hljs-keyword">this</span>.printPreview);
+</td></tr>
+<tr><td class="line-number">49</td><td class="line-text">                printersCB.Enabled = <span class="hljs-literal">false</span>;
+</td></tr>
+<tr><td class="line-number">50</td><td class="line-text">                paperSizesCB.Enabled = <span class="hljs-literal">false</span>;
+</td></tr>
+<tr><td class="line-number">51</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">52</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">53</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">54</td><td class="line-text">        <span class="hljs-comment">// Flag: Has Dispose already been called?</span>
+</td></tr>
+<tr><td class="line-number">55</td><td class="line-text">        <span class="hljs-keyword">bool</span> disposed = <span class="hljs-literal">false</span>;
+</td></tr>
+<tr><td class="line-number">56</td><td class="line-text">        <span class="hljs-comment">// Protected implementation of Dispose pattern.</span>
+</td></tr>
+<tr><td class="line-number">57</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;summary&gt;</span></span>
+</td></tr>
+<tr><td class="line-number">58</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span>  Clean up any resources being used.</span>
+</td></tr>
+<tr><td class="line-number">59</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;/summary&gt;</span></span>
+</td></tr>
+<tr><td class="line-number">60</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;param name="disposing"&gt;</span>true if managed resources should be disposed; otherwise, false.<span class="hljs-doctag">&lt;/param&gt;</span></span>
+</td></tr>
+<tr><td class="line-number">61</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Dispose</span>(<span class="hljs-params"><span class="hljs-keyword">bool</span> disposing</span>)</span> {
+</td></tr>
+<tr><td class="line-number">62</td><td class="line-text">            <span class="hljs-keyword">if</span> (disposed)
+</td></tr>
+<tr><td class="line-number">63</td><td class="line-text">                <span class="hljs-keyword">return</span>;
+</td></tr>
+<tr><td class="line-number">64</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">65</td><td class="line-text">            <span class="hljs-keyword">if</span> (disposing &amp;&amp; (components != <span class="hljs-literal">null</span>)) {
+</td></tr>
+<tr><td class="line-number">66</td><td class="line-text">                components.Dispose();
+</td></tr>
+<tr><td class="line-number">67</td><td class="line-text">                <span class="hljs-comment">//if (streamToPrint != null) streamToPrint.Dispose();</span>
+</td></tr>
+<tr><td class="line-number">68</td><td class="line-text">                <span class="hljs-keyword">if</span> (printDoc != <span class="hljs-literal">null</span>) printDoc.Dispose();
+</td></tr>
+<tr><td class="line-number">69</td><td class="line-text">                <span class="hljs-keyword">if</span> (printPreview != <span class="hljs-literal">null</span>) printPreview.Dispose();
+</td></tr>
+<tr><td class="line-number">70</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">71</td><td class="line-text">            disposed = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">72</td><td class="line-text">            <span class="hljs-keyword">base</span>.Dispose(disposing);
+</td></tr>
+<tr><td class="line-number">73</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">74</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">75</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> SheetViewModel <span class="hljs-title">CreatePreviewSheetViewModel</span>(<span class="hljs-params"></span>)</span> {
+</td></tr>
+<tr><td class="line-number">76</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"CreateSheetViewModel"</span>);
+</td></tr>
+<tr><td class="line-number">77</td><td class="line-text">            SheetViewModel svm = <span class="hljs-keyword">new</span> SheetViewModel();
+</td></tr>
+<tr><td class="line-number">78</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">79</td><td class="line-text">            svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+</td></tr>
+<tr><td class="line-number">80</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">81</td><td class="line-text">            landscapeCheckbox.Checked = svm.Landscape;
+</td></tr>
+<tr><td class="line-number">82</td><td class="line-text">            enableHeader.Checked = svm.Header.Enabled;
+</td></tr>
+<tr><td class="line-number">83</td><td class="line-text">            headerTextBox.Text = svm.Header.Text;
+</td></tr>
+<tr><td class="line-number">84</td><td class="line-text">            enableFooter.Checked = svm.Footer.Enabled;
+</td></tr>
+<tr><td class="line-number">85</td><td class="line-text">            footerTextBox.Text = svm.Footer.Text;
+</td></tr>
+<tr><td class="line-number">86</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">87</td><td class="line-text">            topMargin.Value = svm.Margins.Top / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">88</td><td class="line-text">            leftMargin.Value = svm.Margins.Left / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">89</td><td class="line-text">            rightMargin.Value = svm.Margins.Right / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">90</td><td class="line-text">            bottomMargin.Value = svm.Margins.Bottom / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">91</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">92</td><td class="line-text">            pageSeparator.Checked = svm.PageSepartor;
+</td></tr>
+<tr><td class="line-number">93</td><td class="line-text">            rows.Value = svm.Rows;
+</td></tr>
+<tr><td class="line-number">94</td><td class="line-text">            columns.Value = svm.Columns;
+</td></tr>
+<tr><td class="line-number">95</td><td class="line-text">            padding.Value = svm.Padding / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">96</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">97</td><td class="line-text">            svm.PropertyChanged += (s, e) =&gt; BeginInvoke((Action)(() =&gt; {
+</td></tr>
+<tr><td class="line-number">98</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">$"SheetViewModel.PropertyChanged: <span class="hljs-subst">{e.PropertyName}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">99</td><td class="line-text">                <span class="hljs-keyword">switch</span> (e.PropertyName) {
+</td></tr>
+<tr><td class="line-number">100</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Landscape"</span>:
+</td></tr>
+<tr><td class="line-number">101</td><td class="line-text">                        Debug.WriteLine(<span class="hljs-string">$"  Checking checkbox: <span class="hljs-subst">{ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">102</td><td class="line-text">                        landscapeCheckbox.Checked = svm.Landscape;
+</td></tr>
+<tr><td class="line-number">103</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">104</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">105</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Header"</span>:
+</td></tr>
+<tr><td class="line-number">106</td><td class="line-text">                        headerTextBox.Text = svm.Header.Text;
+</td></tr>
+<tr><td class="line-number">107</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">108</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">109</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Footer"</span>:
+</td></tr>
+<tr><td class="line-number">110</td><td class="line-text">                        footerTextBox.Text = svm.Footer.Text;
+</td></tr>
+<tr><td class="line-number">111</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">112</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">113</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Margins"</span>:
+</td></tr>
+<tr><td class="line-number">114</td><td class="line-text">                        topMargin.Value = svm.Margins.Top / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">115</td><td class="line-text">                        leftMargin.Value = svm.Margins.Left / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">116</td><td class="line-text">                        rightMargin.Value = svm.Margins.Right / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">117</td><td class="line-text">                        bottomMargin.Value = svm.Margins.Bottom / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">118</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">119</td><td class="line-text">                        <span class="hljs-comment">// Keep PrintDocument updated for WinForms.PrintPreview</span>
+</td></tr>
+<tr><td class="line-number">120</td><td class="line-text">                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)svm.Margins.Clone();
+</td></tr>
+<tr><td class="line-number">121</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">122</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">123</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"PageSeparator"</span>:
+</td></tr>
+<tr><td class="line-number">124</td><td class="line-text">                        pageSeparator.Checked = svm.PageSepartor;
+</td></tr>
+<tr><td class="line-number">125</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">126</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">127</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Rows"</span>:
+</td></tr>
+<tr><td class="line-number">128</td><td class="line-text">                        rows.Value = svm.Rows;
+</td></tr>
+<tr><td class="line-number">129</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">130</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">131</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Columns"</span>:
+</td></tr>
+<tr><td class="line-number">132</td><td class="line-text">                        columns.Value = svm.Columns;
+</td></tr>
+<tr><td class="line-number">133</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">134</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">135</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"Padding"</span>:
+</td></tr>
+<tr><td class="line-number">136</td><td class="line-text">                        padding.Value = svm.Padding / <span class="hljs-number">100</span>M;
+</td></tr>
+<tr><td class="line-number">137</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">138</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">139</td><td class="line-text">            }));
+</td></tr>
+<tr><td class="line-number">140</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">141</td><td class="line-text">            svm.SettingsChanged += (s, reflow) =&gt; BeginInvoke((Action)(() =&gt; {
+</td></tr>
+<tr><td class="line-number">142</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">$"SheetViewModel.SettingsChanged: <span class="hljs-subst">{reflow}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">143</td><td class="line-text">                <span class="hljs-keyword">if</span> (reflow)
+</td></tr>
+<tr><td class="line-number">144</td><td class="line-text">                    SheetSettingsChanged();
+</td></tr>
+<tr><td class="line-number">145</td><td class="line-text">                <span class="hljs-keyword">else</span>
+</td></tr>
+<tr><td class="line-number">146</td><td class="line-text">                    printPreview.Invalidate(<span class="hljs-literal">false</span>);
+</td></tr>
+<tr><td class="line-number">147</td><td class="line-text">            }));
+</td></tr>
+<tr><td class="line-number">148</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">149</td><td class="line-text">            printPreview.SheetViewModel = svm;
+</td></tr>
+<tr><td class="line-number">150</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">151</td><td class="line-text">            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Batch Print</span>
+</td></tr>
+<tr><td class="line-number">152</td><td class="line-text">            <span class="hljs-keyword">if</span> (ModelLocator.Current.Options.Files != <span class="hljs-literal">null</span> &amp;&amp;
+</td></tr>
+<tr><td class="line-number">153</td><td class="line-text">                ModelLocator.Current.Options.Files.Any() &amp;&amp;
+</td></tr>
+<tr><td class="line-number">154</td><td class="line-text">                !<span class="hljs-keyword">string</span>.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList()[<span class="hljs-number">0</span>])) {
+</td></tr>
+<tr><td class="line-number">155</td><td class="line-text">                List&lt;<span class="hljs-keyword">string</span>&gt; list = ModelLocator.Current.Options.Files.ToList();
+</td></tr>
+<tr><td class="line-number">156</td><td class="line-text">                file = list[<span class="hljs-number">0</span>];
+</td></tr>
+<tr><td class="line-number">157</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">158</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">159</td><td class="line-text">            svm.File = file;
+</td></tr>
+<tr><td class="line-number">160</td><td class="line-text">            <span class="hljs-keyword">this</span>.Text = <span class="hljs-string">$"WinPrint - <span class="hljs-subst">{file}</span>"</span>;
+</td></tr>
+<tr><td class="line-number">161</td><td class="line-text">            <span class="hljs-keyword">return</span> svm;
+</td></tr>
+<tr><td class="line-number">162</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">163</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">164</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">landscapeCheckbox_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">165</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"landscapeCheckbox_CheckedChanged: <span class="hljs-subst">{landscapeCheckbox.Checked}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">166</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {
+</td></tr>
+<tr><td class="line-number">167</td><td class="line-text">                <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> This should find the Preview SheetViewModel instance and set the property on this, not</span>
+</td></tr>
+<tr><td class="line-number">168</td><td class="line-text">                <span class="hljs-comment">// the model</span>
+</td></tr>
+<tr><td class="line-number">169</td><td class="line-text">                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =
+</td></tr>
+<tr><td class="line-number">170</td><td class="line-text">                    printDoc.DefaultPageSettings.Landscape =
+</td></tr>
+<tr><td class="line-number">171</td><td class="line-text">                    landscapeCheckbox.Checked;
+</td></tr>
+<tr><td class="line-number">172</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">173</td><td class="line-text">                <span class="hljs-comment">// We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel</span>
+</td></tr>
+<tr><td class="line-number">174</td><td class="line-text">                <span class="hljs-comment">//SheetSettingsChanged();</span>
+</td></tr>
+<tr><td class="line-number">175</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">176</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">177</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">178</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MainWindow_Load</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">179</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.WaitCursor;
+</td></tr>
+<tr><td class="line-number">180</td><td class="line-text">            <span class="hljs-comment">// Load settings</span>
+</td></tr>
+<tr><td class="line-number">181</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"First reference to ModelLocator.Current.Settings"</span>);
+</td></tr>
+<tr><td class="line-number">182</td><td class="line-text">            <span class="hljs-keyword">var</span> sheets = ModelLocator.Current.Settings.Sheets;
+</td></tr>
+<tr><td class="line-number">183</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">184</td><td class="line-text">            ModelLocator.Current.Settings.PropertyChanged += (s, e) =&gt; BeginInvoke((Action)(() =&gt; {
+</td></tr>
+<tr><td class="line-number">185</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">$"Settings.PropertyChanged: <span class="hljs-subst">{e.PropertyName}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">186</td><td class="line-text">                <span class="hljs-keyword">switch</span> (e.PropertyName) {
+</td></tr>
+<tr><td class="line-number">187</td><td class="line-text">                    <span class="hljs-keyword">case</span> <span class="hljs-string">"DefaultSheet"</span>:
+</td></tr>
+<tr><td class="line-number">188</td><td class="line-text">                        comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
+</td></tr>
+<tr><td class="line-number">189</td><td class="line-text">                        ChangeSheet();
+</td></tr>
+<tr><td class="line-number">190</td><td class="line-text">                        <span class="hljs-keyword">break</span>;
+</td></tr>
+<tr><td class="line-number">191</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">192</td><td class="line-text">            }));
+</td></tr>
+<tr><td class="line-number">193</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">194</td><td class="line-text">            comboBoxSheet.DisplayMember = <span class="hljs-string">"Value"</span>;
+</td></tr>
+<tr><td class="line-number">195</td><td class="line-text">            comboBoxSheet.ValueMember = <span class="hljs-string">"Key"</span>;
+</td></tr>
+<tr><td class="line-number">196</td><td class="line-text">            <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> s <span class="hljs-keyword">in</span> sheets) {
+</td></tr>
+<tr><td class="line-number">197</td><td class="line-text">                comboBoxSheet.Items.Add(<span class="hljs-keyword">new</span> KeyValuePair&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt;(s.Key, s.Value.Name));
+</td></tr>
+<tr><td class="line-number">198</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">199</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">200</td><td class="line-text">            <span class="hljs-comment">// Select default printer and paper size</span>
+</td></tr>
+<tr><td class="line-number">201</td><td class="line-text">            <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">string</span> printer <span class="hljs-keyword">in</span> System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
+</td></tr>
+<tr><td class="line-number">202</td><td class="line-text">                printersCB.Items.Add(printer);
+</td></tr>
+<tr><td class="line-number">203</td><td class="line-text">                <span class="hljs-comment">//printersCB.Text = "OneNote";</span>
+</td></tr>
+<tr><td class="line-number">204</td><td class="line-text">                <span class="hljs-keyword">if</span> (printDoc.PrinterSettings.IsDefaultPrinter)
+</td></tr>
+<tr><td class="line-number">205</td><td class="line-text">                    printersCB.Text = printDoc.PrinterSettings.PrinterName;
+</td></tr>
+<tr><td class="line-number">206</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">207</td><td class="line-text">            printDoc.PrinterSettings.PrinterName = (<span class="hljs-keyword">string</span>)printersCB.SelectedItem;
+</td></tr>
+<tr><td class="line-number">208</td><td class="line-text">            <span class="hljs-keyword">foreach</span> (PaperSize ps <span class="hljs-keyword">in</span> printDoc.PrinterSettings.PaperSizes) {
+</td></tr>
+<tr><td class="line-number">209</td><td class="line-text">                paperSizesCB.Items.Add(ps);
+</td></tr>
+<tr><td class="line-number">210</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">211</td><td class="line-text">            paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+</td></tr>
+<tr><td class="line-number">212</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">213</td><td class="line-text">            <span class="hljs-comment">// We kept these disabled during load</span>
+</td></tr>
+<tr><td class="line-number">214</td><td class="line-text">            printersCB.Enabled = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">215</td><td class="line-text">            paperSizesCB.Enabled = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">216</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">217</td><td class="line-text">            <span class="hljs-comment">// Select default Sheet </span>
+</td></tr>
+<tr><td class="line-number">218</td><td class="line-text">            comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
+</td></tr>
+<tr><td class="line-number">219</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">220</td><td class="line-text">            <span class="hljs-keyword">if</span> (ModelLocator.Current.Options.Files != <span class="hljs-literal">null</span>)
+</td></tr>
+<tr><td class="line-number">221</td><td class="line-text">                <span class="hljs-comment">//&amp;&amp;</span>
+</td></tr>
+<tr><td class="line-number">222</td><td class="line-text">                <span class="hljs-comment">//  ModelLocator.Current.Options.Files.Any() &amp;&amp;</span>
+</td></tr>
+<tr><td class="line-number">223</td><td class="line-text">                <span class="hljs-comment">//  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList&lt;string&gt;()[0])) </span>
+</td></tr>
+<tr><td class="line-number">224</td><td class="line-text">            {
+</td></tr>
+<tr><td class="line-number">225</td><td class="line-text">                file = ModelLocator.Current.Options.Files.ToList()[<span class="hljs-number">0</span>];
+</td></tr>
+<tr><td class="line-number">226</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">227</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">228</td><td class="line-text">            printPreview.Select();
+</td></tr>
+<tr><td class="line-number">229</td><td class="line-text">            <span class="hljs-keyword">this</span>.Size = <span class="hljs-keyword">new</span> Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+</td></tr>
+<tr><td class="line-number">230</td><td class="line-text">            <span class="hljs-keyword">this</span>.Location = <span class="hljs-keyword">new</span> Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+</td></tr>
+<tr><td class="line-number">231</td><td class="line-text">            <span class="hljs-keyword">this</span>.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+</td></tr>
+<tr><td class="line-number">232</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">233</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.Default;
+</td></tr>
+<tr><td class="line-number">234</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">235</td><td class="line-text">            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">string</span>.IsNullOrEmpty(file)) {
+</td></tr>
+<tr><td class="line-number">236</td><td class="line-text">                <span class="hljs-keyword">using</span> (OpenFileDialog openFileDialog = <span class="hljs-keyword">new</span> OpenFileDialog()) {
+</td></tr>
+<tr><td class="line-number">237</td><td class="line-text">                    
+</td></tr>
+<tr><td class="line-number">238</td><td class="line-text">                    openFileDialog.InitialDirectory = <span class="hljs-string">$"<span class="hljs-subst">{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}</span>\\source\\winprint\\tests"</span>;
+</td></tr>
+<tr><td class="line-number">239</td><td class="line-text">                    openFileDialog.Filter = <span class="hljs-string">"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*"</span>;
+</td></tr>
+<tr><td class="line-number">240</td><td class="line-text">                    openFileDialog.FilterIndex = <span class="hljs-number">3</span>;
+</td></tr>
+<tr><td class="line-number">241</td><td class="line-text">                    openFileDialog.RestoreDirectory = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">242</td><td class="line-text">                    <span class="hljs-keyword">if</span> (openFileDialog.ShowDialog() == DialogResult.OK) {
+</td></tr>
+<tr><td class="line-number">243</td><td class="line-text">                        file = openFileDialog.FileNames.ToList&lt;<span class="hljs-keyword">string</span>&gt;()[<span class="hljs-number">0</span>];
+</td></tr>
+<tr><td class="line-number">244</td><td class="line-text">                    }
+</td></tr>
+<tr><td class="line-number">245</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">246</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">247</td><td class="line-text">            <span class="hljs-comment">// Go!</span>
+</td></tr>
+<tr><td class="line-number">248</td><td class="line-text">            ChangeSheet();
+</td></tr>
+<tr><td class="line-number">249</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">250</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">251</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">252</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ChangeSheet</span>(<span class="hljs-params"></span>)</span> {
+</td></tr>
+<tr><td class="line-number">253</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.WaitCursor;
+</td></tr>
+<tr><td class="line-number">254</td><td class="line-text">            printPreview.SheetViewModel = CreatePreviewSheetViewModel();
+</td></tr>
+<tr><td class="line-number">255</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.Default;
+</td></tr>
+<tr><td class="line-number">256</td><td class="line-text">            SheetSettingsChanged();
+</td></tr>
+<tr><td class="line-number">257</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">258</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">259</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MainWindow_FormClosing</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, FormClosingEventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">260</td><td class="line-text">            <span class="hljs-comment">// Save Window state</span>
+</td></tr>
+<tr><td class="line-number">261</td><td class="line-text">            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.WindowState == System.Windows.Forms.FormWindowState.Normal) {
+</td></tr>
+<tr><td class="line-number">262</td><td class="line-text">                ModelLocator.Current.Settings.Size = <span class="hljs-keyword">new</span> Core.Models.WindowSize(<span class="hljs-keyword">this</span>.Size.Width, <span class="hljs-keyword">this</span>.Size.Height);
+</td></tr>
+<tr><td class="line-number">263</td><td class="line-text">                ModelLocator.Current.Settings.Location = <span class="hljs-keyword">new</span> Core.Models.WindowLocation(<span class="hljs-keyword">this</span>.Location.X, <span class="hljs-keyword">this</span>.Location.Y);
+</td></tr>
+<tr><td class="line-number">264</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">265</td><td class="line-text">            <span class="hljs-keyword">else</span> {
+</td></tr>
+<tr><td class="line-number">266</td><td class="line-text">                ModelLocator.Current.Settings.Size = <span class="hljs-keyword">new</span> Core.Models.WindowSize(<span class="hljs-keyword">this</span>.RestoreBounds.Width, <span class="hljs-keyword">this</span>.RestoreBounds.Height);
+</td></tr>
+<tr><td class="line-number">267</td><td class="line-text">                ModelLocator.Current.Settings.Location = <span class="hljs-keyword">new</span> Core.Models.WindowLocation(<span class="hljs-keyword">this</span>.RestoreBounds.X, <span class="hljs-keyword">this</span>.RestoreBounds.Y);
+</td></tr>
+<tr><td class="line-number">268</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">269</td><td class="line-text">            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)<span class="hljs-keyword">this</span>.WindowState;
+</td></tr>
+<tr><td class="line-number">270</td><td class="line-text">            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
+</td></tr>
+<tr><td class="line-number">271</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">272</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">273</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">internal</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SheetSettingsChanged</span>(<span class="hljs-params"></span>)</span> {
+</td></tr>
+<tr><td class="line-number">274</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"SheetSettingsChanged()"</span>);
+</td></tr>
+<tr><td class="line-number">275</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">276</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.WaitCursor;
+</td></tr>
+<tr><td class="line-number">277</td><td class="line-text">            <span class="hljs-comment">// Set landscape. This causes other DefaultPageSettings to change</span>
+</td></tr>
+<tr><td class="line-number">278</td><td class="line-text">            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+</td></tr>
+<tr><td class="line-number">279</td><td class="line-text">            printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);
+</td></tr>
+<tr><td class="line-number">280</td><td class="line-text">            printPreview.Invalidate(<span class="hljs-literal">true</span>);
+</td></tr>
+<tr><td class="line-number">281</td><td class="line-text">            SizePreview();
+</td></tr>
+<tr><td class="line-number">282</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">283</td><td class="line-text">            <span class="hljs-keyword">this</span>.Cursor = Cursors.Default;
+</td></tr>
+<tr><td class="line-number">284</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">285</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">286</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">internal</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SizePreview</span>(<span class="hljs-params"></span>)</span> {
+</td></tr>
+<tr><td class="line-number">287</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">"SizePreview()"</span>);
+</td></tr>
+<tr><td class="line-number">288</td><td class="line-text">            <span class="hljs-keyword">if</span> (printPreview == <span class="hljs-literal">null</span> || printPreview.SheetViewModel == <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span>;
+</td></tr>
+<tr><td class="line-number">289</td><td class="line-text">            Size size = panelRight.Size;
+</td></tr>
+<tr><td class="line-number">290</td><td class="line-text">            size.Height -= headerTextBox.Height * <span class="hljs-number">3</span>;
+</td></tr>
+<tr><td class="line-number">291</td><td class="line-text">            size.Width -= headerTextBox.Height;
+</td></tr>
+<tr><td class="line-number">292</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">293</td><td class="line-text">            <span class="hljs-keyword">double</span> w = printPreview.SheetViewModel.Bounds.Width;
+</td></tr>
+<tr><td class="line-number">294</td><td class="line-text">            <span class="hljs-keyword">double</span> h = printPreview.SheetViewModel.Bounds.Height;
+</td></tr>
+<tr><td class="line-number">295</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">296</td><td class="line-text">            <span class="hljs-keyword">var</span> scalingX = (<span class="hljs-keyword">double</span>)size.Width / (<span class="hljs-keyword">double</span>)w;
+</td></tr>
+<tr><td class="line-number">297</td><td class="line-text">            <span class="hljs-keyword">var</span> scalingY = (<span class="hljs-keyword">double</span>)size.Height / (<span class="hljs-keyword">double</span>)h;
+</td></tr>
+<tr><td class="line-number">298</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">299</td><td class="line-text">            <span class="hljs-comment">// Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.</span>
+</td></tr>
+<tr><td class="line-number">300</td><td class="line-text">            <span class="hljs-keyword">var</span> scale = Math.Min(scalingY, scalingX);
+</td></tr>
+<tr><td class="line-number">301</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">302</td><td class="line-text">            printPreview.Size = <span class="hljs-keyword">new</span> Size((<span class="hljs-keyword">int</span>)(w * scale), (<span class="hljs-keyword">int</span>)(h * scale));
+</td></tr>
+<tr><td class="line-number">303</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">304</td><td class="line-text">            <span class="hljs-comment">// Now center</span>
+</td></tr>
+<tr><td class="line-number">305</td><td class="line-text">            printPreview.Location = <span class="hljs-keyword">new</span> Point((panelRight.Width / <span class="hljs-number">2</span>) - (printPreview.Width / <span class="hljs-number">2</span>),
+</td></tr>
+<tr><td class="line-number">306</td><td class="line-text">                (panelRight.Height / <span class="hljs-number">2</span>) - (printPreview.Height / <span class="hljs-number">2</span>));
+</td></tr>
+<tr><td class="line-number">307</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">308</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">309</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MainWindow_Layout</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, LayoutEventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">310</td><td class="line-text">            <span class="hljs-comment">// This event is raised once at startup with the AffectedControl</span>
+</td></tr>
+<tr><td class="line-number">311</td><td class="line-text">            <span class="hljs-comment">// and AffectedProperty properties on the LayoutEventArgs as null. </span>
+</td></tr>
+<tr><td class="line-number">312</td><td class="line-text">            <span class="hljs-comment">// The event provides size preferences for that case.</span>
+</td></tr>
+<tr><td class="line-number">313</td><td class="line-text">            <span class="hljs-keyword">if</span> ((e.AffectedControl != <span class="hljs-literal">null</span>) &amp;&amp; (e.AffectedProperty != <span class="hljs-literal">null</span>)) {
+</td></tr>
+<tr><td class="line-number">314</td><td class="line-text">                <span class="hljs-comment">// Ensure that the affected property is the Bounds property</span>
+</td></tr>
+<tr><td class="line-number">315</td><td class="line-text">                <span class="hljs-comment">// of the form.</span>
+</td></tr>
+<tr><td class="line-number">316</td><td class="line-text">                <span class="hljs-keyword">if</span> (e.AffectedProperty.ToString().Equals(<span class="hljs-string">"Bounds"</span>, StringComparison.InvariantCultureIgnoreCase)) {
+</td></tr>
+<tr><td class="line-number">317</td><td class="line-text">                    Debug.WriteLine(<span class="hljs-string">"MainWindow_Layout bounds changed"</span>);
+</td></tr>
+<tr><td class="line-number">318</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">319</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">320</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">321</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">322</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">headerTextBox_TextChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">323</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+</td></tr>
+<tr><td class="line-number">324</td><td class="line-text">                ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
+</td></tr>
+<tr><td class="line-number">325</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">326</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">327</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">footerTextBox_TextChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">328</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+</td></tr>
+<tr><td class="line-number">329</td><td class="line-text">                ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Text = footerTextBox.Text;
+</td></tr>
+<tr><td class="line-number">330</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">331</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">332</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">printersCB_SelectedIndexChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">333</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {
+</td></tr>
+<tr><td class="line-number">334</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">"printersCB_SelectedIndexChanged"</span>);
+</td></tr>
+<tr><td class="line-number">335</td><td class="line-text">                printDoc.PrinterSettings.PrinterName = (<span class="hljs-keyword">string</span>)printersCB.SelectedItem;
+</td></tr>
+<tr><td class="line-number">336</td><td class="line-text">                paperSizesCB.Items.Clear();
+</td></tr>
+<tr><td class="line-number">337</td><td class="line-text">                <span class="hljs-keyword">foreach</span> (PaperSize ps <span class="hljs-keyword">in</span> printDoc.PrinterSettings.PaperSizes) {
+</td></tr>
+<tr><td class="line-number">338</td><td class="line-text">                    paperSizesCB.Items.Add(ps);
+</td></tr>
+<tr><td class="line-number">339</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">340</td><td class="line-text">                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+</td></tr>
+<tr><td class="line-number">341</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">342</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">343</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">344</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">paperSizesCB_SelectedIndexChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">345</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {
+</td></tr>
+<tr><td class="line-number">346</td><td class="line-text">                Debug.WriteLine(<span class="hljs-string">"paperSizesCB_SelectedIndexChanged"</span>);
+</td></tr>
+<tr><td class="line-number">347</td><td class="line-text">                <span class="hljs-comment">// Set the paper size based upon the selection in the combo box.</span>
+</td></tr>
+<tr><td class="line-number">348</td><td class="line-text">                <span class="hljs-keyword">if</span> (paperSizesCB.SelectedIndex != <span class="hljs-number">-1</span>) {
+</td></tr>
+<tr><td class="line-number">349</td><td class="line-text">                    printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
+</td></tr>
+<tr><td class="line-number">350</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">351</td><td class="line-text">                SheetSettingsChanged();
+</td></tr>
+<tr><td class="line-number">352</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">353</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">354</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">355</td><td class="line-text">        [<span class="hljs-meta">System.Diagnostics.CodeAnalysis.SuppressMessage(<span class="hljs-meta-string">"Design"</span>, <span class="hljs-meta-string">"CA1031:Do not catch general exception types"</span>, Justification = <span class="hljs-meta-string">"&lt;Pending&gt;"</span>)</span>]
+</td></tr>
+<tr><td class="line-number">356</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">printButton_Click</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">357</td><td class="line-text">            <span class="hljs-keyword">using</span> <span class="hljs-keyword">var</span> print = <span class="hljs-keyword">new</span> Core.Print();
+</td></tr>
+<tr><td class="line-number">358</td><td class="line-text">            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> It's hokey that Landscape is the only printer setting that's treated specially</span>
+</td></tr>
+<tr><td class="line-number">359</td><td class="line-text">            <span class="hljs-comment">// </span>
+</td></tr>
+<tr><td class="line-number">360</td><td class="line-text">            print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+</td></tr>
+<tr><td class="line-number">361</td><td class="line-text">            print.SheetVM.File = file;
+</td></tr>
+<tr><td class="line-number">362</td><td class="line-text">            print.SheetVM.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+</td></tr>
+<tr><td class="line-number">363</td><td class="line-text">            print.SetPrinter(printDoc.PrinterSettings.PrinterName);
+</td></tr>
+<tr><td class="line-number">364</td><td class="line-text">            print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
+</td></tr>
+<tr><td class="line-number">365</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">366</td><td class="line-text">            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Decide how to make showing the print dialog a setting (or if needed at all)</span>
+</td></tr>
+<tr><td class="line-number">367</td><td class="line-text">            <span class="hljs-comment">// the only reason I can think of now is from/to page support.</span>
+</td></tr>
+<tr><td class="line-number">368</td><td class="line-text">            <span class="hljs-keyword">bool</span> showPrintDialog = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">369</td><td class="line-text">            <span class="hljs-keyword">if</span> (showPrintDialog) {
+</td></tr>
+<tr><td class="line-number">370</td><td class="line-text">                <span class="hljs-keyword">using</span> PrintDialog printDialog = <span class="hljs-keyword">new</span> PrintDialog();
+</td></tr>
+<tr><td class="line-number">371</td><td class="line-text">                printDialog.AllowSomePages = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">372</td><td class="line-text">                printDialog.ShowHelp = <span class="hljs-literal">true</span>;
+</td></tr>
+<tr><td class="line-number">373</td><td class="line-text">                <span class="hljs-comment">// printDialog.AllowSelection = true;</span>
+</td></tr>
+<tr><td class="line-number">374</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">375</td><td class="line-text">                printDialog.Document = print.PrintDocument;
+</td></tr>
+<tr><td class="line-number">376</td><td class="line-text">                printDialog.PrinterSettings.FromPage = <span class="hljs-number">1</span>;
+</td></tr>
+<tr><td class="line-number">377</td><td class="line-text">                <span class="hljs-comment">// Ideally we'd get NumSheets from print.SheetSVM but that would cause a</span>
+</td></tr>
+<tr><td class="line-number">378</td><td class="line-text">                <span class="hljs-comment">// un-needed Reflow. So use the printPreview VM.</span>
+</td></tr>
+<tr><td class="line-number">379</td><td class="line-text">                printDialog.PrinterSettings.ToPage = printPreview.SheetViewModel.NumSheets;
+</td></tr>
+<tr><td class="line-number">380</td><td class="line-text">                <span class="hljs-comment">//If the result is OK then print the document.</span>
+</td></tr>
+<tr><td class="line-number">381</td><td class="line-text">                <span class="hljs-keyword">if</span> (printDialog.ShowDialog() == DialogResult.OK &amp;&amp; printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
+</td></tr>
+<tr><td class="line-number">382</td><td class="line-text">                    print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
+</td></tr>
+<tr><td class="line-number">383</td><td class="line-text">                    print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
+</td></tr>
+<tr><td class="line-number">384</td><td class="line-text">                    print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
+</td></tr>
+<tr><td class="line-number">385</td><td class="line-text">                }
+</td></tr>
+<tr><td class="line-number">386</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">387</td><td class="line-text">            print.DoPrint();
+</td></tr>
+<tr><td class="line-number">388</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">389</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">390</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">panelRight_Resize</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">391</td><td class="line-text">            SizePreview();
+</td></tr>
+<tr><td class="line-number">392</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">393</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">394</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">enableHeader_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">395</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"enableHeader_CheckedChanged: <span class="hljs-subst">{enableHeader.Checked}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">396</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {
+</td></tr>
+<tr><td class="line-number">397</td><td class="line-text">                <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> This should find the Preview SheetViewModel instance and set the property on this, not</span>
+</td></tr>
+<tr><td class="line-number">398</td><td class="line-text">                <span class="hljs-comment">// the model</span>
+</td></tr>
+<tr><td class="line-number">399</td><td class="line-text">                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Enabled =
+</td></tr>
+<tr><td class="line-number">400</td><td class="line-text">                    enableHeader.Checked;
+</td></tr>
+<tr><td class="line-number">401</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">402</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">403</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">404</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">enableFooter_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">405</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"enableFooter_CheckedChanged: <span class="hljs-subst">{enableFooter.Checked}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">406</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {
+</td></tr>
+<tr><td class="line-number">407</td><td class="line-text">                <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> This should find the Preview SheetViewModel instance and set the property on this, not</span>
+</td></tr>
+<tr><td class="line-number">408</td><td class="line-text">                <span class="hljs-comment">// the model</span>
+</td></tr>
+<tr><td class="line-number">409</td><td class="line-text">                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Enabled =
+</td></tr>
+<tr><td class="line-number">410</td><td class="line-text">                    enableFooter.Checked;
+</td></tr>
+<tr><td class="line-number">411</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">412</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">413</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">414</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">comboBoxSheet_SelectedIndexChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">415</td><td class="line-text">            KeyValuePair&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt; si = (KeyValuePair&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt;)comboBoxSheet.SelectedItem;
+</td></tr>
+<tr><td class="line-number">416</td><td class="line-text">            Debug.WriteLine(<span class="hljs-string">$"comboBoxSheet_SelectedIndexChanged: <span class="hljs-subst">{si.Key}</span>, <span class="hljs-subst">{si.Value}</span>"</span>);
+</td></tr>
+<tr><td class="line-number">417</td><td class="line-text">            <span class="hljs-keyword">if</span> (printersCB.Enabled) {
+</td></tr>
+<tr><td class="line-number">418</td><td class="line-text">                ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
+</td></tr>
+<tr><td class="line-number">419</td><td class="line-text">                <span class="hljs-comment">//ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);</span>
+</td></tr>
+<tr><td class="line-number">420</td><td class="line-text">            }
+</td></tr>
+<tr><td class="line-number">421</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">422</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">423</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">topMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">424</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+</td></tr>
+<tr><td class="line-number">425</td><td class="line-text">            margins.Top = (<span class="hljs-keyword">int</span>)(topMargin.Value * <span class="hljs-number">100</span>M);
+</td></tr>
+<tr><td class="line-number">426</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+</td></tr>
+<tr><td class="line-number">427</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">428</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">429</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">leftMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">430</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+</td></tr>
+<tr><td class="line-number">431</td><td class="line-text">            margins.Left = (<span class="hljs-keyword">int</span>)(leftMargin.Value * <span class="hljs-number">100</span>M);
+</td></tr>
+<tr><td class="line-number">432</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+</td></tr>
+<tr><td class="line-number">433</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">434</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">435</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">rightMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">436</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+</td></tr>
+<tr><td class="line-number">437</td><td class="line-text">            margins.Right = (<span class="hljs-keyword">int</span>)(rightMargin.Value * <span class="hljs-number">100</span>M);
+</td></tr>
+<tr><td class="line-number">438</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+</td></tr>
+<tr><td class="line-number">439</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">440</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">441</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">bottomMargin_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">442</td><td class="line-text">            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+</td></tr>
+<tr><td class="line-number">443</td><td class="line-text">            margins.Bottom = (<span class="hljs-keyword">int</span>)(bottomMargin.Value * <span class="hljs-number">100</span>M);
+</td></tr>
+<tr><td class="line-number">444</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+</td></tr>
+<tr><td class="line-number">445</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">446</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">447</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">pageSeparator_CheckedChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">448</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).PageSeparator = pageSeparator.Checked;
+</td></tr>
+<tr><td class="line-number">449</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">450</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">451</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">rows_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">452</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Rows = (<span class="hljs-keyword">int</span>)rows.Value;
+</td></tr>
+<tr><td class="line-number">453</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">454</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">455</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">columns_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">456</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Columns = (<span class="hljs-keyword">int</span>)columns.Value;
+</td></tr>
+<tr><td class="line-number">457</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">458</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">459</td><td class="line-text">
+</td></tr>
+<tr><td class="line-number">460</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">padding_ValueChanged</span>(<span class="hljs-params"><span class="hljs-keyword">object</span> sender, EventArgs e</span>)</span> {
+</td></tr>
+<tr><td class="line-number">461</td><td class="line-text">            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = (<span class="hljs-keyword">int</span>)(padding.Value * <span class="hljs-number">100</span>M);
+</td></tr>
+<tr><td class="line-number">462</td><td class="line-text">        }
+</td></tr>
+<tr><td class="line-number">463</td><td class="line-text">    }
+</td></tr>
+<tr><td class="line-number">464</td><td class="line-text">}
+</td></tr>
 <tr><td class="line-number">465</td><td class="line-text"></td></tr></table></body></html>
