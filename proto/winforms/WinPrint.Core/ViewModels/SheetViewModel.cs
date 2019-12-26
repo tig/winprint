@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using ColorCode;
+using System.Threading.Tasks;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -211,12 +212,18 @@ namespace WinPrint.Core {
 
                         //var csharpstring = "public void Method()\n{\n}";
                         document = streamToPrint.ReadToEnd();
+
+#if USE_COLORCODE
                         var formatter = new HtmlFormatter();
                         var language = ColorCode.Languages.FindById(Type);
                         document = formatter.GetHtmlString(document, language);
                         StreamWriter w = new StreamWriter(File + "_.html");
                         w.Write(document);
                         w.Close();
+#endif
+
+
+
                         break;
 
                     default:

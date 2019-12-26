@@ -46,7 +46,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public override int CountPages(string document, System.Drawing.Printing.PrinterResolution printerResolution) {
-             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             Debug.WriteLine($"HtmlFileContent.CountPages - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
@@ -140,16 +140,18 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
-            //g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));litehtml.SetViewport(new LiteHtmlPoint(0, yPos), new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height)));
+            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            //litehtml.ScrollOffset = new LiteHtmlPoint(0, yP
-            // os);
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {
                 x = 0,
                 y = 0,
                 width = (int)size.Width,
                 height = (int)size.Height
             });
+            //litehtml.SetViewport(new LiteHtmlPoint(0, yPos), new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height)));
+            //litehtml.ScrollOffset = new LiteHtmlPoint(0, yP
+            // os);
             //litehtml.Draw();
 
             //g.DrawImage(htmlBitmap, 0, 0);

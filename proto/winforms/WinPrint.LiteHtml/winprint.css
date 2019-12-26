@@ -185,7 +185,7 @@ td, th {
     display: table-cell;
     vertical-align: inherit;
     border-width: 0px; /* was 1 */
-    padding: 0px; /* was 1 */
+    padding: 1px; /* was 1 */
 }
 
 th {
@@ -227,7 +227,7 @@ tt, code, kbd, samp {
 pre, xmp, plaintext, listing {
     display: block;
     font-family: monospace;
-    white-space: pre-wrap; /* was pre */
+    white-space: pre; /* was pre */
     margin: 1em 0
 }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Globalization;
 using System.Drawing;
+using System.Diagnostics;
 
 namespace WinPrint.LiteHtml {
 
@@ -62,8 +63,10 @@ namespace WinPrint.LiteHtml {
                 gr.PageUnit = GraphicsUnit.Pixel;
             }
 
-            Family = fontFamily ?? new FontFamily("Consolas"); // faceName);
             Font = new Font(familyName: faceName, size, style, GraphicsUnit.Pixel);
+            if (!Font.FontFamily.Name.Equals(faceName, StringComparison.OrdinalIgnoreCase))
+                throw new Exception($"{faceName} not found");
+            Family = Font.FontFamily;
 
             float em_height = Font.FontFamily.GetEmHeight(Font.Style);
             EmHeightPixels = ConvertUnits(gr, Font.Size, Font.Unit, GraphicsUnit.Pixel);
@@ -138,10 +141,9 @@ namespace WinPrint.LiteHtml {
             return value;
         }
 
-
-
         public static FontInfo TryCreateFont(Graphics gr, string faceName, FontStyle style, int size, FontFamily fontFamily = null) {
             try {
+                Debug.WriteLine($"TryCreateFont({faceName}, {size}, {style.ToString()})");
                 return new FontInfo(gr, faceName, style, size, fontFamily);
             }
             catch {
