@@ -46,6 +46,13 @@ namespace WinPrint.LiteHtml {
         public GDIPlusContainer(string masterCssData, ILibInterop libInterop) : base(masterCssData, libInterop) {
         }
 
+        public GDIPlusContainer(string css, IResourceLoader loader) : base(css, LibInterop.Instance) {
+            _loader = loader;
+        }
+
+        public GDIPlusContainer(string css, Func<string, string> getStringResource, Func<string, byte[]> getBytesResource) : this(css, new ResourceLoader(getStringResource, getBytesResource)) {
+        }
+
         protected override UIntPtr CreateFont(string faceName, int size, int weight, font_style italic, font_decoration decoration, ref font_metrics fm) {
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 

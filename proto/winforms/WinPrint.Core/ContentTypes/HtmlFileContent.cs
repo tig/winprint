@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Net.Http;
 using LiteHtmlSharp;
 using WinPrint.LiteHtml;
 
@@ -15,6 +16,9 @@ namespace WinPrint.Core.ContentTypes {
         public static new string Type = "text/html";
 
         private GDIPlusContainer litehtml;
+
+        HttpClient _httpClient;
+        string _lastUrl;
 
         //public HtmlFileContent() {
         //    type = "text/html";
@@ -50,7 +54,7 @@ namespace WinPrint.Core.ContentTypes {
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             Debug.WriteLine($"HtmlFileContent.CountPages - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
-            litehtml = new GDIPlusContainer(IncludedWinPrintCss.CssString, LibInterop.Instance);
+            litehtml = new GDIPlusContainer(IncludedWinPrintCss.CssString, GetResourceString, GetResourceBytes);
             litehtml.Size = new LiteHtmlSize(width, height);
 
             htmlBitmap = new Bitmap(width, height);
@@ -81,7 +85,54 @@ namespace WinPrint.Core.ContentTypes {
             return numPages;
         }
 
+        private byte[] GetResourceBytes(string resource) {
+            if (string.IsNullOrWhiteSpace(resource)) {
+                return new byte[0];
+            }
 
+            try {
+                var url = GetUrlForRequest(resource);
+                return _httpClient.GetByteArrayAsync(url).Result;
+            }
+            catch (Exception e) {
+                Debug.WriteLine($"GetResourceString({resource} - {e.Message}");
+                return null;
+            }
+        }
+
+        private string GetResourceString(string resource) {
+            if (string.IsNullOrWhiteSpace(resource)) {
+                return string.Empty;
+            }
+            try {
+                var url = GetUrlForRequest(resource);
+                string data = _httpClient.GetStringAsync(url).Result;
+                return data;
+            }
+            catch (Exception e) {
+                Debug.WriteLine($"GetResourceString({resource} - {e.Message}");
+                return string.Empty;
+            }
+        }
+
+        string GetUrlForRequest(string resource) {
+            try {
+                UriBuilder urlBuilder;
+                if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
+                    urlBuilder = new UriBuilder(resource.TrimStart(new char[] { '/' }));
+                }
+                else {
+                    urlBuilder = new UriBuilder(_lastUrl);
+                    urlBuilder.Path = resource;
+                }
+                var requestUrl = urlBuilder.ToString();
+                return requestUrl;
+            }
+            catch {
+                Debug.WriteLine($"GetUrlForReqeust({resource}) returning null.");
+                return null;
+            }
+        }
 
         /// <summary>
         /// Gets next page from stream. Returns false if no more pages
