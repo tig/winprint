@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="master.css" />
+    <None Remove="winprint.css" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="master.css" />
+    <EmbeddedResource Include="winprint.css" />
   </ItemGroup>
 
     <ItemGroup>

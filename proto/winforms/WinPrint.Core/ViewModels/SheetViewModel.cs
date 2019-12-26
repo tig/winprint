@@ -7,6 +7,7 @@ using WinPrint.Core.Models;
 using System.Diagnostics;
 using Microsoft.Win32;
 using System.Collections.Generic;
+using ColorCode;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -197,19 +198,38 @@ namespace WinPrint.Core {
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
 
             if (!string.IsNullOrEmpty(File)) {
+                string document;
                 using StreamReader streamToPrint = new StreamReader(File);
-                if (Type == "Text")
-                    Content = ModelLocator.Current.Settings.TextFileSettings;
-                else if (Type == "text/html")
-                    Content = ModelLocator.Current.Settings.HtmlFileSettings;
-                else
-                    Content = ModelLocator.Current.Settings.TextFileSettings;
+                switch (Type) {
+                    case "text/html":
+                        Content = ModelLocator.Current.Settings.HtmlFileSettings;
+                        document = streamToPrint.ReadToEnd();
+                        break;
+
+                    case "c#":
+                        Content = ModelLocator.Current.Settings.HtmlFileSettings;
+
+                        //var csharpstring = "public void Method()\n{\n}";
+                        document = streamToPrint.ReadToEnd();
+                        var formatter = new HtmlFormatter();
+                        var language = ColorCode.Languages.FindById(Type);
+                        document = formatter.GetHtmlString(document, language);
+                        StreamWriter w = new StreamWriter(File + "_.html");
+                        w.Write(document);
+                        w.Close();
+                        break;
+
+                    default:
+                        Content = ModelLocator.Current.Settings.TextFileSettings;
+                        document = streamToPrint.ReadToEnd();
+                        break;
+                }
 
                 Content.PropertyChanged -= OnContentPropertyChanged();
                 Content.PropertyChanged += OnContentPropertyChanged();
 
                 Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                Content.CountPages(streamToPrint, PrinterResolution);
+                Content.CountPages(document, PrinterResolution);
             }
             else {
                 //    // Create a dummmy for preview with no file
@@ -644,6 +664,9 @@ namespace WinPrint.Core {
                 if (contentType != null)
                     mimeType = contentType.ToString();
             }
+
+            if (ext == ".cs")
+                mimeType = "c#";
 
             return mimeType;
         }

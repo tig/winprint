@@ -31,7 +31,7 @@ script {
 
 body {
 	display:block; 
-	margin:8px; 
+	margin:0px; /* was 8px */
     height:100%;
     width:100%;
 }
@@ -184,8 +184,8 @@ tr {
 td, th {
     display: table-cell;
     vertical-align: inherit;
-    border-width:1px;
-    padding:1px;
+    border-width: 0px; /* was 1 */
+    padding: 0px; /* was 1 */
 }
 
 th {
@@ -227,7 +227,7 @@ tt, code, kbd, samp {
 pre, xmp, plaintext, listing {
     display: block;
     font-family: monospace;
-    white-space: pre;
+    white-space: pre-wrap; /* was pre */
     margin: 1em 0
 }
 

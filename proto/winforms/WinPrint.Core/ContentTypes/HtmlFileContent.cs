@@ -38,8 +38,6 @@ namespace WinPrint.Core.ContentTypes {
             disposed = true;
         }
 
-        private string html;
-
         private Bitmap htmlBitmap;
 
         /// <summary>
@@ -47,14 +45,12 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int CountPages(StreamReader streamToPrint, System.Drawing.Printing.PrinterResolution printerResolution) {
-            html = streamToPrint.ReadToEnd();
-
-            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+        public override int CountPages(string document, System.Drawing.Printing.PrinterResolution printerResolution) {
+             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             Debug.WriteLine($"HtmlFileContent.CountPages - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
-            litehtml = new GDIPlusContainer(IncludedMasterCss.CssString, LibInterop.Instance);
+            litehtml = new GDIPlusContainer(IncludedWinPrintCss.CssString, LibInterop.Instance);
             litehtml.Size = new LiteHtmlSize(width, height);
 
             htmlBitmap = new Bitmap(width, height);
@@ -65,7 +61,7 @@ namespace WinPrint.Core.ContentTypes {
             Debug.WriteLine($"HtmlFileContent.CountPages() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
             Debug.WriteLine($"PageUnit = {g.PageUnit.ToString()}");
-            litehtml.Document.CreateFromString(html);
+            litehtml.Document.CreateFromString(document);
             litehtml.Document.OnMediaChanged();
 
             // TODO: Use return of Render() to get "best width"
@@ -144,9 +140,17 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
-            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
-            litehtml.SetViewport(new LiteHtmlPoint(0, yPos), new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height)));
-            litehtml.Draw();
+            //g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));litehtml.SetViewport(new LiteHtmlPoint(0, yPos), new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height)));
+            LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
+            //litehtml.ScrollOffset = new LiteHtmlPoint(0, yP
+            // os);
+            litehtml.Document.Draw((int)-0, (int)-yPos, new position {
+                x = 0,
+                y = 0,
+                width = (int)size.Width,
+                height = (int)size.Height
+            });
+            //litehtml.Draw();
 
             //g.DrawImage(htmlBitmap, 0, 0);
             //g.DrawRectangle(Pens.Red, new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));

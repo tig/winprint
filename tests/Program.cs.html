@@ -43,7 +43,11 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 .hljs-meta-keyword,
 .hljs-doctag,
 .hljs-name {
-  font-weight: bold;
+  font-weight: normal;
+}
+
+.hljs-keyword{
+  font-style: italic;
 }
 
 
@@ -88,6 +92,7 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 .hljs-code,
 .hljs-addition {
   color: #397300;
+  font-style: italic;
 }
 
 
@@ -122,7 +127,7 @@ Orginal Style from ethanschoonover.com/solarized (c) Jeremy Hull <sourdrums@gmai
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  background: #ffffff;
+  background: #fcf7f7;
   color: #657b83;
 }
 
@@ -164,7 +169,9 @@ Orginal Style from ethanschoonover.com/solarized (c) Jeremy Hull <sourdrums@gmai
 .hljs-template-variable,
 .hljs-class .hljs-title,
 .hljs-type {
-  color: #b58900;
+  color: #3600b5;
+  text-decoration: underline;
+
 }
 
 /* Solarized Orange */
@@ -186,7 +193,8 @@ Orginal Style from ethanschoonover.com/solarized (c) Jeremy Hull <sourdrums@gmai
 }
 
 .hljs-formula {
-  background: #eee8d5;
+  background: #f30814;
+  text-decoration: underline;
 }
 
 .hljs-emphasis {
@@ -201,18 +209,16 @@ Orginal Style from ethanschoonover.com/solarized (c) Jeremy Hull <sourdrums@gmai
 /* Line numbers */
 
 table {
-  border: none;
+  border:#880000;
   border-width: 0px;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  border-top-width: 0px;
+  border-style: dotted;
   border-collapse: collapse;
 }
+/* 
 td{
-  border: none;
+  border:#859900;
   border-width: 0px;
-}
+} */
 .line-number {
   border-right: 1px solid silver;
   padding-right: 0.3em;
@@ -220,10 +226,10 @@ td{
   vertical-align: top;
 }
 .line-text {
-  border: none;
   margin-left: 0.7em;
   padding-bottom: 0em;
   white-space: pre-wrap;
+  overflow-wrap:break-word;
 }
 
 .hljs { max-width:100%; width:100%; font-family: "Lucida Console, monospace"; font-size: 10pt; }

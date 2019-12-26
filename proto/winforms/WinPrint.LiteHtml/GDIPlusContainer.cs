@@ -46,7 +46,7 @@ namespace WinPrint.LiteHtml {
         protected override UIntPtr CreateFont(string faceName, int size, int weight, font_style italic, font_decoration decoration, ref font_metrics fm) {
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
             bool isUnderline = false;// decoration & font_decoration.font_decoration_underline;
-            bool isBold = weight > 200;
+            bool isBold = weight >= 700;
 
             FontStyle fontStyle = italic == font_style.fontStyleItalic ? FontStyle.Italic : FontStyle.Regular;
             if (isUnderline)

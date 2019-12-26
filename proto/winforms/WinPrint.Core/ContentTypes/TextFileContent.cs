@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Text;
 
 namespace WinPrint.Core.ContentTypes {
 
@@ -71,7 +72,7 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int CountPages(StreamReader streamToPrint, System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override int CountPages(string document, System.Drawing.Printing.PrinterResolution printerResolution) {
             Debug.WriteLine("TextFileContent.CountPages");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
@@ -87,7 +88,7 @@ namespace WinPrint.Core.ContentTypes {
             numPages = 0;
 
             // Note, MeasureLines may increment numPages due to form feeds
-            lines = MeasureLines(streamToPrint); // new List<string>();
+            lines = MeasureLines(document); // new List<string>();
 
             numPages += (lines.Count / linesPerPage) + 1;
 
@@ -96,7 +97,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         // TODO: Profile for performance
-        private List<Line> MeasureLines(StreamReader streamToPrint) {
+        private List<Line> MeasureLines(string document) {
             Debug.WriteLine("TextFileContent.MeasureLines");
             var list = new List<Line>();
 
@@ -105,7 +106,12 @@ namespace WinPrint.Core.ContentTypes {
 
             string line;
             int lineCount = 0;
-            while ((line = streamToPrint.ReadLine()) != null) {
+
+            // convert string to stream
+            byte[] byteArray = Encoding.UTF8.GetBytes(document);
+            MemoryStream stream = new MemoryStream(byteArray);
+            StreamReader reader = new StreamReader(stream);
+            while ((line = reader.ReadLine()) != null) {
                 // Expand tabs
                 if (tabSpaces > 0)
                     line = line.Replace("\t", new String(' ', tabSpaces));
