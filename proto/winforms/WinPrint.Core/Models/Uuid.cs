@@ -10,6 +10,6 @@ namespace WinPrint.Core {
     //
     public static class Uuid {
         public static readonly Guid DefaultSheet = Guid.Parse("{0002A500-0000-0000-C000-000000000046}");
-
+        public static readonly Guid DefaultSheet1Up = Guid.Parse("{0002A501-0000-0000-C000-000000000046}");
     }
 }

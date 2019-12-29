@@ -195,7 +195,7 @@ namespace WinPrint.LiteHtml {
             text = text.Replace(' ', (char)160);
             var fontInfo = _fonts[font];
 
-            _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y));
+            _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat.GenericTypographic);
         }
 
         protected override string GetDefaultFontName() {
@@ -222,8 +222,10 @@ namespace WinPrint.LiteHtml {
             //var g = Graphics.FromImage(bitmap);
             //g.PageUnit = GraphicsUnit.Pixel;
 
-            var size = _graphics.MeasureString(text, fontInfo.Font);
-            return (int)Math.Round(size.Width + 0.25f);
+            text = text.Replace(' ', 'x');
+
+            var size = _graphics.MeasureString(text, fontInfo.Font, (int)Size.Width, StringFormat.GenericTypographic);
+            return (int)Math.Round(size.Width);
             //return (int)Math.Round(formattedText.WidthIncludingTrailingWhitespace + 0.25f);
         }
 

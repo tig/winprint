@@ -37,24 +37,37 @@ namespace WinPrint.Core.ContentTypes {
 
             if (disposing) {
                 //if (litehtml != null)
-                    //litehtml.Dispose();
+                //litehtml.Dispose();
             }
             disposed = true;
         }
 
         private Bitmap htmlBitmap;
 
+        public Models.Font MonspacedFont { get; internal set; }
+
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage)
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int CountPages(string document, System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override int Render(string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             Debug.WriteLine($"HtmlFileContent.CountPages - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
-            litehtml = new GDIPlusContainer(IncludedWinPrintCss.CssString, GetResourceString, GetResourceBytes);
+            string css;
+            try {
+                // TODO: Make sure wiprint.css is in the same dir as .config file once setup is impl
+                using StreamReader cssStream = new StreamReader("winprint.css");
+                css = cssStream.ReadToEnd();
+                cssStream.Close();
+            }
+            catch {
+                css = IncludedWinPrintCss.CssString;
+            }
+
+            litehtml = new GDIPlusContainer(css, GetResourceString, GetResourceBytes);
             litehtml.Size = new LiteHtmlSize(width, height);
 
             htmlBitmap = new Bitmap(width, height);
@@ -101,24 +114,36 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         private string GetResourceString(string resource) {
+            string data = string.Empty;
             if (string.IsNullOrWhiteSpace(resource)) {
-                return string.Empty;
+                return data;
             }
             try {
-                var url = GetUrlForRequest(resource);
-                string data = _httpClient.GetStringAsync(url).Result;
+                if (resource.StartsWith("file:")) {
+                    UriBuilder urlBuilder = new UriBuilder(resource);
+                    using StreamReader reader = new StreamReader(urlBuilder.Path);
+                    data = reader.ReadToEnd();
+                }
+                else {
+                    var url = GetUrlForRequest(resource);
+                    data = _httpClient.GetStringAsync(url).Result;
+                }
                 return data;
             }
             catch (Exception e) {
                 Debug.WriteLine($"GetResourceString({resource} - {e.Message}");
-                return string.Empty;
+                return data;
             }
         }
 
-        string GetUrlForRequest(string resource) {
+        private string GetUrlForRequest(string resource) {
             try {
                 UriBuilder urlBuilder;
-                if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
+
+                if (resource.StartsWith("file:")) {
+                    urlBuilder = new UriBuilder(resource);
+                }
+                else if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
                     urlBuilder = new UriBuilder(resource.TrimStart(new char[] { '/' }));
                 }
                 else {
@@ -191,7 +216,7 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
-            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+            //g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {

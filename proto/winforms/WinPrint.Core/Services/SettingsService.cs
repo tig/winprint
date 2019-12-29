@@ -45,13 +45,8 @@ namespace WinPrint.Core.Services {
             }
             catch (FileNotFoundException) {
                 Debug.WriteLine($"ReadSettings: {settingsFileName} was not found; creating it.");
+                settings = Settings.CreateDefaults();
 
-                settings = new Settings();
-                settings.TextFileSettings = new TextFileContent();
-                settings.HtmlFileSettings = new HtmlFileContent();
-                settings.DefaultSheet = Uuid.DefaultSheet;
-                settings.Sheets = new Dictionary<string, Sheet>();
-                settings.Sheets.Add(Uuid.DefaultSheet.ToString(), new Sheet());
                 SaveSettings(settings);
             }
             catch (Exception ex) {

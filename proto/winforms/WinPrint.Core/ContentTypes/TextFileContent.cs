@@ -22,7 +22,7 @@ namespace WinPrint.Core.ContentTypes {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextFileContent : ContentBase, IDisposable {
-        public static new string Type = "text/plain";
+        public static new string Type = "plaintext";
         public TextFileContent() {
             Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
@@ -72,7 +72,7 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int CountPages(string document, System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override int Render(string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
             Debug.WriteLine("TextFileContent.CountPages");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,

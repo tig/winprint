@@ -1,61 +1,67 @@
-<div style="color:#000000;background-color:#FFFFFF;"><pre>
-<span style="color:#0000FF;">using</span> System;
-<span style="color:#0000FF;">using</span> System.Collections.Generic;
-<span style="color:#0000FF;">using</span> System.Linq;
-<span style="color:#0000FF;">using</span> System.Windows.Forms;
-<span style="color:#0000FF;">using</span> CommandLine;
-<span style="color:#0000FF;">using</span> CommandLine.Text;
-<span style="color:#0000FF;">using</span> WinPrint.Core.Models;
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\Program.cs</title>
+<meta charset="utf-8"/>
+<link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+<link href="file:/C:/Users/ckindel/source/winprint/proto/winforms/WinPrint/bin/Debug/netcoreapp3.0/prism-winprint-overrides.css" rel="stylesheet"/>
+</head><body>
+<pre class="language-csharp line-numbers "><code class="language-csharp">
+<span class="token keyword">using</span> System<span class="token punctuation">;</span>
+<span class="token keyword">using</span> System<span class="token punctuation">.</span>Collections<span class="token punctuation">.</span>Generic<span class="token punctuation">;</span>
+<span class="token keyword">using</span> System<span class="token punctuation">.</span>Linq<span class="token punctuation">;</span>
+<span class="token keyword">using</span> System<span class="token punctuation">.</span>Windows<span class="token punctuation">.</span>Forms<span class="token punctuation">;</span>
+<span class="token keyword">using</span> CommandLine<span class="token punctuation">;</span>
+<span class="token keyword">using</span> CommandLine<span class="token punctuation">.</span>Text<span class="token punctuation">;</span>
+<span class="token keyword">using</span> WinPrint<span class="token punctuation">.</span>Core<span class="token punctuation">.</span>Models<span class="token punctuation">;</span>
 
-<span style="color:#0000FF;">namespace</span> WinPrint {
-    <span style="color:#0000FF;">static</span> <span style="color:#0000FF;">class</span> Program {
-        <span style="color:#808080;">///</span> <span style="color:#808080;">&lt;summary&gt;</span>
-        <span style="color:#808080;">///</span><span style="color:#008000;">  The main entry point for the application.</span>
-        <span style="color:#808080;">///</span> <span style="color:#808080;">&lt;/summary&gt;</span>
-        [STAThread]
-        <span style="color:#0000FF;">static</span> <span style="color:#0000FF;">void</span> Main(<span style="color:#0000FF;">string</span>[] args) {
-            <span style="color:#008000;">//var settings = new CefSettings();</span>
-            <span style="color:#008000;">//settings.BrowserSubprocessPath = @&quot;x86\CefSharp.BrowserSubprocess.exe&quot;;</span>
-            <span style="color:#008000;">//Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);</span>
+<span class="token keyword">namespace</span> WinPrint <span class="token punctuation">{</span>
+    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">Program</span> <span class="token punctuation">{</span>
+        <span class="token comment">/// &lt;summary></span>
+        <span class="token comment">///  The main entry point for the application.</span>
+        <span class="token comment">/// &lt;/summary></span>
+        <span class="token punctuation">[</span><span class="token class-name">STAThread</span><span class="token punctuation">]</span>
+        <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">Main</span><span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token comment">//var settings = new CefSettings();</span>
+            <span class="token comment">//settings.BrowserSubprocessPath = @"x86CefSharp.BrowserSubprocess.exe";</span>
+            <span class="token comment">//Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);</span>
 
-            <span style="color:#0000FF;">if</span> (args.Length &gt; <span>0</span>) {
-                <span style="color:#0000FF;">var</span> parser = <span style="color:#0000FF;">new</span> Parser(with =&gt; with.EnableDashDash = <span style="color:#0000FF;">true</span>);
-                <span style="color:#0000FF;">var</span> result = parser.ParseArguments&lt;Options&gt;(args);
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">.</span>Length <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">var</span> parser <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Parser</span><span class="token punctuation">(</span>with <span class="token operator">=></span> with<span class="token punctuation">.</span>EnableDashDash <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">var</span> result <span class="token operator">=</span> parser<span class="token punctuation">.</span><span class="token generic-method"><span class="token function">ParseArguments</span><span class="token punctuation">&lt;</span><span class="token class-name">Options</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>args<span class="token punctuation">)</span><span class="token punctuation">;</span>
                 result
-                    .WithParsed&lt;Options&gt;(o =&gt; {
-                        <span style="color:#008000;">// copy Files</span>
-                        ModelLocator.Current.Options.Files = o.Files.ToList();
-                        ModelLocator.Current.Options.Landscape = o.Landscape;
-                        ModelLocator.Current.Options.Printer = o.Printer;
-                        ModelLocator.Current.Options.PaperSize = o.PaperSize;
-                        ModelLocator.Current.Options.Gui = o.Gui;
-                        <span style="color:#008000;">// TODO: Add other command line options supported by command line version</span>
-                    })
-                    .WithNotParsed((errs) =&gt; DisplayHelp(result, errs));
-                parser.Dispose();
-            }
+                    <span class="token punctuation">.</span><span class="token generic-method"><span class="token function">WithParsed</span><span class="token punctuation">&lt;</span><span class="token class-name">Options</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>o <span class="token operator">=></span> <span class="token punctuation">{</span>
+                        <span class="token comment">// copy Files</span>
+                        ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files <span class="token operator">=</span> o<span class="token punctuation">.</span>Files<span class="token punctuation">.</span><span class="token function">ToList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Landscape <span class="token operator">=</span> o<span class="token punctuation">.</span>Landscape<span class="token punctuation">;</span>
+                        ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Printer <span class="token operator">=</span> o<span class="token punctuation">.</span>Printer<span class="token punctuation">;</span>
+                        ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>PaperSize <span class="token operator">=</span> o<span class="token punctuation">.</span>PaperSize<span class="token punctuation">;</span>
+                        ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Gui <span class="token operator">=</span> o<span class="token punctuation">.</span>Gui<span class="token punctuation">;</span>
+                        <span class="token comment">// TODO: Add other command line options supported by command line version</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">)</span>
+                    <span class="token punctuation">.</span><span class="token function">WithNotParsed</span><span class="token punctuation">(</span><span class="token punctuation">(</span>errs<span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token function">DisplayHelp</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> errs<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                parser<span class="token punctuation">.</span><span class="token function">Dispose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
 
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(<span style="color:#0000FF;">false</span>);
+            Application<span class="token punctuation">.</span><span class="token function">SetHighDpiMode</span><span class="token punctuation">(</span>HighDpiMode<span class="token punctuation">.</span>SystemAware<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Application<span class="token punctuation">.</span><span class="token function">EnableVisualStyles</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Application<span class="token punctuation">.</span><span class="token function">SetCompatibleTextRenderingDefault</span><span class="token punctuation">(</span><span class="token keyword">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 
 
-<span style="color:#0000FF;">#pragma</span> warning disable CA2000 // Dispose objects before losing scope
-            Application.Run(<span style="color:#0000FF;">new</span> MainWindow());
-<span style="color:#0000FF;">#pragma</span> warning restore CA2000 // Dispose objects before losing scope
-        }
+<span class="token preprocessor property">#<span class="token directive keyword">pragma</span> warning disable CA2000 </span><span class="token comment">// Dispose objects before losing scope</span>
+            Application<span class="token punctuation">.</span><span class="token function">Run</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">MainWindow</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token preprocessor property">#<span class="token directive keyword">pragma</span> warning restore CA2000 </span><span class="token comment">// Dispose objects before losing scope</span>
+        <span class="token punctuation">}</span>
 
-        <span style="color:#0000FF;">static</span> <span style="color:#0000FF;">void</span> DisplayHelp&lt;T&gt;(ParserResult&lt;T&gt; result, IEnumerable&lt;Error&gt; errs) {
-            <span style="color:#0000FF;">var</span> helpText = HelpText.AutoBuild(result, h =&gt; {
-                h.AutoHelp = <span style="color:#0000FF;">true</span>;
-                h.AutoVersion = <span style="color:#0000FF;">true</span>;
-                <span style="color:#008000;">//h.AddPostOptionsLine(&quot;Files\tOne or more filenames of files to be printed.&quot;);</span>
-                <span style="color:#0000FF;">return</span> HelpText.DefaultParsingErrorsHandler(result, h);
-            }, e =&gt; e);
-            MessageBox.Show(helpText);
-            System.Environment.Exit(<span>0</span>);
-        }
-    }
-}
+        <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token generic-method"><span class="token function">DisplayHelp</span><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>ParserResult<span class="token operator">&lt;</span>T<span class="token operator">></span> result<span class="token punctuation">,</span> IEnumerable<span class="token operator">&lt;</span>Error<span class="token operator">></span> errs<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">var</span> helpText <span class="token operator">=</span> HelpText<span class="token punctuation">.</span><span class="token function">AutoBuild</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> h <span class="token operator">=></span> <span class="token punctuation">{</span>
+                h<span class="token punctuation">.</span>AutoHelp <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span>
+                h<span class="token punctuation">.</span>AutoVersion <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span>
+                <span class="token comment">//h.AddPostOptionsLine("Files	One or more filenames of files to be printed.");</span>
+                <span class="token keyword">return</span> HelpText<span class="token punctuation">.</span><span class="token function">DefaultParsingErrorsHandler</span><span class="token punctuation">(</span>result<span class="token punctuation">,</span> h<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span> e <span class="token operator">=></span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            MessageBox<span class="token punctuation">.</span><span class="token function">Show</span><span class="token punctuation">(</span>helpText<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            System<span class="token punctuation">.</span>Environment<span class="token punctuation">.</span><span class="token function">Exit</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
 
-</pre></div>
+</code></pre>
+</body></html>

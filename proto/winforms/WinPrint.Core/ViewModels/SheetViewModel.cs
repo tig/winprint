@@ -9,6 +9,7 @@ using Microsoft.Win32;
 using System.Collections.Generic;
 using ColorCode;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -202,30 +203,19 @@ namespace WinPrint.Core {
                 string document;
                 using StreamReader streamToPrint = new StreamReader(File);
                 switch (Type) {
+                    // html
                     case "text/html":
                         Content = ModelLocator.Current.Settings.HtmlFileSettings;
                         document = streamToPrint.ReadToEnd();
                         break;
 
-                    case "c#":
-                        Content = ModelLocator.Current.Settings.HtmlFileSettings;
-
-                        //var csharpstring = "public void Method()\n{\n}";
+                    // language supported by Prism
+                    case "csharp":
+                        Content = ModelLocator.Current.Settings.PrismFileSettings;
                         document = streamToPrint.ReadToEnd();
-
-#if USE_COLORCODE
-                        var formatter = new HtmlFormatter();
-                        var language = ColorCode.Languages.FindById(Type);
-                        document = formatter.GetHtmlString(document, language);
-                        StreamWriter w = new StreamWriter(File + "_.html");
-                        w.Write(document);
-                        w.Close();
-#endif
-
-
-
                         break;
 
+                    // plaintext
                     default:
                         Content = ModelLocator.Current.Settings.TextFileSettings;
                         document = streamToPrint.ReadToEnd();
@@ -236,7 +226,7 @@ namespace WinPrint.Core {
                 Content.PropertyChanged += OnContentPropertyChanged();
 
                 Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                Content.CountPages(document, PrinterResolution);
+                Content.Render(document, File, PrinterResolution);
             }
             else {
                 //    // Create a dummmy for preview with no file
@@ -246,6 +236,7 @@ namespace WinPrint.Core {
             }
         }
 
+ 
         private void ClearCache() {
             Debug.WriteLine("SheetViewModel.ClearCache");
             foreach (var i in cachedSheets) {
@@ -673,7 +664,7 @@ namespace WinPrint.Core {
             }
 
             if (ext == ".cs")
-                mimeType = "c#";
+                mimeType = "csharp";
 
             return mimeType;
         }
