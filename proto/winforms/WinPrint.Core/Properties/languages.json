@@ -3,44 +3,47 @@
     "*.markup": "markup",
     "*.css": "css",
     "*.clike": "clike",
-    "*.js": "jsx",
-    "*._js": "jsx",
-    "*.bones": "jsx",
-    "*.es6": "jsx",
-    "*.frag": "jsx",
-    "*.gs": "jsx",
-    "*.jake": "jsx",
-    "*.jsb": "jsx",
-    "*.jsfl": "jsx",
-    "*.jsm": "jsx",
-    "*.jss": "jsx",
-    "*.jsx": "jsx",
-    "*.njs": "jsx",
-    "*.pac": "jsx",
-    "*.sjs": "jsx",
-    "*.ssjs": "jsx",
-    "*.sublime-build": "jsx",
-    "*.sublime-commands": "jsx",
-    "*.sublime-completions": "jsx",
-    "*.sublime-keymap": "jsx",
-    "*.sublime-macro": "jsx",
-    "*.sublime-menu": "jsx",
-    "*.sublime-mousemap": "jsx",
-    "*.sublime-project": "jsx",
-    "*.sublime-settings": "jsx",
-    "*.sublime-theme": "jsx",
-    "*.sublime-workspace": "jsx",
-    "*.sublime_metrics": "jsx",
-    "*.sublime_session": "jsx",
-    "*.xsjs": "jsx",
-    "*.xsjslib": "jsx",
+    "*.c-like": "clike",
+    "*.js": "javascript",
+    "*._js": "javascript",
+    "*.bones": "javascript",
+    "*.es6": "javascript",
+    "*.frag": "javascript",
+    "*.gs": "javascript",
+    "*.jake": "javascript",
+    "*.jsb": "javascript",
+    "*.jsfl": "javascript",
+    "*.jsm": "javascript",
+    "*.jss": "javascript",
+    "*.jsx": "javascript",
+    "*.njs": "javascript",
+    "*.pac": "javascript",
+    "*.sjs": "javascript",
+    "*.ssjs": "javascript",
+    "*.sublime-build": "javascript",
+    "*.sublime-commands": "javascript",
+    "*.sublime-completions": "javascript",
+    "*.sublime-keymap": "javascript",
+    "*.sublime-macro": "javascript",
+    "*.sublime-menu": "javascript",
+    "*.sublime-mousemap": "javascript",
+    "*.sublime-project": "javascript",
+    "*.sublime-settings": "javascript",
+    "*.sublime-theme": "javascript",
+    "*.sublime-workspace": "javascript",
+    "*.sublime_metrics": "javascript",
+    "*.sublime_session": "javascript",
+    "*.xsjs": "javascript",
+    "*.xsjslib": "javascript",
     "*.abap": "abap",
     "*.abnf": "abnf",
+    "*.augmented backus–naur form": "abnf",
     "*.as": "actionscript",
     "*.adb": "ada",
     "*.ada": "ada",
     "*.ads": "ada",
     "*.apacheconf": "apacheconf",
+    "*.apache configuration": "apacheconf",
     "*.apl": "apl",
     "*.dyalog": "apl",
     "*.applescript": "applescript",
@@ -51,16 +54,18 @@
     "*.adoc": "asciidoc",
     "*.asc": "asciidoc",
     "*.asm6502": "asm6502",
+    "*.6502 assembly": "asm6502",
     "*.aspnet": "aspnet",
+    "*.asp.net (c#)": "aspnet",
     "*.ahk": "autohotkey",
     "*.ahkl": "autohotkey",
     "*.au3": "autoit",
     "*.sh": "bash",
     "*.bash": "bash",
     "*.bats": "bash",
-    "*.cgi": "python",
+    "*.cgi": "bash",
     "*.command": "bash",
-    "*.fcgi": "ruby",
+    "*.fcgi": "bash",
     "*.ksh": "bash",
     "*.tmux": "bash",
     "*.tool": "bash",
@@ -69,15 +74,19 @@
     "*.batch": "batch",
     "*.y": "bison",
     "*.bnf": "bnf",
+    "*.backus–naur form": "bnf",
     "*.b": "brainfuck",
     "*.bf": "brainfuck",
     "*.bro": "bro",
     "*.c": "c",
     "*.cats": "c",
-    "*.h": "cpp",
+    "*.h": "c",
     "*.idc": "c",
     "*.w": "c",
     "*.csharp": "csharp",
+    "*.cs": "csharp",
+    "*.cshtml": "csharp",
+    "*.csx": "csharp",
     "*.cpp": "cpp",
     "*.c++": "cpp",
     "*.cc": "cpp",
@@ -110,16 +119,21 @@
     "*.hic": "clojure",
     "*.cr": "crystal",
     "*.csp": "csp",
+    "*.content-security-policy": "csp",
     "*.css-extras": "css-extras",
-    "*.d": "makefile",
+    "*.css extras": "css-extras",
+    "*.d": "d",
     "*.di": "d",
     "*.dart": "dart",
     "*.diff": "diff",
     "*.patch": "diff",
     "*.django": "django",
+    "*.django/jinja2": "django",
     "*.dns-zone-file": "dns-zone-file",
+    "*.dns zone file": "dns-zone-file",
     "*.docker": "docker",
     "*.ebnf": "ebnf",
+    "*.extended backus–naur form": "ebnf",
     "*.e": "eiffel",
     "*.ejs": "ejs",
     "*.ex": "elixir",
@@ -132,6 +146,9 @@
     "*.escript": "erlang",
     "*.hrl": "erlang",
     "*.fsharp": "fsharp",
+    "*.fs": "fsharp",
+    "*.fsi": "fsharp",
+    "*.fsx": "fsharp",
     "*.flow": "flow",
     "*.f90": "fortran",
     "*.f": "fortran",
@@ -150,7 +167,6 @@
     "*.glsl": "glsl",
     "*.fp": "glsl",
     "*.frg": "glsl",
-    "*.fs": "glsl",
     "*.fshader": "glsl",
     "*.geo": "glsl",
     "*.geom": "glsl",
@@ -161,6 +177,7 @@
     "*.vrx": "glsl",
     "*.vshader": "glsl",
     "*.gml": "gml",
+    "*.gamemaker language": "gml",
     "*.go": "go",
     "*.graphql": "graphql",
     "*.groovy": "groovy",
@@ -178,26 +195,34 @@
     "*.hcl": "hcl",
     "*.http": "http",
     "*.hpkp": "hpkp",
+    "*.http public-key-pins": "hpkp",
     "*.hsts": "hsts",
+    "*.http strict-transport-security": "hsts",
     "*.ichigojam": "ichigojam",
     "*.icon": "icon",
     "*.inform7": "inform7",
-    "*.ini": "properties",
-    "*.cfg": "properties",
-    "*.prefs": "properties",
-    "*.pro": "properties",
-    "*.properties": "properties",
+    "*.ni": "inform7",
+    "*.i7x": "inform7",
+    "*.ini": "ini",
+    "*.cfg": "ini",
+    "*.prefs": "ini",
+    "*.pro": "ini",
+    "*.properties": "ini",
     "*.io": "io",
     "*.ijs": "j",
     "*.java": "java",
     "*.javadoc": "javadoc",
     "*.javadoclike": "javadoclike",
+    "*.javadoc-like": "javadoclike",
     "*.javastacktrace": "javastacktrace",
+    "*.java stack trace": "javastacktrace",
     "*.jolie": "jolie",
     "*.jq": "jq",
     "*.jsdoc": "jsdoc",
     "*.js-extras": "js-extras",
+    "*.js extras": "js-extras",
     "*.js-templates": "js-templates",
+    "*.js templates": "js-templates",
     "*.json": "json",
     "*.lock": "json",
     "*.jsonp": "jsonp",
@@ -230,6 +255,7 @@
     "*.mkdown": "markdown",
     "*.ron": "markdown",
     "*.markup-templating": "markup-templating",
+    "*.markup templating": "markup-templating",
     "*.matlab": "matlab",
     "*.m": "matlab",
     "*.mel": "mel",
@@ -238,6 +264,7 @@
     "*.n1ql": "n1ql",
     "*.n4js": "n4js",
     "*.nand2tetris-hdl": "nand2tetris-hdl",
+    "*.nand to tetris hdl": "nand2tetris-hdl",
     "*.asm": "nasm",
     "*.a51": "nasm",
     "*.nasm": "nasm",
@@ -259,15 +286,17 @@
     "*.opencl": "opencl",
     "*.oz": "oz",
     "*.parigp": "parigp",
+    "*.pari/gp": "parigp",
     "*.parser": "parser",
     "*.pas": "pascal",
     "*.dfm": "pascal",
     "*.dpr": "pascal",
     "*.lpr": "pascal",
-    "*.pp": "puppet",
+    "*.pp": "pascal",
     "*.pascaligo": "pascaligo",
     "*.pcaxis": "pcaxis",
-    "*.pl": "prolog",
+    "*.pc-axis": "pcaxis",
+    "*.pl": "perl",
     "*.perl": "perl",
     "*.ph": "perl",
     "*.plx": "perl",
@@ -284,12 +313,14 @@
     "*.phpt": "php",
     "*.phpdoc": "phpdoc",
     "*.php-extras": "php-extras",
+    "*.php extras": "php-extras",
     "*.pls": "plsql",
     "*.pkb": "plsql",
     "*.pks": "plsql",
     "*.plb": "plsql",
     "*.plsql": "plsql",
-    "*.sql": "sql",
+    "*.sql": "plsql",
+    "*.pl/sql": "plsql",
     "*.ps1": "powershell",
     "*.psd1": "powershell",
     "*.psm1": "powershell",
@@ -297,6 +328,7 @@
     "*.ecl": "prolog",
     "*.prolog": "prolog",
     "*.protobuf": "protobuf",
+    "*.protocol buffers": "protobuf",
     "*.pug": "pug",
     "*.pure": "pure",
     "*.py": "python",
@@ -310,16 +342,21 @@
     "*.wsgi": "python",
     "*.xpy": "python",
     "*.q": "q",
+    "*.q (kdb+ database)": "q",
     "*.qore": "qore",
     "*.r": "r",
     "*.rd": "r",
     "*.rsx": "r",
+    "*.react jsx": "jsx",
     "*.tsx": "tsx",
+    "*.react tsx": "tsx",
     "*.renpy": "renpy",
+    "*.ren'py": "renpy",
     "*.reason": "reason",
     "*.regex": "regex",
     "*.rst": "rest",
     "*.rest": "rest",
+    "*.rest (restructuredtext)": "rest",
     "*.rip": "rip",
     "*.roboconf": "roboconf",
     "*.rb": "ruby",
@@ -343,7 +380,9 @@
     "*.rs": "rust",
     "*.sas": "sas",
     "*.sass": "sass",
+    "*.sass (sass)": "sass",
     "*.scss": "scss",
+    "*.sass (scss)": "scss",
     "*.scala": "scala",
     "*.sbt": "scala",
     "*.sc": "scala",
@@ -353,11 +392,13 @@
     "*.sps": "scheme",
     "*.ss": "scheme",
     "*.shell-session": "shell-session",
+    "*.shell session": "shell-session",
     "*.st": "smalltalk",
-    "*.cs": "smalltalk",
     "*.tpl": "smarty",
     "*.soy": "soy",
+    "*.soy (closure template)": "soy",
     "*.splunk-spl": "splunk-spl",
+    "*.splunk spl": "splunk-spl",
     "*.cql": "sql",
     "*.ddl": "sql",
     "*.prc": "sql",
@@ -373,14 +414,19 @@
     "*.textile": "textile",
     "*.toml": "toml",
     "*.tt2": "tt2",
+    "*.template toolkit 2": "tt2",
     "*.twig": "twig",
     "*.ts": "typescript",
     "*.t4-cs": "t4-cs",
+    "*.t4 text templates (c#)": "t4-cs",
     "*.t4-vb": "t4-vb",
+    "*.t4 text templates (vb)": "t4-vb",
     "*.t4-templating": "t4-templating",
+    "*.t4 templating": "t4-templating",
     "*.vala": "vala",
     "*.vapi": "vala",
     "*.vbnet": "vbnet",
+    "*.vb.net": "vbnet",
     "*.velocity": "velocity",
     "*.v": "verilog",
     "*.veo": "verilog",
@@ -394,8 +440,18 @@
     "*.vhw": "vhdl",
     "*.vim": "vim",
     "*.visual-basic": "visual-basic",
+    "*.vb": "visual-basic",
+    "*.bas": "visual-basic",
+    "*.cls": "visual-basic",
+    "*.frm": "visual-basic",
+    "*.frx": "visual-basic",
+    "*.vba": "visual-basic",
+    "*.vbhtml": "visual-basic",
+    "*.vbs": "visual-basic",
     "*.wasm": "wasm",
+    "*.webassembly": "wasm",
     "*.wiki": "wiki",
+    "*.wiki markup": "wiki",
     "*.xeora": "xeora",
     "*.xojo_code": "xojo",
     "*.xojo_menu": "xojo",
@@ -403,6 +459,7 @@
     "*.xojo_script": "xojo",
     "*.xojo_toolbar": "xojo",
     "*.xojo_window": "xojo",
+    "*.xojo (realbasic)": "xojo",
     "*.xquery": "xquery",
     "*.xq": "xquery",
     "*.xql": "xquery",
@@ -438,7 +495,8 @@
       "id": "clike",
       "title": "C-like",
       "extensions": [
-        ".clike"
+        ".clike",
+        ".c-like"
       ]
     },
     {
@@ -492,7 +550,8 @@
       "id": "abnf",
       "title": "Augmented Backus–Naur form",
       "extensions": [
-        ".abnf"
+        ".abnf",
+        ".augmented backus–naur form"
       ]
     },
     {
@@ -515,7 +574,8 @@
       "id": "apacheconf",
       "title": "Apache Configuration",
       "extensions": [
-        ".apacheconf"
+        ".apacheconf",
+        ".apache configuration"
       ]
     },
     {
@@ -564,14 +624,16 @@
       "id": "asm6502",
       "title": "6502 Assembly",
       "extensions": [
-        ".asm6502"
+        ".asm6502",
+        ".6502 assembly"
       ]
     },
     {
       "id": "aspnet",
       "title": "ASP.NET (C#)",
       "extensions": [
-        ".aspnet"
+        ".aspnet",
+        ".asp.net (c#)"
       ]
     },
     {
@@ -636,7 +698,8 @@
         ".rbnf"
       ],
       "extensions": [
-        ".bnf"
+        ".bnf",
+        ".backus–naur form"
       ]
     },
     {
@@ -673,7 +736,10 @@
         "dotnet"
       ],
       "extensions": [
-        ".csharp"
+        ".csharp",
+        ".cs",
+        ".cshtml",
+        ".csx"
       ]
     },
     {
@@ -751,14 +817,16 @@
       "id": "csp",
       "title": "Content-Security-Policy",
       "extensions": [
-        ".csp"
+        ".csp",
+        ".content-security-policy"
       ]
     },
     {
       "id": "css-extras",
       "title": "CSS Extras",
       "extensions": [
-        ".css-extras"
+        ".css-extras",
+        ".css extras"
       ]
     },
     {
@@ -791,7 +859,8 @@
         ".jinja2"
       ],
       "extensions": [
-        ".django"
+        ".django",
+        ".django/jinja2"
       ]
     },
     {
@@ -801,7 +870,8 @@
         ".dns-zone"
       ],
       "extensions": [
-        ".dns-zone-file"
+        ".dns-zone-file",
+        ".dns zone file"
       ]
     },
     {
@@ -818,7 +888,8 @@
       "id": "ebnf",
       "title": "Extended Backus–Naur form",
       "extensions": [
-        ".ebnf"
+        ".ebnf",
+        ".extended backus–naur form"
       ]
     },
     {
@@ -872,7 +943,10 @@
       "id": "fsharp",
       "title": "F#",
       "extensions": [
-        ".fsharp"
+        ".fsharp",
+        ".fs",
+        ".fsi",
+        ".fsx"
       ]
     },
     {
@@ -953,7 +1027,8 @@
         ".gamemakerlanguage"
       ],
       "extensions": [
-        ".gml"
+        ".gml",
+        ".gamemaker language"
       ]
     },
     {
@@ -1033,14 +1108,16 @@
       "id": "hpkp",
       "title": "HTTP Public-Key-Pins",
       "extensions": [
-        ".hpkp"
+        ".hpkp",
+        ".http public-key-pins"
       ]
     },
     {
       "id": "hsts",
       "title": "HTTP Strict-Transport-Security",
       "extensions": [
-        ".hsts"
+        ".hsts",
+        ".http strict-transport-security"
       ]
     },
     {
@@ -1061,7 +1138,9 @@
       "id": "inform7",
       "title": "Inform 7",
       "extensions": [
-        ".inform7"
+        ".inform7",
+        ".ni",
+        ".i7x"
       ]
     },
     {
@@ -1107,14 +1186,16 @@
       "id": "javadoclike",
       "title": "JavaDoc-like",
       "extensions": [
-        ".javadoclike"
+        ".javadoclike",
+        ".javadoc-like"
       ]
     },
     {
       "id": "javastacktrace",
       "title": "Java stack trace",
       "extensions": [
-        ".javastacktrace"
+        ".javastacktrace",
+        ".java stack trace"
       ]
     },
     {
@@ -1142,14 +1223,16 @@
       "id": "js-extras",
       "title": "JS Extras",
       "extensions": [
-        ".js-extras"
+        ".js-extras",
+        ".js extras"
       ]
     },
     {
       "id": "js-templates",
       "title": "JS Templates",
       "extensions": [
-        ".js-templates"
+        ".js-templates",
+        ".js templates"
       ]
     },
     {
@@ -1300,7 +1383,8 @@
       "id": "markup-templating",
       "title": "Markup templating",
       "extensions": [
-        ".markup-templating"
+        ".markup-templating",
+        ".markup templating"
       ]
     },
     {
@@ -1353,7 +1437,8 @@
       "id": "nand2tetris-hdl",
       "title": "Nand To Tetris HDL",
       "extensions": [
-        ".nand2tetris-hdl"
+        ".nand2tetris-hdl",
+        ".nand to tetris hdl"
       ]
     },
     {
@@ -1399,7 +1484,9 @@
       "id": "objectivec",
       "title": "Objective-C",
       "extensions": [
-        ".objectivec"
+        ".objectivec",
+        ".m",
+        ".h"
       ]
     },
     {
@@ -1434,7 +1521,8 @@
       "id": "parigp",
       "title": "PARI/GP",
       "extensions": [
-        ".parigp"
+        ".parigp",
+        ".pari/gp"
       ]
     },
     {
@@ -1472,7 +1560,8 @@
         ".px"
       ],
       "extensions": [
-        ".pcaxis"
+        ".pcaxis",
+        ".pc-axis"
       ]
     },
     {
@@ -1516,7 +1605,8 @@
       "id": "php-extras",
       "title": "PHP Extras",
       "extensions": [
-        ".php-extras"
+        ".php-extras",
+        ".php extras"
       ]
     },
     {
@@ -1528,7 +1618,8 @@
         ".pks",
         ".plb",
         ".plsql",
-        ".sql"
+        ".sql",
+        ".pl/sql"
       ]
     },
     {
@@ -1572,7 +1663,8 @@
       "id": "protobuf",
       "title": "Protocol Buffers",
       "extensions": [
-        ".protobuf"
+        ".protobuf",
+        ".protocol buffers"
       ]
     },
     {
@@ -1621,7 +1713,8 @@
       "id": "q",
       "title": "Q (kdb+ database)",
       "extensions": [
-        ".q"
+        ".q",
+        ".q (kdb+ database)"
       ]
     },
     {
@@ -1674,21 +1767,24 @@
         ".sublime_metrics",
         ".sublime_session",
         ".xsjs",
-        ".xsjslib"
+        ".xsjslib",
+        ".react jsx"
       ]
     },
     {
       "id": "tsx",
       "title": "React TSX",
       "extensions": [
-        ".tsx"
+        ".tsx",
+        ".react tsx"
       ]
     },
     {
       "id": "renpy",
       "title": "Ren'py",
       "extensions": [
-        ".renpy"
+        ".renpy",
+        ".ren'py"
       ]
     },
     {
@@ -1710,7 +1806,8 @@
       "title": "reST (reStructuredText)",
       "extensions": [
         ".rst",
-        ".rest"
+        ".rest",
+        ".rest (restructuredtext)"
       ]
     },
     {
@@ -1773,14 +1870,16 @@
       "id": "sass",
       "title": "Sass (Sass)",
       "extensions": [
-        ".sass"
+        ".sass",
+        ".sass (sass)"
       ]
     },
     {
       "id": "scss",
       "title": "Sass (Scss)",
       "extensions": [
-        ".scss"
+        ".scss",
+        ".sass (scss)"
       ]
     },
     {
@@ -1807,7 +1906,8 @@
       "id": "shell-session",
       "title": "Shell session",
       "extensions": [
-        ".shell-session"
+        ".shell-session",
+        ".shell session"
       ]
     },
     {
@@ -1829,14 +1929,16 @@
       "id": "soy",
       "title": "Soy (Closure Template)",
       "extensions": [
-        ".soy"
+        ".soy",
+        ".soy (closure template)"
       ]
     },
     {
       "id": "splunk-spl",
       "title": "Splunk SPL",
       "extensions": [
-        ".splunk-spl"
+        ".splunk-spl",
+        ".splunk spl"
       ]
     },
     {
@@ -1900,7 +2002,8 @@
       "id": "tt2",
       "title": "Template Toolkit 2",
       "extensions": [
-        ".tt2"
+        ".tt2",
+        ".template toolkit 2"
       ]
     },
     {
@@ -1927,21 +2030,24 @@
         ".t4"
       ],
       "extensions": [
-        ".t4-cs"
+        ".t4-cs",
+        ".t4 text templates (c#)"
       ]
     },
     {
       "id": "t4-vb",
       "title": "T4 Text Templates (VB)",
       "extensions": [
-        ".t4-vb"
+        ".t4-vb",
+        ".t4 text templates (vb)"
       ]
     },
     {
       "id": "t4-templating",
       "title": "T4 templating",
       "extensions": [
-        ".t4-templating"
+        ".t4-templating",
+        ".t4 templating"
       ]
     },
     {
@@ -1956,7 +2062,8 @@
       "id": "vbnet",
       "title": "VB.Net",
       "extensions": [
-        ".vbnet"
+        ".vbnet",
+        ".vb.net"
       ]
     },
     {
@@ -2002,21 +2109,31 @@
         ".vb"
       ],
       "extensions": [
-        ".visual-basic"
+        ".visual-basic",
+        ".vb",
+        ".bas",
+        ".cls",
+        ".frm",
+        ".frx",
+        ".vba",
+        ".vbhtml",
+        ".vbs"
       ]
     },
     {
       "id": "wasm",
       "title": "WebAssembly",
       "extensions": [
-        ".wasm"
+        ".wasm",
+        ".webassembly"
       ]
     },
     {
       "id": "wiki",
       "title": "Wiki markup",
       "extensions": [
-        ".wiki"
+        ".wiki",
+        ".wiki markup"
       ]
     },
     {
@@ -2038,7 +2155,8 @@
         ".xojo_report",
         ".xojo_script",
         ".xojo_toolbar",
-        ".xojo_window"
+        ".xojo_window",
+        ".xojo (realbasic)"
       ]
     },
     {

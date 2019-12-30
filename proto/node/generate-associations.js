@@ -30,17 +30,32 @@ for (var key in components.languages) {
             }
         }
         var extensions = [];
-        map.extensions(key).forEach(ext =>{
-            // Add it to the extnsions for this langauge defn
-            extensions.push('.' + ext);
+        // get lang to extension mapping from lang-map using key
+        if (map.extensions(key).length > 0){
+            map.extensions(key).forEach(ext =>{
+                // Add it to the extensions for this language defn
 
-            // also add it to the files.associations dictionary
-            var pattern = '*.' + ext;
-            var assoc = { 
-                pattern : key
-            };
-            assocDict[pattern] = key;
-        });
+                if (extensions.find(element => element == '.' + ext) == undefined)
+                    extensions.push('.' + ext);
+
+                // also add it to the files.associations dictionary
+                var pattern = '*.' + ext;
+                if (assocDict[pattern] == undefined)
+                    assocDict[pattern] = key;
+            });
+        }
+        if (typeof langTemp.title != 'undefined'){
+            map.extensions(langTemp.title).forEach(ext =>{
+                // Add it to the extensions for this langauge defn
+                if (extensions.find(element => element == '.' + ext) == undefined)
+                    extensions.push('.' + ext);
+
+                // also add it to the files.associations dictionary
+                var pattern = '*.' + ext;
+                if (assocDict[pattern] == undefined)
+                    assocDict[pattern] = key;
+            });
+        }
         langTemp.extensions = extensions;
         languages.push(langTemp);
     }
