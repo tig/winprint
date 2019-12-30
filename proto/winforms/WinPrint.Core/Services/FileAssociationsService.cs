@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Win32;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core.Services {
@@ -62,5 +63,64 @@ namespace WinPrint.Core.Services {
 
             return associations;
         }
+
+        //    internal static string GetDocType() {
+
+        //        string ext = Path.GetExtension(File);
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.Command, ext), "Command");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
+        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
+
+        //        //return Native.FileExtentionInfo(Native.AssocStr.FriendlyDocName, ext);
+
+        //        string mimeType = "application/unknown";
+
+        //        RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(Path.GetExtension(file).ToLower());
+
+        //        if (regKey != null) {
+        //            object contentType = regKey.GetValue("Content Type");
+
+        //            if (contentType != null)
+        //                mimeType = contentType.ToString();
+        //        }
+
+        //        if (ext == ".cs")
+        //            mimeType = "csharp";
+
+        //        return mimeType;
+        //    }
+
+
+        //    ///// <summary>
+        //    ///// The main entry point for the application.
+        //    ///// </summary>
+        //    //[STAThread]
+        //    //static void Main() {
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.Command, ext), "Command");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
+        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
+
+        //    //    //  DDEApplication: WinWord
+        //    //    //DDEIfExec: Ñﻴ߾
+        //    //    //  DDETopic: System
+        //    //    //  Executable: C:\Program Files (x86)\Microsoft Office\Office12\WINWORD.EXE
+        //    //    //  FriendlyAppName: Microsoft Office Word
+        //    //    //  FriendlyDocName: Microsoft Office Word 97 - 2003 Document
+
+
+        //    //}
+        //}
     }
 }

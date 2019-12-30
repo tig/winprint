@@ -1,6 +1,82 @@
 {
   "files.associations": {
     "*.markup": "markup",
+    "*.html": "markup",
+    "*.htm": "markup",
+    "*.html.hl": "markup",
+    "*.st": "markup",
+    "*.xht": "markup",
+    "*.xhtml": "markup",
+    "*.xml": "markup",
+    "*.ant": "markup",
+    "*.axml": "markup",
+    "*.ccxml": "markup",
+    "*.clixml": "markup",
+    "*.cproject": "markup",
+    "*.csproj": "markup",
+    "*.ct": "markup",
+    "*.dita": "markup",
+    "*.ditamap": "markup",
+    "*.ditaval": "markup",
+    "*.dll.config": "markup",
+    "*.filters": "markup",
+    "*.fsproj": "markup",
+    "*.fxml": "markup",
+    "*.glade": "markup",
+    "*.grxml": "markup",
+    "*.ivy": "markup",
+    "*.jelly": "markup",
+    "*.kml": "markup",
+    "*.launch": "markup",
+    "*.mm": "markup",
+    "*.mxml": "markup",
+    "*.nproj": "markup",
+    "*.nuspec": "markup",
+    "*.odd": "markup",
+    "*.osm": "markup",
+    "*.plist": "markup",
+    "*.pluginspec": "markup",
+    "*.ps1xml": "markup",
+    "*.psc1": "markup",
+    "*.pt": "markup",
+    "*.rdf": "markup",
+    "*.rss": "markup",
+    "*.scxml": "markup",
+    "*.srdf": "markup",
+    "*.storyboard": "markup",
+    "*.stTheme": "markup",
+    "*.sublime-snippet": "markup",
+    "*.targets": "markup",
+    "*.tmCommand": "markup",
+    "*.tml": "markup",
+    "*.tmLanguage": "markup",
+    "*.tmPreferences": "markup",
+    "*.tmSnippet": "markup",
+    "*.tmTheme": "markup",
+    "*.ts": "markup",
+    "*.ui": "markup",
+    "*.urdf": "markup",
+    "*.vbproj": "markup",
+    "*.vcxproj": "markup",
+    "*.vxml": "markup",
+    "*.wsdl": "markup",
+    "*.wsf": "markup",
+    "*.wxi": "markup",
+    "*.wxl": "markup",
+    "*.wxs": "markup",
+    "*.x3d": "markup",
+    "*.xacro": "markup",
+    "*.xaml": "markup",
+    "*.xib": "markup",
+    "*.xlf": "markup",
+    "*.xliff": "markup",
+    "*.xmi": "markup",
+    "*.xml.dist": "markup",
+    "*.xsd": "markup",
+    "*.xul": "markup",
+    "*.zcml": "markup",
+    "*.svg": "markup",
+    "*.mathml": "markup",
     "*.css": "css",
     "*.clike": "clike",
     "*.c-like": "clike",
@@ -75,6 +151,7 @@
     "*.y": "bison",
     "*.bnf": "bnf",
     "*.backus–naur form": "bnf",
+    "*.rbnf": "bnf",
     "*.b": "brainfuck",
     "*.bf": "brainfuck",
     "*.bro": "bro",
@@ -87,6 +164,7 @@
     "*.cs": "csharp",
     "*.cshtml": "csharp",
     "*.csx": "csharp",
+    "*.dotnet": "csharp",
     "*.cpp": "cpp",
     "*.c++": "cpp",
     "*.cc": "cpp",
@@ -129,9 +207,12 @@
     "*.patch": "diff",
     "*.django": "django",
     "*.django/jinja2": "django",
+    "*.jinja2": "django",
     "*.dns-zone-file": "dns-zone-file",
     "*.dns zone file": "dns-zone-file",
+    "*.dns-zone": "dns-zone-file",
     "*.docker": "docker",
+    "*.dockerfile": "docker",
     "*.ebnf": "ebnf",
     "*.extended backus–naur form": "ebnf",
     "*.e": "eiffel",
@@ -178,6 +259,7 @@
     "*.vshader": "glsl",
     "*.gml": "gml",
     "*.gamemaker language": "gml",
+    "*.gamemakerlanguage": "gml",
     "*.go": "go",
     "*.graphql": "graphql",
     "*.groovy": "groovy",
@@ -233,11 +315,32 @@
     "*.ktm": "kotlin",
     "*.kts": "kotlin",
     "*.latex": "latex",
+    "*.tex": "latex",
+    "*.aux": "latex",
+    "*.bbx": "latex",
+    "*.bib": "latex",
+    "*.cbx": "latex",
+    "*.cls": "latex",
+    "*.dtx": "latex",
+    "*.ins": "latex",
+    "*.lbx": "latex",
+    "*.ltx": "latex",
+    "*.mkii": "latex",
+    "*.mkiv": "latex",
+    "*.mkvi": "latex",
+    "*.sty": "latex",
+    "*.toc": "latex",
+    "*.context": "latex",
     "*.less": "less",
     "*.ly": "lilypond",
     "*.ily": "lilypond",
     "*.liquid": "liquid",
     "*.lisp": "lisp",
+    "*.el": "lisp",
+    "*.emacs": "lisp",
+    "*.emacs.desktop": "lisp",
+    "*.elisp": "lisp",
+    "*.emacs-lisp": "lisp",
     "*.ls": "livescript",
     "*._ls": "livescript",
     "*.lol": "lolcode",
@@ -263,6 +366,7 @@
     "*.monkey": "monkey",
     "*.n1ql": "n1ql",
     "*.n4js": "n4js",
+    "*.n4jsd": "n4js",
     "*.nand2tetris-hdl": "nand2tetris-hdl",
     "*.nand to tetris hdl": "nand2tetris-hdl",
     "*.asm": "nasm",
@@ -293,9 +397,11 @@
     "*.dpr": "pascal",
     "*.lpr": "pascal",
     "*.pp": "pascal",
+    "*.objectpascal": "pascal",
     "*.pascaligo": "pascaligo",
     "*.pcaxis": "pcaxis",
     "*.pc-axis": "pcaxis",
+    "*.px": "pcaxis",
     "*.pl": "perl",
     "*.perl": "perl",
     "*.ph": "perl",
@@ -366,7 +472,6 @@
     "*.irbrc": "ruby",
     "*.jbuilder": "ruby",
     "*.mspec": "ruby",
-    "*.pluginspec": "ruby",
     "*.podspec": "ruby",
     "*.rabl": "ruby",
     "*.rake": "ruby",
@@ -393,7 +498,6 @@
     "*.ss": "scheme",
     "*.shell-session": "shell-session",
     "*.shell session": "shell-session",
-    "*.st": "smalltalk",
     "*.tpl": "smarty",
     "*.soy": "soy",
     "*.soy (closure template)": "soy",
@@ -416,9 +520,9 @@
     "*.tt2": "tt2",
     "*.template toolkit 2": "tt2",
     "*.twig": "twig",
-    "*.ts": "typescript",
     "*.t4-cs": "t4-cs",
     "*.t4 text templates (c#)": "t4-cs",
+    "*.t4": "t4-cs",
     "*.t4-vb": "t4-vb",
     "*.t4 text templates (vb)": "t4-vb",
     "*.t4-templating": "t4-templating",
@@ -442,7 +546,6 @@
     "*.visual-basic": "visual-basic",
     "*.vb": "visual-basic",
     "*.bas": "visual-basic",
-    "*.cls": "visual-basic",
     "*.frm": "visual-basic",
     "*.frx": "visual-basic",
     "*.vba": "visual-basic",
@@ -453,6 +556,7 @@
     "*.wiki": "wiki",
     "*.wiki markup": "wiki",
     "*.xeora": "xeora",
+    "*.xeoracube": "xeora",
     "*.xojo_code": "xojo",
     "*.xojo_menu": "xojo",
     "*.xojo_report": "xojo",
@@ -473,19 +577,96 @@
   "languages": [
     {
       "id": "markup",
-      "title": "Markup",
       "aliases": [
         "html",
         "xml",
         "svg",
         "mathml"
       ],
+      "title": "Markup",
       "extensions": [
-        ".markup"
+        ".markup",
+        ".html",
+        ".htm",
+        ".html.hl",
+        ".st",
+        ".xht",
+        ".xhtml",
+        ".xml",
+        ".ant",
+        ".axml",
+        ".ccxml",
+        ".clixml",
+        ".cproject",
+        ".csproj",
+        ".ct",
+        ".dita",
+        ".ditamap",
+        ".ditaval",
+        ".dll.config",
+        ".filters",
+        ".fsproj",
+        ".fxml",
+        ".glade",
+        ".grxml",
+        ".ivy",
+        ".jelly",
+        ".kml",
+        ".launch",
+        ".mm",
+        ".mxml",
+        ".nproj",
+        ".nuspec",
+        ".odd",
+        ".osm",
+        ".plist",
+        ".pluginspec",
+        ".ps1xml",
+        ".psc1",
+        ".pt",
+        ".rdf",
+        ".rss",
+        ".scxml",
+        ".srdf",
+        ".storyboard",
+        ".stTheme",
+        ".sublime-snippet",
+        ".targets",
+        ".tmCommand",
+        ".tml",
+        ".tmLanguage",
+        ".tmPreferences",
+        ".tmSnippet",
+        ".tmTheme",
+        ".ts",
+        ".ui",
+        ".urdf",
+        ".vbproj",
+        ".vcxproj",
+        ".vxml",
+        ".wsdl",
+        ".wsf",
+        ".wxi",
+        ".wxl",
+        ".wxs",
+        ".x3d",
+        ".xacro",
+        ".xaml",
+        ".xib",
+        ".xlf",
+        ".xliff",
+        ".xmi",
+        ".xml.dist",
+        ".xsd",
+        ".xul",
+        ".zcml",
+        ".svg",
+        ".mathml"
       ]
     },
     {
       "id": "css",
+      "aliases": [],
       "title": "CSS",
       "extensions": [
         ".css"
@@ -493,6 +674,7 @@
     },
     {
       "id": "clike",
+      "aliases": [],
       "title": "C-like",
       "extensions": [
         ".clike",
@@ -501,10 +683,10 @@
     },
     {
       "id": "javascript",
-      "title": "JavaScript",
       "aliases": [
-        ".js"
+        "js"
       ],
+      "title": "JavaScript",
       "extensions": [
         ".js",
         "._js",
@@ -541,6 +723,7 @@
     },
     {
       "id": "abap",
+      "aliases": [],
       "title": "ABAP",
       "extensions": [
         ".abap"
@@ -548,6 +731,7 @@
     },
     {
       "id": "abnf",
+      "aliases": [],
       "title": "Augmented Backus–Naur form",
       "extensions": [
         ".abnf",
@@ -556,6 +740,7 @@
     },
     {
       "id": "actionscript",
+      "aliases": [],
       "title": "ActionScript",
       "extensions": [
         ".as"
@@ -563,6 +748,7 @@
     },
     {
       "id": "ada",
+      "aliases": [],
       "title": "Ada",
       "extensions": [
         ".adb",
@@ -572,6 +758,7 @@
     },
     {
       "id": "apacheconf",
+      "aliases": [],
       "title": "Apache Configuration",
       "extensions": [
         ".apacheconf",
@@ -580,6 +767,7 @@
     },
     {
       "id": "apl",
+      "aliases": [],
       "title": "APL",
       "extensions": [
         ".apl",
@@ -588,6 +776,7 @@
     },
     {
       "id": "applescript",
+      "aliases": [],
       "title": "AppleScript",
       "extensions": [
         ".applescript",
@@ -596,6 +785,7 @@
     },
     {
       "id": "arduino",
+      "aliases": [],
       "title": "Arduino",
       "extensions": [
         ".ino"
@@ -603,6 +793,7 @@
     },
     {
       "id": "arff",
+      "aliases": [],
       "title": "ARFF",
       "extensions": [
         ".arff"
@@ -610,10 +801,10 @@
     },
     {
       "id": "asciidoc",
-      "title": "AsciiDoc",
       "aliases": [
-        ".adoc"
+        "adoc"
       ],
+      "title": "AsciiDoc",
       "extensions": [
         ".asciidoc",
         ".adoc",
@@ -622,6 +813,7 @@
     },
     {
       "id": "asm6502",
+      "aliases": [],
       "title": "6502 Assembly",
       "extensions": [
         ".asm6502",
@@ -630,6 +822,7 @@
     },
     {
       "id": "aspnet",
+      "aliases": [],
       "title": "ASP.NET (C#)",
       "extensions": [
         ".aspnet",
@@ -638,6 +831,7 @@
     },
     {
       "id": "autohotkey",
+      "aliases": [],
       "title": "AutoHotkey",
       "extensions": [
         ".ahk",
@@ -646,6 +840,7 @@
     },
     {
       "id": "autoit",
+      "aliases": [],
       "title": "AutoIt",
       "extensions": [
         ".au3"
@@ -653,10 +848,10 @@
     },
     {
       "id": "bash",
-      "title": "Bash",
       "aliases": [
-        ".shell"
+        "shell"
       ],
+      "title": "Bash",
       "extensions": [
         ".sh",
         ".bash",
@@ -672,6 +867,7 @@
     },
     {
       "id": "basic",
+      "aliases": [],
       "title": "BASIC",
       "extensions": [
         ".basic"
@@ -679,6 +875,7 @@
     },
     {
       "id": "batch",
+      "aliases": [],
       "title": "Batch",
       "extensions": [
         ".batch"
@@ -686,6 +883,7 @@
     },
     {
       "id": "bison",
+      "aliases": [],
       "title": "Bison",
       "extensions": [
         ".y"
@@ -693,17 +891,19 @@
     },
     {
       "id": "bnf",
-      "title": "Backus–Naur form",
       "aliases": [
-        ".rbnf"
+        "rbnf"
       ],
+      "title": "Backus–Naur form",
       "extensions": [
         ".bnf",
-        ".backus–naur form"
+        ".backus–naur form",
+        ".rbnf"
       ]
     },
     {
       "id": "brainfuck",
+      "aliases": [],
       "title": "Brainfuck",
       "extensions": [
         ".b",
@@ -712,6 +912,7 @@
     },
     {
       "id": "bro",
+      "aliases": [],
       "title": "Bro",
       "extensions": [
         ".bro"
@@ -719,6 +920,7 @@
     },
     {
       "id": "c",
+      "aliases": [],
       "title": "C",
       "extensions": [
         ".c",
@@ -730,20 +932,22 @@
     },
     {
       "id": "csharp",
-      "title": "C#",
       "aliases": [
         "cs",
         "dotnet"
       ],
+      "title": "C#",
       "extensions": [
         ".csharp",
         ".cs",
         ".cshtml",
-        ".csx"
+        ".csx",
+        ".dotnet"
       ]
     },
     {
       "id": "cpp",
+      "aliases": [],
       "title": "C++",
       "extensions": [
         ".cpp",
@@ -764,6 +968,7 @@
     },
     {
       "id": "cil",
+      "aliases": [],
       "title": "CIL",
       "extensions": [
         ".cil"
@@ -771,10 +976,10 @@
     },
     {
       "id": "coffeescript",
-      "title": "CoffeeScript",
       "aliases": [
-        ".coffee"
+        "coffee"
       ],
+      "title": "CoffeeScript",
       "extensions": [
         ".coffee",
         "._coffee",
@@ -785,6 +990,7 @@
     },
     {
       "id": "cmake",
+      "aliases": [],
       "title": "CMake",
       "extensions": [
         ".cmake",
@@ -793,6 +999,7 @@
     },
     {
       "id": "clojure",
+      "aliases": [],
       "title": "Clojure",
       "extensions": [
         ".clj",
@@ -808,6 +1015,7 @@
     },
     {
       "id": "crystal",
+      "aliases": [],
       "title": "Crystal",
       "extensions": [
         ".cr"
@@ -815,6 +1023,7 @@
     },
     {
       "id": "csp",
+      "aliases": [],
       "title": "Content-Security-Policy",
       "extensions": [
         ".csp",
@@ -823,6 +1032,7 @@
     },
     {
       "id": "css-extras",
+      "aliases": [],
       "title": "CSS Extras",
       "extensions": [
         ".css-extras",
@@ -831,6 +1041,7 @@
     },
     {
       "id": "d",
+      "aliases": [],
       "title": "D",
       "extensions": [
         ".d",
@@ -839,6 +1050,7 @@
     },
     {
       "id": "dart",
+      "aliases": [],
       "title": "Dart",
       "extensions": [
         ".dart"
@@ -846,6 +1058,7 @@
     },
     {
       "id": "diff",
+      "aliases": [],
       "title": "Diff",
       "extensions": [
         ".diff",
@@ -854,38 +1067,42 @@
     },
     {
       "id": "django",
-      "title": "Django/Jinja2",
       "aliases": [
-        ".jinja2"
+        "jinja2"
       ],
+      "title": "Django/Jinja2",
       "extensions": [
         ".django",
-        ".django/jinja2"
+        ".django/jinja2",
+        ".jinja2"
       ]
     },
     {
       "id": "dns-zone-file",
-      "title": "DNS zone file",
       "aliases": [
-        ".dns-zone"
+        "dns-zone"
       ],
+      "title": "DNS zone file",
       "extensions": [
         ".dns-zone-file",
-        ".dns zone file"
+        ".dns zone file",
+        ".dns-zone"
       ]
     },
     {
       "id": "docker",
-      "title": "Docker",
       "aliases": [
-        ".dockerfile"
+        "dockerfile"
       ],
+      "title": "Docker",
       "extensions": [
-        ".docker"
+        ".docker",
+        ".dockerfile"
       ]
     },
     {
       "id": "ebnf",
+      "aliases": [],
       "title": "Extended Backus–Naur form",
       "extensions": [
         ".ebnf",
@@ -894,6 +1111,7 @@
     },
     {
       "id": "eiffel",
+      "aliases": [],
       "title": "Eiffel",
       "extensions": [
         ".e"
@@ -901,6 +1119,7 @@
     },
     {
       "id": "ejs",
+      "aliases": [],
       "title": "EJS",
       "extensions": [
         ".ejs"
@@ -908,6 +1127,7 @@
     },
     {
       "id": "elixir",
+      "aliases": [],
       "title": "Elixir",
       "extensions": [
         ".ex",
@@ -916,6 +1136,7 @@
     },
     {
       "id": "elm",
+      "aliases": [],
       "title": "Elm",
       "extensions": [
         ".elm"
@@ -923,6 +1144,7 @@
     },
     {
       "id": "erb",
+      "aliases": [],
       "title": "ERB",
       "extensions": [
         ".erb",
@@ -931,6 +1153,7 @@
     },
     {
       "id": "erlang",
+      "aliases": [],
       "title": "Erlang",
       "extensions": [
         ".erl",
@@ -941,6 +1164,7 @@
     },
     {
       "id": "fsharp",
+      "aliases": [],
       "title": "F#",
       "extensions": [
         ".fsharp",
@@ -951,6 +1175,7 @@
     },
     {
       "id": "flow",
+      "aliases": [],
       "title": "Flow",
       "extensions": [
         ".flow"
@@ -958,6 +1183,7 @@
     },
     {
       "id": "fortran",
+      "aliases": [],
       "title": "Fortran",
       "extensions": [
         ".f90",
@@ -972,6 +1198,7 @@
     },
     {
       "id": "gcode",
+      "aliases": [],
       "title": "G-code",
       "extensions": [
         ".g",
@@ -981,6 +1208,7 @@
     },
     {
       "id": "gedcom",
+      "aliases": [],
       "title": "GEDCOM",
       "extensions": [
         ".gedcom"
@@ -988,6 +1216,7 @@
     },
     {
       "id": "gherkin",
+      "aliases": [],
       "title": "Gherkin",
       "extensions": [
         ".gherkin"
@@ -995,6 +1224,7 @@
     },
     {
       "id": "git",
+      "aliases": [],
       "title": "Git",
       "extensions": [
         ".git"
@@ -1002,6 +1232,7 @@
     },
     {
       "id": "glsl",
+      "aliases": [],
       "title": "GLSL",
       "extensions": [
         ".glsl",
@@ -1022,17 +1253,19 @@
     },
     {
       "id": "gml",
-      "title": "GameMaker Language",
       "aliases": [
-        ".gamemakerlanguage"
+        "gamemakerlanguage"
       ],
+      "title": "GameMaker Language",
       "extensions": [
         ".gml",
-        ".gamemaker language"
+        ".gamemaker language",
+        ".gamemakerlanguage"
       ]
     },
     {
       "id": "go",
+      "aliases": [],
       "title": "Go",
       "extensions": [
         ".go"
@@ -1040,6 +1273,7 @@
     },
     {
       "id": "graphql",
+      "aliases": [],
       "title": "GraphQL",
       "extensions": [
         ".graphql"
@@ -1047,6 +1281,7 @@
     },
     {
       "id": "groovy",
+      "aliases": [],
       "title": "Groovy",
       "extensions": [
         ".groovy",
@@ -1057,6 +1292,7 @@
     },
     {
       "id": "haml",
+      "aliases": [],
       "title": "Haml",
       "extensions": [
         ".haml",
@@ -1065,6 +1301,7 @@
     },
     {
       "id": "handlebars",
+      "aliases": [],
       "title": "Handlebars",
       "extensions": [
         ".handlebars",
@@ -1073,10 +1310,10 @@
     },
     {
       "id": "haskell",
-      "title": "Haskell",
       "aliases": [
-        ".hs"
+        "hs"
       ],
+      "title": "Haskell",
       "extensions": [
         ".hs",
         ".hsc"
@@ -1084,6 +1321,7 @@
     },
     {
       "id": "haxe",
+      "aliases": [],
       "title": "Haxe",
       "extensions": [
         ".hx",
@@ -1092,6 +1330,7 @@
     },
     {
       "id": "hcl",
+      "aliases": [],
       "title": "HCL",
       "extensions": [
         ".hcl"
@@ -1099,6 +1338,7 @@
     },
     {
       "id": "http",
+      "aliases": [],
       "title": "HTTP",
       "extensions": [
         ".http"
@@ -1106,6 +1346,7 @@
     },
     {
       "id": "hpkp",
+      "aliases": [],
       "title": "HTTP Public-Key-Pins",
       "extensions": [
         ".hpkp",
@@ -1114,6 +1355,7 @@
     },
     {
       "id": "hsts",
+      "aliases": [],
       "title": "HTTP Strict-Transport-Security",
       "extensions": [
         ".hsts",
@@ -1122,6 +1364,7 @@
     },
     {
       "id": "ichigojam",
+      "aliases": [],
       "title": "IchigoJam",
       "extensions": [
         ".ichigojam"
@@ -1129,6 +1372,7 @@
     },
     {
       "id": "icon",
+      "aliases": [],
       "title": "Icon",
       "extensions": [
         ".icon"
@@ -1136,6 +1380,7 @@
     },
     {
       "id": "inform7",
+      "aliases": [],
       "title": "Inform 7",
       "extensions": [
         ".inform7",
@@ -1145,6 +1390,7 @@
     },
     {
       "id": "ini",
+      "aliases": [],
       "title": "Ini",
       "extensions": [
         ".ini",
@@ -1156,6 +1402,7 @@
     },
     {
       "id": "io",
+      "aliases": [],
       "title": "Io",
       "extensions": [
         ".io"
@@ -1163,6 +1410,7 @@
     },
     {
       "id": "j",
+      "aliases": [],
       "title": "J",
       "extensions": [
         ".ijs"
@@ -1170,6 +1418,7 @@
     },
     {
       "id": "java",
+      "aliases": [],
       "title": "Java",
       "extensions": [
         ".java"
@@ -1177,6 +1426,7 @@
     },
     {
       "id": "javadoc",
+      "aliases": [],
       "title": "JavaDoc",
       "extensions": [
         ".javadoc"
@@ -1184,6 +1434,7 @@
     },
     {
       "id": "javadoclike",
+      "aliases": [],
       "title": "JavaDoc-like",
       "extensions": [
         ".javadoclike",
@@ -1192,6 +1443,7 @@
     },
     {
       "id": "javastacktrace",
+      "aliases": [],
       "title": "Java stack trace",
       "extensions": [
         ".javastacktrace",
@@ -1200,6 +1452,7 @@
     },
     {
       "id": "jolie",
+      "aliases": [],
       "title": "Jolie",
       "extensions": [
         ".jolie"
@@ -1207,6 +1460,7 @@
     },
     {
       "id": "jq",
+      "aliases": [],
       "title": "JQ",
       "extensions": [
         ".jq"
@@ -1214,6 +1468,7 @@
     },
     {
       "id": "jsdoc",
+      "aliases": [],
       "title": "JSDoc",
       "extensions": [
         ".jsdoc"
@@ -1221,6 +1476,7 @@
     },
     {
       "id": "js-extras",
+      "aliases": [],
       "title": "JS Extras",
       "extensions": [
         ".js-extras",
@@ -1229,6 +1485,7 @@
     },
     {
       "id": "js-templates",
+      "aliases": [],
       "title": "JS Templates",
       "extensions": [
         ".js-templates",
@@ -1237,6 +1494,7 @@
     },
     {
       "id": "json",
+      "aliases": [],
       "title": "JSON",
       "extensions": [
         ".json",
@@ -1245,6 +1503,7 @@
     },
     {
       "id": "jsonp",
+      "aliases": [],
       "title": "JSONP",
       "extensions": [
         ".jsonp"
@@ -1252,6 +1511,7 @@
     },
     {
       "id": "json5",
+      "aliases": [],
       "title": "JSON5",
       "extensions": [
         ".json5"
@@ -1259,6 +1519,7 @@
     },
     {
       "id": "julia",
+      "aliases": [],
       "title": "Julia",
       "extensions": [
         ".jl"
@@ -1266,6 +1527,7 @@
     },
     {
       "id": "keyman",
+      "aliases": [],
       "title": "Keyman",
       "extensions": [
         ".keyman"
@@ -1273,6 +1535,7 @@
     },
     {
       "id": "kotlin",
+      "aliases": [],
       "title": "Kotlin",
       "extensions": [
         ".kt",
@@ -1282,17 +1545,34 @@
     },
     {
       "id": "latex",
-      "title": "LaTeX",
       "aliases": [
         "tex",
         "context"
       ],
+      "title": "LaTeX",
       "extensions": [
-        ".latex"
+        ".latex",
+        ".tex",
+        ".aux",
+        ".bbx",
+        ".bib",
+        ".cbx",
+        ".cls",
+        ".dtx",
+        ".ins",
+        ".lbx",
+        ".ltx",
+        ".mkii",
+        ".mkiv",
+        ".mkvi",
+        ".sty",
+        ".toc",
+        ".context"
       ]
     },
     {
       "id": "less",
+      "aliases": [],
       "title": "Less",
       "extensions": [
         ".less"
@@ -1300,10 +1580,10 @@
     },
     {
       "id": "lilypond",
-      "title": "LilyPond",
       "aliases": [
-        ".ly"
+        "ly"
       ],
+      "title": "LilyPond",
       "extensions": [
         ".ly",
         ".ily"
@@ -1311,6 +1591,7 @@
     },
     {
       "id": "liquid",
+      "aliases": [],
       "title": "Liquid",
       "extensions": [
         ".liquid"
@@ -1318,18 +1599,24 @@
     },
     {
       "id": "lisp",
-      "title": "Lisp",
       "aliases": [
         "emacs",
         "elisp",
         "emacs-lisp"
       ],
+      "title": "Lisp",
       "extensions": [
-        ".lisp"
+        ".lisp",
+        ".el",
+        ".emacs",
+        ".emacs.desktop",
+        ".elisp",
+        ".emacs-lisp"
       ]
     },
     {
       "id": "livescript",
+      "aliases": [],
       "title": "LiveScript",
       "extensions": [
         ".ls",
@@ -1338,6 +1625,7 @@
     },
     {
       "id": "lolcode",
+      "aliases": [],
       "title": "LOLCODE",
       "extensions": [
         ".lol"
@@ -1345,6 +1633,7 @@
     },
     {
       "id": "lua",
+      "aliases": [],
       "title": "Lua",
       "extensions": [
         ".lua",
@@ -1357,6 +1646,7 @@
     },
     {
       "id": "makefile",
+      "aliases": [],
       "title": "Makefile",
       "extensions": [
         ".mak",
@@ -1366,10 +1656,10 @@
     },
     {
       "id": "markdown",
-      "title": "Markdown",
       "aliases": [
-        ".md"
+        "md"
       ],
+      "title": "Markdown",
       "extensions": [
         ".md",
         ".markdown",
@@ -1381,6 +1671,7 @@
     },
     {
       "id": "markup-templating",
+      "aliases": [],
       "title": "Markup templating",
       "extensions": [
         ".markup-templating",
@@ -1389,6 +1680,7 @@
     },
     {
       "id": "matlab",
+      "aliases": [],
       "title": "MATLAB",
       "extensions": [
         ".matlab",
@@ -1397,6 +1689,7 @@
     },
     {
       "id": "mel",
+      "aliases": [],
       "title": "MEL",
       "extensions": [
         ".mel"
@@ -1404,6 +1697,7 @@
     },
     {
       "id": "mizar",
+      "aliases": [],
       "title": "Mizar",
       "extensions": [
         ".mizar"
@@ -1411,6 +1705,7 @@
     },
     {
       "id": "monkey",
+      "aliases": [],
       "title": "Monkey",
       "extensions": [
         ".monkey"
@@ -1418,6 +1713,7 @@
     },
     {
       "id": "n1ql",
+      "aliases": [],
       "title": "N1QL",
       "extensions": [
         ".n1ql"
@@ -1425,16 +1721,18 @@
     },
     {
       "id": "n4js",
-      "title": "N4JS",
       "aliases": [
-        ".n4jsd"
+        "n4jsd"
       ],
+      "title": "N4JS",
       "extensions": [
-        ".n4js"
+        ".n4js",
+        ".n4jsd"
       ]
     },
     {
       "id": "nand2tetris-hdl",
+      "aliases": [],
       "title": "Nand To Tetris HDL",
       "extensions": [
         ".nand2tetris-hdl",
@@ -1443,6 +1741,7 @@
     },
     {
       "id": "nasm",
+      "aliases": [],
       "title": "NASM",
       "extensions": [
         ".asm",
@@ -1452,6 +1751,7 @@
     },
     {
       "id": "nginx",
+      "aliases": [],
       "title": "nginx",
       "extensions": [
         ".nginxconf"
@@ -1459,6 +1759,7 @@
     },
     {
       "id": "nim",
+      "aliases": [],
       "title": "Nim",
       "extensions": [
         ".nim",
@@ -1467,6 +1768,7 @@
     },
     {
       "id": "nix",
+      "aliases": [],
       "title": "Nix",
       "extensions": [
         ".nix"
@@ -1474,6 +1776,7 @@
     },
     {
       "id": "nsis",
+      "aliases": [],
       "title": "NSIS",
       "extensions": [
         ".nsi",
@@ -1482,6 +1785,7 @@
     },
     {
       "id": "objectivec",
+      "aliases": [],
       "title": "Objective-C",
       "extensions": [
         ".objectivec",
@@ -1491,6 +1795,7 @@
     },
     {
       "id": "ocaml",
+      "aliases": [],
       "title": "OCaml",
       "extensions": [
         ".ml",
@@ -1504,6 +1809,7 @@
     },
     {
       "id": "opencl",
+      "aliases": [],
       "title": "OpenCL",
       "extensions": [
         ".cl",
@@ -1512,6 +1818,7 @@
     },
     {
       "id": "oz",
+      "aliases": [],
       "title": "Oz",
       "extensions": [
         ".oz"
@@ -1519,6 +1826,7 @@
     },
     {
       "id": "parigp",
+      "aliases": [],
       "title": "PARI/GP",
       "extensions": [
         ".parigp",
@@ -1527,6 +1835,7 @@
     },
     {
       "id": "parser",
+      "aliases": [],
       "title": "Parser",
       "extensions": [
         ".parser"
@@ -1534,20 +1843,22 @@
     },
     {
       "id": "pascal",
-      "title": "Pascal",
       "aliases": [
-        ".objectpascal"
+        "objectpascal"
       ],
+      "title": "Pascal",
       "extensions": [
         ".pas",
         ".dfm",
         ".dpr",
         ".lpr",
-        ".pp"
+        ".pp",
+        ".objectpascal"
       ]
     },
     {
       "id": "pascaligo",
+      "aliases": [],
       "title": "Pascaligo",
       "extensions": [
         ".pascaligo"
@@ -1555,17 +1866,19 @@
     },
     {
       "id": "pcaxis",
-      "title": "PC-Axis",
       "aliases": [
-        ".px"
+        "px"
       ],
+      "title": "PC-Axis",
       "extensions": [
         ".pcaxis",
-        ".pc-axis"
+        ".pc-axis",
+        ".px"
       ]
     },
     {
       "id": "perl",
+      "aliases": [],
       "title": "Perl",
       "extensions": [
         ".pl",
@@ -1582,6 +1895,7 @@
     },
     {
       "id": "php",
+      "aliases": [],
       "title": "PHP",
       "extensions": [
         ".php",
@@ -1596,6 +1910,7 @@
     },
     {
       "id": "phpdoc",
+      "aliases": [],
       "title": "PHPDoc",
       "extensions": [
         ".phpdoc"
@@ -1603,6 +1918,7 @@
     },
     {
       "id": "php-extras",
+      "aliases": [],
       "title": "PHP Extras",
       "extensions": [
         ".php-extras",
@@ -1611,6 +1927,7 @@
     },
     {
       "id": "plsql",
+      "aliases": [],
       "title": "PL/SQL",
       "extensions": [
         ".pls",
@@ -1624,6 +1941,7 @@
     },
     {
       "id": "powershell",
+      "aliases": [],
       "title": "PowerShell",
       "extensions": [
         ".ps1",
@@ -1633,6 +1951,7 @@
     },
     {
       "id": "processing",
+      "aliases": [],
       "title": "Processing",
       "extensions": [
         ".pde"
@@ -1640,6 +1959,7 @@
     },
     {
       "id": "prolog",
+      "aliases": [],
       "title": "Prolog",
       "extensions": [
         ".pl",
@@ -1650,6 +1970,7 @@
     },
     {
       "id": "properties",
+      "aliases": [],
       "title": ".properties",
       "extensions": [
         ".ini",
@@ -1661,6 +1982,7 @@
     },
     {
       "id": "protobuf",
+      "aliases": [],
       "title": "Protocol Buffers",
       "extensions": [
         ".protobuf",
@@ -1669,6 +1991,7 @@
     },
     {
       "id": "pug",
+      "aliases": [],
       "title": "Pug",
       "extensions": [
         ".pug"
@@ -1676,6 +1999,7 @@
     },
     {
       "id": "puppet",
+      "aliases": [],
       "title": "Puppet",
       "extensions": [
         ".pp"
@@ -1683,6 +2007,7 @@
     },
     {
       "id": "pure",
+      "aliases": [],
       "title": "Pure",
       "extensions": [
         ".pure"
@@ -1690,10 +2015,10 @@
     },
     {
       "id": "python",
-      "title": "Python",
       "aliases": [
-        ".py"
+        "py"
       ],
+      "title": "Python",
       "extensions": [
         ".py",
         ".cgi",
@@ -1711,6 +2036,7 @@
     },
     {
       "id": "q",
+      "aliases": [],
       "title": "Q (kdb+ database)",
       "extensions": [
         ".q",
@@ -1719,6 +2045,7 @@
     },
     {
       "id": "qore",
+      "aliases": [],
       "title": "Qore",
       "extensions": [
         ".qore"
@@ -1726,6 +2053,7 @@
     },
     {
       "id": "r",
+      "aliases": [],
       "title": "R",
       "extensions": [
         ".r",
@@ -1735,6 +2063,7 @@
     },
     {
       "id": "jsx",
+      "aliases": [],
       "title": "React JSX",
       "extensions": [
         ".js",
@@ -1773,6 +2102,7 @@
     },
     {
       "id": "tsx",
+      "aliases": [],
       "title": "React TSX",
       "extensions": [
         ".tsx",
@@ -1781,6 +2111,7 @@
     },
     {
       "id": "renpy",
+      "aliases": [],
       "title": "Ren'py",
       "extensions": [
         ".renpy",
@@ -1789,6 +2120,7 @@
     },
     {
       "id": "reason",
+      "aliases": [],
       "title": "Reason",
       "extensions": [
         ".reason"
@@ -1796,6 +2128,7 @@
     },
     {
       "id": "regex",
+      "aliases": [],
       "title": "Regex",
       "extensions": [
         ".regex"
@@ -1803,6 +2136,7 @@
     },
     {
       "id": "rest",
+      "aliases": [],
       "title": "reST (reStructuredText)",
       "extensions": [
         ".rst",
@@ -1812,6 +2146,7 @@
     },
     {
       "id": "rip",
+      "aliases": [],
       "title": "Rip",
       "extensions": [
         ".rip"
@@ -1819,6 +2154,7 @@
     },
     {
       "id": "roboconf",
+      "aliases": [],
       "title": "Roboconf",
       "extensions": [
         ".roboconf"
@@ -1826,10 +2162,10 @@
     },
     {
       "id": "ruby",
-      "title": "Ruby",
       "aliases": [
-        ".rb"
+        "rb"
       ],
+      "title": "Ruby",
       "extensions": [
         ".rb",
         ".builder",
@@ -1854,6 +2190,7 @@
     },
     {
       "id": "rust",
+      "aliases": [],
       "title": "Rust",
       "extensions": [
         ".rs"
@@ -1861,6 +2198,7 @@
     },
     {
       "id": "sas",
+      "aliases": [],
       "title": "SAS",
       "extensions": [
         ".sas"
@@ -1868,6 +2206,7 @@
     },
     {
       "id": "sass",
+      "aliases": [],
       "title": "Sass (Sass)",
       "extensions": [
         ".sass",
@@ -1876,6 +2215,7 @@
     },
     {
       "id": "scss",
+      "aliases": [],
       "title": "Sass (Scss)",
       "extensions": [
         ".scss",
@@ -1884,6 +2224,7 @@
     },
     {
       "id": "scala",
+      "aliases": [],
       "title": "Scala",
       "extensions": [
         ".scala",
@@ -1893,6 +2234,7 @@
     },
     {
       "id": "scheme",
+      "aliases": [],
       "title": "Scheme",
       "extensions": [
         ".scm",
@@ -1904,6 +2246,7 @@
     },
     {
       "id": "shell-session",
+      "aliases": [],
       "title": "Shell session",
       "extensions": [
         ".shell-session",
@@ -1912,6 +2255,7 @@
     },
     {
       "id": "smalltalk",
+      "aliases": [],
       "title": "Smalltalk",
       "extensions": [
         ".st",
@@ -1920,6 +2264,7 @@
     },
     {
       "id": "smarty",
+      "aliases": [],
       "title": "Smarty",
       "extensions": [
         ".tpl"
@@ -1927,6 +2272,7 @@
     },
     {
       "id": "soy",
+      "aliases": [],
       "title": "Soy (Closure Template)",
       "extensions": [
         ".soy",
@@ -1935,6 +2281,7 @@
     },
     {
       "id": "splunk-spl",
+      "aliases": [],
       "title": "Splunk SPL",
       "extensions": [
         ".splunk-spl",
@@ -1943,6 +2290,7 @@
     },
     {
       "id": "sql",
+      "aliases": [],
       "title": "SQL",
       "extensions": [
         ".sql",
@@ -1956,6 +2304,7 @@
     },
     {
       "id": "stylus",
+      "aliases": [],
       "title": "Stylus",
       "extensions": [
         ".styl"
@@ -1963,6 +2312,7 @@
     },
     {
       "id": "swift",
+      "aliases": [],
       "title": "Swift",
       "extensions": [
         ".swift"
@@ -1970,6 +2320,7 @@
     },
     {
       "id": "tap",
+      "aliases": [],
       "title": "TAP",
       "extensions": [
         ".tap"
@@ -1977,6 +2328,7 @@
     },
     {
       "id": "tcl",
+      "aliases": [],
       "title": "Tcl",
       "extensions": [
         ".tcl",
@@ -1986,6 +2338,7 @@
     },
     {
       "id": "textile",
+      "aliases": [],
       "title": "Textile",
       "extensions": [
         ".textile"
@@ -1993,6 +2346,7 @@
     },
     {
       "id": "toml",
+      "aliases": [],
       "title": "TOML",
       "extensions": [
         ".toml"
@@ -2000,6 +2354,7 @@
     },
     {
       "id": "tt2",
+      "aliases": [],
       "title": "Template Toolkit 2",
       "extensions": [
         ".tt2",
@@ -2008,6 +2363,7 @@
     },
     {
       "id": "twig",
+      "aliases": [],
       "title": "Twig",
       "extensions": [
         ".twig"
@@ -2015,27 +2371,29 @@
     },
     {
       "id": "typescript",
-      "title": "TypeScript",
       "aliases": [
-        ".ts"
+        "ts"
       ],
+      "title": "TypeScript",
       "extensions": [
         ".ts"
       ]
     },
     {
       "id": "t4-cs",
-      "title": "T4 Text Templates (C#)",
       "aliases": [
-        ".t4"
+        "t4"
       ],
+      "title": "T4 Text Templates (C#)",
       "extensions": [
         ".t4-cs",
-        ".t4 text templates (c#)"
+        ".t4 text templates (c#)",
+        ".t4"
       ]
     },
     {
       "id": "t4-vb",
+      "aliases": [],
       "title": "T4 Text Templates (VB)",
       "extensions": [
         ".t4-vb",
@@ -2044,6 +2402,7 @@
     },
     {
       "id": "t4-templating",
+      "aliases": [],
       "title": "T4 templating",
       "extensions": [
         ".t4-templating",
@@ -2052,6 +2411,7 @@
     },
     {
       "id": "vala",
+      "aliases": [],
       "title": "Vala",
       "extensions": [
         ".vala",
@@ -2060,6 +2420,7 @@
     },
     {
       "id": "vbnet",
+      "aliases": [],
       "title": "VB.Net",
       "extensions": [
         ".vbnet",
@@ -2068,6 +2429,7 @@
     },
     {
       "id": "velocity",
+      "aliases": [],
       "title": "Velocity",
       "extensions": [
         ".velocity"
@@ -2075,6 +2437,7 @@
     },
     {
       "id": "verilog",
+      "aliases": [],
       "title": "Verilog",
       "extensions": [
         ".v",
@@ -2083,6 +2446,7 @@
     },
     {
       "id": "vhdl",
+      "aliases": [],
       "title": "VHDL",
       "extensions": [
         ".vhdl",
@@ -2097,6 +2461,7 @@
     },
     {
       "id": "vim",
+      "aliases": [],
       "title": "vim",
       "extensions": [
         ".vim"
@@ -2104,10 +2469,10 @@
     },
     {
       "id": "visual-basic",
-      "title": "Visual Basic",
       "aliases": [
-        ".vb"
+        "vb"
       ],
+      "title": "Visual Basic",
       "extensions": [
         ".visual-basic",
         ".vb",
@@ -2122,6 +2487,7 @@
     },
     {
       "id": "wasm",
+      "aliases": [],
       "title": "WebAssembly",
       "extensions": [
         ".wasm",
@@ -2130,6 +2496,7 @@
     },
     {
       "id": "wiki",
+      "aliases": [],
       "title": "Wiki markup",
       "extensions": [
         ".wiki",
@@ -2138,16 +2505,18 @@
     },
     {
       "id": "xeora",
-      "title": "Xeora",
       "aliases": [
-        ".xeoracube"
+        "xeoracube"
       ],
+      "title": "Xeora",
       "extensions": [
-        ".xeora"
+        ".xeora",
+        ".xeoracube"
       ]
     },
     {
       "id": "xojo",
+      "aliases": [],
       "title": "Xojo (REALbasic)",
       "extensions": [
         ".xojo_code",
@@ -2161,6 +2530,7 @@
     },
     {
       "id": "xquery",
+      "aliases": [],
       "title": "XQuery",
       "extensions": [
         ".xquery",
@@ -2172,10 +2542,10 @@
     },
     {
       "id": "yaml",
-      "title": "YAML",
       "aliases": [
-        ".yml"
+        "yml"
       ],
+      "title": "YAML",
       "extensions": [
         ".yml",
         ".reek",

@@ -189,7 +189,7 @@ namespace WinPrint {
             var sheets = ModelLocator.Current.Settings.Sheets;
 
             // Load file assocations
-            var languages = ModelLocator.Current.Languages;
+            var languages = ModelLocator.Current.Associations;
             Debug.WriteLine($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
 
             ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {

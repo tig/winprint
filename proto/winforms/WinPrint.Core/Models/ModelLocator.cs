@@ -21,7 +21,7 @@ namespace WinPrint.Core.Models {
 
         public Models.Settings Settings => SimpleIoc.Default.GetInstance<Models.Settings>();
         public Models.Options Options => SimpleIoc.Default.GetInstance<Models.Options>();
-        public Models.FileAssociations Languages => SimpleIoc.Default.GetInstance<Models.FileAssociations>();
+        public Models.FileAssociations Associations => SimpleIoc.Default.GetInstance<Models.FileAssociations>();
 
         public void Register<VM, V>()
             where VM : class {

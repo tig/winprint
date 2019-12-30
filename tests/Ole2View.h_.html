@@ -1,0 +1,93 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\Ole2View.h</title>
+<meta charset="utf-8"/>
+<link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+<link href="file:/C:/Users/ckindel/source/winprint/proto/winforms/WinPrint/bin/Debug/netcoreapp3.0/prism-winprint-overrides.css" rel="stylesheet"/>
+</head><body>
+<pre class="language-c line-numbers "><code class="language-csharp">
+<span class="token comment">// Ole2View.h : main header file for the Ole2View application</span>
+<span class="token comment">//</span>
+
+<span class="token macro property">#<span class="token directive keyword">ifndef</span> __AFXWIN_H__</span>
+    <span class="token macro property">#<span class="token directive keyword">error</span> include 'stdafx.h' before including this file for PCH</span>
+<span class="token macro property">#<span class="token directive keyword">endif</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">ifndef</span> _Ole2View_H_</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> _Ole2View_H_</span>
+
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"iviewers\iview.h"</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"resource.h"</span>       </span><span class="token comment">// main symbols</span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"util.h"</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"mainfrm.h"</span>  </span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"doc.h"</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">ifdef</span> WIN32</span>
+    <span class="token macro property">#<span class="token directive keyword">define</span> GETCLASSUINT(hwnd, index)       (UINT)GetClassLong(hwnd, index)</span>
+    <span class="token macro property">#<span class="token directive keyword">define</span> GETCLASSBRBACKGROUND(hwnd)      (HBRUSH)GETCLASSUINT(hwnd, GCL_HBRBACKGROUND)</span>
+    <span class="token macro property">#<span class="token directive keyword">define</span> MGetModuleUsage(h)                  ((h), 2)</span>
+<span class="token macro property">#<span class="token directive keyword">else</span></span>
+    <span class="token macro property">#<span class="token directive keyword">define</span> GETCLASSUINT(hwnd, index)       (UINT)GetClassWord(hwnd, index)</span>
+    <span class="token macro property">#<span class="token directive keyword">define</span> GETCLASSBRBACKGROUND(hwnd)      (HBRUSH)GETCLASSUINT(hwnd, GCW_HBRBACKGROUND)</span>
+    <span class="token macro property">#<span class="token directive keyword">define</span> MGetModuleUsage          GetModuleUsage</span>
+<span class="token macro property">#<span class="token directive keyword">endif</span></span>
+
+<span class="token comment">// override CListBox so we pass WM_COMMANDHELP on</span>
+<span class="token comment">//</span>
+class CMyListBox <span class="token operator">:</span> public CListBox
+<span class="token punctuation">{</span>
+public<span class="token operator">:</span>
+    <span class="token function">DECLARE_DYNCREATE</span><span class="token punctuation">(</span>CMyListBox<span class="token punctuation">)</span>
+
+protected<span class="token operator">:</span>
+    afx_msg LRESULT <span class="token function">OnCommandHelp</span><span class="token punctuation">(</span>WPARAM<span class="token punctuation">,</span> LPARAM lParam<span class="token punctuation">)</span> <span class="token punctuation">;</span>
+
+    <span class="token function">DECLARE_MESSAGE_MAP</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span> <span class="token punctuation">;</span>
+
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"regview.h"</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"obj_vw.h"</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">define</span> IDB_FIRST       IDB_QUESTION</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> BMINDEX(x)      (x - IDB_FIRST)</span>
+
+<span class="token comment">/////////////////////////////////////////////////////////////////////////////</span>
+<span class="token comment">// COle2ViewApp:</span>
+<span class="token comment">// See Ole2View.cpp for the implementation of this class</span>
+<span class="token comment">//</span>
+
+class COle2ViewApp <span class="token operator">:</span> public CWinApp
+<span class="token punctuation">{</span>
+public<span class="token operator">:</span>
+	BOOL <span class="token function">ProcessCmdLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">COle2ViewApp</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    CString     m_szStatusText <span class="token punctuation">;</span>
+
+<span class="token comment">// Overrides</span>
+    virtual BOOL <span class="token function">InitInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    virtual <span class="token keyword">int</span> <span class="token function">ExitInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token macro property">#<span class="token directive keyword">ifdef</span> _MAC</span>
+    virtual BOOL <span class="token function">CreateInitialDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token macro property">#<span class="token directive keyword">endif</span></span>
+<span class="token comment">// Implementation</span>
+
+    <span class="token comment">//{{AFX_MSG(COle2ViewApp)</span>
+    afx_msg <span class="token keyword">void</span> <span class="token function">OnAppAbout</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">//}}AFX_MSG</span>
+    <span class="token function">DECLARE_MESSAGE_MAP</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token keyword">extern</span> COle2ViewApp theApp <span class="token punctuation">;</span>
+<span class="token macro property">#<span class="token directive keyword">if</span> _MFC_VER >= 0x0300</span>
+<span class="token keyword">extern</span> OSVERSIONINFO  g_osvi <span class="token punctuation">;</span>
+<span class="token macro property">#<span class="token directive keyword">endif</span></span>
+
+BOOL <span class="token function">RegisterIViewersDLL</span><span class="token punctuation">(</span>CWnd<span class="token operator">*</span> pParent<span class="token punctuation">,</span>BOOL fForce <span class="token operator">=</span>FALSE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">extern</span> CImageList<span class="token operator">*</span> g_pImages <span class="token punctuation">;</span>
+
+<span class="token macro property">#<span class="token directive keyword">endif</span> </span><span class="token comment">// _Ole2View_H_</span>
+
+
+</code></pre>
+</body></html>

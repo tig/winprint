@@ -1,0 +1,100 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\doc.cpp</title>
+<meta charset="utf-8"/>
+<link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+<link href="file:/C:/Users/ckindel/source/winprint/proto/winforms/WinPrint/bin/Debug/netcoreapp3.0/prism-winprint-overrides.css" rel="stylesheet"/>
+</head><body>
+<pre class="language-cpp line-numbers "><code class="language-csharp">
+<span class="token comment">// doc.cpp : implementation of the COle2ViewDoc class</span>
+<span class="token comment">//</span>
+
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"stdafx.h"</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"Ole2View.h"</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"doc.h"</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">ifdef</span> _DEBUG</span>
+<span class="token macro property">#<span class="token directive keyword">undef</span> THIS_FILE</span>
+<span class="token keyword">static</span> <span class="token keyword">char</span> BASED_CODE THIS_FILE<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token constant">__FILE__</span><span class="token punctuation">;</span>
+<span class="token macro property">#<span class="token directive keyword">endif</span></span>
+
+<span class="token comment">/////////////////////////////////////////////////////////////////////////////</span>
+<span class="token comment">// COle2ViewDoc</span>
+
+<span class="token function">IMPLEMENT_DYNCREATE</span><span class="token punctuation">(</span>COle2ViewDoc<span class="token punctuation">,</span> CDocument<span class="token punctuation">)</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> new DEBUG_NEW</span>
+
+<span class="token function">BEGIN_MESSAGE_MAP</span><span class="token punctuation">(</span>COle2ViewDoc<span class="token punctuation">,</span> CDocument<span class="token punctuation">)</span>
+    <span class="token comment">//{{AFX_MSG_MAP(COle2ViewDoc)</span>
+        <span class="token comment">// NOTE - the ClassWizard will add and remove mapping macros here.</span>
+        <span class="token comment">//    DO NOT EDIT what you see in these blocks of generated code !</span>
+    <span class="token comment">//}}AFX_MSG_MAP</span>
+<span class="token function">END_MESSAGE_MAP</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment">/////////////////////////////////////////////////////////////////////////////</span>
+<span class="token comment">// COle2ViewDoc construction/destruction</span>
+
+COle2ViewDoc<span class="token operator">::</span><span class="token function">COle2ViewDoc</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    m_clsidCur <span class="token operator">=</span> GUID_NULL <span class="token punctuation">;</span>
+    m_szObjectCur <span class="token operator">=</span> <span class="token string">""</span> <span class="token punctuation">;</span>
+	m_nType <span class="token operator">=</span> CObjectData<span class="token operator">::</span>typeUnknown <span class="token punctuation">;</span>
+    CString szSection <span class="token punctuation">;</span>
+    CString szKey <span class="token punctuation">;</span>
+    szSection<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CONFIG <span class="token punctuation">)</span> <span class="token punctuation">;</span>
+
+    szKey<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CLSCTX <span class="token punctuation">)</span> <span class="token punctuation">;</span>
+    m_dwClsCtx <span class="token operator">=</span> <span class="token punctuation">(</span>DWORD<span class="token punctuation">)</span>theApp<span class="token punctuation">.</span><span class="token function">GetProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> CLSCTX_LOCAL_SERVER <span class="token operator">|</span> CLSCTX_INPROC_SERVER <span class="token punctuation">)</span> <span class="token punctuation">;</span>
+
+    szKey <span class="token operator">=</span> <span class="token function">_T</span><span class="token punctuation">(</span><span class="token string">"ViewHiddenComCats"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    m_fViewHiddenComCats <span class="token operator">=</span> <span class="token punctuation">(</span>BOOL<span class="token punctuation">)</span>theApp<span class="token punctuation">.</span><span class="token function">GetProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> FALSE<span class="token punctuation">)</span> <span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+COle2ViewDoc<span class="token operator">::</span><span class="token operator">~</span><span class="token function">COle2ViewDoc</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+
+    CString szSection <span class="token punctuation">;</span>
+    CString szKey <span class="token punctuation">;</span>
+    szSection<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CONFIG <span class="token punctuation">)</span> <span class="token punctuation">;</span>
+
+    szKey<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CLSCTX <span class="token punctuation">)</span> <span class="token punctuation">;</span>
+    theApp<span class="token punctuation">.</span><span class="token function">WriteProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> <span class="token punctuation">(</span>WORD<span class="token punctuation">)</span>m_dwClsCtx <span class="token punctuation">)</span> <span class="token punctuation">;</span>
+
+    szKey <span class="token operator">=</span> <span class="token function">_T</span><span class="token punctuation">(</span><span class="token string">"ViewHiddenComCats"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    theApp<span class="token punctuation">.</span><span class="token function">WriteProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> m_fViewHiddenComCats<span class="token punctuation">)</span> <span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+BOOL COle2ViewDoc<span class="token operator">::</span><span class="token function">OnNewDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+<span class="token comment">//    if (!CDocument::OnNewDocument())</span>
+<span class="token comment">//        return FALSE;</span>
+    <span class="token keyword">return</span> TRUE<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">void</span> COle2ViewDoc<span class="token operator">::</span><span class="token function">OnCloseDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    CDocument<span class="token operator">::</span><span class="token function">OnCloseDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>       
+
+
+<span class="token comment">/////////////////////////////////////////////////////////////////////////////</span>
+<span class="token comment">// COle2ViewDoc diagnostics</span>
+
+<span class="token macro property">#<span class="token directive keyword">ifdef</span> _DEBUG</span>
+<span class="token keyword">void</span> COle2ViewDoc<span class="token operator">::</span><span class="token function">AssertValid</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">const</span>
+<span class="token punctuation">{</span>
+    CDocument<span class="token operator">::</span><span class="token function">AssertValid</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">void</span> COle2ViewDoc<span class="token operator">::</span><span class="token function">Dump</span><span class="token punctuation">(</span>CDumpContext<span class="token operator">&amp;</span> dc<span class="token punctuation">)</span> <span class="token keyword">const</span>
+<span class="token punctuation">{</span>
+    CDocument<span class="token operator">::</span><span class="token function">Dump</span><span class="token punctuation">(</span>dc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token macro property">#<span class="token directive keyword">endif</span> </span><span class="token comment">//_DEBUG</span>
+
+<span class="token comment">/////////////////////////////////////////////////////////////////////////////</span>
+<span class="token comment">// COle2ViewDoc commands</span>
+
+
+</code></pre>
+</body></html>

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using ColorCode;
 using System.Threading.Tasks;
 using System.Text;
+using WinPrint.Core.ContentTypes;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -52,13 +53,12 @@ namespace WinPrint.Core {
         private bool pageSepartor;
 
         private string file;
-        public string File { get => file; set { 
+        public string File {
+            get => file; set {
                 SetField(ref file, value);
                 Debug.WriteLine($"SheetViewModel.File set {file}");
             }
         }
-
-        public string Type { get => GetDocType(); }
 
         public int NumSheets {
             get {
@@ -85,6 +85,7 @@ namespace WinPrint.Core {
         public float HardMarginX { get; set; }
         public float HardMarginY { get; set; }
         public RectangleF ContentBounds { get => contentBounds; private set => contentBounds = value; }
+        public string Type { get; internal set; }
 
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
@@ -202,25 +203,34 @@ namespace WinPrint.Core {
             if (!string.IsNullOrEmpty(File)) {
                 string document;
                 using StreamReader streamToPrint = new StreamReader(File);
-                switch (Type) {
-                    // html
-                    case "text/html":
-                        Content = ModelLocator.Current.Settings.HtmlFileSettings;
-                        document = streamToPrint.ReadToEnd();
-                        break;
-
-                    // language supported by Prism
-                    case "csharp":
+                var ext = Path.GetExtension(File).ToLower();
+                string type = "text/plain";
+                Content = ModelLocator.Current.Settings.TextFileSettings;
+                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
+                    if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
                         Content = ModelLocator.Current.Settings.PrismFileSettings;
-                        document = streamToPrint.ReadToEnd();
-                        break;
+                        ((PrismFileContent)Content).Language = type;
+                    }
+                    else {
+                        // we have a mapping, but it's not a language. 
+                        switch (type) {
+                            case "text/html":
+                                Content = ModelLocator.Current.Settings.HtmlFileSettings;
+                                break;
 
-                    // plaintext
-                    default:
-                        Content = ModelLocator.Current.Settings.TextFileSettings;
-                        document = streamToPrint.ReadToEnd();
-                        break;
+                            case "text/plain":
+                            default:
+                                Content = ModelLocator.Current.Settings.TextFileSettings;
+                                break;
+                        }
+                    }
                 }
+                else {
+                    type = "text/plain";
+                    Content = ModelLocator.Current.Settings.TextFileSettings;
+                }
+                Type = type;
+                document = streamToPrint.ReadToEnd();
 
                 Content.PropertyChanged -= OnContentPropertyChanged();
                 Content.PropertyChanged += OnContentPropertyChanged();
@@ -236,7 +246,7 @@ namespace WinPrint.Core {
             }
         }
 
- 
+
         private void ClearCache() {
             Debug.WriteLine("SheetViewModel.ClearCache");
             foreach (var i in cachedSheets) {
@@ -636,67 +646,5 @@ namespace WinPrint.Core {
                 g.DrawString(text, font, brush, x, y);
             }
         }
-
-        internal string GetDocType() {
-
-            string ext = Path.GetExtension(File);
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.Command, ext), "Command");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
-            //Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
-
-            //return Native.FileExtentionInfo(Native.AssocStr.FriendlyDocName, ext);
-
-            string mimeType = "application/unknown";
-
-            RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(Path.GetExtension(file).ToLower());
-
-            if (regKey != null) {
-                object contentType = regKey.GetValue("Content Type");
-
-                if (contentType != null)
-                    mimeType = contentType.ToString();
-            }
-
-            if (ext == ".cs")
-                mimeType = "csharp";
-
-            return mimeType;
-        }
-
-
-        ///// <summary>
-        ///// The main entry point for the application.
-        ///// </summary>
-        //[STAThread]
-        //static void Main() {
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.Command, ext), "Command");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
-        //    Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
-
-        //    //  DDEApplication: WinWord
-        //    //DDEIfExec: Ñﻴ߾
-        //    //  DDETopic: System
-        //    //  Executable: C:\Program Files (x86)\Microsoft Office\Office12\WINWORD.EXE
-        //    //  FriendlyAppName: Microsoft Office Word
-        //    //  FriendlyDocName: Microsoft Office Word 97 - 2003 Document
-
-
-        //}
-
-
-
     }
-
 }

@@ -8,13 +8,13 @@ using System.Text;
 
 namespace WinPrint.Core.ContentTypes {
     public class PrismFileContent : HtmlFileContent {
-        public static new string Type = "csharp";
+        public static new string Type = "Prism";
         public bool LineNumbers { get; set; }
 
         public override int Render(string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
             //var csharpstring = "public void Method()\n{\n}";
 
-            document = CodeToHtml(document, title, Type);
+            document = CodeToHtml(document, title, Language);
             Debug.WriteLine(document);
 
 #if DEBUG
@@ -35,9 +35,9 @@ namespace WinPrint.Core.ContentTypes {
             return base.Render(document, title, printerResolution);
         }
 
-        private string CodeToHtml(string document, string file, string type) {
+        private string CodeToHtml(string document, string file, string language) {
             const string cssTheme = "prism-coy.css";
-            const string cssPrism = "prism.css";
+            //const string cssPrism = "prism.css";
             const string cssWinPrint = "prism-winprint-overrides.css";
             string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             var cssUri = new UriBuilder();
@@ -49,10 +49,10 @@ namespace WinPrint.Core.ContentTypes {
             var sbNodeJS = new StringBuilder();
             sbNodeJS.AppendLine($"const Prism = require('prismjs');");
             sbNodeJS.AppendLine($"const loadLanguages = require('prismjs/components/');");
-            sbNodeJS.AppendLine($"loadLanguages(['{type}']);");
+            sbNodeJS.AppendLine($"loadLanguages(['{language}']);");
             //document = "using System;";
             sbNodeJS.AppendLine($"const code = `{document}`;");
-            sbNodeJS.AppendLine($"const html = Prism.highlight(code, Prism.languages.{type}, '{type}');");
+            sbNodeJS.AppendLine($"const html = Prism.highlight(code, Prism.languages.{language}, '{language}');");
             sbNodeJS.AppendLine($"console.log(html);");
             var nodeJS = sbNodeJS.ToString();
 
@@ -95,7 +95,7 @@ namespace WinPrint.Core.ContentTypes {
                     sw.Close();
 
                     var ln = LineNumbers ? "line-numbers" : "";
-                    sbHtml.AppendLine($"<pre class=\"language-{type} {ln} \"><code class=\"language-csharp\">");
+                    sbHtml.AppendLine($"<pre class=\"language-{language} {ln} \"><code class=\"language-csharp\">");
                     while (!node.StandardOutput.EndOfStream) {
                         sbHtml.AppendLine(node.StandardOutput.ReadLine());//.Replace(' ', (char)160));
                     }
@@ -111,6 +111,8 @@ namespace WinPrint.Core.ContentTypes {
             sbHtml.AppendLine($"</body></html>");
             return sbHtml.ToString();
         }
+
+        public string Language { get; internal set; }
 
         private string GetPrismThemesPath() {
             string path = @"C:\Users\ckindel\source\node_modules";

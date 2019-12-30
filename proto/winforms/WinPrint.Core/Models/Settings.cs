@@ -153,16 +153,18 @@ namespace WinPrint.Core.Models {
 
             settings.LanguageAssociations = new FileAssociations() {
                 FilesAssociations = new Dictionary<string, string>() {
-                    { "*.config", "config" },
+                    { "*.config", "json" },
+                    { "*.htm", "text/html" },
+                    { "*.html", "text/html" }
                 },
                 Languages = new List<Langauge>() {
                     new Langauge() {
-                        Id = "config",
+                        Id = "icon",
                         Extensions = new List<string>() {
-                            ".config", ".cfg", ".settings"
+                            ".icon"
                         },
                         Aliases = new List<string>() {
-                            "json"
+                            "lisp"
                         }
                     }
                 }
