@@ -14,7 +14,8 @@ namespace WinPrint.Core.Services {
     // TODO: Implement settings validation with appropriate alerting
     public class SettingsService {
         private JsonSerializerOptions jsonOptions;
-        private readonly string settingsFileName = "WinPrint.config";
+        // TODO: Implement settings file location per-user
+        private readonly string settingsFileName = "WinPrint.config.json";
         private FileWatcher watcher;
 
         public SettingsService() {
@@ -30,6 +31,11 @@ namespace WinPrint.Core.Services {
             jsonOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
+        /// <summary>
+        /// Reads settings from settings file (WinPrint.config.json).
+        /// If file does not exist, it is created.
+        /// </summary>
+        /// <returns></returns>
         public Settings ReadSettkngs() {
             Settings settings = null;
             string jsonString;
@@ -45,8 +51,7 @@ namespace WinPrint.Core.Services {
             }
             catch (FileNotFoundException) {
                 Debug.WriteLine($"ReadSettings: {settingsFileName} was not found; creating it.");
-                settings = Settings.CreateDefaults();
-
+                settings = Settings.CreateDefaultSettingsFile();
                 SaveSettings(settings);
             }
             catch (Exception ex) {
@@ -66,7 +71,7 @@ namespace WinPrint.Core.Services {
                     jsonString = File.ReadAllText(settingsFileName);
                     Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
-                    // CopyPropertiesTo does a deep, property-by property copy from the passed instance
+                    // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
                     ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
                     Debug.WriteLine($"ReadSettings: Done Copying Properties!");
                 };
@@ -75,6 +80,10 @@ namespace WinPrint.Core.Services {
             return settings;
         }
 
+        /// <summary>
+        /// Saves settings to settings file (WinPrint.config.json). 
+        /// </summary>
+        /// <param name="settings"></param>
         public void SaveSettings(Models.Settings settings) {
             string jsonString = JsonSerializer.Serialize(settings, jsonOptions); ;
 
@@ -82,7 +91,7 @@ namespace WinPrint.Core.Services {
             var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
 
             // Use the name of the test file as the Document.File property
-            using (FileStream fs = File.Create("WinPrint.config"))
+            using (FileStream fs = File.Create(settingsFileName))
 
             using (var writer = new Utf8JsonWriter(fs, options: writerOptions))
             using (JsonDocument document = JsonDocument.Parse(jsonString, documentOptions)) {
@@ -102,14 +111,13 @@ namespace WinPrint.Core.Services {
                 writer.WriteEndObject();
                 writer.Flush();
             }
-
         }
 
         // Factory - creates 
         static public Settings Create() {
-            // 
             Debug.WriteLine("SettingsService.Create()");
-            return ServiceLocator.Current.SettingsService.ReadSettkngs();
+            var settingsService = ServiceLocator.Current.SettingsService.ReadSettkngs();
+            return settingsService;
         }
 
     }

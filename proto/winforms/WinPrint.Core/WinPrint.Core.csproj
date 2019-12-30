@@ -11,10 +11,12 @@
 
   <ItemGroup>
     <None Remove="ContentTypes\prism-winprint-overrides.css" />
+    <None Remove="Properties\languages.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="ContentTypes\prism-winprint-overrides.css">
+    <EmbeddedResource Include="Properties\languages.json" />
+    <EmbeddedResource Include="Properties\prism-winprint-overrides.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

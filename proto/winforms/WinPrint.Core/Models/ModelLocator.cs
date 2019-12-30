@@ -13,13 +13,15 @@ namespace WinPrint.Core.Models {
         public static ModelLocator Current => _current ?? (_current = new ModelLocator());
 
         private ModelLocator() {
-            // Register the Document model via the SettingsService Factory
+            // Register the models via the SettingsService Factory
             SimpleIoc.Default.Register<Settings>(SettingsService.Create);
+            SimpleIoc.Default.Register<FileAssociations>(FileAssociationsService.Create);
             SimpleIoc.Default.Register<Options>();
         }
 
         public Models.Settings Settings => SimpleIoc.Default.GetInstance<Models.Settings>();
         public Models.Options Options => SimpleIoc.Default.GetInstance<Models.Options>();
+        public Models.FileAssociations Languages => SimpleIoc.Default.GetInstance<Models.FileAssociations>();
 
         public void Register<VM, V>()
             where VM : class {

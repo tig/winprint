@@ -61,13 +61,68 @@ namespace WinPrint.Core.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;${fsPath}&lt;/title&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
-        ///    &lt;style&gt;.
+        ///   Looks up a localized string similar to {
+        ///    &quot;file.associations&quot;: {
+        ///        &quot;*.myphp&quot;: &quot;php&quot;
+        ///    },
+        ///    &quot;languages&quot;: [
+        ///        {
+        ///            &quot;id&quot;: &quot;markup&quot;,
+        ///            &quot;title&quot;: &quot;Markup&quot;,
+        ///            &quot;aliases&quot;: [
+        ///                &quot;html&quot;,
+        ///                &quot;xml&quot;,
+        ///                &quot;svg&quot;,
+        ///                &quot;mathml&quot;
+        ///            ],
+        ///            &quot;extensions&quot;: [
+        ///                &quot;.markup&quot;,
+        ///                &quot;.html&quot;,
+        ///                &quot;.xml&quot;,
+        ///                &quot;.svg&quot;,
+        ///                &quot;.mathml&quot;
+        ///            ]
+        ///        },
+        ///        {
+        ///            &quot;id&quot;: &quot;css&quot;,
+        ///            &quot;t [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string htmlDocStart {
+        internal static string languages {
             get {
-                return ResourceManager.GetString("htmlDocStart", resourceCulture);
+                return ResourceManager.GetString("languages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to code[class*=&quot;language-&quot;],
+        ///pre[class*=&quot;language-&quot;] {
+        ///	background: none;
+        ///	font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
+        ///	font-size: 10pt;
+        ///	white-space: pre-wrap;
+        ///	word-wrap: break-word;
+        ///	word-break: break-all;
+        ///}
+        ///
+        ////* Code blocks */
+        ///pre[class*=&quot;language-&quot;] {
+        ///	margin: 0;
+        ///	overflow: visible;
+        ///	padding: 0;
+        ///}
+        ///
+        ///pre[class*=&quot;language-&quot;]&gt;code {
+        ///	position: relative;
+        ///	border-left: 0px solid black;
+        ///}
+        ///
+        ///code[class*=&quot;language&quot;] {
+        ///	max-height: inherit;
+        ///	padding [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string prism_winprint_overrides {
+            get {
+                return ResourceManager.GetString("prism_winprint_overrides", resourceCulture);
             }
         }
     }

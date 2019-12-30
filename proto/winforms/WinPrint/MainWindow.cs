@@ -188,6 +188,10 @@ namespace WinPrint {
             Debug.WriteLine("First reference to ModelLocator.Current.Settings");
             var sheets = ModelLocator.Current.Settings.Sheets;
 
+            // Load file assocations
+            var languages = ModelLocator.Current.Languages;
+            Debug.WriteLine($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
+
             ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 Debug.WriteLine($"Settings.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {

@@ -76,11 +76,7 @@ namespace WinPrint.Core.ContentTypes {
                 sbHtml.AppendLine($"<link href=\"{cssUri.Path + @"/" + cssWinPrint}\" rel=\"stylesheet\"/>");
             else {
                 sbHtml.AppendLine($"<style>");
-                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                var winprintOverrideResourceName = assembly.GetName().Name + ".ContentTypes." + cssWinPrint;
-                using (var reader = new StreamReader(assembly.GetManifestResourceStream(winprintOverrideResourceName), Encoding.UTF8)) {
-                    sbHtml.AppendLine(reader.ReadToEnd());
-                }
+                sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
                 sbHtml.AppendLine($"</style>");
             }
             sbHtml.AppendLine($"</head><body>");

@@ -13,9 +13,11 @@ namespace WinPrint.Core.Services {
 
         private ServiceLocator() {
             SimpleIoc.Default.Register<WinPrint.Core.Services.SettingsService>();
+            SimpleIoc.Default.Register<WinPrint.Core.Services.FileAssociationsService>();
         }
 
         public SettingsService SettingsService => SimpleIoc.Default.GetInstance<Services.SettingsService>();
+        public FileAssociationsService FileAssociationsService => SimpleIoc.Default.GetInstance<Services.FileAssociationsService>();
 
         public void Register<VM, V>()
             where VM : class {

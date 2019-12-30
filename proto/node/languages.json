@@ -1,0 +1,1367 @@
+{
+    "file.associations": [],
+    "languages": [
+        {
+            "id": "markup",
+            "title": "Markup",
+            "aliases": [
+                "html",
+                "xml",
+                "svg",
+                "mathml"
+            ],
+            "extensions": [
+                ".markup",
+                ".html",
+                ".xml",
+                ".svg",
+                ".mathml"
+            ]
+        },
+        {
+            "id": "css",
+            "title": "CSS",
+            "extensions": [
+                ".css"
+            ]
+        },
+        {
+            "id": "clike",
+            "title": "C-like",
+            "extensions": [
+                ".clike"
+            ]
+        },
+        {
+            "id": "javascript",
+            "title": "JavaScript",
+            "aliases": "js",
+            "extensions": [
+                ".javascript",
+                ".js"
+            ]
+        },
+        {
+            "id": "abap",
+            "title": "ABAP",
+            "extensions": [
+                ".abap"
+            ]
+        },
+        {
+            "id": "abnf",
+            "title": "Augmented Backus–Naur form",
+            "extensions": [
+                ".abnf"
+            ]
+        },
+        {
+            "id": "actionscript",
+            "title": "ActionScript",
+            "extensions": [
+                ".actionscript"
+            ]
+        },
+        {
+            "id": "ada",
+            "title": "Ada",
+            "extensions": [
+                ".ada"
+            ]
+        },
+        {
+            "id": "apacheconf",
+            "title": "Apache Configuration",
+            "extensions": [
+                ".apacheconf"
+            ]
+        },
+        {
+            "id": "apl",
+            "title": "APL",
+            "extensions": [
+                ".apl"
+            ]
+        },
+        {
+            "id": "applescript",
+            "title": "AppleScript",
+            "extensions": [
+                ".applescript"
+            ]
+        },
+        {
+            "id": "arduino",
+            "title": "Arduino",
+            "extensions": [
+                ".arduino"
+            ]
+        },
+        {
+            "id": "arff",
+            "title": "ARFF",
+            "extensions": [
+                ".arff"
+            ]
+        },
+        {
+            "id": "asciidoc",
+            "title": "AsciiDoc",
+            "aliases": "adoc",
+            "extensions": [
+                ".asciidoc",
+                ".adoc"
+            ]
+        },
+        {
+            "id": "asm6502",
+            "title": "6502 Assembly",
+            "extensions": [
+                ".asm6502"
+            ]
+        },
+        {
+            "id": "aspnet",
+            "title": "ASP.NET (C#)",
+            "extensions": [
+                ".aspnet"
+            ]
+        },
+        {
+            "id": "autohotkey",
+            "title": "AutoHotkey",
+            "extensions": [
+                ".autohotkey"
+            ]
+        },
+        {
+            "id": "autoit",
+            "title": "AutoIt",
+            "extensions": [
+                ".autoit"
+            ]
+        },
+        {
+            "id": "bash",
+            "title": "Bash",
+            "aliases": "shell",
+            "extensions": [
+                ".bash",
+                ".shell"
+            ]
+        },
+        {
+            "id": "basic",
+            "title": "BASIC",
+            "extensions": [
+                ".basic"
+            ]
+        },
+        {
+            "id": "batch",
+            "title": "Batch",
+            "extensions": [
+                ".batch"
+            ]
+        },
+        {
+            "id": "bison",
+            "title": "Bison",
+            "extensions": [
+                ".bison"
+            ]
+        },
+        {
+            "id": "bnf",
+            "title": "Backus–Naur form",
+            "aliases": "rbnf",
+            "extensions": [
+                ".bnf",
+                ".rbnf"
+            ]
+        },
+        {
+            "id": "brainfuck",
+            "title": "Brainfuck",
+            "extensions": [
+                ".brainfuck"
+            ]
+        },
+        {
+            "id": "bro",
+            "title": "Bro",
+            "extensions": [
+                ".bro"
+            ]
+        },
+        {
+            "id": "c",
+            "title": "C",
+            "extensions": [
+                ".c"
+            ]
+        },
+        {
+            "id": "csharp",
+            "title": "C#",
+            "aliases": [
+                "cs",
+                "dotnet"
+            ],
+            "extensions": [
+                ".csharp",
+                ".cs",
+                ".dotnet"
+            ]
+        },
+        {
+            "id": "cpp",
+            "title": "C++",
+            "extensions": [
+                ".cpp"
+            ]
+        },
+        {
+            "id": "cil",
+            "title": "CIL",
+            "extensions": [
+                ".cil"
+            ]
+        },
+        {
+            "id": "coffeescript",
+            "title": "CoffeeScript",
+            "aliases": "coffee",
+            "extensions": [
+                ".coffeescript",
+                ".coffee"
+            ]
+        },
+        {
+            "id": "cmake",
+            "title": "CMake",
+            "extensions": [
+                ".cmake"
+            ]
+        },
+        {
+            "id": "clojure",
+            "title": "Clojure",
+            "extensions": [
+                ".clojure"
+            ]
+        },
+        {
+            "id": "crystal",
+            "title": "Crystal",
+            "extensions": [
+                ".crystal"
+            ]
+        },
+        {
+            "id": "csp",
+            "title": "Content-Security-Policy",
+            "extensions": [
+                ".csp"
+            ]
+        },
+        {
+            "id": "css-extras",
+            "title": "CSS Extras",
+            "extensions": [
+                ".css-extras"
+            ]
+        },
+        {
+            "id": "d",
+            "title": "D",
+            "extensions": [
+                ".d"
+            ]
+        },
+        {
+            "id": "dart",
+            "title": "Dart",
+            "extensions": [
+                ".dart"
+            ]
+        },
+        {
+            "id": "diff",
+            "title": "Diff",
+            "extensions": [
+                ".diff"
+            ]
+        },
+        {
+            "id": "django",
+            "title": "Django/Jinja2",
+            "aliases": "jinja2",
+            "extensions": [
+                ".django",
+                ".jinja2"
+            ]
+        },
+        {
+            "id": "dns-zone-file",
+            "title": "DNS zone file",
+            "aliases": "dns-zone",
+            "extensions": [
+                ".dns-zone-file",
+                ".dns-zone"
+            ]
+        },
+        {
+            "id": "docker",
+            "title": "Docker",
+            "aliases": "dockerfile",
+            "extensions": [
+                ".docker",
+                ".dockerfile"
+            ]
+        },
+        {
+            "id": "ebnf",
+            "title": "Extended Backus–Naur form",
+            "extensions": [
+                ".ebnf"
+            ]
+        },
+        {
+            "id": "eiffel",
+            "title": "Eiffel",
+            "extensions": [
+                ".eiffel"
+            ]
+        },
+        {
+            "id": "ejs",
+            "title": "EJS",
+            "extensions": [
+                ".ejs"
+            ]
+        },
+        {
+            "id": "elixir",
+            "title": "Elixir",
+            "extensions": [
+                ".elixir"
+            ]
+        },
+        {
+            "id": "elm",
+            "title": "Elm",
+            "extensions": [
+                ".elm"
+            ]
+        },
+        {
+            "id": "erb",
+            "title": "ERB",
+            "extensions": [
+                ".erb"
+            ]
+        },
+        {
+            "id": "erlang",
+            "title": "Erlang",
+            "extensions": [
+                ".erlang"
+            ]
+        },
+        {
+            "id": "fsharp",
+            "title": "F#",
+            "extensions": [
+                ".fsharp"
+            ]
+        },
+        {
+            "id": "flow",
+            "title": "Flow",
+            "extensions": [
+                ".flow"
+            ]
+        },
+        {
+            "id": "fortran",
+            "title": "Fortran",
+            "extensions": [
+                ".fortran"
+            ]
+        },
+        {
+            "id": "gcode",
+            "title": "G-code",
+            "extensions": [
+                ".gcode"
+            ]
+        },
+        {
+            "id": "gedcom",
+            "title": "GEDCOM",
+            "extensions": [
+                ".gedcom"
+            ]
+        },
+        {
+            "id": "gherkin",
+            "title": "Gherkin",
+            "extensions": [
+                ".gherkin"
+            ]
+        },
+        {
+            "id": "git",
+            "title": "Git",
+            "extensions": [
+                ".git"
+            ]
+        },
+        {
+            "id": "glsl",
+            "title": "GLSL",
+            "extensions": [
+                ".glsl"
+            ]
+        },
+        {
+            "id": "gml",
+            "title": "GameMaker Language",
+            "aliases": "gamemakerlanguage",
+            "extensions": [
+                ".gml",
+                ".gamemakerlanguage"
+            ]
+        },
+        {
+            "id": "go",
+            "title": "Go",
+            "extensions": [
+                ".go"
+            ]
+        },
+        {
+            "id": "graphql",
+            "title": "GraphQL",
+            "extensions": [
+                ".graphql"
+            ]
+        },
+        {
+            "id": "groovy",
+            "title": "Groovy",
+            "extensions": [
+                ".groovy"
+            ]
+        },
+        {
+            "id": "haml",
+            "title": "Haml",
+            "extensions": [
+                ".haml"
+            ]
+        },
+        {
+            "id": "handlebars",
+            "title": "Handlebars",
+            "extensions": [
+                ".handlebars"
+            ]
+        },
+        {
+            "id": "haskell",
+            "title": "Haskell",
+            "aliases": "hs",
+            "extensions": [
+                ".haskell",
+                ".hs"
+            ]
+        },
+        {
+            "id": "haxe",
+            "title": "Haxe",
+            "extensions": [
+                ".haxe"
+            ]
+        },
+        {
+            "id": "hcl",
+            "title": "HCL",
+            "extensions": [
+                ".hcl"
+            ]
+        },
+        {
+            "id": "http",
+            "title": "HTTP",
+            "extensions": [
+                ".http"
+            ]
+        },
+        {
+            "id": "hpkp",
+            "title": "HTTP Public-Key-Pins",
+            "extensions": [
+                ".hpkp"
+            ]
+        },
+        {
+            "id": "hsts",
+            "title": "HTTP Strict-Transport-Security",
+            "extensions": [
+                ".hsts"
+            ]
+        },
+        {
+            "id": "ichigojam",
+            "title": "IchigoJam",
+            "extensions": [
+                ".ichigojam"
+            ]
+        },
+        {
+            "id": "icon",
+            "title": "Icon",
+            "extensions": [
+                ".icon"
+            ]
+        },
+        {
+            "id": "inform7",
+            "title": "Inform 7",
+            "extensions": [
+                ".inform7"
+            ]
+        },
+        {
+            "id": "ini",
+            "title": "Ini",
+            "extensions": [
+                ".ini"
+            ]
+        },
+        {
+            "id": "io",
+            "title": "Io",
+            "extensions": [
+                ".io"
+            ]
+        },
+        {
+            "id": "j",
+            "title": "J",
+            "extensions": [
+                ".j"
+            ]
+        },
+        {
+            "id": "java",
+            "title": "Java",
+            "extensions": [
+                ".java"
+            ]
+        },
+        {
+            "id": "javadoc",
+            "title": "JavaDoc",
+            "extensions": [
+                ".javadoc"
+            ]
+        },
+        {
+            "id": "javadoclike",
+            "title": "JavaDoc-like",
+            "extensions": [
+                ".javadoclike"
+            ]
+        },
+        {
+            "id": "javastacktrace",
+            "title": "Java stack trace",
+            "extensions": [
+                ".javastacktrace"
+            ]
+        },
+        {
+            "id": "jolie",
+            "title": "Jolie",
+            "extensions": [
+                ".jolie"
+            ]
+        },
+        {
+            "id": "jq",
+            "title": "JQ",
+            "extensions": [
+                ".jq"
+            ]
+        },
+        {
+            "id": "jsdoc",
+            "title": "JSDoc",
+            "extensions": [
+                ".jsdoc"
+            ]
+        },
+        {
+            "id": "js-extras",
+            "title": "JS Extras",
+            "extensions": [
+                ".js-extras"
+            ]
+        },
+        {
+            "id": "js-templates",
+            "title": "JS Templates",
+            "extensions": [
+                ".js-templates"
+            ]
+        },
+        {
+            "id": "json",
+            "title": "JSON",
+            "extensions": [
+                ".json"
+            ]
+        },
+        {
+            "id": "jsonp",
+            "title": "JSONP",
+            "extensions": [
+                ".jsonp"
+            ]
+        },
+        {
+            "id": "json5",
+            "title": "JSON5",
+            "extensions": [
+                ".json5"
+            ]
+        },
+        {
+            "id": "julia",
+            "title": "Julia",
+            "extensions": [
+                ".julia"
+            ]
+        },
+        {
+            "id": "keyman",
+            "title": "Keyman",
+            "extensions": [
+                ".keyman"
+            ]
+        },
+        {
+            "id": "kotlin",
+            "title": "Kotlin",
+            "extensions": [
+                ".kotlin"
+            ]
+        },
+        {
+            "id": "latex",
+            "title": "LaTeX",
+            "aliases": [
+                "tex",
+                "context"
+            ],
+            "extensions": [
+                ".latex",
+                ".tex",
+                ".context"
+            ]
+        },
+        {
+            "id": "less",
+            "title": "Less",
+            "extensions": [
+                ".less"
+            ]
+        },
+        {
+            "id": "lilypond",
+            "title": "LilyPond",
+            "aliases": "ly",
+            "extensions": [
+                ".lilypond",
+                ".ly"
+            ]
+        },
+        {
+            "id": "liquid",
+            "title": "Liquid",
+            "extensions": [
+                ".liquid"
+            ]
+        },
+        {
+            "id": "lisp",
+            "title": "Lisp",
+            "aliases": [
+                "emacs",
+                "elisp",
+                "emacs-lisp"
+            ],
+            "extensions": [
+                ".lisp",
+                ".emacs",
+                ".elisp",
+                ".emacs-lisp"
+            ]
+        },
+        {
+            "id": "livescript",
+            "title": "LiveScript",
+            "extensions": [
+                ".livescript"
+            ]
+        },
+        {
+            "id": "lolcode",
+            "title": "LOLCODE",
+            "extensions": [
+                ".lolcode"
+            ]
+        },
+        {
+            "id": "lua",
+            "title": "Lua",
+            "extensions": [
+                ".lua"
+            ]
+        },
+        {
+            "id": "makefile",
+            "title": "Makefile",
+            "extensions": [
+                ".makefile"
+            ]
+        },
+        {
+            "id": "markdown",
+            "title": "Markdown",
+            "aliases": "md",
+            "extensions": [
+                ".markdown",
+                ".md"
+            ]
+        },
+        {
+            "id": "markup-templating",
+            "title": "Markup templating",
+            "extensions": [
+                ".markup-templating"
+            ]
+        },
+        {
+            "id": "matlab",
+            "title": "MATLAB",
+            "extensions": [
+                ".matlab"
+            ]
+        },
+        {
+            "id": "mel",
+            "title": "MEL",
+            "extensions": [
+                ".mel"
+            ]
+        },
+        {
+            "id": "mizar",
+            "title": "Mizar",
+            "extensions": [
+                ".mizar"
+            ]
+        },
+        {
+            "id": "monkey",
+            "title": "Monkey",
+            "extensions": [
+                ".monkey"
+            ]
+        },
+        {
+            "id": "n1ql",
+            "title": "N1QL",
+            "extensions": [
+                ".n1ql"
+            ]
+        },
+        {
+            "id": "n4js",
+            "title": "N4JS",
+            "aliases": "n4jsd",
+            "extensions": [
+                ".n4js",
+                ".n4jsd"
+            ]
+        },
+        {
+            "id": "nand2tetris-hdl",
+            "title": "Nand To Tetris HDL",
+            "extensions": [
+                ".nand2tetris-hdl"
+            ]
+        },
+        {
+            "id": "nasm",
+            "title": "NASM",
+            "extensions": [
+                ".nasm"
+            ]
+        },
+        {
+            "id": "nginx",
+            "title": "nginx",
+            "extensions": [
+                ".nginx"
+            ]
+        },
+        {
+            "id": "nim",
+            "title": "Nim",
+            "extensions": [
+                ".nim"
+            ]
+        },
+        {
+            "id": "nix",
+            "title": "Nix",
+            "extensions": [
+                ".nix"
+            ]
+        },
+        {
+            "id": "nsis",
+            "title": "NSIS",
+            "extensions": [
+                ".nsis"
+            ]
+        },
+        {
+            "id": "objectivec",
+            "title": "Objective-C",
+            "extensions": [
+                ".objectivec"
+            ]
+        },
+        {
+            "id": "ocaml",
+            "title": "OCaml",
+            "extensions": [
+                ".ocaml"
+            ]
+        },
+        {
+            "id": "opencl",
+            "title": "OpenCL",
+            "extensions": [
+                ".opencl"
+            ]
+        },
+        {
+            "id": "oz",
+            "title": "Oz",
+            "extensions": [
+                ".oz"
+            ]
+        },
+        {
+            "id": "parigp",
+            "title": "PARI/GP",
+            "extensions": [
+                ".parigp"
+            ]
+        },
+        {
+            "id": "parser",
+            "title": "Parser",
+            "extensions": [
+                ".parser"
+            ]
+        },
+        {
+            "id": "pascal",
+            "title": "Pascal",
+            "aliases": "objectpascal",
+            "extensions": [
+                ".pascal",
+                ".objectpascal"
+            ]
+        },
+        {
+            "id": "pascaligo",
+            "title": "Pascaligo",
+            "extensions": [
+                ".pascaligo"
+            ]
+        },
+        {
+            "id": "pcaxis",
+            "title": "PC-Axis",
+            "aliases": "px",
+            "extensions": [
+                ".pcaxis",
+                ".px"
+            ]
+        },
+        {
+            "id": "perl",
+            "title": "Perl",
+            "extensions": [
+                ".perl"
+            ]
+        },
+        {
+            "id": "php",
+            "title": "PHP",
+            "extensions": [
+                ".php"
+            ]
+        },
+        {
+            "id": "phpdoc",
+            "title": "PHPDoc",
+            "extensions": [
+                ".phpdoc"
+            ]
+        },
+        {
+            "id": "php-extras",
+            "title": "PHP Extras",
+            "extensions": [
+                ".php-extras"
+            ]
+        },
+        {
+            "id": "plsql",
+            "title": "PL/SQL",
+            "extensions": [
+                ".plsql"
+            ]
+        },
+        {
+            "id": "powershell",
+            "title": "PowerShell",
+            "extensions": [
+                ".powershell"
+            ]
+        },
+        {
+            "id": "processing",
+            "title": "Processing",
+            "extensions": [
+                ".processing"
+            ]
+        },
+        {
+            "id": "prolog",
+            "title": "Prolog",
+            "extensions": [
+                ".prolog"
+            ]
+        },
+        {
+            "id": "properties",
+            "title": ".properties",
+            "extensions": [
+                ".properties"
+            ]
+        },
+        {
+            "id": "protobuf",
+            "title": "Protocol Buffers",
+            "extensions": [
+                ".protobuf"
+            ]
+        },
+        {
+            "id": "pug",
+            "title": "Pug",
+            "extensions": [
+                ".pug"
+            ]
+        },
+        {
+            "id": "puppet",
+            "title": "Puppet",
+            "extensions": [
+                ".puppet"
+            ]
+        },
+        {
+            "id": "pure",
+            "title": "Pure",
+            "extensions": [
+                ".pure"
+            ]
+        },
+        {
+            "id": "python",
+            "title": "Python",
+            "aliases": "py",
+            "extensions": [
+                ".python",
+                ".py"
+            ]
+        },
+        {
+            "id": "q",
+            "title": "Q (kdb+ database)",
+            "extensions": [
+                ".q"
+            ]
+        },
+        {
+            "id": "qore",
+            "title": "Qore",
+            "extensions": [
+                ".qore"
+            ]
+        },
+        {
+            "id": "r",
+            "title": "R",
+            "extensions": [
+                ".r"
+            ]
+        },
+        {
+            "id": "jsx",
+            "title": "React JSX",
+            "extensions": [
+                ".jsx"
+            ]
+        },
+        {
+            "id": "tsx",
+            "title": "React TSX",
+            "extensions": [
+                ".tsx"
+            ]
+        },
+        {
+            "id": "renpy",
+            "title": "Ren'py",
+            "extensions": [
+                ".renpy"
+            ]
+        },
+        {
+            "id": "reason",
+            "title": "Reason",
+            "extensions": [
+                ".reason"
+            ]
+        },
+        {
+            "id": "regex",
+            "title": "Regex",
+            "extensions": [
+                ".regex"
+            ]
+        },
+        {
+            "id": "rest",
+            "title": "reST (reStructuredText)",
+            "extensions": [
+                ".rest"
+            ]
+        },
+        {
+            "id": "rip",
+            "title": "Rip",
+            "extensions": [
+                ".rip"
+            ]
+        },
+        {
+            "id": "roboconf",
+            "title": "Roboconf",
+            "extensions": [
+                ".roboconf"
+            ]
+        },
+        {
+            "id": "ruby",
+            "title": "Ruby",
+            "aliases": "rb",
+            "extensions": [
+                ".ruby",
+                ".rb"
+            ]
+        },
+        {
+            "id": "rust",
+            "title": "Rust",
+            "extensions": [
+                ".rust"
+            ]
+        },
+        {
+            "id": "sas",
+            "title": "SAS",
+            "extensions": [
+                ".sas"
+            ]
+        },
+        {
+            "id": "sass",
+            "title": "Sass (Sass)",
+            "extensions": [
+                ".sass"
+            ]
+        },
+        {
+            "id": "scss",
+            "title": "Sass (Scss)",
+            "extensions": [
+                ".scss"
+            ]
+        },
+        {
+            "id": "scala",
+            "title": "Scala",
+            "extensions": [
+                ".scala"
+            ]
+        },
+        {
+            "id": "scheme",
+            "title": "Scheme",
+            "extensions": [
+                ".scheme"
+            ]
+        },
+        {
+            "id": "shell-session",
+            "title": "Shell session",
+            "extensions": [
+                ".shell-session"
+            ]
+        },
+        {
+            "id": "smalltalk",
+            "title": "Smalltalk",
+            "extensions": [
+                ".smalltalk"
+            ]
+        },
+        {
+            "id": "smarty",
+            "title": "Smarty",
+            "extensions": [
+                ".smarty"
+            ]
+        },
+        {
+            "id": "soy",
+            "title": "Soy (Closure Template)",
+            "extensions": [
+                ".soy"
+            ]
+        },
+        {
+            "id": "splunk-spl",
+            "title": "Splunk SPL",
+            "extensions": [
+                ".splunk-spl"
+            ]
+        },
+        {
+            "id": "sql",
+            "title": "SQL",
+            "extensions": [
+                ".sql"
+            ]
+        },
+        {
+            "id": "stylus",
+            "title": "Stylus",
+            "extensions": [
+                ".stylus"
+            ]
+        },
+        {
+            "id": "swift",
+            "title": "Swift",
+            "extensions": [
+                ".swift"
+            ]
+        },
+        {
+            "id": "tap",
+            "title": "TAP",
+            "extensions": [
+                ".tap"
+            ]
+        },
+        {
+            "id": "tcl",
+            "title": "Tcl",
+            "extensions": [
+                ".tcl"
+            ]
+        },
+        {
+            "id": "textile",
+            "title": "Textile",
+            "extensions": [
+                ".textile"
+            ]
+        },
+        {
+            "id": "toml",
+            "title": "TOML",
+            "extensions": [
+                ".toml"
+            ]
+        },
+        {
+            "id": "tt2",
+            "title": "Template Toolkit 2",
+            "extensions": [
+                ".tt2"
+            ]
+        },
+        {
+            "id": "twig",
+            "title": "Twig",
+            "extensions": [
+                ".twig"
+            ]
+        },
+        {
+            "id": "typescript",
+            "title": "TypeScript",
+            "aliases": "ts",
+            "extensions": [
+                ".typescript",
+                ".ts"
+            ]
+        },
+        {
+            "id": "t4-cs",
+            "title": "T4 Text Templates (C#)",
+            "aliases": "t4",
+            "extensions": [
+                ".t4-cs",
+                ".t4"
+            ]
+        },
+        {
+            "id": "t4-vb",
+            "title": "T4 Text Templates (VB)",
+            "extensions": [
+                ".t4-vb"
+            ]
+        },
+        {
+            "id": "t4-templating",
+            "title": "T4 templating",
+            "extensions": [
+                ".t4-templating"
+            ]
+        },
+        {
+            "id": "vala",
+            "title": "Vala",
+            "extensions": [
+                ".vala"
+            ]
+        },
+        {
+            "id": "vbnet",
+            "title": "VB.Net",
+            "extensions": [
+                ".vbnet"
+            ]
+        },
+        {
+            "id": "velocity",
+            "title": "Velocity",
+            "extensions": [
+                ".velocity"
+            ]
+        },
+        {
+            "id": "verilog",
+            "title": "Verilog",
+            "extensions": [
+                ".verilog"
+            ]
+        },
+        {
+            "id": "vhdl",
+            "title": "VHDL",
+            "extensions": [
+                ".vhdl"
+            ]
+        },
+        {
+            "id": "vim",
+            "title": "vim",
+            "extensions": [
+                ".vim"
+            ]
+        },
+        {
+            "id": "visual-basic",
+            "title": "Visual Basic",
+            "aliases": "vb",
+            "extensions": [
+                ".visual-basic",
+                ".vb"
+            ]
+        },
+        {
+            "id": "wasm",
+            "title": "WebAssembly",
+            "extensions": [
+                ".wasm"
+            ]
+        },
+        {
+            "id": "wiki",
+            "title": "Wiki markup",
+            "extensions": [
+                ".wiki"
+            ]
+        },
+        {
+            "id": "xeora",
+            "title": "Xeora",
+            "aliases": "xeoracube",
+            "extensions": [
+                ".xeora",
+                ".xeoracube"
+            ]
+        },
+        {
+            "id": "xojo",
+            "title": "Xojo (REALbasic)",
+            "extensions": [
+                ".xojo"
+            ]
+        },
+        {
+            "id": "xquery",
+            "title": "XQuery",
+            "extensions": [
+                ".xquery"
+            ]
+        },
+        {
+            "id": "yaml",
+            "title": "YAML",
+            "aliases": "yml",
+            "extensions": [
+                ".yaml",
+                ".yml"
+            ]
+        }
+    ]
+}

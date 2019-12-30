@@ -95,13 +95,13 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public Dictionary<string, Sheet> Sheets { get; set; }
 
-        public LanguageAssociations languageAssociations { get; set; }
+        public FileAssociations LanguageAssociations { get; set; }
 
         public Settings() {
 
         }
 
-        internal static Settings CreateDefaults() {
+        internal static Settings CreateDefaultSettingsFile() {
             var settings = new Settings();
             settings.size = new WindowSize(1024, 800);
             settings.location = new WindowLocation(100, 100);
@@ -120,6 +120,7 @@ namespace WinPrint.Core.Models {
 
             settings.PrismFileSettings = new PrismFileContent() {
                 Font = new Font() { Family = "Verdana", Size = 10F, Style = FontStyle.Regular },
+                MonspacedFont = new Font() { Family = "Consolas", Size = 10F, Style = FontStyle.Regular },
                 LineNumbers = true,
             };
 
@@ -150,7 +151,7 @@ namespace WinPrint.Core.Models {
             sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 50;
             settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
 
-            settings.languageAssociations = new LanguageAssociations() {
+            settings.LanguageAssociations = new FileAssociations() {
                 FilesAssociations = new Dictionary<string, string>() {
                     { "*.config", "config" },
                 },
