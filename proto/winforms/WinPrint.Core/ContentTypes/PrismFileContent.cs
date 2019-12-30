@@ -11,13 +11,13 @@ namespace WinPrint.Core.ContentTypes {
         public static new string Type = "Prism";
         public bool LineNumbers { get; set; }
 
-        public override int Render(string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override int Render(ref string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
             //var csharpstring = "public void Method()\n{\n}";
 
             document = CodeToHtml(document, title, Language);
             Debug.WriteLine(document);
 
-#if DEBUG
+#if DEBUGx
             var w = new StreamWriter(title + "_.html");
             w.Write(document);
             w.Close();
@@ -32,7 +32,7 @@ namespace WinPrint.Core.ContentTypes {
                         w.Close();
 #endif
 
-            return base.Render(document, title, printerResolution);
+            return base.Render(ref document, title, printerResolution);
         }
 
         private string CodeToHtml(string document, string file, string language) {

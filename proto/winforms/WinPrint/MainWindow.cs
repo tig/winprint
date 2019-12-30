@@ -143,6 +143,7 @@ namespace WinPrint {
 
                     case "File":
                         this.Text = $"WinPrint - {svm.File}";
+                        printPreview.CurrentSheet = 1;
                         SheetSettingsChanged();
                         break;
                 }

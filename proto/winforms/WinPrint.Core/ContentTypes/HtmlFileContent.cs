@@ -51,7 +51,7 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int Render(string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override int Render(ref string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             Debug.WriteLine($"HtmlFileContent.CountPages - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
