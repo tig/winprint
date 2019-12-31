@@ -47,7 +47,7 @@ namespace WinPrint.Core {
                 try {
                     e = DynamicExpressionParser.ParseLambda(new[] { p }, null, propertyGroup.Value);
                 }
-                catch (ParseException ex) {
+                catch { //(ParseException ex) {
                     // Non-existant Property or other parse error
                     return propertyGroup.Value;
                 }

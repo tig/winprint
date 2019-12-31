@@ -1,0 +1,147 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\generate-associations.js</title>
+<meta charset="utf-8"/>
+<link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+<style>
+code[class*="language-"],
+pre[class*="language-"] {
+    background: none;
+    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 10pt;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    margin: 0;
+    overflow: visible;
+    padding: 0;
+}
+
+/* Background & bordder */
+pre[class*="language-"] > code {
+    position: relative;
+	border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+    background: none;
+    background-image: none;
+    background-color: transparent; 
+    /*background-size: unset;*/
+    /*background-origin: content-box;*/
+    /*background-attachment: local;*/
+}
+
+code[class*="language"] {
+    max-height: inherit;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    margin-bottom: 0;
+}
+
+</style>
+</head><body>
+<pre class="language-javascript line-numbers "><code class="language-csharp">
+<span class="token comment">// Imports file-extension to langauge mapping from both</span>
+<span class="token comment">// prismjs and lang-map and outputs a JSDON document that</span>
+<span class="token comment">// follows the vscode schema for extension mapping.</span>
+<span class="token comment">// PrismJS language definitions trump for my solution.</span>
+<span class="token keyword">const</span> fs <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'fs'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">var</span> map <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'lang-map'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">var</span> components <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">'prismjs/components.js'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment">// vscode files.associations is not an array. Use a dictionary instead.</span>
+<span class="token keyword">var</span> assocDict <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token keyword">var</span> languages <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">var</span> key <span class="token keyword">in</span> components<span class="token punctuation">.</span>languages<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>components<span class="token punctuation">.</span>languages<span class="token punctuation">.</span><span class="token function">hasOwnProperty</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> key <span class="token operator">!=</span> <span class="token string">'meta'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">var</span> language <span class="token operator">=</span> components<span class="token punctuation">.</span>languages<span class="token punctuation">[</span>key<span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token keyword">var</span> langTemp <span class="token operator">=</span> <span class="token punctuation">{</span>
+          id <span class="token punctuation">:</span> key
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+        langTemp<span class="token punctuation">.</span>aliases <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// vscode doesn't support title, but I want to use it</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> language<span class="token punctuation">.</span>title <span class="token operator">!=</span> <span class="token string">'undefined'</span><span class="token punctuation">)</span>
+            langTemp<span class="token punctuation">.</span>title <span class="token operator">=</span> language<span class="token punctuation">.</span>title<span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> language<span class="token punctuation">.</span>alias <span class="token operator">!=</span> <span class="token string">'undefined'</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>Array<span class="token punctuation">.</span><span class="token function">isArray</span><span class="token punctuation">(</span>language<span class="token punctuation">.</span>alias<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+                langTemp<span class="token punctuation">.</span>aliases <span class="token operator">=</span> language<span class="token punctuation">.</span>alias<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+            <span class="token keyword">else</span><span class="token punctuation">{</span>
+                langTemp<span class="token punctuation">.</span>aliases<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>language<span class="token punctuation">.</span>alias<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">var</span> extensions <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token comment">// get lang to extension mapping from lang-map using key</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>map<span class="token punctuation">.</span><span class="token function">extensions</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">.</span>length <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+            map<span class="token punctuation">.</span><span class="token function">extensions</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token parameter">ext</span> <span class="token operator">=></span><span class="token punctuation">{</span>
+                <span class="token comment">// Add it to the extensions for this language defn</span>
+
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>extensions<span class="token punctuation">.</span><span class="token function">find</span><span class="token punctuation">(</span><span class="token parameter">element</span> <span class="token operator">=></span> element <span class="token operator">==</span> <span class="token string">'.'</span> <span class="token operator">+</span> ext<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span>
+                    extensions<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token string">'.'</span> <span class="token operator">+</span> ext<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                <span class="token comment">// also add it to the files.associations dictionary</span>
+                <span class="token keyword">var</span> pattern <span class="token operator">=</span> <span class="token string">'*.'</span> <span class="token operator">+</span> ext<span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>assocDict<span class="token punctuation">[</span>pattern<span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span>
+                    assocDict<span class="token punctuation">[</span>pattern<span class="token punctuation">]</span> <span class="token operator">=</span> key<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> langTemp<span class="token punctuation">.</span>title <span class="token operator">!=</span> <span class="token string">'undefined'</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+            map<span class="token punctuation">.</span><span class="token function">extensions</span><span class="token punctuation">(</span>langTemp<span class="token punctuation">.</span>title<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token parameter">ext</span> <span class="token operator">=></span><span class="token punctuation">{</span>
+                <span class="token comment">// Add it to the extensions for this langauge defn</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>extensions<span class="token punctuation">.</span><span class="token function">find</span><span class="token punctuation">(</span><span class="token parameter">element</span> <span class="token operator">=></span> element <span class="token operator">==</span> <span class="token string">'.'</span> <span class="token operator">+</span> ext<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span>
+                    extensions<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token string">'.'</span> <span class="token operator">+</span> ext<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                <span class="token comment">// also add it to the files.associations dictionary</span>
+                <span class="token keyword">var</span> pattern <span class="token operator">=</span> <span class="token string">'*.'</span> <span class="token operator">+</span> ext<span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>assocDict<span class="token punctuation">[</span>pattern<span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span>
+                    assocDict<span class="token punctuation">[</span>pattern<span class="token punctuation">]</span> <span class="token operator">=</span> key<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        langTemp<span class="token punctuation">.</span>aliases<span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token parameter">a</span> <span class="token operator">=></span> <span class="token punctuation">{</span>        
+            map<span class="token punctuation">.</span><span class="token function">extensions</span><span class="token punctuation">(</span>a<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token parameter">ext</span> <span class="token operator">=></span><span class="token punctuation">{</span>
+                <span class="token comment">// Add it to the extensions for this langauge defn</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>extensions<span class="token punctuation">.</span><span class="token function">find</span><span class="token punctuation">(</span><span class="token parameter">element</span> <span class="token operator">=></span> element <span class="token operator">==</span> <span class="token string">'.'</span> <span class="token operator">+</span> ext<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span>
+                    extensions<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span><span class="token string">'.'</span> <span class="token operator">+</span> ext<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                <span class="token comment">// also add it to the files.associations dictionary</span>
+                <span class="token keyword">var</span> pattern <span class="token operator">=</span> <span class="token string">'*.'</span> <span class="token operator">+</span> ext<span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>assocDict<span class="token punctuation">[</span>pattern<span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token keyword">undefined</span><span class="token punctuation">)</span>
+                    assocDict<span class="token punctuation">[</span>pattern<span class="token punctuation">]</span> <span class="token operator">=</span> key<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        langTemp<span class="token punctuation">.</span>extensions <span class="token operator">=</span> extensions<span class="token punctuation">;</span>
+        languages<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>langTemp<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment">// create JSON doc conforming to vscode spec. associations is not an array</span>
+<span class="token comment">// languages is</span>
+<span class="token keyword">var</span> output <span class="token operator">=</span> <span class="token punctuation">{</span> 
+    <span class="token string">'files.associations'</span> <span class="token punctuation">:</span> assocDict<span class="token punctuation">,</span>
+    <span class="token string">'languages'</span> <span class="token punctuation">:</span> languages
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token keyword">var</span> file <span class="token operator">=</span> <span class="token string">"../winforms/WinPrint.Core/Properties/languages.json"</span><span class="token punctuation">;</span>
+fs<span class="token punctuation">.</span><span class="token function">writeFile</span><span class="token punctuation">(</span>file<span class="token punctuation">,</span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>output<span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token string">'  '</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">err</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>err<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>err<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"Wrote "</span> <span class="token operator">+</span> Object<span class="token punctuation">.</span><span class="token function">keys</span><span class="token punctuation">(</span>assocDict<span class="token punctuation">)</span><span class="token punctuation">.</span>length <span class="token operator">+</span> <span class="token string">" file-type associations and "</span> <span class="token operator">+</span> languages<span class="token punctuation">.</span>length <span class="token operator">+</span> <span class="token string">" language defs to "</span> <span class="token operator">+</span> file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+</code></pre>
+</body></html>

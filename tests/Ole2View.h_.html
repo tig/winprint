@@ -1,7 +1,53 @@
 <!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\Ole2View.h</title>
 <meta charset="utf-8"/>
 <link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
-<link href="file:/C:/Users/ckindel/source/winprint/proto/winforms/WinPrint/bin/Debug/netcoreapp3.0/prism-winprint-overrides.css" rel="stylesheet"/>
+<style>
+code[class*="language-"],
+pre[class*="language-"] {
+    background: none;
+    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 10pt;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    margin: 0;
+    overflow: visible;
+    padding: 0;
+}
+
+/* Background & bordder */
+pre[class*="language-"] > code {
+    position: relative;
+	border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+    background: none;
+    background-image: none;
+    background-color: transparent; 
+    /*background-size: unset;*/
+    /*background-origin: content-box;*/
+    /*background-attachment: local;*/
+}
+
+code[class*="language"] {
+    max-height: inherit;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    margin-bottom: 0;
+}
+
+</style>
 </head><body>
 <pre class="language-c line-numbers "><code class="language-csharp">
 <span class="token comment">// Ole2View.h : main header file for the Ole2View application</span>
@@ -87,6 +133,7 @@ BOOL <span class="token function">RegisterIViewersDLL</span><span class="token p
 <span class="token keyword">extern</span> CImageList<span class="token operator">*</span> g_pImages <span class="token punctuation">;</span>
 
 <span class="token macro property">#<span class="token directive keyword">endif</span> </span><span class="token comment">// _Ole2View_H_</span>
+
 
 
 </code></pre>

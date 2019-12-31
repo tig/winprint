@@ -54,7 +54,8 @@ namespace WinPrint.Core {
 
         private string file;
         public string File {
-            get => file; set {
+            get => file;
+            internal set {
                 SetField(ref file, value);
                 Debug.WriteLine($"SheetViewModel.File set {file}");
             }
@@ -62,13 +63,14 @@ namespace WinPrint.Core {
 
         public int NumSheets {
             get {
-                if (Content.GetNumPages() == 0) return 0;
-                return (int)Math.Ceiling((double)Content.GetNumPages() / (Rows * Columns));
+                if (Content == null || Content.NumPages == 0) return 0;
+                return (int)Math.Ceiling((double)Content.NumPages / (Rows * Columns));
             }
         }
 
         // TOOD: Hold an abstract base-type to enable mulitple content types
-        internal Core.ContentTypes.ContentBase Content { get; set; }
+        internal ContentBase Content { get => _content; set => SetField(ref _content, value); }
+        private ContentBase _content;
 
         private Size paperSize;
         private RectangleF printableArea;
@@ -87,10 +89,15 @@ namespace WinPrint.Core {
         public RectangleF ContentBounds { get => contentBounds; private set => contentBounds = value; }
         public string Type { get; internal set; }
 
+        public bool Loading { get => loading; set => SetField(ref loading, value); }
+        private bool loading;
+        public bool Reflowing { get => reflowing; set => SetField(ref reflowing, value); }
+        private bool reflowing;
+
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
         protected void OnSettingsChanged(bool reflow) {
-            ClearCache();
+            //ClearCache();
             SettingsChanged?.Invoke(this, reflow);
         }
 
@@ -102,26 +109,71 @@ namespace WinPrint.Core {
             //Reflow(new PageSettings());
         }
 
-        public void SetSettings(Sheet sheet) {
-            if (sheet is null) throw new ArgumentNullException(nameof(sheet));
+        /// <summary>
+        /// Call SetSheet when the Sheet has changed. 
+        /// </summary>
+        /// <param name="newSheet">new Sheet defintiion to use</param>
+        public void SetSheet(Sheet newSheet) {
+            if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
+            if (this.sheet != null)
+                sheet.PropertyChanged -= OnSheetPropertyChanged();
 
-            this.sheet = sheet;
-            Landscape = sheet.Landscape;
-            RulesFont = (Core.Models.Font)sheet.RulesFont.Clone();
-            Rows = sheet.Rows;
-            Columns = sheet.Columns;
-            Padding = sheet.Padding;
-            PageSepartor = sheet.PageSeparator;
-            margins = (Margins)sheet.Margins.Clone();
-            headerVM = new HeaderViewModel(this, sheet.Header);
-            footerVM = new FooterViewModel(this, sheet.Footer);
+            this.sheet = newSheet;
+            Landscape = newSheet.Landscape;
+            RulesFont = (Core.Models.Font)newSheet.RulesFont.Clone();
+            Rows = newSheet.Rows;
+            Columns = newSheet.Columns;
+            Padding = newSheet.Padding;
+            PageSepartor = newSheet.PageSeparator;
+            margins = (Margins)newSheet.Margins.Clone();
+
+            if (headerVM != null)
+                headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+            headerVM = new HeaderViewModel(this, newSheet.Header);
+            if (footerVM != null)
+                footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+            footerVM = new FooterViewModel(this, newSheet.Footer);
 
             // Subscribe to all settings properties
-            sheet.PropertyChanged -= OnSheetPropertyChanged();
-            sheet.PropertyChanged += OnSheetPropertyChanged();
-
+            newSheet.PropertyChanged += OnSheetPropertyChanged();
             headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
             footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
+        }
+
+        public async Task LoadAsync(string filePath) {
+            Debug.WriteLine($"SheetViewModel.LoadAsync({filePath})");
+            var ext = Path.GetExtension(filePath).ToLower();
+            string type = "text/plain";
+            ContentBase content = TextFileContent.Create();
+            if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
+                if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
+                    content = PrismFileContent.Create();
+                    ((PrismFileContent)content).Language = type;
+                }
+                else {
+                    if (type.Equals("text/html"))
+                        content = HtmlFileContent.Create();
+                }
+            }
+            Type = type;
+
+            if (Content != null) {
+                Content.PropertyChanged -= OnContentPropertyChanged();
+                //Content = null;
+            }
+            content.PropertyChanged += OnContentPropertyChanged();
+
+            Loading = true;
+            await content.LoadAsync(filePath);
+
+            // Callers can subscribe to File property to be notifed the content has been
+            // loaded. 
+            File = filePath;
+
+            // Callers can subscribe to Content property change to be notified content has
+            // been loaded.
+            Content = content;
+            Loading = false;
         }
 
         /// <summary>
@@ -129,9 +181,16 @@ namespace WinPrint.Core {
         /// for performance (and for platform independence). 
         /// </summary>
         /// <param name="pageSettings"></param>
-        public void Reflow(PageSettings pageSettings) {
+        public async Task ReflowAsync(PageSettings pageSettings) {
+            Debug.WriteLine($"SheetViewModel.ReflowAsync");
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
 
+            if (Reflowing) {
+                Debug.WriteLine($"SheetViewModel.ReflowAsync - already reflowing, returning");
+                return;
+            }
+
+            Reflowing = true;
             ClearCache();
 
             var ps = (PageSettings)pageSettings.Clone();
@@ -200,50 +259,16 @@ namespace WinPrint.Core {
             contentBounds.Width = Bounds.Width - sheet.Margins.Left - sheet.Margins.Right;
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
 
-            if (!string.IsNullOrEmpty(File)) {
-                string document;
-                using StreamReader streamToPrint = new StreamReader(File);
-                var ext = Path.GetExtension(File).ToLower();
-                string type = "text/plain";
-                Content = ModelLocator.Current.Settings.TextFileSettings;
-                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
-                    if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
-                        Content = ModelLocator.Current.Settings.PrismFileSettings;
-                        ((PrismFileContent)Content).Language = type;
-                    }
-                    else {
-                        // we have a mapping, but it's not a language. 
-                        switch (type) {
-                            case "text/html":
-                                Content = ModelLocator.Current.Settings.HtmlFileSettings;
-                                break;
-
-                            case "text/plain":
-                            default:
-                                Content = ModelLocator.Current.Settings.TextFileSettings;
-                                break;
-                        }
-                    }
-                }
-                else {
-                    type = "text/plain";
-                    Content = ModelLocator.Current.Settings.TextFileSettings;
-                }
-                Type = type;
-                document = streamToPrint.ReadToEnd();
-
-                Content.PropertyChanged -= OnContentPropertyChanged();
-                Content.PropertyChanged += OnContentPropertyChanged();
-
-                Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                Content.Render(ref document, File, PrinterResolution);
+            if (Content is null) {
+                Debug.WriteLine("SheetViewModel.ReflowAsync - Content is null");
+                Reflowing = false;
+                return;
             }
-            else {
-                //    // Create a dummmy for preview with no file
-                //    Content = new Core.ContentTypes.TextFileContent();
-                //    Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-                throw new Exception("No filename provided.");
-            }
+
+            Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+            // TODO: Make this async
+            int numPages = await Content.RenderAsync(PrinterResolution);
+            Reflowing = false;
         }
 
 
@@ -268,7 +293,6 @@ namespace WinPrint.Core {
                     Margins = sheet.Margins;
                     reflow = true;
                     break;
-
 
                 case "RulesFont":
                     RulesFont = sheet.RulesFont;
@@ -324,9 +348,14 @@ namespace WinPrint.Core {
                     reflow = true;
                     break;
 
+                case "PageSize":
+                    reflow = true;
+                    break;
+
                 default:
                     break;
             }
+            if (e.PropertyName == "NumPages") return;
             OnSettingsChanged(reflow);
         };
 
@@ -364,7 +393,6 @@ namespace WinPrint.Core {
         /// <param name="g">Graphics to print on</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         public void PrintSheet(Graphics graphics, int sheetNum) {
-            if (NumSheets == 0) return;
             GraphicsState state = graphics.Save();
 
             if (graphics.PageUnit == GraphicsUnit.Display) {
@@ -378,6 +406,7 @@ namespace WinPrint.Core {
                 PaintSheet(graphics, sheetNum);
             }
         }
+
 
         /// <summary>
         /// Returns an Image with the specified sheet painted on it. Image will be of the size & resolution of the selected printer.
@@ -406,6 +435,7 @@ namespace WinPrint.Core {
         }
 
         private void PaintSheet(Graphics g, int sheetNum) {
+
             // This is needed for image scaling to work right
             g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
             PaintRules(g);
@@ -437,7 +467,10 @@ namespace WinPrint.Core {
                     if (Rows > 1 && GetPageRow(pageOnSheet) < (Rows - 1))
                         g.DrawLine(Pens.Black, Padding / 2, h + (Padding / 2), w - Padding, h + (Padding / 2));
                 }
-                Content.PaintPage(g, pageOnSheet);
+
+                if (Content != null) 
+                    Content.PaintPage(g, pageOnSheet);
+
                 // Translate back
                 g.TranslateTransform(-xPos, -yPos);
             }

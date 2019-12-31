@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 using LiteHtmlSharp;
+using WinPrint.Core.Models;
 using WinPrint.LiteHtml;
 
 namespace WinPrint.Core.ContentTypes {
@@ -12,8 +14,13 @@ namespace WinPrint.Core.ContentTypes {
     /// Implements generic HTML file type support. 
     /// </summary>
     public class HtmlFileContent : ContentBase, IDisposable {
+        public static new string ContentType = "text/html";
 
-        public static new string Type = "text/html";
+        public static HtmlFileContent Create() {
+            var content = new HtmlFileContent();
+            content.CopyPropertiesFrom(ModelLocator.Current.Settings.HtmlFileSettings);
+            return content;
+        }
 
         private GDIPlusContainer litehtml;
 
@@ -37,7 +44,7 @@ namespace WinPrint.Core.ContentTypes {
 
             if (disposing) {
                 //if (litehtml != null)
-                //litehtml.Dispose();
+                //    litehtml.Dispose();
             }
             disposed = true;
         }
@@ -46,21 +53,32 @@ namespace WinPrint.Core.ContentTypes {
 
         public Models.Font MonspacedFont { get; internal set; }
 
+        public async override Task<string> LoadAsync(string filePath) {
+            litehtml = null;
+            htmlBitmap = null;
+            document = await base.LoadAsync(filePath);
+            return document;
+        }
+
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage)
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int Render(ref string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
+            Debug.WriteLine("HtmlFileContent.RenderAsync()");
+
+            await base.RenderAsync(printerResolution);
+
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
-            Debug.WriteLine($"HtmlFileContent.CountPages - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
+            Debug.WriteLine($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
             string css;
             try {
                 // TODO: Make sure wiprint.css is in the same dir as .config file once setup is impl
                 using StreamReader cssStream = new StreamReader("winprint.css");
-                css = cssStream.ReadToEnd();
+                css = await cssStream.ReadToEndAsync();
                 cssStream.Close();
             }
             catch {
@@ -75,7 +93,7 @@ namespace WinPrint.Core.ContentTypes {
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
-            Debug.WriteLine($"HtmlFileContent.CountPages() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
+            Debug.WriteLine($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
             Debug.WriteLine($"PageUnit = {g.PageUnit.ToString()}");
             litehtml.Document.CreateFromString(document);
@@ -89,28 +107,25 @@ namespace WinPrint.Core.ContentTypes {
 
             Debug.WriteLine($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
 
-            int maxPages = (int)(litehtml.Document.Height() / height) + 1;
-            Debug.WriteLine($"HtmlFileContent.CountPages - {maxPages} pages.");
-            for (numPages = 0; numPages < maxPages; numPages++) {
+            NumPages = (int)(litehtml.Document.Height() / height) + 1;
+            Debug.WriteLine($"HtmlFileContent.RenderAsync - {NumPages} pages.");
 
-            }
-
-            return numPages;
+            return NumPages;
         }
 
         private byte[] GetResourceBytes(string resource) {
+            byte[] data = new byte[0];
             if (string.IsNullOrWhiteSpace(resource)) {
-                return new byte[0];
+                return data;
             }
 
             try {
-                var url = GetUrlForRequest(resource);
-                return _httpClient.GetByteArrayAsync(url).Result;
+                data = File.ReadAllBytes($"{Path.GetDirectoryName(filePath)}\\{resource}");
             }
             catch (Exception e) {
-                Debug.WriteLine($"GetResourceString({resource} - {e.Message}");
-                return null;
+                Debug.WriteLine($"GetResourceBytes({resource}) - {e.Message}");
             }
+            return data;
         }
 
         private string GetResourceString(string resource) {
@@ -131,7 +146,7 @@ namespace WinPrint.Core.ContentTypes {
                 return data;
             }
             catch (Exception e) {
-                Debug.WriteLine($"GetResourceString({resource} - {e.Message}");
+                Debug.WriteLine($"GetResourceString({resource}) - {e.Message}");
                 return data;
             }
         }
@@ -141,7 +156,10 @@ namespace WinPrint.Core.ContentTypes {
                 UriBuilder urlBuilder;
 
                 if (resource.StartsWith("file:")) {
-                    urlBuilder = new UriBuilder(resource);
+                    urlBuilder = new UriBuilder();
+                    urlBuilder.Scheme = "file";
+                    urlBuilder.Host = "";
+                    urlBuilder.Path = resource;
                 }
                 else if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
                     urlBuilder = new UriBuilder(resource.TrimStart(new char[] { '/' }));
@@ -189,6 +207,14 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
+            if (pageNum > NumPages) {
+                Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+                return;
+            }
+            if (litehtml == null) {
+                Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
+                return;
+            }
             SizeF pagesizeInPixels;
             var state = g.Save();
 
@@ -211,7 +237,7 @@ namespace WinPrint.Core.ContentTypes {
             //    int bestWidth = litehtml.Document.Render((int)PageSize.Width);
             //}
 
-            Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
+            Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
             litehtml.Graphics = g;
 

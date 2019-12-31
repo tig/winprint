@@ -1,34 +1,44 @@
 code[class*="language-"],
 pre[class*="language-"] {
-	background: none;
-	font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	font-size: 10pt;
-	white-space: pre-wrap;
-	word-wrap: break-word;
-	word-break: break-all;
+    background: none;
+    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 10pt;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
 }
 
 /* Code blocks */
 pre[class*="language-"] {
-	margin: 0;
-	overflow: visible;
-	padding: 0;
+    margin: 0;
+    overflow: visible;
+    padding: 0;
 }
 
-pre[class*="language-"]>code {
-	position: relative;
-	border-left: 0px solid black;
+/* Background & border */
+pre[class*="language-"] > code {
+    position: relative;
+	border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+    background: none;
+    background-image: none;
+    background-color: transparent; 
+    /*background-size: unset;*/
+    /*background-origin: content-box;*/
+    /*background-attachment: local;*/
 }
 
 code[class*="language"] {
-	max-height: inherit;
-	padding: 0;
-	overflow: visible;
+    max-height: inherit;
+    padding: 0;
+    overflow: visible;
 }
 
 /* Margin bottom to accommodate shadow */
 :not(pre) > code[class*="language-"],
 pre[class*="language-"] {
-	margin-bottom: 0;
+    margin-bottom: 0;
 }
-

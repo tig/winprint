@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using WinPrint.Core.Models;
 
 namespace WinPrint.Core.ContentTypes {
 
@@ -22,7 +24,13 @@ namespace WinPrint.Core.ContentTypes {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextFileContent : ContentBase, IDisposable {
-        public static new string Type = "plaintext";
+        public static TextFileContent Create() {
+            var content = new TextFileContent();
+            content.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
+            return content;
+        }
+
+        public static new string ContentType = "Plaintext";
         public TextFileContent() {
             Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
@@ -67,13 +75,23 @@ namespace WinPrint.Core.ContentTypes {
             disposed = true;
         }
 
+        public async override Task<string> LoadAsync(string filePath) {
+            document = await base.LoadAsync(filePath);
+
+            return document;
+        }
+
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage)
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override int Render(ref string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
-            Debug.WriteLine("TextFileContent.CountPages");
+        public async override Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
+            await base.RenderAsync(printerResolution);
+
+            if (document == null) throw new ArgumentNullException("document can't be null for Render");
+
+            Debug.WriteLine("TextFileContent.Render");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
@@ -90,7 +108,7 @@ namespace WinPrint.Core.ContentTypes {
             // Note, MeasureLines may increment numPages due to form feeds
             lines = MeasureLines(document); // new List<string>();
 
-            numPages += (lines.Count / linesPerPage) + 1;
+            NumPages += (lines.Count / linesPerPage) + 1;
 
             Debug.WriteLine($"{lines.Count} lines across {numPages} pages.");
             return numPages;
@@ -230,6 +248,11 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
+            if (pageNum > NumPages) {
+                Debug.WriteLine($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+                return;
+            }
+
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
  
             PaintLineNumberSeparator(g);

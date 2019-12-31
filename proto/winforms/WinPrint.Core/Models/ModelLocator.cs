@@ -1,6 +1,7 @@
 ﻿using System;
 
 using GalaSoft.MvvmLight.Ioc;
+using WinPrint.Core.ContentTypes;
 using WinPrint.Core.Services;
 
 //using WinPrint.Services;
@@ -27,7 +28,5 @@ namespace WinPrint.Core.Models {
             where VM : class {
             SimpleIoc.Default.Register<VM>();
         }
-
-        
     }
 }

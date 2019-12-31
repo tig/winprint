@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using WinPrint.Core;
 using WinPrint.Core.Models;
@@ -42,7 +43,10 @@ namespace WinPrint {
             printPreview.KeyUp += (s, e) => {
                 switch (e.KeyCode) {
                     case Keys.F5:
-                        SheetSettingsChanged();
+                        printPreview.Invalidate(true);
+                        Debug.WriteLine("-------- F5 ---------");
+                        Task.Run(() => 
+                            printPreview.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false)); 
                         break;
                 }
             };
@@ -77,11 +81,11 @@ namespace WinPrint {
             base.Dispose(disposing);
         }
 
-        private SheetViewModel CreatePreviewSheetViewModel() {
-            Debug.WriteLine("CreateSheetViewModel()");
+        private async Task<SheetViewModel> CreatePreviewSheetViewModel() {
+            Debug.WriteLine("CreatePreviewSheetViewModel()");
             SheetViewModel svm = new SheetViewModel();
 
-            svm.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+            svm.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
             landscapeCheckbox.Checked = svm.Landscape;
             enableHeader.Checked = svm.Header.Enabled;
@@ -144,7 +148,21 @@ namespace WinPrint {
                     case "File":
                         this.Text = $"WinPrint - {svm.File}";
                         printPreview.CurrentSheet = 1;
+                        break;
+
+                    case "Content":
+                        printPreview.CurrentSheet = 1;
                         SheetSettingsChanged();
+                        break;
+
+                    case "Loading":
+                        printPreview.Text = svm.Loading ? "Loading..." : "";
+                        printPreview.Invalidate(false);
+                        break;
+
+                    case "Reflowing":
+                        printPreview.Text = svm.Reflowing ? "Rendering..." : "";
+                        printPreview.Invalidate(false);
                         break;
                 }
             }));
@@ -164,7 +182,7 @@ namespace WinPrint {
                 ModelLocator.Current.Options.Files.Any() &&
                 !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList()[0])) {
                 List<string> list = ModelLocator.Current.Options.Files.ToList();
-                svm.File = list[0];
+                await svm.LoadAsync(list[0]).ConfigureAwait(false);
             }
             return svm;
         }
@@ -183,7 +201,9 @@ namespace WinPrint {
             }
         }
 
-        private void MainWindow_Load(object sender, EventArgs e) {
+        private async void MainWindow_Load(object sender, EventArgs e) {
+            Debug.WriteLine("MainWindow_Load()");
+
             this.Cursor = Cursors.WaitCursor;
             // Load settings
             Debug.WriteLine("First reference to ModelLocator.Current.Settings");
@@ -230,15 +250,17 @@ namespace WinPrint {
             comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
 
             // Create our sheet view model.
-            printPreview.SheetViewModel = CreatePreviewSheetViewModel();
-
+            printPreview.SheetViewModel = await CreatePreviewSheetViewModel().ConfigureAwait(false);
             if (ModelLocator.Current.Options.Files != null)
                 //&&
                 //  ModelLocator.Current.Options.Files.Any() &&
                 //  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList<string>()[0])) 
             {
-                printPreview.SheetViewModel.File = ModelLocator.Current.Options.Files.ToList()[0];
+                await printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0]).ConfigureAwait(false); ;
             }
+
+            // even if a file's not been set, call Reflow to juice the print preview
+            SheetSettingsChanged();
 
             this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
             this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
@@ -252,10 +274,11 @@ namespace WinPrint {
                 ShowFilesDialog();
 
             // Go!
- 
         }
 
-        private void ShowFilesDialog() {
+        private async void ShowFilesDialog() {
+            Debug.WriteLine("ShowFilesDialog()");
+
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
 
                 openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
@@ -263,16 +286,18 @@ namespace WinPrint {
                 openFileDialog.FilterIndex = 3;
                 openFileDialog.RestoreDirectory = true;
                 if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    printPreview.SheetViewModel.File = openFileDialog.FileNames.ToList<string>()[0];
+                    await Task.Run(() =>
+                    printPreview.SheetViewModel.LoadAsync(openFileDialog.FileNames.ToList()[0])).ConfigureAwait(false);
                 }
             }
+            Debug.WriteLine("exting ShowFilesDialog()");
         }
 
-        private void SheetChanged() {
+        private async void SheetChanged() {
             Debug.WriteLine("SheetChanged()");
 
             this.Cursor = Cursors.WaitCursor;
-            printPreview.SheetViewModel = CreatePreviewSheetViewModel();
+            printPreview.SheetViewModel = await CreatePreviewSheetViewModel().ConfigureAwait(false);
             this.Cursor = Cursors.Default;
             SheetSettingsChanged();
         }
@@ -291,16 +316,16 @@ namespace WinPrint {
             ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
         }
 
-        internal void SheetSettingsChanged() {
+        internal async void SheetSettingsChanged() {
             Debug.WriteLine("SheetSettingsChanged()");
 
-            this.Cursor = Cursors.WaitCursor;
+            //this.Cursor = Cursors.WaitCursor;
             // Set landscape. This causes other DefaultPageSettings to change
             printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            printPreview.SheetViewModel.Reflow(printDoc.DefaultPageSettings);
-            printPreview.Invalidate(true);
- 
-            this.Cursor = Cursors.Default;
+            BeginInvoke((Action)(() => printPreview.Invalidate(true)));
+            await Task.Run(() => printPreview.SheetViewModel.ReflowAsync(printDoc.DefaultPageSettings)).ConfigureAwait(false);
+            BeginInvoke((Action)(() => printPreview.Invalidate(true)));
+            //this.Cursor = Cursors.Default;
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
@@ -350,13 +375,15 @@ namespace WinPrint {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-        private void printButton_Click(object sender, EventArgs e) {
+        private async void printButton_Click(object sender, EventArgs e) {
             using var print = new Core.Print();
             // TODO: It's hokey that Landscape is the only printer setting that's treated specially
             // 
             print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            print.SheetVM.File = printPreview.SheetViewModel.File;
-            print.SheetVM.SetSettings(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+            print.SheetVM.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+
+            await print.SheetVM.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false);
+
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
 

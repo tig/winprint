@@ -23,11 +23,11 @@ namespace WinPrint {
             get => svm; set {
                 // Wire up notificatins?
                 svm = value;
-
             }
         }
         public int CurrentSheet { get; set; }
         public int Zoom { get; set; }
+        public object Task { get; internal set; }
 
         public PrintPreview() {
             Instance = this;
@@ -87,7 +87,7 @@ namespace WinPrint {
 
         protected override void OnLostFocus(EventArgs e) {
             base.OnLostFocus(e);
-            Invalidate();
+            //Invalidate();
         }
 
         protected override void OnKeyUp(KeyEventArgs e) {
@@ -136,7 +136,7 @@ namespace WinPrint {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) throw new ArgumentNullException(nameof(e));
-            if (svm is null || string.IsNullOrEmpty(svm.File)) return;
+            if (svm is null) return;
 
             //base.OnPaint(e);
 
@@ -171,7 +171,7 @@ namespace WinPrint {
 
             bool useCachedImages = false;
             if (useCachedImages) {
-                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
                 Image img = svm.GetSheet(CurrentSheet);
                 e.Graphics.DrawImage(img,
                     new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
@@ -181,6 +181,14 @@ namespace WinPrint {
             }
             else
                 svm.PrintSheet(e.Graphics, CurrentSheet);
+
+            // While loading & reflowing show Text
+            if (!string.IsNullOrEmpty(Text)) {
+                using var font = new Font(Font.FontFamily, 18F, FontStyle.Regular, GraphicsUnit.Point);
+                var s = e.Graphics.MeasureString(Text, font);
+                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
+            }
+
 
             e.Graphics.Restore(state);
 

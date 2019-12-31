@@ -5,37 +5,58 @@ using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using WinPrint.Core.Models;
 
 namespace WinPrint.Core.ContentTypes {
     public class PrismFileContent : HtmlFileContent {
-        public static new string Type = "Prism";
+        public static new string ContentType = "Syntax Highlighted Code";
+
+        public static PrismFileContent Create() {
+            var content = new PrismFileContent();
+            content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismFileSettings);
+            return content;
+        }
+
         public bool LineNumbers { get; set; }
 
-        public override int Render(ref string document, string title, System.Drawing.Printing.PrinterResolution printerResolution) {
-            //var csharpstring = "public void Method()\n{\n}";
+        private bool convertedToHtml = false;
 
-            document = CodeToHtml(document, title, Language);
-            Debug.WriteLine(document);
+        public async override Task<string> LoadAsync(string filePath) {
+            Debug.WriteLine("PrismFileContent.LoadAsync()");
+            await base.LoadAsync(filePath);
 
-#if DEBUGx
-            var w = new StreamWriter(title + "_.html");
+            if (!convertedToHtml)
+                document = await CodeToHtml(filePath, Language);
+            convertedToHtml = true;
+
+            //Debug.WriteLine(document);
+
+#if DEBUG
+            var w = new StreamWriter(filePath + "_.html");
             w.Write(document);
             w.Close();
 #endif
 
 #if USE_COLORCODE
-                        var formatter = new HtmlFormatter();
-                        var language = ColorCode.Languages.FindById(Type);
-                        document = formatter.GetHtmlString(document, language);
-                        StreamWriter w = new StreamWriter(title + "_.html");
-                        w.Write(document);
-                        w.Close();
+            var formatter = new HtmlFormatter();
+            var language = ColorCode.Languages.FindById(Type);
+            document = formatter.GetHtmlString(document, language);
+            StreamWriter w = new StreamWriter(title + "_.html");
+            w.Write(document);
+            w.Close();
 #endif
-
-            return base.Render(ref document, title, printerResolution);
+            return document;
         }
 
-        private string CodeToHtml(string document, string file, string language) {
+        public override async Task<int> RenderAsync(PrinterResolution printerResolution) {
+            Debug.WriteLine("PrismFileContent.RenderAsync()");
+            return await base.RenderAsync(printerResolution);
+        }
+
+        private async Task<string> CodeToHtml(string file, string language) {
+            Debug.WriteLine("PrismFileContent.CodeToHtml()");
+
             const string cssTheme = "prism-coy.css";
             //const string cssPrism = "prism.css";
             const string cssWinPrint = "prism-winprint-overrides.css";
@@ -91,14 +112,12 @@ namespace WinPrint.Core.ContentTypes {
                 using (var node = Process.Start(psi)) {
                     StreamWriter sw = node.StandardInput;
                     //Debug.WriteLine(sbNodeJS.ToString());
-                    sw.WriteLine(sbNodeJS.ToString());
+                    await sw.WriteLineAsync(sbNodeJS.ToString());
                     sw.Close();
 
                     var ln = LineNumbers ? "line-numbers" : "";
                     sbHtml.AppendLine($"<pre class=\"language-{language} {ln} \"><code class=\"language-csharp\">");
-                    while (!node.StandardOutput.EndOfStream) {
-                        sbHtml.AppendLine(node.StandardOutput.ReadLine());//.Replace(' ', (char)160));
-                    }
+                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());//.Replace(' ', (char)160));
                     sbHtml.AppendLine($"</code></pre>");
                     //node.WaitForExit(10000);
                 }
@@ -109,6 +128,7 @@ namespace WinPrint.Core.ContentTypes {
                 sbHtml.AppendLine($"<p>Failed to convert to html. {e.Message}</p>");
             }
             sbHtml.AppendLine($"</body></html>");
+            Debug.WriteLine("PrismFileContent.CodeToHtml() - exiting");
             return sbHtml.ToString();
         }
 
@@ -136,9 +156,5 @@ namespace WinPrint.Core.ContentTypes {
             //}
             return path + @"\prismjs\themes";
         }
-
-        //public override void PaintPage(Graphics g, int pageNum) {
-        //    base.PaintPage(g, pageNum);
-        //}
     }
 }

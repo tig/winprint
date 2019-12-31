@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core.ContentTypes {
@@ -28,9 +29,10 @@ namespace WinPrint.Core.ContentTypes {
         public event EventHandler<bool> SettingsChanged;
         protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
 
-        //public string Type { get => type; set => type = value; }
-        //internal string type = "none";
-        public static string Type = "none";
+        /// <summary>
+        /// ContentType identifier (shorthand for class name). 
+        /// </summary>
+        public static string ContentType = "base";
 
         /// <summary>
         /// Calculated page size. Set by Sheet view model.
@@ -46,14 +48,31 @@ namespace WinPrint.Core.ContentTypes {
 
 
         internal int numPages = 0;
-        public int GetNumPages() { return numPages; }
+        public int NumPages {
+            get => numPages;
+            set => SetField(ref numPages, value);
+        }
+
+        internal string filePath = null;
+        internal string document = null;
+
+        public async virtual Task<string> LoadAsync(string filePath) {
+            using StreamReader streamToPrint = new StreamReader(filePath);
+            document = await streamToPrint.ReadToEndAsync();
+            this.filePath = filePath;
+            return document;
+        } 
 
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public abstract int Render(ref string document, string title, System.Drawing.Printing.PrinterResolution printerResolution);
+        public async virtual Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
+            if (document == null) throw new ArgumentNullException("document can't be null for Render");
+            NumPages = 0;
+            return NumPages;
+        }
 
         /// <summary>
         /// Paints a single page

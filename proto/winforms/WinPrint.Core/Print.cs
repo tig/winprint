@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing.Printing;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core {
@@ -63,15 +64,15 @@ namespace WinPrint.Core {
             }
         }
 
-        public int CountPages(int fromSheet = 1, int toSheet = 0) {
+        public async Task<int> CountPages(int fromSheet = 1, int toSheet = 0) {
             // BUGBUG: Ignores from/to
-            SheetVM.Reflow(PrintDocument.DefaultPageSettings);
+            await SheetVM.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
             return svm.NumSheets;
         }
 
-        public void DoPrint() {
+        public async void DoPrint() {
             printDoc.DocumentName = SheetVM.File;
-            SheetVM.Reflow(PrintDocument.DefaultPageSettings);
+            await SheetVM.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
 
             PrintDocument.PrinterSettings.FromPage = PrintDocument.PrinterSettings.FromPage == 0 ? 1 : PrintDocument.PrinterSettings.FromPage;
             PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetVM.NumSheets : PrintDocument.PrinterSettings.ToPage ;

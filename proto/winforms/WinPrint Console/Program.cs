@@ -26,7 +26,7 @@ namespace WinPrintConsole {
             System.Environment.Exit(0);
         }
 
-        private static void Go(Options opts) {
+        private async static void Go(Options opts) {
             var print = new Print();
 
             // -g
@@ -53,8 +53,8 @@ namespace WinPrintConsole {
 
                 // Must set landsacpe after printer/paper selection
                 print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
-                print.SheetVM.File = opts.Files.ToList().FirstOrDefault();
-                print.SheetVM.SetSettings(sheet);
+                await print.SheetVM.LoadAsync(opts.Files.ToList().FirstOrDefault()).ConfigureAwait(false);
+                print.SheetVM.SetSheet(sheet);
 
                 // --v
                 if (opts.Verbose) {
@@ -68,7 +68,7 @@ namespace WinPrintConsole {
 
                 // --c
                 if (opts.CountPages) {
-                    int n = print.CountPages(fromSheet: opts.FromPage, toSheet: opts.ToPage);
+                    int n =  await print.CountPages(fromSheet: opts.FromPage, toSheet: opts.ToPage);
                     if (opts.Verbose)
                         Console.WriteLine($"Would print {n} pages.");
                     System.Environment.Exit(n);
