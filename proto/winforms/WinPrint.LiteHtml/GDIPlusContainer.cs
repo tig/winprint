@@ -56,7 +56,7 @@ namespace WinPrint.LiteHtml {
         protected override UIntPtr CreateFont(string faceName, int size, int weight, font_style italic, font_decoration decoration, ref font_metrics fm) {
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
-            //Debug.WriteLine($"CreateFont({faceName}, {size}, {italic.ToString()}, {weight}, {decoration.ToString()}");
+            //Helpers.Logging.TraceMessage($"CreateFont({faceName}, {size}, {italic.ToString()}, {weight}, {decoration.ToString()}");
 
             bool isUnderline = false;// decoration & font_decoration.font_decoration_underline;
             bool isBold = weight >= 700;
@@ -83,7 +83,7 @@ namespace WinPrint.LiteHtml {
             if (fi == null) 
              fi = FontInfo.TryCreateFont(_graphics, DefaultFontName, fontStyle, size);
 
-            //Debug.WriteLine($"Added FontInfo({fi.Font.FontFamily.ToString()}, {fi.LineHeight}, {fi.Size}, {fi.Font.Style.ToString()}");
+            //Helpers.Logging.TraceMessage($"Added FontInfo({fi.Font.FontFamily.ToString()}, {fi.LineHeight}, {fi.Size}, {fi.Font.Style.ToString()}");
 
             _fonts.Add((UIntPtr)fi.GetHashCode(), fi);
 

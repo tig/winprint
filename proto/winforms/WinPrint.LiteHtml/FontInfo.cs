@@ -143,7 +143,7 @@ namespace WinPrint.LiteHtml {
 
         public static FontInfo TryCreateFont(Graphics gr, string faceName, FontStyle style, int size, FontFamily fontFamily = null) {
             try {
-                //Debug.WriteLine($"TryCreateFont({faceName}, {size}, {style.ToString()})");
+                //Helpers.Logging.TraceMessage($"TryCreateFont({faceName}, {size}, {style.ToString()})");
                 return new FontInfo(gr, faceName, style, size, fontFamily);
             }
             catch {

@@ -44,7 +44,7 @@ namespace WinPrint {
                 switch (e.KeyCode) {
                     case Keys.F5:
                         printPreview.Invalidate(true);
-                        Debug.WriteLine("-------- F5 ---------");
+                        Core.Helpers.Logging.TraceMessage("-------- F5 ---------");
                         Task.Run(() => 
                             printPreview.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false)); 
                         break;
@@ -81,72 +81,65 @@ namespace WinPrint {
             base.Dispose(disposing);
         }
 
-        private async Task<SheetViewModel> CreatePreviewSheetViewModel() {
-            Debug.WriteLine("CreatePreviewSheetViewModel()");
-            SheetViewModel svm = new SheetViewModel();
+        /// <summary>
+        /// Wire up property change notifications from the View Model.
+        /// This should only be called once
+        /// </summary>
+        // TODO: Refactor PropertyChanged lambdas to be functions so they can be -=
+        private void SetupSheetViewModelNotifications() {
+            Core.Helpers.Logging.TraceMessage();
 
-            svm.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+            if (printPreview.SheetViewModel != null) {
+                Core.Helpers.Logging.TraceMessage("  SetupSheetViewModelNotifications was alreadya called");
+                return;
+            }
 
-            landscapeCheckbox.Checked = svm.Landscape;
-            enableHeader.Checked = svm.Header.Enabled;
-            headerTextBox.Text = svm.Header.Text;
-            enableFooter.Checked = svm.Footer.Enabled;
-            footerTextBox.Text = svm.Footer.Text;
+            printPreview.SheetViewModel = new SheetViewModel();
 
-            topMargin.Value = svm.Margins.Top / 100M;
-            leftMargin.Value = svm.Margins.Left / 100M;
-            rightMargin.Value = svm.Margins.Right / 100M;
-            bottomMargin.Value = svm.Margins.Bottom / 100M;
-
-            pageSeparator.Checked = svm.PageSepartor;
-            rows.Value = svm.Rows;
-            columns.Value = svm.Columns;
-            padding.Value = svm.Padding / 100M;
-
-            svm.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
-                Debug.WriteLine($"SheetViewModel.PropertyChanged: {e.PropertyName}");
+            printPreview.SheetViewModel.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
+                Core.Helpers.Logging.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "Landscape":
-                        Debug.WriteLine($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
-                        landscapeCheckbox.Checked = svm.Landscape;
+                        Core.Helpers.Logging.TraceMessage($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
+                        landscapeCheckbox.Checked = printPreview.SheetViewModel.Landscape;
                         break;
 
                     case "Header":
-                        headerTextBox.Text = svm.Header.Text;
+                        headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
                         break;
 
                     case "Footer":
-                        footerTextBox.Text = svm.Footer.Text;
+                        footerTextBox.Text = printPreview.SheetViewModel.Footer.Text;
                         break;
 
                     case "Margins":
-                        topMargin.Value = svm.Margins.Top / 100M;
-                        leftMargin.Value = svm.Margins.Left / 100M;
-                        rightMargin.Value = svm.Margins.Right / 100M;
-                        bottomMargin.Value = svm.Margins.Bottom / 100M;
+                        topMargin.Value = printPreview.SheetViewModel.Margins.Top / 100M;
+                        leftMargin.Value = printPreview.SheetViewModel.Margins.Left / 100M;
+                        rightMargin.Value = printPreview.SheetViewModel.Margins.Right / 100M;
+                        bottomMargin.Value = printPreview.SheetViewModel.Margins.Bottom / 100M;
 
                         // Keep PrintDocument updated for WinForms.PrintPreview
-                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)svm.Margins.Clone();
+                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)printPreview.SheetViewModel.Margins.Clone();
                         break;
 
                     case "PageSeparator":
-                        pageSeparator.Checked = svm.PageSepartor;
+                        pageSeparator.Checked = printPreview.SheetViewModel.PageSepartor;
                         break;
 
                     case "Rows":
-                        rows.Value = svm.Rows;
+                        rows.Value = printPreview.SheetViewModel.Rows;
                         break;
 
                     case "Columns":
-                        columns.Value = svm.Columns;
+                        columns.Value = printPreview.SheetViewModel.Columns;
                         break;
 
                     case "Padding":
-                        padding.Value = svm.Padding / 100M;
+                        padding.Value = printPreview.SheetViewModel.Padding / 100M;
                         break;
 
                     case "File":
-                        this.Text = $"WinPrint - {svm.File}";
+                        this.Text = $"WinPrint - {printPreview.SheetViewModel.File}";
                         printPreview.CurrentSheet = 1;
                         break;
 
@@ -156,39 +149,50 @@ namespace WinPrint {
                         break;
 
                     case "Loading":
-                        printPreview.Text = svm.Loading ? "Loading..." : "";
+                        printPreview.Text = printPreview.SheetViewModel.Loading ? "Loading..." : "";
                         printPreview.Invalidate(false);
                         break;
 
                     case "Reflowing":
-                        printPreview.Text = svm.Reflowing ? "Rendering..." : "";
+                        printPreview.Text = printPreview.SheetViewModel.Reflowing ? "Rendering..." : "";
                         printPreview.Invalidate(false);
                         break;
                 }
             }));
 
-            svm.SettingsChanged += (s, reflow) => BeginInvoke((Action)(() => {
-                Debug.WriteLine($"SheetViewModel.SettingsChanged: {reflow}");
+            printPreview.SheetViewModel.SettingsChanged += (s, reflow) => BeginInvoke((Action)(() => {
+                Core.Helpers.Logging.TraceMessage($"SheetViewModel.SettingsChanged: {reflow}");
                 if (reflow)
                     SheetSettingsChanged();
                 else
                     printPreview.Invalidate(false);
             }));
-
-            printPreview.SheetViewModel = svm;
-
-            // TODO: Batch Print
-            if (ModelLocator.Current.Options.Files != null &&
-                ModelLocator.Current.Options.Files.Any() &&
-                !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList()[0])) {
-                List<string> list = ModelLocator.Current.Options.Files.ToList();
-                await svm.LoadAsync(list[0]).ConfigureAwait(false);
-            }
-            return svm;
         }
 
+        //private void UpdatePreviewSheetViewModel() {
+        //    Helpers.Logging.TraceMessage("UpdatePreviewSheetViewModel()");
+
+        //    printPreview.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+
+        //    //landscapeCheckbox.Checked = printPreview.SheetViewModel.Landscape;
+        //    //enableHeader.Checked = printPreview.SheetViewModel.Header.Enabled;
+        //    //headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
+        //    //enableFooter.Checked = printPreview.SheetViewModel.Footer.Enabled;
+        //    //footerTextBox.Text = printPreview.SheetViewModel.Footer.Text;
+
+        //    //topMargin.Value = printPreview.SheetViewModel.Margins.Top / 100M;
+        //    //leftMargin.Value = printPreview.SheetViewModel.Margins.Left / 100M;
+        //    //rightMargin.Value = printPreview.SheetViewModel.Margins.Right / 100M;
+        //    //bottomMargin.Value = printPreview.SheetViewModel.Margins.Bottom / 100M;
+
+        //    //pageSeparator.Checked = printPreview.SheetViewModel.PageSepartor;
+        //    //rows.Value = printPreview.SheetViewModel.Rows;
+        //    //columns.Value = printPreview.SheetViewModel.Columns;
+        //    //padding.Value = printPreview.SheetViewModel.Padding / 100M;
+        //}
+
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
-            Debug.WriteLine($"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}");
+            Core.Helpers.Logging.TraceMessage($"{landscapeCheckbox.Checked}");
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
@@ -202,22 +206,21 @@ namespace WinPrint {
         }
 
         private async void MainWindow_Load(object sender, EventArgs e) {
-            Debug.WriteLine("MainWindow_Load()");
+            Core.Helpers.Logging.TraceMessage();
 
             this.Cursor = Cursors.WaitCursor;
             // Load settings
-            Debug.WriteLine("First reference to ModelLocator.Current.Settings");
+            Core.Helpers.Logging.TraceMessage("First reference to ModelLocator.Current.Settings");
             var sheets = ModelLocator.Current.Settings.Sheets;
 
             // Load file assocations
             var languages = ModelLocator.Current.Associations;
-            Debug.WriteLine($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
+            Core.Helpers.Logging.TraceMessage($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
 
             ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
-                Debug.WriteLine($"Settings.PropertyChanged: {e.PropertyName}");
+                Core.Helpers.Logging.TraceMessage($"Settings.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "DefaultSheet":
-                        comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
                         SheetChanged();
                         break;
                 }
@@ -246,11 +249,17 @@ namespace WinPrint {
             printersCB.Enabled = true;
             paperSizesCB.Enabled = true;
 
-            // Select default Sheet 
-            comboBoxSheet.Text = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Name;
 
-            // Create our sheet view model.
-            printPreview.SheetViewModel = await CreatePreviewSheetViewModel().ConfigureAwait(false);
+            // Create sheet view model & wire up notifications
+            SetupSheetViewModelNotifications();
+
+            // Select default Sheet 
+            var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            comboBoxSheet.Text = newSheet.Name;
+            // This will cause a flurry of property change notifications, setting all UI elements
+            printPreview.SheetViewModel.SetSheet(newSheet);
+
+            // Batch print
             if (ModelLocator.Current.Options.Files != null)
                 //&&
                 //  ModelLocator.Current.Options.Files.Any() &&
@@ -259,7 +268,7 @@ namespace WinPrint {
                 await printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0]).ConfigureAwait(false); ;
             }
 
-            // even if a file's not been set, call Reflow to juice the print preview
+            // Even if a file's not been set, SheetSettingsChanged to Reflow in order ot juice the print preview
             SheetSettingsChanged();
 
             this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
@@ -270,17 +279,15 @@ namespace WinPrint {
             printPreview.Focus();
 
             this.Cursor = Cursors.Default;
-            if (string.IsNullOrEmpty(printPreview.SheetViewModel.File)) 
+            if (string.IsNullOrEmpty(printPreview.SheetViewModel.File))
                 ShowFilesDialog();
 
             // Go!
         }
 
         private async void ShowFilesDialog() {
-            Debug.WriteLine("ShowFilesDialog()");
-
+            Core.Helpers.Logging.TraceMessage();
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-
                 openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
                 openFileDialog.Filter = $"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
                 openFileDialog.FilterIndex = 3;
@@ -290,15 +297,14 @@ namespace WinPrint {
                     printPreview.SheetViewModel.LoadAsync(openFileDialog.FileNames.ToList()[0])).ConfigureAwait(false);
                 }
             }
-            Debug.WriteLine("exting ShowFilesDialog()");
+            Core.Helpers.Logging.TraceMessage("exting ShowFilesDialog()");
         }
 
-        private async void SheetChanged() {
-            Debug.WriteLine("SheetChanged()");
-
-            this.Cursor = Cursors.WaitCursor;
-            printPreview.SheetViewModel = await CreatePreviewSheetViewModel().ConfigureAwait(false);
-            this.Cursor = Cursors.Default;
+        private void SheetChanged() {
+            Core.Helpers.Logging.TraceMessage();
+            var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            comboBoxSheet.Text = newSheet.Name;
+            printPreview.SheetViewModel.SetSheet(newSheet);
             SheetSettingsChanged();
         }
 
@@ -317,15 +323,13 @@ namespace WinPrint {
         }
 
         internal async void SheetSettingsChanged() {
-            Debug.WriteLine("SheetSettingsChanged()");
+            Core.Helpers.Logging.TraceMessage();
 
-            //this.Cursor = Cursors.WaitCursor;
             // Set landscape. This causes other DefaultPageSettings to change
-            printDoc.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
             BeginInvoke((Action)(() => printPreview.Invalidate(true)));
             await Task.Run(() => printPreview.SheetViewModel.ReflowAsync(printDoc.DefaultPageSettings)).ConfigureAwait(false);
             BeginInvoke((Action)(() => printPreview.Invalidate(true)));
-            //this.Cursor = Cursors.Default;
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
@@ -336,7 +340,7 @@ namespace WinPrint {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
                 if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {
-                    Debug.WriteLine("MainWindow_Layout bounds changed");
+                    //Core.Helpers.Logging.TraceMessage("MainWindow_Layout bounds changed");
                 }
             }
         }
@@ -353,7 +357,7 @@ namespace WinPrint {
 
         private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled) {
-                Debug.WriteLine("printersCB_SelectedIndexChanged");
+                Core.Helpers.Logging.TraceMessage("printersCB_SelectedIndexChanged");
                 printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
                 paperSizesCB.Items.Clear();
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
@@ -365,7 +369,7 @@ namespace WinPrint {
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled) {
-                Debug.WriteLine("paperSizesCB_SelectedIndexChanged");
+                Core.Helpers.Logging.TraceMessage("paperSizesCB_SelectedIndexChanged");
                 // Set the paper size based upon the selection in the combo box.
                 if (paperSizesCB.SelectedIndex != -1) {
                     printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
@@ -416,7 +420,7 @@ namespace WinPrint {
         }
 
         private void enableHeader_CheckedChanged(object sender, EventArgs e) {
-            Debug.WriteLine($"enableHeader_CheckedChanged: {enableHeader.Checked}");
+            Core.Helpers.Logging.TraceMessage($"enableHeader_CheckedChanged: {enableHeader.Checked}");
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
@@ -426,7 +430,7 @@ namespace WinPrint {
         }
 
         private void enableFooter_CheckedChanged(object sender, EventArgs e) {
-            Debug.WriteLine($"enableFooter_CheckedChanged: {enableFooter.Checked}");
+            Core.Helpers.Logging.TraceMessage($"enableFooter_CheckedChanged: {enableFooter.Checked}");
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
@@ -437,7 +441,7 @@ namespace WinPrint {
 
         private void comboBoxSheet_SelectedIndexChanged(object sender, EventArgs e) {
             KeyValuePair<string, string> si = (KeyValuePair<string, string>)comboBoxSheet.SelectedItem;
-            Debug.WriteLine($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
+            Core.Helpers.Logging.TraceMessage($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
             if (printersCB.Enabled) {
                 ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
                 //ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);

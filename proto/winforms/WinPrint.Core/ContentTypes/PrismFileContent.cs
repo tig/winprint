@@ -23,14 +23,14 @@ namespace WinPrint.Core.ContentTypes {
         private bool convertedToHtml = false;
 
         public async override Task<string> LoadAsync(string filePath) {
-            Debug.WriteLine("PrismFileContent.LoadAsync()");
+            Helpers.Logging.TraceMessage("PrismFileContent.LoadAsync()");
             await base.LoadAsync(filePath);
 
             if (!convertedToHtml)
                 document = await CodeToHtml(filePath, Language);
             convertedToHtml = true;
 
-            //Debug.WriteLine(document);
+            //Helpers.Logging.TraceMessage(document);
 
 #if DEBUG
             var w = new StreamWriter(filePath + "_.html");
@@ -50,12 +50,12 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         public override async Task<int> RenderAsync(PrinterResolution printerResolution) {
-            Debug.WriteLine("PrismFileContent.RenderAsync()");
+            Helpers.Logging.TraceMessage("PrismFileContent.RenderAsync()");
             return await base.RenderAsync(printerResolution);
         }
 
         private async Task<string> CodeToHtml(string file, string language) {
-            Debug.WriteLine("PrismFileContent.CodeToHtml()");
+            Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml()");
 
             const string cssTheme = "prism-coy.css";
             //const string cssPrism = "prism.css";
@@ -111,7 +111,7 @@ namespace WinPrint.Core.ContentTypes {
                 psi.RedirectStandardOutput = true;
                 using (var node = Process.Start(psi)) {
                     StreamWriter sw = node.StandardInput;
-                    //Debug.WriteLine(sbNodeJS.ToString());
+                    //Helpers.Logging.TraceMessage(sbNodeJS.ToString());
                     await sw.WriteLineAsync(sbNodeJS.ToString());
                     sw.Close();
 
@@ -124,11 +124,11 @@ namespace WinPrint.Core.ContentTypes {
 
             }
             catch (Exception e) {
-                Debug.WriteLine(e.Message);
+                Helpers.Logging.TraceMessage(e.Message);
                 sbHtml.AppendLine($"<p>Failed to convert to html. {e.Message}</p>");
             }
             sbHtml.AppendLine($"</body></html>");
-            Debug.WriteLine("PrismFileContent.CodeToHtml() - exiting");
+            Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml() - exiting");
             return sbHtml.ToString();
         }
 
@@ -152,7 +152,7 @@ namespace WinPrint.Core.ContentTypes {
 
             //}
             //catch (Exception e) {
-            //    Debug.WriteLine(e.Message);
+            //    Helpers.Logging.TraceMessage(e.Message);
             //}
             return path + @"\prismjs\themes";
         }

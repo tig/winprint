@@ -91,7 +91,7 @@ namespace WinPrint.Core.ContentTypes {
 
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
 
-            Debug.WriteLine("TextFileContent.Render");
+            Helpers.Logging.TraceMessage("TextFileContent.Render");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
@@ -110,13 +110,13 @@ namespace WinPrint.Core.ContentTypes {
 
             NumPages += (lines.Count / linesPerPage) + 1;
 
-            Debug.WriteLine($"{lines.Count} lines across {numPages} pages.");
+            Helpers.Logging.TraceMessage($"{lines.Count} lines across {numPages} pages.");
             return numPages;
         }
 
         // TODO: Profile for performance
         private List<Line> MeasureLines(string document) {
-            Debug.WriteLine("TextFileContent.MeasureLines");
+            Helpers.Logging.TraceMessage("TextFileContent.MeasureLines");
             var list = new List<Line>();
 
             minCharWidth = MeasureString(null, "W").Width;
@@ -249,7 +249,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             if (pageNum > NumPages) {
-                Debug.WriteLine($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+                Helpers.Logging.TraceMessage($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
                 return;
             }
 

@@ -13,7 +13,7 @@ namespace WinPrint.Core.Services {
         // Factory - creates 
         static public FileAssociations Create() {
             // 
-            Debug.WriteLine("FileAssociationsService.Create()");
+            Helpers.Logging.TraceMessage("FileAssociationsService.Create()");
             return ServiceLocator.Current.FileAssociationsService.LoadAssociations();
         }
 
@@ -67,15 +67,15 @@ namespace WinPrint.Core.Services {
         //    internal static string GetDocType() {
 
         //        string ext = Path.GetExtension(File);
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.Command, ext), "Command");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
-        //        //Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Command, ext), "Command");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
+        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
 
         //        //return Native.FileExtentionInfo(Native.AssocStr.FriendlyDocName, ext);
 
@@ -102,15 +102,15 @@ namespace WinPrint.Core.Services {
         //    ///// </summary>
         //    //[STAThread]
         //    //static void Main() {
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.Command, ext), "Command");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
-        //    //    Debug.WriteLine(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Command, ext), "Command");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
+        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
 
         //    //    //  DDEApplication: WinWord
         //    //    //DDEIfExec: Ñﻴ߾

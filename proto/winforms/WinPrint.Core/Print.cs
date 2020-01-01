@@ -83,24 +83,24 @@ namespace WinPrint.Core {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void BeginPrint(object sender, PrintEventArgs ev) {
-            Debug.WriteLine($"Print.BeginPrint");
+            Helpers.Logging.TraceMessage($"Print.BeginPrint");
         }
 
         // Occurs when the last page of the document has printed.
         private void EndPrint(object sender, PrintEventArgs ev) {
-            Debug.WriteLine($"Print.EndPrint");
+            Helpers.Logging.TraceMessage($"Print.EndPrint");
             // Reset so PrintPreviewDialog Print button works
             curSheet = printDoc.PrinterSettings.FromPage;
         }
 
         // Occurs immediately before each PrintPage event.
         private void QueryPageSettings(object sender, QueryPageSettingsEventArgs e) {
-            Debug.WriteLine($"Print.QueryPageSettings");
+            Helpers.Logging.TraceMessage($"Print.QueryPageSettings");
         }
 
         // The PrintPage event is raised for each page to be printed.
         private void PrintPage(object sender, PrintPageEventArgs ev) {
-            Debug.WriteLine($"Print.PrintPage - Sheet {curSheet}");
+            Helpers.Logging.TraceMessage($"Print.PrintPage - Sheet {curSheet}");
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
                 while (curSheet < printDoc.PrinterSettings.FromPage) {
                     // Blow through pages up to fromPage

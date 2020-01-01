@@ -57,7 +57,7 @@ namespace WinPrint.Core {
             get => file;
             internal set {
                 SetField(ref file, value);
-                Debug.WriteLine($"SheetViewModel.File set {file}");
+                Helpers.Logging.TraceMessage($"SheetViewModel.File set {file}");
             }
         }
 
@@ -94,6 +94,9 @@ namespace WinPrint.Core {
         public bool Reflowing { get => reflowing; set => SetField(ref reflowing, value); }
         private bool reflowing;
 
+        public bool CacheEnabled { get => cacheEnabled; set => SetField(ref cacheEnabled, value); }
+        private bool cacheEnabled = false;
+
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
         protected void OnSettingsChanged(bool reflow) {
@@ -103,6 +106,7 @@ namespace WinPrint.Core {
 
         // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
         private List<Image> cachedSheets = new List<Image>();
+        
 
         public SheetViewModel() {
             //SetSettings(new Sheet());
@@ -114,6 +118,7 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="newSheet">new Sheet defintiion to use</param>
         public void SetSheet(Sheet newSheet) {
+            Helpers.Logging.TraceMessage($"{newSheet.Name}");
             if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
             if (this.sheet != null)
                 sheet.PropertyChanged -= OnSheetPropertyChanged();
@@ -141,7 +146,7 @@ namespace WinPrint.Core {
         }
 
         public async Task LoadAsync(string filePath) {
-            Debug.WriteLine($"SheetViewModel.LoadAsync({filePath})");
+            Helpers.Logging.TraceMessage($"SheetViewModel.LoadAsync({filePath})");
             var ext = Path.GetExtension(filePath).ToLower();
             string type = "text/plain";
             ContentBase content = TextFileContent.Create();
@@ -159,7 +164,7 @@ namespace WinPrint.Core {
 
             if (Content != null) {
                 Content.PropertyChanged -= OnContentPropertyChanged();
-                //Content = null;
+                Content = null;
             }
             content.PropertyChanged += OnContentPropertyChanged();
 
@@ -182,16 +187,18 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="pageSettings"></param>
         public async Task ReflowAsync(PageSettings pageSettings) {
-            Debug.WriteLine($"SheetViewModel.ReflowAsync");
+            Helpers.Logging.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
 
             if (Reflowing) {
-                Debug.WriteLine($"SheetViewModel.ReflowAsync - already reflowing, returning");
+                Helpers.Logging.TraceMessage($"SheetViewModel.ReflowAsync - already reflowing, returning");
                 return;
             }
 
             Reflowing = true;
-            ClearCache();
+
+            if (CacheEnabled)
+               ClearCache();
 
             var ps = (PageSettings)pageSettings.Clone();
 
@@ -260,7 +267,7 @@ namespace WinPrint.Core {
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
 
             if (Content is null) {
-                Debug.WriteLine("SheetViewModel.ReflowAsync - Content is null");
+                Helpers.Logging.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
                 Reflowing = false;
                 return;
             }
@@ -273,7 +280,10 @@ namespace WinPrint.Core {
 
 
         private void ClearCache() {
-            Debug.WriteLine("SheetViewModel.ClearCache");
+            if (!CacheEnabled)
+                throw new InvalidOperationException("Cache is not enabled!");
+
+            Helpers.Logging.TraceMessage();
             foreach (var i in cachedSheets) {
                 i.Dispose();
             }
@@ -282,7 +292,7 @@ namespace WinPrint.Core {
 
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
             bool reflow = false;
-            Debug.WriteLine($"sheet.PropertyChanged: {e.PropertyName}");
+            Helpers.Logging.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Landscape":
                     Landscape = sheet.Landscape;
@@ -321,7 +331,7 @@ namespace WinPrint.Core {
                     // Print/Preview Rule Settings.
                     //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
                     //    // Repaint view (no reflow needed)
-                    //    Debug.WriteLine($"Rules Changed");
+                    //    Helpers.Logging.TraceMessage($"Rules Changed");
                     //}
                     break;
             }
@@ -330,7 +340,7 @@ namespace WinPrint.Core {
 
         private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() => (s, e) => {
             bool reflow = false;
-            Debug.WriteLine($"Content.PropertyChanged: {e.PropertyName}");
+            Helpers.Logging.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Font":
                     reflow = true;
@@ -413,29 +423,33 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         /// <returns></returns>
-        public Image GetSheet(int sheetNum) {
+        public Image GetCachedSheet(Graphics graphics, int sheetNum) {
+            if (!CacheEnabled) 
+                throw new InvalidOperationException("Cache is not enabled!");
+            
             const int dpiMultiplier = 1;
+            float xDpi = PrinterResolution.X * dpiMultiplier;
+            float yDpi = PrinterResolution.Y * dpiMultiplier;
+            int xRes = (int)(PrintableArea.Width / 100 * xDpi);
+            int yRes = (int)(PrintableArea.Height / 100 * yDpi);
             if (cachedSheets.Count < sheetNum) {
                 // Create a new bitmap object with the resolution of a printer page
-                Bitmap bmp = new Bitmap((int)(PrintableArea.Width / 100 * PrinterResolution.X * dpiMultiplier), (int)(PrintableArea.Height / 100 * PrinterResolution.Y * dpiMultiplier));
-                bmp.SetResolution(PrinterResolution.X * dpiMultiplier, PrinterResolution.Y * dpiMultiplier);
+                Bitmap bmp = new Bitmap(xRes, yRes);
+                //bmp.SetResolution(xDpi, yDpi);
 
                 // Obtain a Graphics object from that bitmap
                 Graphics g = Graphics.FromImage(bmp);
                 g.PageUnit = GraphicsUnit.Pixel;
-
                 PaintSheet(g, sheetNum);
-
                 cachedSheets.Add(bmp);
-
             }
 
-            Debug.WriteLine($"SheetViewModel.GetSheet({sheetNum}) returinging image.");
+            Helpers.Logging.TraceMessage($"GetCachedSheet({sheetNum}) returning image.");
             return cachedSheets[sheetNum - 1];
         }
 
         private void PaintSheet(Graphics g, int sheetNum) {
-
+            Helpers.Logging.TraceMessage($"{sheetNum}");
             // This is needed for image scaling to work right
             g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
             PaintRules(g);

@@ -119,7 +119,7 @@ namespace WinPrint.Core.Models {
         public bool PrintPageBounds { get => printPageBounds; set => SetField(ref printPageBounds, value); }
 
         public Sheet() {
-            Debug.WriteLine("Document()");
+            Helpers.Logging.TraceMessage("new");
 
             // TODO: Don't specify defaults in constructor; do it through default settings
             Margins = new Margins(30, 30, 30, 30);

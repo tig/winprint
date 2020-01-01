@@ -53,7 +53,7 @@ namespace WinPrint.Core.Helpers {
 
             // Begin watching.
             watcher.EnableRaisingEvents = true;
-            Debug.WriteLine($"FileSystemSafeWatcher: Watching {watcher.Path}\\{watcher.Filter} for changes.");
+            Helpers.Logging.TraceMessage($"FileSystemSafeWatcher: Watching {watcher.Path}\\{watcher.Filter} for changes.");
             return watcher;
 
         }
@@ -65,7 +65,7 @@ namespace WinPrint.Core.Helpers {
 
         private void OnRenamed(object source, RenamedEventArgs e) {
             // Specify what is done when a file is renamed.
-            Debug.WriteLine($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");
+            Helpers.Logging.TraceMessage($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");
         }
 
         #region IDisposable Support

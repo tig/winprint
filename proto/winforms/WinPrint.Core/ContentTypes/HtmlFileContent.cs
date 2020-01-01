@@ -66,13 +66,13 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
-            Debug.WriteLine("HtmlFileContent.RenderAsync()");
+            Helpers.Logging.TraceMessage("HtmlFileContent.RenderAsync()");
 
             await base.RenderAsync(printerResolution);
 
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
-            Debug.WriteLine($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
+            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
             string css;
             try {
@@ -93,9 +93,9 @@ namespace WinPrint.Core.ContentTypes {
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
-            Debug.WriteLine($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
+            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
-            Debug.WriteLine($"PageUnit = {g.PageUnit.ToString()}");
+            Helpers.Logging.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
             litehtml.Document.CreateFromString(document);
             litehtml.Document.OnMediaChanged();
 
@@ -105,10 +105,10 @@ namespace WinPrint.Core.ContentTypes {
             //litehtml.Draw();
             litehtml.Graphics = null;
 
-            Debug.WriteLine($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
+            Helpers.Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
 
             NumPages = (int)(litehtml.Document.Height() / height) + 1;
-            Debug.WriteLine($"HtmlFileContent.RenderAsync - {NumPages} pages.");
+            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - {NumPages} pages.");
 
             return NumPages;
         }
@@ -123,7 +123,7 @@ namespace WinPrint.Core.ContentTypes {
                 data = File.ReadAllBytes($"{Path.GetDirectoryName(filePath)}\\{resource}");
             }
             catch (Exception e) {
-                Debug.WriteLine($"GetResourceBytes({resource}) - {e.Message}");
+                Helpers.Logging.TraceMessage($"GetResourceBytes({resource}) - {e.Message}");
             }
             return data;
         }
@@ -146,7 +146,7 @@ namespace WinPrint.Core.ContentTypes {
                 return data;
             }
             catch (Exception e) {
-                Debug.WriteLine($"GetResourceString({resource}) - {e.Message}");
+                Helpers.Logging.TraceMessage($"GetResourceString({resource}) - {e.Message}");
                 return data;
             }
         }
@@ -172,7 +172,7 @@ namespace WinPrint.Core.ContentTypes {
                 return requestUrl;
             }
             catch {
-                Debug.WriteLine($"GetUrlForReqeust({resource}) returning null.");
+                Helpers.Logging.TraceMessage($"GetUrlForReqeust({resource}) returning null.");
                 return null;
             }
         }
@@ -208,11 +208,11 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             if (pageNum > NumPages) {
-                Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+                Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
                 return;
             }
             if (litehtml == null) {
-                Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
+                Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
                 return;
             }
             SizeF pagesizeInPixels;
@@ -230,14 +230,14 @@ namespace WinPrint.Core.ContentTypes {
 
 
             //if (litehtml.Graphics == null) {
-            //    Debug.WriteLine($"new print job. Rendering again");
+            //    Helpers.Logging.TraceMessage($"new print job. Rendering again");
             //    // This is a new print job. Re-render with new DPI
             //    litehtml.Graphics = g;
             //    litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(PageSize.Width, PageSize.Height));
             //    int bestWidth = litehtml.Document.Render((int)PageSize.Width);
             //}
 
-            Debug.WriteLine($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
+            Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
             litehtml.Graphics = g;
 

@@ -47,7 +47,7 @@ namespace WinPrint {
                     ZoomIn();
             }
             else {
-                Debug.WriteLine($"_MouseWheel page {e.Delta}");
+                Core.Helpers.Logging.TraceMessage($"_MouseWheel page {e.Delta}");
                 if (e.Delta < 0)
                     PageDown();
                 else
@@ -117,7 +117,7 @@ namespace WinPrint {
         }
 
         private void PageUp() {
-            Debug.WriteLine($"Preview:PageUp");
+            Core.Helpers.Logging.TraceMessage($"Preview:PageUp");
 
             if (CurrentSheet > 1) {
                 CurrentSheet--;
@@ -126,7 +126,7 @@ namespace WinPrint {
         }
 
         private void PageDown() {
-            Debug.WriteLine($"Preview:PageDown");
+            Core.Helpers.Logging.TraceMessage($"Preview:PageDown");
             if (CurrentSheet < svm.NumSheets) {
                 CurrentSheet++;
                 Invalidate();
@@ -154,10 +154,10 @@ namespace WinPrint {
 
             // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
             var scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
-            Debug.WriteLine($"OnPaint scale {scale}");
+            Core.Helpers.Logging.TraceMessage($"OnPaint scale {scale}");
 
             var previewSize = new Size((int)(w * scale), (int)(h * scale));
-            Debug.WriteLine($"OnPaint previewSize {previewSize.Width}, {previewSize.Height}");
+            Core.Helpers.Logging.TraceMessage($"OnPaint previewSize {previewSize.Width}, {previewSize.Height}");
 
             // Don't do anything if the window's been shrunk too far or GDI+ will crash
             if (previewSize.Width <= 10 || previewSize.Height <= 10) return;
@@ -169,18 +169,21 @@ namespace WinPrint {
             // Scale for client size & zoom
             e.Graphics.ScaleTransform((float)scale, (float)scale);
 
-            bool useCachedImages = false;
-            if (useCachedImages) {
-                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                Image img = svm.GetSheet(CurrentSheet);
-                e.Graphics.DrawImage(img,
-                    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
-                    0F, 0F, img.Width, img.Height,
-                    GraphicsUnit.Pixel);
-                e.Graphics.Restore(state);
+            if (!svm.Loading && !svm.Reflowing) {
+                if (svm.CacheEnabled) {
+                    e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                    Image img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
+                    //e.Graphics.DrawImage(img,
+                    //    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
+                    //    0F, 0F, img.Width, img.Height,
+                    //    GraphicsUnit.Pixel);
+                    e.Graphics.DrawImageUnscaledAndClipped(img,
+                        new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(svm.PrintableArea.Width), (int)(svm.PrintableArea.Height)));
+                    e.Graphics.Restore(state);
+                }
+                else
+                    svm.PrintSheet(e.Graphics, CurrentSheet);
             }
-            else
-                svm.PrintSheet(e.Graphics, CurrentSheet);
 
             // While loading & reflowing show Text
             if (!string.IsNullOrEmpty(Text)) {
@@ -188,7 +191,6 @@ namespace WinPrint {
                 var s = e.Graphics.MeasureString(Text, font);
                 e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
             }
-
 
             e.Graphics.Restore(state);
 
