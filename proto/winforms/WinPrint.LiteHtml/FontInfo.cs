@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace WinPrint.LiteHtml {
 
-    class FontInfo : IDisposable {
+    public class FontInfo : IDisposable {
         public FontFamily Family;
         public Font Font;
         public int Size;

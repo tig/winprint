@@ -166,7 +166,7 @@ namespace WinPrint.Core.ContentTypes {
                         //}
                         sbHtml.AppendLine($"</head><body>");
                         sbHtml.AppendLine($"</body></html>");
-                        sbHtml.AppendLine($"<pre class=\"language-{language}\"><code class=\"language-csharp\">");
+                        sbHtml.AppendLine($"<pre class=\"language-{language}\"><code class=\"language-{language}\">");
                         sbHtml.AppendLine(await node.StandardOutput.ReadLineAsync());//.Replace(' ', (char)160));
                         sbHtml.AppendLine($"</code></pre>");
 
@@ -238,7 +238,7 @@ namespace WinPrint.Core.ContentTypes {
             // for now, assume 1 line per htmlLine
 
             // Note, MeasureLines may increment numPages due to form feeds
-            lines = MeasureLines(document); // new List<string>();
+            lines = await MeasureLines(document).ConfigureAwait(false); // new List<string>();
 
             NumPages += (lines.Count / linesPerPage) + 1;
 
@@ -247,31 +247,36 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         // TODO: Profile for performance
-        private List<HtmlLine> MeasureLines(string document) {
+        private async Task<List<HtmlLine>> MeasureLines(string document) {
             Helpers.Logging.TraceMessage("CodeFileContent.MeasureLines");
 
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
-            var lineSize = new LiteHtmlSize(width, height);
 
-            foreach (HtmlLine l in lines) {
-                l.liteHtml.Size = lineSize;
-                var htmlBitmap = new Bitmap(width, height);
-                var g = Graphics.FromImage(htmlBitmap);
-                g.PageUnit = GraphicsUnit.Display;
-                l.liteHtml.Graphics = g;
-                l.liteHtml.Document.CreateFromString(l.html);
-                //l.liteHtml.Document.OnMediaChanged();
-
-                // TODO: Use return of Render() to get "best width"
-                int bestWidth = l.liteHtml.Document.Render((int)width);
-                l.liteHtml.Graphics = null;
-            }
+            foreach (var l in lines)
+                await Task.Run(() => RenderLine(l));
+            //await RenderLine(l);
 
             minCharWidth = MeasureString(null, "W").Width;
             int minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
             return lines;
+        }
+
+        private async Task RenderLine(HtmlLine line) {
+            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+            int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
+            var htmlBitmap = new Bitmap(width, height);
+            var g = Graphics.FromImage(htmlBitmap);
+            g.PageUnit = GraphicsUnit.Display;
+            var lineSize = new LiteHtmlSize(width, height);
+            line.liteHtml.Size = lineSize;
+            line.liteHtml.Graphics = g;
+            line.liteHtml.Document.CreateFromString(line.html);
+            //l.liteHtml.Document.OnMediaChanged();
+            // TODO: Use return of Render() to get "best width"
+            int bestWidth = line.liteHtml.Document.Render((int)width);
+            line.liteHtml.Graphics = null;
         }
 
         private SizeF MeasureString(Graphics g, string text) {
@@ -343,7 +348,7 @@ namespace WinPrint.Core.ContentTypes {
             //            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            line.liteHtml.Document.Draw((int)xPos, (int)yPos, new position {
+            line.liteHtml.Document.Draw((int)xPos, (int)yPos-2, new position {
                 x = 0,
                 y = 0,
                 width = (int)Math.Round(size.Width),

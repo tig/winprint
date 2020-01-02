@@ -22,7 +22,7 @@ namespace WinPrint.Core.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace WinPrint.Core.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("WinPrint.Core.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace WinPrint.Core.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -84,7 +84,7 @@ namespace WinPrint.Core.Properties {
         ///    &quot;*.dll.config&quot;: &quot;markup&quot;,
         ///    &quot;*.fi [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string languages {
+        public static string languages {
             get {
                 return ResourceManager.GetString("languages", resourceCulture);
             }
@@ -107,7 +107,7 @@ namespace WinPrint.Core.Properties {
         ///	white-space: pre;
         ///	word-sp [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string prism_coy {
+        public static string prism_coy {
             get {
                 return ResourceManager.GetString("prism_coy", resourceCulture);
             }
@@ -117,11 +117,14 @@ namespace WinPrint.Core.Properties {
         ///   Looks up a localized string similar to code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
         ///    background: none;
-        ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
+        ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
         ///    font-size: 10pt;
         ///    white-space: pre-wrap;
         ///    word-wrap: break-word;
         ///    word-break: break-all;
+        ///    line-height:normal;
+        ///    padding: 0;
+        ///    margin: 0;
         ///}
         ///
         ////* Code blocks */
@@ -132,12 +135,9 @@ namespace WinPrint.Core.Properties {
         ///}
         ///
         ////* Background &amp; border */
-        ///pre[class*=&quot;language-&quot;] &gt; code {
-        ///    position: relative;
-        ///	border-left: 0px;
-        ///    border-right [rest of string was truncated]&quot;;.
+        ///pre[class*=&quot;language-&quot;] &gt; c [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string prism_winprint_overrides {
+        public static string prism_winprint_overrides {
             get {
                 return ResourceManager.GetString("prism_winprint_overrides", resourceCulture);
             }

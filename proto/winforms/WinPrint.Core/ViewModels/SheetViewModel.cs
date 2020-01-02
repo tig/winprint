@@ -152,10 +152,10 @@ namespace WinPrint.Core {
             ContentBase content = TextFileContent.Create();
             if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
                 if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
-                    //content = PrismFileContent.Create();
-                    //((PrismFileContent)content).Language = type;
-                    content = CodeFileContent.Create();
-                    ((CodeFileContent)content).Language = type;
+                    content = PrismFileContent.Create();
+                    ((PrismFileContent)content).Language = type;
+                    //content = CodeFileContent.Create();
+                    //((CodeFileContent)content).Language = type;
                 }
                 else
                     switch (type) {

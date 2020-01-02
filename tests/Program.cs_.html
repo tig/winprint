@@ -5,11 +5,14 @@
 code[class*="language-"],
 pre[class*="language-"] {
     background: none;
-    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
     font-size: 10pt;
     white-space: pre-wrap;
     word-wrap: break-word;
     word-break: break-all;
+    line-height:normal;
+    padding: 0;
+    margin: 0;
 }
 
 /* Code blocks */
@@ -19,7 +22,7 @@ pre[class*="language-"] {
     padding: 0;
 }
 
-/* Background & bordder */
+/* Background & border */
 pre[class*="language-"] > code {
     position: relative;
 	border-left: 0px;
@@ -38,6 +41,7 @@ pre[class*="language-"] > code {
 code[class*="language"] {
     max-height: inherit;
     padding: 0;
+    margin: 0;
     overflow: visible;
 }
 
@@ -47,14 +51,9 @@ pre[class*="language-"] {
     margin-bottom: 0;
 }
 
-pre.line-numbers > code {
-  overflow: visible;
-  padding: 0;
-}
-
 </style>
 </head><body>
-<pre class="language-csharp line-numbers"><code class="language-csharp line-numbers">
+<pre class="language-csharp "><code class="language-csharp">
 <span class="token keyword">using</span> System<span class="token punctuation">;</span>
 <span class="token keyword">using</span> System<span class="token punctuation">.</span>Collections<span class="token punctuation">.</span>Generic<span class="token punctuation">;</span>
 <span class="token keyword">using</span> System<span class="token punctuation">.</span>Linq<span class="token punctuation">;</span>

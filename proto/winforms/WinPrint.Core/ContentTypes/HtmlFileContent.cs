@@ -22,7 +22,7 @@ namespace WinPrint.Core.ContentTypes {
             return content;
         }
 
-        private GDIPlusContainer litehtml;
+        internal GDIPlusContainer litehtml;
 
         //public HtmlFileContent() {
         //    type = "text/html";

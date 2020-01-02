@@ -1,11 +1,14 @@
 code[class*="language-"],
 pre[class*="language-"] {
     background: none;
-    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
     font-size: 10pt;
     white-space: pre-wrap;
     word-wrap: break-word;
     word-break: break-all;
+    line-height:normal;
+    padding: 0;
+    margin: 0;
 }
 
 /* Code blocks */

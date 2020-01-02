@@ -85,6 +85,10 @@ namespace WinPrint.LiteHtml {
 
             //Helpers.Logging.TraceMessage($"Added FontInfo({fi.Font.FontFamily.ToString()}, {fi.LineHeight}, {fi.Size}, {fi.Font.Style.ToString()}");
 
+            // HACK: Used to enable PrismFileContent to determine font used for code
+            if (faceName.Contains("winprint", StringComparison.OrdinalIgnoreCase))
+                codeFontInfo = fi;
+
             _fonts.Add((UIntPtr)fi.GetHashCode(), fi);
 
             fm.x_height = fi.xHeight;
@@ -94,6 +98,12 @@ namespace WinPrint.LiteHtml {
             fm.draw_spaces = decoration > 0;
 
             return (UIntPtr)fi.GetHashCode();
+        }
+
+        // HACK: Used to enable PrismFileContent to determine font used for code
+        private FontInfo codeFontInfo;
+        public FontInfo GetCodeFontInfo() {
+            return codeFontInfo;
         }
 
         protected override void DrawBackground(UIntPtr hdc, string image, background_repeat repeat, ref web_color color, ref position pos, ref border_radiuses borderRadiuses, ref position borderBox, bool isRoot) {
