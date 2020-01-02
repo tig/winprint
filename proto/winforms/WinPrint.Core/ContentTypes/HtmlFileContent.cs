@@ -24,9 +24,6 @@ namespace WinPrint.Core.ContentTypes {
 
         private GDIPlusContainer litehtml;
 
-        HttpClient _httpClient;
-        string _lastUrl;
-
         //public HtmlFileContent() {
         //    type = "text/html";
         //}
@@ -85,7 +82,8 @@ namespace WinPrint.Core.ContentTypes {
                 css = IncludedWinPrintCss.CssString;
             }
 
-            litehtml = new GDIPlusContainer(css, GetResourceString, GetResourceBytes);
+            var resources = new HtmlResources(filePath);
+            litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes);
             litehtml.Size = new LiteHtmlSize(width, height);
 
             htmlBitmap = new Bitmap(width, height);
@@ -111,70 +109,6 @@ namespace WinPrint.Core.ContentTypes {
             Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - {NumPages} pages.");
 
             return NumPages;
-        }
-
-        private byte[] GetResourceBytes(string resource) {
-            byte[] data = new byte[0];
-            if (string.IsNullOrWhiteSpace(resource)) {
-                return data;
-            }
-
-            try {
-                data = File.ReadAllBytes($"{Path.GetDirectoryName(filePath)}\\{resource}");
-            }
-            catch (Exception e) {
-                Helpers.Logging.TraceMessage($"GetResourceBytes({resource}) - {e.Message}");
-            }
-            return data;
-        }
-
-        private string GetResourceString(string resource) {
-            string data = string.Empty;
-            if (string.IsNullOrWhiteSpace(resource)) {
-                return data;
-            }
-            try {
-                if (resource.StartsWith("file:")) {
-                    UriBuilder urlBuilder = new UriBuilder(resource);
-                    using StreamReader reader = new StreamReader(urlBuilder.Path);
-                    data = reader.ReadToEnd();
-                }
-                else {
-                    var url = GetUrlForRequest(resource);
-                    data = _httpClient.GetStringAsync(url).Result;
-                }
-                return data;
-            }
-            catch (Exception e) {
-                Helpers.Logging.TraceMessage($"GetResourceString({resource}) - {e.Message}");
-                return data;
-            }
-        }
-
-        private string GetUrlForRequest(string resource) {
-            try {
-                UriBuilder urlBuilder;
-
-                if (resource.StartsWith("file:")) {
-                    urlBuilder = new UriBuilder();
-                    urlBuilder.Scheme = "file";
-                    urlBuilder.Host = "";
-                    urlBuilder.Path = resource;
-                }
-                else if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
-                    urlBuilder = new UriBuilder(resource.TrimStart(new char[] { '/' }));
-                }
-                else {
-                    urlBuilder = new UriBuilder(_lastUrl);
-                    urlBuilder.Path = resource;
-                }
-                var requestUrl = urlBuilder.ToString();
-                return requestUrl;
-            }
-            catch {
-                Helpers.Logging.TraceMessage($"GetUrlForReqeust({resource}) returning null.");
-                return null;
-            }
         }
 
         /// <summary>
@@ -242,7 +176,7 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
-            //g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {

@@ -62,30 +62,27 @@ namespace WinPrint.Core.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///    &quot;file.associations&quot;: {
-        ///        &quot;*.myphp&quot;: &quot;php&quot;
-        ///    },
-        ///    &quot;languages&quot;: [
-        ///        {
-        ///            &quot;id&quot;: &quot;markup&quot;,
-        ///            &quot;title&quot;: &quot;Markup&quot;,
-        ///            &quot;aliases&quot;: [
-        ///                &quot;html&quot;,
-        ///                &quot;xml&quot;,
-        ///                &quot;svg&quot;,
-        ///                &quot;mathml&quot;
-        ///            ],
-        ///            &quot;extensions&quot;: [
-        ///                &quot;.markup&quot;,
-        ///                &quot;.html&quot;,
-        ///                &quot;.xml&quot;,
-        ///                &quot;.svg&quot;,
-        ///                &quot;.mathml&quot;
-        ///            ]
-        ///        },
-        ///        {
-        ///            &quot;id&quot;: &quot;css&quot;,
-        ///            &quot;t [rest of string was truncated]&quot;;.
+        ///  &quot;files.associations&quot;: {
+        ///    &quot;*.markup&quot;: &quot;markup&quot;,
+        ///    &quot;*.html&quot;: &quot;markup&quot;,
+        ///    &quot;*.htm&quot;: &quot;markup&quot;,
+        ///    &quot;*.html.hl&quot;: &quot;markup&quot;,
+        ///    &quot;*.st&quot;: &quot;markup&quot;,
+        ///    &quot;*.xht&quot;: &quot;markup&quot;,
+        ///    &quot;*.xhtml&quot;: &quot;markup&quot;,
+        ///    &quot;*.xml&quot;: &quot;markup&quot;,
+        ///    &quot;*.ant&quot;: &quot;markup&quot;,
+        ///    &quot;*.axml&quot;: &quot;markup&quot;,
+        ///    &quot;*.ccxml&quot;: &quot;markup&quot;,
+        ///    &quot;*.clixml&quot;: &quot;markup&quot;,
+        ///    &quot;*.cproject&quot;: &quot;markup&quot;,
+        ///    &quot;*.csproj&quot;: &quot;markup&quot;,
+        ///    &quot;*.ct&quot;: &quot;markup&quot;,
+        ///    &quot;*.dita&quot;: &quot;markup&quot;,
+        ///    &quot;*.ditamap&quot;: &quot;markup&quot;,
+        ///    &quot;*.ditaval&quot;: &quot;markup&quot;,
+        ///    &quot;*.dll.config&quot;: &quot;markup&quot;,
+        ///    &quot;*.fi [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string languages {
             get {
@@ -94,31 +91,51 @@ namespace WinPrint.Core.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to /**
+        /// * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
+        /// * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
+        /// * @author Tim  Shedor
+        /// */
+        ///
+        ///code[class*=&quot;language-&quot;],
+        ///pre[class*=&quot;language-&quot;] {
+        ///	color: black;
+        ///	background: none;
+        ///	font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
+        ///	font-size: 1em;
+        ///	text-align: left;
+        ///	white-space: pre;
+        ///	word-sp [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string prism_coy {
+            get {
+                return ResourceManager.GetString("prism_coy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
-        ///	background: none;
-        ///	font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
-        ///	font-size: 10pt;
-        ///	white-space: pre-wrap;
-        ///	word-wrap: break-word;
-        ///	word-break: break-all;
+        ///    background: none;
+        ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
+        ///    font-size: 10pt;
+        ///    white-space: pre-wrap;
+        ///    word-wrap: break-word;
+        ///    word-break: break-all;
         ///}
         ///
         ////* Code blocks */
         ///pre[class*=&quot;language-&quot;] {
-        ///	margin: 0;
-        ///	overflow: visible;
-        ///	padding: 0;
+        ///    margin: 0;
+        ///    overflow: visible;
+        ///    padding: 0;
         ///}
         ///
-        ///pre[class*=&quot;language-&quot;]&gt;code {
-        ///	position: relative;
-        ///	border-left: 0px solid black;
-        ///}
-        ///
-        ///code[class*=&quot;language&quot;] {
-        ///	max-height: inherit;
-        ///	padding [rest of string was truncated]&quot;;.
+        ////* Background &amp; border */
+        ///pre[class*=&quot;language-&quot;] &gt; code {
+        ///    position: relative;
+        ///	border-left: 0px;
+        ///    border-right [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string prism_winprint_overrides {
             get {

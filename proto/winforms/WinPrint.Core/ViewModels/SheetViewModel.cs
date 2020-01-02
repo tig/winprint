@@ -106,7 +106,7 @@ namespace WinPrint.Core {
 
         // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
         private List<Image> cachedSheets = new List<Image>();
-        
+
 
         public SheetViewModel() {
             //SetSettings(new Sheet());
@@ -152,13 +152,24 @@ namespace WinPrint.Core {
             ContentBase content = TextFileContent.Create();
             if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
                 if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
-                    content = PrismFileContent.Create();
-                    ((PrismFileContent)content).Language = type;
+                    //content = PrismFileContent.Create();
+                    //((PrismFileContent)content).Language = type;
+                    content = CodeFileContent.Create();
+                    ((CodeFileContent)content).Language = type;
                 }
-                else {
-                    if (type.Equals("text/html"))
-                        content = HtmlFileContent.Create();
-                }
+                else
+                    switch (type) {
+                        case "sourcecode":
+                            content = CodeFileContent.Create();
+                            ((CodeFileContent)content).Language = type;
+                            break;
+
+                        case "text/html":
+                        default:
+                            content = HtmlFileContent.Create();
+                            break;
+                    }
+
             }
             Type = type;
 
@@ -198,7 +209,7 @@ namespace WinPrint.Core {
             Reflowing = true;
 
             if (CacheEnabled)
-               ClearCache();
+                ClearCache();
 
             var ps = (PageSettings)pageSettings.Clone();
 
@@ -424,9 +435,9 @@ namespace WinPrint.Core {
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         /// <returns></returns>
         public Image GetCachedSheet(Graphics graphics, int sheetNum) {
-            if (!CacheEnabled) 
+            if (!CacheEnabled)
                 throw new InvalidOperationException("Cache is not enabled!");
-            
+
             const int dpiMultiplier = 1;
             float xDpi = PrinterResolution.X * dpiMultiplier;
             float yDpi = PrinterResolution.Y * dpiMultiplier;
@@ -482,7 +493,7 @@ namespace WinPrint.Core {
                         g.DrawLine(Pens.Black, Padding / 2, h + (Padding / 2), w - Padding, h + (Padding / 2));
                 }
 
-                if (Content != null) 
+                if (Content != null)
                     Content.PaintPage(g, pageOnSheet);
 
                 // Translate back

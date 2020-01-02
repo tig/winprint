@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Properties\languages.json" />
-    <EmbeddedResource Include="Properties\prism-winprint-overrides.css">
+    <EmbeddedResource Include="Resources\languages.json" />
+    <EmbeddedResource Include="Resources\prism-winprint-overrides.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
