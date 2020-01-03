@@ -85,6 +85,7 @@ namespace WinPrint.Core.ContentTypes {
             var resources = new HtmlResources(filePath);
             litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes);
             litehtml.Size = new LiteHtmlSize(width, height);
+            litehtml.PageHeight = height;
 
             htmlBitmap = new Bitmap(width, height);
             //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
@@ -96,6 +97,7 @@ namespace WinPrint.Core.ContentTypes {
             Helpers.Logging.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
             litehtml.Document.CreateFromString(document);
             litehtml.Document.OnMediaChanged();
+            
 
             // TODO: Use return of Render() to get "best width"
             int bestWidth = litehtml.Document.Render((int)width);

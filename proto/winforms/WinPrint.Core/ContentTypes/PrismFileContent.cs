@@ -114,12 +114,14 @@ namespace WinPrint.Core.ContentTypes {
             return size;
         }
 
+        private int linesInDocument;
         private async Task<string> CodeToHtml(string file, string language) {
             Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml()");
 
+            const string cssPrism = "prism.css";
             const string cssTheme = "prism-coy.css";
-            //const string cssPrism = "prism.css";
             const string cssWinPrint = "prism-winprint-overrides.css";
+
             string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             var cssUri = new UriBuilder();
             cssUri.Scheme = "file";
@@ -146,6 +148,7 @@ namespace WinPrint.Core.ContentTypes {
             var prismThemes = GetPrismThemesPath();
             // Reference choosen theme style sheet
             cssUri.Path = prismThemes;
+            //sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssPrism}\" rel=\"stylesheet\"/>");
             sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssTheme}\" rel=\"stylesheet\"/>");
 
             cssUri.Path = appDir;
@@ -160,7 +163,7 @@ namespace WinPrint.Core.ContentTypes {
                 sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
                 sbHtml.AppendLine($"</style>");
             }
-            sbHtml.AppendLine($"</head><body>");
+            sbHtml.Append($"</head><body>");
 
             try {
                 ProcessStartInfo psi = new ProcessStartInfo();
@@ -176,9 +179,15 @@ namespace WinPrint.Core.ContentTypes {
                     sw.Close();
 
                     var ln = "";// LineNumbers ? "line-numbers" : "";
-                    sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\">");
-                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());//.Replace(' ', (char)160));
-                    sbHtml.AppendLine($"</code></pre>");
+                    sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><ol>");
+                    //                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
+                    linesInDocument = 0;
+                    while (!node.StandardOutput.EndOfStream) { 
+                        sbHtml.AppendLine($"<li>{await node.StandardOutput.ReadLineAsync()}</li>");
+                        linesInDocument++;
+                        //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
+                    }
+                    sbHtml.AppendLine($"</ol></code></pre>");
                     //node.WaitForExit(10000);
                 }
 
@@ -246,12 +255,12 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
-            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+            //g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
             // 
 
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            litehtml.Document.Draw((int)lineNumberWidth, (int)-yPos, new position {
+            litehtml.Document.Draw((int)-0, (int)-yPos, new position {
                 x = 0,
                 y = 0,
                 width = (int)size.Width,
@@ -260,21 +269,22 @@ namespace WinPrint.Core.ContentTypes {
 
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 
-            PaintLineNumberSeparator(g);
+            //PaintLineNumberSeparator(g);
 
             // Print each line of the file.
             int startLine = linesPerPage * (pageNum - 1);
             int endLine = startLine + linesPerPage;
             int lineOnPage;
-            int linesInDocument = (int)Math.Round(litehtml.Size.Height / lineHeight);
+            //int linesInDocument = (int)Math.Round(litehtml.Document.Height() / lineHeight);
             for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
                 int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
                 if (lineInDocument < linesInDocument && lineInDocument >= startLine && lineInDocument <= endLine) {
                     //if (lines[lineInDocument].lineNumber > 0)
-                    PaintLineNumber(g, pageNum, lineInDocument);
-                    //float xPos = leftMargin + lineNumberWidth;
-                    //float yPos = lineOnPage * lineHeight;
+                    //PaintLineNumber(g, pageNum, lineInDocument);
+                    int x = (int)leftMargin ;
+                    int y = lineOnPage * (int)lineHeight;
                     //RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
+                    g.DrawRectangle(Pens.Red, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
                 }
             }
 

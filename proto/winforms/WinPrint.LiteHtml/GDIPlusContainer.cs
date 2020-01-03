@@ -53,6 +53,15 @@ namespace WinPrint.LiteHtml {
         public GDIPlusContainer(string css, Func<string, string> getStringResource, Func<string, byte[]> getBytesResource) : this(css, new ResourceLoader(getStringResource, getBytesResource)) {
         }
 
+        public int PageHeight;
+        protected override void GetMediaFeatures(ref media_features media) {
+            media.width = media.device_width = (int)Size.Width;
+            media.height = (int)Size.Height;
+
+            // BUGBUG: I don't think litehtml actaully honors device_height
+            media.device_height = PageHeight;
+        }
+
         protected override UIntPtr CreateFont(string faceName, int size, int weight, font_style italic, font_decoration decoration, ref font_metrics fm) {
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
@@ -195,8 +204,8 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void DrawListMarker(string image, string baseURL, list_style_type marker_type, ref web_color color, ref position pos) {
-            // TODO: Implement DrawListMarker
-            // throw new NotImplementedException();
+            if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
+            _graphics.FillRectangle(color.GetBrush(), pos.x, pos.y, pos.width, pos.height);
         }
 
         protected override void DrawText(string text, UIntPtr font, ref web_color color, ref position pos) {

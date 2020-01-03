@@ -1,0 +1,67 @@
+<!DOCTYPE html><html><head><title>CSS Counter Test</title>
+    <meta charset="utf-8"/>
+    <style>
+
+pre {
+  background: #303030;
+  color: #f1f1f1;
+  padding: 10px 16px;
+  border-radius: 2px;
+  border-top: 4px solid #00aeef;
+  -moz-box-shadow: inset 0 0 10px #000;
+  box-shadow: inset 0 0 10px #000;
+  counter-reset: line;
+}
+pre span {
+  display: block;
+  line-height: 1.5rem;
+}
+pre span:before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  border-right: 1px solid #ddd;
+  padding: 0 .5em;
+  margin-right: .5em;
+  color: #888
+}
+
+div[class*='ln'] {
+  
+  float: left; width: 20px; 
+	font-size: 100%;
+  
+	/* works for line-numbers below 1000 lines */
+	letter-spacing: 0px;
+	border-right: 1px solid red;
+	padding-right: 1em;
+	text-align: right;
+  
+}
+</style>
+</head>
+<body>
+
+<pre class="">
+<code class="language-javascript">
+<div class="ln">1</div>        var a = 10;
+<div class="ln">2</div>        var b = 5;
+<div class="ln">10</div>        var c = a + b;
+</code>
+
+
+<pre><span>lorem ipsum</span>
+<span>&gt;&gt; lorem ipsum</span>
+<span>lorem ipsum,\ </span>
+<span>lorem ipsum.</span>
+<span>&gt;&gt; lorem ipsum</span>
+<span>lorem ipsum</span>
+<span>lorem ipsum</span>
+<span>lorem ipsum</span>
+<span>lorem ipsum</span>
+<span>lorem ipsum</span>
+<span>lorem ipsum</span>
+<span>lorem ipsum</span>
+</pre>
+</body>
+</html>

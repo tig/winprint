@@ -117,7 +117,7 @@ namespace WinPrint.Core.Properties {
         ///   Looks up a localized string similar to code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
         ///    background: none;
-        ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
+        ///    font-family: Arial, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
         ///    font-size: 10pt;
         ///    white-space: pre-wrap;
         ///    word-wrap: break-word;
@@ -135,7 +135,8 @@ namespace WinPrint.Core.Properties {
         ///}
         ///
         ////* Background &amp; border */
-        ///pre[class*=&quot;language-&quot;] &gt; c [rest of string was truncated]&quot;;.
+        ///pre[class*=&quot;language-&quot;] &gt; code {
+        ///    position: [rest of string was truncated]&quot;;.
         /// </summary>
         public static string prism_winprint_overrides {
             get {
