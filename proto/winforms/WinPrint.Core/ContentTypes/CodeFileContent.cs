@@ -233,17 +233,17 @@ namespace WinPrint.Core.ContentTypes {
             // Note, Measure string is actually dependent on lineNumberWidth!
             lineNumberWidth = LineNumbers ? MeasureString(null, new string('0', 4)).Width : 0;
 
-            numPages = 0;
+            var n = 0;
 
             // for now, assume 1 line per htmlLine
 
             // Note, MeasureLines may increment numPages due to form feeds
             lines = await MeasureLines(document).ConfigureAwait(false); // new List<string>();
 
-            NumPages += (lines.Count / linesPerPage) + 1;
+            n += (lines.Count / linesPerPage) + 1;
 
-            Helpers.Logging.TraceMessage($"{lines.Count} lines across {numPages} pages.");
-            return numPages;
+            Helpers.Logging.TraceMessage($"{lines.Count} lines across {n} pages.");
+            return n;
         }
 
         // TODO: Profile for performance
@@ -315,10 +315,10 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            if (pageNum > NumPages) {
-                Helpers.Logging.TraceMessage($"CodeFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
-                return;
-            }
+            //if (pageNum > NumPages) {
+            //    Helpers.Logging.TraceMessage($"CodeFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+            //    return;
+            //}
 
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 

@@ -1,0 +1,194 @@
+{
+  "location": {
+    "x": 85,
+    "y": 5
+  },
+  "size": {
+    "width": 1687,
+    "height": 1022
+  },
+  "windowState": "maximized",
+  "defaultSheet": "0002a500-0000-0000-c000-000000000046",
+  "type": "text/html",
+  "textFileSettings": {
+    "lineNumbers": true,
+    "lineNumberSeparator": false,
+    "tabSpaces": 4,
+    "newPageOnFormFeed": false,
+    "font": {
+      "family": "Consolas",
+      "style": "regular",
+      "size": 8
+    }
+  },
+  "htmlFileSettings": {
+    "monspacedFont": null,
+    "font": {
+      "family": "Verdana",
+      "style": "regular",
+      "size": 10
+    }
+  },
+  "prismFileSettings": {
+    "lineNumbers": true,
+    "lineNumberSeparator": true,
+    "language": null,
+    "monspacedFont": null,
+    "font": {
+      "family": "Consolas",
+      "style": "regular",
+      "size": 8
+    }
+  },
+  "sheets": {
+    "0002a500-0000-0000-c000-000000000046": {
+      "name": "Default (2up)",
+      "landscape": true,
+      "rows": 1,
+      "columns": 2,
+      "padding": 10,
+      "pageSeparator": true,
+      "margins": {
+        "left": 25,
+        "right": 20,
+        "top": 25,
+        "bottom": 20
+      },
+      "rulesFont": {
+        "family": "sansserif",
+        "style": "regular",
+        "size": 8
+      },
+      "header": {
+        "text": "Test|{FullyQualifiedPath}|{FileType}",
+        "font": {
+          "family": "Microsft Sans Serif",
+          "style": "bold",
+          "size": 8
+        },
+        "leftBorder": false,
+        "topBorder": false,
+        "rightBorder": false,
+        "bottomBorder": true,
+        "enabled": true
+      },
+      "footer": {
+        "text": "Copyright 2020 Kindel Systems|Page {Page} of {NumPages}",
+        "font": {
+          "family": "Microsft Sans Serif",
+          "style": "bold",
+          "size": 8
+        },
+        "leftBorder": false,
+        "topBorder": true,
+        "rightBorder": false,
+        "bottomBorder": false,
+        "enabled": true
+      },
+      "previewPrintableArea": false,
+      "printPrintableArea": false,
+      "previewPaperSize": false,
+      "printPaperSize": false,
+      "previewMargins": false,
+      "printMargins": false,
+      "previewHardMargins": false,
+      "printHardMargins": false,
+      "printBounds": false,
+      "previewBounds": false,
+      "printContentBounds": false,
+      "previewContentBounds": false,
+      "printHeaderFooterBounds": false,
+      "previewHeaderFooterBounds": false,
+      "previewPageBounds": false,
+      "printPageBounds": false
+    },
+    "0002a501-0000-0000-c000-000000000046": {
+      "name": "Default (1up)",
+      "landscape": false,
+      "rows": 1,
+      "columns": 1,
+      "padding": 3,
+      "pageSeparator": false,
+      "margins": {
+        "left": 46,
+        "right": 50,
+        "top": 24,
+        "bottom": 26
+      },
+      "rulesFont": {
+        "family": "sansserif",
+        "style": "regular",
+        "size": 8
+      },
+      "header": {
+        "text": "|{FullyQualifiedPath}|File Type: {FileType}",
+        "font": {
+          "family": "Microsft Sans Serif",
+          "style": "bold",
+          "size": 8
+        },
+        "leftBorder": false,
+        "topBorder": false,
+        "rightBorder": false,
+        "bottomBorder": true,
+        "enabled": true
+      },
+      "footer": {
+        "text": "Kindel Systems|Page {Page} of {NumPages}",
+        "font": {
+          "family": "Microsft Sans Serif",
+          "style": "bold",
+          "size": 8
+        },
+        "leftBorder": false,
+        "topBorder": true,
+        "rightBorder": false,
+        "bottomBorder": false,
+        "enabled": true
+      },
+      "previewPrintableArea": false,
+      "printPrintableArea": false,
+      "previewPaperSize": false,
+      "printPaperSize": false,
+      "previewMargins": false,
+      "printMargins": false,
+      "previewHardMargins": false,
+      "printHardMargins": false,
+      "printBounds": false,
+      "previewBounds": false,
+      "printContentBounds": false,
+      "previewContentBounds": false,
+      "printHeaderFooterBounds": false,
+      "previewHeaderFooterBounds": false,
+      "previewPageBounds": true,
+      "printPageBounds": false
+    }
+  },
+  "languageAssociations": {
+    "files.associations": {
+      "*.config": "config",
+      "*.html": "text/html",
+      "*.htm": "text/html"
+    },
+    "languages": [
+      {
+        "id": "config",
+        "extensions": [
+          ".config",
+          ".cfg",
+          ".settings"
+        ],
+        "aliases": [
+          "json"
+        ]
+      },
+      {
+        "id": "csx",
+        "extensions": [
+          ".csx"
+        ],
+        "aliases": null
+      }
+    ]
+  }
+}

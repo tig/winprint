@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\Short Program.cs</title>
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\.travis.yml</title>
 <meta charset="utf-8"/>
 <link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
 <style>
@@ -115,21 +115,34 @@ body {
     margin: 0px;
 }
 </style>
-</head><body><pre class="language-csharp "><code class="language-csharp">
-<span class="token keyword">using</span> System<span class="token punctuation">;</span>
+</head><body><pre class="language-yaml "><code class="language-yaml">
+<span class="token key atrule">language</span><span class="token punctuation">:</span> node_js
+<span class="token key atrule">node_js</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> <span class="token string">'8'</span>
+<span class="token punctuation">-</span> <span class="token string">'10'</span>
+<span class="token punctuation">-</span> <span class="token string">'node'</span>
+<span class="token comment"># Build all branches</span>
+<span class="token key atrule">branches</span><span class="token punctuation">:</span>
+  <span class="token key atrule">only</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> gh<span class="token punctuation">-</span>pages
+  <span class="token punctuation">-</span> /.*/
+<span class="token key atrule">before_install</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> npm i <span class="token punctuation">-</span>g npm@latest
+<span class="token key atrule">install</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> npm ci
+<span class="token key atrule">before_script</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> npm install <span class="token punctuation">-</span>g gulp
+<span class="token punctuation">-</span> gulp
+<span class="token punctuation">-</span> gulp premerge
+<span class="token key atrule">script</span><span class="token punctuation">:</span> npm test
+<span class="token key atrule">deploy</span><span class="token punctuation">:</span>
+  <span class="token key atrule">provider</span><span class="token punctuation">:</span> npm
+  <span class="token key atrule">email</span><span class="token punctuation">:</span> lea@verou.me
+  <span class="token key atrule">api_key</span><span class="token punctuation">:</span>
+    <span class="token key atrule">secure</span><span class="token punctuation">:</span> TjRcXEr7Y/9KRJ4EOEQbd2Ij8hxKj8c/yOpEROy2lTYv6QH9x46nFDgZEE3VHfp/nnBUYpC47dRaSxiUj8H5rtkMNCZrREZu1n1zahmzP6dI6kCj+H3GiY7yw/Jhdx3uvQZHwknW2TJ/YRsLeQsmMSG2HnJobY9Zn4REX5ccP2E=
+  <span class="token key atrule">on</span><span class="token punctuation">:</span>
+    <span class="token key atrule">tags</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+    <span class="token key atrule">repo</span><span class="token punctuation">:</span> PrismJS/prism
 
-<span class="token comment">// WinPrint Test App</span>
-<span class="token keyword">namespace</span> WinPrint <span class="token punctuation">{</span>
-
-    <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">Program</span> <span class="token punctuation">{</span>
-        <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">Main</span><span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">.</span>Length <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-                <span class="token comment">// Do something here</span>
-            <span class="token punctuation">}</span>
-            Application<span class="token punctuation">.</span><span class="token function">Run</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">MainWindow</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">}</span>
-    <span class="token punctuation">}</span>
-<span class="token punctuation">}</span>
-<span class="token comment">// Last line</span>
 </code></pre>
 </body></html>

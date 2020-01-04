@@ -84,7 +84,7 @@ namespace WinPrint.Core.ContentTypes {
 
             var resources = new HtmlResources(filePath);
             litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes);
-            litehtml.Size = new LiteHtmlSize(width, height);
+            litehtml.Size = new LiteHtmlSize(width, 0);
             litehtml.PageHeight = height;
 
             htmlBitmap = new Bitmap(width, height);
@@ -107,10 +107,10 @@ namespace WinPrint.Core.ContentTypes {
 
             Helpers.Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
 
-            NumPages = (int)(litehtml.Document.Height() / height) + 1;
-            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - {NumPages} pages.");
+            var n = (int)(litehtml.Document.Height() / height) + 1;
+            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - {n} pages.");
 
-            return NumPages;
+            return n;
         }
 
         /// <summary>
@@ -143,10 +143,10 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            if (pageNum > NumPages) {
-                Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
-                return;
-            }
+            //if (pageNum > NumPages) {
+            //    Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+            //    return;
+            //}
             if (litehtml == null) {
                 Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
                 return;

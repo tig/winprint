@@ -1,0 +1,159 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\431_1.PAS</title>
+<meta charset="utf-8"/>
+<link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+<style>
+/* These style override Prism built-in (and any provided theme), 
+   optimizing for rendering for print. E.g. Colored backgrounds
+    make no sense when printing. Also turns off some stuff 
+    litehtml does not support correctly.
+*/
+code[class*="language-"],
+pre[class*="language-"] {
+    /* no backgrond */
+    background: none;
+
+    /* WinPrint supports changing theme font. */
+    /* HACK: note 'winprint' font at end. */
+    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
+    font-size: 10pt;
+
+    /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+
+    /* Force line-height to 'normal' */
+    line-height:normal;
+
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    /* Remove all padding and margins */
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Background & border */
+pre[class*="language-"] > code {
+    /* turn off all background features */
+    background: none;
+    background-image: none;
+    background-color: transparent; 
+
+    /* turn off all borders (winprint provides own border mechansim) */
+	border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+code[class*="language"] {
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    /* Remove all padding and margins (prism-coy) */
+    all: unset;
+}
+
+/* Remove any before/after fancy formatting (like coy's shadows) */
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+    all: initial;
+}
+
+:not(pre) > code[class*="language-"]:after,
+pre[class*="language-"]:after {
+    all: unset;
+}
+
+/* disable operator background found in default prism.js */
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    background: none;
+}
+
+ol {
+    display: block;
+    /* This works around a bug in litehmtl where it renders lists too far down */
+    margin-top: -0.5em; 
+    margin-bottom: 0;
+    margin-left: 30px;
+    margin-right: 0;
+    list-style-type: decimal;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+}
+
+li:first-child {
+    margin-top: 0;
+}
+
+li {
+    padding: 0px;
+    margin: 0;
+    line-height: 0px;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+}
+</style>
+</head><body><pre class="language-pascal "><code class="language-pascal">
+<span class="token keyword">Program</span> SIE431_ass1<span class="token punctuation">;</span>
+<span class="token comment">{
+  Copyright (C) 1989 Charles E. Kindel, All Rights Reserved.
+
+  Program to read in an unknown amount of data, and calculate the
+  sample mean, sample variance, and a 95% confidence interval on the
+  data.
+
+  Program should run under Turbo Pascal 5.0.
+}</span>
+
+  <span class="token keyword">var</span> n <span class="token punctuation">:</span> integer <span class="token punctuation">;</span>
+      x<span class="token punctuation">,</span> sum<span class="token punctuation">,</span> sumsq<span class="token punctuation">,</span> ci<span class="token punctuation">,</span> average<span class="token punctuation">,</span> variance <span class="token punctuation">:</span> real <span class="token punctuation">;</span>
+
+
+<span class="token keyword">begin</span>
+  n <span class="token operator">:=</span> <span class="token number">0</span> <span class="token punctuation">;</span>
+  sum <span class="token operator">:=</span> <span class="token number">0</span> <span class="token punctuation">;</span>
+  sumsq <span class="token operator">:=</span> <span class="token number">0</span> <span class="token punctuation">;</span>
+  x <span class="token operator">:=</span> <span class="token number">0</span> <span class="token punctuation">;</span>
+  <span class="token keyword">while</span> <span class="token operator">not</span> eof <span class="token keyword">do</span>
+    <span class="token keyword">begin</span>
+      readln <span class="token punctuation">(</span>x<span class="token punctuation">)</span> <span class="token punctuation">;</span>
+      sum <span class="token operator">:=</span> sum <span class="token operator">+</span> x <span class="token punctuation">;</span>
+      sumsq <span class="token operator">:=</span> sumsq <span class="token operator">+</span> <span class="token punctuation">(</span>x<span class="token operator">*</span>x<span class="token punctuation">)</span> <span class="token punctuation">;</span>
+      inc<span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+    <span class="token keyword">end</span> <span class="token punctuation">;</span>
+  average <span class="token operator">:=</span> sum <span class="token operator">/</span> n <span class="token punctuation">;</span>
+  variance <span class="token operator">:=</span> <span class="token number">1</span> <span class="token operator">/</span> <span class="token punctuation">(</span>n<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">*</span><span class="token punctuation">(</span>sumsq <span class="token operator">-</span> <span class="token punctuation">(</span>sum<span class="token operator">*</span>sum<span class="token operator">/</span>n<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">;</span>
+  ci <span class="token operator">:=</span> <span class="token number">1.645</span><span class="token operator">*</span>sqrt<span class="token punctuation">(</span>variance<span class="token punctuation">)</span><span class="token operator">/</span>sqrt<span class="token punctuation">(</span>n<span class="token punctuation">)</span> <span class="token punctuation">;</span>
+  writeln <span class="token punctuation">(</span><span class="token string">'The average is: '</span><span class="token punctuation">,</span> average<span class="token punctuation">:</span><span class="token number">5</span><span class="token punctuation">:</span><span class="token number">3</span><span class="token punctuation">)</span> <span class="token punctuation">;</span>
+  writeln <span class="token punctuation">(</span><span class="token string">'The variance is: '</span><span class="token punctuation">,</span> variance<span class="token punctuation">:</span><span class="token number">5</span><span class="token punctuation">:</span><span class="token number">3</span><span class="token punctuation">)</span> <span class="token punctuation">;</span>
+  writeln <span class="token punctuation">(</span><span class="token string">'A 95% confidence interval is: '</span><span class="token punctuation">,</span> average<span class="token punctuation">:</span><span class="token number">5</span><span class="token punctuation">:</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token string">' +- '</span><span class="token punctuation">,</span> ci<span class="token punctuation">:</span><span class="token number">5</span><span class="token punctuation">:</span><span class="token number">3</span><span class="token punctuation">)</span> <span class="token punctuation">;</span>
+  writeln <span class="token punctuation">;</span>
+  writeln <span class="token punctuation">(</span><span class="token string">'Done!'</span><span class="token punctuation">)</span>
+<span class="token keyword">end</span><span class="token punctuation">.</span>
+
+
+
+</code></pre>
+</body></html>

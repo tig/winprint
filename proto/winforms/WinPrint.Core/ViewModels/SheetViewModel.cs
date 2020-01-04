@@ -11,6 +11,7 @@ using ColorCode;
 using System.Threading.Tasks;
 using System.Text;
 using WinPrint.Core.ContentTypes;
+using System.Runtime.CompilerServices;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -49,8 +50,8 @@ namespace WinPrint.Core {
         public int Padding { get => padding; set => SetField(ref padding, value); }
         private int padding;
 
-        public bool PageSepartor { get => pageSepartor; set => SetField(ref pageSepartor, value); }
-        private bool pageSepartor;
+        public bool PageSeparator { get => pageSeparator; set => SetField(ref pageSeparator, value); }
+        private bool pageSeparator;
 
         private string file;
         public string File {
@@ -61,10 +62,12 @@ namespace WinPrint.Core {
             }
         }
 
+        private int numPages;
+
         public int NumSheets {
             get {
-                if (Content == null || Content.NumPages == 0) return 0;
-                return (int)Math.Ceiling((double)Content.NumPages / (Rows * Columns));
+                if (Content == null) return 0;
+                return (int)Math.Ceiling((double)numPages / (Rows * Columns));
             }
         }
 
@@ -113,6 +116,11 @@ namespace WinPrint.Core {
             //Reflow(new PageSettings());
         }
 
+        protected override void OnPropertyChanged([CallerMemberName] string propertyName = null) {
+            base.OnPropertyChanged(propertyName);
+
+        }
+
         /// <summary>
         /// Call SetSheet when the Sheet has changed. 
         /// </summary>
@@ -129,15 +137,15 @@ namespace WinPrint.Core {
             Rows = newSheet.Rows;
             Columns = newSheet.Columns;
             Padding = newSheet.Padding;
-            PageSepartor = newSheet.PageSeparator;
-            margins = (Margins)newSheet.Margins.Clone();
+            PageSeparator = newSheet.PageSeparator;
+            Margins = (Margins)newSheet.Margins.Clone();
 
             if (headerVM != null)
                 headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
-            headerVM = new HeaderViewModel(this, newSheet.Header);
+            Header = new HeaderViewModel(this, newSheet.Header);
             if (footerVM != null)
                 footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
-            footerVM = new FooterViewModel(this, newSheet.Footer);
+            Footer = new FooterViewModel(this, newSheet.Footer);
 
             // Subscribe to all settings properties
             newSheet.PropertyChanged += OnSheetPropertyChanged();
@@ -284,8 +292,8 @@ namespace WinPrint.Core {
             }
 
             Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-            // TODO: Make this async
-            int numPages = await Content.RenderAsync(PrinterResolution);
+            // TODO: Make this async?
+            numPages = await Content.RenderAsync(PrinterResolution);
             Reflowing = false;
         }
 
@@ -335,7 +343,7 @@ namespace WinPrint.Core {
                     break;
 
                 case "PageSeparator":
-                    PageSepartor = sheet.PageSeparator;
+                    PageSeparator = sheet.PageSeparator;
                     break;
 
                 default:
@@ -483,7 +491,7 @@ namespace WinPrint.Core {
                 // TODO: clip by GetHeight/Width
                 PaintPageNum(g, pageOnSheet);
 
-                if (pageSepartor) {
+                if (pageSeparator) {
                     // If there will be a page to the left of this page, draw vert separator
                     if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns - 1))
                         g.DrawLine(Pens.Black, w + (Padding / 2), Padding / 2, w + (Padding / 2), h - Padding);

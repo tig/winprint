@@ -96,7 +96,7 @@ namespace WinPrint
             this.printersCB.Location = new System.Drawing.Point(15, 617);
             this.printersCB.Name = "printersCB";
             this.printersCB.Size = new System.Drawing.Size(259, 28);
-            this.printersCB.TabIndex = 2;
+            this.printersCB.TabIndex = 20;
             this.printersCB.SelectedIndexChanged += new System.EventHandler(this.printersCB_SelectedIndexChanged);
             // 
             // paperSizesCB
@@ -107,7 +107,7 @@ namespace WinPrint
             this.paperSizesCB.Location = new System.Drawing.Point(14, 673);
             this.paperSizesCB.Name = "paperSizesCB";
             this.paperSizesCB.Size = new System.Drawing.Size(260, 28);
-            this.paperSizesCB.TabIndex = 3;
+            this.paperSizesCB.TabIndex = 21;
             this.paperSizesCB.SelectedIndexChanged += new System.EventHandler(this.paperSizesCB_SelectedIndexChanged);
             // 
             // landscapeCheckbox
@@ -116,7 +116,7 @@ namespace WinPrint
             this.landscapeCheckbox.Location = new System.Drawing.Point(14, 105);
             this.landscapeCheckbox.Name = "landscapeCheckbox";
             this.landscapeCheckbox.Size = new System.Drawing.Size(101, 24);
-            this.landscapeCheckbox.TabIndex = 4;
+            this.landscapeCheckbox.TabIndex = 2;
             this.landscapeCheckbox.Text = "&Landscape";
             this.landscapeCheckbox.UseVisualStyleBackColor = true;
             this.landscapeCheckbox.CheckedChanged += new System.EventHandler(this.landscapeCheckbox_CheckedChanged);
@@ -127,7 +127,7 @@ namespace WinPrint
             this.printButton.Location = new System.Drawing.Point(15, 724);
             this.printButton.Name = "printButton";
             this.printButton.Size = new System.Drawing.Size(125, 37);
-            this.printButton.TabIndex = 5;
+            this.printButton.TabIndex = 22;
             this.printButton.Text = "&Print...";
             this.printButton.UseVisualStyleBackColor = true;
             this.printButton.Click += new System.EventHandler(this.printButton_Click);
@@ -217,7 +217,7 @@ namespace WinPrint
             this.panelLeft.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.panelLeft.Name = "panelLeft";
             this.panelLeft.Size = new System.Drawing.Size(288, 776);
-            this.panelLeft.TabIndex = 9;
+            this.panelLeft.TabIndex = 0;
             // 
             // groupPages
             // 
@@ -344,7 +344,7 @@ namespace WinPrint
             this.groupMargins.Name = "groupMargins";
             this.groupMargins.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupMargins.Size = new System.Drawing.Size(262, 144);
-            this.groupMargins.TabIndex = 14;
+            this.groupMargins.TabIndex = 0;
             this.groupMargins.TabStop = false;
             this.groupMargins.Text = "&Margins";
             // 
@@ -354,7 +354,7 @@ namespace WinPrint
             this.labelBottom.Location = new System.Drawing.Point(43, 107);
             this.labelBottom.Name = "labelBottom";
             this.labelBottom.Size = new System.Drawing.Size(62, 20);
-            this.labelBottom.TabIndex = 10;
+            this.labelBottom.TabIndex = 0;
             this.labelBottom.Text = "&Bottom:";
             // 
             // bottomMargin
@@ -369,7 +369,7 @@ namespace WinPrint
             this.bottomMargin.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.bottomMargin.Name = "bottomMargin";
             this.bottomMargin.Size = new System.Drawing.Size(61, 27);
-            this.bottomMargin.TabIndex = 11;
+            this.bottomMargin.TabIndex = 4;
             this.bottomMargin.Value = new decimal(new int[] {
             25,
             0,
@@ -389,7 +389,7 @@ namespace WinPrint
             this.leftMargin.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.leftMargin.Name = "leftMargin";
             this.leftMargin.Size = new System.Drawing.Size(56, 27);
-            this.leftMargin.TabIndex = 11;
+            this.leftMargin.TabIndex = 4;
             this.leftMargin.Value = new decimal(new int[] {
             25,
             0,
@@ -403,7 +403,7 @@ namespace WinPrint
             this.labelLeft.Location = new System.Drawing.Point(15, 67);
             this.labelLeft.Name = "labelLeft";
             this.labelLeft.Size = new System.Drawing.Size(37, 20);
-            this.labelLeft.TabIndex = 10;
+            this.labelLeft.TabIndex = 2;
             this.labelLeft.Text = "&Left:";
             // 
             // rightMargin
@@ -418,7 +418,7 @@ namespace WinPrint
             this.rightMargin.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.rightMargin.Name = "rightMargin";
             this.rightMargin.Size = new System.Drawing.Size(61, 27);
-            this.rightMargin.TabIndex = 11;
+            this.rightMargin.TabIndex = 3;
             this.rightMargin.Value = new decimal(new int[] {
             25,
             0,
@@ -432,7 +432,7 @@ namespace WinPrint
             this.labelTop.Location = new System.Drawing.Point(67, 25);
             this.labelTop.Name = "labelTop";
             this.labelTop.Size = new System.Drawing.Size(37, 20);
-            this.labelTop.TabIndex = 10;
+            this.labelTop.TabIndex = 0;
             this.labelTop.Text = "&Top:";
             // 
             // labelRight
@@ -441,7 +441,7 @@ namespace WinPrint
             this.labelRight.Location = new System.Drawing.Point(141, 67);
             this.labelRight.Name = "labelRight";
             this.labelRight.Size = new System.Drawing.Size(47, 20);
-            this.labelRight.TabIndex = 10;
+            this.labelRight.TabIndex = 0;
             this.labelRight.Text = "&Right:";
             // 
             // topMargin
@@ -456,7 +456,7 @@ namespace WinPrint
             this.topMargin.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.topMargin.Name = "topMargin";
             this.topMargin.Size = new System.Drawing.Size(61, 27);
-            this.topMargin.TabIndex = 11;
+            this.topMargin.TabIndex = 1;
             this.topMargin.Value = new decimal(new int[] {
             25,
             0,
@@ -491,7 +491,7 @@ namespace WinPrint
             this.labelPrinter.Location = new System.Drawing.Point(15, 595);
             this.labelPrinter.Name = "labelPrinter";
             this.labelPrinter.Size = new System.Drawing.Size(55, 20);
-            this.labelPrinter.TabIndex = 7;
+            this.labelPrinter.TabIndex = 0;
             this.labelPrinter.Text = "&Printer:";
             // 
             // labelPaper
@@ -501,7 +501,7 @@ namespace WinPrint
             this.labelPaper.Location = new System.Drawing.Point(15, 651);
             this.labelPaper.Name = "labelPaper";
             this.labelPaper.Size = new System.Drawing.Size(49, 20);
-            this.labelPaper.TabIndex = 7;
+            this.labelPaper.TabIndex = 0;
             this.labelPaper.Text = "P&aper:";
             // 
             // panelRight
@@ -515,7 +515,8 @@ namespace WinPrint
             this.panelRight.Margin = new System.Windows.Forms.Padding(0);
             this.panelRight.Name = "panelRight";
             this.panelRight.Size = new System.Drawing.Size(519, 776);
-            this.panelRight.TabIndex = 10;
+            this.panelRight.TabIndex = 4;
+            this.panelRight.TabStop = true;
             // 
             // footerPanel
             // 
@@ -526,7 +527,7 @@ namespace WinPrint
             this.footerPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.footerPanel.Name = "footerPanel";
             this.footerPanel.Size = new System.Drawing.Size(519, 32);
-            this.footerPanel.TabIndex = 10;
+            this.footerPanel.TabIndex = 3;
             // 
             // headerPanel
             // 
@@ -537,14 +538,14 @@ namespace WinPrint
             this.headerPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.headerPanel.Name = "headerPanel";
             this.headerPanel.Size = new System.Drawing.Size(519, 27);
-            this.headerPanel.TabIndex = 9;
+            this.headerPanel.TabIndex = 1;
             // 
             // fileButton
             // 
             this.fileButton.Location = new System.Drawing.Point(15, 13);
             this.fileButton.Name = "fileButton";
             this.fileButton.Size = new System.Drawing.Size(147, 29);
-            this.fileButton.TabIndex = 16;
+            this.fileButton.TabIndex = 0;
             this.fileButton.Text = "&File...";
             this.fileButton.UseVisualStyleBackColor = true;
             this.fileButton.Click += new System.EventHandler(this.fileButton_Click);

@@ -43,15 +43,17 @@ namespace WinPrint.Core.ContentTypes {
         /// Default content font for this content type
         /// </summary>
         private Core.Models.Font font;
-        public Core.Models.Font Font { get => font; 
-            set => SetField(ref font, value); }
-
-
-        internal int numPages = 0;
-        public int NumPages {
-            get => numPages;
-            set => SetField(ref numPages, value);
+        public Core.Models.Font Font {
+            get => font;
+            set => SetField(ref font, value);
         }
+
+
+        //internal int numPages = 0;
+        //public int NumPages {
+        //    get => numPages;
+        //    set => SetField(ref numPages, value);
+        //}
 
         internal string filePath = null;
         internal string document = null;
@@ -61,7 +63,7 @@ namespace WinPrint.Core.ContentTypes {
             document = await streamToPrint.ReadToEndAsync();
             this.filePath = filePath;
             return document;
-        } 
+        }
 
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
@@ -70,8 +72,8 @@ namespace WinPrint.Core.ContentTypes {
         /// <returns></returns>
         public async virtual Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
-            NumPages = 0;
-            return NumPages;
+            //NumPages = 0;
+            return 0;
         }
 
         /// <summary>

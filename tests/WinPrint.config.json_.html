@@ -1,0 +1,314 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint\tests\WinPrint.config.json</title>
+<meta charset="utf-8"/>
+<link href="file:///C:/Users/ckindel/source/node_modules/prismjs/themes/prism-coy.css" rel="stylesheet"/>
+<style>
+/* These style override Prism built-in (and any provided theme), 
+   optimizing for rendering for print. E.g. Colored backgrounds
+    make no sense when printing. Also turns off some stuff 
+    litehtml does not support correctly.
+*/
+code[class*="language-"],
+pre[class*="language-"] {
+    /* no backgrond */
+    background: none;
+
+    /* WinPrint supports changing theme font. */
+    /* HACK: note 'winprint' font at end. */
+    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
+    font-size: 10pt;
+
+    /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+
+    /* Force line-height to 'normal' */
+    line-height:normal;
+
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    /* Remove all padding and margins */
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Background & border */
+pre[class*="language-"] > code {
+    /* turn off all background features */
+    background: none;
+    background-image: none;
+    background-color: transparent; 
+
+    /* turn off all borders (winprint provides own border mechansim) */
+	border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+code[class*="language"] {
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    /* Remove all padding and margins (prism-coy) */
+    all: unset;
+}
+
+/* Remove any before/after fancy formatting (like coy's shadows) */
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+    all: initial;
+}
+
+:not(pre) > code[class*="language-"]:after,
+pre[class*="language-"]:after {
+    all: unset;
+}
+
+/* disable operator background found in default prism.js */
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    background: none;
+}
+
+ol {
+    display: block;
+    /* This works around a bug in litehmtl where it renders lists too far down */
+    margin-top: -0.5em; 
+    margin-bottom: 0;
+    margin-left: 30px;
+    margin-right: 0;
+    list-style-type: decimal;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+}
+
+li:first-child {
+    margin-top: 0;
+}
+
+li {
+    padding: 0px;
+    margin: 0;
+    line-height: 0px;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+}
+</style>
+</head><body><pre class="language-json "><code class="language-json">
+<span class="token punctuation">{</span>
+  <span class="token property">"location"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"x"</span><span class="token operator">:</span> <span class="token number">85</span><span class="token punctuation">,</span>
+    <span class="token property">"y"</span><span class="token operator">:</span> <span class="token number">5</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"size"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"width"</span><span class="token operator">:</span> <span class="token number">1687</span><span class="token punctuation">,</span>
+    <span class="token property">"height"</span><span class="token operator">:</span> <span class="token number">1022</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"windowState"</span><span class="token operator">:</span> <span class="token string">"maximized"</span><span class="token punctuation">,</span>
+  <span class="token property">"defaultSheet"</span><span class="token operator">:</span> <span class="token string">"0002a500-0000-0000-c000-000000000046"</span><span class="token punctuation">,</span>
+  <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"text/html"</span><span class="token punctuation">,</span>
+  <span class="token property">"textFileSettings"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"lineNumbers"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">"lineNumberSeparator"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+    <span class="token property">"tabSpaces"</span><span class="token operator">:</span> <span class="token number">4</span><span class="token punctuation">,</span>
+    <span class="token property">"newPageOnFormFeed"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+    <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Consolas"</span><span class="token punctuation">,</span>
+      <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"regular"</span><span class="token punctuation">,</span>
+      <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"htmlFileSettings"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"monspacedFont"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+    <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Verdana"</span><span class="token punctuation">,</span>
+      <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"regular"</span><span class="token punctuation">,</span>
+      <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">10</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"prismFileSettings"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"lineNumbers"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">"lineNumberSeparator"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">"language"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+    <span class="token property">"monspacedFont"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+    <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Consolas"</span><span class="token punctuation">,</span>
+      <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"regular"</span><span class="token punctuation">,</span>
+      <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"sheets"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"0002a500-0000-0000-c000-000000000046"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">"name"</span><span class="token operator">:</span> <span class="token string">"Default (2up)"</span><span class="token punctuation">,</span>
+      <span class="token property">"landscape"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+      <span class="token property">"rows"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+      <span class="token property">"columns"</span><span class="token operator">:</span> <span class="token number">2</span><span class="token punctuation">,</span>
+      <span class="token property">"padding"</span><span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span>
+      <span class="token property">"pageSeparator"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+      <span class="token property">"margins"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"left"</span><span class="token operator">:</span> <span class="token number">25</span><span class="token punctuation">,</span>
+        <span class="token property">"right"</span><span class="token operator">:</span> <span class="token number">20</span><span class="token punctuation">,</span>
+        <span class="token property">"top"</span><span class="token operator">:</span> <span class="token number">25</span><span class="token punctuation">,</span>
+        <span class="token property">"bottom"</span><span class="token operator">:</span> <span class="token number">20</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"rulesFont"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"sansserif"</span><span class="token punctuation">,</span>
+        <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"regular"</span><span class="token punctuation">,</span>
+        <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"header"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"text"</span><span class="token operator">:</span> <span class="token string">"Test|{FullyQualifiedPath}|{FileType}"</span><span class="token punctuation">,</span>
+        <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+          <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Microsft Sans Serif"</span><span class="token punctuation">,</span>
+          <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"bold"</span><span class="token punctuation">,</span>
+          <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">"leftBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"topBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"rightBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"bottomBorder"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+        <span class="token property">"enabled"</span><span class="token operator">:</span> <span class="token boolean">true</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"footer"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"text"</span><span class="token operator">:</span> <span class="token string">"Copyright 2020 Kindel Systems|Page {Page} of {NumPages}"</span><span class="token punctuation">,</span>
+        <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+          <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Microsft Sans Serif"</span><span class="token punctuation">,</span>
+          <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"bold"</span><span class="token punctuation">,</span>
+          <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">"leftBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"topBorder"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+        <span class="token property">"rightBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"bottomBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"enabled"</span><span class="token operator">:</span> <span class="token boolean">true</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"previewPrintableArea"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printPrintableArea"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewPaperSize"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printPaperSize"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewHardMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printHardMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printContentBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewContentBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printHeaderFooterBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewHeaderFooterBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewPageBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printPageBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"0002a501-0000-0000-c000-000000000046"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">"name"</span><span class="token operator">:</span> <span class="token string">"Default (1up)"</span><span class="token punctuation">,</span>
+      <span class="token property">"landscape"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"rows"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+      <span class="token property">"columns"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+      <span class="token property">"padding"</span><span class="token operator">:</span> <span class="token number">3</span><span class="token punctuation">,</span>
+      <span class="token property">"pageSeparator"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"margins"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"left"</span><span class="token operator">:</span> <span class="token number">46</span><span class="token punctuation">,</span>
+        <span class="token property">"right"</span><span class="token operator">:</span> <span class="token number">50</span><span class="token punctuation">,</span>
+        <span class="token property">"top"</span><span class="token operator">:</span> <span class="token number">24</span><span class="token punctuation">,</span>
+        <span class="token property">"bottom"</span><span class="token operator">:</span> <span class="token number">26</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"rulesFont"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"sansserif"</span><span class="token punctuation">,</span>
+        <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"regular"</span><span class="token punctuation">,</span>
+        <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"header"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"text"</span><span class="token operator">:</span> <span class="token string">"|{FullyQualifiedPath}|File Type: {FileType}"</span><span class="token punctuation">,</span>
+        <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+          <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Microsft Sans Serif"</span><span class="token punctuation">,</span>
+          <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"bold"</span><span class="token punctuation">,</span>
+          <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">"leftBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"topBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"rightBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"bottomBorder"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+        <span class="token property">"enabled"</span><span class="token operator">:</span> <span class="token boolean">true</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"footer"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"text"</span><span class="token operator">:</span> <span class="token string">"Kindel Systems|Page {Page} of {NumPages}"</span><span class="token punctuation">,</span>
+        <span class="token property">"font"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+          <span class="token property">"family"</span><span class="token operator">:</span> <span class="token string">"Microsft Sans Serif"</span><span class="token punctuation">,</span>
+          <span class="token property">"style"</span><span class="token operator">:</span> <span class="token string">"bold"</span><span class="token punctuation">,</span>
+          <span class="token property">"size"</span><span class="token operator">:</span> <span class="token number">8</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">"leftBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"topBorder"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+        <span class="token property">"rightBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"bottomBorder"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+        <span class="token property">"enabled"</span><span class="token operator">:</span> <span class="token boolean">true</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">"previewPrintableArea"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printPrintableArea"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewPaperSize"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printPaperSize"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewHardMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printHardMargins"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printContentBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewContentBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"printHeaderFooterBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewHeaderFooterBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+      <span class="token property">"previewPageBounds"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+      <span class="token property">"printPageBounds"</span><span class="token operator">:</span> <span class="token boolean">false</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"languageAssociations"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"files.associations"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">"*.config"</span><span class="token operator">:</span> <span class="token string">"config"</span><span class="token punctuation">,</span>
+      <span class="token property">"*.html"</span><span class="token operator">:</span> <span class="token string">"text/html"</span><span class="token punctuation">,</span>
+      <span class="token property">"*.htm"</span><span class="token operator">:</span> <span class="token string">"text/html"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"languages"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+      <span class="token punctuation">{</span>
+        <span class="token property">"id"</span><span class="token operator">:</span> <span class="token string">"config"</span><span class="token punctuation">,</span>
+        <span class="token property">"extensions"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+          <span class="token string">".config"</span><span class="token punctuation">,</span>
+          <span class="token string">".cfg"</span><span class="token punctuation">,</span>
+          <span class="token string">".settings"</span>
+        <span class="token punctuation">]</span><span class="token punctuation">,</span>
+        <span class="token property">"aliases"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+          <span class="token string">"json"</span>
+        <span class="token punctuation">]</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token punctuation">{</span>
+        <span class="token property">"id"</span><span class="token operator">:</span> <span class="token string">"csx"</span><span class="token punctuation">,</span>
+        <span class="token property">"extensions"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+          <span class="token string">".csx"</span>
+        <span class="token punctuation">]</span><span class="token punctuation">,</span>
+        <span class="token property">"aliases"</span><span class="token operator">:</span> <span class="token null keyword">null</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">]</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+</body></html>
