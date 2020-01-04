@@ -7,7 +7,6 @@ using WinPrint.Core.Models;
 using System.Diagnostics;
 using Microsoft.Win32;
 using System.Collections.Generic;
-using ColorCode;
 using System.Threading.Tasks;
 using System.Text;
 using WinPrint.Core.ContentTypes;
