@@ -1,0 +1,42 @@
+{
+  "header": {
+    "text": "|{FullyQualifiedPath}",
+    "font": {
+      "family": "Microsoft Sans Serif",
+      "style": "bold",
+      "size": 8
+    },
+    "leftBorder": false,
+    "topBorder": false,
+    "rightBorder": false,
+    "bottomBorder": false,
+    "enabled": false
+  },
+  "footer": {
+    "text": "|{Page}/{NumPages}",
+    "font": {
+      "family": "Microsoft Sans Serif",
+      "style": "bold",
+      "size": 8
+    },
+    "leftBorder": false,
+    "topBorder": false,
+    "rightBorder": false,
+    "bottomBorder": false,
+    "enabled": false
+  },
+  "previewPrintableArea": true,
+  "printPrintableArea": true,
+  "previewPageSize": true,
+  "printPageSize": true,
+  "previewMargins": true,
+  "printMargins": false,
+  "previewHardMargins": false,
+  "printHardMargins": false,
+  "printBounds": false,
+  "previewBounds": true,
+  "printContentBounds": false,
+  "previewContentBounds": true,
+  "printHeaderFooterBounds": false,
+  "previewHeaderFooterBounds": false
+}
