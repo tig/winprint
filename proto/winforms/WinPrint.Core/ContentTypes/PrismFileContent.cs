@@ -30,6 +30,9 @@ namespace WinPrint.Core.ContentTypes {
         public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
         private bool lineNumbers = true;
 
+        public bool Diagnostics { get => diagnostics; set => SetField(ref diagnostics, value); }
+        private bool diagnostics =false;
+
         public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
         private bool lineNumberSeparator = true;
 
@@ -116,11 +119,19 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         private int linesInDocument;
+
         private async Task<string> CodeToHtml(string file, string language) {
             Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml()");
 
             const string cssPrism = "prism.css";
             const string cssTheme = "prism-coy.css";
+            //const string cssTheme = "prism-dark.css";
+            //const string cssTheme = "prism-funky.css";
+            //const string cssTheme = "prism-okaidia.css";
+            //const string cssTheme = "prism-solarizedlight.css";
+            //const string cssTheme = "prism-tomorrow.css";
+            //const string cssTheme = "prism-twilight.css";
+
             const string cssWinPrint = "prism-winprint-overrides.css";
 
             string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
@@ -162,6 +173,9 @@ namespace WinPrint.Core.ContentTypes {
             else {
                 sbHtml.AppendLine($"<style>");
                 sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
+                sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
+                    $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
+                    $"font-size: {Font.Size}pt;}}");
                 sbHtml.AppendLine($"</style>");
             }
             sbHtml.Append($"</head><body>");
@@ -180,15 +194,14 @@ namespace WinPrint.Core.ContentTypes {
                     sw.Close();
 
                     var ln = "";// LineNumbers ? "line-numbers" : "";
-                    sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\">");
+                    sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><table>");
                     //                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
                     linesInDocument = 0;
                     while (!node.StandardOutput.EndOfStream) { 
-                        sbHtml.AppendLine($"{await node.StandardOutput.ReadLineAsync()}");
-                        linesInDocument++;
+                        sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
                         //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
                     }
-                    sbHtml.AppendLine($"</code></pre>");
+                    sbHtml.AppendLine($"</table></code></pre>");
                     //node.WaitForExit(10000);
                 }
 
@@ -271,20 +284,22 @@ namespace WinPrint.Core.ContentTypes {
             //PaintLineNumberSeparator(g);
 
             // Diagnostics
-            g.ResetClip();
-            int startLine = linesPerPage * (pageNum - 1);
-            int endLine = startLine + linesPerPage;
-            int lineOnPage;
-            //int linesInDocument = (int)Math.Round(litehtml.Document.Height() / lineHeight);
-            for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
-                int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
-                if (lineInDocument < linesInDocument && lineInDocument >= startLine) {// && lineInDocument <= endLine) {
-                    //if (lines[lineInDocument].lineNumber > 0)
-                    PaintLineNumber(g, pageNum, lineInDocument);
-                    int x = (int)leftMargin ;
-                    int y = lineOnPage * (int)lineHeight;
-                    //RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
-                    //g.DrawRectangle(Pens.Orange, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
+            if (diagnostics) {
+                g.ResetClip();
+                int startLine = linesPerPage * (pageNum - 1);
+                int endLine = startLine + linesPerPage;
+                int lineOnPage;
+                //int linesInDocument = (int)Math.Round(litehtml.Document.Height() / lineHeight);
+                for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
+                    int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
+                    if (lineInDocument < linesInDocument && lineInDocument >= startLine) {// && lineInDocument <= endLine) {
+                                                                                          //if (lines[lineInDocument].lineNumber > 0)
+                        PaintLineNumber(g, pageNum, lineInDocument);
+                        int x = (int)leftMargin;
+                        int y = lineOnPage * (int)lineHeight;
+                        //RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
+                        g.DrawRectangle(Pens.LightSlateGray, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
+                    }
                 }
             }
             g.Restore(state);

@@ -53,7 +53,7 @@
     "*.tmPreferences": "markup",
     "*.tmSnippet": "markup",
     "*.tmTheme": "markup",
-    "*.ts": "markup",
+    "*.ts": "typescript",
     "*.ui": "markup",
     "*.urdf": "markup",
     "*.vbproj": "markup",

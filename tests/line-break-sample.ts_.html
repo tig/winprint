@@ -1,0 +1,224 @@
+<!DOCTYPE html><html><head><title>C:
+    break-sample.ts</title>
+    <meta charset="utf-8"/>
+    <link href="C:/Users/ckindel/source/node_modules/prismjs/themes/prism-solarizedlight.css" rel="stylesheet"/>
+    <style>
+    code.language-typescript,
+    pre.language-typescript {
+        background: none;
+        font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
+        font-size: 10pt;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        word-break: break-all;
+        line-height: normal;
+        padding: 0;
+        margin: 0;
+    color: green;
+    }
+    
+    pre.language-typescript {
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+    }
+    
+        pre.language-typescript > code {
+            background: none;
+            background-image: none;
+            background-color: transparent;
+            border-left: 0px;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+            box-shadow: none;
+        }
+    
+    code.language-typescript {
+        padding: 0;
+        margin: 0;
+    color: blue;
+    }
+    
+    :not(pre) > code.language-typescript,
+    pre.language-typescript {
+        all: unset;
+    }
+    
+    pre.language-typescript:before,
+        pre.language-typescript:after {
+            all: initial;
+        }
+    
+        :not(pre) > code.language-typescript:after,
+        pre.language-typescript:after {
+            all: unset;
+        }
+    
+    .token.operator,
+    .token.entity,
+    .token.url,
+    .language-css .token.string,
+    .style .token.string {
+        background: none;
+    }
+    
+    ol {
+        display: block;
+        margin-top: -0.5em;
+        margin-bottom: 0;
+        margin-left: 30px;
+        margin-right: 0;
+        list-style-type: decimal;
+        padding-top: 0px;
+        padding-right: 0px;
+        padding-bottom: 0px;
+        padding-left: 0px;
+    }
+    
+    li:first-child {
+        margin-top: 0;
+    }
+    
+    li {
+        padding: 0px;
+        margin: 0;
+        line-height: 0px;
+    }
+    
+    body {
+        padding: 0px;
+        margin: 0px;
+    }
+    
+    table {
+        border: 0;
+        border-spacing: 0;
+        padding: 0px;
+        margin: 0;
+    }
+    
+    tr {
+        border: 0;
+        border-spacing: 0;
+        padding: 0px;
+        margin: 0;
+    }
+    
+    td {
+        border: 0;
+        border-spacing: 0;
+        padding: 0px;
+        margin: 0;
+    padding-left: 8px;
+    }
+    
+        td.line-number {
+            padding-left: 1em;
+            padding-right: 1em;
+            margin-right: 1em;
+            text-align: right;
+            vertical-align: top;
+            border-right: 1px solid darkgray;
+            color: darkgray;
+        }
+    
+    code.langage-typescript{
+    font-family: 'Comic Sans MS', winprint;
+    font-size: 12pt;
+    }
+    
+    
+    .comment{
+        color: gray;
+    }
+    
+    .punctuation {
+        color: gray;
+    font-weight: 700;
+    }
+    
+    .property,
+    .tag,
+    .boolean,
+    .number,
+    .function-name,
+    .constant,
+    .symbol,
+    .deleted {
+        color: black;
+    }
+    
+    .selector,
+    .attr-name,
+    .string,
+    .char,
+    .function,
+    .builtin,
+    .inserted {
+        color: black;
+    }
+    
+    .operator,
+    .entity,
+    .url,
+    .variable {
+        color: lightgray;
+    }
+    
+    .atrule,
+    .attr-value,
+    .keyword,
+    .class-name {
+        color: black;
+    font-weight: 700;
+    }
+    
+    .regex,
+    .important {
+        color: black;
+    }
+    
+    .important {
+        font-weight: normal;
+    }
+    
+    .bold {
+        font-weight: bold;
+    }
+    .italic {
+        font-style: italic;
+    }
+    
+    .entity {
+        cursor: help;
+    }
+    
+    .namespace {
+        opacity: .7;
+    }
+    </style>
+    </head><body><pre class="language-typescript "><code class="language-typescript"><table>
+    <tr><td class="line-number">1</td><td><span class="token comment">// This is a long comment with word breaks. It should break cleanly no matter what the css settings are.</span></td></tr>
+    <tr><td class="line-number">2</td><td><span class="token comment">// This is a long comment that may break:  012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+    <tr><td class="line-number">3</td><td><span class="token comment">// 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+    <tr><td class="line-number">4</td><td><span class="token keyword">var</span> n1<span class="token punctuation">:</span><span class="token builtin">number</span> <span class="token operator">=</span> <span class="token number">569</span> <span class="token comment">// global variable</span></td></tr>
+    <tr><td class="line-number">5</td><td> </td></tr>
+    <tr><td class="line-number">6</td><td><span class="token keyword">class</span> <span class="token class-name">Person</span> <span class="token punctuation">{</span> </td></tr>
+    <tr><td class="line-number">7</td><td>   name<span class="token punctuation">:</span><span class="token builtin">string</span> <span class="token comment">//class variable</span></td></tr>
+    <tr><td class="line-number">8</td><td> </td></tr>
+    <tr><td class="line-number">9</td><td>   <span class="token keyword">static</span> sval <span class="token operator">=</span> <span class="token number">10</span> <span class="token comment">//static property</span></td></tr>
+    <tr><td class="line-number">10</td><td></td></tr>
+    <tr><td class="line-number">11</td><td>   <span class="token keyword">static</span> aVeryLongPropertyNameThatMayOrMayNotWrapDependingOnSettingsBecauseHtmlIsTricky<span class="token punctuation">.</span></td></tr>
+    <tr><td class="line-number">12</td><td>  </td></tr>
+    <tr><td class="line-number">13</td><td>   <span class="token function">printSomethingThenPrintSomethingElseBecauseThisIsReallyLong</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token keyword">void</span> <span class="token punctuation">{</span> </td></tr>
+    <tr><td class="line-number">14</td><td>      <span class="token keyword">var</span> message0<span class="token punctuation">:</span><span class="token builtin">string</span> <span class="token operator">=</span> <span class="token string">'ReallyLongStringLiteralThatShouldBreakButProbablyWontBecauseLiteHtmlIs Lame!'</span> <span class="token comment">//local variable</span></td></tr>
+    <tr><td class="line-number">15</td><td>      <span class="token keyword">var</span> message1<span class="token punctuation">:</span><span class="token builtin">string</span> <span class="token operator">=</span> <span class="token string">'Really Long String Literal That Should Break Because LiteHtml Is Lame!'</span> <span class="token comment">//local variable</span></td></tr>
+    <tr><td class="line-number">16</td><td>   <span class="token punctuation">}</span> </td></tr>
+    <tr><td class="line-number">17</td><td><span class="token punctuation">}</span></td></tr>
+    <tr><td class="line-number">18</td><td></td></tr>
+    <tr><td class="line-number">19</td><td><span class="token keyword">for</span><span class="token punctuation">(</span><span class="token keyword">var</span> counter<span class="token punctuation">:</span><span class="token builtin">number</span> <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> counter<span class="token operator">&lt</span><span class="token number">10</span><span class="token punctuation">;</span> counter<span class="token operator">++</span><span class="token punctuation">)</span><span class="token punctuation">{</span></td></tr>
+    <tr><td class="line-number">20</td><td>    <span class="token builtin">console</span><span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"for loop executed : "</span> <span class="token operator">+</span> counter<span class="token punctuation">)</span></td></tr>
+    <tr><td class="line-number">21</td><td><span class="token punctuation">}</span></td></tr>
+    </table></code></pre>
+    </body></html>
