@@ -16,6 +16,7 @@ namespace WinPrint.LiteHtml {
         }
 
         public byte[] GetResourceBytes(string resource) {
+            Core.Helpers.Logging.TraceMessage($"{resource}");
             byte[] data = new byte[0];
             if (string.IsNullOrWhiteSpace(resource)) {
                 return data;
@@ -31,6 +32,7 @@ namespace WinPrint.LiteHtml {
         }
 
         public string GetResourceString(string resource) {
+            Core.Helpers.Logging.TraceMessage($"{resource}");
             string data = string.Empty;
             if (string.IsNullOrWhiteSpace(resource)) {
                 return data;
@@ -54,6 +56,8 @@ namespace WinPrint.LiteHtml {
         }
 
         private string GetUrlForRequest(string resource) {
+            Core.Helpers.Logging.TraceMessage($"{resource}");
+
             try {
                 UriBuilder urlBuilder;
 

@@ -55,6 +55,7 @@ namespace WinPrint.LiteHtml {
 
         public int PageHeight;
         protected override void GetMediaFeatures(ref media_features media) {
+            Logging.TraceMessage($"{media.ToString()}");
             media.width = media.device_width = (int)Size.Width;
             media.height = (int)Size.Height;
 
@@ -63,6 +64,7 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override UIntPtr CreateFont(string faceName, int size, int weight, font_style italic, font_decoration decoration, ref font_metrics fm) {
+            Logging.TraceMessage($"{faceName}, {size}, {weight}");
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
             //Helpers.Logging.TraceMessage($"CreateFont({faceName}, {size}, {italic.ToString()}, {weight}, {decoration.ToString()}");
@@ -116,6 +118,7 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void DrawBackground(UIntPtr hdc, string image, background_repeat repeat, ref web_color color, ref position pos, ref border_radiuses borderRadiuses, ref position borderBox, bool isRoot) {
+            Logging.TraceMessage();
             if (pos.width > 0 && pos.height > 0) {
                 if (!String.IsNullOrEmpty(image)) {
                     var bitmap = LoadImage(image);
@@ -150,6 +153,8 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void DrawBorders(UIntPtr hdc, ref borders borders, ref position draw_pos, bool root) {
+            //Logging.TraceMessage();
+
             // Skinny controls can push borders off, in which case we can't create a rect with a negative size.
             if (draw_pos.width < 0) draw_pos.width = 0;
             if (draw_pos.height < 0) draw_pos.height = 0;
@@ -204,11 +209,14 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void DrawListMarker(string image, string baseURL, list_style_type marker_type, ref web_color color, ref position pos) {
+            Logging.TraceMessage();
+
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
             _graphics.FillRectangle(color.GetBrush(), pos.x, pos.y, pos.width, pos.height);
         }
 
         protected override void DrawText(string text, UIntPtr font, ref web_color color, ref position pos) {
+            //Logging.TraceMessage();
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
             text = text.Replace(' ', (char)160);
@@ -226,6 +234,8 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void GetImageSize(string image, ref size size) {
+            Logging.TraceMessage();
+
             var bmp = LoadImage(image);
             if (bmp != null) {
                 size.width = bmp.Width;
@@ -234,6 +244,8 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override int GetTextWidth(string text, UIntPtr font) {
+            //Logging.TraceMessage($"{text}");
+
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
             var fontInfo = _fonts[font];
 
@@ -249,6 +261,8 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override int PTtoPX(int pt) {
+            Logging.TraceMessage();
+
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
             // BUGBUG: Figure out why the WPF implementaiton just returns pt and Core Graphics returns 1
             //return (int)Math.Round(pt / 72F * _graphics.DpiY);
@@ -257,16 +271,22 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void SetBaseURL(string base_url) {
+            Logging.TraceMessage($"{base_url}");
+
             // TODO: Impl SetBaseURL
             //throw new NotImplementedException();
         }
 
         protected override void SetCaption(string caption) {
+            Logging.TraceMessage($"{caption}");
+
             // TODO: SetCaption
             //throw new NotImplementedException();
         }
 
         protected override void SetCursor(string cursor) {
+            Logging.TraceMessage($"{cursor}");
+
             // TODO: Impelemnt SetCursor
             // throw new NotImplementedException();
         }
@@ -300,6 +320,7 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override string ImportCss(string url, string baseurl) {
+            Logging.TraceMessage($"{url}");
             return _loader.GetResourceString(url);
         }
 

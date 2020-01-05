@@ -216,8 +216,8 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async override Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
-            await base.RenderAsync(printerResolution);
+        public new async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
+            //await base.RenderAsync(printerResolution, reflowProgress);
 
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
             Helpers.Logging.TraceMessage("CodeFileContent.Render");

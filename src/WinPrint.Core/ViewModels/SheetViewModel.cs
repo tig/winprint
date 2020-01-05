@@ -127,6 +127,11 @@ namespace WinPrint.Core {
         }
         private bool reflowing;
 
+        public event EventHandler<string> ReflowProgress;
+        protected void OnReflowProgress(string msg) {
+            ReflowProgress?.Invoke(this, msg); 
+        }
+
         public bool CacheEnabled { get => cacheEnabled; set => SetField(ref cacheEnabled, value); }
         private bool cacheEnabled = false;
 
@@ -328,7 +333,7 @@ namespace WinPrint.Core {
 
             Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
             // TODO: Make this async?
-            numPages = await Content.RenderAsync(PrinterResolution);
+            numPages = await Content.RenderAsync(PrinterResolution, ReflowProgress);
             Reflowing = false;
         }
 

@@ -57,6 +57,8 @@ namespace WinPrintConsole {
 
             print.SheetViewModel.Reflowed += SheetViewModel_Reflowed;
 
+            print.SheetViewModel.ReflowProgress += (s, msg) => Console.WriteLine($"{DateTime.Now:mm:ss.fff}:Reflow Progress {msg}...");
+
             // -g
             if (options.Gui) {
                 // TODO Spawn WinPrint GUI App with args
@@ -105,6 +107,7 @@ namespace WinPrintConsole {
 
                 int pagesCounted = 0;
                 foreach (var file in options.Files.ToList()) {
+
                     WinPrint.Core.Helpers.Logging.TraceMessage($"awaiting LoadAsync {file}");
                     var type = await print.SheetViewModel.LoadAsync(file).ConfigureAwait(false);
                     WinPrint.Core.Helpers.Logging.TraceMessage($"back from LoadAsync. Type is {type}");
@@ -122,11 +125,15 @@ namespace WinPrintConsole {
                             print.PrintDocument.PrinterSettings.FromPage = options.FromPage;
                             pageRangeSet = true;
                         }
+                        else
+                            print.PrintDocument.PrinterSettings.FromPage = 0;
 
                         if (options.ToPage != 0) {
                             print.PrintDocument.PrinterSettings.ToPage = options.ToPage;
                             pageRangeSet = true;
                         }
+                        else
+                            print.PrintDocument.PrinterSettings.ToPage = 0;
 
                         if (pageRangeSet)
                             Console.Write($"Printing from page {print.PrintDocument.PrinterSettings.FromPage} to page {print.PrintDocument.PrinterSettings.ToPage}");

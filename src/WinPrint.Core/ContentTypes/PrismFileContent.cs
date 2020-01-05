@@ -65,11 +65,11 @@ namespace WinPrint.Core.ContentTypes {
             return !string.IsNullOrEmpty(document);
         }
 
-        public override async Task<int> RenderAsync(PrinterResolution printerResolution) {
+        public new async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             Helpers.Logging.TraceMessage("PrismFileContent.RenderAsync()");
 
             // Calculate the number of lines per page etc..
-            var numPages = await base.RenderAsync(printerResolution);
+            var numPages = await base.RenderAsync(printerResolution, reflowProgress);
             var fi = litehtml.GetCodeFontInfo();
             cachedFont = fi.Font;
             lineHeight = fi.LineHeight;

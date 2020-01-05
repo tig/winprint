@@ -61,10 +61,10 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
-            Helpers.Logging.TraceMessage("HtmlFileContent.RenderAsync()");
-
-            await base.RenderAsync(printerResolution);
+        public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
+            Helpers.Logging.TraceMessage();
+            reflowProgress?.Invoke(this, "HtmlFileContent.RenderAsync");
+            await base.RenderAsync(printerResolution, reflowProgress);
 
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
@@ -76,6 +76,7 @@ namespace WinPrint.Core.ContentTypes {
                 using StreamReader cssStream = new StreamReader("winprint.css");
                 css = await cssStream.ReadToEndAsync();
                 cssStream.Close();
+                reflowProgress?.Invoke(this, "Read winprint.css");
             }
             catch {
                 css = IncludedWinPrintCss.CssString;
@@ -94,20 +95,26 @@ namespace WinPrint.Core.ContentTypes {
             Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
             Helpers.Logging.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
+
+            Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
+            reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");
             litehtml.Document.CreateFromString(document);
-            litehtml.Document.OnMediaChanged();
-            
+            Logging.TraceMessage("back from litehtml.Document.CreateFromString(document)");
+            reflowProgress?.Invoke(this, "back from litehtml.Document.CreateFromString(document)");
+            //litehtml.Document.OnMediaChanged();
+            //Logging.TraceMessage("back from litehtml.Document.OnMediaChanged");
 
             // TODO: Use return of Render() to get "best width"
             int bestWidth = litehtml.Document.Render((int)width);
+            reflowProgress?.Invoke(this, "Done with Render");
             //litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(width, height));
             //litehtml.Draw();
             litehtml.Graphics = null;
 
-            Helpers.Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
+            Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
 
             var n = (int)(litehtml.Document.Height() / height) + 1;
-            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - {n} pages.");
+            Logging.TraceMessage($"HtmlFileContent.RenderAsync - {n} pages.");
 
             return n;
         }

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace WinPrint.Core.Helpers {
+namespace WinPrint.LiteHtml {
     public class Logging {
         public static void TraceMessage(string message = "",
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
