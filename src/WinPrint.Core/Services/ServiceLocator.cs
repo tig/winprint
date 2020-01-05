@@ -12,12 +12,14 @@ namespace WinPrint.Core.Services {
         public static ServiceLocator Current => _current ?? (_current = new ServiceLocator());
 
         private ServiceLocator() {
-            SimpleIoc.Default.Register<WinPrint.Core.Services.SettingsService>();
-            SimpleIoc.Default.Register<WinPrint.Core.Services.FileAssociationsService>();
+            SimpleIoc.Default.Register<SettingsService>();
+            SimpleIoc.Default.Register<FileAssociationsService>();
+            SimpleIoc.Default.Register<NodeService>();
         }
 
         public SettingsService SettingsService => SimpleIoc.Default.GetInstance<Services.SettingsService>();
         public FileAssociationsService FileAssociationsService => SimpleIoc.Default.GetInstance<Services.FileAssociationsService>();
+        public NodeService NodeService => SimpleIoc.Default.GetInstance<Services.NodeService>();
 
         public void Register<VM, V>()
             where VM : class {

@@ -13,6 +13,7 @@ using WinPrint.Core.ContentTypes;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Timers;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -193,10 +194,17 @@ namespace WinPrint.Core {
 
             if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
                 if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
-                    content = PrismFileContent.Create();
-                    ((PrismFileContent)content).Language = type;
-                    //content = CodeFileContent.Create();
-                    //((CodeFileContent)content).Language = type;
+
+                    // Verify node.js and Prism are installed
+                    if (!await ServiceLocator.Current.NodeService.IsInstalled()) {
+                        Helpers.Logging.TraceMessage("Node.js must be installed to use Prism-based syntax highlighting");
+                        type = "text/plain";
+                        content = TextFileContent.Create();
+                    }
+                    else {
+                        content = PrismFileContent.Create();
+                        ((PrismFileContent)content).Language = type;
+                    }
                 }
                 else
                     switch (type) {
@@ -213,7 +221,7 @@ namespace WinPrint.Core {
             }
             else {
                 // assume text/plain
-                type = "text/html";
+                type = "text/plain";
             }
 
             File = filePath;

@@ -87,7 +87,7 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<int> reflowProgress) {
+        public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             Helpers.Logging.TraceMessage();
             //await base.RenderAsync(printerResolution);
 

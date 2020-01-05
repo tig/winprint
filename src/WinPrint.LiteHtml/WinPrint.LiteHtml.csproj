@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
@@ -22,11 +22,24 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\..\litehtmlsharp\LiteHtmlLib\Release\x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\litehtmlsharp\LiteHtmlLib\Release\x64\LiteHtmlLib.pdb" Link="x64\LiteHtmlLib.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
     <ItemGroup>
     <PackageReference Include="LiteHtmlSharp" Version="1.1.15" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
   </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="x64\" />
+    </ItemGroup>
 
 </Project>

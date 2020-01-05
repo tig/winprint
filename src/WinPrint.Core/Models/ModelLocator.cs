@@ -14,7 +14,7 @@ namespace WinPrint.Core.Models {
         public static ModelLocator Current => _current ?? (_current = new ModelLocator());
 
         private ModelLocator() {
-            // Register the models via the SettingsService Factory
+            // Register the models via the Servcies Factory
             SimpleIoc.Default.Register<Settings>(SettingsService.Create);
             SimpleIoc.Default.Register<FileAssociations>(FileAssociationsService.Create);
             SimpleIoc.Default.Register<Options>();

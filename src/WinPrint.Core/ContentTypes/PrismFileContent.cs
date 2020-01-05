@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypes {
     public class PrismFileContent : HtmlFileContent {
@@ -31,12 +32,13 @@ namespace WinPrint.Core.ContentTypes {
         private bool lineNumbers = true;
 
         public bool Diagnostics { get => diagnostics; set => SetField(ref diagnostics, value); }
-        private bool diagnostics =false;
+        private bool diagnostics = false;
 
         public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
         private bool lineNumberSeparator = true;
 
         private bool convertedToHtml = false;
+
 
         public async override Task<bool> LoadAsync(string filePath) {
             Helpers.Logging.TraceMessage("PrismFileContent.LoadAsync()");
@@ -139,7 +141,7 @@ namespace WinPrint.Core.ContentTypes {
             cssUri.Scheme = "file";
             cssUri.Host = @"";
             cssUri.Path = appDir;
- 
+
             // Emit javascript to be run via node.js
             var sbNodeJS = new StringBuilder();
             sbNodeJS.AppendLine($"const Prism = require('prismjs');");
@@ -157,7 +159,7 @@ namespace WinPrint.Core.ContentTypes {
             sbHtml.AppendLine($"<meta charset=\"utf-8\"/>");
 
             // TODO: detect node and prism installation
-            var prismThemes = GetPrismThemesPath();
+            var prismThemes = await ServiceLocator.Current.NodeService.GetModulesDirectory() + @"\prismjs\themes";
             // Reference choosen theme style sheet
             cssUri.Path = prismThemes;
             //sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssPrism}\" rel=\"stylesheet\"/>");
@@ -167,7 +169,7 @@ namespace WinPrint.Core.ContentTypes {
             // Override styles with WinPrint settings for better printing
             // If the app directory has the file, use it. Otherwise inline them.
             // Strip "file:/" off of appDir for local
-            string overridePath = appDir.Substring(6, appDir.Length-6) + "\\" + cssWinPrint;
+            string overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrint;
             if (File.Exists(overridePath))
                 sbHtml.AppendLine($"<link href=\"{cssUri.Path + @"/" + cssWinPrint}\" rel=\"stylesheet\"/>");
             else {
@@ -180,6 +182,7 @@ namespace WinPrint.Core.ContentTypes {
             }
             sbHtml.Append($"</head><body>");
 
+            Process node = null;
             try {
                 ProcessStartInfo psi = new ProcessStartInfo();
                 psi.UseShellExecute = false;   // This is important
@@ -187,28 +190,29 @@ namespace WinPrint.Core.ContentTypes {
                 psi.FileName = @"node";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
-                using (var node = Process.Start(psi)) {
-                    StreamWriter sw = node.StandardInput;
-                    //Helpers.Logging.TraceMessage(sbNodeJS.ToString());
-                    await sw.WriteLineAsync(sbNodeJS.ToString());
-                    sw.Close();
 
-                    var ln = "";// LineNumbers ? "line-numbers" : "";
-                    sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><table>");
-                    //                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
-                    linesInDocument = 0;
-                    while (!node.StandardOutput.EndOfStream) { 
-                        sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
-                        //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
-                    }
-                    sbHtml.AppendLine($"</table></code></pre>");
-                    //node.WaitForExit(10000);
+                node = Process.Start(psi);
+                StreamWriter sw = node.StandardInput;
+                //Helpers.Logging.TraceMessage(sbNodeJS.ToString());
+                await sw.WriteLineAsync(sbNodeJS.ToString());
+                sw.Close();
+
+                var ln = "";// LineNumbers ? "line-numbers" : "";
+                sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><table>");
+                //                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
+                linesInDocument = 0;
+                while (!node.StandardOutput.EndOfStream) {
+                    sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
+                    //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
                 }
-
+                sbHtml.AppendLine($"</table></code></pre>");
             }
             catch (Exception e) {
                 Helpers.Logging.TraceMessage(e.Message);
                 sbHtml.AppendLine($"<p>Failed to convert to html. {e.Message}</p>");
+            }
+            finally {
+                node?.Dispose();
             }
             sbHtml.AppendLine($"</body></html>");
             Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml() - exiting");
@@ -216,29 +220,6 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         public string Language { get; internal set; }
-
-        private string GetPrismThemesPath() {
-            string path = @"C:\Users\ckindel\source\node_modules";
-            //try {
-            //    ProcessStartInfo psi = new ProcessStartInfo();
-            //    psi.UseShellExecute = false;   // This is important
-            //    psi.CreateNoWindow = true;     // This is what hides the command window.
-            //    psi.FileName = @"npm";
-            //    psi.RedirectStandardInput = true;
-            //    psi.RedirectStandardOutput = true;
-            //    using (var node = Process.Start(psi)) {
-            //        StreamWriter sw = node.StandardInput;
-            //        sw.WriteLine("npm root");
-            //        sw.Close();
-            //        path = node.StandardOutput.ReadLine();
-            //    }
-
-            //}
-            //catch (Exception e) {
-            //    Helpers.Logging.TraceMessage(e.Message);
-            //}
-            return path + @"\prismjs\themes";
-        }
 
         public override void PaintPage(Graphics g, int pageNum) {
             //base.PaintPage(g, pageNum);
@@ -320,7 +301,7 @@ namespace WinPrint.Core.ContentTypes {
                 // TOOD: Figure out how to make the spacig around separator more dynamic
                 lineNumber++;
                 int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lineNumber}").Width) : 0;
-                g.DrawString($"{lineNumber}", cachedFont, Brushes.Orange, x-lineNumberWidth, lineOnPage * lineHeight, StringFormat.GenericDefault);
+                g.DrawString($"{lineNumber}", cachedFont, Brushes.Orange, x - lineNumberWidth, lineOnPage * lineHeight, StringFormat.GenericDefault);
             }
         }
     }
