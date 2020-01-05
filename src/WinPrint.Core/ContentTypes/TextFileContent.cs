@@ -65,6 +65,8 @@ namespace WinPrint.Core.ContentTypes {
         // Flag: Has Dispose already been called?
         bool disposed = false;
         void Dispose(bool disposing) {
+            Helpers.Logging.TraceMessage($"disposing: {disposing}");
+
             if (disposed)
                 return;
 
@@ -75,10 +77,9 @@ namespace WinPrint.Core.ContentTypes {
             disposed = true;
         }
 
-        public async override Task<string> LoadAsync(string filePath) {
-            document = await base.LoadAsync(filePath);
-
-            return document;
+        public override async Task<bool> LoadAsync(string filePath) {
+            Helpers.Logging.TraceMessage();
+            return await base.LoadAsync(filePath);
         }
 
         /// <summary>
@@ -86,12 +87,12 @@ namespace WinPrint.Core.ContentTypes {
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async override Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
+        public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
+            Helpers.Logging.TraceMessage();
             await base.RenderAsync(printerResolution);
 
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
 
-            Helpers.Logging.TraceMessage("TextFileContent.Render");
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
@@ -116,7 +117,7 @@ namespace WinPrint.Core.ContentTypes {
 
         // TODO: Profile for performance
         private List<Line> MeasureLines(string document) {
-            Helpers.Logging.TraceMessage("TextFileContent.MeasureLines");
+            Helpers.Logging.TraceMessage();
             var list = new List<Line>();
 
             minCharWidth = MeasureString(null, "W").Width;
@@ -248,6 +249,8 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
+            Helpers.Logging.TraceMessage();
+
             //if (pageNum > NumPages) {
             //    Helpers.Logging.TraceMessage($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
             //    return;

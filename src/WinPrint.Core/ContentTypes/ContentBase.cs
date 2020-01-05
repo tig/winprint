@@ -58,11 +58,24 @@ namespace WinPrint.Core.ContentTypes {
         internal string filePath = null;
         internal string document = null;
 
-        public async virtual Task<string> LoadAsync(string filePath) {
-            using StreamReader streamToPrint = new StreamReader(filePath);
-            document = await streamToPrint.ReadToEndAsync();
+        /// <summary>
+        /// Loads the file specified into memeory. (holds in document property).
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns>True if file was read. False if the file was empty or failed to read.</returns>
+        public async virtual Task<bool> LoadAsync(string filePath) {
+            Helpers.Logging.TraceMessage();
             this.filePath = filePath;
-            return document;
+            using StreamReader streamToPrint = new StreamReader(filePath);
+            try {
+                document = await streamToPrint.ReadToEndAsync();
+                Helpers.Logging.TraceMessage($"document is {document.Length} chars.");
+            }
+            catch (Exception e) {
+                Helpers.Logging.TraceMessage($"Exception {e.Message}");
+                return false;
+            }
+            return !String.IsNullOrEmpty(document);
         }
 
         /// <summary>
@@ -71,8 +84,9 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public async virtual Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution) {
-            if (document == null) throw new ArgumentNullException("document can't be null for Render");
-            //NumPages = 0;
+            Helpers.Logging.TraceMessage();
+            if (document == null) 
+                throw new ArgumentNullException("document can't be null for Render");
             return 0;
         }
 

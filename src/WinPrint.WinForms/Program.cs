@@ -6,7 +6,7 @@ using CommandLine;
 using CommandLine.Text;
 using WinPrint.Core.Models;
 
-namespace WinPrint {
+namespace WinPrint.Winforms {
     static class Program {
         /// <summary>
         ///  The main entry point for the application.

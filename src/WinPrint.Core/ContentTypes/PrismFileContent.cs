@@ -38,9 +38,9 @@ namespace WinPrint.Core.ContentTypes {
 
         private bool convertedToHtml = false;
 
-        public async override Task<string> LoadAsync(string filePath) {
+        public async override Task<bool> LoadAsync(string filePath) {
             Helpers.Logging.TraceMessage("PrismFileContent.LoadAsync()");
-            await base.LoadAsync(filePath);
+            if (!await base.LoadAsync(filePath)) return false;
 
             if (!convertedToHtml)
                 document = await CodeToHtml(filePath, Language);
@@ -62,7 +62,7 @@ namespace WinPrint.Core.ContentTypes {
             w.Write(document);
             w.Close();
 #endif
-            return document;
+            return !string.IsNullOrEmpty(document);
         }
 
         public override async Task<int> RenderAsync(PrinterResolution printerResolution) {

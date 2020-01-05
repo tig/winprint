@@ -13,7 +13,7 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.WinForms;
 
-namespace WinPrint {
+namespace WinPrint.Winforms {
     public partial class MainWindow : Form {
 
         // The Windows printer document
@@ -171,7 +171,7 @@ namespace WinPrint {
         private void SettingsChangedEventHandler(object o, bool reflow) {
             if (InvokeRequired)
                 BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
-            else { 
+            else {
                 Core.Helpers.Logging.TraceMessage($"SheetViewModel.SettingsChanged: {reflow}");
                 if (reflow)
                     SheetSettingsChanged();
@@ -211,37 +211,57 @@ namespace WinPrint {
             foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
                 printersCB.Items.Add(printer);
                 //printersCB.Text = "OneNote";
+
                 if (printDoc.PrinterSettings.IsDefaultPrinter)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
+
+            // --p
+            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Printer))
+                printersCB.Text = ModelLocator.Current.Options.Printer;
+
+
             printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
             foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
                 paperSizesCB.Items.Add(ps);
             }
-            paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+
+            // --z
+            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize))
+                paperSizesCB.Text = ModelLocator.Current.Options.PaperSize;
+            else
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
 
             // We kept these disabled during load
             printersCB.Enabled = true;
             paperSizesCB.Enabled = true;
 
-
             // Create sheet view model & wire up notifications
             SetupSheetViewModelNotifications();
 
+
+            if (ModelLocator.Current.Options.FromPage != 0)
+                printDoc.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;
+
+            if (ModelLocator.Current.Options.ToPage != 0) {
+                printDoc.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;
+            }
+
+            // --s
             // Select default Sheet 
             var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Sheet)) {
+                string sheetID;
+                newSheet = printPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out sheetID);
+            }
             comboBoxSheet.Text = newSheet.Name;
             // This will cause a flurry of property change notifications, setting all UI elements
             printPreview.SheetViewModel.SetSheet(newSheet);
 
-            // Batch print
-            if (ModelLocator.Current.Options.Files != null)
-            //&&
-            //  ModelLocator.Current.Options.Files.Any() &&
-            //  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList<string>()[0])) 
-            {
-                await printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0]).ConfigureAwait(false); ;
-            }
+            // Must set landsacpe after printer/paper selection
+            // --l and --o
+            if (ModelLocator.Current.Options.Landscape) printPreview.SheetViewModel.Landscape = true;
+            if (ModelLocator.Current.Options.Portrait) printPreview.SheetViewModel.Landscape = false;
 
             // Even if a file's not been set, SheetSettingsChanged to Reflow in order ot juice the print preview
             SheetSettingsChanged();
@@ -252,13 +272,16 @@ namespace WinPrint {
 
             printPreview.Select();
             printPreview.Focus();
-
             this.Cursor = Cursors.Default;
-            if (string.IsNullOrEmpty(printPreview.SheetViewModel.File))
-                ShowFilesDialog();
 
-            // Go!
+            if (ModelLocator.Current.Options.Files is null || ModelLocator.Current.Options.Files.ToList().Count == 0)
+                ShowFilesDialog();
+            else { 
+                await Task.Run (() => printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0])).ConfigureAwait(false);
+            }
+            // Don't do anything on UI thread here because of the above await Task.Run...
         }
+
 
         private async void ShowFilesDialog() {
             Core.Helpers.Logging.TraceMessage();
@@ -367,9 +390,9 @@ namespace WinPrint {
             // TODO: It's hokey that Landscape is the only printer setting that's treated specially
             // 
             print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-            print.SheetVM.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+            print.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
-            await print.SheetVM.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false);
+            await print.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false);
 
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);

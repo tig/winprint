@@ -11,7 +11,7 @@ namespace WinPrint.Core {
     public class Print : IDisposable {
         // The WinPrint "document"
         private readonly SheetViewModel svm = new SheetViewModel();
-        public SheetViewModel SheetVM => svm;
+        public SheetViewModel SheetViewModel => svm;
 
         // The Windows printer document
         private readonly PrintDocument printDoc = new PrintDocument();
@@ -25,6 +25,13 @@ namespace WinPrint.Core {
             printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.QueryPageSettings);
             printDoc.PrintPage += new PrintPageEventHandler(this.PrintPage);
         }
+
+        /// <summary>
+        /// Subscribe to know when file has been Reflowed by the SheetViewModel. 
+        /// TimeSpan indicates how long it took.
+        /// </summary>
+        public event EventHandler<int> PrintingPage;
+        protected void OnPrintingPage(int pageNum) => PrintingPage?.Invoke(this, pageNum);
 
         /// <summary>
         /// Sets printer. 
@@ -66,16 +73,16 @@ namespace WinPrint.Core {
 
         public async Task<int> CountPages(int fromSheet = 1, int toSheet = 0) {
             // BUGBUG: Ignores from/to
-            await SheetVM.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
-            return svm.NumSheets;
+            await SheetViewModel.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
+            return SheetViewModel.NumSheets;
         }
 
-        public async void DoPrint() {
-            printDoc.DocumentName = SheetVM.File;
-            await SheetVM.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
+        public async Task DoPrint() {
+            printDoc.DocumentName = SheetViewModel.File;
+            await SheetViewModel.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
 
             PrintDocument.PrinterSettings.FromPage = PrintDocument.PrinterSettings.FromPage == 0 ? 1 : PrintDocument.PrinterSettings.FromPage;
-            PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetVM.NumSheets : PrintDocument.PrinterSettings.ToPage ;
+            PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetViewModel.NumSheets : PrintDocument.PrinterSettings.ToPage ;
 
             curSheet = PrintDocument.PrinterSettings.FromPage;
             printDoc.Print();
@@ -100,7 +107,9 @@ namespace WinPrint.Core {
 
         // The PrintPage event is raised for each page to be printed.
         private void PrintPage(object sender, PrintPageEventArgs ev) {
-            Helpers.Logging.TraceMessage($"Print.PrintPage - Sheet {curSheet}");
+            Helpers.Logging.TraceMessage($"Sheet {curSheet}");
+            OnPrintingPage(curSheet);
+
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
                 while (curSheet < printDoc.PrinterSettings.FromPage) {
                     // Blow through pages up to fromPage
@@ -108,7 +117,7 @@ namespace WinPrint.Core {
                 }
             }
             if (curSheet <= printDoc.PrinterSettings.ToPage)
-                SheetVM.PrintSheet(ev.Graphics, curSheet);
+                SheetViewModel.PrintSheet(ev.Graphics, curSheet);
             curSheet++;
             ev.HasMorePages = curSheet <= printDoc.PrinterSettings.ToPage;
         }

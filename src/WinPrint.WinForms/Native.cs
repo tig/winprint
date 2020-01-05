@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace WinPrint {
+namespace WinPrint.WinForms {
     class NativeMethods {
 
         [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]

@@ -26,7 +26,6 @@
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="LiteHtmlSharp" Version="1.1.15" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
   </ItemGroup>

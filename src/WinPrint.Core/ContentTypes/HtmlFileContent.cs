@@ -50,11 +50,10 @@ namespace WinPrint.Core.ContentTypes {
 
         public Models.Font MonspacedFont { get; internal set; }
 
-        public async override Task<string> LoadAsync(string filePath) {
+        public async override Task<bool> LoadAsync(string filePath) {
             litehtml = null;
             htmlBitmap = null;
-            document = await base.LoadAsync(filePath);
-            return document;
+            return await base.LoadAsync(filePath);
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿namespace WinPrint
-{
+﻿namespace WinPrint.Winforms {
     partial class PrintPreview
     {
         /// <summary> 

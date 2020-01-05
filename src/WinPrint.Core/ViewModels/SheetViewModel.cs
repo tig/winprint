@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Text;
 using WinPrint.Core.ContentTypes;
 using System.Runtime.CompilerServices;
+using System.Linq;
+using System.Timers;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -70,7 +72,6 @@ namespace WinPrint.Core {
             }
         }
 
-        // TOOD: Hold an abstract base-type to enable mulitple content types
         internal ContentBase Content { get => _content; set => SetField(ref _content, value); }
         private ContentBase _content;
 
@@ -89,11 +90,41 @@ namespace WinPrint.Core {
         public float HardMarginX { get; set; }
         public float HardMarginY { get; set; }
         public RectangleF ContentBounds { get => contentBounds; private set => contentBounds = value; }
-        public string Type { get; internal set; }
+        public string Type { get => fileType; internal set => SetField(ref fileType, value); }
+        private string fileType;
 
-        public bool Loading { get => loading; set => SetField(ref loading, value); }
+        /// <summary>
+        /// Subscribe to know when file has been loaded by the SheetViewModel. 
+        /// TimeSpan indicates how long it took.
+        /// </summary>
+        public event EventHandler Loaded;
+        protected void OnLoaded() => Loaded?.Invoke(this, null);
+
+        public bool Loading {
+            get => loading; 
+            set {
+                OnLoaded();
+                SetField(ref loading, value);
+            }
+        }
         private bool loading;
-        public bool Reflowing { get => reflowing; set => SetField(ref reflowing, value); }
+
+
+        /// <summary>
+        /// Subscribe to know when file has been Reflowed by the SheetViewModel. 
+        /// TimeSpan indicates how long it took.
+        /// </summary>
+        public event EventHandler Reflowed;
+        protected void OnReflowed() => Reflowed?.Invoke(this, null);
+        private TimeSpan reflowTime;
+
+        public bool Reflowing {
+            get => reflowing;
+            set {
+                OnReflowed();
+                SetField(ref reflowing, value);
+            }
+        }
         private bool reflowing;
 
         public bool CacheEnabled { get => cacheEnabled; set => SetField(ref cacheEnabled, value); }
@@ -102,17 +133,14 @@ namespace WinPrint.Core {
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
         protected void OnSettingsChanged(bool reflow) {
-            //ClearCache();
+            Helpers.Logging.TraceMessage();
             SettingsChanged?.Invoke(this, reflow);
         }
 
         // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
         private List<Image> cachedSheets = new List<Image>();
 
-
         public SheetViewModel() {
-            //SetSettings(new Sheet());
-            //Reflow(new PageSettings());
         }
 
         protected override void OnPropertyChanged([CallerMemberName] string propertyName = null) {
@@ -152,11 +180,12 @@ namespace WinPrint.Core {
             footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
         }
 
-        public async Task LoadAsync(string filePath) {
-            Helpers.Logging.TraceMessage($"SheetViewModel.LoadAsync({filePath})");
+        public async Task<string> LoadAsync(string filePath) {
+            Helpers.Logging.TraceMessage($"{filePath}");
             var ext = Path.GetExtension(filePath).ToLower();
-            string type = "text/plain";
+            string type = null;
             ContentBase content = TextFileContent.Create();
+
             if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
                 if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
                     content = PrismFileContent.Create();
@@ -173,11 +202,16 @@ namespace WinPrint.Core {
 
                         case "text/html":
                         default:
-                            content = HtmlFileContent.Create();
+                            content = TextFileContent.Create();
                             break;
                     }
-
             }
+            else {
+                // assume text/plain
+                type = "text/html";
+            }
+
+            File = filePath;
             Type = type;
 
             if (Content != null) {
@@ -187,16 +221,18 @@ namespace WinPrint.Core {
             content.PropertyChanged += OnContentPropertyChanged();
 
             Loading = true;
-            await content.LoadAsync(filePath);
-
-            // Callers can subscribe to File property to be notifed the content has been
-            // loaded. 
-            File = filePath;
+            Helpers.Logging.TraceMessage($"Calling {content.GetType()}.LoadAsync({filePath}...");
+            var success = await content.LoadAsync(filePath).ConfigureAwait(false);
+            Helpers.Logging.TraceMessage($"Read succeeded? {success}");
+            //content.document = "test";
 
             // Callers can subscribe to Content property change to be notified content has
             // been loaded.
             Content = content;
+
+            // Set this last to notify loading is done with File valid
             Loading = false;
+            return Type;
         }
 
         /// <summary>
@@ -296,6 +332,26 @@ namespace WinPrint.Core {
             Reflowing = false;
         }
 
+        public Sheet FindSheet(string sheetName, out string sheetID) {
+            Sheet sheet = null;
+            sheetID = ModelLocator.Current.Settings.DefaultSheet.ToString();
+            if (!string.IsNullOrEmpty(sheetName) && !sheetName.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
+                if (!ModelLocator.Current.Settings.Sheets.TryGetValue(sheetName, out sheet)) {
+                    // Wasn't a GUID or isn't valid
+                    var s = ModelLocator.Current.Settings.Sheets
+                    .Where(s => s.Value.Name.Equals(sheetName, StringComparison.InvariantCultureIgnoreCase))
+                    .FirstOrDefault();
+
+                    if (s.Value is null)
+                        throw new InvalidOperationException($"Sheet definiton not found ({sheetName}).");
+                    sheetID = s.Key;
+                    sheet = s.Value;
+                }
+            }
+            else
+                sheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(sheetID);
+            return sheet;
+        }
 
         private void ClearCache() {
             if (!CacheEnabled)
@@ -401,11 +457,15 @@ namespace WinPrint.Core {
         internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (padding / (Rows)); }
 
         public float GetPageX(int n) {
+            Helpers.Logging.TraceMessage();
+
             float f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
             f += Padding * GetPageColumn(n);
             return f;
         }
         public float GetPageY(int n) {
+            Helpers.Logging.TraceMessage();
+
             float f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
             f += Padding * GetPageRow(n);
             return f;
@@ -421,6 +481,8 @@ namespace WinPrint.Core {
         /// <param name="g">Graphics to print on</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         public void PrintSheet(Graphics graphics, int sheetNum) {
+            Helpers.Logging.TraceMessage();
+
             GraphicsState state = graphics.Save();
 
             if (graphics.PageUnit == GraphicsUnit.Display) {

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace WinPrint
-{
+namespace WinPrint.Winforms {
     partial class MainWindow
     {
         /// <summary>

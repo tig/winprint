@@ -11,7 +11,7 @@ using System.IO;
 using WinPrint.Core;
 using System.Diagnostics;
 
-namespace WinPrint {
+namespace WinPrint.Winforms {
     /// <summary>
     /// WinPrint Print Preview WinForms control. 
     /// This is the View in the Model-View-View Model pattern. 

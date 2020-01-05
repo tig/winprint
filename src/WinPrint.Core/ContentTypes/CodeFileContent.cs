@@ -77,14 +77,14 @@ namespace WinPrint.Core.ContentTypes {
 
         private bool convertedToHtml = false;
 
-        public async override Task<string> LoadAsync(string filePath) {
-            document = await base.LoadAsync(filePath);
-
-            if (!convertedToHtml)
-                lines = await DocumentToHtmlLines(filePath, Language);
-            convertedToHtml = true;
-
-            return document;
+        public async override Task<bool> LoadAsync(string filePath) {
+            if (await base.LoadAsync(filePath)) {
+                if (!convertedToHtml)
+                    lines = await DocumentToHtmlLines(filePath, Language);
+                convertedToHtml = true;
+                return true;
+            }
+            return false;
         }
 
         private async Task<List<HtmlLine>> DocumentToHtmlLines(string file, string language) {
