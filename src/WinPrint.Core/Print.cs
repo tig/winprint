@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core {
     public class Print : IDisposable {
@@ -90,24 +91,24 @@ namespace WinPrint.Core {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void BeginPrint(object sender, PrintEventArgs ev) {
-            Helpers.Logging.TraceMessage($"Print.BeginPrint");
+            LogService.TraceMessage($"Print.BeginPrint");
         }
 
         // Occurs when the last page of the document has printed.
         private void EndPrint(object sender, PrintEventArgs ev) {
-            Helpers.Logging.TraceMessage($"Print.EndPrint");
+            LogService.TraceMessage($"Print.EndPrint");
             // Reset so PrintPreviewDialog Print button works
             curSheet = printDoc.PrinterSettings.FromPage;
         }
 
         // Occurs immediately before each PrintPage event.
         private void QueryPageSettings(object sender, QueryPageSettingsEventArgs e) {
-            Helpers.Logging.TraceMessage($"Print.QueryPageSettings");
+            LogService.TraceMessage($"Print.QueryPageSettings");
         }
 
         // The PrintPage event is raised for each page to be printed.
         private void PrintPage(object sender, PrintPageEventArgs ev) {
-            Helpers.Logging.TraceMessage($"Sheet {curSheet}");
+            LogService.TraceMessage($"Sheet {curSheet}");
             OnPrintingPage(curSheet);
 
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {

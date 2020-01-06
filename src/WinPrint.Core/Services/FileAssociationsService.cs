@@ -13,7 +13,7 @@ namespace WinPrint.Core.Services {
         // Factory - creates 
         static public FileAssociations Create() {
             // 
-            Helpers.Logging.TraceMessage("FileAssociationsService.Create()");
+            LogService.TraceMessage("FileAssociationsService.Create()");
             return ServiceLocator.Current.FileAssociationsService.LoadAssociations();
         }
 

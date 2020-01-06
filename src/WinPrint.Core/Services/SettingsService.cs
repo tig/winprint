@@ -19,7 +19,7 @@ namespace WinPrint.Core.Services {
         private FileWatcher watcher;
 
         public SettingsService() {
-            Helpers.Logging.TraceMessage("SettingsService()");
+            LogService.TraceMessage("SettingsService()");
 
             jsonOptions = new JsonSerializerOptions {
                 WriteIndented = true,
@@ -45,18 +45,18 @@ namespace WinPrint.Core.Services {
                 //Logger.Instance.Log4.Info($"Loading user-defined commands from {userCommandsFile}.");
                 fs = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read);
                 jsonString = File.ReadAllText(settingsFileName);
-                Helpers.Logging.TraceMessage($"ReadSettings: Deserializing from {settingsFileName} ");
+                LogService.TraceMessage($"ReadSettings: Deserializing from {settingsFileName} ");
                 settings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
             }
             catch (FileNotFoundException) {
-                Helpers.Logging.TraceMessage($"ReadSettings: {settingsFileName} was not found; creating it.");
+                LogService.TraceMessage($"ReadSettings: {settingsFileName} was not found; creating it.");
                 settings = Settings.CreateDefaultSettingsFile();
                 SaveSettings(settings);
             }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
-                Helpers.Logging.TraceMessage($"SettingsService: Error with {settingsFileName}. {ex.Message}");
+                LogService.TraceMessage($"SettingsService: Error with {settingsFileName}. {ex.Message}");
                 //ExceptionUtils.DumpException(ex);
             }
             finally {
@@ -73,7 +73,7 @@ namespace WinPrint.Core.Services {
 
                     // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
                     ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
-                    Helpers.Logging.TraceMessage($"ReadSettings: Done Copying Properties!");
+                    LogService.TraceMessage($"ReadSettings: Done Copying Properties!");
                 };
             }
 
@@ -115,7 +115,7 @@ namespace WinPrint.Core.Services {
 
         // Factory - creates 
         static public Settings Create() {
-            Helpers.Logging.TraceMessage("SettingsService.Create()");
+            LogService.TraceMessage("SettingsService.Create()");
             var settingsService = ServiceLocator.Current.SettingsService.ReadSettkngs();
             return settingsService;
         }

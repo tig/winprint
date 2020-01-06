@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;
+using Serilog;
+using Serilog.Events;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Winforms {
     static class Program {
@@ -13,6 +18,8 @@ namespace WinPrint.Winforms {
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
+            ServiceLocator.Current.LogService.Start(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase));
+
             //var settings = new CefSettings();
             //settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";
             //Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);
@@ -22,13 +29,15 @@ namespace WinPrint.Winforms {
                 var result = parser.ParseArguments<Options>(args);
                 result
                     .WithParsed<Options>(o => {
-                        // copy Files
-                        ModelLocator.Current.Options.Files = o.Files.ToList();
-                        ModelLocator.Current.Options.Landscape = o.Landscape;
-                        ModelLocator.Current.Options.Printer = o.Printer;
-                        ModelLocator.Current.Options.PaperSize = o.PaperSize;
-                        ModelLocator.Current.Options.Gui = o.Gui;
-                        // TODO: Add other command line options supported by command line version
+                        if (o.Debug) {
+                            ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+                            ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+                        }
+                        else {
+                            ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
+                        }
+                        Log.Information("Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
+                        ModelLocator.Current.Options.CopyPropertiesFrom(o);
                     })
                     .WithNotParsed((errs) => DisplayHelp(result, errs));
                 parser.Dispose();
@@ -37,7 +46,6 @@ namespace WinPrint.Winforms {
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
             Application.Run(new MainWindow());
@@ -52,7 +60,7 @@ namespace WinPrint.Winforms {
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);
             MessageBox.Show(helpText);
-            System.Environment.Exit(0);
+            Environment.Exit(0);
         }
     }
 }

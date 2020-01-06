@@ -5,14 +5,14 @@ using CommandLine;
 using CommandLine.Text;
 
 namespace WinPrint.Core.Models {
-    public class Options {
+    public class Options : ModelBase {
 
         // Files
         [Value(0, Required = false, MetaName = "<files>", HelpText = "One or more files to be printed.")]
         public IEnumerable<string> Files { get; set; }
 
         // Print options
-        [Option('s', "sheet", Required = false, Default = "default", HelpText = "Sheet defintion to use for formatting. Use sheet ID or friendly name.")]
+        [Option('s', "sheet", Required = false, HelpText = "Sheet defintion to use for formatting. Use sheet ID or friendly name.")]
         public string Sheet { get; set; }
 
         [Option('l', "landscape", Required = false, Default = false, HelpText = "Force landscape orientation.")]
@@ -37,8 +37,11 @@ namespace WinPrint.Core.Models {
         public bool CountPages { get; set; }
 
         // App Options
-        [Option('v', "verbose", Default = false, HelpText = "Verbose console output.")]
+        [Option('v', "verbose", Default = false, HelpText = "Verbose console output (log is always verbose).")]
         public bool Verbose { get; set; }
+
+        [Option('d', "debug", Default = false, HelpText = "Debug-level console & log output.")]
+        public bool Debug { get; set; }
 
         [Option('g', "gui", Default = false, SetName = "gui", HelpText = "Show WinPrint GUI (to preview or change sheet settings).")]
         public bool Gui { get; set; }

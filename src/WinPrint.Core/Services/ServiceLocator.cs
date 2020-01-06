@@ -1,9 +1,11 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight.Ioc;
+using WinPrint.Core.Services;
 
-using GalaSoft.MvvmLight.Ioc;
-
-//using WinPrint.Services;
-//using WinPrint.Views;
+namespace WinPrint {
+    //public class Logger {
+    //    static WinPrint.Core.Services.LogService Log = ServiceLocator.Current.LogService;
+    //}
+}
 
 namespace WinPrint.Core.Services {
     public class ServiceLocator {
@@ -15,8 +17,10 @@ namespace WinPrint.Core.Services {
             SimpleIoc.Default.Register<SettingsService>();
             SimpleIoc.Default.Register<FileAssociationsService>();
             SimpleIoc.Default.Register<NodeService>();
+            SimpleIoc.Default.Register<LogService>(true);
         }
 
+        public LogService LogService => SimpleIoc.Default.GetInstance<Services.LogService>();
         public SettingsService SettingsService => SimpleIoc.Default.GetInstance<Services.SettingsService>();
         public FileAssociationsService FileAssociationsService => SimpleIoc.Default.GetInstance<Services.FileAssociationsService>();
         public NodeService NodeService => SimpleIoc.Default.GetInstance<Services.NodeService>();

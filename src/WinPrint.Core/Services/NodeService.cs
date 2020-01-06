@@ -39,7 +39,7 @@ namespace WinPrint.Core.Services {
                 path = await proc.StandardOutput.ReadLineAsync();
             }
             catch (Exception e) {
-                Helpers.Logging.TraceMessage(e.Message);
+                LogService.TraceMessage(e.Message);
             }
             finally {
                 proc?.Dispose();
@@ -70,7 +70,7 @@ namespace WinPrint.Core.Services {
                 path = await proc.StandardOutput.ReadLineAsync() + "\\";
             }
             catch (Exception e) {
-                Helpers.Logging.TraceMessage(e.Message);
+                LogService.TraceMessage(e.Message);
             }
             finally {
                 proc?.Dispose();
@@ -106,22 +106,22 @@ namespace WinPrint.Core.Services {
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
 
-                Helpers.Logging.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
+                LogService.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
                 proc = Process.Start(psi);
                 StreamWriter sw = proc.StandardInput;
-                Helpers.Logging.TraceMessage($"Process started: {proc.ProcessName}");
-                Helpers.Logging.TraceMessage($"Sending: {stdIn.ToString()}");
+                LogService.TraceMessage($"Process started: {proc.ProcessName}");
+                LogService.TraceMessage($"Sending: {stdIn.ToString()}");
                 await sw.WriteLineAsync(stdIn.ToString());
                 // This terminates the session
                 sw.Close();
 
-                Helpers.Logging.TraceMessage($"Reading stdOut:");
+                LogService.TraceMessage($"Reading stdOut:");
                 while (!proc.StandardOutput.EndOfStream) {
                     var outputLine = await proc.StandardOutput.ReadLineAsync();
                     stdOut.AppendLine(outputLine);
                 }
 
-                Helpers.Logging.TraceMessage($"Reading stdErr:");
+                LogService.TraceMessage($"Reading stdErr:");
                 while (!proc.StandardError.EndOfStream) {
                     var outputLine = await proc.StandardError.ReadLineAsync();
                     stdErr.AppendLine(outputLine);
@@ -135,17 +135,17 @@ namespace WinPrint.Core.Services {
             }
             catch (Exception e) {
 
-                Helpers.Logging.TraceMessage(e.Message);
+                LogService.TraceMessage(e.Message);
                 // Node not installed. 
                 // TODO: Install node
             }
             finally {
                 proc?.Dispose();
-                Helpers.Logging.TraceMessage($"stdOutput: {stdOut.ToString()}");
-                Helpers.Logging.TraceMessage($"stdError: {stdErr.ToString()}");
+                LogService.TraceMessage($"stdOutput: {stdOut.ToString()}");
+                LogService.TraceMessage($"stdError: {stdErr.ToString()}");
             }
 
-            Helpers.Logging.TraceMessage($"Node.js installed: {installed}, Version: {version}");
+            LogService.TraceMessage($"Node.js installed: {installed}, Version: {version}");
             return installed;
         }
 
@@ -167,38 +167,38 @@ namespace WinPrint.Core.Services {
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
 
-                Helpers.Logging.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
+                LogService.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
                 nodeProc = Process.Start(psi);
                 StreamWriter sw = nodeProc.StandardInput;
-                Helpers.Logging.TraceMessage($"Process started: {proc.ProcessName}");
-                Helpers.Logging.TraceMessage($"Sending: {stdIn.ToString()}");
+                LogService.TraceMessage($"Process started: {proc.ProcessName}");
+                LogService.TraceMessage($"Sending: {stdIn.ToString()}");
                 await sw.WriteLineAsync(stdIn.ToString());
                 sw.Close();
 
-                Helpers.Logging.TraceMessage($"Reading stdOut:");
+                LogService.TraceMessage($"Reading stdOut:");
                 while (!nodeProc.StandardOutput.EndOfStream) {
                     var outputLine = await proc.StandardOutput.ReadLineAsync();
                     stdOut.AppendLine(outputLine);
                 }
 
-                Helpers.Logging.TraceMessage($"Reading stdErr:");
+                LogService.TraceMessage($"Reading stdErr:");
                 while (!nodeProc.StandardError.EndOfStream) {
                     var outputLine = await proc.StandardError.ReadLineAsync();
                     stdErr.AppendLine(outputLine);
                 }
 
-                Helpers.Logging.TraceMessage($"EOF");
+                LogService.TraceMessage($"EOF");
             }
             catch (Exception e) {
-                Helpers.Logging.TraceMessage(e.Message);
+                LogService.TraceMessage(e.Message);
                 // Node not installed. 
                 // TODO: Install node
                 nodeProc?.Dispose();
                 nodeProc = null;
             }
             finally {
-                Helpers.Logging.TraceMessage($"stdOutput: {stdOut.ToString()}");
-                Helpers.Logging.TraceMessage($"stdError: {stdErr.ToString()}");
+                LogService.TraceMessage($"stdOutput: {stdOut.ToString()}");
+                LogService.TraceMessage($"stdError: {stdErr.ToString()}");
             }
             return installed;
         }

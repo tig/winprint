@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.LiteHtml;
 
 namespace WinPrint.Core.ContentTypes {
@@ -62,13 +63,13 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             reflowProgress?.Invoke(this, "HtmlFileContent.RenderAsync");
             await base.RenderAsync(printerResolution, reflowProgress);
 
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
-            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
+            LogService.TraceMessage($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
             string css;
             try {
@@ -92,9 +93,9 @@ namespace WinPrint.Core.ContentTypes {
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
-            Helpers.Logging.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
+            LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
-            Helpers.Logging.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
+            LogService.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
 
             Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");
@@ -150,11 +151,11 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             //if (pageNum > NumPages) {
-            //    Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
+            //    Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
             //    return;
             //}
             if (litehtml == null) {
-                Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
+                LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
                 return;
             }
             SizeF pagesizeInPixels;
@@ -172,14 +173,14 @@ namespace WinPrint.Core.ContentTypes {
 
 
             //if (litehtml.Graphics == null) {
-            //    Helpers.Logging.TraceMessage($"new print job. Rendering again");
+            //    Logging.TraceMessage($"new print job. Rendering again");
             //    // This is a new print job. Re-render with new DPI
             //    litehtml.Graphics = g;
             //    litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(PageSize.Width, PageSize.Height));
             //    int bestWidth = litehtml.Document.Render((int)PageSize.Width);
             //}
 
-            Helpers.Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
+            LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
             litehtml.Graphics = g;
 

@@ -10,6 +10,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using WinPrint.Core;
 using System.Diagnostics;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Winforms {
     /// <summary>
@@ -17,7 +18,6 @@ namespace WinPrint.Winforms {
     /// This is the View in the Model-View-View Model pattern. 
     /// </summary>
     public partial class PrintPreview : Control {
-        static public PrintPreview Instance = null;
         private SheetViewModel svm;
         public SheetViewModel SheetViewModel {
             get => svm; set {
@@ -30,7 +30,6 @@ namespace WinPrint.Winforms {
         public object Task { get; internal set; }
 
         public PrintPreview() {
-            Instance = this;
             InitializeComponent();
             CurrentSheet = 1;
             Zoom = 100;
@@ -47,7 +46,7 @@ namespace WinPrint.Winforms {
                     ZoomIn();
             }
             else {
-                Core.Helpers.Logging.TraceMessage($"_MouseWheel page {e.Delta}");
+                LogService.TraceMessage($"_MouseWheel page {e.Delta}");
                 if (e.Delta < 0)
                     PageDown();
                 else
@@ -91,6 +90,9 @@ namespace WinPrint.Winforms {
         }
 
         protected override void OnKeyUp(KeyEventArgs e) {
+            if (e is null) 
+                throw new ArgumentNullException(nameof(e));
+
             base.OnKeyUp(e);
             switch (e.KeyCode) {
                 case Keys.PageDown:
@@ -117,7 +119,7 @@ namespace WinPrint.Winforms {
         }
 
         private void PageUp() {
-            Core.Helpers.Logging.TraceMessage($"Preview:PageUp");
+            LogService.TraceMessage($"Preview:PageUp");
 
             if (CurrentSheet > 1) {
                 CurrentSheet--;
@@ -126,7 +128,7 @@ namespace WinPrint.Winforms {
         }
 
         private void PageDown() {
-            Core.Helpers.Logging.TraceMessage($"Preview:PageDown");
+            LogService.TraceMessage($"Preview:PageDown");
             if (CurrentSheet < svm.NumSheets) {
                 CurrentSheet++;
                 Invalidate();
@@ -154,10 +156,10 @@ namespace WinPrint.Winforms {
 
             // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
             var scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
-            Core.Helpers.Logging.TraceMessage($"OnPaint scale {scale}");
+            LogService.TraceMessage($"OnPaint scale {scale}");
 
             var previewSize = new Size((int)(w * scale), (int)(h * scale));
-            Core.Helpers.Logging.TraceMessage($"OnPaint previewSize {previewSize.Width}, {previewSize.Height}");
+            LogService.TraceMessage($"OnPaint previewSize {previewSize.Width}, {previewSize.Height}");
 
             // Don't do anything if the window's been shrunk too far or GDI+ will crash
             if (previewSize.Width <= 10 || previewSize.Height <= 10) return;

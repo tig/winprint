@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.LiteHtml;
 
 namespace WinPrint.Core.ContentTypes {
@@ -88,7 +89,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         private async Task<List<HtmlLine>> DocumentToHtmlLines(string file, string language) {
-            Helpers.Logging.TraceMessage($"{language}");
+            LogService.TraceMessage($"{language}");
 
             const string cssTheme = "prism-coy.css";
             //const string cssPrism = "prism.css";
@@ -180,9 +181,9 @@ namespace WinPrint.Core.ContentTypes {
                 }
             }
             catch (Exception e) {
-                Helpers.Logging.TraceMessage(e.Message);
+                LogService.TraceMessage(e.Message);
             }
-            Helpers.Logging.TraceMessage("DocumentToHtmlLines() - exiting");
+            LogService.TraceMessage("DocumentToHtmlLines() - exiting");
             return htmlLines;
         }
 
@@ -220,7 +221,7 @@ namespace WinPrint.Core.ContentTypes {
             //await base.RenderAsync(printerResolution, reflowProgress);
 
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
-            Helpers.Logging.TraceMessage("CodeFileContent.Render");
+            LogService.TraceMessage("CodeFileContent.Render");
 
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
@@ -242,13 +243,13 @@ namespace WinPrint.Core.ContentTypes {
 
             n += (lines.Count / linesPerPage) + 1;
 
-            Helpers.Logging.TraceMessage($"{lines.Count} lines across {n} pages.");
+            LogService.TraceMessage($"{lines.Count} lines across {n} pages.");
             return n;
         }
 
         // TODO: Profile for performance
         private async Task<List<HtmlLine>> MeasureLines(string document) {
-            Helpers.Logging.TraceMessage("CodeFileContent.MeasureLines");
+            LogService.TraceMessage("CodeFileContent.MeasureLines");
 
             int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);

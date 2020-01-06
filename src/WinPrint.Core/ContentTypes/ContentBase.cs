@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypes {
     /// <summary>
@@ -64,15 +65,15 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="filePath"></param>
         /// <returns>True if file was read. False if the file was empty or failed to read.</returns>
         public async virtual Task<bool> LoadAsync(string filePath) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             this.filePath = filePath;
             using StreamReader streamToPrint = new StreamReader(filePath);
             try {
                 document = await streamToPrint.ReadToEndAsync();
-                Helpers.Logging.TraceMessage($"document is {document.Length} chars.");
+                LogService.TraceMessage($"document is {document.Length} chars.");
             }
             catch (Exception e) {
-                Helpers.Logging.TraceMessage($"Exception {e.Message}");
+                LogService.TraceMessage($"Exception {e.Message}");
                 return false;
             }
             return !String.IsNullOrEmpty(document);
@@ -84,7 +85,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public virtual async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             if (document == null) 
                 throw new ArgumentNullException("document can't be null for Render");
             return 0;

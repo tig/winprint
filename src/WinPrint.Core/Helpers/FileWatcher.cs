@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using menelabs.core;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core.Helpers {
     public class FileWatcher : IDisposable {
@@ -53,7 +54,7 @@ namespace WinPrint.Core.Helpers {
 
             // Begin watching.
             watcher.EnableRaisingEvents = true;
-            Helpers.Logging.TraceMessage($"FileSystemSafeWatcher: Watching {watcher.Path}\\{watcher.Filter} for changes.");
+            LogService.TraceMessage($"FileSystemSafeWatcher: Watching {watcher.Path}\\{watcher.Filter} for changes.");
             return watcher;
 
         }
@@ -65,7 +66,7 @@ namespace WinPrint.Core.Helpers {
 
         private void OnRenamed(object source, RenamedEventArgs e) {
             // Specify what is done when a file is renamed.
-            Helpers.Logging.TraceMessage($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");
+            LogService.TraceMessage($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");
         }
 
         #region IDisposable Support

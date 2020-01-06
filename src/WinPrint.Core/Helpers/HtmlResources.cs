@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using WinPrint.Core;
+using WinPrint.Core.Services;
 
 namespace WinPrint.LiteHtml {
     public class HtmlResources {
@@ -16,7 +17,7 @@ namespace WinPrint.LiteHtml {
         }
 
         public byte[] GetResourceBytes(string resource) {
-            Core.Helpers.Logging.TraceMessage($"{resource}");
+            LogService.TraceMessage($"{resource}");
             byte[] data = new byte[0];
             if (string.IsNullOrWhiteSpace(resource)) {
                 return data;
@@ -26,13 +27,13 @@ namespace WinPrint.LiteHtml {
                 data = File.ReadAllBytes($"{Path.GetDirectoryName(filePath)}\\{resource}");
             }
             catch (Exception e) {
-                Core.Helpers.Logging.TraceMessage($"GetResourceBytes({resource}) - {e.Message}");
+                LogService.TraceMessage($"GetResourceBytes({resource}) - {e.Message}");
             }
             return data;
         }
 
         public string GetResourceString(string resource) {
-            Core.Helpers.Logging.TraceMessage($"{resource}");
+            LogService.TraceMessage($"{resource}");
             string data = string.Empty;
             if (string.IsNullOrWhiteSpace(resource)) {
                 return data;
@@ -50,13 +51,13 @@ namespace WinPrint.LiteHtml {
                 return data;
             }
             catch (Exception e) {
-                Core.Helpers.Logging.TraceMessage($"GetResourceString({resource}) - {e.Message}");
+                LogService.TraceMessage($"GetResourceString({resource}) - {e.Message}");
                 return data;
             }
         }
 
         private string GetUrlForRequest(string resource) {
-            Core.Helpers.Logging.TraceMessage($"{resource}");
+            LogService.TraceMessage($"{resource}");
 
             try {
                 UriBuilder urlBuilder;
@@ -78,7 +79,7 @@ namespace WinPrint.LiteHtml {
                 return requestUrl;
             }
             catch {
-                WinPrint.Core.Helpers.Logging.TraceMessage($"GetUrlForReqeust({resource}) returning null.");
+                LogService.TraceMessage($"GetUrlForReqeust({resource}) returning null.");
                 return null;
             }
         }

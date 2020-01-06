@@ -11,6 +11,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrintConsole.Program</StartupObject>
     <Authors>Charlie Kindel</Authors>
+    <RepositoryUrl>https://github.com/tig/winprint</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

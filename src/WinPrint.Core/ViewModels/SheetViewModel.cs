@@ -60,7 +60,7 @@ namespace WinPrint.Core {
             get => file;
             internal set {
                 SetField(ref file, value);
-                Helpers.Logging.TraceMessage($"SheetViewModel.File set {file}");
+                LogService.TraceMessage($"SheetViewModel.File set {file}");
             }
         }
 
@@ -117,7 +117,6 @@ namespace WinPrint.Core {
         /// </summary>
         public event EventHandler Reflowed;
         protected void OnReflowed() => Reflowed?.Invoke(this, null);
-        private TimeSpan reflowTime;
 
         public bool Reflowing {
             get => reflowing;
@@ -139,7 +138,7 @@ namespace WinPrint.Core {
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
         protected void OnSettingsChanged(bool reflow) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             SettingsChanged?.Invoke(this, reflow);
         }
 
@@ -159,7 +158,7 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="newSheet">new Sheet defintiion to use</param>
         public void SetSheet(Sheet newSheet) {
-            Helpers.Logging.TraceMessage($"{newSheet.Name}");
+            LogService.TraceMessage($"{newSheet.Name}");
             if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
             if (this.sheet != null)
                 sheet.PropertyChanged -= OnSheetPropertyChanged();
@@ -187,7 +186,7 @@ namespace WinPrint.Core {
         }
 
         public async Task<string> LoadAsync(string filePath) {
-            Helpers.Logging.TraceMessage($"{filePath}");
+            LogService.TraceMessage($"{filePath}");
             var ext = Path.GetExtension(filePath).ToLower();
             string type = null;
             ContentBase content = TextFileContent.Create();
@@ -197,7 +196,7 @@ namespace WinPrint.Core {
 
                     // Verify node.js and Prism are installed
                     if (!await ServiceLocator.Current.NodeService.IsInstalled()) {
-                        Helpers.Logging.TraceMessage("Node.js must be installed to use Prism-based syntax highlighting");
+                        LogService.TraceMessage("Node.js must be installed to use Prism-based syntax highlighting");
                         type = "text/plain";
                         content = TextFileContent.Create();
                     }
@@ -234,9 +233,9 @@ namespace WinPrint.Core {
             content.PropertyChanged += OnContentPropertyChanged();
 
             Loading = true;
-            Helpers.Logging.TraceMessage($"Calling {content.GetType()}.LoadAsync({filePath}...");
+            LogService.TraceMessage($"Calling {content.GetType()}.LoadAsync({filePath}...");
             var success = await content.LoadAsync(filePath).ConfigureAwait(false);
-            Helpers.Logging.TraceMessage($"Read succeeded? {success}");
+            LogService.TraceMessage($"Read succeeded? {success}");
             //content.document = "test";
 
             // Callers can subscribe to Content property change to be notified content has
@@ -254,11 +253,11 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="pageSettings"></param>
         public async Task ReflowAsync(PageSettings pageSettings) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
 
             if (Reflowing) {
-                Helpers.Logging.TraceMessage($"SheetViewModel.ReflowAsync - already reflowing, returning");
+                LogService.TraceMessage($"SheetViewModel.ReflowAsync - already reflowing, returning");
                 return;
             }
 
@@ -334,7 +333,7 @@ namespace WinPrint.Core {
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
 
             if (Content is null) {
-                Helpers.Logging.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
+                LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
                 Reflowing = false;
                 return;
             }
@@ -370,7 +369,7 @@ namespace WinPrint.Core {
             if (!CacheEnabled)
                 throw new InvalidOperationException("Cache is not enabled!");
 
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             foreach (var i in cachedSheets) {
                 i.Dispose();
             }
@@ -379,7 +378,7 @@ namespace WinPrint.Core {
 
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
             bool reflow = false;
-            Helpers.Logging.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
+            LogService.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Landscape":
                     Landscape = sheet.Landscape;
@@ -427,7 +426,7 @@ namespace WinPrint.Core {
 
         private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() => (s, e) => {
             bool reflow = false;
-            Helpers.Logging.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
+            LogService.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Font":
                     reflow = true;
@@ -470,14 +469,14 @@ namespace WinPrint.Core {
         internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (padding / (Rows)); }
 
         public float GetPageX(int n) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
 
             float f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
             f += Padding * GetPageColumn(n);
             return f;
         }
         public float GetPageY(int n) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
 
             float f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
             f += Padding * GetPageRow(n);
@@ -494,7 +493,7 @@ namespace WinPrint.Core {
         /// <param name="g">Graphics to print on</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         public void PrintSheet(Graphics graphics, int sheetNum) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
 
             GraphicsState state = graphics.Save();
 
@@ -537,12 +536,12 @@ namespace WinPrint.Core {
                 cachedSheets.Add(bmp);
             }
 
-            Helpers.Logging.TraceMessage($"GetCachedSheet({sheetNum}) returning image.");
+            LogService.TraceMessage($"GetCachedSheet({sheetNum}) returning image.");
             return cachedSheets[sheetNum - 1];
         }
 
         private void PaintSheet(Graphics g, int sheetNum) {
-            Helpers.Logging.TraceMessage($"{sheetNum}");
+            LogService.TraceMessage($"{sheetNum}");
             // This is needed for image scaling to work right
             g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
             PaintRules(g);

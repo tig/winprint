@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypes {
 
@@ -65,7 +66,7 @@ namespace WinPrint.Core.ContentTypes {
         // Flag: Has Dispose already been called?
         bool disposed = false;
         void Dispose(bool disposing) {
-            Helpers.Logging.TraceMessage($"disposing: {disposing}");
+            LogService.TraceMessage($"disposing: {disposing}");
 
             if (disposed)
                 return;
@@ -78,7 +79,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         public override async Task<bool> LoadAsync(string filePath) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             return await base.LoadAsync(filePath);
         }
 
@@ -88,7 +89,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="e"></param>
         /// <returns></returns>
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             //await base.RenderAsync(printerResolution);
 
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
@@ -111,13 +112,13 @@ namespace WinPrint.Core.ContentTypes {
 
             n += (lines.Count / linesPerPage) + 1;
 
-            Helpers.Logging.TraceMessage($"{lines.Count} lines across {n} pages.");
+            LogService.TraceMessage($"{lines.Count} lines across {n} pages.");
             return n;
         }
 
         // TODO: Profile for performance
         private List<Line> MeasureLines(string document) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             var list = new List<Line>();
 
             minCharWidth = MeasureString(null, "W").Width;
@@ -249,7 +250,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
 
             //if (pageNum > NumPages) {
             //    Helpers.Logging.TraceMessage($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");

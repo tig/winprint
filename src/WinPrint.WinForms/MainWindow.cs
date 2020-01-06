@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Serilog;
 using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -44,7 +45,7 @@ namespace WinPrint.Winforms {
                 switch (e.KeyCode) {
                     case Keys.F5:
                         printPreview.Invalidate(true);
-                        Core.Helpers.Logging.TraceMessage("-------- F5 ---------");
+                        Log.Debug("-------- F5 ---------");
                         Task.Run(() =>
                             printPreview.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false));
                         break;
@@ -87,9 +88,9 @@ namespace WinPrint.Winforms {
         /// </summary>
         // TODO: Refactor PropertyChanged lambdas to be functions so they can be -=
         private void SetupSheetViewModelNotifications() {
-            Core.Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             if (printPreview.SheetViewModel != null) {
-                Core.Helpers.Logging.TraceMessage("  SetupSheetViewModelNotifications was alreadya called");
+                LogService.TraceMessage("SetupSheetViewModelNotifications was alreadya called");
                 return;
             }
 
@@ -102,10 +103,10 @@ namespace WinPrint.Winforms {
             if (InvokeRequired)
                 BeginInvoke((Action)(() => PropertyChangedEventHandler(o, e)));
             else {
-                Core.Helpers.Logging.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
+                LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "Landscape":
-                        Core.Helpers.Logging.TraceMessage($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
+                        LogService.TraceMessage($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
                         landscapeCheckbox.Checked = printPreview.SheetViewModel.Landscape;
                         break;
 
@@ -172,7 +173,7 @@ namespace WinPrint.Winforms {
             if (InvokeRequired)
                 BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
             else {
-                Core.Helpers.Logging.TraceMessage($"SheetViewModel.SettingsChanged: {reflow}");
+                LogService.TraceMessage($"SheetViewModel.SettingsChanged: {reflow}");
                 if (reflow)
                     SheetSettingsChanged();
                 else
@@ -181,19 +182,19 @@ namespace WinPrint.Winforms {
         }
 
         private async void MainWindow_Load(object sender, EventArgs e) {
-            Core.Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
 
             this.Cursor = Cursors.WaitCursor;
             // Load settings
-            Core.Helpers.Logging.TraceMessage("First reference to ModelLocator.Current.Settings");
+            LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
             var sheets = ModelLocator.Current.Settings.Sheets;
 
             // Load file assocations
             var languages = ModelLocator.Current.Associations;
-            Core.Helpers.Logging.TraceMessage($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
+            LogService.TraceMessage($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
 
             ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
-                Core.Helpers.Logging.TraceMessage($"Settings.PropertyChanged: {e.PropertyName}");
+                LogService.TraceMessage($"Settings.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "DefaultSheet":
                         SheetChanged();
@@ -276,30 +277,39 @@ namespace WinPrint.Winforms {
 
             if (ModelLocator.Current.Options.Files is null || ModelLocator.Current.Options.Files.ToList().Count == 0)
                 ShowFilesDialog();
-            else { 
-                await Task.Run (() => printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0])).ConfigureAwait(false);
+            else {
+                try {
+                    await Task.Run(() => printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0])).ConfigureAwait(false);
+                }catch (FileNotFoundException fnfe) {
+                    MessageBox.Show(fnfe.Message);
+                    ShowFilesDialog();
+                }
             }
             // Don't do anything on UI thread here because of the above await Task.Run...
         }
 
 
         private async void ShowFilesDialog() {
-            Core.Helpers.Logging.TraceMessage();
-            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
-                openFileDialog.Filter = $"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                openFileDialog.FilterIndex = 3;
-                openFileDialog.RestoreDirectory = true;
-                if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    await Task.Run(() =>
-                    printPreview.SheetViewModel.LoadAsync(openFileDialog.FileNames.ToList()[0])).ConfigureAwait(false);
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => ShowFilesDialog()));
+            else {
+                LogService.TraceMessage();
+                using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                    openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
+                    openFileDialog.Filter = $"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                    openFileDialog.FilterIndex = 3;
+                    openFileDialog.RestoreDirectory = true;
+                    if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                        await Task.Run(() =>
+                        printPreview.SheetViewModel.LoadAsync(openFileDialog.FileNames.ToList()[0])).ConfigureAwait(false);
+                    }
                 }
+                LogService.TraceMessage("exting ShowFilesDialog()");
             }
-            Core.Helpers.Logging.TraceMessage("exting ShowFilesDialog()");
         }
 
         private void SheetChanged() {
-            Core.Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
             var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
             comboBoxSheet.Text = newSheet.Name;
             printPreview.SheetViewModel.SetSheet(newSheet);
@@ -321,7 +331,7 @@ namespace WinPrint.Winforms {
         }
 
         internal async void SheetSettingsChanged() {
-            Core.Helpers.Logging.TraceMessage();
+            LogService.TraceMessage();
 
             // Set landscape. This causes other DefaultPageSettings to change
             printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
@@ -337,14 +347,14 @@ namespace WinPrint.Winforms {
             if ((e.AffectedControl != null) && (e.AffectedProperty != null)) {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
-                if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {
+                //if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {
                     //Core.Helpers.Logging.TraceMessage("MainWindow_Layout bounds changed");
-                }
+                //}
             }
         }
 
         private void landscapeCheckbox_CheckedChanged(object sender, EventArgs e) {
-            Core.Helpers.Logging.TraceMessage($"{landscapeCheckbox.Checked}");
+            LogService.TraceMessage($"{landscapeCheckbox.Checked}");
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
             ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =
                 printDoc.DefaultPageSettings.Landscape =
@@ -363,7 +373,7 @@ namespace WinPrint.Winforms {
 
         private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled) {
-                Core.Helpers.Logging.TraceMessage("printersCB_SelectedIndexChanged");
+                LogService.TraceMessage("printersCB_SelectedIndexChanged");
                 printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
                 paperSizesCB.Items.Clear();
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
@@ -375,7 +385,7 @@ namespace WinPrint.Winforms {
 
         private void paperSizesCB_SelectedIndexChanged(object sender, EventArgs e) {
             if (printersCB.Enabled) {
-                Core.Helpers.Logging.TraceMessage("paperSizesCB_SelectedIndexChanged");
+                LogService.TraceMessage("paperSizesCB_SelectedIndexChanged");
                 // Set the paper size based upon the selection in the combo box.
                 if (paperSizesCB.SelectedIndex != -1) {
                     printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
@@ -418,7 +428,7 @@ namespace WinPrint.Winforms {
                     print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
                 }
             }
-            print.DoPrint();
+            await print.DoPrint().ConfigureAwait(false);
         }
 
         private void panelRight_Resize(object sender, EventArgs e) {
@@ -426,7 +436,7 @@ namespace WinPrint.Winforms {
         }
 
         private void enableHeader_CheckedChanged(object sender, EventArgs e) {
-            Core.Helpers.Logging.TraceMessage($"enableHeader_CheckedChanged: {enableHeader.Checked}");
+            LogService.TraceMessage($"enableHeader_CheckedChanged: {enableHeader.Checked}");
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
@@ -436,7 +446,7 @@ namespace WinPrint.Winforms {
         }
 
         private void enableFooter_CheckedChanged(object sender, EventArgs e) {
-            Core.Helpers.Logging.TraceMessage($"enableFooter_CheckedChanged: {enableFooter.Checked}");
+            LogService.TraceMessage($"enableFooter_CheckedChanged: {enableFooter.Checked}");
             if (printersCB.Enabled) {
                 // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
                 // the model
@@ -447,7 +457,7 @@ namespace WinPrint.Winforms {
 
         private void comboBoxSheet_SelectedIndexChanged(object sender, EventArgs e) {
             KeyValuePair<string, string> si = (KeyValuePair<string, string>)comboBoxSheet.SelectedItem;
-            Core.Helpers.Logging.TraceMessage($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
+            LogService.TraceMessage($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
             if (printersCB.Enabled) {
                 ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
                 //ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);

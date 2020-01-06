@@ -14,7 +14,7 @@ namespace WinPrint.Core.ContentTypes {
     public class PrismFileContent : HtmlFileContent {
         public static new string ContentType = "Syntax Highlighted Code";
 
-        public static PrismFileContent Create() {
+        public static new PrismFileContent Create() {
             var content = new PrismFileContent();
             content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismFileSettings);
             return content;
@@ -41,7 +41,7 @@ namespace WinPrint.Core.ContentTypes {
 
 
         public async override Task<bool> LoadAsync(string filePath) {
-            Helpers.Logging.TraceMessage("PrismFileContent.LoadAsync()");
+            LogService.TraceMessage("PrismFileContent.LoadAsync()");
             if (!await base.LoadAsync(filePath)) return false;
 
             if (!convertedToHtml)
@@ -68,7 +68,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         public new async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
-            Helpers.Logging.TraceMessage("PrismFileContent.RenderAsync()");
+            LogService.TraceMessage("PrismFileContent.RenderAsync()");
 
             // Calculate the number of lines per page etc..
             var numPages = await base.RenderAsync(printerResolution, reflowProgress);
@@ -123,7 +123,7 @@ namespace WinPrint.Core.ContentTypes {
         private int linesInDocument;
 
         private async Task<string> CodeToHtml(string file, string language) {
-            Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml()");
+            LogService.TraceMessage("PrismFileContent.CodeToHtml()");
 
             const string cssPrism = "prism.css";
             const string cssTheme = "prism-coy.css";
@@ -208,14 +208,14 @@ namespace WinPrint.Core.ContentTypes {
                 sbHtml.AppendLine($"</table></code></pre>");
             }
             catch (Exception e) {
-                Helpers.Logging.TraceMessage(e.Message);
+                LogService.TraceMessage(e.Message);
                 sbHtml.AppendLine($"<p>Failed to convert to html. {e.Message}</p>");
             }
             finally {
                 node?.Dispose();
             }
             sbHtml.AppendLine($"</body></html>");
-            Helpers.Logging.TraceMessage("PrismFileContent.CodeToHtml() - exiting");
+            LogService.TraceMessage("PrismFileContent.CodeToHtml() - exiting");
             return sbHtml.ToString();
         }
 
@@ -229,7 +229,7 @@ namespace WinPrint.Core.ContentTypes {
             //    return;
             //}
             if (litehtml == null) {
-                Helpers.Logging.TraceMessage($"PaintPage({pageNum}) when litehtml is null");
+                LogService.TraceMessage($"PaintPage({pageNum}) when litehtml is null");
                 return;
             }
             SizeF pagesizeInPixels;
