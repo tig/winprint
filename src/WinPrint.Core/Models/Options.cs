@@ -8,7 +8,7 @@ namespace WinPrint.Core.Models {
     public class Options : ModelBase {
 
         // Files
-        [Value(0, Required = false, MetaName = "<files>", HelpText = "One or more files to be printed.")]
+        [Value(0, Required = true, MetaName = "<files>", HelpText = "One or more files to be printed.")]
         public IEnumerable<string> Files { get; set; }
 
         // Print options

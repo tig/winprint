@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
+using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -41,7 +42,7 @@ namespace WinPrint.Core.ContentTypes {
 
 
         public async override Task<bool> LoadAsync(string filePath) {
-            LogService.TraceMessage("PrismFileContent.LoadAsync()");
+            LogService.TraceMessage();
             if (!await base.LoadAsync(filePath)) return false;
 
             if (!convertedToHtml)
@@ -68,7 +69,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         public new async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
-            LogService.TraceMessage("PrismFileContent.RenderAsync()");
+            LogService.TraceMessage();
 
             // Calculate the number of lines per page etc..
             var numPages = await base.RenderAsync(printerResolution, reflowProgress);
@@ -123,8 +124,9 @@ namespace WinPrint.Core.ContentTypes {
         private int linesInDocument;
 
         private async Task<string> CodeToHtml(string file, string language) {
-            LogService.TraceMessage("PrismFileContent.CodeToHtml()");
-
+            Log.Debug(LogService.GetTraceMsg(), $" {file} (type={language})", file, language);
+   
+            // TODO: Implement theme selection (or not; most don't make sense for print)
             const string cssPrism = "prism.css";
             const string cssTheme = "prism-coy.css";
             //const string cssTheme = "prism-dark.css";
@@ -136,18 +138,29 @@ namespace WinPrint.Core.ContentTypes {
 
             const string cssWinPrint = "prism-winprint-overrides.css";
 
+            // Get the URI to our app dir so user-provided stylesheets can be placed there.
+            // If (user provided sheet found in exeucting dir)
+            //    Use user provided sheet
+            // Else 
+            //    Use sheet in prismjs\themes
             string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             var cssUri = new UriBuilder();
             cssUri.Scheme = "file";
             cssUri.Host = @"";
             cssUri.Path = appDir;
 
+            // TODO: detect node and prism installation
+            // TODO: implement theme choice
+            var prismThemes = await ServiceLocator.Current.NodeService.GetModulesDirectory() + @"\prismjs\themes";
+            // Reference choosen theme style sheet
+            cssUri.Path = prismThemes;
+
             // Emit javascript to be run via node.js
             var sbNodeJS = new StringBuilder();
             sbNodeJS.AppendLine($"const Prism = require('prismjs');");
             sbNodeJS.AppendLine($"const loadLanguages = require('prismjs/components/');");
             sbNodeJS.AppendLine($"loadLanguages(['{language}']);");
-            //document = "using System;";
+            // TODO: for very large files should we use TEMP file?
             sbNodeJS.AppendLine($"const code = `{document}`;");
             sbNodeJS.AppendLine($"const html = Prism.highlight(code, Prism.languages.{language}, '{language}');");
             sbNodeJS.AppendLine($"console.log(html);");
@@ -158,16 +171,14 @@ namespace WinPrint.Core.ContentTypes {
             sbHtml.AppendLine($"<!DOCTYPE html><html><head><title>{file}</title>");
             sbHtml.AppendLine($"<meta charset=\"utf-8\"/>");
 
-            // TODO: detect node and prism installation
-            var prismThemes = await ServiceLocator.Current.NodeService.GetModulesDirectory() + @"\prismjs\themes";
-            // Reference choosen theme style sheet
-            cssUri.Path = prismThemes;
+            // Link to the theme style sheet. 
             //sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssPrism}\" rel=\"stylesheet\"/>");
             sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssTheme}\" rel=\"stylesheet\"/>");
 
-            cssUri.Path = appDir;
             // Override styles with WinPrint settings for better printing
             // If the app directory has the file, use it. Otherwise inline them.
+            // User can put a prism-winprint-overrides.css in the app dir to override built-in
+            cssUri.Path = appDir;
             // Strip "file:/" off of appDir for local
             string overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrint;
             if (File.Exists(overridePath))
@@ -182,40 +193,47 @@ namespace WinPrint.Core.ContentTypes {
             }
             sbHtml.Append($"</head><body>");
 
+            // Run node
             Process node = null;
+            ProcessStartInfo psi = new ProcessStartInfo();
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
                 psi.FileName = @"node";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
 
+                Log.Debug("Starting Process: '{f} {a}'", psi.FileName, psi.Arguments);
                 node = Process.Start(psi);
                 StreamWriter sw = node.StandardInput;
-                //Helpers.Logging.TraceMessage(sbNodeJS.ToString());
+                Log.Debug("Writing {n} chars to stdin", document.Length);
                 await sw.WriteLineAsync(sbNodeJS.ToString());
                 sw.Close();
 
+                // TODO: Detect script failure and do right thing
+
                 var ln = "";// LineNumbers ? "line-numbers" : "";
                 sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><table>");
-                //                    sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
+                // sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
                 linesInDocument = 0;
                 while (!node.StandardOutput.EndOfStream) {
                     sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
                     //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
                 }
+                Log.Debug("Read {n} lines from stdout", linesInDocument);
                 sbHtml.AppendLine($"</table></code></pre>");
             }
             catch (Exception e) {
-                LogService.TraceMessage(e.Message);
+                // TODO: Decide what to do here. a) Provide error and fail?
+                // b) render without syntax highlighting (call TextFileContent)? Tell the user why?
+                Log.Error(e, "Failed to convert to html");
                 sbHtml.AppendLine($"<p>Failed to convert to html. {e.Message}</p>");
             }
             finally {
                 node?.Dispose();
             }
             sbHtml.AppendLine($"</body></html>");
-            LogService.TraceMessage("PrismFileContent.CodeToHtml() - exiting");
+            Log.Debug("CodeToHtml done: {n} chars", sbHtml.Length);
             return sbHtml.ToString();
         }
 
@@ -229,7 +247,7 @@ namespace WinPrint.Core.ContentTypes {
             //    return;
             //}
             if (litehtml == null) {
-                LogService.TraceMessage($"PaintPage({pageNum}) when litehtml is null");
+                Log.Debug("PaintPage({pageNum}) when litehtml is null", pageNum);
                 return;
             }
             SizeF pagesizeInPixels;

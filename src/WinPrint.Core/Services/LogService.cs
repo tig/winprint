@@ -13,31 +13,34 @@ namespace WinPrint.Core.Services {
     public class LogService {
         public string LogPath { get; set; }
         public LoggingLevelSwitch MasterLevelSwitch { get; set; } = new LoggingLevelSwitch();
+        public LoggingLevelSwitch FileLevelSwitch { get; set; } = new LoggingLevelSwitch();
         public LoggingLevelSwitch ConsoleLevelSwitch { get; set; } = new LoggingLevelSwitch();
         public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new LoggingLevelSwitch();
 
         public void Start(string path) {
             LogPath = $"{path}\\logs\\{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
 
-            MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+            MasterLevelSwitch.MinimumLevel = LogEventLevel.Information;
 
 #if DEBUG
+            FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #else
+            FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
 #endif 
             DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(DebugLevelSwitch)
+                .MinimumLevel.ControlledBy(MasterLevelSwitch)
                 .WriteTo.Console(levelSwitch: ConsoleLevelSwitch)
                 .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
-                .WriteTo.File(LogPath, shared: true, levelSwitch: MasterLevelSwitch)
+                .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
                 .CreateLogger();
 
             string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).ProductVersion;
             Log.Debug("===================");
-            Log.Information("{app} {v}", AppDomain.CurrentDomain.FriendlyName, productVersion);
+            Log.Debug("{app} {v}", AppDomain.CurrentDomain.FriendlyName, productVersion);
             Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);
         }
 
@@ -48,14 +51,14 @@ namespace WinPrint.Core.Services {
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
         [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
         [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0) {
-            Log.Logger.Debug($"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}:{{msg}}", msg);
+            Log.Logger.Debug($"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}: {{msg}}", msg);
         }
 
         public static string GetTraceMsg(
             [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
             [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
             [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0) {
-            return $"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}:{{msg}}";
+            return $"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}: {{msg}}";
         }
     }
 }

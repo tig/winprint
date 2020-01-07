@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Timers;
 using WinPrint.Core.Services;
+using Serilog;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -193,10 +194,9 @@ namespace WinPrint.Core {
 
             if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
                 if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
-
                     // Verify node.js and Prism are installed
                     if (!await ServiceLocator.Current.NodeService.IsInstalled()) {
-                        LogService.TraceMessage("Node.js must be installed to use Prism-based syntax highlighting");
+                        Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", type, "text/plain");
                         type = "text/plain";
                         content = TextFileContent.Create();
                     }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace WinPrint.Core.Services {
     public class NodeService {
@@ -37,9 +38,11 @@ namespace WinPrint.Core.Services {
                 //sw.WriteLine("");
                 //sw.Close();
                 path = await proc.StandardOutput.ReadLineAsync();
+                Log.Debug(LogService.GetTraceMsg(), path);
             }
             catch (Exception e) {
-                LogService.TraceMessage(e.Message);
+                // TODO: Better error message (output of stderr?)
+                Log.Error(e, "Failed to find node.js using where.exe.");
             }
             finally {
                 proc?.Dispose();
@@ -70,7 +73,8 @@ namespace WinPrint.Core.Services {
                 path = await proc.StandardOutput.ReadLineAsync() + "\\";
             }
             catch (Exception e) {
-                LogService.TraceMessage(e.Message);
+                // TODO: Better error message (output of stderr?)
+                Log.Error(e, "Failed to get node_modules location.");
             }
             finally {
                 proc?.Dispose();
@@ -96,32 +100,31 @@ namespace WinPrint.Core.Services {
         public async Task<bool> IsInstalled() {
             bool installed = false;
             Process proc = null;
+            ProcessStartInfo psi = new ProcessStartInfo();
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
-                psi.FileName = @"nodex";
+                psi.FileName = @"node";
                 psi.Arguments = $"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" version";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
 
-                LogService.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
+                Log.Debug("Starting Process: {f}, {a}", psi.FileName, psi.Arguments);
                 proc = Process.Start(psi);
                 StreamWriter sw = proc.StandardInput;
-                LogService.TraceMessage($"Process started: {proc.ProcessName}");
-                LogService.TraceMessage($"Sending: {stdIn.ToString()}");
+                Log.Debug("Sending: {cmd}", stdIn.ToString());
                 await sw.WriteLineAsync(stdIn.ToString());
                 // This terminates the session
                 sw.Close();
 
-                LogService.TraceMessage($"Reading stdOut:");
+                Log.Debug("Reading stdOut...");
                 while (!proc.StandardOutput.EndOfStream) {
                     var outputLine = await proc.StandardOutput.ReadLineAsync();
                     stdOut.AppendLine(outputLine);
                 }
 
-                LogService.TraceMessage($"Reading stdErr:");
+                Log.Debug($"Reading stdErr...");
                 while (!proc.StandardError.EndOfStream) {
                     var outputLine = await proc.StandardError.ReadLineAsync();
                     stdErr.AppendLine(outputLine);
@@ -129,23 +132,29 @@ namespace WinPrint.Core.Services {
 
                 // Process output
                 if (stdOut.Length > 0) {
-                    version = Regex.Match(stdOut.ToString(), @"npm:\W'(.*)',").Groups[1].ToString();
+                    // node returns data in Javascript format (no quotes around property names)
+                    // System.Text.Json does not support this. So a little regex to just find the 
+                    // npm: "x.y.z" version #. We don't use the version # for anything bug diagnostics
+                    // so this could just be a `installed = stdOut.Contains("npm:")'.
+                    Version = Regex.Match(stdOut.ToString(), @"npm:\W'(.*)',").Groups[1].ToString();
+                    Log.Debug("Node.js found. File: {file} {args}", psi.FileName, psi.Arguments);
                     installed = true;
                 }
+
+                // TODO: Implement better error handling of stdErr
             }
             catch (Exception e) {
-
-                LogService.TraceMessage(e.Message);
+                Log.Debug(e, "File: {file}, Args: {args}", psi.FileName, psi.Arguments);
                 // Node not installed. 
                 // TODO: Install node
             }
             finally {
                 proc?.Dispose();
-                LogService.TraceMessage($"stdOutput: {stdOut.ToString()}");
-                LogService.TraceMessage($"stdError: {stdErr.ToString()}");
+                Log.Debug("stdOutput: {s}", stdOut);
+                Log.Debug("stdError: {s}", stdErr);
             }
 
-            LogService.TraceMessage($"Node.js installed: {installed}, Version: {version}");
+            Log.Debug("Node.js is {installed}, Version: {version}", installed ? "installed" : "not installed", Version);
             return installed;
         }
 

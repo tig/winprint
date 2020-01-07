@@ -8,8 +8,6 @@ using WinPrint.Core.Services;
 namespace WinPrint.Core.ViewModels {
     public abstract class ViewModelBase : INotifyPropertyChanged {
 
-        internal static LogService Log = ServiceLocator.Current.LogService;
-
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

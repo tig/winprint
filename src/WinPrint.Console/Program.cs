@@ -18,7 +18,7 @@ using WinPrint.Core.Services;
 /// <summary>
 /// Implements the WinPrint console/command line app. 
 /// </summary>
-namespace WinPrintConsole {
+namespace WinPrint.Console {
     class Program {
         private Print print;
         private static ParserResult<Options> result;
@@ -259,7 +259,7 @@ namespace WinPrintConsole {
 
                 case "Reflowing":
                     if (print.SheetViewModel.Reflowing)
-                        Log.Information("Formatting {t}", print.SheetViewModel.Type);
+                        Log.Information("Formatting as {t}", print.SheetViewModel.Type);
                     else if (ModelLocator.Current.Options.Verbose)
                         Log.Information("Formating complete.");
                     break;
@@ -277,7 +277,7 @@ namespace WinPrintConsole {
                 //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);
-            Console.WriteLine(helpText);
+            Log.Information(helpText);
         }
     }
 }
