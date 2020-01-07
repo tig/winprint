@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="WinPrint.Install" Language="1033" Version="1.0.0.0" Manufacturer="Kindel Systems, LLC" UpgradeCode="3a12f9b1-9aaf-4f22-a906-af01027c167a">
+  <!-- WinPrint 2.0 GUIDS are documented in \WinPrint.Core\Models\Uuid.cs -->
+	<Product Id="0002A501-0000-0000-C000-000000000046" 
+           Manufacturer="Kindel Systems" 
+           Name="WinPrint" Version="2.0.0.0" 
+           Language="1033" 
+           UpgradeCode="0002A500-0000-0000-C000-000000000046">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-		<MediaTemplate />
+
+    <!-- EmbedCab="yes" gives a single, self-contained file for download -->
+      <MediaTemplate EmbedCab="yes" />
 
 		<Feature Id="ProductFeature" Title="WinPrint.Install" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
@@ -13,8 +20,9 @@
 
 	<Fragment>
 		<Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- See https://docs.microsoft.com/en-us/previous-versions//aa372057(v=vs.85) -->
 			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLFOLDER" Name="WinPrint.Install" />
+				<Directory Id="INSTALLFOLDER" Name="[ProductName]" />
 			</Directory>
 		</Directory>
 	</Fragment>
@@ -22,9 +30,9 @@
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-			<!-- <Component Id="ProductComponent"> -->
-				<!-- TODO: Insert files, registry keys, and other resources here. -->
-			<!-- </Component> -->
+			 <Component Id="WinPrint.Console"> 
+				  <File Id="WinPrint.Console" Name="WinPrint Console App" Source="winprint.exe" KeyPath="yes"/>
+			 </Component> 
 		</ComponentGroup>
 	</Fragment>
 </Wix>
