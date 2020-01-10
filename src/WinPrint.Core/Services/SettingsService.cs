@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Serilog;
 using WinPrint.Core.ContentTypes;
 using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
@@ -15,11 +16,15 @@ namespace WinPrint.Core.Services {
     public class SettingsService {
         private JsonSerializerOptions jsonOptions;
         // TODO: Implement settings file location per-user
-        private readonly string settingsFileName = "WinPrint.config.json";
+        private string settingsFileName = "WinPrint.config.json";
         private FileWatcher watcher;
 
         public SettingsService() {
-            LogService.TraceMessage("SettingsService()");
+            LogService.TraceMessage();
+
+            settingsFileName = SettingsPath + "\\" + settingsFileName;
+            Log.Debug("Settings file path: {settingsFileName}", settingsFileName);
+
 
             jsonOptions = new JsonSerializerOptions {
                 WriteIndented = true,
@@ -45,19 +50,18 @@ namespace WinPrint.Core.Services {
                 //Logger.Instance.Log4.Info($"Loading user-defined commands from {userCommandsFile}.");
                 fs = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read);
                 jsonString = File.ReadAllText(settingsFileName);
-                LogService.TraceMessage($"ReadSettings: Deserializing from {settingsFileName} ");
+                Log.Debug("ReadSettings: Deserializing from {settingsFileName}", settingsFileName);
                 settings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
             }
             catch (FileNotFoundException) {
-                LogService.TraceMessage($"ReadSettings: {settingsFileName} was not found; creating it.");
+                Log.Information("Settings file was not found; creating {settingsFileName} with defaults.", settingsFileName);
                 settings = Settings.CreateDefaultSettingsFile();
                 SaveSettings(settings);
             }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
-                LogService.TraceMessage($"SettingsService: Error with {settingsFileName}. {ex.Message}");
-                //ExceptionUtils.DumpException(ex);
+                Log.Error(ex, "SettingsService: Error with {settingsFileName}", settingsFileName);
             }
             finally {
                 if (fs != null) fs.Close();
@@ -73,7 +77,7 @@ namespace WinPrint.Core.Services {
 
                     // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
                     ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
-                    LogService.TraceMessage($"ReadSettings: Done Copying Properties!");
+                    Log.Debug("ReadSettings: Done Copying Properties.");
                 };
             }
 
@@ -115,10 +119,26 @@ namespace WinPrint.Core.Services {
 
         // Factory - creates 
         static public Settings Create() {
-            LogService.TraceMessage("SettingsService.Create()");
+            LogService.TraceMessage();
             var settingsService = ServiceLocator.Current.SettingsService.ReadSettkngs();
             return settingsService;
         }
 
+        internal static string SettingsPath {
+            get {
+                // Get dir of .exe
+                string path = AppDomain.CurrentDomain.BaseDirectory;
+                string programfiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+                // is this in Program Files?
+                if (path.Contains(programfiles)) {
+                    // We're running from the default install location. Use %appdata%.
+                    // strip %programfiles%
+                    path = $@"{appdata}\{path.Substring(programfiles.Length + 1)}";
+                }
+                return path;
+            }
+        }
     }
 }

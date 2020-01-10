@@ -15,8 +15,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MSBump" Version="2.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
     <ProjectReference Include="..\WinPrint.WinForms\WinPrint.WinForms.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(OutDir)\$(TargetName).exe $(SolutionDir)\..\release&#xD;&#xA;copy $(OutDir)\*.dll $(SolutionDir)\..\release&#xD;&#xA;copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)\..\release" />
+  </Target>
 
 </Project>

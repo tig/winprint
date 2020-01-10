@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.LiteHtml", "WinPri
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "WinPrint.Install", "WinPrint.Install\WinPrint.Install.wixproj", "{CBA949C1-2B89-4DFA-9F9A-BBE0D8097D30}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPrint.WixSharp", "WinPrint.WixSharp\WinPrint.WixSharp.csproj", "{44555887-C439-470C-944D-8866EC3D7067}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +74,14 @@ Global
 		{CBA949C1-2B89-4DFA-9F9A-BBE0D8097D30}.Release|Any CPU.ActiveCfg = Release|x86
 		{CBA949C1-2B89-4DFA-9F9A-BBE0D8097D30}.Release|x86.ActiveCfg = Release|x86
 		{CBA949C1-2B89-4DFA-9F9A-BBE0D8097D30}.Release|x86.Build.0 = Release|x86
+		{44555887-C439-470C-944D-8866EC3D7067}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Debug|x86.Build.0 = Debug|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Release|x86.ActiveCfg = Release|Any CPU
+		{44555887-C439-470C-944D-8866EC3D7067}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

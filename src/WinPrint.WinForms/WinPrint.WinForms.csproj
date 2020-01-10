@@ -26,6 +26,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MSBump" Version="2.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
   </ItemGroup>
@@ -50,7 +54,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)" />
+    <Exec Command="copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;copy $(OutDir)\$(TargetName).exe $(SolutionDir)\..\release&#xD;&#xA;copy $(OutDir)\$(TargetName).dll $(SolutionDir)\..\release&#xD;&#xA;copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)\..\release" />
   </Target>
 
 </Project>

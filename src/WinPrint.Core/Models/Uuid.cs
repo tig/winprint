@@ -12,6 +12,9 @@ namespace WinPrint.Core {
     // {0002A501-0000-0000-C000-000000000046} - Wix Installer Product Code, Default 1SheetUp ID 
     //
     public static class Uuid {
+        public static readonly Guid UpgradeCode = Guid.Parse("{0002A500-0000-0000-C000-000000000046}");
+        public static readonly Guid ProductCode = Guid.Parse("{0002A501-0000-0000-C000-000000000046}");
+
         public static readonly Guid DefaultSheet = Guid.Parse("{0002A500-0000-0000-C000-000000000046}");
         public static readonly Guid DefaultSheet1Up = Guid.Parse("{0002A501-0000-0000-C000-000000000046}");
     }

@@ -1,12 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
+    <Version>2.0.0.85</Version>
+    <Company>Kindel Systems</Company>
+    <Product>WinPrint</Product>
+    <Authors>Charlie Kindel</Authors>
+    <Description>WinPrint Core Engine</Description>
+    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;TRACE WINDOWS</DefineConstants>
+    <DefineConstants>DEBUG</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +34,10 @@
     <PackageReference Include="CommandLineParser" Version="2.7.82" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
+    <PackageReference Include="MSBump" Version="2.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
     <PackageReference Include="Serilog" Version="2.9.1-dev-01154" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0-dev-00834" />

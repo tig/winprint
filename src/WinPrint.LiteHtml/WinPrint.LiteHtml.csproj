@@ -34,6 +34,10 @@
     <ItemGroup>
     <PackageReference Include="LiteHtmlSharp" Version="1.1.15" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
+    <PackageReference Include="MSBump" Version="2.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
   </ItemGroup>
@@ -41,5 +45,9 @@
     <ItemGroup>
       <Folder Include="x64\" />
     </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="copy $(OutDir)\$(TargetName).dll $(SolutionDir)\..\release&#xD;&#xA;mkdir $(SolutionDir)\..\release\x64&#xD;&#xA;copy $(OutDir)\x64\*.dll $(SolutionDir)\..\release\x64\&#xD;&#xA;REM copy $(OutDir)\x86\*.dll $(SolutionDir)\..\release\x86\" />
+    </Target>
 
 </Project>
