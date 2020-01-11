@@ -40,9 +40,21 @@ namespace WinPrint.Core.ContentTypes {
 
         private bool convertedToHtml = false;
 
-
         public async override Task<bool> LoadAsync(string filePath) {
             LogService.TraceMessage();
+
+            if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
+                Log.Warning("Prism.js is not installed. Installing...");
+
+                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("install prismjs");
+                if (string.IsNullOrEmpty(result)) {
+                    Log.Error("Could not install PrismJS");
+                    return false;
+                }
+
+
+            }
+
             if (!await base.LoadAsync(filePath)) return false;
 
             if (!convertedToHtml)

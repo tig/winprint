@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="0002a501-0000-0000-c000-00002000009b" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.84" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
+  <Product Id="0002a501-0000-0000-c000-0000200000ac" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.101" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
     <Package InstallerVersion="200" Compressed="yes" Platform="x64" SummaryCodepage="Windows-1252" Languages="1033" />
     <Media Id="1" Cabinet="WinPrint.cab" EmbedCab="yes" />
 
@@ -14,7 +14,9 @@
             </Component>
 
             <Component Id="Component.winprintgui_exe" Guid="0002a501-0000-0000-c000-0000964d9468" Win64="yes">
-              <File Id="winprintgui_exe" Source="winprintgui.exe" />
+              <File Id="winprintgui_exe" Source="winprintgui.exe" KeyPath="yes">
+                <Shortcut Id="Shortcut.winprintgui_exe.WinPrint__" WorkingDirectory="INSTALLDIR" Directory="INSTALLDIR" Name="WinPrint.lnk" Advertise="yes" />
+              </File>
             </Component>
 
             <Component Id="Component.CommandLine.dll_3457475749" Guid="0002a501-0000-0000-c000-0000a6e4cadd" Win64="yes">
@@ -127,6 +129,13 @@
               </Component>
 
             </Directory>
+
+            <Component Id="PATH" Guid="0002a501-0000-0000-c000-000077cc6f1c" KeyPath="yes" Win64="yes">
+              <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Action="set" Part="last" />
+
+              <CreateFolder />
+            </Component>
+
           </Directory>
 
           <Component Id="ProgramFiles64Folder.Kindel_Systems" Guid="0002a501-0000-0000-c000-0000ac202de3" KeyPath="yes" Win64="yes">
@@ -137,12 +146,12 @@
       </Directory>
 
       <Directory Id="AppDataFolder" Name="AppDataFolder">
-        <Directory Id="AppDataFolder.Kindel_Systems" Name="Kindel Systems">
-          <Directory Id="AppDataFolder.Kindel_Systems.WinPrint" Name="WinPrint">
+        <Directory Id="Kindel_Systems" Name="Kindel Systems">
+          <Directory Id="Kindel_Systems.WinPrint" Name="WinPrint">
 
-            <Component Id="Component.AppDataFolder.Kindel_Systems.WinPrint.EmptyDirectory" Guid="0002a501-0000-0000-c000-00005013b494" Win64="yes">
+            <Component Id="Component.Kindel_Systems.WinPrint.EmptyDirectory" Guid="0002a501-0000-0000-c000-0000042bab3f" Win64="yes">
               <CreateFolder />
-              <RemoveFolder Id="AppDataFolder.Kindel_Systems.WinPrint" On="uninstall" />
+              <RemoveFolder Id="Kindel_Systems.WinPrint" On="uninstall" />
 
               <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
                 <RegistryValue Value="0" Type="string" KeyPath="yes" />
@@ -151,9 +160,9 @@
 
           </Directory>
 
-          <Component Id="AppDataFolder.Kindel_Systems" Guid="0002a501-0000-0000-c000-0000edaafc00" Win64="yes">
+          <Component Id="Kindel_Systems" Guid="0002a501-0000-0000-c000-0000c2c850da" Win64="yes">
             <CreateFolder />
-            <RemoveFolder Id="AppDataFolder.Kindel_Systems" On="uninstall" />
+            <RemoveFolder Id="Kindel_Systems" On="uninstall" />
 
             <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
               <RegistryValue Value="0" Type="string" KeyPath="yes" />
@@ -164,14 +173,14 @@
       </Directory>
 
       <Directory Id="ProgramMenuFolder" Name="ProgramMenuFolder">
-        <Directory Id="ProgramMenuFolder.Kindel_Systems" Name="Kindel Systems">
-          <Directory Id="ProgramMenuFolder.Kindel_Systems.WinPrint" Name="WinPrint">
+        <Directory Id="Kindel_Systems.1" Name="Kindel Systems">
+          <Directory Id="Kindel_Systems.1.WinPrint" Name="WinPrint">
 
-            <Component Id="Component.WinPrint__" Guid="0002a501-0000-0000-c000-000003be08f6" Win64="yes">
-              <Shortcut Id="ProgramMenuFolder.Kindel_Systems.WinPrint.WinPrint__" WorkingDirectory="INSTALL_DIR" Target="[INSTALL_DIR]winprintgui.exe" Name="WinPrint.lnk" />
+            <Component Id="Component.WinPrint___" Guid="0002a501-0000-0000-c000-000060843187" Win64="yes">
+              <Shortcut Id="Kindel_Systems.1.WinPrint.WinPrint___" WorkingDirectory="INSTALLDIR" Target="[INSTALLDIR]winprintgui.exe" Name="WinPrint.lnk" />
 
               <CreateFolder />
-              <RemoveFolder Id="ProgramMenuFolder.Kindel_Systems.WinPrint" On="uninstall" />
+              <RemoveFolder Id="Kindel_Systems.1.WinPrint" On="uninstall" />
 
               <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
                 <RegistryValue Value="0" Type="string" KeyPath="yes" />
@@ -180,8 +189,8 @@
 
           </Directory>
 
-          <Component Id="ProgramMenuFolder.Kindel_Systems" Guid="0002a501-0000-0000-c000-00005056d8ae" Win64="yes">
-            <RemoveFolder Id="ProgramMenuFolder.Kindel_Systems" On="uninstall" />
+          <Component Id="Kindel_Systems.1" Guid="0002a501-0000-0000-c000-000053f0ba23" Win64="yes">
+            <RemoveFolder Id="Kindel_Systems.1" On="uninstall" />
 
             <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
               <RegistryValue Value="0" Type="string" KeyPath="yes" />
@@ -193,6 +202,8 @@
     </Directory>
 
     <UI />
+
+    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." Schedule="afterInstallInitialize" />
 
     <CustomAction Id="Set_ARPINSTALLLOCATION" Property="ARPINSTALLLOCATION" Value="[INSTALLDIR]" Return="check" Execute="immediate" />
     <CustomAction Id="Set_ARPNOMODIFY" Property="ARPNOMODIFY" Value="True" Return="check" Execute="immediate" />
@@ -207,8 +218,10 @@
     <Property Id="ARPREADME" Value="https://github.com/tig/winprint" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/tig/winprint" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/tig/winprint" />
+    <Property Id="REINSTALLMODE" Value="omus" />
 
     <Feature Id="Complete" Title="Complete" Absent="allow" Level="1">
+      <ComponentRef Id="PATH" />
       <ComponentRef Id="Component.winprint_exe" />
       <ComponentRef Id="Component.winprintgui_exe" />
       <ComponentRef Id="Component.CommandLine.dll_3457475749" />
@@ -236,11 +249,11 @@
       <ComponentRef Id="Component.winprintgui.runtimeconfig.json_1014415574" />
       <ComponentRef Id="Component.Uninstall_WinPrint" />
       <ComponentRef Id="Component.LiteHtmlLib.dll_3802360625" />
-      <ComponentRef Id="Component.AppDataFolder.Kindel_Systems.WinPrint.EmptyDirectory" />
-      <ComponentRef Id="Component.WinPrint__" />
-      <ComponentRef Id="AppDataFolder.Kindel_Systems" />
+      <ComponentRef Id="Component.Kindel_Systems.WinPrint.EmptyDirectory" />
+      <ComponentRef Id="Component.WinPrint___" />
+      <ComponentRef Id="Kindel_Systems" />
       <ComponentRef Id="ProgramFiles64Folder.Kindel_Systems" />
-      <ComponentRef Id="ProgramMenuFolder.Kindel_Systems" />
+      <ComponentRef Id="Kindel_Systems.1" />
     </Feature>
 
     <InstallExecuteSequence>

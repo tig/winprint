@@ -25,40 +25,41 @@ namespace WinPrint.WixSharp {
 
            // Feature Feature = new Feature(new Id("Feature_Run"));
 
-            var project = new Project() {
-                Name = productName,
-
+            var project = new Project(productName, 
+                new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
+ 
                 Dirs = new[] {
                     new Dir($"%ProgramFiles%\\{companyName}\\{productName}", 
                         new Files(@"*.dll"),
                         new Files(@"*.json"),
                         new File(new Id("winprint_exe"), @"winprint.exe"),
-                        new File(new Id("winprintgui_exe"), @"winprintgui.exe"), //new FileShortcut("WinPrint", "INSTALLDIR")),
+                        new File(new Id("winprintgui_exe"), @"winprintgui.exe", 
+                            new FileShortcut("WinPrint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
                         new ExeFileShortcut("Uninstall WinPrint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),
                     new Dir($"%AppData%\\{companyName}\\{productName}"),
                     new Dir($"%ProgramMenu%\\{companyName}\\{productName}",
-                        new ExeFileShortcut("WinPrint", "[INSTALL_DIR]winprintgui.exe", arguments: ""))
+                        new ExeFileShortcut("WinPrint", "[INSTALLDIR]winprintgui.exe", arguments: ""))
                         //new ExeFileShortcut("WinPrint Config Directory", 
                         //    $"[%AppData%\\{companyName}\\{productName}".ToDirID() +" ]", ""),
                         //new ExeFileShortcut("Uninstall WinPrint", "[System64Folder]msiexec.exe", "/x [ProductCode]"))
                  },
 
-                //Binaries = new[] {
-                //},
+            //Binaries = new[] {
+            //},
 
-                //Actions = new[] {
-                //    new InstalledFileAction("winprintgui_exe", "")
-                //    {
-                //        Step = Step.InstallFinalize,
-                //        When = When.After,
-                //        Return = Return.asyncNoWait,
-                //        Execute = Execute.immediate,
-                //        Impersonate = true,
-                //        //Condition = Feature.BeingInstall(),
-                //    }
-                //},
+            //Actions = new[] {
+            //    new InstalledFileAction("winprintgui_exe", "")
+            //    {
+            //        Step = Step.InstallFinalize,
+            //        When = When.After,
+            //        Return = Return.asyncNoWait,
+            //        Execute = Execute.immediate,
+            //        Impersonate = true,
+            //        //Condition = Feature.BeingInstall(),
+            //    }
+            //},
 
-                Properties = new[]{
+            Properties = new[]{
                     //setting property to be used in install condition
                     new Property("ALLUSERS", "1"),
                 }
@@ -69,7 +70,12 @@ namespace WinPrint.WixSharp {
             project.UpgradeCode = UpgradeCode;
             project.SourceBaseDir = sourceBaseDir;
             project.OutDir = outDir;
-            project.Version = Version.Parse(info.ProductVersion);
+            project.Version = Version.Parse(info.ProductVersion); //new Version("2.0.1.10040"); 
+
+            project.MajorUpgrade = new MajorUpgrade {
+                Schedule = UpgradeSchedule.afterInstallInitialize,
+                DowngradeErrorMessage = "A later version of [ProductName] is already installed. Setup will now exit."
+            };
 
             project.Platform = Platform.x64;
 

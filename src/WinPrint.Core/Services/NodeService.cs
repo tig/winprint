@@ -10,7 +10,6 @@ using Serilog;
 
 namespace WinPrint.Core.Services {
     public class NodeService {
-
         internal NodeService Create() {
             return new NodeService();
         }
@@ -33,6 +32,10 @@ namespace WinPrint.Core.Services {
                 psi.Arguments = "node";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
+
+                stdIn.Clear();
+                stdOut.Clear();
+                stdErr.Clear();
                 proc = Process.Start(psi);
                 //StreamWriter sw = node.StandardInput;
                 //sw.WriteLine("");
@@ -66,6 +69,10 @@ namespace WinPrint.Core.Services {
                 psi.Arguments = $"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" root";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
+
+                stdIn.Clear();
+                stdOut.Clear();
+                stdErr.Clear();
                 proc = Process.Start(psi);
                 //StreamWriter sw = node.StandardInput;
                 //sw.WriteLine("");
@@ -84,7 +91,7 @@ namespace WinPrint.Core.Services {
 
         private StringBuilder stdIn = new StringBuilder();
         private StringBuilder stdOut = new StringBuilder();
-        private StringBuilder stdErr = new StringBuilder();
+        public StringBuilder stdErr = new StringBuilder();
         private Process nodeProc = null;
         private string nodeDir = null;
 
@@ -92,24 +99,23 @@ namespace WinPrint.Core.Services {
 
         public string Version { get => version; set => version = value; }
 
-        /// <summary>
-        /// Sees if node.js is installed. If it's not been installed, returns false.
-        /// sets Version.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<bool> IsInstalled() {
-            bool installed = false;
+        private async Task<string> RunNodeCommmand(string nodeCmd) {
+            string result = null;
+
             Process proc = null;
             ProcessStartInfo psi = new ProcessStartInfo();
             try {
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
                 psi.FileName = @"node";
-                psi.Arguments = $"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" version";
+                psi.Arguments = nodeCmd;
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
 
+                stdIn.Clear();
+                stdOut.Clear();
+                stdErr.Clear();
                 Log.Debug("Starting Process: {f}, {a}", psi.FileName, psi.Arguments);
                 proc = Process.Start(psi);
                 StreamWriter sw = proc.StandardInput;
@@ -131,15 +137,8 @@ namespace WinPrint.Core.Services {
                 }
 
                 // Process output
-                if (stdOut.Length > 0) {
-                    // node returns data in Javascript format (no quotes around property names)
-                    // System.Text.Json does not support this. So a little regex to just find the 
-                    // npm: "x.y.z" version #. We don't use the version # for anything bug diagnostics
-                    // so this could just be a `installed = stdOut.Contains("npm:")'.
-                    Version = Regex.Match(stdOut.ToString(), @"npm:\W'(.*)',").Groups[1].ToString();
-                    Log.Debug("Node.js found. File: {file} {args}", psi.FileName, psi.Arguments);
-                    installed = true;
-                }
+                if (stdOut.Length > 0) 
+                    result = stdOut.ToString();
 
                 // TODO: Implement better error handling of stdErr
             }
@@ -154,8 +153,42 @@ namespace WinPrint.Core.Services {
                 Log.Debug("stdError: {s}", stdErr);
             }
 
-            Log.Debug("Node.js is {installed}, Version: {version}", installed ? "installed" : "not installed", Version);
+            Log.Debug("RunNodeCommand({cmd}) result: {result}", nodeCmd, result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Runs an NPM command
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> RunNpmCommand(string npmCmd) {
+            var result = await RunNodeCommmand($"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" {npmCmd}");
+            return result;
+        }
+        /// <summary>
+        /// Sees if node.js is installed. If it's not been installed, returns false.
+        /// sets Version.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> IsInstalled() {
+            bool installed = false;
+
+            var result = await RunNpmCommand("version");
+            if (!string.IsNullOrEmpty(result)) {
+                // node returns data in Javascript format (no quotes around property names)
+                // System.Text.Json does not support this. So a little regex to just find the 
+                // npm: "x.y.z" version #. We don't use the version # for anything bug diagnostics
+                // so this could just be a `installed = stdOut.Contains("npm:")'.
+                Version = Regex.Match(stdOut.ToString(), @"npm:\W'(.*)',").Groups[1].ToString();
+                installed = true;
+            }
             return installed;
+        }
+
+        public async Task<bool> IsPrismInstalled() {
+            var s = await RunNpmCommand("ls prismjs");
+            return !s.Contains("-- (empty)");
         }
 
         /// <summary>
