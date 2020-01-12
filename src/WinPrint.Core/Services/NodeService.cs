@@ -172,6 +172,7 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<bool> IsInstalled() {
+            LogService.TraceMessage();
             bool installed = false;
 
             var result = await RunNpmCommand("version");

@@ -87,6 +87,9 @@ namespace WinPrint.Core {
         //       public bool Landscape { get; set; }
         public int LandscapeAngle { get; set; }
         public PrinterResolution PrinterResolution { get; set; }
+
+        public bool PrintInColor { get; set; }
+
         public RectangleF PrintableArea { get => printableArea; set => printableArea = value; }
         public Rectangle Bounds { get => bounds; set => bounds = value; }
         public float HardMarginX { get; set; }
@@ -214,7 +217,7 @@ namespace WinPrint.Core {
 
                         case "text/html":
                         default:
-                            content = TextFileContent.Create();
+                            content = HtmlFileContent.Create();
                             break;
                     }
             }
@@ -320,6 +323,8 @@ namespace WinPrint.Core {
                 paperSize.Height = ps.PaperSize.Height;
             }
             PrinterResolution = ps.PrinterResolution;
+
+            PrintInColor = ps.Color;
 
             // Bounds represents page size area, auto adjusted for landscape
             Bounds = ps.Bounds;

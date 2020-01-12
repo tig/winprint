@@ -155,15 +155,19 @@ namespace WinPrint.Winforms {
                         break;
 
                     case "Loading":
-                        printPreview.Text = printPreview.SheetViewModel.Loading ? "Loading..." : "";
-                        printPreview.Invalidate(false);
+                        if (printPreview.SheetViewModel.Loading)
+                            printPreview.Text = "Loading...";
+                        printPreview.Refresh();
                         printPreview.Select();
                         printPreview.Focus();
                         break;
 
                     case "Reflowing":
-                        printPreview.Text = printPreview.SheetViewModel.Reflowing ? "Rendering..." : "";
-                        printPreview.Invalidate(false);
+                        if (printPreview.SheetViewModel.Reflowing)
+                            printPreview.Text = "Rendering...";
+                        else
+                            printPreview.Text = "";
+                        printPreview.Refresh();
                         break;
                 }
             }
@@ -211,21 +215,17 @@ namespace WinPrint.Winforms {
             // Select default printer and paper size
             foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
                 printersCB.Items.Add(printer);
-                //printersCB.Text = "OneNote";
-
-                if (printDoc.PrinterSettings.IsDefaultPrinter)
+                 if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
 
             // --p
-            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Printer))
-                printersCB.Text = ModelLocator.Current.Options.Printer;
-
-
-            printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
-            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
-                paperSizesCB.Items.Add(ps);
+            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Printer)) {
+                printDoc.PrinterSettings.PrinterName = printersCB.Text = ModelLocator.Current.Options.Printer;
             }
+
+            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) 
+                paperSizesCB.Items.Add(ps);
 
             // --z
             if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize))
@@ -359,7 +359,7 @@ namespace WinPrint.Winforms {
 
             // Set landscape. This causes other DefaultPageSettings to change
             printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-            BeginInvoke((Action)(() => printPreview.Invalidate(true)));
+            //BeginInvoke((Action)(() => printPreview.Invalidate(true)));
             await Task.Run(() => printPreview.SheetViewModel.ReflowAsync(printDoc.DefaultPageSettings)).ConfigureAwait(false);
             BeginInvoke((Action)(() => printPreview.Invalidate(true)));
         }

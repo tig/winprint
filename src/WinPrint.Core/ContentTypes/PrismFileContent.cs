@@ -46,7 +46,7 @@ namespace WinPrint.Core.ContentTypes {
             if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
                 Log.Warning("Prism.js is not installed. Installing...");
 
-                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("install prismjxs");
+                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("install prismjs");
                 if (string.IsNullOrEmpty(result)) {
                     Log.Debug("Could not install PrismJS");
                     throw new InvalidOperationException("Could not install PrismJS.");

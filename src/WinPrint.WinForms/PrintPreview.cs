@@ -171,7 +171,7 @@ namespace WinPrint.Winforms {
             // Scale for client size & zoom
             e.Graphics.ScaleTransform((float)scale, (float)scale);
 
-            if (!svm.Loading && !svm.Reflowing) {
+            //if (!svm.Loading && !svm.Reflowing) {
                 if (svm.CacheEnabled) {
                     e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
                     Image img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
@@ -185,7 +185,9 @@ namespace WinPrint.Winforms {
                 }
                 else
                     svm.PrintSheet(e.Graphics, CurrentSheet);
-            }
+            //}
+
+            e.Graphics.Restore(state);
 
             // While in error or loading & reflowing show Text 
             if (!string.IsNullOrEmpty(Text)) {
@@ -194,13 +196,12 @@ namespace WinPrint.Winforms {
                 sf.LineAlignment = StringAlignment.Center;
                 sf.Alignment = StringAlignment.Center;
                 sf.Trimming = StringTrimming.EllipsisWord;
-                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, svm.PrintableArea, sf);
+                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, ClientRectangle, sf);
                 //var s = e.Graphics.MeasureString(Text, font);
                 //e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, 
                 //    (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
             }
 
-            e.Graphics.Restore(state);
 
             // If we're zoomed, paint zoom factor
             if (Zoom != 100) {

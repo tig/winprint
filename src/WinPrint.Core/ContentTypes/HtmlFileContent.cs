@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
+using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.LiteHtml;
@@ -24,6 +25,7 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         internal GDIPlusContainer litehtml;
+        internal bool ready = false; // Loaded Rendered 
 
         //public HtmlFileContent() {
         //    type = "text/html";
@@ -52,6 +54,7 @@ namespace WinPrint.Core.ContentTypes {
         public Models.Font MonspacedFont { get; internal set; }
 
         public async override Task<bool> LoadAsync(string filePath) {
+            ready = false;
             litehtml = null;
             htmlBitmap = null;
             return await base.LoadAsync(filePath);
@@ -116,7 +119,7 @@ namespace WinPrint.Core.ContentTypes {
 
             var n = (int)(litehtml.Document.Height() / height) + 1;
             Logging.TraceMessage($"HtmlFileContent.RenderAsync - {n} pages.");
-
+            ready = true;
             return n;
         }
 
@@ -150,12 +153,13 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
+
             //if (pageNum > NumPages) {
             //    Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
             //    return;
             //}
-            if (litehtml == null) {
-                LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when litehtml is null");
+            if (litehtml == null || ready == false) {
+                Log.Debug($"HtmlFileContent.PaintPage({pageNum}) when litehtml is not ready.");
                 return;
             }
             SizeF pagesizeInPixels;
