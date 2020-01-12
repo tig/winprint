@@ -1,7 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyTitle>WinPrint LiteHtml</AssemblyTitle>
+    <AssemblyName>WinPrint.LiteHtml</AssemblyName>
+
+    <Version>2.0.0.190</Version>
+    <Company>Kindel Systems</Company>
+    <Product>WinPrint</Product>
+    <Authors>Charlie Kindel</Authors>
+    <Description>WinPrint LiteHtml Adapter</Description>
+    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

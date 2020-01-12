@@ -46,7 +46,7 @@ namespace WinPrint.Core.ContentTypes {
             if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
                 Log.Warning("Prism.js is not installed. Installing...");
 
-                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("install prismjs");
+                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("-g install prismjs");
                 if (string.IsNullOrEmpty(result)) {
                     Log.Debug("Could not install PrismJS");
                     throw new InvalidOperationException("Could not install PrismJS.");
@@ -161,14 +161,15 @@ namespace WinPrint.Core.ContentTypes {
 
             // TODO: detect node and prism installation
             // TODO: implement theme choice
-            var prismThemes = await ServiceLocator.Current.NodeService.GetModulesDirectory() + @"\prismjs\themes";
+            var nodeDir = await ServiceLocator.Current.NodeService.GetModulesDirectory();
+            var prismThemes = nodeDir + @"\prismjs\themes";
             // Reference choosen theme style sheet
             cssUri.Path = prismThemes;
 
             // Emit javascript to be run via node.js
             var sbNodeJS = new StringBuilder();
-            sbNodeJS.AppendLine($"const Prism = require('prismjs');");
-            sbNodeJS.AppendLine($"const loadLanguages = require('prismjs/components/');");
+            sbNodeJS.AppendLine($"const Prism = require('{nodeDir.Replace('\\', '/')}/prismjs');");
+            sbNodeJS.AppendLine($"const loadLanguages = require('{nodeDir.Replace('\\', '/')}/prismjs/components/');");
             sbNodeJS.AppendLine($"loadLanguages(['{language}']);");
             // TODO: for very large files should we use TEMP file?
             sbNodeJS.AppendLine($"const code = `{document}`;");
@@ -212,6 +213,7 @@ namespace WinPrint.Core.ContentTypes {
                 psi.FileName = @"node";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
 
                 Log.Debug("Starting Process: '{f} {a}'", psi.FileName, psi.Arguments);
                 node = Process.Start(psi);
@@ -221,6 +223,10 @@ namespace WinPrint.Core.ContentTypes {
                 sw.Close();
 
                 // TODO: Detect script failure and do right thing
+                while (!node.StandardError.EndOfStream) {
+                    var s = node.StandardError.ReadLine();
+                    Log.Debug(s);
+                }
 
                 var ln = "";// LineNumbers ? "line-numbers" : "";
                 sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><table>");

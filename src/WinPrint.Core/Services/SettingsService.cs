@@ -124,7 +124,7 @@ namespace WinPrint.Core.Services {
             return settingsService;
         }
 
-        internal static string SettingsPath {
+        public static string SettingsPath {
             get {
                 // Get dir of .exe
                 string path = AppDomain.CurrentDomain.BaseDirectory;

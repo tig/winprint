@@ -18,7 +18,7 @@ namespace WinPrint.Winforms {
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
-            ServiceLocator.Current.LogService.Start(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase));
+            ServiceLocator.Current.LogService.Start(SettingsService.SettingsPath);
 
             //var settings = new CefSettings();
             //settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";

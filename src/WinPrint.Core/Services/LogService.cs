@@ -18,7 +18,7 @@ namespace WinPrint.Core.Services {
         public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new LoggingLevelSwitch();
 
         public void Start(string path) {
-            LogPath = $"{path}\\logs\\{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
+            LogPath = $"{path}logs\\{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
 
             MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
             DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;

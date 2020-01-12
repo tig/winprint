@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="0002a501-0000-0000-c000-0000200000be" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.119" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
+  <Product Id="0002a501-0000-0000-c000-0000200000e9" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.162" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
     <Package InstallerVersion="200" Compressed="yes" Platform="x64" SummaryCodepage="Windows-1252" Languages="1033" />
     <Media Id="1" Cabinet="WinPrint.cab" EmbedCab="yes" />
 
@@ -103,10 +103,6 @@
               <File Id="winprintgui.dll_4017844992" Source="winprintgui.dll" />
             </Component>
 
-            <Component Id="Component.WinPrint.config.json_2865510536" Guid="0002a501-0000-0000-c000-0000a2d2de19" Win64="yes">
-              <File Id="WinPrint.config.json_2865510536" Source="WinPrint.config.json" />
-            </Component>
-
             <Component Id="Component.winprint.runtimeconfig.json_4286513909" Guid="0002a501-0000-0000-c000-00003ab26cdf" Win64="yes">
               <File Id="winprint.runtimeconfig.json_4286513909" Source="winprint.runtimeconfig.json" />
             </Component>
@@ -126,15 +122,6 @@
               </RegistryKey>
             </Component>
 
-            <Directory Id="INSTALLDIR.logs" Name="logs">
-
-              <Component Id="Component.INSTALLDIR.logs.EmptyDirectory" Guid="0002a501-0000-0000-c000-00000d3ee7c4" KeyPath="yes" Win64="yes">
-                <CreateFolder />
-                <RemoveFolder Id="INSTALLDIR.logs" On="uninstall" />
-              </Component>
-
-            </Directory>
-
             <Directory Id="INSTALLDIR.x64" Name="x64">
 
               <Component Id="Component.LiteHtmlLib.dll_3802360625" Guid="0002a501-0000-0000-c000-000099bd505b" Win64="yes">
@@ -152,7 +139,6 @@
           </Directory>
 
           <Component Id="ProgramFiles64Folder.Kindel_Systems" Guid="0002a501-0000-0000-c000-0000ac202de3" KeyPath="yes" Win64="yes">
-            <CreateFolder />
             <RemoveFolder Id="ProgramFiles64Folder.Kindel_Systems" On="uninstall" />
           </Component>
 
@@ -217,7 +203,7 @@
 
     <UI />
 
-    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." Schedule="afterInstallInitialize" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." Schedule="afterInstallInitialize" />
 
     <CustomAction Id="Set_ARPINSTALLLOCATION" Property="ARPINSTALLLOCATION" Value="[INSTALLDIR]" Return="check" Execute="immediate" />
     <CustomAction Id="Set_ARPNOMODIFY" Property="ARPNOMODIFY" Value="True" Return="check" Execute="immediate" />
@@ -259,16 +245,14 @@
       <ComponentRef Id="Component.winprint.dll_3866337698" />
       <ComponentRef Id="Component.WinPrint.LiteHtml.dll_3178883582" />
       <ComponentRef Id="Component.winprintgui.dll_4017844992" />
-      <ComponentRef Id="Component.WinPrint.config.json_2865510536" />
       <ComponentRef Id="Component.winprint.runtimeconfig.json_4286513909" />
       <ComponentRef Id="Component.winprintgui.runtimeconfig.json_1014415574" />
       <ComponentRef Id="Component.Uninstall_WinPrint" />
-      <ComponentRef Id="Component.INSTALLDIR.logs.EmptyDirectory" />
       <ComponentRef Id="Component.LiteHtmlLib.dll_3802360625" />
       <ComponentRef Id="Component.Kindel_Systems.WinPrint.EmptyDirectory" />
       <ComponentRef Id="Component.WinPrint___" />
-      <ComponentRef Id="ProgramFiles64Folder.Kindel_Systems" />
       <ComponentRef Id="Kindel_Systems" />
+      <ComponentRef Id="ProgramFiles64Folder.Kindel_Systems" />
       <ComponentRef Id="Kindel_Systems.1" />
     </Feature>
 

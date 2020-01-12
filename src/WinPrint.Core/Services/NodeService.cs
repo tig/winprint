@@ -60,32 +60,7 @@ namespace WinPrint.Core.Services {
         /// <returns></returns>
         public async Task<string> GetModulesDirectory() {
             string path = "";
-            Process proc = null;
-            try {
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.UseShellExecute = false;   // This is important
-                psi.CreateNoWindow = true;     // This is what hides the command window.
-                psi.FileName = @"node";
-                psi.Arguments = $"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" root";
-                psi.RedirectStandardInput = true;
-                psi.RedirectStandardOutput = true;
-
-                stdIn.Clear();
-                stdOut.Clear();
-                stdErr.Clear();
-                proc = Process.Start(psi);
-                //StreamWriter sw = node.StandardInput;
-                //sw.WriteLine("");
-                //sw.Close();
-                path = await proc.StandardOutput.ReadLineAsync() + "\\";
-            }
-            catch (Exception e) {
-                // TODO: Better error message (output of stderr?)
-                Log.Error(e, "Failed to get node_modules location.");
-            }
-            finally {
-                proc?.Dispose();
-            }
+            path = (await RunNpmCommand("-g root")).TrimEnd() + "\\";
             return Path.GetDirectoryName(path);
         }
 
@@ -188,7 +163,7 @@ namespace WinPrint.Core.Services {
         }
 
         public async Task<bool> IsPrismInstalled() {
-            var s = await RunNpmCommand("ls prismjs");
+            var s = await RunNpmCommand("-g ls prismjs");
             return !s.Contains("-- (empty)");
         }
 

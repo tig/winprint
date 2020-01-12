@@ -24,15 +24,15 @@ namespace WinPrint.Console {
         private static ParserResult<Options> result;
 
         static void Main(string[] args) {
-            ServiceLocator.Current.LogService.Start(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase));
+            ServiceLocator.Current.LogService.Start(SettingsService.SettingsPath);
 
             // Parse command line
             using var parser = new Parser(with => {
                 with.EnableDashDash = true;
                 with.HelpWriter = null;
             });
-            result = parser.ParseArguments<Options>(args)
-                .WithParsed(o => {
+            result = parser.ParseArguments<Options>(args);
+            result.WithParsed(o => {
                     ModelLocator.Current.Options.CopyPropertiesFrom(o);
 
                     if (o.Debug) {
@@ -265,15 +265,9 @@ namespace WinPrint.Console {
         }
 
         static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs) {
-            var helpText = HelpText.AutoBuild(result, h => {
-                h.AutoHelp = true;
-                h.AutoVersion = true;
-                //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
-                return HelpText.DefaultParsingErrorsHandler(result, h);
-            }, e => e);
-            System.Console.WriteLine(helpText.ToString());
-            //foreach (var line in helpText.ToString().Split(Environment.NewLine))
-            //    Log.Information(line);
+            LogService.TraceMessage();
+            var helpText = HelpText.AutoBuild(result, h => h);
+            System.Console.WriteLine(helpText);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,12 +8,19 @@
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <StartupObject>WinPrint.Winforms.Program</StartupObject>
     <ApplicationIcon>Document.ico</ApplicationIcon>
-    <Copyright>Copyright (C) 2020 Kindel Systems, LLC - https://kindel.com/winprint</Copyright>
-    <Company>Kindel Systems, LLC</Company>
-    <Version>2.0.0-beta</Version>
+
     <AssemblyTitle>WinPrint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
+
+    <Version>2.0.0.190</Version>
+    <Company>Kindel Systems</Company>
+    <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
+    <Description>WinPrint GUI App</Description>
+    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

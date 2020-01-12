@@ -74,6 +74,7 @@ namespace WinPrint.WixSharp {
 
             project.MajorUpgrade = new MajorUpgrade {
                 Schedule = UpgradeSchedule.afterInstallInitialize,
+                AllowSameVersionUpgrades = true,
                 DowngradeErrorMessage = "A later version of [ProductName] is already installed. Setup will now exit."
             };
 

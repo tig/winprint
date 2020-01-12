@@ -1,17 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>WinPrint.Console</RootNamespace>
-    <Copyright>Copyright (C) 2020 Kindel Systems, LLC - https://kindel.com/winprint</Copyright>
-    <Company>Kindel Systems, LLC</Company>
-    <Version>2.0.0-beta</Version>
     <AssemblyTitle>WinPrint Console App</AssemblyTitle>
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
+
+    <Version>2.0.0.160</Version>
+    <Company>Kindel Systems</Company>
+    <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
-    <RepositoryUrl>https://github.com/tig/winprint</RepositoryUrl>
+    <Description>WinPrint Console App</Description>
+    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
