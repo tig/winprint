@@ -74,13 +74,15 @@ namespace WinPrint.Core {
 
         public async Task<int> CountPages(int fromSheet = 1, int toSheet = 0) {
             // BUGBUG: Ignores from/to
-            await SheetViewModel.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
+            await SheetViewModel.SetPageSettings(PrintDocument.DefaultPageSettings);
+            await SheetViewModel.ReflowAsync().ConfigureAwait(false);
             return SheetViewModel.NumSheets;
         }
 
         public async Task DoPrint() {
             printDoc.DocumentName = SheetViewModel.File;
-            await SheetViewModel.ReflowAsync(PrintDocument.DefaultPageSettings).ConfigureAwait(false);
+            await SheetViewModel.SetPageSettings(PrintDocument.DefaultPageSettings);
+            await SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
             PrintDocument.PrinterSettings.FromPage = PrintDocument.PrinterSettings.FromPage == 0 ? 1 : PrintDocument.PrinterSettings.FromPage;
             PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetViewModel.NumSheets : PrintDocument.PrinterSettings.ToPage ;

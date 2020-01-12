@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="0002a501-0000-0000-c000-0000200000bc" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.117" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
+  <Product Id="0002a501-0000-0000-c000-0000200000be" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.119" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
     <Package InstallerVersion="200" Compressed="yes" Platform="x64" SummaryCodepage="Windows-1252" Languages="1033" />
     <Media Id="1" Cabinet="WinPrint.cab" EmbedCab="yes" />
 

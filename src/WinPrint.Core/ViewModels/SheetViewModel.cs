@@ -250,25 +250,9 @@ namespace WinPrint.Core {
             return Type;
         }
 
-        /// <summary>
-        /// Reflows the sheet based on page settings from a PageSettings instance. Caches those settings 
-        /// for performance (and for platform independence). 
-        /// </summary>
-        /// <param name="pageSettings"></param>
-        public async Task ReflowAsync(PageSettings pageSettings) {
+        public async Task SetPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
-
-            if (Reflowing) {
-                LogService.TraceMessage($"SheetViewModel.ReflowAsync - already reflowing, returning");
-                return;
-            }
-
-            Reflowing = true;
-
-            if (CacheEnabled)
-                ClearCache();
-
             var ps = (PageSettings)pageSettings.Clone();
 
             // The following elements of PageSettings are dependent
@@ -339,12 +323,35 @@ namespace WinPrint.Core {
 
             if (Content is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
-                Reflowing = false;
                 return;
             }
 
             Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-            // TODO: Make this async?
+        }
+
+        /// <summary>
+        /// Reflows the sheet based on page settings from a PageSettings instance. Caches those settings 
+        /// for performance (and for platform independence). 
+        /// </summary>
+        /// <param name="pageSettings"></param>
+        public async Task ReflowAsync() {
+            LogService.TraceMessage();
+            if (Reflowing) {
+                Log.Debug($"SheetViewModel.ReflowAsync - already reflowing, returning");
+                return;
+            }
+
+            Reflowing = true;
+
+            if (CacheEnabled)
+                ClearCache();
+
+            if (Content is null) {
+                LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
+                Reflowing = false;
+                return;
+            }
+
             numPages = await Content.RenderAsync(PrinterResolution, ReflowProgress);
             Reflowing = false;
         }
@@ -552,6 +559,11 @@ namespace WinPrint.Core {
             PaintRules(g);
             headerVM.Paint(g, sheetNum);
             footerVM.Paint(g, sheetNum);
+
+            if (Reflowing) {
+                Log.Debug($"SheetViewModel.PaintSheet - Relfowing; can't paint");
+                return;
+            }
 
             int pagesPerSheet = rows * cols;
             // 1-based; assume 4-up...

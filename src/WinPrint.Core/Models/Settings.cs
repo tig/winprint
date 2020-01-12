@@ -102,6 +102,8 @@ namespace WinPrint.Core.Models {
         }
 
         internal static Settings CreateDefaultSettingsFile() {
+            const string defaultHeaderText = "{DateRevised:D}|{FullyQualifiedPath}|{FileType}";
+            const string defualtFooterText = "Printed with WinPrint||Page {Page} of {NumPages}";
             var settings = new Settings();
             settings.size = new WindowSize(1024, 800);
             settings.location = new WindowLocation(100, 100);
@@ -134,8 +136,10 @@ namespace WinPrint.Core.Models {
                 Landscape = true,
                 Padding = 3               
             };
+            sheet.Header.Text = defaultHeaderText;
             sheet.Header.BottomBorder = true;
             sheet.Footer.TopBorder = true;
+            sheet.Footer.Text = defualtFooterText;
             sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 50;
             settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
 
@@ -146,7 +150,9 @@ namespace WinPrint.Core.Models {
                 Landscape = false,
                 Padding = 3
             };
+            sheet.Header.Text = defaultHeaderText;
             sheet.Header.BottomBorder = true;
+            sheet.Footer.Text = defualtFooterText;
             sheet.Footer.TopBorder = true;
             sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 50;
             settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);

@@ -67,6 +67,9 @@ namespace WinPrint.Core.ContentTypes {
         /// <returns></returns>
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
+
+            ready = false;
+
             reflowProgress?.Invoke(this, "HtmlFileContent.RenderAsync");
             await base.RenderAsync(printerResolution, reflowProgress);
 
