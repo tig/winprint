@@ -26,29 +26,29 @@ namespace WinPrint.Console {
         static void Main(string[] args) {
             ServiceLocator.Current.LogService.Start(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase));
 
-            var parser = new Parser(with => {
+            // Parse command line
+            using var parser = new Parser(with => {
                 with.EnableDashDash = true;
                 with.HelpWriter = null;
             });
+            result = parser.ParseArguments<Options>(args)
+                .WithParsed(o => {
+                    ModelLocator.Current.Options.CopyPropertiesFrom(o);
 
-            result = parser.ParseArguments<Options>(args);
-            result.WithParsed(o => {
-                ModelLocator.Current.Options.CopyPropertiesFrom(o);
-
-                if (o.Debug) {
-                    ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                    ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                }
-                else {
-                    ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
-                }
-                Log.Debug("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
-                if (o.Verbose) Log.Information("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
-                var program = new Program();
-                Task.WaitAll(program.Go());
-            }).WithNotParsed((errs) => DisplayHelp(result, errs));
-            parser.Dispose();
-
+                    if (o.Debug) {
+                        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+                        ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+                    }
+                    else {
+                        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
+                    }
+                    Log.Debug("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
+                    if (o.Verbose) Log.Information("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
+                    var program = new Program();
+                    Task.WaitAll(program.Go());
+                })
+                .WithNotParsed((errs) => DisplayHelp(result, errs));
+  
             if (ModelLocator.Current.Options.Verbose) Log.Information("Exiting sucessfully.");
             Log.Debug($"Environment.Exit(0)");
             Environment.Exit(0);
@@ -59,16 +59,15 @@ namespace WinPrint.Console {
             print = new Print();
 
             print.PrintingPage += (s, pageNum) => Log.Information("Printing page {pageNum}", pageNum);
-
             print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
             print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
-
             print.SheetViewModel.Reflowed += SheetViewModel_Reflowed;
-
             print.SheetViewModel.ReflowProgress += (s, msg) => Log.Information("{DateTime:mm:ss.fff}:Reflow Progress {msg}", DateTime.Now, msg);
 
             // -g
-            if (ModelLocator.Current.Options.Gui) StartGui();
+            if (ModelLocator.Current.Options.Gui) 
+                // This will exit this app
+                StartGui();
 
             try {
                 // --s
@@ -99,6 +98,8 @@ namespace WinPrint.Console {
                 Log.Debug("Calling SetSheet");
                 print.SheetViewModel.SetSheet(sheet);
 
+                // Go through each file on command line and print them
+                // TODO: Handle wildcards
                 int pagesCounted = 0;
                 foreach (var file in ModelLocator.Current.Options.Files.ToList())
                     pagesCounted += await Print(file).ConfigureAwait(false);
@@ -113,14 +114,15 @@ namespace WinPrint.Console {
 
             catch (Exception e) {
                 Log.Error("{msg}", e.Message);
-                //var result = new ParserResult<Options>();
-                var helpText = HelpText.AutoBuild(result, h => {
-                    h.AutoHelp = true;
-                    h.AutoVersion = true;
-                    //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
-                    return HelpText.DefaultParsingErrorsHandler(result, h);
-                }, e => e);
-                Log.Information(helpText);
+                // TODO: Should we show usage info on error? 
+                //var helpText = HelpText.AutoBuild(result, h => {
+                //    h.AutoHelp = true;
+                //    h.AutoVersion = true;
+                //    //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
+                //    return HelpText.DefaultParsingErrorsHandler(result, h);
+                //}, e => e);
+                //foreach (var line in helpText.ToString().Split(Environment.NewLine))
+                //    Log.Information(line);
                 Environment.Exit(-1);
             }
         }
@@ -128,56 +130,49 @@ namespace WinPrint.Console {
         private async Task<int> Print(string file) {
             int pagesCounted = 0;
 
-            try {
-                Log.Debug("awaiting LoadAsync {file}", file);
-                var type = await print.SheetViewModel.LoadAsync(file).ConfigureAwait(false);
-                Log.Debug("back from LoadAsync. Type is {type}", type);
+            Log.Debug("awaiting LoadAsync {file}", file);
+            var type = await print.SheetViewModel.LoadAsync(file).ConfigureAwait(false);
+            Log.Debug("back from LoadAsync. Type is {type}", type);
 
-                // --c
-                if (ModelLocator.Current.Options.CountPages) {
-                    int n = 0;
-                    pagesCounted += n = await print.CountPages(fromSheet: ModelLocator.Current.Options.FromPage, toSheet: ModelLocator.Current.Options.ToPage);
-                    if (ModelLocator.Current.Options.Verbose)
-                        Log.Information("Would print {n} pages of {file}.", n, file);
-                }
-                else {
-                    bool pageRangeSet = false;
-                    if (ModelLocator.Current.Options.FromPage != 0) {
-                        print.PrintDocument.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;
-                        pageRangeSet = true;
-                    }
-                    else
-                        print.PrintDocument.PrinterSettings.FromPage = 0;
-
-                    if (ModelLocator.Current.Options.ToPage != 0) {
-                        print.PrintDocument.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;
-                        pageRangeSet = true;
-                    }
-                    else
-                        print.PrintDocument.PrinterSettings.ToPage = 0;
-
-                    if (pageRangeSet)
-                        Log.Information("Printing from page {from} to page {to}.", print.PrintDocument.PrinterSettings.FromPage, print.PrintDocument.PrinterSettings.ToPage);
-                    else
-                        Log.Information("Printing all pages.");
-                    await print.DoPrint();
-                }
+            // --c
+            if (ModelLocator.Current.Options.CountPages) {
+                int n = 0;
+                pagesCounted += n = await print.CountPages(fromSheet: ModelLocator.Current.Options.FromPage, toSheet: ModelLocator.Current.Options.ToPage);
+                if (ModelLocator.Current.Options.Verbose)
+                    Log.Information("Would print {n} pages of {file}.", n, file);
             }
-            catch (FileNotFoundException fnfe) {
-                Log.Error(fnfe, "{file} not found.", file);
+            else {
+                bool pageRangeSet = false;
+                if (ModelLocator.Current.Options.FromPage != 0) {
+                    print.PrintDocument.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;
+                    pageRangeSet = true;
+                }
+                else
+                    print.PrintDocument.PrinterSettings.FromPage = 0;
+
+                if (ModelLocator.Current.Options.ToPage != 0) {
+                    print.PrintDocument.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;
+                    pageRangeSet = true;
+                }
+                else
+                    print.PrintDocument.PrinterSettings.ToPage = 0;
+
+                if (pageRangeSet)
+                    Log.Information("Printing from page {from} to page {to}.", print.PrintDocument.PrinterSettings.FromPage, print.PrintDocument.PrinterSettings.ToPage);
+                else
+                    Log.Information("Printing all pages.");
+                await print.DoPrint();
             }
-           
             return pagesCounted;
         }
 
         private static void StartGui() {
-
             // TODO Spawn WinPrint GUI App with args
             if (ModelLocator.Current.Options.Verbose)
                 Log.Information("Starting WinPrint GUI App");
 
             Process gui = null;
-            ProcessStartInfo psi = new ProcessStartInfo();
+            var psi = new ProcessStartInfo();
             try {
 
                 psi.UseShellExecute = false;   // This is important
@@ -189,11 +184,10 @@ namespace WinPrint.Console {
             }
             catch (Exception e) {
                 Log.Error(e, "Could not start WinPrint GUI App ({app})", psi.FileName);
+                Environment.Exit(-1);
             }
             finally {
                 gui?.Dispose();
-                if (ModelLocator.Current.Options.Verbose)
-                    Log.Information("Exiting");
                 Environment.Exit(0);
             }
         }
@@ -206,7 +200,7 @@ namespace WinPrint.Console {
             Log.Debug("SheetViewModel.PropertyChanged: {s}", e.PropertyName);
             switch (e.PropertyName) {
                 case "Landscape":
-                    if (ModelLocator.Current.Options.Verbose) 
+                    if (ModelLocator.Current.Options.Verbose)
                         Log.Information("Page Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
                     break;
 
@@ -277,7 +271,9 @@ namespace WinPrint.Console {
                 //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);
-            Log.Information(helpText);
+            System.Console.WriteLine(helpText.ToString());
+            //foreach (var line in helpText.ToString().Split(Environment.NewLine))
+            //    Log.Information(line);
         }
     }
 }

@@ -187,11 +187,17 @@ namespace WinPrint.Winforms {
                     svm.PrintSheet(e.Graphics, CurrentSheet);
             }
 
-            // While loading & reflowing show Text
+            // While in error or loading & reflowing show Text 
             if (!string.IsNullOrEmpty(Text)) {
                 using var font = new Font(Font.FontFamily, 18F, FontStyle.Regular, GraphicsUnit.Point);
-                var s = e.Graphics.MeasureString(Text, font);
-                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
+                using StringFormat sf = new StringFormat();
+                sf.LineAlignment = StringAlignment.Center;
+                sf.Alignment = StringAlignment.Center;
+                sf.Trimming = StringTrimming.EllipsisWord;
+                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, svm.PrintableArea, sf);
+                //var s = e.Graphics.MeasureString(Text, font);
+                //e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, 
+                //    (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
             }
 
             e.Graphics.Restore(state);

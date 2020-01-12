@@ -68,14 +68,14 @@ namespace WinPrint.Core.ContentTypes {
             LogService.TraceMessage();
             this.filePath = filePath;
             using StreamReader streamToPrint = new StreamReader(filePath);
-            try {
+            //try {
                 document = await streamToPrint.ReadToEndAsync();
                 LogService.TraceMessage($"document is {document.Length} chars.");
-            }
-            catch (Exception e) {
-                LogService.TraceMessage($"Exception {e.Message}");
-                return false;
-            }
+            //}
+            //catch (Exception e) {
+            //    LogService.TraceMessage($"Exception {e.Message}");
+            //    return false;
+            //}
             return !String.IsNullOrEmpty(document);
         }
 

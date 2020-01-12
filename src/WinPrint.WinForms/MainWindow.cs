@@ -276,22 +276,47 @@ namespace WinPrint.Winforms {
             this.Cursor = Cursors.Default;
 
             if (ModelLocator.Current.Options.Files is null || ModelLocator.Current.Options.Files.ToList().Count == 0)
-                ShowFilesDialog();
-            else {
-                try {
-                    await Task.Run(() => printPreview.SheetViewModel.LoadAsync(ModelLocator.Current.Options.Files.ToList()[0])).ConfigureAwait(false);
-                }catch (FileNotFoundException fnfe) {
-                    MessageBox.Show(fnfe.Message);
-                    ShowFilesDialog();
-                }
-            }
-            // Don't do anything on UI thread here because of the above await Task.Run...
+                fileButton_Click(null, null);
+            else
+                await FileChanged(ModelLocator.Current.Options.Files.ToList()[0]).ConfigureAwait(false);
         }
 
+        private async Task FileChanged(string file) {
+            try {
+                await Task.Run(() => printPreview.SheetViewModel.LoadAsync(file)).ConfigureAwait(false);
+            }
+            catch (FileNotFoundException fnfe) {
+                Log.Error(fnfe, "File Not Found {file}", file);
+                ShowError($"{file} not found.");
+                fileButton_Click(null, null);
+            }
+            catch (InvalidOperationException ioe) {
+                Log.Error(ioe, "Error Operation {file}", file);
+                ShowError($"Error: {ioe.Message}{Environment.NewLine}({file})");
+//                fileButton_Click(null, null);
+            }
+            catch (Exception e) {
+                Log.Error(e, "Exception {file}", file);
+                ShowError($"Exception: {e.Message}{Environment.NewLine}({file})");
+ //               fileButton_Click(null, null);
+            }
+        }
 
-        private async void ShowFilesDialog() {
+        private void ShowError(string str) {
             if (InvokeRequired)
-                BeginInvoke((Action)(() => ShowFilesDialog()));
+                BeginInvoke((Action)(() => ShowError(str)));
+            else {
+                printPreview.Text = new String(str);
+                printPreview.Invalidate(true);
+                MessageBox.Show(str);
+            }
+
+        }
+
+        private string ShowFilesDialog() {
+            string file = null;
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => file = ShowFilesDialog()));
             else {
                 LogService.TraceMessage();
                 using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
@@ -300,12 +325,11 @@ namespace WinPrint.Winforms {
                     openFileDialog.FilterIndex = 3;
                     openFileDialog.RestoreDirectory = true;
                     if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                        await Task.Run(() =>
-                        printPreview.SheetViewModel.LoadAsync(openFileDialog.FileNames.ToList()[0])).ConfigureAwait(false);
+                        file = openFileDialog.FileNames.ToList()[0];
                     }
                 }
-                LogService.TraceMessage("exting ShowFilesDialog()");
             }
+            return file;
         }
 
         private void SheetChanged() {
@@ -505,8 +529,10 @@ namespace WinPrint.Winforms {
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = (int)(padding.Value * 100M);
         }
 
-        private void fileButton_Click(object sender, EventArgs e) {
-            ShowFilesDialog();
+        private async void fileButton_Click(object sender, EventArgs e) {
+            var file = ShowFilesDialog();
+            if (!string.IsNullOrEmpty(file))
+                await FileChanged(file).ConfigureAwait(false);
         }
     }
 }

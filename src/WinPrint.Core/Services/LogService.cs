@@ -20,7 +20,8 @@ namespace WinPrint.Core.Services {
         public void Start(string path) {
             LogPath = $"{path}\\logs\\{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
 
-            MasterLevelSwitch.MinimumLevel = LogEventLevel.Information;
+            MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
+            DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 
 #if DEBUG
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
@@ -29,7 +30,6 @@ namespace WinPrint.Core.Services {
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
 #endif 
-            DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(MasterLevelSwitch)
@@ -38,9 +38,8 @@ namespace WinPrint.Core.Services {
                 .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
                 .CreateLogger();
 
-            string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).ProductVersion;
-            Log.Debug("===================");
-            Log.Debug("{app} {v}", AppDomain.CurrentDomain.FriendlyName, productVersion);
+            string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
+            Log.Debug("--------- {app} {v} ---------", AppDomain.CurrentDomain.FriendlyName, productVersion);
             Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);
         }
 
