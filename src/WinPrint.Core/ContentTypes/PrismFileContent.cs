@@ -250,16 +250,11 @@ namespace WinPrint.Core.ContentTypes {
         public string Language { get; internal set; }
 
         public override void PaintPage(Graphics g, int pageNum) {
-            //base.PaintPage(g, pageNum);
-
-            //if (pageNum > NumPages) {
-            //    Helpers.Logging.TraceMessage($"PaintPage({pageNum}) when NumPages is {NumPages}");
-            //    return;
-            //}
-            if (litehtml == null) {
-                Log.Debug("PaintPage({pageNum}) when litehtml is null", pageNum);
+            if (litehtml == null || ready == false) {
+                Log.Debug($"PrismFileContent.PaintPage({pageNum}) when litehtml is not ready.");
                 return;
             }
+
             SizeF pagesizeInPixels;
             var state = g.Save();
 

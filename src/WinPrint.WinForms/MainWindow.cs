@@ -165,8 +165,10 @@ namespace WinPrint.Winforms {
                     case "Reflowing":
                         if (printPreview.SheetViewModel.Reflowing)
                             printPreview.Text = "Rendering...";
-                        else
+                        else {
                             printPreview.Text = "";
+                            // TODO: Set to/from page # boxes now that we know how many sheets there are?
+                        }
                         printPreview.Refresh();
                         break;
                 }
@@ -215,7 +217,7 @@ namespace WinPrint.Winforms {
             // Select default printer and paper size
             foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
                 printersCB.Items.Add(printer);
-                 if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName)
+                if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName)
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
             }
 
@@ -224,7 +226,7 @@ namespace WinPrint.Winforms {
                 printDoc.PrinterSettings.PrinterName = printersCB.Text = ModelLocator.Current.Options.Printer;
             }
 
-            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) 
+            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
                 paperSizesCB.Items.Add(ps);
 
             // --z
@@ -240,12 +242,14 @@ namespace WinPrint.Winforms {
             // Create sheet view model & wire up notifications
             SetupSheetViewModelNotifications();
 
-
-            if (ModelLocator.Current.Options.FromPage != 0)
-                printDoc.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;
+            if (ModelLocator.Current.Options.FromPage != 0) {
+                //printDoc.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;
+                fromText.Text = $"{ModelLocator.Current.Options.FromPage}";
+            }
 
             if (ModelLocator.Current.Options.ToPage != 0) {
-                printDoc.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;
+                //printDoc.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;
+                toText.Text = $"{ModelLocator.Current.Options.ToPage}";
             }
 
             // --s
@@ -293,12 +297,12 @@ namespace WinPrint.Winforms {
             catch (InvalidOperationException ioe) {
                 Log.Error(ioe, "Error Operation {file}", file);
                 ShowError($"Error: {ioe.Message}{Environment.NewLine}({file})");
-//                fileButton_Click(null, null);
+                //                fileButton_Click(null, null);
             }
             catch (Exception e) {
                 Log.Error(e, "Exception {file}", file);
                 ShowError($"Exception: {e.Message}{Environment.NewLine}({file})");
- //               fileButton_Click(null, null);
+                //               fileButton_Click(null, null);
             }
         }
 
@@ -372,7 +376,7 @@ namespace WinPrint.Winforms {
                 // Ensure that the affected property is the Bounds property
                 // of the form.
                 //if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {
-                    //Core.Helpers.Logging.TraceMessage("MainWindow_Layout bounds changed");
+                //Core.Helpers.Logging.TraceMessage("MainWindow_Layout bounds changed");
                 //}
             }
         }
@@ -431,6 +435,14 @@ namespace WinPrint.Winforms {
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
 
+            int from= 0, to = 0;
+            if (!int.TryParse(fromText.Text, out from))
+                from = 0;
+            // Ideally we'd get NumSheets from print.SheetSVM but that would cause a
+            // un-needed Reflow. So use the printPreview VM.
+            if (!int.TryParse(toText.Text, out to))
+                to = 0;// printPreview.SheetViewModel.NumSheets;
+
             // TODO: Decide how to make showing the print dialog a setting (or if needed at all)
             // the only reason I can think of now is from/to page support.
             bool showPrintDialog = true;
@@ -441,15 +453,24 @@ namespace WinPrint.Winforms {
                 // printDialog.AllowSelection = true;
 
                 printDialog.Document = print.PrintDocument;
-                printDialog.PrinterSettings.FromPage = 1;
-                // Ideally we'd get NumSheets from print.SheetSVM but that would cause a
-                // un-needed Reflow. So use the printPreview VM.
-                printDialog.PrinterSettings.ToPage = printPreview.SheetViewModel.NumSheets;
+                if (from > 0 && to > 0) {
+                    printDialog.PrinterSettings.PrintRange = PrintRange.SomePages;
+                    printDialog.PrinterSettings.FromPage = from;
+                    printDialog.PrinterSettings.ToPage = to;
+                }
+
                 //If the result is OK then print the document.
                 if (printDialog.ShowDialog() == DialogResult.OK && printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
                     print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
                     print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
                     print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
+                }
+            }
+            else {
+                if (from > 0 && to > 0) {
+                    print.PrintDocument.PrinterSettings.PrintRange = PrintRange.SomePages;
+                    print.PrintDocument.PrinterSettings.FromPage = from;
+                    print.PrintDocument.PrinterSettings.ToPage = to;
                 }
             }
             await print.DoPrint().ConfigureAwait(false);
@@ -533,6 +554,14 @@ namespace WinPrint.Winforms {
             var file = ShowFilesDialog();
             if (!string.IsNullOrEmpty(file))
                 await FileChanged(file).ConfigureAwait(false);
+        }
+
+        private void fromText_TextChanged(object sender, EventArgs e) {
+
+        }
+
+        private void toText_TextChanged(object sender, EventArgs e) {
+
         }
     }
 }
