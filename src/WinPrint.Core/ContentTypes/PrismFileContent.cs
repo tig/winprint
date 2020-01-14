@@ -223,10 +223,10 @@ namespace WinPrint.Core.ContentTypes {
                 sw.Close();
 
                 // TODO: Detect script failure and do right thing
-                while (!node.StandardError.EndOfStream) {
-                    var s = node.StandardError.ReadLine();
-                    Log.Debug(s);
-                }
+                //while (!node.StandardError.EndOfStream) {
+                //    var s = node.StandardError.ReadLine();
+                //    Log.Debug(s);
+                //}
 
                 var ln = "";// LineNumbers ? "line-numbers" : "";
                 sbHtml.AppendLine($"<pre class=\"language-{language} {ln}\"><code class=\"language-{language}\"><table>");
