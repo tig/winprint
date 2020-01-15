@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/tig/winprint/badge?s=93affda0738af869187afe5296914b814511f529)](https://www.codefactor.io/repository/github/tig/winprint)
+
 # WinPrint 2.0
 
 WinPrint - A modern take on the the classic from [1988](https://www.kindel.com/products/winprint/).
