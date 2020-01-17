@@ -80,7 +80,7 @@ namespace WinPrint.Core {
         }
 
         public async Task DoPrint() {
-            printDoc.DocumentName = SheetViewModel.File;
+            PrintDocument.DocumentName = SheetViewModel.File;
             await SheetViewModel.SetPageSettings(PrintDocument.DefaultPageSettings);
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
@@ -88,7 +88,7 @@ namespace WinPrint.Core {
             PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetViewModel.NumSheets : PrintDocument.PrinterSettings.ToPage ;
 
             curSheet = PrintDocument.PrinterSettings.FromPage;
-            printDoc.Print();
+            PrintDocument.Print();
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
@@ -100,11 +100,12 @@ namespace WinPrint.Core {
         private void EndPrint(object sender, PrintEventArgs ev) {
             LogService.TraceMessage($"Print.EndPrint");
             // Reset so PrintPreviewDialog Print button works
-            curSheet = printDoc.PrinterSettings.FromPage;
+            curSheet = PrintDocument.PrinterSettings.FromPage;
         }
 
         // Occurs immediately before each PrintPage event.
         private void QueryPageSettings(object sender, QueryPageSettingsEventArgs e) {
+
             LogService.TraceMessage($"Print.QueryPageSettings");
         }
 
@@ -114,15 +115,17 @@ namespace WinPrint.Core {
             OnPrintingPage(curSheet);
 
             if (ev.PageSettings.PrinterSettings.PrintRange == PrintRange.SomePages) {
-                while (curSheet < printDoc.PrinterSettings.FromPage) {
+                while (curSheet < PrintDocument.PrinterSettings.FromPage) {
                     // Blow through pages up to fromPage
                     curSheet++;
                 }
             }
-            if (curSheet <= printDoc.PrinterSettings.ToPage)
+            if (curSheet <= PrintDocument.PrinterSettings.ToPage) {
+                // BUGBUG: LINUX - On pages > 1 in landscape mode, landscape mode is lost
                 SheetViewModel.PrintSheet(ev.Graphics, curSheet);
+            }
             curSheet++;
-            ev.HasMorePages = curSheet <= printDoc.PrinterSettings.ToPage;
+            ev.HasMorePages = curSheet <= PrintDocument.PrinterSettings.ToPage;
         }
 
         public void Dispose() {

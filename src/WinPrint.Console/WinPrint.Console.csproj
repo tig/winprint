@@ -9,7 +9,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.160</Version>
+    <Version>2.0.0.274</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -27,12 +27,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
-    <ProjectReference Include="..\WinPrint.WinForms\WinPrint.WinForms.csproj" />
+    <ProjectReference Include="../WinPrint.Core/WinPrint.Core.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(OutDir)\$(TargetName).exe $(SolutionDir)\..\release&#xD;&#xA;copy $(OutDir)\*.dll $(SolutionDir)\..\release&#xD;&#xA;copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)\..\release" />
-  </Target>
+  <ItemGroup>
+    <Compile Update="Properties/Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties/Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
 
 </Project>

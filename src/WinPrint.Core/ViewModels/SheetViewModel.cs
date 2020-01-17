@@ -15,6 +15,7 @@ using System.Linq;
 using System.Timers;
 using WinPrint.Core.Services;
 using Serilog;
+using System.Runtime.InteropServices;
 
 namespace WinPrint.Core {
     /// <summary>
@@ -77,23 +78,36 @@ namespace WinPrint.Core {
         internal ContentBase Content { get => _content; set => SetField(ref _content, value); }
         private ContentBase _content;
 
-        private Size paperSize;
+        private Size paperSize;             
         private RectangleF printableArea;
         private Rectangle bounds;
         private RectangleF contentBounds;
 
         // These properties are all either calculated or dependent on printer settings
+        /// <summary>
+        /// Size of the Sheet of Paper in 100ths of an inch.
+        /// </summary>
         public Size PaperSize { get => paperSize; set => paperSize = value; }
-        //       public bool Landscape { get; set; }
+
+        /// <summary>
+        /// Angle pages is rotated by
+        /// </summary>
         public int LandscapeAngle { get; set; }
         public PrinterResolution PrinterResolution { get; set; }
 
         public bool PrintInColor { get; set; }
 
-        public RectangleF PrintableArea { get => printableArea; set => printableArea = value; }
+        //public RectangleF PrintableArea { get => printableArea; set => printableArea = value; }
+        /// <summary>
+        /// The phyisical bounds of the Sheet of paper as provided by PageSettings. 
+        /// </summary>
         public Rectangle Bounds { get => bounds; set => bounds = value; }
         public float HardMarginX { get; set; }
         public float HardMarginY { get; set; }
+
+        /// <summary>
+        /// The printable area. Bounds minus margins and header/footer.
+        /// </summary>
         public RectangleF ContentBounds { get => contentBounds; private set => contentBounds = value; }
         public string Type { get => fileType; internal set => SetField(ref fileType, value); }
         private string fileType;
@@ -255,6 +269,10 @@ namespace WinPrint.Core {
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
             var ps = (PageSettings)pageSettings.Clone();
 
+            // On Linux, PageSettings.Bounds is determined from PageSettings.Margins. 
+            // On Windows, it has no effect. Regardelss, here we set Bounds to 0 to work around this.
+            ps.Margins = new Margins(0, 0, 0, 0);
+
             // The following elements of PageSettings are dependent
             // Landscape
             // LandscapeAngle (Landscape)
@@ -290,6 +308,7 @@ namespace WinPrint.Core {
                 printableArea.Y = ps.PrintableArea.X;
                 printableArea.Width = ps.PrintableArea.Height;
                 printableArea.Height = ps.PrintableArea.Width;
+
                 paperSize.Height = ps.PaperSize.Width;
                 paperSize.Width = ps.PaperSize.Height;
             }
@@ -306,27 +325,47 @@ namespace WinPrint.Core {
                 paperSize.Width = ps.PaperSize.Width;
                 paperSize.Height = ps.PaperSize.Height;
             }
-            PrinterResolution = ps.PrinterResolution;
 
+
+            PrinterResolution = ps.PrinterResolution;
             PrintInColor = ps.Color;
 
             // Bounds represents page size area, auto adjusted for landscape
             Bounds = ps.Bounds;
 
             // PrintableArea is Bounds minus HardMargins, but more accurate. 
-            // HardMarginX/Y should NOT be used for anything
+            // HardMarginX/Y should NOT be used for anything.
+            // 
+            // BUGBUG: On Linux, PageSettings.PrintableArea is all 0s. 
+            // BUGBUG: On Linux, not seeing HardMargins > 0 ever (e.g. HP laser should have 0.16". No idea how to fix this.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+                printableArea.X = Bounds.X;
+                printableArea.Y = Bounds.Y;
+                printableArea.Width = Bounds.Width;
+                printableArea.Height = Bounds.Height;
+            }
 
             // Content bounds represents printable area, minus margins and header/footer.
             contentBounds.Location = new PointF(sheet.Margins.Left, sheet.Margins.Top + headerVM.Bounds.Height);
             contentBounds.Width = Bounds.Width - sheet.Margins.Left - sheet.Margins.Right;
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
-
             if (Content is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
                 return;
             }
 
             Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+
+            Log.Debug("Paper Size: {w}x{h}\"", PaperSize.Width/100F, PaperSize.Height/100F);
+            Log.Debug("Hard Margins: {w}x{h}\"", HardMarginX / 100F, HardMarginY / 100F);
+            Log.Debug("Printable Area: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
+                printableArea.Left / 100F, printableArea.Top / 100F, printableArea.Right / 100, printableArea.Bottom / 100, printableArea.Width / 100, printableArea.Height / 100);
+            Log.Debug("Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
+                Bounds.Left / 100F, Bounds.Top / 100F, Bounds.Right / 100F, Bounds.Bottom / 100F, Bounds.Width / 100F, Bounds.Height / 100F);
+            Log.Debug("Content Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
+                ContentBounds.Left / 100F, ContentBounds.Top / 100F, ContentBounds.Right / 100F, ContentBounds.Bottom / 100F, ContentBounds.Width / 100F, ContentBounds.Height / 100F);
+            Log.Debug("Page Size: {w}x{h}\"", Content.PageSize.Width / 100F, Content.PageSize.Height / 100F);
+
         }
 
         /// <summary>
@@ -353,6 +392,9 @@ namespace WinPrint.Core {
             }
 
             numPages = await Content.RenderAsync(PrinterResolution, ReflowProgress);
+
+            Log.Debug("Rreflow complete. {n} pages {w}x{h}\"", numPages, Bounds.Width/100F, Bounds.Height/100F);
+
             Reflowing = false;
         }
 
@@ -468,9 +510,20 @@ namespace WinPrint.Core {
         };
 
         public static float GetFontHeight(Core.Models.Font font) {
-            System.Drawing.Font f = new System.Drawing.Font(font.Family, font.Size, font.Style, GraphicsUnit.Point);
-            float h = f.GetHeight(100);
-            f.Dispose();
+            //Log.Debug(LogService.GetTraceMsg(), $"{font.Family}, {font.Size}, {font.Style}");
+            System.Drawing.Font f = null;
+            float h = 0;
+            try {
+                f = new System.Drawing.Font(font.Family, font.Size, font.Style, GraphicsUnit.Point);
+                h = f.GetHeight(100);
+            }
+            catch (Exception e) {
+                // TODO: We shouldn't keep this exception here
+                Log.Error(e, "Failed to create font. {msg} ({font})", e.Message, $"{font.Family}, {font.Size}, {font.Style}");
+            }
+            finally {
+                f?.Dispose();
+            }
             return h;
         }
 
@@ -481,14 +534,14 @@ namespace WinPrint.Core {
         internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (padding / (Rows)); }
 
         public float GetPageX(int n) {
-            LogService.TraceMessage();
+            Log.Debug(LogService.GetTraceMsg() + " {p}", n, Padding);
 
             float f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
             f += Padding * GetPageColumn(n);
             return f;
         }
         public float GetPageY(int n) {
-            LogService.TraceMessage();
+            Log.Debug(LogService.GetTraceMsg() + " {p}", n, Padding);
 
             float f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
             f += Padding * GetPageRow(n);
@@ -505,10 +558,9 @@ namespace WinPrint.Core {
         /// <param name="g">Graphics to print on</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         public void PrintSheet(Graphics graphics, int sheetNum) {
-            LogService.TraceMessage();
-
             GraphicsState state = graphics.Save();
 
+            Log.Debug(LogService.GetTraceMsg("{n} PageUnit: {pu}"), sheetNum, graphics.PageUnit);
             if (graphics.PageUnit == GraphicsUnit.Display) {
                 // In print mode, adjust origin to account for hard margins
                 // In print mode, 0,0 is top, left - hard margins
@@ -534,8 +586,8 @@ namespace WinPrint.Core {
             const int dpiMultiplier = 1;
             float xDpi = PrinterResolution.X * dpiMultiplier;
             float yDpi = PrinterResolution.Y * dpiMultiplier;
-            int xRes = (int)(PrintableArea.Width / 100 * xDpi);
-            int yRes = (int)(PrintableArea.Height / 100 * yDpi);
+            int xRes = (int)(Bounds.Width / 100 * xDpi);
+            int yRes = (int)(Bounds.Height / 100 * yDpi);
             if (cachedSheets.Count < sheetNum) {
                 // Create a new bitmap object with the resolution of a printer page
                 Bitmap bmp = new Bitmap(xRes, yRes);
@@ -555,8 +607,8 @@ namespace WinPrint.Core {
         private void PaintSheet(Graphics g, int sheetNum) {
             LogService.TraceMessage($"{sheetNum}");
             // This is needed for image scaling to work right
-            g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
-            PaintRules(g);
+            //g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
+            //PaintRules(g);
             headerVM.Paint(g, sheetNum);
             footerVM.Paint(g, sheetNum);
 
@@ -578,8 +630,9 @@ namespace WinPrint.Core {
 
                 // Move origin to page's x & y
                 g.TranslateTransform(xPos, yPos);
-                // TODO: clip by GetHeight/Width
-                PaintPageNum(g, pageOnSheet);
+
+                if (sheet.PrintPageBounds || sheet.PreviewPageBounds) 
+                    PaintPageNum(g, pageOnSheet);
 
                 if (pageSeparator) {
                     // If there will be a page to the left of this page, draw vert separator
@@ -634,16 +687,15 @@ namespace WinPrint.Core {
 
                 }
             }
+            PaintRules(g);
         }
 
         /// <summary>
-        /// Paint a diagnostic page number centered on sheet.
+        /// Paint a diagnostic page number centered on Page.
         /// </summary>
         /// <param name="g"></param>
         /// <param name="pageNum"></param>
         internal void PaintPageNum(Graphics g, int pageNum) {
-            if (!sheet.PrintPageBounds && !sheet.PreviewPageBounds) return;
-
             System.Drawing.Font font;
 
             if (g.PageUnit == GraphicsUnit.Display) {
@@ -670,7 +722,7 @@ namespace WinPrint.Core {
         }
 
         /// <summary>
-        /// Paint diagnostic rules for elements that are 
+        /// Paint diagnostic rules on Sheet 
         /// </summary>
         /// <param name="g"></param>
         internal void PaintRules(Graphics g) {
@@ -685,7 +737,6 @@ namespace WinPrint.Core {
             }
 
             // Draw Rules that are physical
-            // PaperSize
             if ((sheet.PrintPaperSize && !preview) || (sheet.PreviewPaperSize && preview)) {
                 // Draw paper size
                 DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Width / 4, preview ? 0 : (int)-printableArea.Y),
@@ -701,24 +752,24 @@ namespace WinPrint.Core {
                 //GraphicsState state = g.Save();
                 //g.TranslateTransform(-HardMarginX, -HardMarginY);
                 if (sheet.Landscape) {
-                    g.DrawString($"Landscape Angle = {LandscapeAngle}°", font, Brushes.Red, HardMarginX, HardMarginY);
+                    g.DrawString($"Landscape Angle = {LandscapeAngle}°", font, Brushes.YellowGreen, HardMarginX, HardMarginY);
                     if (LandscapeAngle == 270) {
                         // 270 degrees - marginX is on bottom and marginY is left
-                        DrawRule(g, font, Color.OrangeRed, $"HardMarginX - {HardMarginX / 100F}\"", new Point(sheet.Margins.Left, PaperSize.Height - (int)HardMarginX), new Point(PaperSize.Width - sheet.Margins.Right, PaperSize.Height - (int)HardMarginX), 5F);
-                        DrawRule(g, font, Color.OrangeRed, $"HardMarginY - {HardMarginY / 100F}\"", new Point((int)HardMarginY, sheet.Margins.Top), new Point((int)HardMarginY, PaperSize.Height - sheet.Margins.Bottom), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"", new Point(sheet.Margins.Left, PaperSize.Height - (int)HardMarginX), new Point(PaperSize.Width - sheet.Margins.Right, PaperSize.Height - (int)HardMarginX), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"", new Point((int)HardMarginY, sheet.Margins.Top), new Point((int)HardMarginY, PaperSize.Height - sheet.Margins.Bottom), 5F);
                     }
                     else {
                         // 90 degrees - marginX is on top and marginY is on right
-                        DrawRule(g, font, Color.OrangeRed, $"HardMarginX - {HardMarginX / 100F}\"", new Point(sheet.Margins.Left, (int)HardMarginX), new Point(PaperSize.Width - sheet.Margins.Right, (int)HardMarginX), 5F);
-                        DrawRule(g, font, Color.OrangeRed, $"HardMarginY - {HardMarginY / 100F}\"", new Point(PaperSize.Width - (int)HardMarginY, sheet.Margins.Top), new Point(PaperSize.Width - (int)HardMarginY, PaperSize.Height - sheet.Margins.Bottom), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"", new Point(sheet.Margins.Left, (int)HardMarginX), new Point(PaperSize.Width - sheet.Margins.Right, (int)HardMarginX), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"", new Point(PaperSize.Width - (int)HardMarginY, sheet.Margins.Top), new Point(PaperSize.Width - (int)HardMarginY, PaperSize.Height - sheet.Margins.Bottom), 5F);
                     }
                 }
                 else {
                     // 0 degrees - marginX is left and marginY is top
-                    DrawRule(g, font, Color.OrangeRed, $"HardMarginX - {HardMarginX / 100F}\"",
+                    DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"",
                         new Point((int)HardMarginX, 0),
                         new Point((int)HardMarginX, PaperSize.Height), 5F);
-                    DrawRule(g, font, Color.OrangeRed, $"HardMarginY - {HardMarginY / 100F}\"",
+                    DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"",
                         new Point(0, (int)HardMarginY),
                         new Point(PaperSize.Width, (int)HardMarginY), 5F);
                 }
@@ -754,12 +805,12 @@ namespace WinPrint.Core {
             }
 
             // Printable area 
-            if ((PrintableArea.Width != PaperSize.Width) || (PrintableArea.Height != PaperSize.Height)) {
-                if ((sheet.PrintPrintableArea && !preview) || (sheet.PreviewPrintableArea && preview)) {
-                    //g.FillRectangle(Brushes.LightGray, PrintableArea );
-                    g.DrawRectangle(Pens.Red, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
-                }
-            }
+            //if ((PrintableArea.Width != PaperSize.Width) || (PrintableArea.Height != PaperSize.Height)) {
+            //    if ((sheet.PrintPrintableArea && !preview) || (sheet.PreviewPrintableArea && preview)) {
+            //        //g.FillRectangle(Brushes.LightGray, PrintableArea );
+            //        g.DrawRectangle(Pens.Red, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
+            //    }
+            //}
 
             font.Dispose();
         }
@@ -788,7 +839,7 @@ namespace WinPrint.Core {
                 g.TranslateTransform(x * tx.Elements[1], y * tx.Elements[1], MatrixOrder.Append);
 
                 RectangleF textRect = new RectangleF(new PointF(0, 0), textSize);
-                g.FillRectangles(Brushes.Yellow, new RectangleF[] { textRect });
+                g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
                 g.DrawString(text, font, brush, 0, 0);
                 g.Restore(state);
 

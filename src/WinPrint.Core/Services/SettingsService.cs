@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Serilog;
@@ -22,7 +23,7 @@ namespace WinPrint.Core.Services {
         public SettingsService() {
             LogService.TraceMessage();
 
-            settingsFileName = SettingsPath + "\\" + settingsFileName;
+            settingsFileName = $"{SettingsPath}{Path.DirectorySeparatorChar}{settingsFileName}";
             Log.Debug("Settings file path: {settingsFileName}", settingsFileName);
 
 
@@ -130,13 +131,26 @@ namespace WinPrint.Core.Services {
                 string path = AppDomain.CurrentDomain.BaseDirectory;
                 string programfiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                Log.Debug("path = {path}", path);
+                Log.Debug("programfiles = {programfiles}", programfiles);
+                Log.Debug("appdata = {appdata}", appdata);
 
-                // is this in Program Files?
-                if (path.Contains(programfiles)) {
-                    // We're running from the default install location. Use %appdata%.
-                    // strip %programfiles%
-                    path = $@"{appdata}\{path.Substring(programfiles.Length + 1)}";
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                    // Your OSX code here.
                 }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+{
+                    // 
+                }
+                else {
+                    // is this in Program Files?
+                    if (path.Contains(programfiles)) {
+                        // We're running from the default install location. Use %appdata%.
+                        // strip %programfiles%
+                        path = $@"{appdata}{Path.DirectorySeparatorChar}{path.Substring(programfiles.Length + 1)}";
+                    }
+                }
+
                 return path;
             }
         }

@@ -6,6 +6,7 @@ WinPrint is the perfect tool for printing source code, web pages, reports genera
 
 ## Features
 
+* Cross platform. Even though it's named **Win**Print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
 * Use from the Commandline/Console or GUI.
 * Print source code, with syntax highlighting and line numbering for over 200 programming langauges and file formats.
 * Print "multiple-pages-up" on one piece of paper (saves trees!)

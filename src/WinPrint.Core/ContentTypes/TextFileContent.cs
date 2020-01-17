@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -241,6 +243,10 @@ namespace WinPrint.Core.ContentTypes {
             // Use page settings including lineNumberWidth
             SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
             SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
+
+            // TODO: HACK to work around MeasureString not working right on Linux
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                linesFilled = 1;
             return size;
         }
 
@@ -250,7 +256,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            LogService.TraceMessage();
+            Log.Debug(LogService.GetTraceMsg(), pageNum);
 
             //if (pageNum > NumPages) {
             //    Helpers.Logging.TraceMessage($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="0002a501-0000-0000-c000-0000200000e9" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.162" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
+  <Product Id="0002a501-0000-0000-c000-00002000000f" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.200" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
     <Package InstallerVersion="200" Compressed="yes" Platform="x64" SummaryCodepage="Windows-1252" Languages="1033" />
     <Media Id="1" Cabinet="WinPrint.cab" EmbedCab="yes" />
 
@@ -67,6 +67,10 @@
               <File Id="Microsoft.Extensions.Primitives.dll_3002264542" Source="Microsoft.Extensions.Primitives.dll" />
             </Component>
 
+            <Component Id="Component.Microsoft.Win32.SystemEvents.dll_661768356" Guid="0002a501-0000-0000-c000-0000c789ffe4" Win64="yes">
+              <File Id="Microsoft.Win32.SystemEvents.dll_661768356" Source="Microsoft.Win32.SystemEvents.dll" />
+            </Component>
+
             <Component Id="Component.Serilog.dll_940806560" Guid="0002a501-0000-0000-c000-0000e3213ecd" Win64="yes">
               <File Id="Serilog.dll_940806560" Source="Serilog.dll" />
             </Component>
@@ -81,6 +85,10 @@
 
             <Component Id="Component.Serilog.Sinks.File.dll_2317525057" Guid="0002a501-0000-0000-c000-0000b53330d0" Win64="yes">
               <File Id="Serilog.Sinks.File.dll_2317525057" Source="Serilog.Sinks.File.dll" />
+            </Component>
+
+            <Component Id="Component.System.Drawing.Common.dll_3702015273" Guid="0002a501-0000-0000-c000-0000ca613116" Win64="yes">
+              <File Id="System.Drawing.Common.dll_3702015273" Source="System.Drawing.Common.dll" />
             </Component>
 
             <Component Id="Component.System.Linq.Dynamic.Core.dll_2869695215" Guid="0002a501-0000-0000-c000-0000897cfe6c" Win64="yes">
@@ -236,10 +244,12 @@
       <ComponentRef Id="Component.Microsoft.Extensions.Logging.dll_2060383318" />
       <ComponentRef Id="Component.Microsoft.Extensions.Options.dll_3477575443" />
       <ComponentRef Id="Component.Microsoft.Extensions.Primitives.dll_3002264542" />
+      <ComponentRef Id="Component.Microsoft.Win32.SystemEvents.dll_661768356" />
       <ComponentRef Id="Component.Serilog.dll_940806560" />
       <ComponentRef Id="Component.Serilog.Sinks.Console.dll_841886768" />
       <ComponentRef Id="Component.Serilog.Sinks.Debug.dll_3189322391" />
       <ComponentRef Id="Component.Serilog.Sinks.File.dll_2317525057" />
+      <ComponentRef Id="Component.System.Drawing.Common.dll_3702015273" />
       <ComponentRef Id="Component.System.Linq.Dynamic.Core.dll_2869695215" />
       <ComponentRef Id="Component.WinPrint.Core.dll_2182204871" />
       <ComponentRef Id="Component.winprint.dll_3866337698" />

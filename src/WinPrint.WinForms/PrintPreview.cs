@@ -180,7 +180,7 @@ namespace WinPrint.Winforms {
                     //    0F, 0F, img.Width, img.Height,
                     //    GraphicsUnit.Pixel);
                     e.Graphics.DrawImageUnscaledAndClipped(img,
-                        new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(svm.PrintableArea.Width), (int)(svm.PrintableArea.Height)));
+                        new Rectangle((int)svm.Bounds.Left, (int)svm.Bounds.Top, (int)(svm.Bounds.Width), (int)(svm.Bounds.Height)));
                     e.Graphics.Restore(state);
                 }
                 else

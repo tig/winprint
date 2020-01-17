@@ -113,7 +113,10 @@ namespace WinPrint.Console {
             }
 
             catch (Exception e) {
-                Log.Error("{msg}", e.Message);
+                if (ModelLocator.Current.Options.Debug)
+                    Log.Error(e, "{msg}", e.Message);
+                else
+                    Log.Error("{msg}", e.Message);
                 // TODO: Should we show usage info on error? 
                 //var helpText = HelpText.AutoBuild(result, h => {
                 //    h.AutoHelp = true;

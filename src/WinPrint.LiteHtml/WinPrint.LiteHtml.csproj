@@ -6,7 +6,7 @@
     <AssemblyTitle>WinPrint LiteHtml</AssemblyTitle>
     <AssemblyName>WinPrint.LiteHtml</AssemblyName>
 
-    <Version>2.0.0.193</Version>
+    <Version>2.0.0.307</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -58,9 +58,5 @@
     <ItemGroup>
       <Folder Include="x64\" />
     </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="copy $(OutDir)\$(TargetName).dll $(SolutionDir)\..\release&#xD;&#xA;mkdir $(SolutionDir)\..\release\x64&#xD;&#xA;copy $(OutDir)\x64\*.dll $(SolutionDir)\..\release\x64\&#xD;&#xA;REM copy $(OutDir)\x86\*.dll $(SolutionDir)\..\release\x86\" />
-    </Target>
 
 </Project>
