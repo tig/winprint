@@ -31,6 +31,15 @@ namespace WinPrint.Winforms {
             this.enableFooter = new System.Windows.Forms.CheckBox();
             this.panelLeft = new System.Windows.Forms.Panel();
             this.fileButton = new System.Windows.Forms.Button();
+            this.toText = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.fromText = new System.Windows.Forms.TextBox();
+            this.fromLabel = new System.Windows.Forms.Label();
+            this.pagesLabel = new System.Windows.Forms.Label();
+            this.labelPaper = new System.Windows.Forms.Label();
+            this.labelPrinter = new System.Windows.Forms.Label();
+            this.comboBoxSheet = new System.Windows.Forms.ComboBox();
+            this.labelSheet = new System.Windows.Forms.Label();
             this.groupPages = new System.Windows.Forms.GroupBox();
             this.pageSeparator = new System.Windows.Forms.CheckBox();
             this.labelPadding = new System.Windows.Forms.Label();
@@ -48,18 +57,9 @@ namespace WinPrint.Winforms {
             this.labelTop = new System.Windows.Forms.Label();
             this.labelRight = new System.Windows.Forms.Label();
             this.topMargin = new System.Windows.Forms.NumericUpDown();
-            this.labelSheet = new System.Windows.Forms.Label();
-            this.comboBoxSheet = new System.Windows.Forms.ComboBox();
-            this.labelPrinter = new System.Windows.Forms.Label();
-            this.labelPaper = new System.Windows.Forms.Label();
             this.panelRight = new System.Windows.Forms.Panel();
             this.footerPanel = new System.Windows.Forms.Panel();
             this.headerPanel = new System.Windows.Forms.Panel();
-            this.pagesLabel = new System.Windows.Forms.Label();
-            this.fromLabel = new System.Windows.Forms.Label();
-            this.fromText = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.toText = new System.Windows.Forms.TextBox();
             this.headerTextBox.SuspendLayout();
             this.footerTextBox.SuspendLayout();
             this.panelLeft.SuspendLayout();
@@ -87,7 +87,7 @@ namespace WinPrint.Winforms {
             this.dummyButton.Location = new System.Drawing.Point(14, 50);
             this.dummyButton.Margin = new System.Windows.Forms.Padding(0);
             this.dummyButton.Name = "dummyButton";
-            this.dummyButton.Size = new System.Drawing.Size(621, 773);
+            this.dummyButton.Size = new System.Drawing.Size(621, 791);
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
             this.dummyButton.UseVisualStyleBackColor = false;
@@ -97,8 +97,8 @@ namespace WinPrint.Winforms {
             this.printersCB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.printersCB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.printersCB.FormattingEnabled = true;
-            this.printersCB.Location = new System.Drawing.Point(18, 628);
-            this.printersCB.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.printersCB.Location = new System.Drawing.Point(18, 646);
+            this.printersCB.Margin = new System.Windows.Forms.Padding(4);
             this.printersCB.Name = "printersCB";
             this.printersCB.Size = new System.Drawing.Size(323, 33);
             this.printersCB.TabIndex = 20;
@@ -109,8 +109,8 @@ namespace WinPrint.Winforms {
             this.paperSizesCB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.paperSizesCB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.paperSizesCB.FormattingEnabled = true;
-            this.paperSizesCB.Location = new System.Drawing.Point(17, 694);
-            this.paperSizesCB.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.paperSizesCB.Location = new System.Drawing.Point(17, 712);
+            this.paperSizesCB.Margin = new System.Windows.Forms.Padding(4);
             this.paperSizesCB.Name = "paperSizesCB";
             this.paperSizesCB.Size = new System.Drawing.Size(323, 33);
             this.paperSizesCB.TabIndex = 21;
@@ -119,8 +119,8 @@ namespace WinPrint.Winforms {
             // landscapeCheckbox
             // 
             this.landscapeCheckbox.AutoSize = true;
-            this.landscapeCheckbox.Location = new System.Drawing.Point(14, 133);
-            this.landscapeCheckbox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.landscapeCheckbox.Location = new System.Drawing.Point(22, 140);
+            this.landscapeCheckbox.Margin = new System.Windows.Forms.Padding(4);
             this.landscapeCheckbox.Name = "landscapeCheckbox";
             this.landscapeCheckbox.Size = new System.Drawing.Size(121, 29);
             this.landscapeCheckbox.TabIndex = 2;
@@ -131,8 +131,8 @@ namespace WinPrint.Winforms {
             // printButton
             // 
             this.printButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.printButton.Location = new System.Drawing.Point(20, 822);
-            this.printButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.printButton.Location = new System.Drawing.Point(20, 840);
+            this.printButton.Margin = new System.Windows.Forms.Padding(4);
             this.printButton.Name = "printButton";
             this.printButton.Size = new System.Drawing.Size(156, 41);
             this.printButton.TabIndex = 22;
@@ -208,8 +208,10 @@ namespace WinPrint.Winforms {
             // panelLeft
             // 
             this.panelLeft.BackColor = System.Drawing.SystemColors.Window;
-            this.panelLeft.Controls.Add(this.printButton);
+            this.panelLeft.Controls.Add(this.landscapeCheckbox);
+            this.panelLeft.Controls.Add(this.labelSheet);
             this.panelLeft.Controls.Add(this.fileButton);
+            this.panelLeft.Controls.Add(this.printButton);
             this.panelLeft.Controls.Add(this.toText);
             this.panelLeft.Controls.Add(this.label1);
             this.panelLeft.Controls.Add(this.fromText);
@@ -219,9 +221,7 @@ namespace WinPrint.Winforms {
             this.panelLeft.Controls.Add(this.labelPaper);
             this.panelLeft.Controls.Add(this.printersCB);
             this.panelLeft.Controls.Add(this.labelPrinter);
-            this.panelLeft.Controls.Add(this.landscapeCheckbox);
             this.panelLeft.Controls.Add(this.comboBoxSheet);
-            this.panelLeft.Controls.Add(this.labelSheet);
             this.panelLeft.Controls.Add(this.groupPages);
             this.panelLeft.Controls.Add(this.groupMargins);
             this.panelLeft.Dock = System.Windows.Forms.DockStyle.Left;
@@ -229,19 +229,110 @@ namespace WinPrint.Winforms {
             this.panelLeft.Location = new System.Drawing.Point(0, 0);
             this.panelLeft.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panelLeft.Name = "panelLeft";
-            this.panelLeft.Size = new System.Drawing.Size(360, 879);
+            this.panelLeft.Size = new System.Drawing.Size(360, 897);
             this.panelLeft.TabIndex = 0;
             // 
             // fileButton
             // 
-            this.fileButton.Location = new System.Drawing.Point(20, 13);
-            this.fileButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.fileButton.Location = new System.Drawing.Point(14, 13);
+            this.fileButton.Margin = new System.Windows.Forms.Padding(4);
             this.fileButton.Name = "fileButton";
             this.fileButton.Size = new System.Drawing.Size(156, 41);
             this.fileButton.TabIndex = 0;
             this.fileButton.Text = "&File...";
             this.fileButton.UseVisualStyleBackColor = true;
             this.fileButton.Click += new System.EventHandler(this.fileButton_Click);
+            // 
+            // toText
+            // 
+            this.toText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.toText.Location = new System.Drawing.Point(230, 786);
+            this.toText.Name = "toText";
+            this.toText.Size = new System.Drawing.Size(60, 31);
+            this.toText.TabIndex = 24;
+            this.toText.TextChanged += new System.EventHandler(this.toText_TextChanged);
+            // 
+            // label1
+            // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(190, 789);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(34, 25);
+            this.label1.TabIndex = 23;
+            this.label1.Text = "To&:";
+            // 
+            // fromText
+            // 
+            this.fromText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.fromText.Location = new System.Drawing.Point(97, 786);
+            this.fromText.Name = "fromText";
+            this.fromText.Size = new System.Drawing.Size(64, 31);
+            this.fromText.TabIndex = 24;
+            this.fromText.TextChanged += new System.EventHandler(this.fromText_TextChanged);
+            // 
+            // fromLabel
+            // 
+            this.fromLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.fromLabel.AutoSize = true;
+            this.fromLabel.Location = new System.Drawing.Point(33, 789);
+            this.fromLabel.Name = "fromLabel";
+            this.fromLabel.Size = new System.Drawing.Size(58, 25);
+            this.fromLabel.TabIndex = 23;
+            this.fromLabel.Text = "&From:";
+            // 
+            // pagesLabel
+            // 
+            this.pagesLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.pagesLabel.AutoSize = true;
+            this.pagesLabel.Location = new System.Drawing.Point(17, 752);
+            this.pagesLabel.Name = "pagesLabel";
+            this.pagesLabel.Size = new System.Drawing.Size(62, 25);
+            this.pagesLabel.TabIndex = 23;
+            this.pagesLabel.Text = "Pages:";
+            // 
+            // labelPaper
+            // 
+            this.labelPaper.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelPaper.AutoSize = true;
+            this.labelPaper.Location = new System.Drawing.Point(13, 683);
+            this.labelPaper.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelPaper.Name = "labelPaper";
+            this.labelPaper.Size = new System.Drawing.Size(60, 25);
+            this.labelPaper.TabIndex = 0;
+            this.labelPaper.Text = "P&aper:";
+            // 
+            // labelPrinter
+            // 
+            this.labelPrinter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelPrinter.AutoSize = true;
+            this.labelPrinter.Location = new System.Drawing.Point(14, 617);
+            this.labelPrinter.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelPrinter.Name = "labelPrinter";
+            this.labelPrinter.Size = new System.Drawing.Size(67, 25);
+            this.labelPrinter.TabIndex = 0;
+            this.labelPrinter.Text = "&Printer:";
+            // 
+            // comboBoxSheet
+            // 
+            this.comboBoxSheet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSheet.FormattingEnabled = true;
+            this.comboBoxSheet.Location = new System.Drawing.Point(14, 96);
+            this.comboBoxSheet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.comboBoxSheet.Name = "comboBoxSheet";
+            this.comboBoxSheet.Size = new System.Drawing.Size(323, 33);
+            this.comboBoxSheet.TabIndex = 8;
+            this.comboBoxSheet.SelectedIndexChanged += new System.EventHandler(this.comboBoxSheet_SelectedIndexChanged);
+            // 
+            // labelSheet
+            // 
+            this.labelSheet.AutoSize = true;
+            this.labelSheet.Location = new System.Drawing.Point(14, 66);
+            this.labelSheet.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelSheet.Name = "labelSheet";
+            this.labelSheet.Size = new System.Drawing.Size(120, 25);
+            this.labelSheet.TabIndex = 9;
+            this.labelSheet.Text = "&Sheet Design:";
             // 
             // groupPages
             // 
@@ -252,7 +343,7 @@ namespace WinPrint.Winforms {
             this.groupPages.Controls.Add(this.labelColumns);
             this.groupPages.Controls.Add(this.columns);
             this.groupPages.Controls.Add(this.rows);
-            this.groupPages.Location = new System.Drawing.Point(18, 361);
+            this.groupPages.Location = new System.Drawing.Point(18, 371);
             this.groupPages.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupPages.Name = "groupPages";
             this.groupPages.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -366,7 +457,7 @@ namespace WinPrint.Winforms {
             this.groupMargins.Controls.Add(this.labelTop);
             this.groupMargins.Controls.Add(this.labelRight);
             this.groupMargins.Controls.Add(this.topMargin);
-            this.groupMargins.Location = new System.Drawing.Point(14, 171);
+            this.groupMargins.Location = new System.Drawing.Point(14, 177);
             this.groupMargins.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupMargins.Name = "groupMargins";
             this.groupMargins.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -495,49 +586,6 @@ namespace WinPrint.Winforms {
             131072});
             this.topMargin.ValueChanged += new System.EventHandler(this.topMargin_ValueChanged);
             // 
-            // labelSheet
-            // 
-            this.labelSheet.AutoSize = true;
-            this.labelSheet.Location = new System.Drawing.Point(13, 66);
-            this.labelSheet.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelSheet.Name = "labelSheet";
-            this.labelSheet.Size = new System.Drawing.Size(120, 25);
-            this.labelSheet.TabIndex = 9;
-            this.labelSheet.Text = "&Sheet Design:";
-            // 
-            // comboBoxSheet
-            // 
-            this.comboBoxSheet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSheet.FormattingEnabled = true;
-            this.comboBoxSheet.Location = new System.Drawing.Point(14, 96);
-            this.comboBoxSheet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.comboBoxSheet.Name = "comboBoxSheet";
-            this.comboBoxSheet.Size = new System.Drawing.Size(323, 33);
-            this.comboBoxSheet.TabIndex = 8;
-            this.comboBoxSheet.SelectedIndexChanged += new System.EventHandler(this.comboBoxSheet_SelectedIndexChanged);
-            // 
-            // labelPrinter
-            // 
-            this.labelPrinter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelPrinter.AutoSize = true;
-            this.labelPrinter.Location = new System.Drawing.Point(14, 599);
-            this.labelPrinter.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelPrinter.Name = "labelPrinter";
-            this.labelPrinter.Size = new System.Drawing.Size(67, 25);
-            this.labelPrinter.TabIndex = 0;
-            this.labelPrinter.Text = "&Printer:";
-            // 
-            // labelPaper
-            // 
-            this.labelPaper.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelPaper.AutoSize = true;
-            this.labelPaper.Location = new System.Drawing.Point(13, 665);
-            this.labelPaper.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.labelPaper.Name = "labelPaper";
-            this.labelPaper.Size = new System.Drawing.Size(60, 25);
-            this.labelPaper.TabIndex = 0;
-            this.labelPaper.Text = "P&aper:";
-            // 
             // panelRight
             // 
             this.panelRight.BackColor = System.Drawing.SystemColors.AppWorkspace;
@@ -548,7 +596,7 @@ namespace WinPrint.Winforms {
             this.panelRight.Location = new System.Drawing.Point(360, 0);
             this.panelRight.Margin = new System.Windows.Forms.Padding(0);
             this.panelRight.Name = "panelRight";
-            this.panelRight.Size = new System.Drawing.Size(649, 879);
+            this.panelRight.Size = new System.Drawing.Size(649, 897);
             this.panelRight.TabIndex = 4;
             this.panelRight.TabStop = true;
             // 
@@ -557,7 +605,7 @@ namespace WinPrint.Winforms {
             this.footerPanel.BackColor = System.Drawing.SystemColors.Window;
             this.footerPanel.Controls.Add(this.footerTextBox);
             this.footerPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.footerPanel.Location = new System.Drawing.Point(0, 839);
+            this.footerPanel.Location = new System.Drawing.Point(0, 857);
             this.footerPanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.footerPanel.Name = "footerPanel";
             this.footerPanel.Size = new System.Drawing.Size(649, 40);
@@ -574,60 +622,12 @@ namespace WinPrint.Winforms {
             this.headerPanel.Size = new System.Drawing.Size(649, 34);
             this.headerPanel.TabIndex = 1;
             // 
-            // pagesLabel
-            // 
-            this.pagesLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.pagesLabel.AutoSize = true;
-            this.pagesLabel.Location = new System.Drawing.Point(17, 731);
-            this.pagesLabel.Name = "pagesLabel";
-            this.pagesLabel.Size = new System.Drawing.Size(62, 25);
-            this.pagesLabel.TabIndex = 23;
-            this.pagesLabel.Text = "Pages:";
-            // 
-            // fromLabel
-            // 
-            this.fromLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.fromLabel.AutoSize = true;
-            this.fromLabel.Location = new System.Drawing.Point(33, 765);
-            this.fromLabel.Name = "fromLabel";
-            this.fromLabel.Size = new System.Drawing.Size(58, 25);
-            this.fromLabel.TabIndex = 23;
-            this.fromLabel.Text = "&From:";
-            // 
-            // fromText
-            // 
-            this.fromText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.fromText.Location = new System.Drawing.Point(97, 762);
-            this.fromText.Name = "fromText";
-            this.fromText.Size = new System.Drawing.Size(64, 31);
-            this.fromText.TabIndex = 24;
-            this.fromText.TextChanged += new System.EventHandler(this.fromText_TextChanged);
-            // 
-            // label1
-            // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(190, 765);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(34, 25);
-            this.label1.TabIndex = 23;
-            this.label1.Text = "To&:";
-            // 
-            // toText
-            // 
-            this.toText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.toText.Location = new System.Drawing.Point(230, 762);
-            this.toText.Name = "toText";
-            this.toText.Size = new System.Drawing.Size(60, 31);
-            this.toText.TabIndex = 24;
-            this.toText.TextChanged += new System.EventHandler(this.toText_TextChanged);
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.ClientSize = new System.Drawing.Size(1009, 879);
+            this.ClientSize = new System.Drawing.Size(1009, 897);
             this.Controls.Add(this.panelRight);
             this.Controls.Add(this.panelLeft);
             this.HelpButton = true;
