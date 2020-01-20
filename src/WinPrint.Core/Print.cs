@@ -21,6 +21,8 @@ namespace WinPrint.Core {
 
         private int curSheet = 0;
 
+        private int sheetsPrinted = 0;
+
         public Print() {
             printDoc.BeginPrint += new PrintEventHandler(this.BeginPrint);
             printDoc.EndPrint += new PrintEventHandler(this.EndPrint);
@@ -88,7 +90,7 @@ namespace WinPrint.Core {
             return SheetViewModel.NumSheets;
         }
 
-        public async Task DoPrint() {
+        public async Task<int> DoPrint() {
             PrintDocument.DocumentName = SheetViewModel.File;
             await SheetViewModel.SetPrinterPageSettings(PrintDocument.DefaultPageSettings);
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
@@ -98,11 +100,13 @@ namespace WinPrint.Core {
 
             curSheet = PrintDocument.PrinterSettings.FromPage;
             PrintDocument.Print();
+            return sheetsPrinted;
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         // Occurs when the Print() method is called and before the first page of the document prints.
         private void BeginPrint(object sender, PrintEventArgs ev) {
             LogService.TraceMessage($"Print.BeginPrint");
+            sheetsPrinted = 0;
         }
 
         // Occurs when the last page of the document has printed.
@@ -132,6 +136,7 @@ namespace WinPrint.Core {
             if (curSheet <= PrintDocument.PrinterSettings.ToPage) {
                 // BUGBUG: LINUX - On pages > 1 in landscape mode, landscape mode is lost
                 SheetViewModel.PrintSheet(ev.Graphics, curSheet);
+                sheetsPrinted++;
             }
             curSheet++;
             ev.HasMorePages = curSheet <= PrintDocument.PrinterSettings.ToPage;

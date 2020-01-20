@@ -154,7 +154,7 @@ namespace WinPrint.Console {
         }
 
         private async Task<int> Print(string file) {
-            int pagesCounted = 0;
+            int sheetsCounted = 0;
 
             Log.Debug("awaiting LoadAsync {file}", file);
             var type = await print.SheetViewModel.LoadAsync(file).ConfigureAwait(false);
@@ -163,31 +163,31 @@ namespace WinPrint.Console {
             // --c
             if (ModelLocator.Current.Options.CountPages) {
                 int n = 0;
-                pagesCounted += n = await print.CountSheets(fromSheet: ModelLocator.Current.Options.FromPage, toSheet: ModelLocator.Current.Options.ToPage);
+                sheetsCounted += n = await print.CountSheets(fromSheet: ModelLocator.Current.Options.FromPage, toSheet: ModelLocator.Current.Options.ToPage);
             }
             else {
-                bool pageRangeSet = false;
+                bool sheetRangeSet = false;
                 if (ModelLocator.Current.Options.FromPage != 0) {
                     print.PrintDocument.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;
-                    pageRangeSet = true;
+                    sheetRangeSet = true;
                 }
                 else
                     print.PrintDocument.PrinterSettings.FromPage = 0;
 
                 if (ModelLocator.Current.Options.ToPage != 0) {
                     print.PrintDocument.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;
-                    pageRangeSet = true;
+                    sheetRangeSet = true;
                 }
                 else
                     print.PrintDocument.PrinterSettings.ToPage = 0;
 
-                if (pageRangeSet)
+                if (sheetRangeSet)
                     Log.Information("Printing from sheet {from} to sheet {to}.", print.PrintDocument.PrinterSettings.FromPage, print.PrintDocument.PrinterSettings.ToPage);
                 else
                     Log.Information("Printing all sheets.");
-                await print.DoPrint();
+                sheetsCounted += await print.DoPrint();
             }
-            return pagesCounted;
+            return sheetsCounted;
         }
 
         private static void StartGui() {
