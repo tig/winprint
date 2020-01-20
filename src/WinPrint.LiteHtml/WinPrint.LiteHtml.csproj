@@ -6,7 +6,7 @@
     <AssemblyTitle>WinPrint LiteHtml</AssemblyTitle>
     <AssemblyName>WinPrint.LiteHtml</AssemblyName>
 
-    <Version>2.0.0.307</Version>
+    <Version>2.0.0.309</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -36,10 +36,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\litehtmlsharp\LiteHtmlLib\Release\x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
+    <None Include="..\..\..\LiteHtmlSharp\LiteHtmlLib\Release\x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\..\litehtmlsharp\LiteHtmlLib\Release\x64\LiteHtmlLib.pdb" Link="x64\LiteHtmlLib.pdb">
+    <None Include="..\..\..\LiteHtmlSharp\LiteHtmlLib\Release\x64\LiteHtmlLib.pdb" Link="x64\LiteHtmlLib.pdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
