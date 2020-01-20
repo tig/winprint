@@ -141,7 +141,7 @@ namespace WinPrint.Console {
             finally {
                 if (ModelLocator.Current.Options.Verbose) 
                     Log.Information($"Exiting with exit code {exitCode}.");
-                Log.Debug($"Environment.Exit({exitCode}");
+                Log.Debug($"Environment.Exit({exitCode})");
                 Environment.Exit(exitCode);
             }
         }

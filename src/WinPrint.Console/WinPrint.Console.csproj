@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -10,7 +9,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.277</Version>
+    <Version>2.0.0.340</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -47,53 +46,3 @@
   </ItemGroup>
 
 </Project>
-=======
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>WinPrint.Console</RootNamespace>
-    <AssemblyTitle>WinPrint Console App</AssemblyTitle>
-    <AssemblyName>winprint</AssemblyName>
-    <StartupObject>WinPrint.Console.Program</StartupObject>
-
-    <Version>2.0.0.333</Version>
-    <Company>Kindel Systems</Company>
-    <Product>WinPrint</Product>
-    <Authors>Charlie Kindel</Authors>
-    <Description>WinPrint Console App</Description>
-    <Copyright>Copyright Kindel Systems, LLC</Copyright>
-    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MSBump" Version="2.3.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../WinPrint.Core/WinPrint.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties/Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties/Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-</Project>
->>>>>>> 6ac8b7d3f0dc379356e31643bcd6d71250dcf4b8

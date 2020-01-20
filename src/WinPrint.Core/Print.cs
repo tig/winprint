@@ -5,6 +5,7 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -40,8 +41,16 @@ namespace WinPrint.Core {
         /// <param name="opts"></param>
         /// <returns>Returns printer name.</returns>
         public void SetPrinter(string printerName) {
+            Log.Debug(LogService.GetTraceMsg("{p}"), printerName);
             if (!string.IsNullOrEmpty(printerName)) {
-                PrintDocument.PrinterSettings.PrinterName = printerName;
+                try {
+                    PrintDocument.PrinterSettings.PrinterName = printerName;
+                }
+                catch (NullReferenceException e) {
+                    // On Linux if an invalid printer name is passed in we get a 
+                    // NullReferenceException. 
+                    throw new InvalidPrinterException(PrintDocument.PrinterSettings);
+                }
                 if (!PrintDocument.PrinterSettings.IsValid) {
                     throw new InvalidPrinterException(PrintDocument.PrinterSettings);
                 }
