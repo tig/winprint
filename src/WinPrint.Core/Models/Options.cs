@@ -27,13 +27,13 @@ namespace WinPrint.Core.Models {
         [Option('z', "paper-size", HelpText = "Paper size name.")]
         public string PaperSize { get; set; }
 
-        [Option('f', "from-page", Default = 0, HelpText = "Number of first page to print (may be used with --to-page).")]
+        [Option('f', "from-sheet", Default = 0, HelpText = "Number of first sheet to print (may be used with --to-sheet).")]
         public int FromPage { get; set; }
 
-        [Option('t', "to-page", Default = 0, HelpText = "Number of last page to print (may be used with --from-page).")]
+        [Option('t', "to-sheet", Default = 0, HelpText = "Number of last sheet to print (may be used with --from-sheet).")]
         public int ToPage { get; set; }
 
-        [Option('c', "count-pages", Default = false, Required = false, HelpText = "Exit code is set to numer of pages that would be printed. Use --verbose to diplsay the count.")]
+        [Option('c', "count-sheets", Default = false, Required = false, HelpText = "Exit code is set to numer of sheets that would be printed. Use --verbose to diplsay the count.")]
         public bool CountPages { get; set; }
 
         // App Options
@@ -59,7 +59,7 @@ namespace WinPrint.Core.Models {
                         Printer = "Fabricam 535",
                         PaperSize = "A4"
                     }),                    
-                    new Example("Print the first two pages of Program.cs", new Options {
+                    new Example("Print the first two sheets of Program.cs", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         FromPage = 1,
                         ToPage = 2

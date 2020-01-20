@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
@@ -14,7 +15,17 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font name or font family name (e.g. "Courier New" or "monospace"
         /// </summary>
-        public string Family { get => family; set {
+        public string Family {
+            get {
+                if (family == "monospace") {
+                    // TODO: This is a hack. Implement platform defaults gracefully.
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        return "Consolas";
+                }
+                return family;
+            }
+
+            set {
                 family = value;
                 //SetField(ref family, value); 
             }

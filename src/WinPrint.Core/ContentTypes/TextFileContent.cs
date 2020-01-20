@@ -96,34 +96,68 @@ namespace WinPrint.Core.ContentTypes {
 
             if (document == null) throw new ArgumentNullException("document can't be null for Render");
 
+            int dpiX = printerResolution.X;
+            int dpiY = printerResolution.Y;
+
+            // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
+            // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
+             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+                dpiX = dpiY = 96;
+
+            // Create a representative Graphcis used for determining glyph metrics.        
+            using Bitmap bitmap = new Bitmap(1, 1);
+            bitmap.SetResolution(dpiX, dpiY);
+            var g = Graphics.FromImage(bitmap);
+            g.PageUnit = GraphicsUnit.Pixel; // Display is 1/100th"
+ 
             // Calculate the number of lines per page.
             cachedFont = new System.Drawing.Font(Font.Family,
+            //Font.Size, Font.Style, GraphicsUnit.Point); 
                 Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
-            lineHeight = cachedFont.GetHeight(100);
+            //lineHeight = cachedFont.GetHeight(g) ;
+
+            Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+                cachedFont.Dispose();
+                cachedFont = new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point);
+                Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
+                g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
+            }
+
+            //var lineSize = g.MeasureString("Tigger", cachedFont) ;
+            //Log.Debug("lineSize (Tigger) = {h}x{w} pixels", lineSize.Width, lineSize.Height);
+            //lineHeight = lineSize.Height;
+
+            lineHeight = cachedFont.GetHeight(dpiY);
+            Log.Debug("lineHeight = {h}\"", lineHeight / 100F);
+
             linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
+            Log.Debug("linesPerPage = {l}", linesPerPage);
 
             // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
             // TODO: Make line number width dynamic
             // Note, Measure string is actually dependent on lineNumberWidth!
-            lineNumberWidth = LineNumbers ? MeasureString(null, new string('0', 4)).Width : 0;
+            lineNumberWidth = LineNumbers ? MeasureString(g, new string('0', 4)).Width : 0;
 
             int n = 0;
 
             // Note, MeasureLines may increment numPages due to form feeds
-            lines = MeasureLines(document); // new List<string>();
+            lines = MeasureLines(g, document); // new List<string>();
 
             n += (lines.Count / linesPerPage) + 1;
 
             LogService.TraceMessage($"{lines.Count} lines across {n} pages.");
+
             return n;
         }
 
         // TODO: Profile for performance
-        private List<Line> MeasureLines(string document) {
+        private List<Line> MeasureLines(Graphics g, string document) {
             LogService.TraceMessage();
             var list = new List<Line>();
 
-            minCharWidth = MeasureString(null, "W").Width;
+            minCharWidth = MeasureString(g, "W").Width;
             int minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
             string line;
@@ -140,15 +174,15 @@ namespace WinPrint.Core.ContentTypes {
 
                 ++lineCount;
                 if (newPageOnFormFeed && line.Contains("\f"))
-                    lineCount = ExpandFormFeeds(list, line, minLineLen, lineCount);
+                    lineCount = ExpandFormFeeds(g, list, line, minLineLen, lineCount);
                 else
-                    lineCount = AddLine(list, line, minLineLen, lineCount);
+                    lineCount = AddLine(g, list, line, minLineLen, lineCount);
             }
 
             return list;
         }
 
-        private int ExpandFormFeeds(List<Line> list, string line, int minLineLen, int lineCount) {
+        private int ExpandFormFeeds(Graphics g, List<Line> list, string line, int minLineLen, int lineCount) {
             // Form feeds
             // treat a FF the same as the end of a line; next line is first line of next page
             // FF at start of line - That line should be at top of next page
@@ -162,7 +196,7 @@ namespace WinPrint.Core.ContentTypes {
                 if (line[i] == '\f') {
                     if (lineToAdd.Length > 0) {
                         // FF was NOT at start of line. Add it.
-                        AddLine(list, lineToAdd, minLineLen, lineCount);
+                        AddLine(g, list, lineToAdd, minLineLen, lineCount);
                         // if we're not at the end of the line t increment line #
                         if (i < line.Length-1) lineCount++;
                     }
@@ -179,15 +213,15 @@ namespace WinPrint.Core.ContentTypes {
                 }
             }
             if (lineToAdd.Length > 0)
-                AddLine(list, lineToAdd, minLineLen, lineCount);
+                AddLine(g, list, lineToAdd, minLineLen, lineCount);
             return lineCount;
         }
 
         // TODO: Profile AddLine for performance
-        private int AddLine(List<Line> list, string line, int minLineLen, int lineCount) {
+        private int AddLine(Graphics g, List<Line> list, string line, int minLineLen, int lineCount) {
             int charsFitted, linesFilled;
 
-            float height = MeasureString(null, line, out charsFitted, out linesFilled).Height;
+            float height = MeasureString(g, line, out charsFitted, out linesFilled).Height;
             if (linesFilled > 1) {
                 // This line wraps. Figure out by how much.
                 // Starting at minLineLen into the line, keep trying until it wraps again
@@ -195,7 +229,7 @@ namespace WinPrint.Core.ContentTypes {
                 int c = minLineLen;
                 for (int i = minLineLen; i < line.Length; i++) {
                     int linesFilled2;
-                    height = MeasureString(null, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
+                    height = MeasureString(g, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
                     if (linesFilled2 > 1) {
                         // It's too big again, so add it, minus extra
                         list.Add(new Line() { text = line.Substring(start, i - 1), lineNumber = lineCount });
@@ -203,7 +237,7 @@ namespace WinPrint.Core.ContentTypes {
                         c = line.Substring(start, line.Length - start).Length;
 
                         // Recurse wrapped lines
-                        AddLine(list, line.Substring(start, c), minLineLen, 0);
+                        AddLine(g, list, line.Substring(start, c), minLineLen, 0);
 
                         // exit for loop
                         i = line.Length;
@@ -235,7 +269,7 @@ namespace WinPrint.Core.ContentTypes {
                 using Bitmap bitmap = new Bitmap(1, 1);
                 g = Graphics.FromImage(bitmap);
                 //g = Graphics.FromHwnd(PrintPreview.Instance.Handle);
-                g.PageUnit = GraphicsUnit.Document;
+                g.PageUnit = GraphicsUnit.Display;
             }
 
             // determine width     
@@ -245,8 +279,8 @@ namespace WinPrint.Core.ContentTypes {
             SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
 
             // TODO: HACK to work around MeasureString not working right on Linux
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                linesFilled = 1;
+            //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            //    linesFilled = 1;
             return size;
         }
 
@@ -281,6 +315,7 @@ namespace WinPrint.Core.ContentTypes {
                     g.DrawString(lines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
                 }
             }
+            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine}", lineOnPage-1, startLine, endLine);
         }
 
         // TODO: Support setting color of line #s and separator

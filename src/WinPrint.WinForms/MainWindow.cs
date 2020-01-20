@@ -363,7 +363,7 @@ namespace WinPrint.Winforms {
 
             // Set landscape. This causes other DefaultPageSettings to change
             printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-            await printPreview.SheetViewModel.SetPageSettings(printDoc.DefaultPageSettings).ConfigureAwait(false);
+            await printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings).ConfigureAwait(false);
             BeginInvoke((Action)(() => printPreview.Refresh()));
             await Task.Run(() => printPreview.SheetViewModel.ReflowAsync()).ConfigureAwait(false);
             BeginInvoke((Action)(() => printPreview.Refresh()));
