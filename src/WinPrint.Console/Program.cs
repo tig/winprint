@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
+using System.Drawing.Printing;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
@@ -48,21 +46,22 @@ namespace WinPrint.Console {
                     Task.WaitAll(program.Go());
                 })
                 .WithNotParsed((errs) => DisplayHelp(result, errs));
-  
-            if (ModelLocator.Current.Options.Verbose) Log.Information("Exiting sucessfully.");
-            Log.Debug($"Environment.Exit(0)");
-            Environment.Exit(0);
+
+            Log.Debug($"Exiting Main - This should never happen.");
+            Environment.Exit(-1);
         }
 
         private async Task Go() {
+            int exitCode = -1;
+
             Log.Debug(LogService.GetTraceMsg(), "Go");
             print = new Print();
 
-            print.PrintingPage += (s, pageNum) => Log.Information("Printing page {pageNum}", pageNum);
+            print.PrintingSheet += (s, sheetNum) => Log.Information("Printing sheet {pageNum}", sheetNum);
             print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
             print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
             print.SheetViewModel.Reflowed += SheetViewModel_Reflowed;
-            print.SheetViewModel.ReflowProgress += (s, msg) => Log.Information("{DateTime:mm:ss.fff}:Reflow Progress {msg}", DateTime.Now, msg);
+            print.SheetViewModel.ReflowProgress += (s, msg) => Log.Debug("{DateTime:mm:ss.fff}:Reflow Progress {msg}", DateTime.Now, msg);
 
             // -g
             if (ModelLocator.Current.Options.Gui) 
@@ -86,7 +85,6 @@ namespace WinPrint.Console {
 
                 // --v
                 if (ModelLocator.Current.Options.Verbose) {
-                    Log.Information("Printing {files:l}", ModelLocator.Current.Options.Files.ToList());
                     Log.Information("    Printer:          {printer}", print.PrintDocument.PrinterSettings.PrinterName);
                     Log.Information("    Paper Size:       {size}", print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
                     Log.Information("    Orientation:      {s}", print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
@@ -100,23 +98,36 @@ namespace WinPrint.Console {
 
                 // Go through each file on command line and print them
                 // TODO: Handle wildcards
-                int pagesCounted = 0;
+                int sheetsCounted = 0;
                 foreach (var file in ModelLocator.Current.Options.Files.ToList())
-                    pagesCounted += await Print(file).ConfigureAwait(false);
+                    sheetsCounted += await Print(file).ConfigureAwait(false);
 
                 if (ModelLocator.Current.Options.Verbose) {
                     if (ModelLocator.Current.Options.CountPages)
-                        Log.Information("Would have printed a total of {pagesCounted}.", pagesCounted);
+                        Log.Information("Would have printed a total of {pagesCounted} sheets.", sheetsCounted);
                     else
-                        Log.Information("Done.");
+                        Log.Information("Printed a total of {pagesCounted} sheets.", sheetsCounted);
+                }
+
+                exitCode = sheetsCounted;
+            }
+            catch (InvalidPrinterException e) {
+                LogException(e);
+                Log.Information("Installed printers:");
+                foreach (string printer in PrinterSettings.InstalledPrinters)
+                    Log.Information($"   {printer}");                  
+            }
+            catch (InvalidOperationException e) {
+                LogException(e);
+                if (e.Message.Contains("Sheet definiton not found")) {
+                    // show list of available sheets
+                    Log.Information("Sheet definitons:");
+                    foreach (var sheet in ModelLocator.Current.Settings.Sheets)
+                        Log.Information($"   {sheet.Value.Name}");
                 }
             }
-
             catch (Exception e) {
-                if (ModelLocator.Current.Options.Debug)
-                    Log.Error(e, "{msg}", e.Message);
-                else
-                    Log.Error("{msg}", e.Message);
+                LogException(e);
                 // TODO: Should we show usage info on error? 
                 //var helpText = HelpText.AutoBuild(result, h => {
                 //    h.AutoHelp = true;
@@ -126,8 +137,20 @@ namespace WinPrint.Console {
                 //}, e => e);
                 //foreach (var line in helpText.ToString().Split(Environment.NewLine))
                 //    Log.Information(line);
-                Environment.Exit(-1);
             }
+            finally {
+                if (ModelLocator.Current.Options.Verbose) 
+                    Log.Information($"Exiting with exit code {exitCode}.");
+                Log.Debug($"Environment.Exit({exitCode}");
+                Environment.Exit(exitCode);
+            }
+        }
+
+        private static void LogException(Exception e) {
+            if (ModelLocator.Current.Options.Debug)
+                Log.Error(e, "{msg}", e.Message);
+            else
+                Log.Error("{msg}", e.Message);
         }
 
         private async Task<int> Print(string file) {
@@ -140,9 +163,7 @@ namespace WinPrint.Console {
             // --c
             if (ModelLocator.Current.Options.CountPages) {
                 int n = 0;
-                pagesCounted += n = await print.CountPages(fromSheet: ModelLocator.Current.Options.FromPage, toSheet: ModelLocator.Current.Options.ToPage);
-                if (ModelLocator.Current.Options.Verbose)
-                    Log.Information("Would print {n} pages of {file}.", n, file);
+                pagesCounted += n = await print.CountSheets(fromSheet: ModelLocator.Current.Options.FromPage, toSheet: ModelLocator.Current.Options.ToPage);
             }
             else {
                 bool pageRangeSet = false;
@@ -161,9 +182,9 @@ namespace WinPrint.Console {
                     print.PrintDocument.PrinterSettings.ToPage = 0;
 
                 if (pageRangeSet)
-                    Log.Information("Printing from page {from} to page {to}.", print.PrintDocument.PrinterSettings.FromPage, print.PrintDocument.PrinterSettings.ToPage);
+                    Log.Information("Printing from sheet {from} to sheet {to}.", print.PrintDocument.PrinterSettings.FromPage, print.PrintDocument.PrinterSettings.ToPage);
                 else
-                    Log.Information("Printing all pages.");
+                    Log.Information("Printing all sheets.");
                 await print.DoPrint();
             }
             return pagesCounted;
@@ -204,7 +225,7 @@ namespace WinPrint.Console {
             switch (e.PropertyName) {
                 case "Landscape":
                     if (ModelLocator.Current.Options.Verbose)
-                        Log.Information("Page Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
+                        Log.Information("Paper Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
                     break;
 
                 case "Header":

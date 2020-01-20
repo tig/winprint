@@ -264,7 +264,7 @@ namespace WinPrint.Core {
             return Type;
         }
 
-        public async Task SetPageSettings(PageSettings pageSettings) {
+        public async Task SetPrinterPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
             var ps = (PageSettings)pageSettings.Clone();
@@ -339,10 +339,10 @@ namespace WinPrint.Core {
             // BUGBUG: On Linux, PageSettings.PrintableArea is all 0s. 
             // BUGBUG: On Linux, not seeing HardMargins > 0 ever (e.g. HP laser should have 0.16". No idea how to fix this.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-                printableArea.X = Bounds.X;
-                printableArea.Y = Bounds.Y;
-                printableArea.Width = Bounds.Width;
-                printableArea.Height = Bounds.Height;
+                printableArea.X = Bounds.X - HardMarginX;
+                printableArea.Y = Bounds.Y - HardMarginY;
+                printableArea.Width = Bounds.Width - (HardMarginX*2);
+                printableArea.Height = Bounds.Height - (HardMarginY*2);
             }
 
             // Content bounds represents printable area, minus margins and header/footer.
@@ -356,6 +356,7 @@ namespace WinPrint.Core {
 
             Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
 
+            Log.Debug("Printer Resolution: {w}x{h}DPI", PrinterResolution.X, PrinterResolution.Y);
             Log.Debug("Paper Size: {w}x{h}\"", PaperSize.Width/100F, PaperSize.Height/100F);
             Log.Debug("Hard Margins: {w}x{h}\"", HardMarginX / 100F, HardMarginY / 100F);
             Log.Debug("Printable Area: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
@@ -393,9 +394,23 @@ namespace WinPrint.Core {
 
             numPages = await Content.RenderAsync(PrinterResolution, ReflowProgress);
 
+            CheckPrintOutsideHardMargins();
             Log.Debug("Rreflow complete. {n} pages {w}x{h}\"", numPages, Bounds.Width/100F, Bounds.Height/100F);
 
             Reflowing = false;
+        }
+
+        public bool CheckPrintOutsideHardMargins() {
+            int leftMax = (int)Math.Round(printableArea.X);
+            int topMax = (int)Math.Round(printableArea.Top);
+            int rightMax = (int)Math.Round(bounds.Width - printableArea.Right);
+            int bottomMax = (int)Math.Round(bounds.Height - printableArea.Bottom);
+
+            if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax) {
+                Log.Warning($"Margins are set outside of printable area - Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"");
+                return false;
+            }
+            return true;
         }
 
         public Sheet FindSheet(string sheetName, out string sheetID) {
@@ -534,14 +549,14 @@ namespace WinPrint.Core {
         internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (padding / (Rows)); }
 
         public float GetPageX(int n) {
-            Log.Debug(LogService.GetTraceMsg() + " {p}", n, Padding);
+            //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
 
             float f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
             f += Padding * GetPageColumn(n);
             return f;
         }
         public float GetPageY(int n) {
-            Log.Debug(LogService.GetTraceMsg() + " {p}", n, Padding);
+            //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
 
             float f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
             f += Padding * GetPageRow(n);
@@ -606,8 +621,8 @@ namespace WinPrint.Core {
 
         private void PaintSheet(Graphics g, int sheetNum) {
             LogService.TraceMessage($"{sheetNum}");
-            // This is needed for image scaling to work right
-            //g.FillRectangle(Brushes.White, printableArea.X, printableArea.Y, printableArea.Width, printableArea.Height);
+            // background needs to be filled image scaling to work right
+            g.FillRectangle(Brushes.White, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
             //PaintRules(g);
             headerVM.Paint(g, sheetNum);
             footerVM.Paint(g, sheetNum);
