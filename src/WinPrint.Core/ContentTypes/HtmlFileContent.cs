@@ -99,12 +99,12 @@ namespace WinPrint.Core.ContentTypes {
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
-            LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width}x{htmlBitmap.Height} @ {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
+            LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
             LogService.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
 
-            litehtml.ForPrint = true; 
-            litehtml.Monochrome = true;
+            //litehtml.ForPrint = true; 
+            //litehtml.MonochromeDarkness = 200; 
 
             Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");

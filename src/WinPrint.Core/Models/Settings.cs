@@ -153,8 +153,8 @@ namespace WinPrint.Core.Models {
             float defaultHFFontSize = 10F;
             FontStyle defaultHFFontStyle = FontStyle.Bold;
 
-            string defaultHeaderText = "{DateRevised:D}|{FullyQualifiedPath}|{FileType}";
-            string defualtFooterText = "Printed with WinPrint||Page {Page} of {NumPages}";
+            string defaultHeaderText = "{DateRevised:D}|{FullyQualifiedPath}|Type: {FileType}";
+            string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
             var settings = new Settings();
             //settings.size = new WindowSize(1024, 800);

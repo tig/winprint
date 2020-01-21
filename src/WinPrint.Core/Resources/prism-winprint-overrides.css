@@ -5,12 +5,8 @@
 */
 code[class*="language-"],
 pre[class*="language-"] {
-    /* no backgrond */
-    background: none;
-    /* WinPrint supports changing theme font. */
-    /* HACK: note 'winprint' font at end. */
-    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
-    font-size: 10pt;
+    /* no backgrond 
+    background: none;*/
     /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -20,29 +16,34 @@ pre[class*="language-"] {
     /* Remove all padding and margins */
     padding: 0;
     margin: 0;
+    hyphens: auto;
+    text-align: left;
+    tab-size: 4;
 }
 
 /* Code blocks */
 pre[class*="language-"] {
+    position: relative;
     /* Remove all padding and margins */
     margin: 0;
     padding: 0;
     overflow: visible;
 }
 
-    /* Background & border */
-    pre[class*="language-"] > code {
-        /* turn off all background features */
-        background: none;
-        background-image: none;
-        background-color: transparent;
-        /* turn off all borders (winprint provides own border mechansim) */
-        border-left: 0px;
-        border-right: none;
-        border-top: none;
-        border-bottom: none;
-        box-shadow: none;
-    }
+/* Background & border */
+pre[class*="language-"] > code {
+    /* turn off all background features */
+    /* no backgrond 
+    background: none;*/
+    background-image: none;
+    /* background-color: transparent;*/
+    /* turn off all borders (winprint provides own border mechansim) */
+    border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+}
 
 code[class*="language"] {
     /* Remove all padding and margins */
@@ -69,12 +70,49 @@ pre[class*="language-"] {
     }
 
 /* disable operator background found in default prism.js */
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata,
+.token.punctuation,
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted,
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted,
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable,
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name,
+.token.regex,
+.token.important,
+.language-css .token.string,
+.style .token.string,
+.token.important,
+.token.bold,
+.token.italic,
 .token.operator,
 .token.entity,
 .token.url,
 .language-css .token.string,
 .style .token.string {
-    background: none;
+    /* no backgrond 
+    background: none;*/
 }
 
 ol {
@@ -127,12 +165,12 @@ td {
     margin: 0;
 }
 
-    td[class*="line-number"] {
-        padding-left: 0.5em;
-        padding-right: 0.2em;
-        margin-right: 0.5em;
-        text-align: right;
-        vertical-align: top;
-        border-right: 1px solid darkgray;
-        color: darkgray;
-    }
+td[class*="line-number"] {
+    padding-left: 0.5em;
+    padding-right: 0.2em;
+    margin-right: 0.5em;
+    text-align: right;
+    vertical-align: top;
+    border-right: 1px solid darkgray;
+    color: darkgray;
+}

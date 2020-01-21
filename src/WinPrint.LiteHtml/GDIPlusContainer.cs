@@ -40,7 +40,10 @@ namespace WinPrint.LiteHtml {
 
         public bool ForPrint { get; set; }
 
-        public bool Monochrome { get; set; }
+        /// <summary>
+        /// Darkness factor. 0 = color. 100 = black. Anything inbetween provides a shade of gray.
+        /// </summary>
+        public int MonochromeDarkness { get; set; }
 
         static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
         static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
@@ -65,7 +68,7 @@ namespace WinPrint.LiteHtml {
             // BUGBUG: I don't think litehtml actaully honors device_height
             media.device_height = PageHeight;
 
-            if (Monochrome) {
+            if (MonochromeDarkness > 0) {
                 media.color = 0;
                 media.color_index = 0;
             }
@@ -104,7 +107,7 @@ namespace WinPrint.LiteHtml {
 
             //Helpers.Logging.TraceMessage($"Added FontInfo({fi.Font.FontFamily.ToString()}, {fi.LineHeight}, {fi.Size}, {fi.Font.Style.ToString()}");
 
-            // HACK: Used to enable PrismFileContent to determine font used for code
+            // HACK: Used to enable PrismFileContent to determine font used for CODE/PRE
             if (faceName.Contains("winprint", StringComparison.OrdinalIgnoreCase))
                 codeFontInfo = fi;
 
@@ -129,7 +132,7 @@ namespace WinPrint.LiteHtml {
             Logging.TraceMessage();
 
             web_color color = bgcolor;
-            if (Monochrome) {
+            if (MonochromeDarkness > 0) {
                 color.red = 0xff;
                 color.blue = 0xff;
                 color.green = 0xff;
@@ -206,7 +209,7 @@ namespace WinPrint.LiteHtml {
 //            byte grayScale = (byte)((originalColor.red * .3) + (originalColor.green * .59) + (originalColor.blue * .11));
             originalColor.red = originalColor.green = originalColor.blue = grayScale;
 
-            var c = ChangeColorBrightness(Color.FromArgb(originalColor.red, originalColor.green, originalColor.blue), -0.2F);
+            var c = ChangeColorBrightness(Color.FromArgb(originalColor.red, originalColor.green, originalColor.blue), -(MonochromeDarkness / 100F));
             originalColor.red = c.R;
             originalColor.green = c.G;
             originalColor.blue = c.B;
@@ -217,7 +220,7 @@ namespace WinPrint.LiteHtml {
             //Logging.TraceMessage();
 
             borders borders = borders_ref;
-            if (Monochrome) {
+            if (MonochromeDarkness > 0) {
                 borders.top.color = ToGrayScaleColor(borders.top.color);
                 borders.left.color = ToGrayScaleColor(borders.left.color);
                 borders.bottom.color = ToGrayScaleColor(borders.bottom.color);
@@ -281,7 +284,7 @@ namespace WinPrint.LiteHtml {
             Logging.TraceMessage();
 
             web_color color = markerColor;
-            if (Monochrome) {
+            if (MonochromeDarkness > 0) {
                 color = ToGrayScaleColor(color);
             }
 
@@ -297,7 +300,7 @@ namespace WinPrint.LiteHtml {
             var fontInfo = _fonts[font];
 
             web_color color = textColor;
-            if (Monochrome) {
+            if (MonochromeDarkness > 0) {
                 color = ToGrayScaleColor(color);
             }
 

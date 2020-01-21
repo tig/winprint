@@ -161,7 +161,7 @@ namespace WinPrint.Core.ContentTypes {
                         //    sbHtml.AppendLine($"<link href=\"{cssUri.Path + @"/" + cssWinPrint}\" rel=\"stylesheet\"/>");
                         //else {
                         sbHtml.AppendLine($"<style>");
-                        sbHtml.AppendLine(Properties.Resources.prism_coy);
+                        sbHtml.AppendLine(Properties.Resources.prism_winprint);
                         sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
                         sbHtml.AppendLine($"</style>");
                         //}

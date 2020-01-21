@@ -92,51 +92,44 @@ namespace WinPrint.Core.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to /**
-        /// * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
-        /// * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
-        /// * @author Tim  Shedor
+        /// * prism.js WinPrint theme for JavaScript, CoffeeScript, CSS and HTML
+        /// * Based on prism-coy.css
+        /// * @author Charlie Kindel
         /// */
         ///
         ///code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
-        ///	color: black;
-        ///	background: none;
-        ///	font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
-        ///	font-size: 1em;
-        ///	text-align: left;
-        ///	white-space: pre;
-        ///	word-sp [rest of string was truncated]&quot;;.
+        ///    color: black;
+        ///    background: none;
+        ///    /* *font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace; */
+        ///
+        ///    /* HACK: note &apos;winprint&apos; font at end. */
+        ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
+        ///    font-size: 10pt;
+        ///    
+        ///    text-align: [rest of string was truncated]&quot;;.
         /// </summary>
-        public static string prism_coy {
+        public static string prism_winprint {
             get {
-                return ResourceManager.GetString("prism_coy", resourceCulture);
+                return ResourceManager.GetString("prism_winprint", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to code[class*=&quot;language-&quot;],
+        ///   Looks up a localized string similar to /* These style override Prism built-in (and any provided theme), 
+        ///   optimizing for rendering for print. E.g. Colored backgrounds
+        ///    make no sense when printing. Also turns off some stuff 
+        ///    litehtml does not support correctly.
+        ///*/
+        ///code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
+        ///    /* no backgrond */
         ///    background: none;
-        ///    font-family: Arial, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
-        ///    font-size: 10pt;
+        ///    /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
         ///    white-space: pre-wrap;
         ///    word-wrap: break-word;
         ///    word-break: break-all;
-        ///    line-height:normal;
-        ///    padding: 0;
-        ///    margin: 0;
-        ///}
-        ///
-        ////* Code blocks */
-        ///pre[class*=&quot;language-&quot;] {
-        ///    margin: 0;
-        ///    overflow: visible;
-        ///    padding: 0;
-        ///}
-        ///
-        ////* Background &amp; border */
-        ///pre[class*=&quot;language-&quot;] &gt; code {
-        ///    position: [rest of string was truncated]&quot;;.
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         public static string prism_winprint_overrides {
             get {

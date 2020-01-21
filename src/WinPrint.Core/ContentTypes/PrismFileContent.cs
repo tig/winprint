@@ -135,18 +135,17 @@ namespace WinPrint.Core.ContentTypes {
 
         private async Task<string> CodeToHtml(string file, string language) {
             Log.Debug(LogService.GetTraceMsg(), $" {file} (type={language})", file, language);
-   
-            // TODO: Implement theme selection (or not; most don't make sense for print)
-            const string cssPrism = "prism.css";
-            const string cssTheme = "prism-coy.css";
-            //const string cssTheme = "prism-dark.css";
-            //const string cssTheme = "prism-funky.css";
-            //const string cssTheme = "prism-okaidia.css";
-            //const string cssTheme = "prism-solarizedlight.css";
-            //const string cssTheme = "prism-tomorrow.css";
-            //const string cssTheme = "prism-twilight.css";
 
-            const string cssWinPrint = "prism-winprint-overrides.css";
+            // TODO: Implement theme selection (or not; most don't make sense for print)
+            const string cssUserProvidePrismThemeFile = "prism-winprint.css"; // "prism-coy.css";
+            //const string cssUserProvidePrismThemeFile = "prism-dark.css";
+            //const string cssUserProvidePrismThemeFile = "prism-funky.css";
+            //const string cssUserProvidePrismThemeFile = "prism-okaidia.css";
+            //const string cssUserProvidePrismThemeFile = "prism-solarizedlight.css";
+            //const string cssUserProvidePrismThemeFile = "prism-tomorrow.css";
+            //const string cssUserProvidePrismThemeFile = "prism-twilight.css";
+
+            const string cssWinPrintOverrides = "prism-winprint-overrides.css";
 
             // Get the URI to our app dir so user-provided stylesheets can be placed there.
             // If (user provided sheet found in exeucting dir)
@@ -180,30 +179,70 @@ namespace WinPrint.Core.ContentTypes {
             // build a well-formed HTML file
             var sbHtml = new StringBuilder();
             sbHtml.AppendLine($"<!DOCTYPE html><html><head><title>{file}</title>");
+
+            // <meta/>
             sbHtml.AppendLine($"<meta charset=\"utf-8\"/>");
 
-            // Link to the theme style sheet. 
-            //sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssPrism}\" rel=\"stylesheet\"/>");
-            sbHtml.AppendLine($"<link href=\"{cssUri.Uri + @"/" + cssTheme}\" rel=\"stylesheet\"/>");
+            sbHtml.AppendLine($"<style>");
 
-            // Override styles with WinPrint settings for better printing
-            // If the app directory has the file, use it. Otherwise inline them.
-            // User can put a prism-winprint-overrides.css in the app dir to override built-in
+            // Put all CSS inline - faster and enables self-contained saved files
+            // Prism formatting is determined with this algo
+            //    <heaad>
+            //      <style>
+            //         if (user provided prism-xxx.css) 
+            //             User provided prism-xxx.css (Body -> Font, Pre -> Monospace Font) OR built-in prism.css
+            //         else 
+            //             Built-in provided prism-winprint.css (Body -> Font, Pre -> Monospace Font)
+            //         if (PrismFileContent.Font != null)
+            //             (Body -> PrismFileContent.Font, Pre -> PrismFileContent.Monospace Font)
+            //         if (Sheet.Font != null)
+            //             (Body -> Sheet.Font, Pre -> Sheet.Monospace Font)
+            //         if (user provided prism-winprint-overrides.css) 
+            //             User provided WinPrint Prism Overrides (makes Prism work with printing).
+            //         else 
+            //             Built-in WinPrint Prism Overrides (makes Prism work with printing).
+            //      </style>
+            string themePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssUserProvidePrismThemeFile;
+            if (File.Exists(themePath)) {
+                //string themePath = $"{prismThemes}/{cssUserProvidePrismThemeFile}";
+                Log.Debug("Using user provided Prism theme: {prism}", themePath);
+                // TODO: Test this. 
+                // BUGBUG: Font specified in user provided CSS will not be detected due to lack of
+                // "winprint" in style specifier (see GDIPlusContainer.cs)
+                sbHtml.AppendLine(File.ReadAllText(cssUserProvidePrismThemeFile)); 
+            }
+            else
+                sbHtml.AppendLine(Properties.Resources.prism_winprint);
+ 
+            // If prismContentType settings specifies a font, override what's in CSS.
+            if (Font != null)
+                sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
+                    $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
+                    $"font-size: {Font.Size}pt;" +  Environment.NewLine +
+                    // BUGBUG: This ain't right
+                    $"font-weight: {Font.Style};}}");
+
+            // TODO: If Sheet settings specifies a font, override what's in CSS.
+            //if (sheet.Font != null)
+            //    sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
+            //        $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
+            //        $"font-size: {Font.Size}pt;}}");
+
+            // Finally, override styles with WinPrint settings for better printing
+            // User can put a prism-winprint-overrides.css in the app dir to override built-in overrides
             cssUri.Path = appDir;
             // Strip "file:/" off of appDir for local
-            string overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrint;
-            if (File.Exists(overridePath))
-                sbHtml.AppendLine($"<link href=\"{cssUri.Path + @"/" + cssWinPrint}\" rel=\"stylesheet\"/>");
-            else {
-                sbHtml.AppendLine($"<style>");
-                sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
-                // If settings specifies a font, override what's in CSS.
-                if (Font != null) 
-                    sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
-                        $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
-                        $"font-size: {Font.Size}pt;}}");
-                sbHtml.AppendLine($"</style>");
+            string overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrintOverrides;
+            if (File.Exists(overridePath)) {
+                Log.Debug("Using user provided css overrides: {prism}", overridePath);
+
+                sbHtml.AppendLine(File.ReadAllText(overridePath));
             }
+            else
+                sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
+
+            sbHtml.AppendLine($"</style>");
+
             sbHtml.Append($"</head><body>");
 
             // Run node

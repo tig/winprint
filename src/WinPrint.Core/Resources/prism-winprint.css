@@ -1,0 +1,147 @@
+/**
+ * prism.js WinPrint theme 
+ * Based on prism-coy.css
+ * @author Charlie Kindel
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+    color: green;
+    /* *font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; */
+    /* HACK: note 'winprint' font at end. */
+    font-family: 'Cascadia Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace, winprint;
+    font-size: 7pt;
+}
+
+code[class*="language"] {
+    max-height: inherit;
+    height: inherit;
+    display: block;
+    overflow: auto;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+    position: relative;
+    color: #c92c2c;
+    display: inline;
+    white-space: normal;
+}
+
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: gray;
+    font-style: italic;
+}
+
+.token.punctuation {
+    color: black;
+}
+
+.token.class-name,
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted {
+    color: darkblue;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted {
+    color: #2f9c0a;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable {
+    color: green;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+    color: blue;
+}
+
+.token.regex,
+.token.important {
+    color: darkorange;
+}
+
+.language-css .token.string,
+.style .token.string {
+    color: brown;
+}
+
+.token.important {
+    font-weight: normal;
+}
+
+.token.bold {
+    font-weight: bold;
+}
+
+.token.italic {
+    font-style: italic;
+}
+
+.namespace {
+    opacity: .7;
+}
+
+@media screen and (max-width: 767px) {
+    pre[class*="language-"]:before,
+    pre[class*="language-"]:after {
+        bottom: 14px;
+        box-shadow: none;
+    }
+}
+
+/* Plugin styles */
+.token.tab:not(:empty):before,
+.token.cr:before,
+.token.lf:before {
+    color: #e0d7d1;
+}
+
+/* Plugin styles: Line Numbers */
+pre[class*="language-"].line-numbers.line-numbers {
+    padding-left: 0;
+}
+
+    pre[class*="language-"].line-numbers.line-numbers code {
+        padding-left: 3.8em;
+    }
+
+    pre[class*="language-"].line-numbers.line-numbers .line-numbers-rows {
+        left: 0;
+    }
+
+/* Plugin styles: Line Highlight */
+pre[class*="language-"][data-line] {
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+}
+
+pre[data-line] code {
+    position: relative;
+    padding-left: 4em;
+}
+
+pre .line-highlight {
+    margin-top: 0;
+}
