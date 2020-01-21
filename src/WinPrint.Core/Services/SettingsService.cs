@@ -16,15 +16,16 @@ namespace WinPrint.Core.Services {
     // TODO: Implement settings validation with appropriate alerting
     public class SettingsService {
         private JsonSerializerOptions jsonOptions;
-        // TODO: Implement settings file location per-user
         private string settingsFileName = "WinPrint.config.json";
+        public string SettingsFileName { get => settingsFileName; set => settingsFileName = value; }
+
         private FileWatcher watcher;
 
         public SettingsService() {
             LogService.TraceMessage();
 
-            settingsFileName = $"{SettingsPath}{Path.DirectorySeparatorChar}{settingsFileName}";
-            Log.Debug("Settings file path: {settingsFileName}", settingsFileName);
+            SettingsFileName = $"{SettingsPath}{Path.DirectorySeparatorChar}{SettingsFileName}";
+            Log.Debug("Settings file path: {settingsFileName}", SettingsFileName);
 
 
             jsonOptions = new JsonSerializerOptions {
@@ -49,20 +50,20 @@ namespace WinPrint.Core.Services {
 
             try {
                 //Logger.Instance.Log4.Info($"Loading user-defined commands from {userCommandsFile}.");
-                fs = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read);
-                jsonString = File.ReadAllText(settingsFileName);
-                Log.Debug("ReadSettings: Deserializing from {settingsFileName}", settingsFileName);
+                fs = new FileStream(SettingsFileName, FileMode.Open, FileAccess.Read);
+                jsonString = File.ReadAllText(SettingsFileName);
+                Log.Debug("ReadSettings: Deserializing from {settingsFileName}", SettingsFileName);
                 settings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
             }
             catch (FileNotFoundException) {
-                Log.Information("Settings file was not found; creating {settingsFileName} with defaults.", settingsFileName);
+                Log.Information("Settings file was not found; creating {settingsFileName} with defaults.", SettingsFileName);
                 settings = Settings.CreateDefaultSettingsFile();
                 SaveSettings(settings);
             }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
-                Log.Error(ex, "SettingsService: Error with {settingsFileName}", settingsFileName);
+                Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
             }
             finally {
                 if (fs != null) fs.Close();
@@ -71,9 +72,9 @@ namespace WinPrint.Core.Services {
             // Enable file watcher
             if (settings != null) {
                 // watch .command file for changes
-                watcher = new FileWatcher(Path.GetFullPath(settingsFileName));
+                watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
                 watcher.ChangedEvent += (o, a) => {
-                    jsonString = File.ReadAllText(settingsFileName);
+                    jsonString = File.ReadAllText(SettingsFileName);
                     Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
                     // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
@@ -96,7 +97,7 @@ namespace WinPrint.Core.Services {
             var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
 
             // Use the name of the test file as the Document.File property
-            using (FileStream fs = File.Create(settingsFileName))
+            using (FileStream fs = File.Create(SettingsFileName))
 
             using (var writer = new Utf8JsonWriter(fs, options: writerOptions))
             using (JsonDocument document = JsonDocument.Parse(jsonString, documentOptions)) {
@@ -154,5 +155,6 @@ namespace WinPrint.Core.Services {
                 return path;
             }
         }
+
     }
 }

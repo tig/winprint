@@ -41,6 +41,8 @@ namespace WinPrint.Winforms {
             printPreview.TabIndex = 1;
             printPreview.TabStop = true;
 
+            Color();
+
             printPreview.KeyUp += (s, e) => {
                 switch (e.KeyCode) {
                     case Keys.F5:
@@ -59,6 +61,95 @@ namespace WinPrint.Winforms {
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
+        }
+
+        private void Color() {
+            Color back = System.Drawing.Color.FromName("white");
+            Color text = System.Drawing.SystemColors.ControlText;
+            dummyButton.BackColor = back;
+            printersCB.BackColor = back;
+
+            settingsButton.BackColor = back;
+            paperSizesCB.BackColor = back;
+            landscapeCheckbox.BackColor = back;
+            printButton.BackColor = back;
+            pageUp.BackColor = back;
+            pageDown.BackColor = back;
+            headerTextBox.BackColor = back;
+            footerTextBox.BackColor = back;
+            panelLeft.BackColor = back;
+            enableHeader.BackColor = back;
+            enableFooter.BackColor = back;
+            comboBoxSheet.BackColor = back;
+            labelPaper.BackColor = back;
+            labelTop.BackColor = back;
+            topMargin.BackColor = back;
+            labelLeft.BackColor = back;
+            leftMargin.BackColor = back;
+            labelRight.BackColor = back;
+            rightMargin.BackColor = back;
+            labelBottom.BackColor = back;
+            bottomMargin.BackColor = back;
+            labelRows.BackColor = back;
+            rows.BackColor = back;
+            labelColumns.BackColor = back;
+            columns.BackColor = back;
+            groupMargins.BackColor = back;
+            groupPages.BackColor = back;
+            pageSeparator.BackColor = back;
+            labelPadding.BackColor = back;
+            padding.BackColor = back;
+            headerPanel.BackColor = back;
+            footerPanel.BackColor = back;
+            fileButton.BackColor = back;
+            toText.BackColor = back;
+            label1.BackColor = back;
+            fromText.BackColor = back;
+            fromLabel.BackColor = back;
+            pagesLabel.BackColor = back;
+
+            dummyButton.ForeColor = text;
+            printersCB.ForeColor = text;
+            paperSizesCB.ForeColor = text;
+            landscapeCheckbox.ForeColor = text;
+            printButton.ForeColor = text;
+            pageUp.ForeColor = text;
+            pageDown.ForeColor = text;
+            headerTextBox.ForeColor = text;
+            footerTextBox.ForeColor = text;
+            panelLeft.ForeColor = text;
+            enableHeader.ForeColor = text;
+            enableFooter.ForeColor = text;
+            comboBoxSheet.ForeColor = text;
+            labelPaper.ForeColor = text;
+            labelTop.ForeColor = text;
+            topMargin.ForeColor = text;
+            labelLeft.ForeColor = text;
+            leftMargin.ForeColor = text;
+            labelRight.ForeColor = text;
+            rightMargin.ForeColor = text;
+            labelBottom.ForeColor = text;
+            bottomMargin.ForeColor = text;
+            labelRows.ForeColor = text;
+            rows.ForeColor = text;
+            labelColumns.ForeColor = text;
+            columns.ForeColor = text;
+            groupMargins.ForeColor = text;
+            groupPages.ForeColor = text;
+            pageSeparator.ForeColor = text;
+            labelPadding.ForeColor = text;
+            padding.ForeColor = text;
+            headerPanel.ForeColor = text;
+            footerPanel.ForeColor = text;
+            fileButton.ForeColor = text;
+            toText.ForeColor = text;
+            label1.ForeColor = text;
+            fromText.ForeColor = text;
+            fromLabel.ForeColor = text;
+            pagesLabel.ForeColor = text;
+
+            //            panelRight.BackColor = back;
+
         }
 
         // Flag: Has Dispose already been called?
@@ -436,7 +527,7 @@ namespace WinPrint.Winforms {
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
 
-            int from= 0, to = 0;
+            int from = 0, to = 0;
             if (!int.TryParse(fromText.Text, out from))
                 from = 0;
             // Ideally we'd get NumSheets from print.SheetSVM but that would cause a
@@ -447,34 +538,38 @@ namespace WinPrint.Winforms {
             // TODO: Decide how to make showing the print dialog a setting (or if needed at all)
             // the only reason I can think of now is from/to page support.
             bool showPrintDialog = true;
-            if (showPrintDialog) {
-                using PrintDialog printDialog = new PrintDialog();
-                printDialog.AllowSomePages = true;
-                printDialog.ShowHelp = true;
-                // printDialog.AllowSelection = true;
+            if (showPrintDialog)
+                BeginInvoke((Action)(async ()  => {
+                    using PrintDialog printDialog = new PrintDialog();
+                    printDialog.AllowSomePages = true;
+                    printDialog.ShowHelp = true;
+                    // printDialog.AllowSelection = true;
 
-                printDialog.Document = print.PrintDocument;
-                if (from > 0 && to > 0) {
-                    printDialog.PrinterSettings.PrintRange = PrintRange.SomePages;
-                    printDialog.PrinterSettings.FromPage = from;
-                    printDialog.PrinterSettings.ToPage = to;
-                }
+                    printDialog.Document = print.PrintDocument;
+                    if (from > 0 && to > 0) {
+                        printDialog.PrinterSettings.PrintRange = PrintRange.SomePages;
+                        printDialog.PrinterSettings.FromPage = from;
+                        printDialog.PrinterSettings.ToPage = to;
+                    }
 
-                //If the result is OK then print the document.
-                if (printDialog.ShowDialog() == DialogResult.OK && printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
-                    print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
-                    print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
-                    print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
-                }
-            }
+                    //If the result is OK then print the document.
+                    if (printDialog.ShowDialog() == DialogResult.OK) {
+                        if (printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
+                            print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
+                            print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
+                            print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
+                        }
+                        await print.DoPrint().ConfigureAwait(false);
+                    }
+                }));
             else {
                 if (from > 0 && to > 0) {
                     print.PrintDocument.PrinterSettings.PrintRange = PrintRange.SomePages;
                     print.PrintDocument.PrinterSettings.FromPage = from;
                     print.PrintDocument.PrinterSettings.ToPage = to;
                 }
+                await print.DoPrint().ConfigureAwait(false);
             }
-            await print.DoPrint().ConfigureAwait(false);
         }
 
         private void panelRight_Resize(object sender, EventArgs e) {
@@ -557,12 +652,22 @@ namespace WinPrint.Winforms {
                 await FileChanged(file).ConfigureAwait(false);
         }
 
-        private void fromText_TextChanged(object sender, EventArgs e) {
-
-        }
-
-        private void toText_TextChanged(object sender, EventArgs e) {
-
+        private void settingsButton_Click(object sender, EventArgs args) {
+            Log.Debug($"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}");
+            Process proc = null;
+            try {
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.UseShellExecute = true;   // This is important
+                psi.FileName = ServiceLocator.Current.SettingsService.SettingsFileName;
+                proc = Process.Start(psi);
+            }
+            catch (Exception e) {
+                // TODO: Better error message (output of stderr?)
+                Log.Error(e, $"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}.");
+            }
+            finally {
+                proc?.Dispose();
+            }
         }
     }
 }
