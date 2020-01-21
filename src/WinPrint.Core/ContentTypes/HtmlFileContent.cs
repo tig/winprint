@@ -103,12 +103,16 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
             LogService.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
 
+            litehtml.ForPrint = true; 
+            litehtml.Monochrome = true;
+
             Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");
             litehtml.Document.CreateFromString(document);
             Logging.TraceMessage("back from litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "back from litehtml.Document.CreateFromString(document)");
-            //litehtml.Document.OnMediaChanged();
+
+            litehtml.Document.OnMediaChanged();
             //Logging.TraceMessage("back from litehtml.Document.OnMediaChanged");
 
             // TODO: Use return of Render() to get "best width"

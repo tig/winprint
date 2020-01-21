@@ -38,6 +38,9 @@ namespace WinPrint.LiteHtml {
 
         private Graphics _graphics;
 
+        public bool ForPrint { get; set; }
+
+        public bool Monochrome { get; set; }
 
         static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
         static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
@@ -61,6 +64,11 @@ namespace WinPrint.LiteHtml {
 
             // BUGBUG: I don't think litehtml actaully honors device_height
             media.device_height = PageHeight;
+
+            if (Monochrome) {
+                media.color = 0;
+                media.color_index = 0;
+            }
         }
 
         protected override UIntPtr CreateFont(string faceName, int size, int weight, font_style italic, font_decoration decoration, ref font_metrics fm) {
@@ -91,8 +99,8 @@ namespace WinPrint.LiteHtml {
             if (fi == null && faceName.Contains("monospace", StringComparison.OrdinalIgnoreCase))
                 fi = FontInfo.TryCreateFont(_graphics, DefaultMonospaceFontName, fontStyle, size);
 
-            if (fi == null) 
-             fi = FontInfo.TryCreateFont(_graphics, DefaultFontName, fontStyle, size);
+            if (fi == null)
+                fi = FontInfo.TryCreateFont(_graphics, DefaultFontName, fontStyle, size);
 
             //Helpers.Logging.TraceMessage($"Added FontInfo({fi.Font.FontFamily.ToString()}, {fi.LineHeight}, {fi.Size}, {fi.Font.Style.ToString()}");
 
@@ -117,8 +125,17 @@ namespace WinPrint.LiteHtml {
             return codeFontInfo;
         }
 
-        protected override void DrawBackground(UIntPtr hdc, string image, background_repeat repeat, ref web_color color, ref position pos, ref border_radiuses borderRadiuses, ref position borderBox, bool isRoot) {
+        protected override void DrawBackground(UIntPtr hdc, string image, background_repeat repeat, ref web_color bgcolor, ref position pos, ref border_radiuses borderRadiuses, ref position borderBox, bool isRoot) {
             Logging.TraceMessage();
+
+            web_color color = bgcolor;
+            if (Monochrome) {
+                color.red = 0xff;
+                color.blue = 0xff;
+                color.green = 0xff;
+                color.alpha = 0x00;
+            }
+
             if (pos.width > 0 && pos.height > 0) {
                 if (!String.IsNullOrEmpty(image)) {
                     var bitmap = LoadImage(image);
@@ -127,9 +144,10 @@ namespace WinPrint.LiteHtml {
                     }
                 }
                 else {
-                    Rectangle rect = new Rectangle(pos.x, pos.y, pos.width, pos.height);
-                    _graphics.FillRectangle(color.GetBrush(), rect);
-
+                    if (!ForPrint) {
+                        Rectangle rect = new Rectangle(pos.x, pos.y, pos.width, pos.height);
+                        _graphics.FillRectangle(color.GetBrush(), rect);
+                    }
                     //var geometry = new PathGeometry();
                     //PathSegmentCollection path = new PathSegmentCollection();
 
@@ -152,8 +170,59 @@ namespace WinPrint.LiteHtml {
             }
         }
 
-        protected override void DrawBorders(UIntPtr hdc, ref borders borders, ref position draw_pos, bool root) {
+
+        /// <summary>
+        /// Creates color with corrected brightness.
+        /// </summary>
+        /// <param name="color">Color to correct.</param>
+        /// <param name="correctionFactor">The brightness correction factor. Must be between -1 and 1. 
+        /// Negative values produce darker colors.</param>
+        /// <returns>
+        /// Corrected <see cref="Color"/> structure.
+        /// </returns>
+        public static Color ChangeColorBrightness(Color color, float correctionFactor) {
+            float red = (float)color.R;
+            float green = (float)color.G;
+            float blue = (float)color.B;
+
+            if (correctionFactor < 0) {
+                correctionFactor = 1 + correctionFactor;
+                red *= correctionFactor;
+                green *= correctionFactor;
+                blue *= correctionFactor;
+            }
+            else {
+                red = (255 - red) * correctionFactor + red;
+                green = (255 - green) * correctionFactor + green;
+                blue = (255 - blue) * correctionFactor + blue;
+            }
+
+            return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
+        }
+
+        public web_color ToGrayScaleColor(web_color originalColor) {
+            // (0.21*Red + 0.72*Green + 0.07*Blue)
+            byte grayScale = (byte)((originalColor.red * .21) + (originalColor.green * .72) + (originalColor.blue * .07));
+//            byte grayScale = (byte)((originalColor.red * .3) + (originalColor.green * .59) + (originalColor.blue * .11));
+            originalColor.red = originalColor.green = originalColor.blue = grayScale;
+
+            var c = ChangeColorBrightness(Color.FromArgb(originalColor.red, originalColor.green, originalColor.blue), -0.2F);
+            originalColor.red = c.R;
+            originalColor.green = c.G;
+            originalColor.blue = c.B;
+            return originalColor;
+        }
+
+        protected override void DrawBorders(UIntPtr hdc, ref borders borders_ref, ref position draw_pos, bool root) {
             //Logging.TraceMessage();
+
+            borders borders = borders_ref;
+            if (Monochrome) {
+                borders.top.color = ToGrayScaleColor(borders.top.color);
+                borders.left.color = ToGrayScaleColor(borders.left.color);
+                borders.bottom.color = ToGrayScaleColor(borders.bottom.color);
+                borders.right.color = ToGrayScaleColor(borders.right.color);
+            }
 
             // Skinny controls can push borders off, in which case we can't create a rect with a negative size.
             if (draw_pos.width < 0) draw_pos.width = 0;
@@ -189,7 +258,7 @@ namespace WinPrint.LiteHtml {
                 Point p4 = new Point(rect.Left, rect.Bottom - br.bottom_left_y);
                 //DrawCurvedPath(p1, p2, p3, p4, ref borders.bottom.color, borders.bottom.width);
                 _graphics.DrawLine(borders.bottom.color.GetPen(borders.bottom.width), rect.Left, rect.Bottom, rect.Right, rect.Bottom);
-//                DrawRect(draw_pos.x, draw_pos.y + draw_pos.height - borders.bottom.width, draw_pos.width, borders.bottom.width, borders.bottom.color.GetPen(borders.bottom.width));
+                //                DrawRect(draw_pos.x, draw_pos.y + draw_pos.height - borders.bottom.width, draw_pos.width, borders.bottom.width, borders.bottom.color.GetPen(borders.bottom.width));
             }
 
             if (borders.left.width > 0) {
@@ -199,7 +268,7 @@ namespace WinPrint.LiteHtml {
                 Point p4 = new Point(rect.Left + br.top_left_x, rect.Top);
                 //DrawCurvedPath(p1, p2, p3, p4, ref borders.left.color, borders.left.width);
                 _graphics.DrawLine(borders.left.color.GetPen(borders.left.width), rect.Left, rect.Top, rect.Left, rect.Bottom);
-//                DrawRect(draw_pos.x, draw_pos.y, borders.left.width, draw_pos.height, borders.left.color.GetPen(borders.left.width));
+                //                DrawRect(draw_pos.x, draw_pos.y, borders.left.width, draw_pos.height, borders.left.color.GetPen(borders.left.width));
             }
         }
 
@@ -208,19 +277,29 @@ namespace WinPrint.LiteHtml {
             Graphics.DrawRectangle(pen, rect);
         }
 
-        protected override void DrawListMarker(string image, string baseURL, list_style_type marker_type, ref web_color color, ref position pos) {
+        protected override void DrawListMarker(string image, string baseURL, list_style_type marker_type, ref web_color markerColor, ref position pos) {
             Logging.TraceMessage();
+
+            web_color color = markerColor;
+            if (Monochrome) {
+                color = ToGrayScaleColor(color);
+            }
 
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
             _graphics.FillRectangle(color.GetBrush(), pos.x, pos.y, pos.width, pos.height);
         }
 
-        protected override void DrawText(string text, UIntPtr font, ref web_color color, ref position pos) {
+        protected override void DrawText(string text, UIntPtr font, ref web_color textColor, ref position pos) {
             //Logging.TraceMessage();
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
             text = text.Replace(' ', (char)160);
             var fontInfo = _fonts[font];
+
+            web_color color = textColor;
+            if (Monochrome) {
+                color = ToGrayScaleColor(color);
+            }
 
             _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat.GenericTypographic);
         }
