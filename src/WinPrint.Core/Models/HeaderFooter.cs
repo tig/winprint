@@ -85,17 +85,14 @@ namespace WinPrint.Core.Models {
         public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
 
         public HeaderFooter() {
-            font = new Font() { Family = "Microsft Sans Serif", Size = 8F, Style = FontStyle.Bold };
         }
     }
     public class Header : HeaderFooter {
         public Header() : base() {
-            Text = "|{FullyQualifiedPath}";
         }
     }
     public class Footer : HeaderFooter {
         public Footer() : base() {
-            Text = "|{Page}/{NumPages}";
         }
     }
 }

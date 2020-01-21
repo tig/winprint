@@ -18,34 +18,14 @@ namespace WinPrint.Core.Models {
         private int columns = 1;
         private int padding = 3;
         private bool pageSeparator;
-        private Margins margins;
+        private Margins margins = new Margins(0,0,0,0);
 
         private bool landscape;
 
         private Header header = new Header();
         private Footer footer = new Footer();
 
-        // TOOD: These should go on printPreview model?
-        private Font font = new Font() { Family = "monospace", Size = 8F, Style = FontStyle.Regular };
-        private Font rulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
-
-        private bool previewPrintableArea = false;
-        private bool printPrintableArea = false;
-        private bool previewPageSize = false;
-        private bool printPageSize = false;
-        private bool previewMargins = false;
-        private bool printMargins = false;
-        private bool previewHardMargins = false;
-        private bool printHardMargins = false;
-        private bool printBounds = false;
-        private bool previewBounds = false;
-        private bool printContentBounds = false;
-        private bool previewContentBounds = false;
-        private bool printHeaderFooterBounds = false;
-        private bool previewHeaderFooterBounds = false;
-        private bool printPageBounds = false;
-        private bool previewPageBounds = false;
-
+        private Font contentFont;
 
         /// <summary>
         /// Unique identifier for this Sheet definition.
@@ -84,9 +64,9 @@ namespace WinPrint.Core.Models {
         public Margins Margins { get => margins; set => SetField(ref margins, value); }
 
         /// <summary>
-        /// Font used for diagnostic rules
+        /// Font used for content. Will override any content font settings specified by a ContentType provider.
         /// </summary>
-        public Font RulesFont { get => rulesFont; set => SetField(ref rulesFont, value); }
+        public Font ContentFont { get => contentFont; set => SetField(ref contentFont, value); }
 
         /// <summary>
         /// Header printed at bottom  of each sheet
@@ -98,36 +78,11 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public Footer Footer { get => footer; set => SetField(ref footer, value); }
 
-        /// <summary>
-        /// Diagnostic settings
-        /// </summary>
-        public bool PreviewPrintableArea { get => previewPrintableArea; set => SetField(ref previewPrintableArea, value); }
-        public bool PrintPrintableArea { get => printPrintableArea; set => SetField(ref printPrintableArea, value); }
-        public bool PreviewPaperSize { get => previewPageSize; set => SetField(ref previewPageSize, value); }
-        public bool PrintPaperSize { get => printPageSize; set => SetField(ref printPageSize, value); }
-        public bool PreviewMargins { get => previewMargins; set => SetField(ref previewMargins, value); }
-        public bool PrintMargins { get => printMargins; set => SetField(ref printMargins, value); }
-        public bool PreviewHardMargins { get => previewHardMargins; set => SetField(ref previewHardMargins, value); }
-        public bool PrintHardMargins { get => printHardMargins; set => SetField(ref printHardMargins, value); }
-        public bool PrintBounds { get => printBounds; set => SetField(ref printBounds, value); }
-        public bool PreviewBounds { get => previewBounds; set => SetField(ref previewBounds, value); }
-        public bool PrintContentBounds { get => printContentBounds; set => SetField(ref printContentBounds, value); }
-        public bool PreviewContentBounds { get => previewContentBounds; set => SetField(ref previewContentBounds, value); }
-        public bool PrintHeaderFooterBounds { get => printHeaderFooterBounds; set => SetField(ref printHeaderFooterBounds, value); }
-        public bool PreviewHeaderFooterBounds { get => previewHeaderFooterBounds; set => SetField(ref previewHeaderFooterBounds, value); }
-        public bool PreviewPageBounds { get => previewPageBounds; set => SetField(ref previewPageBounds, value); }
-        public bool PrintPageBounds { get => printPageBounds; set => SetField(ref printPageBounds, value); }
-
         public Sheet() {
-            LogService.TraceMessage("new");
+            LogService.TraceMessage();
 
-            // TODO: Don't specify defaults in constructor; do it through default settings
-            Margins = new Margins(30, 30, 30, 30);
-            header.Enabled = true;
-            footer.Enabled = true;
-            landscape = true;
-            columns = 2;
-            pageSeparator = false;
+            // Don't specify defaults in constructor; do it through default settings in
+            // SettingsService.CreateDefaultSettingsFile
         }
     }
 }

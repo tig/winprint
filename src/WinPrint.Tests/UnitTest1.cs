@@ -36,10 +36,10 @@ namespace WinPrint.Tests {
             Core.Models.Sheet doc = new Core.Models.Sheet();
             Assert.IsNotNull(doc, "doc should not be null");
 
-            Assert.AreEqual("sansserif", doc.RulesFont.Family);
+            //Assert.AreEqual("sansserif", doc.DiagnosticRulesFont.Family);
 
-            doc.RulesFont.Family = "Cascadia Code";
-            Assert.AreEqual("Cascadia Code", doc.RulesFont.Family);
+            //doc.DiagnosticRulesFont.Family = "Cascadia Code";
+            //Assert.AreEqual("Cascadia Code", doc.DiagnosticRulesFont.Family);
 
             TestHeaderFooter(doc);
         }

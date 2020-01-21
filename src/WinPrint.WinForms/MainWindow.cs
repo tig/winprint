@@ -364,8 +364,10 @@ namespace WinPrint.Winforms {
             // Even if a file's not been set, SheetSettingsChanged to Reflow in order ot juice the print preview
             SheetSettingsChanged();
 
-            this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
-            this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+            if (ModelLocator.Current.Settings.Size != null)
+                this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+            if (ModelLocator.Current.Settings.Location != null)
+                this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
             printPreview.Select();

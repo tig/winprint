@@ -17,11 +17,6 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public string Family {
             get {
-                if (family == "monospace") {
-                    // TODO: This is a hack. Implement platform defaults gracefully.
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        return "Consolas";
-                }
                 return family;
             }
 

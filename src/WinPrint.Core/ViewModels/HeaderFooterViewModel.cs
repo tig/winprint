@@ -113,14 +113,7 @@ namespace WinPrint.Core {
                 return;
             }
 
-            System.Drawing.Font tempFont;
-            if (g.PageUnit == GraphicsUnit.Display) {
-                tempFont = new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point);
-            }
-            else {
-                // Convert font to pixel units if we're in preview
-                tempFont = new System.Drawing.Font(Font.Family, Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel);
-            }
+            using System.Drawing.Font tempFont = CreateTempFont(g);
 
             using StringFormat fmt = new StringFormat(StringFormat.GenericTypographic) {
                 Trimming = StringTrimming.None,
@@ -162,7 +155,28 @@ namespace WinPrint.Core {
                 //g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
                 g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
             }
-            tempFont.Dispose();
+        }
+
+        /// <summary>
+        /// Get a font suitable for printing or preview. If no font was specified just return default system font.
+        /// </summary>
+        /// <param name="g"></param>
+        /// <returns></returns>
+        private System.Drawing.Font CreateTempFont(Graphics g) {
+            System.Drawing.Font tempFont;
+
+            if (Font == null)
+                return System.Drawing.SystemFonts.DefaultFont;
+
+            if (g.PageUnit == GraphicsUnit.Display) {
+                tempFont = new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point);
+            }
+            else {
+                // Convert font to pixel units if we're in preview
+                tempFont = new System.Drawing.Font(Font.Family, Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel);
+            }
+
+            return tempFont;
         }
 
 
@@ -180,7 +194,10 @@ namespace WinPrint.Core {
             RightBorder = hf.RightBorder;
             TopBorder = hf.TopBorder;
             BottomBorder = hf.BottomBorder;
-            Font = (Core.Models.Font)hf.Font.Clone();
+
+            // Font can be null (provided by Sheet definition)
+            if (hf.Font != null)
+                Font = (Core.Models.Font)hf.Font.Clone();
             Enabled = hf.Enabled;
 
             // Wire up changes from Header / Footer models

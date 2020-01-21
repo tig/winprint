@@ -197,9 +197,11 @@ namespace WinPrint.Core.ContentTypes {
             else {
                 sbHtml.AppendLine($"<style>");
                 sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
-                sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
-                    $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
-                    $"font-size: {Font.Size}pt;}}");
+                // If settings specifies a font, override what's in CSS.
+                if (Font != null) 
+                    sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
+                        $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
+                        $"font-size: {Font.Size}pt;}}");
                 sbHtml.AppendLine($"</style>");
             }
             sbHtml.Append($"</head><body>");
