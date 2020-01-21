@@ -203,10 +203,12 @@ namespace WinPrint.Winforms {
 
                     case "Header":
                         headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
+                        enableHeader.Checked = printPreview.SheetViewModel.Header.Enabled;
                         break;
 
                     case "Footer":
                         footerTextBox.Text = printPreview.SheetViewModel.Footer.Text;
+                        enableFooter.Checked = printPreview.SheetViewModel.Footer.Enabled;
                         break;
 
                     case "Margins":
@@ -664,6 +666,25 @@ namespace WinPrint.Winforms {
             catch (Exception e) {
                 // TODO: Better error message (output of stderr?)
                 Log.Error(e, $"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}.");
+            }
+            finally {
+                proc?.Dispose();
+            }
+        }
+
+        private void wikiLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args) {
+            string url = "https://github.com/tig/winprint";
+            Log.Debug($"Browsing to home page: {url}");
+            Process proc = null;
+            try {
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.UseShellExecute = true;   // This is important
+                psi.FileName = url;
+                proc = Process.Start(psi);
+            }
+            catch (Exception e) {
+                // TODO: Better error message (output of stderr?)
+                Log.Error(e, $"Couldn't browse to {url}.");
             }
             finally {
                 proc?.Dispose();
