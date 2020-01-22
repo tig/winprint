@@ -78,6 +78,25 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public Footer Footer { get => footer; set => SetField(ref footer, value); }
 
+        /// <summary>
+        /// if True, print content background, if present. Otherwise, all backgrounds will be paper color.
+        /// </summary>
+        public bool PrintBackground { get => printBackground; set => SetField(ref printBackground, value); }
+        private bool printBackground = true;
+
+        /// <summary>
+        /// If True, all content will be printed in grayscale. Use Darkness property to change how
+        /// dark the grey is.
+        /// </summary>
+        public bool Grayscale { get => grayscale; set => SetField(ref grayscale, value); }
+        private bool grayscale = false;
+
+        /// <summary>
+        /// Darkness factor. 0 = RGB. 100 = black.
+        /// </summary>
+        public int Darkness { get => darkness; set => SetField(ref darkness, value); }
+        private int darkness = 0;
+
         public Sheet() {
             LogService.TraceMessage();
 
