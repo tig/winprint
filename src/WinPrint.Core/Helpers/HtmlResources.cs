@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Text;
-using WinPrint.Core;
 using WinPrint.Core.Services;
 
 namespace WinPrint.LiteHtml {
     public class HtmlResources {
-        private HttpClient _httpClient;
-        private string _lastUrl;
+        private HttpClient _httpClient = null;
+        private string _lastUrl = null;
         private string filePath;
 
         public HtmlResources(string filePath) {

@@ -267,7 +267,8 @@ namespace WinPrint.Core {
         public async Task SetPrinterPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
-            var ps = (PageSettings)pageSettings.Clone();
+            PageSettings ps = null;
+            await Task.Run(() => ps = (PageSettings)pageSettings.Clone());
 
             // On Linux, PageSettings.Bounds is determined from PageSettings.Margins. 
             // On Windows, it has no effect. Regardelss, here we set Bounds to 0 to work around this.

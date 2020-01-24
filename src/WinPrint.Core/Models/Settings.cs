@@ -178,11 +178,6 @@ namespace WinPrint.Core.Models {
                 MonspacedFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
             };
 
-            // Prism fonts are determined by:
-            // 1) Sheet
-            // 2) PrismFileContent settings
-            // 3) user provided prism-winprint-overrides.css.css (Body -> Font, Pre -> Monospace Font)
-            // 3) built-in provided winprint-prism.css (Body -> Font, Pre -> Monospace Font)
             settings.PrismFileSettings = new PrismFileContent() {
                 Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
                 MonspacedFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },

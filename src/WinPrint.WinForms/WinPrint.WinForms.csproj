@@ -12,7 +12,7 @@
     <AssemblyTitle>WinPrint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.0.0.420</Version>
+    <Version>2.0.0.436</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -20,6 +20,7 @@
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
 
   </PropertyGroup>
 

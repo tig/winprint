@@ -215,12 +215,12 @@ namespace WinPrint.Core.ContentTypes {
                 sbHtml.AppendLine(Properties.Resources.prism_winprint);
  
             // If prismContentType settings specifies a font, override what's in CSS.
-            if (Font != null)
+            if (MonspacedFont != null)
                 sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
-                    $"font-family: '{Font.Family}', winprint;" + Environment.NewLine +
-                    $"font-size: {Font.Size}pt;" +  Environment.NewLine +
+                    $"font-family: '{MonspacedFont.Family}', winprint;" + Environment.NewLine +
+                    $"font-size: {MonspacedFont.Size}pt;" +  Environment.NewLine +
                     // BUGBUG: This ain't right
-                    $"font-weight: {Font.Style};}}");
+                    $"font-weight: {MonspacedFont.Style};}}");
 
             // TODO: If Sheet settings specifies a font, override what's in CSS.
             //if (sheet.Font != null)

@@ -48,7 +48,7 @@ namespace WinPrint.Core {
                 try {
                     PrintDocument.PrinterSettings.PrinterName = printerName;
                 }
-                catch (NullReferenceException e) {
+                catch (NullReferenceException) {
                     // On Linux if an invalid printer name is passed in we get a 
                     // NullReferenceException. 
                     throw new InvalidPrinterException(PrintDocument.PrinterSettings);

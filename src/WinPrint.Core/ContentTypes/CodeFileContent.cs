@@ -91,9 +91,9 @@ namespace WinPrint.Core.ContentTypes {
         private async Task<List<HtmlLine>> DocumentToHtmlLines(string file, string language) {
             LogService.TraceMessage($"{language}");
 
-            const string cssTheme = "prism-coy.css";
+           // const string cssTheme = "prism-coy.css";
             //const string cssPrism = "prism.css";
-            const string cssWinPrint = "prism-winprint-overrides.css";
+            //const string cssWinPrint = "prism-winprint-overrides.css";
             string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             var cssUri = new UriBuilder();
             cssUri.Scheme = "file";
@@ -273,10 +273,11 @@ namespace WinPrint.Core.ContentTypes {
             var lineSize = new LiteHtmlSize(width, height);
             line.liteHtml.Size = lineSize;
             line.liteHtml.Graphics = g;
-            line.liteHtml.Document.CreateFromString(line.html);
+            await Task.Run(() => line.liteHtml.Document.CreateFromString(line.html));
             //l.liteHtml.Document.OnMediaChanged();
             // TODO: Use return of Render() to get "best width"
-            int bestWidth = line.liteHtml.Document.Render((int)width);
+            int bestWidth;
+            await Task.Run(() => bestWidth = line.liteHtml.Document.Render((int)width));
             line.liteHtml.Graphics = null;
         }
 

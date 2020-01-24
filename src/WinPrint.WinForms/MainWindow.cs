@@ -23,7 +23,6 @@ namespace WinPrint.Winforms {
         // Winprint Print Preview control
         private PrintPreview printPreview;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public MainWindow() {
             InitializeComponent();
 
@@ -53,7 +52,6 @@ namespace WinPrint.Winforms {
                         break;
                 }
             };
-
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 this.panelRight.Controls.Remove(this.dummyButton);
@@ -147,9 +145,6 @@ namespace WinPrint.Winforms {
             fromText.ForeColor = text;
             fromLabel.ForeColor = text;
             pagesLabel.ForeColor = text;
-
-            //            panelRight.BackColor = back;
-
         }
 
         // Flag: Has Dispose already been called?
@@ -249,7 +244,7 @@ namespace WinPrint.Winforms {
 
                     case "Loading":
                         if (printPreview.SheetViewModel.Loading)
-                            printPreview.Text = "Loading...";
+                            printPreview.Text = Resources.LoadingMsg;
                         printPreview.Refresh();
                         printPreview.Select();
                         printPreview.Focus();
@@ -257,7 +252,7 @@ namespace WinPrint.Winforms {
 
                     case "Reflowing":
                         if (printPreview.SheetViewModel.Reflowing)
-                            printPreview.Text = "Rendering...";
+                            printPreview.Text = Resources.RenderingMsg;
                         else {
                             printPreview.Text = "";
                             // TODO: Set to/from page # boxes now that we know how many sheets there are?
@@ -320,7 +315,7 @@ namespace WinPrint.Winforms {
             }
 
             foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
-                paperSizesCB.Items.Add(ps);
+                paperSizesCB.Items.Add(ps.PaperName);
 
             // --z
             if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize))
@@ -394,10 +389,11 @@ namespace WinPrint.Winforms {
                 ShowError($"Error: {ioe.Message}{Environment.NewLine}({file})");
                 //                fileButton_Click(null, null);
             }
+            #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
+            #pragma warning restore CA1031 // Do not catch general exception types
                 Log.Error(e, "Exception {file}", file);
                 ShowError($"Exception: {e.Message}{Environment.NewLine}({file})");
-                //               fileButton_Click(null, null);
             }
         }
 
@@ -420,7 +416,7 @@ namespace WinPrint.Winforms {
                 LogService.TraceMessage();
                 using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                     openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\source\\winprint\\tests";
-                    openFileDialog.Filter = $"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                    openFileDialog.Filter = Resources.FileOpenTemplate;
                     openFileDialog.FilterIndex = 3;
                     openFileDialog.RestoreDirectory = true;
                     if (openFileDialog.ShowDialog() == DialogResult.OK) {
@@ -501,7 +497,7 @@ namespace WinPrint.Winforms {
                 printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
                 paperSizesCB.Items.Clear();
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
-                    paperSizesCB.Items.Add(ps);
+                    paperSizesCB.Items.Add(ps.PaperName);
                 }
                 paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
             }
@@ -656,6 +652,8 @@ namespace WinPrint.Winforms {
                 await FileChanged(file).ConfigureAwait(false);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", 
+            "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void settingsButton_Click(object sender, EventArgs args) {
             Log.Debug($"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}");
             Process proc = null;
@@ -674,6 +672,8 @@ namespace WinPrint.Winforms {
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", 
+            "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void wikiLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args) {
             string url = "https://github.com/tig/winprint";
             Log.Debug($"Browsing to home page: {url}");

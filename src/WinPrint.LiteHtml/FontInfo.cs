@@ -154,10 +154,7 @@ namespace WinPrint.LiteHtml {
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
-        private string defaultFontName;
-        private FontStyle fontStyle;
-        private object p;
-
+ 
         protected virtual void Dispose(bool disposing) {
             if (!disposedValue) {
                 if (disposing) {

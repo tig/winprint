@@ -149,7 +149,7 @@ namespace WinPrint.Core.ContentTypes {
 
             LogService.TraceMessage($"{lines.Count} lines across {n} pages.");
 
-            return n;
+            return await Task.FromResult(n);
         }
 
         // TODO: Profile for performance

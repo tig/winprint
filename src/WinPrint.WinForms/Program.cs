@@ -39,7 +39,7 @@ namespace WinPrint.Winforms {
                         Log.Information("Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
                         ModelLocator.Current.Options.CopyPropertiesFrom(o);
                     })
-                    .WithNotParsed((errs) => DisplayHelp(result, errs));
+                    .WithNotParsed((errs) => DisplayHelp(result));
                 parser.Dispose();
             }
 
@@ -52,7 +52,7 @@ namespace WinPrint.Winforms {
 #pragma warning restore CA2000 // Dispose objects before losing scope
         }
 
-        static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs) {
+        static void DisplayHelp<T>(ParserResult<T> result) {
             var helpText = HelpText.AutoBuild(result, h => {
                 h.AutoHelp = true;
                 h.AutoVersion = true;
