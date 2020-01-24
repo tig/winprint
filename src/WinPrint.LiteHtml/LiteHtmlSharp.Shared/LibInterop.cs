@@ -10,6 +10,51 @@ using Utf8Str = System.IntPtr;
 
 namespace LiteHtmlSharp
 {
+
+    public static class NativeMethods {
+        // here we just use "Foo" and at runtime we load "Foo.dll" dynamically
+        // from any path on disk depending on the logic you want to implement
+        [DllImport("litehtml_", EntryPoint = "Init")]
+        private extern static void Init();
+
+        [DllImport("kernel32")]
+        private static extern IntPtr LoadLibrary(string dllname);
+
+        [DllImport("kernel32")]
+        private static extern void FreeLibrary(IntPtr handle);
+
+        private sealed  class LibraryUnloader {
+            internal LibraryUnloader(IntPtr handle) {
+                this.handle = handle;
+            }
+
+            ~LibraryUnloader() {
+                if (handle != null)
+                    FreeLibrary(handle);
+            }
+
+            private IntPtr handle;
+
+        } // LibraryUnloader
+
+        private static readonly LibraryUnloader unloader;
+
+        static NativeMethods() {
+            string path;
+
+            if (IntPtr.Size == 4)
+                path = "path/to/the/32/bit/Foo.dll";
+            else
+                path = "path/to/the/64/bit/Foo.dll";
+
+                IntPtr handle = LoadLibrary(path);
+
+                if (handle == null)
+                    throw new DllNotFoundException("unable to find the native Foo library: " + path);
+
+                unloader = new LibraryUnloader(handle);
+        }
+    }
     public class LibInterop : ILibInterop
     {
 
