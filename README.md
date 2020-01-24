@@ -12,13 +12,13 @@ WinPrint is the perfect tool for printing source code, web pages, reports genera
 
 Ever since I started programming on an Apple ][+ in 1981, I've had a thing for printing. My earliest apps focused on printing and my first money-making endeavor was "Tapes", which printed casette tape '[J-cards](https://en.wikipedia.org/wiki/J-card)' for all the mix-tapes of great '80s music me made for the girls. Whenever I learned a new programming language or OS, the first app I'd write was '[Spit](https://github.com/tig/Tigger/blob/a2013af12fef6d9946adea7fe510f8c649766160/College/C_SRC/SPIT153.C)', an app for printing my source code all pretty (it "spits" source code out of a printer). Over the years, I wrote Spit for AppleDOS (Apple BASIC), UCSD-Pascal, CP/M (Turbo Pascal), DOS (8086 assembly and C), VAX/VMS (Pascal and FORTRAN-77, and Mac (Pascal).
 
-In 1988, as a College Senior, I decided Windows was going to win (over OS/2). I decided I was going to work for Microsoft. I bought Charles Petzold's "Programming Windows" and conned my dad into buying me a copy of the Windows 2.0 SDK (which was, like, $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first (useful) app I wrote was WinSpit. In a rare moment of adulting, I renamed it [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For the next 10 years those $25 checks just arrived in the mail. Even better, WinPrint demonstrated to Microsoft I could actually, really write code. So they hired me.
+In 1988, as a College Senior, I decided Windows was going to win (over OS/2) I was going to work for Microsoft. I bought Charles Petzold's "Programming Windows" and conned my dad into buying me a copy of the Windows 2.0 SDK (which was like $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first (useful) app I wrote was WinSpit. In a rare moment of adulting, I renamed it [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For the next 10 years those $25 checks just arrived in the mail. Even better, WinPrint demonstrated to Microsoft I could actually, really write code. So they hired me.
 
 Several times in the early 1990s I started writing WinPrint 2.0. Each time I had the basics working and realized three things: 1) Nobody cares about printing source code, 3) I'd over-engineered things, and 2) the technology I choose was already dated (e.g. MFC). Two of those abandoned efforts can be found in my archive [here (1992)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRINT) and [here (1994)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRT20).
 
-Last year (2019) I got a wild-hair to write some code. It all started with MS releasing the [Cascadia Code](https://devblogs.microsoft.com/commandline/cascadia-code/) font. I have a thing for fixed-pitch fonts. It's weird. I installed the font in `Terminal` and `code` but just looking at stuff wasn't enough. I needed to *use the font in anger*!. So I fixed some long-standing issues in [MCE Controller](https://tig.github.io/mcec/) (another app nobody uses).
+Last year (2019) I got a wild-hair to write some code as a way of blowing off steam, and proving to myself I was still cool. It all started with MS releasing the [Cascadia Code](https://devblogs.microsoft.com/commandline/cascadia-code/) font. I have a thing for fixed-pitch fonts. It's weird. Anyway, I installed the font in Terminal and VScode but just looking at stuff wasn't enough. I needed to *use the font in anger*!. So I fixed some long-standing issues in [MCE Controller](https://tig.github.io/mcec/) (another app I wrote that nobody uses anymore).
 
-This all led to me accidentally finding the old WinPrint 2.0 source code. Reminiscing on how much time I wasted back then, I just had to try again. So I did. And, to be clear, here's what I did:
+This all led to me accidentally finding the old WinPrint 2.0 source code. Reminiscing on how much time I wasted back then, I just had to try again. So I did. And, just to be clear, here's what I did:
 
 1) I wrote a *printing* app in 2019-2020. Nobody prints these days. *I* don't even print anymore. 
 2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. A full command-line interface. It can syntax-highlight over 200 different programming languages. It's cross-platfom. And more.
@@ -38,13 +38,13 @@ So, there you are. I present to you WinPrint 2.0. I hope you enjoy it.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Headers and Footers support detailed file nad print information macros with rich date/time formatting.
 
-## Installing WinPrint
+## Installing
 
-On Windows: Download and run the setup file. Once installed, WinPrint can be started from the Start menu or command line. The installer adds WinPrint to the `PATH` so that typing `winprint` from any command prompt will run the app.
+**On Windows**: Download and run the setup file. Once installed, WinPrint can be started from the Start menu or command line. The installer adds WinPrint to the `PATH` so that typing `winprint` from any command prompt will run the app.
 
-On Linux: *Describe all the incantations requried to get .NET installed, the right `libgdiplus`, etc... Including (probably) compliling the kernel. Oh, and have different instructions for each distro. Did I mention how much I hate linux?*
+**On Linux**: Good luck. Start by cloning the WinPrint repo, installing .NET Core 3, and buildng. Then I have some C++ libraries I'm using under the covers that you'll have to grab and build too. You'll need JUST THE RIGHT version of `libgdiplus`. It might help if you re-compile your kernel. You know, all the stuff reqruied to make anything work on one of several Linux distros. Did I mention how much [I hate linux](https://ceklog.kindel.com/2011/10/21/i-sincerely-tried-but-i-still-hate-linux/)? (Seriously, it does work on Linux. But until someone begs me for it, I'm not spending another second on trying to build an installer. Submit an Issue if you really want help.)
 
-On Mac: *Describe, the installer. I'm sure I'll figure it out.*
+**On Mac**: I haven't even tried as my old Macbook Air died and Apple wont fix it. I refuse to buy anything from Apple (except for for my family who are all all-in with Apple...sigh). I'll buy beer for someone who contributes to getting the Mac version working. It should not be hard given I've proven the stupid things works on Linux already.
 
 ## Command Line Interface
 
@@ -96,13 +96,13 @@ Print Program.cs using the 2 Up sheet defintion:
 
 ## Graphical User Interface
 
-When run as a Windows app (`winprintgui.exe`), WinPrint provides a simple GUI for previewing how a file will be printed and changing settings. 
+When run as a Windows app (`winprintgui.exe`), WinPrint provides an easy to use GUI for previewing how a file will be printed and changing many settings.
 
-The File button opens a File Open Dialog for choosing the file to preview and/or print. The GUI app can print a single file at a time. Use the console verion (`winprint.exe`) to print multiple files at once.
+The **File button** opens a File Open Dialog for choosing the file to preview and/or print. The GUI app can print a single file at a time. Use the console verion (`winprint.exe`) to print multiple files at once.
 
-The Print button prints the currently selected file.
+The **Print button** prints the currently selected file.
 
-The settings (⚙) button will open `WinPrint.Config.json` in your favorite text editor. Changes made to the file will be reflected in the GUI automatically.
+The **Settings (⚙) button** will open `WinPrint.Config.json` in your favorite text editor. Changes made to the file will be reflected in the GUI automatically.
 
 ## Sheet Definitions
 
@@ -110,7 +110,9 @@ Font choices, header/footer options, and other print-job settings are defined in
 
 This is called "n-up" printing. The most common form of "n-up" printing is "2-up" where the page orientation is set to landscape and there are two columns of pages.
 
-The layout and format of the **Sheet** is defined by a set of configuration settings called a **Sheet Definition**. **Sheet Definitions** are defined and stored in the `WinPrint.Config.json` configuration file found in `%appdata%\Kindel Systems\WinPrint`.
+The layout and format of the **Sheet** is defined by a set of configuration settings called a **Sheet Definition**. Out of the box WinPrint comes with two: `Default 1 Up` and `Default 2 Up`.
+
+**Sheet Definitions** are defined and stored in the `WinPrint.Config.json` configuration file found in `%appdata%\Kindel Systems\WinPrint`.
 
 ### Headers & Footers Macros
 
@@ -148,7 +150,7 @@ The WinPrint GUI can be used to change most Sheet Definition settings. All setti
 
 ### Creating new Sheet Definitions
 
-WinPrint starts with two "built-in" Sheet Definitions: `Default (1-UP)` and `Default (2-Up)`. Additional Sheet Definitions can be created by editing `WinPrint.Config.json`, copying one of the existing Sheet Defintions and giving it a new unique `name` and unique `ID`.
+WinPrint starts with two "built-in" Sheet Definitions: `Default 1-Up` and `Default 2-Up`. Additional Sheet Definitions can be created by editing `WinPrint.Config.json`, copying one of the existing Sheet Defintions and giving it a new unique `name` and unique `ID`.
 
 ## Content Types
 
@@ -158,9 +160,9 @@ WinPrint supports three rendering engines, representing three Content Types:
 
 2. **`text/html`** - This rendering engine can print html files. Any CSS specified by the HTML file will be honored. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\WinPrint` folder. `text/html` does not support line numbers.
 
-3. **`text/sourcecode`** - The sourcecode rendering engine supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` `%appdata%\Kindel Systems\WinPrint` folder. The styles defined in this format shold match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with WinPrint.
+3. **`text/sourcecode`** - The sourcecode rendering engine supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` in the `%appdata%\Kindel Systems\WinPrint` folder. The styles defined in this format shold match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with WinPrint.
 
-WinPrint decides which Content Type Rendering Engine to use based on file extension. It has a built-in library of hundreds of file-type mappings. 
+The extension of the file being printed (e.g. `.cs`) is determines which Content Type rendering engine will be used. WinPrint has a built-in library of hundreds of file extension to content type/language mappings.
 
 To associate a file extension with a particular Content Type Engine modify the `files.associations` section of `WinPrint.Config.json` appropriately. For example to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below (the `WinPrint.Config.json` generated when WinPrint runs the first time already provides this example, as an example):
 
@@ -168,7 +170,7 @@ To associate a file extension with a particular Content Type Engine modify the `
       "*.htm": "text/html",
     }
 
-For assocaiting file extentions with a particular programming language using the `sourcecode` File Type Renderer see below.
+For associating file extentions with a particular programming language using the `sourcecode` File Type Renderer see below.
 
 ## Language Associations
 
