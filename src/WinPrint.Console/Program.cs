@@ -60,7 +60,7 @@ namespace WinPrint.Console {
             print.PrintingSheet += (s, sheetNum) => Log.Information("Printing sheet {pageNum}", sheetNum);
             print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
             print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
-            print.SheetViewModel.Reflowed += SheetViewModel_Reflowed;
+            print.SheetViewModel.ReflowComplete += SheetViewModel_Reflowed;
             print.SheetViewModel.ReflowProgress += (s, msg) => Log.Debug("{DateTime:mm:ss.fff}:Reflow Progress {msg}", DateTime.Now, msg);
 
             // -g
@@ -216,8 +216,8 @@ namespace WinPrint.Console {
             }
         }
 
-        private void SheetViewModel_Reflowed(object sender, EventArgs e) {
-            LogService.TraceMessage();
+        private void SheetViewModel_Reflowed(object sender, bool reflowing) {
+            LogService.TraceMessage($"{reflowing}");
         }
 
         private void PropertyChangedEventHandler(object o, PropertyChangedEventArgs e) {

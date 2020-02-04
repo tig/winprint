@@ -290,7 +290,7 @@ namespace WinPrint.Core.ContentTypes {
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
-            Log.Debug(LogService.GetTraceMsg(), pageNum);
+            LogService.TraceMessage($"{pageNum}");
 
             //if (pageNum > NumPages) {
             //    Helpers.Logging.TraceMessage($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");

@@ -23,6 +23,9 @@ namespace WinPrint.Winforms {
         // Winprint Print Preview control
         private PrintPreview printPreview;
 
+        // The active file
+        private string activeFile;
+
         public MainWindow() {
             InitializeComponent();
 
@@ -45,10 +48,9 @@ namespace WinPrint.Winforms {
             printPreview.KeyUp += (s, e) => {
                 switch (e.KeyCode) {
                     case Keys.F5:
-                        printPreview.Invalidate(true);
+                        //printPreview.Invalidate(true);
                         Log.Debug("-------- F5 ---------");
-                        Task.Run(() =>
-                            printPreview.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false));
+                        Task.Run(() => Start());
                         break;
                 }
             };
@@ -176,18 +178,52 @@ namespace WinPrint.Winforms {
         private void SetupSheetViewModelNotifications() {
             LogService.TraceMessage();
             if (printPreview.SheetViewModel != null) {
-                LogService.TraceMessage("SetupSheetViewModelNotifications was alreadya called");
+                LogService.TraceMessage("SetupSheetViewModelNotifications was already called");
                 return;
             }
 
             printPreview.SheetViewModel = new SheetViewModel();
             printPreview.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
             printPreview.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
+            printPreview.SheetViewModel.PageSettingsSet += PageSettingsSetEventHandler;
+            printPreview.SheetViewModel.Loaded += FileLoadedEventHandler;
+            printPreview.SheetViewModel.ReflowComplete += ReflowCompleteEventHandler;
         }
 
-        private void PropertyChangedEventHandler(object o, PropertyChangedEventArgs e) {
+        private void FileLoadedEventHandler(object sender, bool loading) {
             if (InvokeRequired)
-                BeginInvoke((Action)(() => PropertyChangedEventHandler(o, e)));
+                BeginInvoke((Action)(() => FileLoadedEventHandler(sender, loading)));
+            else {
+                LogService.TraceMessage($"{loading}");
+                if (loading) return;
+                // This kicks off Relfow
+                SheetSettingsChanged();
+            }
+        }
+
+        private void PageSettingsSetEventHandler(object sender, EventArgs e) {
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => PageSettingsSetEventHandler(sender, e)));
+            else {
+                LogService.TraceMessage();
+            }
+        }
+
+        private void ReflowCompleteEventHandler(object sender, bool reflowing) {
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => ReflowCompleteEventHandler(sender, reflowing)));
+            else {
+                LogService.TraceMessage($"{reflowing}");
+                if (reflowing) return;
+
+                printPreview.Text = "";
+                printPreview.Invalidate();
+            }
+        }
+
+        private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e) {
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => PropertyChangedEventHandler(sender, e)));
             else {
                 LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
@@ -237,27 +273,9 @@ namespace WinPrint.Winforms {
                         printPreview.CurrentSheet = 1;
                         break;
 
-                    case "Content":
+                    // When ContentEngine changes we know the document has been loaded.
+                    case "ContentEngine":
                         printPreview.CurrentSheet = 1;
-                        SheetSettingsChanged();
-                        break;
-
-                    case "Loading":
-                        if (printPreview.SheetViewModel.Loading)
-                            printPreview.Text = Resources.LoadingMsg;
-                        printPreview.Refresh();
-                        printPreview.Select();
-                        printPreview.Focus();
-                        break;
-
-                    case "Reflowing":
-                        if (printPreview.SheetViewModel.Reflowing)
-                            printPreview.Text = Resources.RenderingMsg;
-                        else {
-                            printPreview.Text = "";
-                            // TODO: Set to/from page # boxes now that we know how many sheets there are?
-                        }
-                        printPreview.Refresh();
                         break;
                 }
             }
@@ -267,20 +285,28 @@ namespace WinPrint.Winforms {
             if (InvokeRequired)
                 BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
             else {
-                LogService.TraceMessage($"SheetViewModel.SettingsChanged: {reflow}");
+                LogService.TraceMessage($"{reflow}");
                 if (reflow)
                     SheetSettingsChanged();
                 else
-                    printPreview.Invalidate(false);
+                    printPreview.Invalidate();
             }
         }
 
-        private async void MainWindow_Load(object sender, EventArgs e) {
+        private void MainWindow_Load(object sender, EventArgs e) {
             LogService.TraceMessage();
 
-            this.Cursor = Cursors.WaitCursor;
-            // Load settings
+            // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
+            if (ModelLocator.Current.Settings.Size != null)
+                this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+            if (ModelLocator.Current.Settings.Location != null)
+                this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+            this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+
+            printPreview.Text = "Getting things ready...";
+
+            //this.Cursor = Cursors.WaitCursor;
             var sheets = ModelLocator.Current.Settings.Sheets;
 
             // Load file assocations
@@ -321,7 +347,7 @@ namespace WinPrint.Winforms {
             if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize))
                 paperSizesCB.Text = ModelLocator.Current.Options.PaperSize;
             else
-                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
 
             // We kept these disabled during load
             printersCB.Enabled = true;
@@ -351,49 +377,68 @@ namespace WinPrint.Winforms {
             // This will cause a flurry of property change notifications, setting all UI elements
             printPreview.SheetViewModel.SetSheet(newSheet);
 
-            // Must set landsacpe after printer/paper selection
+            // Must set landscape after printer/paper selection
             // --l and --o
             if (ModelLocator.Current.Options.Landscape) printPreview.SheetViewModel.Landscape = true;
             if (ModelLocator.Current.Options.Portrait) printPreview.SheetViewModel.Landscape = false;
 
-            // Even if a file's not been set, SheetSettingsChanged to Reflow in order ot juice the print preview
-            SheetSettingsChanged();
-
-            if (ModelLocator.Current.Settings.Size != null)
-                this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
-            if (ModelLocator.Current.Settings.Location != null)
-                this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
-            this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
-
             printPreview.Select();
             printPreview.Focus();
-            this.Cursor = Cursors.Default;
+            //this.Cursor = Cursors.Default;
 
-            if (ModelLocator.Current.Options.Files is null || ModelLocator.Current.Options.Files.ToList().Count == 0)
-                fileButton_Click(null, null);
-            else
-                await FileChanged(ModelLocator.Current.Options.Files.ToList()[0]).ConfigureAwait(false);
+            if (ModelLocator.Current.Options.Files != null && ModelLocator.Current.Options.Files.ToList().Count > 0)
+                activeFile = ModelLocator.Current.Options.Files.ToList()[0];
+
+            // By running this on a different thread, we enable the main window to show
+            // as quickly as possible; making startup seem faster.
+            Task.Run(() => Start());
         }
 
-        private async Task FileChanged(string file) {
-            try {
-                await Task.Run(() => printPreview.SheetViewModel.LoadAsync(file)).ConfigureAwait(false);
-            }
-            catch (FileNotFoundException fnfe) {
-                Log.Error(fnfe, "File Not Found {file}", file);
-                ShowError($"{file} not found.");
+        private void Start() {
+            LogService.TraceMessage();
+
+            if (string.IsNullOrEmpty(activeFile)) {
+                // If a file's not been set, juice the print preview and show the file open dialog box
+                SheetSettingsChanged();
                 fileButton_Click(null, null);
             }
-            catch (InvalidOperationException ioe) {
-                Log.Error(ioe, "Error Operation {file}", file);
-                ShowError($"Error: {ioe.Message}{Environment.NewLine}({file})");
-                //                fileButton_Click(null, null);
-            }
-            #pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception e) {
-            #pragma warning restore CA1031 // Do not catch general exception types
-                Log.Error(e, "Exception {file}", file);
-                ShowError($"Exception: {e.Message}{Environment.NewLine}({file})");
+            else
+                FileChanged();
+        }
+
+        private void FileChanged() {
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => FileChanged()));
+            else {
+                // Reset View Model
+                printPreview.SheetViewModel.Reset();
+                printPreview.Text = Resources.LoadingMsg;
+                printPreview.Refresh();
+                Task.Run(async () => {
+                    try {
+                        await printPreview.SheetViewModel.LoadAsync(activeFile).ConfigureAwait(false);
+                    }
+                    catch (FileNotFoundException fnfe) {
+                        Log.Error(fnfe, "File Not Found");
+                        ShowError($"{fnfe.Message}");
+                        //fileButton_Click(null, null);
+                    }
+                    catch (InvalidOperationException ioe) {
+                        Log.Error(ioe, "Error Operation {file}", activeFile);
+                        ShowError($"Error: {ioe.Message}{Environment.NewLine}({activeFile})");
+                        //                fileButton_Click(null, null);
+                    }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                        Log.Error(e, "Exception {file}", activeFile);
+                        ShowError($"Exception: {e.Message}{Environment.NewLine}({activeFile})");
+                    }
+                    finally {
+                        // Set Loading to false in case of an error
+                        printPreview.SheetViewModel.Loading = false;
+                    }
+                });
             }
         }
 
@@ -402,10 +447,7 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => ShowError(str)));
             else {
                 printPreview.Text = new String(str);
-                printPreview.Invalidate(true);
-                MessageBox.Show(str);
             }
-
         }
 
         private string ShowFilesDialog() {
@@ -435,6 +477,29 @@ namespace WinPrint.Winforms {
             SheetSettingsChanged();
         }
 
+        /// <summary>
+        /// If Sheet settings change (either a new sheet or something that causes a reflow)
+        /// Update printer settings and Reflow.
+        /// Because getting printer settings can take 4-5 seconds we do that and reflow on another thread
+        /// </summary>
+        internal void SheetSettingsChanged() {
+            LogService.TraceMessage();
+
+            Task.Run(async () => {
+                BeginInvoke((Action)(() => {
+                    printPreview.Text = "Getting Printer Settings...";
+                }));
+                // Set landscape. This causes other DefaultPageSettings to change
+                printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
+                await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
+
+                BeginInvoke((Action)(() => {
+                    printPreview.Text = Resources.RenderingMsg;
+                }));
+                return printPreview.SheetViewModel.ReflowAsync();
+            });
+        }
+
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
             // Save Window state
             if (this.WindowState == System.Windows.Forms.FormWindowState.Normal) {
@@ -447,17 +512,6 @@ namespace WinPrint.Winforms {
             }
             ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)this.WindowState;
             ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
-        }
-
-        internal async void SheetSettingsChanged() {
-            LogService.TraceMessage();
-
-            // Set landscape. This causes other DefaultPageSettings to change
-            printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-            await printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings).ConfigureAwait(false);
-            BeginInvoke((Action)(() => printPreview.Refresh()));
-            await Task.Run(() => printPreview.SheetViewModel.ReflowAsync()).ConfigureAwait(false);
-            BeginInvoke((Action)(() => printPreview.Refresh()));
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
@@ -499,7 +553,7 @@ namespace WinPrint.Winforms {
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
                     paperSizesCB.Items.Add(ps.PaperName);
                 }
-                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.ToString();
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
             }
         }
 
@@ -539,7 +593,7 @@ namespace WinPrint.Winforms {
             // the only reason I can think of now is from/to page support.
             bool showPrintDialog = true;
             if (showPrintDialog)
-                BeginInvoke((Action)(async ()  => {
+                BeginInvoke((Action)(async () => {
                     using PrintDialog printDialog = new PrintDialog();
                     printDialog.AllowSomePages = true;
                     printDialog.ShowHelp = true;
@@ -646,13 +700,13 @@ namespace WinPrint.Winforms {
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = (int)(padding.Value * 100M);
         }
 
-        private async void fileButton_Click(object sender, EventArgs e) {
-            var file = ShowFilesDialog();
-            if (!string.IsNullOrEmpty(file))
-                await FileChanged(file).ConfigureAwait(false);
+        private void fileButton_Click(object sender, EventArgs e) {
+            activeFile = ShowFilesDialog();
+            if (!string.IsNullOrEmpty(activeFile))
+                FileChanged();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
             "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void settingsButton_Click(object sender, EventArgs args) {
             Log.Debug($"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}");
@@ -672,7 +726,7 @@ namespace WinPrint.Winforms {
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
             "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void wikiLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args) {
             string url = "https://github.com/tig/winprint";

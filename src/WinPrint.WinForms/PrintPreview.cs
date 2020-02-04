@@ -11,6 +11,7 @@ using System.IO;
 using WinPrint.Core;
 using System.Diagnostics;
 using WinPrint.Core.Services;
+using Serilog;
 
 namespace WinPrint.Winforms {
     /// <summary>
@@ -135,61 +136,68 @@ namespace WinPrint.Winforms {
             }
         }
 
+        protected override void OnTextChanged(EventArgs e) {
+            base.OnTextChanged(e);
+            Invalidate();
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) throw new ArgumentNullException(nameof(e));
-            if (svm is null) return;
 
+            LogService.TraceMessage($"Text: {Text}");
             //base.OnPaint(e);
 
-            // Paint background
-            using var backBrush = new SolidBrush(BackColor);
-            e.Graphics.FillRectangle(backBrush, ClientRectangle);
+            if (svm != null) {
+                // Paint background
+                //using var backBrush = new SolidBrush(BackColor);
+                //e.Graphics.FillRectangle(backBrush, ClientRectangle);
+                GraphicsState state = e.Graphics.Save();
 
-            GraphicsState state = e.Graphics.Save();
+                // Calculate scale and location
+                double w = svm.Bounds.Width;
+                double h = svm.Bounds.Height;
+                var scalingX = (double)(ClientSize.Width) / (double)w;
+                var scalingY = (double)(ClientSize.Height) / (double)h;
 
-            // Calculate scale and location
-            double w = svm.Bounds.Width;
-            double h = svm.Bounds.Height;
-            var scalingX = (double)(ClientSize.Width) / (double)w;
-            var scalingY = (double)(ClientSize.Height) / (double)h;
+                // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
+                var scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
+                LogService.TraceMessage($"Scale {scale}");
 
-            // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
-            var scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
-            LogService.TraceMessage($"OnPaint scale {scale}");
+                var previewSize = new Size((int)(w * scale), (int)(h * scale));
+                LogService.TraceMessage($"previewSize {previewSize.Width}, {previewSize.Height}");
 
-            var previewSize = new Size((int)(w * scale), (int)(h * scale));
-            LogService.TraceMessage($"OnPaint previewSize {previewSize.Width}, {previewSize.Height}");
+                // Don't do anything if the window's been shrunk too far or GDI+ will crash
+                if (previewSize.Width > 10 && previewSize.Height > 10) {
 
-            // Don't do anything if the window's been shrunk too far or GDI+ will crash
-            if (previewSize.Width <= 10 || previewSize.Height <= 10) return;
+                    // Center
+                    if (Zoom <= 100)
+                        e.Graphics.TranslateTransform((ClientSize.Width / 2) - (previewSize.Width / 2), (ClientSize.Height / 2) - (previewSize.Height / 2));
 
-            // Center
-            if (Zoom <= 100)
-                e.Graphics.TranslateTransform((ClientSize.Width / 2) - (previewSize.Width / 2), (ClientSize.Height / 2) - (previewSize.Height / 2));
+                    // Scale for client size & zoom
+                    e.Graphics.ScaleTransform((float)scale, (float)scale);
 
-            // Scale for client size & zoom
-            e.Graphics.ScaleTransform((float)scale, (float)scale);
-
-            //if (!svm.Loading && !svm.Reflowing) {
-                if (svm.CacheEnabled) {
-                    e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                    Image img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
-                    //e.Graphics.DrawImage(img,
-                    //    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
-                    //    0F, 0F, img.Width, img.Height,
-                    //    GraphicsUnit.Pixel);
-                    e.Graphics.DrawImageUnscaledAndClipped(img,
-                        new Rectangle((int)svm.Bounds.Left, (int)svm.Bounds.Top, (int)(svm.Bounds.Width), (int)(svm.Bounds.Height)));
-                    e.Graphics.Restore(state);
+                    //if (!svm.Loading && !svm.Reflowing) {
+                    if (svm.CacheEnabled) {
+                        e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                        Image img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
+                        //e.Graphics.DrawImage(img,
+                        //    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
+                        //    0F, 0F, img.Width, img.Height,
+                        //    GraphicsUnit.Pixel);
+                        e.Graphics.DrawImageUnscaledAndClipped(img,
+                            new Rectangle((int)svm.Bounds.Left, (int)svm.Bounds.Top, (int)(svm.Bounds.Width), (int)(svm.Bounds.Height)));
+                        e.Graphics.Restore(state);
+                    }
+                    else
+                        svm.PrintSheet(e.Graphics, CurrentSheet);
+                    //}
                 }
-                else
-                    svm.PrintSheet(e.Graphics, CurrentSheet);
-            //}
-
-            e.Graphics.Restore(state);
+                e.Graphics.Restore(state);
+            }
 
             // While in error or loading & reflowing show Text 
+            Log.Information("Status: {status}", Text);
             if (!string.IsNullOrEmpty(Text)) {
                 using var font = new Font(Font.FontFamily, 18F, FontStyle.Regular, GraphicsUnit.Point);
                 using StringFormat sf = new StringFormat();
@@ -201,7 +209,6 @@ namespace WinPrint.Winforms {
                 //e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, 
                 //    (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
             }
-
 
             // If we're zoomed, paint zoom factor
             if (Zoom != 100) {

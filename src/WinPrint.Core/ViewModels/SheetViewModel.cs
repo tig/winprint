@@ -70,13 +70,13 @@ namespace WinPrint.Core {
 
         public int NumSheets {
             get {
-                if (Content == null) return 0;
+                if (ContentEngine == null) return 0;
                 return (int)Math.Ceiling((double)numPages / (Rows * Columns));
             }
         }
 
-        internal ContentBase Content { get => _content; set => SetField(ref _content, value); }
-        private ContentBase _content;
+        internal ContentBase ContentEngine { get => contentEngine; set => SetField(ref contentEngine, value); }
+        private ContentBase contentEngine;
 
         private Size paperSize;
         private RectangleF printableArea;
@@ -114,36 +114,45 @@ namespace WinPrint.Core {
 
         /// <summary>
         /// Subscribe to know when file has been loaded by the SheetViewModel. 
-        /// TimeSpan indicates how long it took.
         /// </summary>
-        public event EventHandler Loaded;
-        protected void OnLoaded() => Loaded?.Invoke(this, null);
+        public event EventHandler<bool> Loaded;
+        protected void OnLoaded(bool l) => Loaded?.Invoke(this, l);
 
+        /// <summary>
+        /// True if we're in the middle of loading the file. False otherwise.
+        /// </summary>
         public bool Loading {
             get => loading;
             set {
-                OnLoaded();
+                OnLoaded(value);
                 SetField(ref loading, value);
             }
         }
         private bool loading;
 
-
         /// <summary>
         /// Subscribe to know when file has been Reflowed by the SheetViewModel. 
-        /// TimeSpan indicates how long it took.
         /// </summary>
-        public event EventHandler Reflowed;
-        protected void OnReflowed() => Reflowed?.Invoke(this, null);
+        public event EventHandler<bool> ReflowComplete;
+        protected void OnReflowed(bool r) => ReflowComplete?.Invoke(this, r);
 
+        /// <summary>
+        /// True if we're in the middle of reflowing. False otherwise.
+        /// </summary>
         public bool Reflowing {
             get => reflowing;
             set {
-                OnReflowed();
+                OnReflowed(value);
                 SetField(ref reflowing, value);
             }
         }
         private bool reflowing;
+
+        /// <summary>
+        /// Subscribe to be notified when the Printer PageSettings have been set.
+        /// </summary>
+        public event EventHandler PageSettingsSet;
+        protected void OnPageSettingsSet() => PageSettingsSet?.Invoke(this, null);
 
         public event EventHandler<string> ReflowProgress;
         protected void OnReflowProgress(string msg) {
@@ -169,6 +178,19 @@ namespace WinPrint.Core {
         protected override void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             base.OnPropertyChanged(propertyName);
 
+        }
+
+        /// <summary>
+        /// Call this to reset the SVM before loading a new file (enables painting print preview status cleanly)
+        /// </summary>
+        public void Reset() {
+            if (ContentEngine != null) {
+                ContentEngine.PropertyChanged -= OnContentPropertyChanged();
+                ContentEngine = null;
+            }
+
+            ClearCache();
+            numPages = 0;
         }
 
         /// <summary>
@@ -205,9 +227,14 @@ namespace WinPrint.Core {
 
         public async Task<string> LoadAsync(string filePath) {
             LogService.TraceMessage($"{filePath}");
+
+            Loading = true;
+
+            // Reset the SVM in case it was not already done
+            Reset();
+
             var ext = Path.GetExtension(filePath).ToLower();
             string type = null;
-            ContentBase content = TextFileContent.Create();
 
             if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
                 if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
@@ -215,64 +242,61 @@ namespace WinPrint.Core {
                     if (!await ServiceLocator.Current.NodeService.IsInstalled()) {
                         Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", type, "text/plain");
                         type = "text/plain";
-                        content = TextFileContent.Create();
+                        ContentEngine = TextFileContent.Create();
                     }
                     else {
-                        content = PrismFileContent.Create();
-                        ((PrismFileContent)content).Language = type;
+                        ContentEngine = PrismFileContent.Create();
+                        ((PrismFileContent)ContentEngine).Language = type;
                     }
                 }
                 else
                     switch (type) {
                         case "sourcecode":
-                            content = CodeFileContent.Create();
-                            ((CodeFileContent)content).Language = type;
+                            ContentEngine = CodeFileContent.Create();
+                            ((CodeFileContent)ContentEngine).Language = type;
                             break;
 
                         case "text/html":
                         default:
-                            content = HtmlFileContent.Create();
+                            ContentEngine = HtmlFileContent.Create();
                             break;
                     }
             }
             else {
                 // assume text/plain
+                ContentEngine = TextFileContent.Create();
                 type = "text/plain";
             }
 
+            ContentEngine.PropertyChanged += OnContentPropertyChanged();
             File = filePath;
             Type = type;
 
-            if (Content != null) {
-                Content.PropertyChanged -= OnContentPropertyChanged();
-                Content = null;
-            }
-            content.PropertyChanged += OnContentPropertyChanged();
-
-            Loading = true;
-            LogService.TraceMessage($"Calling {content.GetType()}.LoadAsync({filePath}...");
-            var success = await content.LoadAsync(filePath).ConfigureAwait(false);
+            // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
+            LogService.TraceMessage($"Calling {ContentEngine.GetType()}.LoadAsync({filePath})...");
+            var success = await ContentEngine.LoadAsync(filePath).ConfigureAwait(false);
             LogService.TraceMessage($"Read succeeded? {success}");
-            //content.document = "test";
-
-            // Callers can subscribe to Content property change to be notified content has
-            // been loaded.
-            Content = content;
 
             // Set this last to notify loading is done with File valid
             Loading = false;
             return Type;
         }
 
-        public async Task SetPrinterPageSettings(PageSettings pageSettings) {
+        /// <summary>
+        /// Set the page setting from a PageSettings instance. Note that accessing
+        /// PageSettings can be expensive so we cache the values instead of just holding
+        /// a PageSettings instance.
+        /// </summary>
+        /// <param name="pageSettings"></param>
+        /// <returns></returns>
+        public async Task SetPrinterPageSettingsAsync(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
-            PageSettings ps = null;
-            await Task.Run(() => ps = (PageSettings)pageSettings.Clone());
 
             // On Linux, PageSettings.Bounds is determined from PageSettings.Margins. 
             // On Windows, it has no effect. Regardelss, here we set Bounds to 0 to work around this.
-            ps.Margins = new Margins(0, 0, 0, 0);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) 
+                pageSettings.Margins = new Margins(0, 0, 0, 0);
 
             // The following elements of PageSettings are dependent
             // Landscape
@@ -281,7 +305,7 @@ namespace WinPrint.Core {
             // PaperSize (Landscape)
             // HardMarginX, HardMarginY (Landscape, LandscapeAngle)
 
-            LandscapeAngle = ps.PrinterSettings.LandscapeAngle;
+            LandscapeAngle = pageSettings.PrinterSettings.LandscapeAngle;
 
             // 0 degrees
             //          Top
@@ -302,37 +326,38 @@ namespace WinPrint.Core {
             if (sheet != null && sheet.Landscape) {
                 // Translate page settings for landscape mode
                 // HardMarginX/Y should NOT be used for anything - use printableArea instead
-                HardMarginX = ps.HardMarginY;
-                HardMarginY = ps.HardMarginX;
+                HardMarginX = pageSettings.HardMarginY;
+                HardMarginY = pageSettings.HardMarginX;
 
-                printableArea.X = ps.PrintableArea.Y;
-                printableArea.Y = ps.PrintableArea.X;
-                printableArea.Width = ps.PrintableArea.Height;
-                printableArea.Height = ps.PrintableArea.Width;
+                printableArea.X = pageSettings.PrintableArea.Y;
+                printableArea.Y = pageSettings.PrintableArea.X;
 
-                paperSize.Height = ps.PaperSize.Width;
-                paperSize.Width = ps.PaperSize.Height;
+                printableArea.Width = pageSettings.PrintableArea.Height;
+                printableArea.Height = pageSettings.PrintableArea.Width;
+
+                paperSize.Height = pageSettings.PaperSize.Width;
+                paperSize.Width = pageSettings.PaperSize.Height;
             }
             else {
                 // HardMarginX/Y should NOT be used for anything - use printableArea instead
-                HardMarginX = ps.HardMarginX;
-                HardMarginY = ps.HardMarginY;
+                HardMarginX = pageSettings.HardMarginX;
+                HardMarginY = pageSettings.HardMarginY;
 
-                printableArea.X = ps.PrintableArea.X;
-                printableArea.Y = ps.PrintableArea.Y;
-                printableArea.Width = ps.PrintableArea.Width;
-                printableArea.Height = ps.PrintableArea.Height;
+                printableArea.X = pageSettings.PrintableArea.X;
+                printableArea.Y = pageSettings.PrintableArea.Y;
+                printableArea.Width = pageSettings.PrintableArea.Width;
+                printableArea.Height = pageSettings.PrintableArea.Height;
 
-                paperSize.Width = ps.PaperSize.Width;
-                paperSize.Height = ps.PaperSize.Height;
+                paperSize.Width = pageSettings.PaperSize.Width;
+                paperSize.Height = pageSettings.PaperSize.Height;
             }
+            PrinterResolution = pageSettings.PrinterResolution;
 
-
-            PrinterResolution = ps.PrinterResolution;
-            PrintInColor = ps.Color;
+            // TODO: Do something if printer is set to color or bw?
+            PrintInColor = pageSettings.Color;
 
             // Bounds represents page size area, auto adjusted for landscape
-            Bounds = ps.Bounds;
+            Bounds = pageSettings.Bounds;
 
             // PrintableArea is Bounds minus HardMargins, but more accurate. 
             // HardMarginX/Y should NOT be used for anything.
@@ -350,24 +375,24 @@ namespace WinPrint.Core {
             contentBounds.Location = new PointF(sheet.Margins.Left, sheet.Margins.Top + headerVM.Bounds.Height);
             contentBounds.Width = Bounds.Width - sheet.Margins.Left - sheet.Margins.Right;
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
-            if (Content is null) {
+            if (ContentEngine is null) 
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
-                return;
-            }
+            else
+                // TODO: Figure out a better way for the content engine to get page size.
+                ContentEngine.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
 
-            Content.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
-
-            Log.Debug("Printer Resolution: {w}x{h}DPI", PrinterResolution.X, PrinterResolution.Y);
-            Log.Debug("Paper Size: {w}x{h}\"", PaperSize.Width / 100F, PaperSize.Height / 100F);
-            Log.Debug("Hard Margins: {w}x{h}\"", HardMarginX / 100F, HardMarginY / 100F);
-            Log.Debug("Printable Area: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
+            Log.Debug("Printer Resolution: {w} x {h}DPI", PrinterResolution.X, PrinterResolution.Y);
+            Log.Debug("Paper Size: {w} x {h}\"", PaperSize.Width / 100F, PaperSize.Height / 100F);
+            Log.Debug("Hard Margins: {w} x {h}\"", HardMarginX / 100F, HardMarginY / 100F);
+            Log.Debug("Printable Area: {left}\", {top}\", {right}\", {bottom}\" ({w} x {h}\")",
                 printableArea.Left / 100F, printableArea.Top / 100F, printableArea.Right / 100, printableArea.Bottom / 100, printableArea.Width / 100, printableArea.Height / 100);
             Log.Debug("Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
                 Bounds.Left / 100F, Bounds.Top / 100F, Bounds.Right / 100F, Bounds.Bottom / 100F, Bounds.Width / 100F, Bounds.Height / 100F);
-            Log.Debug("Content Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
+            Log.Debug("Content Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w} x {h}\")",
                 ContentBounds.Left / 100F, ContentBounds.Top / 100F, ContentBounds.Right / 100F, ContentBounds.Bottom / 100F, ContentBounds.Width / 100F, ContentBounds.Height / 100F);
-            Log.Debug("Page Size: {w}x{h}\"", Content.PageSize.Width / 100F, Content.PageSize.Height / 100F);
+            Log.Debug("Page Size: {w} x {h}\"", GetPageWidth() / 100F, GetPageHeight() / 100F);
 
+            OnPageSettingsSet();
         }
 
         /// <summary>
@@ -387,17 +412,19 @@ namespace WinPrint.Core {
             if (CacheEnabled)
                 ClearCache();
 
-            if (Content is null) {
+            if (ContentEngine is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
+                // Causes OnReflowed
                 Reflowing = false;
                 return;
             }
 
-            numPages = await Content.RenderAsync(PrinterResolution, ReflowProgress);
+            numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 
             CheckPrintOutsideHardMargins();
             Log.Debug("Rreflow complete. {n} pages {w}x{h}\"", numPages, Bounds.Width / 100F, Bounds.Height / 100F);
 
+            // Causes OnReflowed
             Reflowing = false;
         }
 
@@ -437,7 +464,7 @@ namespace WinPrint.Core {
 
         private void ClearCache() {
             if (!CacheEnabled)
-                throw new InvalidOperationException("Cache is not enabled!");
+                return;// throw new InvalidOperationException("Cache is not enabled!");
 
             LogService.TraceMessage();
             foreach (var i in cachedSheets) {
@@ -634,8 +661,13 @@ namespace WinPrint.Core {
             headerVM.Paint(g, sheetNum);
             footerVM.Paint(g, sheetNum);
 
+            if (Loading) {
+                Log.Debug($"SheetViewModel.PaintSheet - Loading; can't paint");
+                return;
+            }
+
             if (Reflowing) {
-                Log.Debug($"SheetViewModel.PaintSheet - Relfowing; can't paint");
+                Log.Debug($"SheetViewModel.PaintSheet - Reflowing; can't paint");
                 return;
             }
 
@@ -666,8 +698,8 @@ namespace WinPrint.Core {
                         g.DrawLine(Pens.Black, Padding / 2, h + (Padding / 2), w - Padding, h + (Padding / 2));
                 }
 
-                if (Content != null)
-                    Content.PaintPage(g, pageOnSheet);
+                if (ContentEngine != null)
+                    ContentEngine.PaintPage(g, pageOnSheet);
 
                 // Translate back
                 g.TranslateTransform(-xPos, -yPos);
