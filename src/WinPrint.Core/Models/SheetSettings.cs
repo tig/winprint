@@ -25,6 +25,7 @@ namespace WinPrint.Core.Models {
         private Header header = new Header();
         private Footer footer = new Footer();
 
+        // TODO: replace this with ContentSettings
         private Font contentFont;
 
         /// <summary>
