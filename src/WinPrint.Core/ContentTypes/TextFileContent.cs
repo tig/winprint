@@ -29,9 +29,9 @@ namespace WinPrint.Core.ContentTypes {
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextFileContent : ContentBase, IDisposable {
         public static TextFileContent Create() {
-            var content = new TextFileContent();
-            content.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
-            return content;
+            var engine = new TextFileContent();
+            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
+            return engine;
         }
 
         private StringFormat stringFormat = new StringFormat();
@@ -45,7 +45,7 @@ namespace WinPrint.Core.ContentTypes {
             stringFormat.LineAlignment = StringAlignment.Near;
             stringFormat.Trimming = StringTrimming.None;
 
-            Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
+ //           Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
 
         // All of the lines of the text file, after reflow/line-wrap
@@ -111,24 +111,27 @@ namespace WinPrint.Core.ContentTypes {
 
             // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
             // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
-             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0) 
                 dpiX = dpiY = 96;
 
-            // Create a representative Graphcis used for determining glyph metrics.        
+            // Create a representative Graphcis used for determining glyph metrics.      
+            LogService.TraceMessage();
+
             using Bitmap bitmap = new Bitmap(1, 1);
             bitmap.SetResolution(dpiX, dpiY);
             var g = Graphics.FromImage(bitmap);
             g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
- 
+
             // Calculate the number of lines per page.
-            cachedFont = new System.Drawing.Font(Font.Family, Font.Size / 72F * 96, Font.Style, GraphicsUnit.Pixel); // World?
+            LogService.TraceMessage();
+            cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size / 72F * 96, ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
             //lineHeight = cachedFont.GetHeight(g) ;
 
             Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
                 cachedFont.Dispose();
-                cachedFont = new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point);
+                cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size, ContentSettings.Font.Style, GraphicsUnit.Point);
                 Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
                 g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             }

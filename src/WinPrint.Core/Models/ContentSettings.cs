@@ -12,8 +12,8 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font used for content. Will override any content font settings specified by a ContentType provider.
         /// </summary>
-        public Font Font { get => font; set => SetField(ref font, value); }
-        private Font font;
+        public Core.Models.Font Font { get => font; set => SetField(ref font, value); }
+        private Core.Models.Font font = new Font();
 
         /// <summary>
         /// if True, print content background, if present. Otherwise, all backgrounds will be paper color.

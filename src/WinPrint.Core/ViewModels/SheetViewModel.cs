@@ -57,6 +57,9 @@ namespace WinPrint.Core {
         public bool PageSeparator { get => pageSeparator; set => SetField(ref pageSeparator, value); }
         private bool pageSeparator;
 
+        public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
+        private ContentSettings contentSettings;
+
         private string file;
         public string File {
             get => file;
@@ -124,7 +127,8 @@ namespace WinPrint.Core {
         public bool Loading {
             get => loading;
             set {
-                OnLoaded(value);
+                if (value != loading)
+                    OnLoaded(value);
                 SetField(ref loading, value);
             }
         }
@@ -142,7 +146,8 @@ namespace WinPrint.Core {
         public bool Reflowing {
             get => reflowing;
             set {
-                OnReflowed(value);
+                if (value != reflowing)
+                    OnReflowed(value);
                 SetField(ref reflowing, value);
             }
         }
@@ -211,6 +216,7 @@ namespace WinPrint.Core {
             Padding = newSheet.Padding;
             PageSeparator = newSheet.PageSeparator;
             Margins = (Margins)newSheet.Margins.Clone();
+            ContentSettings = newSheet.ContentSettings;
 
             if (headerVM != null)
                 headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
@@ -223,6 +229,7 @@ namespace WinPrint.Core {
             newSheet.PropertyChanged += OnSheetPropertyChanged();
             headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
             footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
+            
         }
 
         /// <summary>
@@ -439,6 +446,10 @@ namespace WinPrint.Core {
             }
 
             // TODO: If no font is set, override
+            //if (ContentSettings != null) {
+                //if (ContentSettings.Font != null)
+                    ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+            //}
 
             numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 

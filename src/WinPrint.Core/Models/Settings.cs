@@ -162,7 +162,12 @@ namespace WinPrint.Core.Models {
 
             settings.TextFileSettings = new TextFileContent() {
                 // This font will be overriddent by Sheet defined fonts (if any)
-                Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                ContentSettings = new ContentSettings() {
+                    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    Darkness = 100,
+                    Grayscale = false,
+                    PrintBackground = true
+                },
                 LineNumbers = true,
                 LineNumberSeparator = false,
                 NewPageOnFormFeed = false,
@@ -174,12 +179,22 @@ namespace WinPrint.Core.Models {
             // 2) winprint.css (Body -> Font, Pre -> Monospace Font)
             // 3) HtmlileContent settings
             settings.HtmlFileSettings = new HtmlFileContent() {
-                Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                ContentSettings = new ContentSettings() {
+                    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    Darkness = 100,
+                    Grayscale = false,
+                    PrintBackground = true
+                },
                 MonspacedFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
             };
 
             settings.PrismFileSettings = new PrismFileContent() {
-                Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
+                ContentSettings = new ContentSettings() {
+                    Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
+                    Darkness = 100,
+                    Grayscale = false,
+                    PrintBackground = true
+                },
                 MonspacedFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
                 LineNumbers = true,
             };
@@ -195,7 +210,12 @@ namespace WinPrint.Core.Models {
                 Landscape = true,
                 Padding = 3,
                 PageSeparator = false,
-                ContentFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                ContentSettings = new ContentSettings() {
+                    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    Darkness = 100,
+                    Grayscale = false,
+                    PrintBackground = true
+                }
             };
             sheet.Header.Enabled = true;
             sheet.Header.Text = defaultHeaderText;
@@ -218,7 +238,12 @@ namespace WinPrint.Core.Models {
                 Landscape = false,
                 Padding = 3,
                 PageSeparator = false,
-                ContentFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                ContentSettings = new ContentSettings() {
+                    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    Darkness = 100,
+                    Grayscale = false,
+                    PrintBackground = true
+                }
             };
 
             sheet.Header.Enabled = true;

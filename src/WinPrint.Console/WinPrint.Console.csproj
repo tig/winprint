@@ -9,7 +9,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.370</Version>
+    <Version>2.0.0.375</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>

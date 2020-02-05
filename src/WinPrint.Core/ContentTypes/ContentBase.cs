@@ -43,12 +43,14 @@ namespace WinPrint.Core.ContentTypes {
         /// <summary>
         /// Default content font for this content type
         /// </summary>
-        private Core.Models.Font font;
-        public Core.Models.Font Font {
-            get => font;
-            set => SetField(ref font, value);
-        }
+        //private Core.Models.Font font;
+        //public Core.Models.Font Font {
+        //    get => font;
+        //    set => SetField(ref font, value);
+        //}
 
+        public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
+        private ContentSettings contentSettings = new ContentSettings();
 
         //internal int numPages = 0;
         //public int NumPages {

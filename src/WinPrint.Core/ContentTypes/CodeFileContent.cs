@@ -26,14 +26,13 @@ namespace WinPrint.Core.ContentTypes {
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class CodeFileContent : ContentBase, IDisposable {
         public static CodeFileContent Create() {
-            var content = new CodeFileContent();
-            content.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
-            return content;
+            var engine = new CodeFileContent();
+            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
+            return engine;
         }
 
         public static new string ContentType = "Source code";
         public CodeFileContent() {
-            Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
 
         // All of the lines of the text file, after reflow/line-wrap
@@ -224,8 +223,8 @@ namespace WinPrint.Core.ContentTypes {
             LogService.TraceMessage("CodeFileContent.Render");
 
             // Calculate the number of lines per page.
-            cachedFont = new System.Drawing.Font(Font.Family,
-                Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
+            cachedFont = new System.Drawing.Font(ContentSettings.Font.Family,
+                ContentSettings.Font.Size / 72F * 96F, ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
             lineHeight = cachedFont.GetHeight();
             linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
 
