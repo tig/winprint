@@ -36,6 +36,9 @@ namespace WinPrint.Core.Models {
         [Option('c', "count-sheets", Default = false, Required = false, HelpText = "Exit code is set to numer of sheets that would be printed. Use --verbose to diplsay the count.")]
         public bool CountPages { get; set; }
 
+        [Option('e', "content-type-engine", Default = "", Required = false, HelpText = "Name of the Content Type Engine to use for rendering (\"text/plain\", \"text/html\", or \"<language>\".")]
+        public string ContentType { get; set; }
+
         // App Options
         [Option('v', "verbose", Default = false, HelpText = "Verbose console output (log is always verbose).")]
         public bool Verbose { get; set; }
@@ -67,8 +70,11 @@ namespace WinPrint.Core.Models {
                     new Example("Print Program.cs using the 2 Up sheet defintion", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         Sheet = "2 Up"
+                    }),
+                    new Example("Print tapes.pas using C-like syntax highlighting.", new Options {
+                        Files = new List<string>() { { "tapes.pas" } },
+                        ContentType= "clike"
                     })
-
               };
             }
         }

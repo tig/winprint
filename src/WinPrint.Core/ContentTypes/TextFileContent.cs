@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -33,8 +34,17 @@ namespace WinPrint.Core.ContentTypes {
             return content;
         }
 
+        private StringFormat stringFormat = new StringFormat();
+        private const TextRenderingHint textRenderingHint = TextRenderingHint.ClearTypeGridFit;
+
         public static new string ContentType = "Plaintext";
         public TextFileContent() {
+            // StringFormat to use throughout
+            stringFormat.FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.FitBlackBox | StringFormatFlags.MeasureTrailingSpaces; // | StringFormatFlags.DisplayFormatControl;
+            stringFormat.Alignment = StringAlignment.Near;
+            stringFormat.LineAlignment = StringAlignment.Near;
+            stringFormat.Trimming = StringTrimming.None;
+
             Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
 
@@ -108,12 +118,10 @@ namespace WinPrint.Core.ContentTypes {
             using Bitmap bitmap = new Bitmap(1, 1);
             bitmap.SetResolution(dpiX, dpiY);
             var g = Graphics.FromImage(bitmap);
-            g.PageUnit = GraphicsUnit.Pixel; // Display is 1/100th"
+            g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
  
             // Calculate the number of lines per page.
-            cachedFont = new System.Drawing.Font(Font.Family,
-            //Font.Size, Font.Style, GraphicsUnit.Point); 
-                Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel); // World?
+            cachedFont = new System.Drawing.Font(Font.Family, Font.Size / 72F * 96, Font.Style, GraphicsUnit.Pixel); // World?
             //lineHeight = cachedFont.GetHeight(g) ;
 
             Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
@@ -222,15 +230,16 @@ namespace WinPrint.Core.ContentTypes {
             int charsFitted, linesFilled;
 
             float height = MeasureString(g, line, out charsFitted, out linesFilled).Height;
-            if (linesFilled > 1) {
+            if (charsFitted < line.Length) {
                 // This line wraps. Figure out by how much.
                 // Starting at minLineLen into the line, keep trying until it wraps again
                 int start = 0;
                 int c = minLineLen;
                 for (int i = minLineLen; i < line.Length; i++) {
                     int linesFilled2;
-                    height = MeasureString(g, line.Substring(start, c++), out charsFitted, out linesFilled2).Height;
-                    if (linesFilled2 > 1) {
+                    string truncatedLine = line.Substring(start, c++);
+                    height = MeasureString(g, truncatedLine, out charsFitted, out linesFilled2).Height;
+                    if (charsFitted < truncatedLine.Length) {
                         // It's too big again, so add it, minus extra
                         list.Add(new Line() { text = line.Substring(start, i - 1), lineNumber = lineCount });
                         start = start + i - 1;
@@ -255,6 +264,7 @@ namespace WinPrint.Core.ContentTypes {
             return MeasureString(g, text, out charsFitted, out linesFilled);
         }
 
+
         /// <summary>
         /// Measures how much width a string will take, given current page settings (including line numbers)
         /// </summary>
@@ -272,11 +282,13 @@ namespace WinPrint.Core.ContentTypes {
                 g.PageUnit = GraphicsUnit.Display;
             }
 
+            g.TextRenderingHint = textRenderingHint;
+
             // determine width     
             float fontHeight = lineHeight;
             // Use page settings including lineNumberWidth
-            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
-            SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
+            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight + (lineHeight/2));
+            SizeF size = g.MeasureString(text, cachedFont, proposedSize, stringFormat, out charsFitted, out linesFilled);
 
             // TODO: HACK to work around MeasureString not working right on Linux
             //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -298,6 +310,8 @@ namespace WinPrint.Core.ContentTypes {
             //}
 
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
+
+            g.TextRenderingHint = textRenderingHint;
  
             PaintLineNumberSeparator(g);
 
@@ -312,7 +326,8 @@ namespace WinPrint.Core.ContentTypes {
                         PaintLineNumber(g, pageNum, lineInDocument);
                     float xPos = leftMargin + lineNumberWidth;
                     float yPos = lineOnPage * lineHeight;
-                    g.DrawString(lines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, StringFormat.GenericTypographic);
+                    g.DrawString(lines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, stringFormat);
+                    g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
                 }
             }
             Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine}", lineOnPage-1, startLine, endLine);
@@ -332,7 +347,7 @@ namespace WinPrint.Core.ContentTypes {
                 int lineOnPage = lineNumber % linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
                 int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lines[lineNumber].lineNumber}").Width) : 0;
-                g.DrawString($"{lines[lineNumber].lineNumber}", cachedFont, Brushes.Gray, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
+                g.DrawString($"{lines[lineNumber].lineNumber}", cachedFont, Brushes.Gray, x, lineOnPage * lineHeight, stringFormat);
             }
         }
     }

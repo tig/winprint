@@ -10,7 +10,7 @@ namespace WinPrint.Core.Models {
     /// <summary>
     /// Defines the settings for a Sheet (Sheet Definition)
     /// </summary>
-    public class Sheet : ModelBase {
+    public class SheetSettings : ModelBase {
 
         //private Guid id;
         private string name = "";
@@ -97,7 +97,7 @@ namespace WinPrint.Core.Models {
         public int Darkness { get => darkness; set => SetField(ref darkness, value); }
         private int darkness = 0;
 
-        public Sheet() {
+        public SheetSettings() {
             LogService.TraceMessage();
 
             // Don't specify defaults in constructor; do it through default settings in

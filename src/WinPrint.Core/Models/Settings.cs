@@ -78,7 +78,7 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Sheet definitons
         /// </summary>
-        public Dictionary<string, Sheet> Sheets { get; set; }
+        public Dictionary<string, SheetSettings> Sheets { get; set; }
 
         /// <summary>
         /// Content type handlers
@@ -185,10 +185,10 @@ namespace WinPrint.Core.Models {
             };
 
             settings.DefaultSheet = Uuid.DefaultSheet;
-            settings.Sheets = new Dictionary<string, Sheet>();
+            settings.Sheets = new Dictionary<string, SheetSettings>();
 
             // Create default 2 Up sheet
-            var sheet = new Sheet() {
+            var sheet = new SheetSettings() {
                 Name = "Default 2-Up",
                 Columns = 2,
                 Rows = 1,
@@ -211,7 +211,7 @@ namespace WinPrint.Core.Models {
             settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
 
             // Create default 1 Up sheet
-            sheet = new Sheet() {
+            sheet = new SheetSettings() {
                 Name = "Default 1-Up",
                 Columns = 1,
                 Rows = 1,

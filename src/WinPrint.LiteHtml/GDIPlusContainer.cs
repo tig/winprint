@@ -304,7 +304,7 @@ namespace WinPrint.LiteHtml {
                 color = ToGrayScaleColor(color);
             }
 
-            _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat.GenericTypographic);
+            _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat.GenericDefault);
         }
 
         protected override string GetDefaultFontName() {

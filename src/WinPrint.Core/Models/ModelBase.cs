@@ -46,13 +46,13 @@ namespace WinPrint.Core.Models {
                         destProp.SetValue(this, sourceProp.GetValue(source, null), null);
                 }
                 else {
-                    Dictionary<string,Sheet> sourceList = (Dictionary<string, Sheet>)sourceProp.GetValue(source);
-                    Dictionary<string, Sheet> destList = (Dictionary<string, Sheet>)destProp.GetValue(this);
+                    Dictionary<string,SheetSettings> sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue(source);
+                    Dictionary<string, SheetSettings> destList = (Dictionary<string, SheetSettings>)destProp.GetValue(this);
                     foreach (var src in sourceList) {
                         if (destList.ContainsKey(src.Key))
                             destList[src.Key].CopyPropertiesFrom(src.Value);
                         else {
-                            destList[src.Key] = new Sheet();
+                            destList[src.Key] = new SheetSettings();
                             destList[src.Key].CopyPropertiesFrom(src.Value);
                         }
                     }

@@ -33,7 +33,7 @@ namespace WinPrint.Tests {
 
         [Test]
         public void TestNew() {
-            Core.Models.Sheet doc = new Core.Models.Sheet();
+            Core.Models.SheetSettings doc = new Core.Models.SheetSettings();
             Assert.IsNotNull(doc, "doc should not be null");
 
             //Assert.AreEqual("sansserif", doc.DiagnosticRulesFont.Family);
@@ -46,21 +46,21 @@ namespace WinPrint.Tests {
 
         [Test]
         public void TestPersist() {
-            Core.Models.Sheet doc = new Core.Models.Sheet();
+            Core.Models.SheetSettings doc = new Core.Models.SheetSettings();
 
             string json = JsonSerializer.Serialize(doc, jsonOptions);
             Assert.IsNotNull(json);
 
             Assert.IsTrue(json.Length > 0);
 
-            var doc2 = JsonSerializer.Deserialize<Core.Models.Sheet>(json);
+            var doc2 = JsonSerializer.Deserialize<Core.Models.SheetSettings>(json);
             Assert.IsNotNull(doc2);
             TestHeaderFooter(doc2);
         }
 
         [Test]
         public void TestSerializeToFile() {
-            Core.Models.Sheet doc = new Core.Models.Sheet();
+            Core.Models.SheetSettings doc = new Core.Models.SheetSettings();
 
             // Use the name of the test file as the Document.File property
             string file = "WinPrint.Test.New.json";
@@ -120,14 +120,14 @@ namespace WinPrint.Tests {
             //Assert.AreEqual("Test.txt", doc., $"File property of {file} should have been {file}");
         }
 
-        public Core.Models.Sheet DeserializeFromFile(string file) {
+        public Core.Models.SheetSettings DeserializeFromFile(string file) {
             string jsonString = File.ReadAllText(file);
             Assert.IsNotNull(jsonString);
 
-            return JsonSerializer.Deserialize<Core.Models.Sheet>(jsonString, jsonOptions);
+            return JsonSerializer.Deserialize<Core.Models.SheetSettings>(jsonString, jsonOptions);
         }
 
-        public void TestHeaderFooter(Core.Models.Sheet doc) {
+        public void TestHeaderFooter(Core.Models.SheetSettings doc) {
             Assert.IsNotNull(doc.Header, "Header should not be null");
             Assert.AreEqual("|{FullyQualifiedPath}", doc.Header.Text);
             // Default font

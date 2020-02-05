@@ -7,7 +7,7 @@ namespace WinPrint.Core.Models {
     /// Model for page content (properties that impact how content w/in a page is printed).
     /// Each Sheet prints sheet.Columns by sheet.Rows Pages. 
     /// </summary>
-    public class Content : ModelBase {
+    public class ContentSettings : ModelBase {
 
         /// <summary>
         /// Font used for content. Will override any content font settings specified by a ContentType provider.

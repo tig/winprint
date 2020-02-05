@@ -71,7 +71,7 @@ namespace WinPrint.Console {
             try {
                 // --s
                 string sheetID;
-                Sheet sheet = print.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out sheetID);
+                SheetSettings sheet = print.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out sheetID);
 
                 // --l and --o
                 if (ModelLocator.Current.Options.Landscape) sheet.Landscape = true;
@@ -156,8 +156,8 @@ namespace WinPrint.Console {
         private async Task<int> Print(string file) {
             int sheetsCounted = 0;
 
-            Log.Debug("awaiting LoadAsync {file}", file);
-            var type = await print.SheetViewModel.LoadAsync(file).ConfigureAwait(false);
+            Log.Debug("awaiting LoadAsync {file}, contentType = {t}.", file, ModelLocator.Current.Options.ContentType);
+            var type = await print.SheetViewModel.LoadAsync(file, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
             Log.Debug("back from LoadAsync. Type is {type}", type);
 
             // --c

@@ -58,7 +58,7 @@ Program Tapes; {ver 3.39}
 {       5/15/89                                                          }
 {       V3.37 - Added tab key support.  Tab key now inserts 5 spaces     }
 {                                                                        }
-{       11/30/89                                                          }
+{       11/30/89                                                         }
 {       V3.38 - Fixed bug in clear where after clear the cursor would    }
 {               return to field 1.  Fixed keyboard handling problem in   }
 {               Menu.  Previously if the down arrrow was pressed in Menu }
@@ -79,7 +79,7 @@ Uses
   sDefs;
 
    type PtrRec = record
-           Comp_On : string [9];
+           Comp_On  : string [9];
            Comp_Off : string [9];
            Bold_On  : string [9];
            Bold_Off : string [9];
@@ -96,17 +96,17 @@ Uses
       prntype  : byte = 1;
 
       Printers : array [1..2] of PtrRec =
-               (    (Comp_On  : ^O ;         {Compressed on: change to suit your printer}
+               (    (Comp_On : ^O ;         {Compressed on: change to suit your printer}
                     Comp_Off : ^R ;         {Compressed off: ditto.}
-        {IBM/EPSON} Bold_On  : #27+'G';         {Turns on double strike}
-                    Bold_Off : #27+'H';         {Turns double strike off}
+        {IBM/EPSON} Bold_On  : #27+'G';     {Turns on double strike}
+                    Bold_Off : #27+'H';     {Turns double strike off}
                     One8th   : #27+'0';
                     One6th   : #27+ 'A'+ #12+ #27+ '2'
                     ),
-                    (Comp_On : #27+'(s16.66H';         {Compressed on: change to suit your printer}
-                    Comp_Off : #27+'(s10H';         {Compressed off: ditto.}
-        {HP Laser}  Bold_On  : #27+'(s3B';         {Turns on double strike}
-                    Bold_Off : #27+'(s0B';         {Turns double strike off}
+                    (Comp_On : #27+'(s16.66H';   {Compressed on: change to suit your printer}
+                    Comp_Off : #27+'(s10H';      {Compressed off: ditto.}
+        {HP Laser}  Bold_On  : #27+'(s3B';       {Turns on double strike}
+                    Bold_Off : #27+'(s0B';       {Turns double strike off}
                     One8th   : #27+'&l8D';
                     One6th   : #27+'&l6D'
                     )
@@ -269,7 +269,7 @@ Uses
         TextColor (MapColor (Yellow));
         str (Version:5:2, VerS);
         writeln;
-        Writeln (Center ('ððð T A P E S - V'+VerS+' ððð',currentwidth-1));
+        Writeln (Center ('ï¿½ï¿½ï¿½ T A P E S - V'+VerS+' ï¿½ï¿½ï¿½',currentwidth-1));
         writeln;
         writeln;
         TextColor (MapColor (LightRed));

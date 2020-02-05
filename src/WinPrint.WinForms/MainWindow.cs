@@ -382,6 +382,12 @@ namespace WinPrint.Winforms {
             if (ModelLocator.Current.Options.Landscape) printPreview.SheetViewModel.Landscape = true;
             if (ModelLocator.Current.Options.Portrait) printPreview.SheetViewModel.Landscape = false;
 
+            // Override content-type
+            // --t
+            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.ContentType)) {
+                // TODO: (nothing?)
+            }
+
             printPreview.Select();
             printPreview.Focus();
             //this.Cursor = Cursors.Default;
@@ -416,7 +422,9 @@ namespace WinPrint.Winforms {
                 printPreview.Refresh();
                 Task.Run(async () => {
                     try {
-                        await printPreview.SheetViewModel.LoadAsync(activeFile).ConfigureAwait(false);
+                        // This is an IO bound operation. 
+                        // TODO: This does not need to run on another thread if we are using async/await correctly
+                        await printPreview.SheetViewModel.LoadAsync(activeFile, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
                     }
                     catch (FileNotFoundException fnfe) {
                         Log.Error(fnfe, "File Not Found");
@@ -490,6 +498,8 @@ namespace WinPrint.Winforms {
                     printPreview.Text = "Getting Printer Settings...";
                 }));
                 // Set landscape. This causes other DefaultPageSettings to change
+                // These are CPU bound operations. 
+                // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
                 printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
                 await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
 
@@ -576,7 +586,7 @@ namespace WinPrint.Winforms {
             print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             print.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
-            await print.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File).ConfigureAwait(false);
+            await print.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);

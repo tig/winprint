@@ -24,7 +24,7 @@ namespace WinPrint.Core {
     /// </summary>
     public class SheetViewModel : ViewModels.ViewModelBase {
 
-        private Sheet sheet;
+        private SheetSettings sheet;
 
         // These properties are all defined by user and sync'd with the Sheet model
         private string title;
@@ -197,7 +197,7 @@ namespace WinPrint.Core {
         /// Call SetSheet when the Sheet has changed. 
         /// </summary>
         /// <param name="newSheet">new Sheet defintiion to use</param>
-        public void SetSheet(Sheet newSheet) {
+        public void SetSheet(SheetSettings newSheet) {
             LogService.TraceMessage($"{newSheet.Name}");
             if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
             if (this.sheet != null)
@@ -225,7 +225,13 @@ namespace WinPrint.Core {
             footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
         }
 
-        public async Task<string> LoadAsync(string filePath) {
+        /// <summary>
+        /// Loads the specified file via the appropriate Content Type Engine.
+        /// </summary>
+        /// <param name="filePath">File to load.</param>
+        /// <param name="contentType">If not null or empty, defines the content type engine to use.</param>
+        /// <returns></returns>
+        public async Task<string> LoadAsync(string filePath, string contentType) {
             LogService.TraceMessage($"{filePath}");
 
             Loading = true;
@@ -234,43 +240,56 @@ namespace WinPrint.Core {
             Reset();
 
             var ext = Path.GetExtension(filePath).ToLower();
-            string type = null;
+            //string type = null;
 
-            if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out type)) {
-                if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == type)) {
-                    // Verify node.js and Prism are installed
-                    if (!await ServiceLocator.Current.NodeService.IsInstalled()) {
-                        Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", type, "text/plain");
-                        type = "text/plain";
-                        ContentEngine = TextFileContent.Create();
-                    }
-                    else {
-                        ContentEngine = PrismFileContent.Create();
-                        ((PrismFileContent)ContentEngine).Language = type;
-                    }
-                }
-                else
-                    switch (type) {
-                        case "sourcecode":
-                            ContentEngine = CodeFileContent.Create();
-                            ((CodeFileContent)ContentEngine).Language = type;
-                            break;
-
-                        case "text/html":
-                        default:
-                            ContentEngine = HtmlFileContent.Create();
-                            break;
-                    }
+            if (string.IsNullOrEmpty(contentType)) {
+                // Use file assocations to figure it out
+                if (!ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out contentType))
+                    contentType = "text/plain";
             }
-            else {
-                // assume text/plain
-                ContentEngine = TextFileContent.Create();
-                type = "text/plain";
+            Debug.Assert(!string.IsNullOrEmpty(contentType));
+
+            switch (contentType) {
+                case "text/html":
+                    ContentEngine = HtmlFileContent.Create();
+                    break;
+
+                case "text/plain":
+                    ContentEngine = TextFileContent.Create();
+                    break;
+
+                    // TODO: Figure out if we really want to use the sourcecode CTE.
+                case "sourcecode":
+                    ContentEngine = CodeFileContent.Create();
+                    ((CodeFileContent)ContentEngine).Language = contentType;
+                    break;
+
+                default:
+                    // Not text or html. Is it a language?
+                    if (((List<Langauge>) ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType)) {
+                        // It's a language. Verify node.js and Prism are installed
+                        if (await ServiceLocator.Current.NodeService.IsInstalled()) {
+                            // contentType == Language
+                            ContentEngine = PrismFileContent.Create();
+                            ((PrismFileContent)ContentEngine).Language = contentType;
+                        }
+                        else {
+                            Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", contentType, "text/plain");
+                            contentType = "text/plain";
+                            ContentEngine = TextFileContent.Create();
+                        }
+                    } else {
+                        // No language mapping found, just use contentType as the language
+                        // TODO: Do more error checking here
+                        ContentEngine = PrismFileContent.Create();
+                        ((PrismFileContent)ContentEngine).Language = contentType;
+                    }
+                    break;
             }
 
             ContentEngine.PropertyChanged += OnContentPropertyChanged();
             File = filePath;
-            Type = type;
+            Type = contentType;
 
             // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
             LogService.TraceMessage($"Calling {ContentEngine.GetType()}.LoadAsync({filePath})...");
@@ -295,7 +314,7 @@ namespace WinPrint.Core {
 
             // On Linux, PageSettings.Bounds is determined from PageSettings.Margins. 
             // On Windows, it has no effect. Regardelss, here we set Bounds to 0 to work around this.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 pageSettings.Margins = new Margins(0, 0, 0, 0);
 
             // The following elements of PageSettings are dependent
@@ -375,7 +394,7 @@ namespace WinPrint.Core {
             contentBounds.Location = new PointF(sheet.Margins.Left, sheet.Margins.Top + headerVM.Bounds.Height);
             contentBounds.Width = Bounds.Width - sheet.Margins.Left - sheet.Margins.Right;
             contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
-            if (ContentEngine is null) 
+            if (ContentEngine is null)
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
             else
                 // TODO: Figure out a better way for the content engine to get page size.
@@ -419,6 +438,8 @@ namespace WinPrint.Core {
                 return;
             }
 
+            // TODO: If no font is set, override
+
             numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 
             CheckPrintOutsideHardMargins();
@@ -441,8 +462,8 @@ namespace WinPrint.Core {
             return true;
         }
 
-        public Sheet FindSheet(string sheetName, out string sheetID) {
-            Sheet sheet = null;
+        public SheetSettings FindSheet(string sheetName, out string sheetID) {
+            SheetSettings sheet = null;
             sheetID = ModelLocator.Current.Settings.DefaultSheet.ToString();
             if (!string.IsNullOrEmpty(sheetName) && !sheetName.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
                 if (!ModelLocator.Current.Settings.Sheets.TryGetValue(sheetName, out sheet)) {
