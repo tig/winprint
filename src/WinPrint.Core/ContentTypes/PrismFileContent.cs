@@ -32,9 +32,6 @@ namespace WinPrint.Core.ContentTypes {
         public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
         private bool lineNumbers = true;
 
-        public bool Diagnostics { get => diagnostics; set => SetField(ref diagnostics, value); }
-        private bool diagnostics = false;
-
         public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
         private bool lineNumberSeparator = true;
 
@@ -78,7 +75,7 @@ namespace WinPrint.Core.ContentTypes {
             return !string.IsNullOrEmpty(document);
         }
 
-        public new async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
+        public override async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
 
             // Calculate the number of lines per page etc..
@@ -215,12 +212,12 @@ namespace WinPrint.Core.ContentTypes {
                 sbHtml.AppendLine(Properties.Resources.prism_winprint);
  
             // If prismContentType settings specifies a font, override what's in CSS.
-            if (MonspacedFont != null)
+            if (ContentSettings.Font != null)
                 sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
-                    $"font-family: '{MonspacedFont.Family}', winprint;" + Environment.NewLine +
-                    $"font-size: {MonspacedFont.Size}pt;" +  Environment.NewLine +
+                    $"font-family: '{ContentSettings.Font.Family}', winprint;" + Environment.NewLine +
+                    $"font-size: {ContentSettings.Font.Size}pt;" +  Environment.NewLine +
                     // BUGBUG: This ain't right
-                    $"font-weight: {MonspacedFont.Style};}}");
+                    $"font-weight: {ContentSettings.Font.Style};}}");
 
             // TODO: If Sheet settings specifies a font, override what's in CSS.
             //if (sheet.Font != null)
@@ -335,7 +332,7 @@ namespace WinPrint.Core.ContentTypes {
             //PaintLineNumberSeparator(g);
 
             // Diagnostics
-            if (diagnostics) {
+            if (ContentSettings.Diagnostics) {
                 g.ResetClip();
                 int startLine = linesPerPage * (pageNum - 1);
                 int endLine = startLine + linesPerPage;
@@ -349,7 +346,7 @@ namespace WinPrint.Core.ContentTypes {
                         int x = (int)leftMargin;
                         int y = lineOnPage * (int)lineHeight;
                         //RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
-                        g.DrawRectangle(Pens.LightSlateGray, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
+                        g.DrawRectangle(Pens.Red, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
                     }
                 }
             }

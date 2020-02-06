@@ -330,7 +330,8 @@ namespace WinPrint.Core.ContentTypes {
                     float xPos = leftMargin + lineNumberWidth;
                     float yPos = lineOnPage * lineHeight;
                     g.DrawString(lines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, stringFormat);
-                    g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
+                    if (ContentSettings.Diagnostics)
+                        g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
                 }
             }
             Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage-1, startLine, endLine);

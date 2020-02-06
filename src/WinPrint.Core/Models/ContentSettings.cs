@@ -33,5 +33,11 @@ namespace WinPrint.Core.Models {
         /// </summary>
         public int Darkness { get => darkness; set => SetField(ref darkness, value); }
         private int darkness = 0;
+
+        /// <summary>
+        /// If true, content will be drawn with diagnostic info and/or rules.
+        /// </summary>
+        public bool Diagnostics { get => diagnostics; set => SetField(ref diagnostics, value); }
+        private bool diagnostics = false;
     }
 }

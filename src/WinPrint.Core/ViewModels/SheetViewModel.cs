@@ -302,6 +302,15 @@ namespace WinPrint.Core {
             File = filePath;
             Type = contentType;
 
+            // Content settings in Sheet take precidence over Engine
+            if (ContentEngine.ContentSettings is null) {
+                ContentEngine.ContentSettings = new ContentSettings();
+                // TODO: set some defaults
+            }
+
+            if (ContentSettings != null)
+                ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+
             // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
             LogService.TraceMessage($"Calling {ContentEngine.GetType()}.LoadAsync({filePath})...");
             var success = await ContentEngine.LoadAsync(filePath).ConfigureAwait(false);
@@ -448,15 +457,6 @@ namespace WinPrint.Core {
                 Reflowing = false;
                 return;
             }
-
-            // Content settings in Sheet take precidence over Engine
-            if (ContentEngine.ContentSettings is null) {
-                ContentEngine.ContentSettings = new ContentSettings();
-                // TODO: set some defaults
-            }
-
-            if (ContentSettings != null)
-                ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
             numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 

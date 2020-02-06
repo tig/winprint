@@ -38,12 +38,20 @@ namespace WinPrint.LiteHtml {
 
         private Graphics _graphics;
 
-        public bool ForPrint { get; set; }
+        /// <summary>
+        /// If true, all colors will be converted to grayscale. 
+        /// </summary>
+        public bool Grayscale { get; set; }
 
         /// <summary>
-        /// Darkness factor. 0 = color. 100 = black. Anything inbetween provides a shade of gray.
+        /// If true, the background color will be printed. Otherwise it will be white.
         /// </summary>
-        public int MonochromeDarkness { get; set; }
+        public bool PrintBackground { get; set; }
+
+        /// <summary>
+        /// Darkness factor. 0 = color. 100 = black. Anything inbetween provides a shade of gray (or darker colors).
+        /// </summary>
+        public int Darkness { get; set; }
 
         static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
         static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
@@ -68,7 +76,7 @@ namespace WinPrint.LiteHtml {
             // BUGBUG: I don't think litehtml actaully honors device_height
             media.device_height = PageHeight;
 
-            if (MonochromeDarkness > 0) {
+            if (Grayscale) {
                 media.color = 0;
                 media.color_index = 0;
             }
@@ -132,7 +140,7 @@ namespace WinPrint.LiteHtml {
             Logging.TraceMessage();
 
             web_color color = bgcolor;
-            if (MonochromeDarkness > 0) {
+            if (Grayscale) {
                 color.red = 0xff;
                 color.blue = 0xff;
                 color.green = 0xff;
@@ -147,7 +155,8 @@ namespace WinPrint.LiteHtml {
                     }
                 }
                 else {
-                    if (!ForPrint) {
+                    // TODO: Make this more precise; not for ALL backgrounds, just page background?
+                    if (PrintBackground) {
                         Rectangle rect = new Rectangle(pos.x, pos.y, pos.width, pos.height);
                         _graphics.FillRectangle(color.GetBrush(), rect);
                     }
@@ -209,7 +218,7 @@ namespace WinPrint.LiteHtml {
 //            byte grayScale = (byte)((originalColor.red * .3) + (originalColor.green * .59) + (originalColor.blue * .11));
             originalColor.red = originalColor.green = originalColor.blue = grayScale;
 
-            var c = ChangeColorBrightness(Color.FromArgb(originalColor.red, originalColor.green, originalColor.blue), -(MonochromeDarkness / 100F));
+            var c = ChangeColorBrightness(Color.FromArgb(originalColor.red, originalColor.green, originalColor.blue), -(Darkness / 100F));
             originalColor.red = c.R;
             originalColor.green = c.G;
             originalColor.blue = c.B;
@@ -220,7 +229,7 @@ namespace WinPrint.LiteHtml {
             //Logging.TraceMessage();
 
             borders borders = borders_ref;
-            if (MonochromeDarkness > 0) {
+            if (Grayscale) {
                 borders.top.color = ToGrayScaleColor(borders.top.color);
                 borders.left.color = ToGrayScaleColor(borders.left.color);
                 borders.bottom.color = ToGrayScaleColor(borders.bottom.color);
@@ -284,7 +293,7 @@ namespace WinPrint.LiteHtml {
             Logging.TraceMessage();
 
             web_color color = markerColor;
-            if (MonochromeDarkness > 0) {
+            if (Grayscale) {
                 color = ToGrayScaleColor(color);
             }
 
@@ -300,7 +309,7 @@ namespace WinPrint.LiteHtml {
             var fontInfo = _fonts[font];
 
             web_color color = textColor;
-            if (MonochromeDarkness > 0) {
+            if (Grayscale) {
                 color = ToGrayScaleColor(color);
             }
 

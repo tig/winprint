@@ -103,8 +103,9 @@ namespace WinPrint.Core.ContentTypes {
             litehtml.Graphics = g;
             LogService.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
 
-            //litehtml.ForPrint = true; 
-            //litehtml.MonochromeDarkness = 200; 
+            litehtml.Grayscale = ContentSettings.Grayscale ;
+            litehtml.Darkness = ContentSettings.Darkness;
+            litehtml.PrintBackground = ContentSettings.PrintBackground;
 
             Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");
