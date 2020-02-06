@@ -10,16 +10,16 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.LiteHtml;
 
-namespace WinPrint.Core.ContentTypes {
+namespace WinPrint.Core.ContentTypeEngines {
 
     /// <summary>
     /// Implements generic HTML file type support. 
     /// </summary>
-    public class HtmlFileContent : ContentBase, IDisposable {
+    public class HtmlCte : ContentTypeEngineBase, IDisposable {
         public static new string ContentType = "text/html";
 
-        public static HtmlFileContent Create() {
-            var content = new HtmlFileContent();
+        public static HtmlCte Create() {
+            var content = new HtmlCte();
             content.CopyPropertiesFrom(ModelLocator.Current.Settings.HtmlContentTypeEngineSettings);
             return content;
         }
@@ -50,8 +50,6 @@ namespace WinPrint.Core.ContentTypes {
         }
 
         private Bitmap htmlBitmap;
-
-        public Models.Font MonspacedFont { get; internal set; }
 
         public async override Task<bool> LoadAsync(string filePath) {
             ready = false;

@@ -10,7 +10,7 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.LiteHtml;
 
-namespace WinPrint.Core.ContentTypes {
+namespace WinPrint.Core.ContentTypeEngines {
 
     internal struct HtmlLine {
         internal string html;
@@ -24,15 +24,15 @@ namespace WinPrint.Core.ContentTypes {
     /// These classes know how to parse and paint the file type's content.
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
-    public class CodeFileContent : ContentBase, IDisposable {
-        public static CodeFileContent Create() {
-            var engine = new CodeFileContent();
+    public class CodeCte : ContentTypeEngineBase, IDisposable {
+        public static CodeCte Create() {
+            var engine = new CodeCte();
             engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
             return engine;
         }
 
         public static new string ContentType = "Source code";
-        public CodeFileContent() {
+        public CodeCte() {
         }
 
         // All of the lines of the text file, after reflow/line-wrap

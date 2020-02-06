@@ -11,7 +11,7 @@ using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
-namespace WinPrint.Core.ContentTypes {
+namespace WinPrint.Core.ContentTypeEngines {
 
     /// <summary>
     /// This struct keeps track of which lines are 'real' and thus get a printed line number
@@ -22,14 +22,12 @@ namespace WinPrint.Core.ContentTypes {
         internal int lineNumber; // 0 if wrapped
     }
     /// <summary>
-    /// Implements generic text file type support. 
-    /// Base class for WinPrint content types. Each file type may have a Content type
-    /// These classes know how to parse and paint the file type's content.
+    /// Implements text/plain file type support. 
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
-    public class TextFileContent : ContentBase, IDisposable {
-        public static TextFileContent Create() {
-            var engine = new TextFileContent();
+    public class TextCte : ContentTypeEngineBase, IDisposable {
+        public static TextCte Create() {
+            var engine = new TextCte();
             engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
             return engine;
         }
@@ -37,8 +35,8 @@ namespace WinPrint.Core.ContentTypes {
         private StringFormat stringFormat = new StringFormat();
         private const TextRenderingHint textRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-        public static new string ContentType = "Plaintext";
-        public TextFileContent() {
+        public static new string ContentType = "text/plain";
+        public TextCte() {
             // StringFormat to use throughout
             stringFormat.FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.FitBlackBox | StringFormatFlags.MeasureTrailingSpaces; // | StringFormatFlags.DisplayFormatControl;
             stringFormat.Alignment = StringAlignment.Near;

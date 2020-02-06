@@ -11,12 +11,12 @@ using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
-namespace WinPrint.Core.ContentTypes {
-    public class PrismFileContent : HtmlFileContent {
-        public static new string ContentType = "Syntax Highlighted Code";
+namespace WinPrint.Core.ContentTypeEngines {
+    public class PrismCte : HtmlCte {
+        public static new string ContentType = "text/code";
 
-        public static new PrismFileContent Create() {
-            var content = new PrismFileContent();
+        public static new PrismCte Create() {
+            var content = new PrismCte();
             content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismContentTypeEngineSettings);
             return content;
         }
@@ -187,13 +187,13 @@ namespace WinPrint.Core.ContentTypes {
             //    <heaad>
             //      <style>
             //         if (user provided prism-xxx.css) 
-            //             User provided prism-xxx.css (Body -> Font, Pre -> Monospace Font) OR built-in prism.css
+            //             User provided prism-xxx.css (Body -> ContentSettings.Font, Pre -> ContentSettings.Font) OR built-in prism.css
             //         else 
             //             Built-in provided prism-winprint.css (Body -> Font, Pre -> Monospace Font)
             //         if (PrismFileContent.Font != null)
-            //             (Body -> PrismFileContent.Font, Pre -> PrismFileContent.Monospace Font)
+            //             (Body -> PrismFileContent.Font, Pre -> PrismFileContent.Font Font)
             //         if (Sheet.Font != null)
-            //             (Body -> Sheet.Font, Pre -> Sheet.Monospace Font)
+            //             (Body -> Sheet.Font, Pre -> Sheet.Font Font)
             //         if (user provided prism-winprint-overrides.css) 
             //             User provided WinPrint Prism Overrides (makes Prism work with printing).
             //         else 

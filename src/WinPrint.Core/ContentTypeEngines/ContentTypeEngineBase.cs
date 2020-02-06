@@ -4,16 +4,15 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
-namespace WinPrint.Core.ContentTypes {
+namespace WinPrint.Core.ContentTypeEngines {
     /// <summary>
     /// base class for Content/File types
     /// </summary>
-    public abstract class ContentBase : ModelBase, INotifyPropertyChanged {
+    public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
         public new event PropertyChangedEventHandler PropertyChanged;
         protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

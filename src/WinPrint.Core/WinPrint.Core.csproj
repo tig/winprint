@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.0.782</Version>
+    <Version>2.0.0.786</Version>
     <Company>Kindel Systems</Company>
     <Product>WinPrint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ContentTypes\prism-winprint-overrides.css" />
+    <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
     <None Remove="Properties\languages.json" />
   </ItemGroup>
 

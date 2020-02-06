@@ -9,7 +9,7 @@ using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Text;
-using WinPrint.Core.ContentTypes;
+using WinPrint.Core.ContentTypeEngines;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Timers;
@@ -78,8 +78,8 @@ namespace WinPrint.Core {
             }
         }
 
-        internal ContentBase ContentEngine { get => contentEngine; set => SetField(ref contentEngine, value); }
-        private ContentBase contentEngine;
+        internal ContentTypeEngineBase ContentEngine { get => contentEngine; set => SetField(ref contentEngine, value); }
+        private ContentTypeEngineBase contentEngine;
 
         private Size paperSize;
         private RectangleF printableArea;
@@ -263,17 +263,17 @@ namespace WinPrint.Core {
 
             switch (contentType) {
                 case "text/html":
-                    ContentEngine = HtmlFileContent.Create();
+                    ContentEngine = HtmlCte.Create();
                     break;
 
                 case "text/plain":
-                    ContentEngine = TextFileContent.Create();
+                    ContentEngine = TextCte.Create();
                     break;
 
                 // TODO: Figure out if we really want to use the sourcecode CTE.
                 case "sourcecode":
-                    ContentEngine = CodeFileContent.Create();
-                    ((CodeFileContent)ContentEngine).Language = contentType;
+                    ContentEngine = CodeCte.Create();
+                    ((CodeCte)ContentEngine).Language = contentType;
                     break;
 
                 default:
@@ -282,20 +282,20 @@ namespace WinPrint.Core {
                         // It's a language. Verify node.js and Prism are installed
                         if (await ServiceLocator.Current.NodeService.IsInstalled()) {
                             // contentType == Language
-                            ContentEngine = PrismFileContent.Create();
-                            ((PrismFileContent)ContentEngine).Language = contentType;
+                            ContentEngine = PrismCte.Create();
+                            ((PrismCte)ContentEngine).Language = contentType;
                         }
                         else {
                             Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", contentType, "text/plain");
                             contentType = "text/plain";
-                            ContentEngine = TextFileContent.Create();
+                            ContentEngine = TextCte.Create();
                         }
                     }
                     else {
                         // No language mapping found, just use contentType as the language
                         // TODO: Do more error checking here
-                        ContentEngine = PrismFileContent.Create();
-                        ((PrismFileContent)ContentEngine).Language = contentType;
+                        ContentEngine = PrismCte.Create();
+                        ((PrismCte)ContentEngine).Language = contentType;
                     }
                     break;
             }

@@ -1,7 +1,7 @@
 ﻿using System;
 
 using GalaSoft.MvvmLight.Ioc;
-using WinPrint.Core.ContentTypes;
+using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Services;
 
 //using WinPrint.Services;
