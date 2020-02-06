@@ -291,7 +291,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             return sbHtml.ToString();
         }
 
-        public string Language { get; internal set; }
+        internal string Language { get; set; }
 
         public override void PaintPage(Graphics g, int pageNum) {
             if (litehtml == null || ready == false) {
