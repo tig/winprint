@@ -197,7 +197,7 @@ namespace WinPrint.Winforms {
                 LogService.TraceMessage($"{loading}");
                 if (loading) return;
                 // This kicks off Relfow
-                SheetSettingsChanged();
+                //SheetSettingsChanged();
             }
         }
 
@@ -287,7 +287,7 @@ namespace WinPrint.Winforms {
             else {
                 LogService.TraceMessage($"{reflow}");
                 if (reflow)
-                    SheetSettingsChanged();
+                    LoadFile();
                 else
                     printPreview.Invalidate();
             }
@@ -409,46 +409,73 @@ namespace WinPrint.Winforms {
 
             if (string.IsNullOrEmpty(activeFile)) {
                 // If a file's not been set, juice the print preview and show the file open dialog box
-                SheetSettingsChanged();
+                //SheetSettingsChanged();
                 fileButton_Click(null, null);
             }
             else
-                FileChanged();
+                LoadFile();
         }
 
-        private void FileChanged() {
+        private void LoadFile() {
             if (InvokeRequired)
-                BeginInvoke((Action)(() => FileChanged()));
+                BeginInvoke((Action)(() => LoadFile()));
             else {
                 // Reset View Model
                 printPreview.SheetViewModel.Reset();
                 printPreview.Text = Resources.LoadingMsg;
                 printPreview.Refresh();
+
+                // On another thread 
+                //    - load file
+                //    - set printer page settings
+                //    - reflow
                 Task.Run(async () => {
+                    string stage = "Loading";
                     try {
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = $"{stage}...";
+                        }));
                         // This is an IO bound operation. 
                         // TODO: This does not need to run on another thread if we are using async/await correctly
                         await printPreview.SheetViewModel.LoadAsync(activeFile, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+
+                        // Set landscape. This causes other DefaultPageSettings to change
+                        // These are CPU bound operations. 
+                        // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
+                        stage = "Getting Printer Page Settings";
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = $"{stage}...";
+                        }));
+                        printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
+                        await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
+
+                        stage = "Rendering";
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = $"{stage}...";
+                        }));
+                        await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
+
                     }
                     catch (FileNotFoundException fnfe) {
                         Log.Error(fnfe, "File Not Found");
-                        ShowError($"{fnfe.Message}");
+                        ShowError($"{stage}: {fnfe.Message}");
                         //fileButton_Click(null, null);
                     }
                     catch (InvalidOperationException ioe) {
                         Log.Error(ioe, "Error Operation {file}", activeFile);
-                        ShowError($"Error: {ioe.Message}{Environment.NewLine}({activeFile})");
+                        ShowError($"{stage}: {ioe.Message}{Environment.NewLine}({activeFile})");
                         //                fileButton_Click(null, null);
                     }
 #pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
                         Log.Error(e, "Exception {file}", activeFile);
-                        ShowError($"Exception: {e.Message}{Environment.NewLine}({activeFile})");
+                        ShowError($"{stage}: Exception: {e.Message}{Environment.NewLine}({activeFile})");
                     }
                     finally {
                         // Set Loading to false in case of an error
                         printPreview.SheetViewModel.Loading = false;
+                        printPreview.SheetViewModel.Reflowing = false;
                     }
                 });
             }
@@ -486,60 +513,22 @@ namespace WinPrint.Winforms {
             var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
             comboBoxSheet.Text = newSheet.Name;
             printPreview.SheetViewModel.SetSheet(newSheet);
-            SheetSettingsChanged();
+            //SheetSettingsChanged();
+            LoadFile();
         }
 
         /// <summary>
         /// If Sheet settings change (either a new sheet or something that causes a reflow)
         /// Update printer settings and Reflow.
         /// Because getting printer settings can take 4-5 seconds we do that and reflow on another thread
-        /// </summary>
-        internal void SheetSettingsChanged() {
-            LogService.TraceMessage();
+        ///// </summary>
+        //internal void SheetSettingsChanged() {
+        //    LogService.TraceMessage();
 
-            Task.Run(async () => {
-                BeginInvoke((Action)(() => {
-                    printPreview.Text = "Getting Printer Settings...";
-                }));
-
-                try {
-                    // Set landscape. This causes other DefaultPageSettings to change
-                    // These are CPU bound operations. 
-                    // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
-                    printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-                    await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
-                    Log.Error(e, "Exception Setting Printer Page Settings");
-                    ShowError($"Exception While Setting Printer Page Settings: {e.Message}");
-                    return;
-                }
-                finally {
-                    // Set Relflowing to false in case of an error
-                    //printPreview.SheetViewModel.Reflowing = false;
-                }
-
-                BeginInvoke((Action)(() => {
-                    printPreview.Text = Resources.RenderingMsg;
-                }));
-
-                try {
-                    await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
-                    Log.Error(e, "Exception While Rendering");
-                    ShowError($"Exception While Rendering: {e.Message}");
-                }
-                finally {
-                    // Set Relflowing to false in case of an error
-                    printPreview.SheetViewModel.Reflowing = false;
-                }
-            });
-        }
+        //    Task.Run(async () => {
+                
+        //    });
+        //}
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
             if (ModelLocator.Current.Settings is null) return;
@@ -607,7 +596,7 @@ namespace WinPrint.Winforms {
                 if (paperSizesCB.SelectedIndex != -1) {
                     printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
                 }
-                SheetSettingsChanged();
+                LoadFile();
             }
         }
 
@@ -746,7 +735,7 @@ namespace WinPrint.Winforms {
         private void fileButton_Click(object sender, EventArgs e) {
             activeFile = ShowFilesDialog();
             if (!string.IsNullOrEmpty(activeFile))
-                FileChanged();
+                LoadFile();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",

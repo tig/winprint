@@ -84,9 +84,9 @@ namespace WinPrint.Core.Models {
         /// Content type handlers
         /// </summary>
 //        public Dictionary<string, ContentBase> ContentTypes { get; set; }
-        public TextFileContent TextFileSettings { get; set; }
-        public HtmlFileContent HtmlFileSettings { get; set; }
-        public PrismFileContent PrismFileSettings { get; set; }
+        public TextFileContent TextContentTypeEngineSettings { get; set; }
+        public HtmlFileContent HtmlContentTypeEngineSettings { get; set; }
+        public PrismFileContent PrismContentTypeEngineSettings { get; set; }
 
         public FileAssociations LanguageAssociations { get; set; }
 
@@ -137,7 +137,12 @@ namespace WinPrint.Core.Models {
 
         }
 
-        internal static Settings CreateDefaultSettingsFile() {
+        /// <summary>
+        /// Creates a default set of settings that can be persisted to create
+        /// the .config.json file. 
+        /// </summary>
+        /// <returns>A Settings object with default settings.</returns>
+        internal static Settings CreateDefaultSettings() {
             string monoSpaceFamily = "monospace";
             string sansSerifFamily = "sansserif";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
@@ -160,41 +165,41 @@ namespace WinPrint.Core.Models {
             //settings.size = new WindowSize(1024, 800);
             //settings.location = new WindowLocation(100, 100);
 
-            settings.TextFileSettings = new TextFileContent() {
+            settings.TextContentTypeEngineSettings = new TextFileContent() {
                 // This font will be overriddent by Sheet defined fonts (if any)
-                ContentSettings = new ContentSettings() {
-                    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                    Darkness = 100,
-                    Grayscale = false,
-                    PrintBackground = true
-                },
-                LineNumbers = true,
-                LineNumberSeparator = false,
-                NewPageOnFormFeed = false,
-                TabSpaces = 4
+                //ContentSettings = new ContentSettings() {
+                //    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                //    Darkness = 100,
+                //    Grayscale = false,
+                //    PrintBackground = true
+                //},
+                //LineNumbers = true,
+                //LineNumberSeparator = false,
+                //NewPageOnFormFeed = false,
+                //TabSpaces = 4
             };
 
             // Html fonts are determined by:
             // 1) Sheet (all HTML & CSS ignored)
             // 2) winprint.css (Body -> Font, Pre -> Monospace Font)
             // 3) HtmlileContent settings
-            settings.HtmlFileSettings = new HtmlFileContent() {
-                ContentSettings = new ContentSettings() {
-                    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                    Darkness = 100,
-                    Grayscale = false,
-                    PrintBackground = true
-                },
+            settings.HtmlContentTypeEngineSettings = new HtmlFileContent() {
+                //ContentSettings = new ContentSettings() {
+                //    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                //    Darkness = 100,
+                //    Grayscale = false,
+                //    PrintBackground = true
+                //},
                 MonspacedFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
             };
 
-            settings.PrismFileSettings = new PrismFileContent() {
-                ContentSettings = new ContentSettings() {
-                    Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
-                    Darkness = 100,
-                    Grayscale = false,
-                    PrintBackground = true
-                },
+            settings.PrismContentTypeEngineSettings = new PrismFileContent() {
+                //ContentSettings = new ContentSettings() {
+                //    Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
+                //    Darkness = 100,
+                //    Grayscale = false,
+                //    PrintBackground = true
+                //},
                 MonspacedFont = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
                 LineNumbers = true,
             };

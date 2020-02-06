@@ -17,7 +17,7 @@ namespace WinPrint.Core.ContentTypes {
 
         public static new PrismFileContent Create() {
             var content = new PrismFileContent();
-            content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismFileSettings);
+            content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismContentTypeEngineSettings);
             return content;
         }
 

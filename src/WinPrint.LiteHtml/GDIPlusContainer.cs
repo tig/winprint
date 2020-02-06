@@ -137,7 +137,7 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override void DrawBackground(UIntPtr hdc, string image, background_repeat repeat, ref web_color bgcolor, ref position pos, ref border_radiuses borderRadiuses, ref position borderBox, bool isRoot) {
-            Logging.TraceMessage();
+            //Logging.TraceMessage();
 
             web_color color = bgcolor;
             if (Grayscale) {

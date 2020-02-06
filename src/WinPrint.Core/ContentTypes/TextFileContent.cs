@@ -30,7 +30,7 @@ namespace WinPrint.Core.ContentTypes {
     public class TextFileContent : ContentBase, IDisposable {
         public static TextFileContent Create() {
             var engine = new TextFileContent();
-            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
+            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
             return engine;
         }
 

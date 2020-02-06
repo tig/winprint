@@ -25,7 +25,7 @@ namespace WinPrint.Core.Models {
         private Header header = new Header();
         private Footer footer = new Footer();
 
-        private ContentSettings contentSetings;
+        private ContentSettings contentSettings;
 
         /// <summary>
         /// Unique identifier for this Sheet definition.
@@ -66,7 +66,13 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font used for content. Will override any content font settings specified by a ContentType provider.
         /// </summary>
-        public ContentSettings ContentSettings { get => contentSetings; set => SetField(ref contentSetings, value); }
+        public ContentSettings ContentSettings { 
+            get {
+                //if (contentSettings is null)
+                //    contentSettings = new ContentSettings();
+                 return contentSettings; 
+            } 
+            set => SetField(ref contentSettings, value); }
 
         /// <summary>
         /// Header printed at bottom  of each sheet

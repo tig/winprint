@@ -27,7 +27,7 @@ namespace WinPrint.Core.ContentTypes {
     public class CodeFileContent : ContentBase, IDisposable {
         public static CodeFileContent Create() {
             var engine = new CodeFileContent();
-            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextFileSettings);
+            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
             return engine;
         }
 

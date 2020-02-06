@@ -20,7 +20,7 @@ namespace WinPrint.Core.ContentTypes {
 
         public static HtmlFileContent Create() {
             var content = new HtmlFileContent();
-            content.CopyPropertiesFrom(ModelLocator.Current.Settings.HtmlFileSettings);
+            content.CopyPropertiesFrom(ModelLocator.Current.Settings.HtmlContentTypeEngineSettings);
             return content;
         }
 

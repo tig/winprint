@@ -58,7 +58,7 @@ namespace WinPrint.Core.Services {
             }
             catch (FileNotFoundException) {
                 Log.Information("Settings file was not found; creating {settingsFileName} with defaults.", SettingsFileName);
-                settings = Settings.CreateDefaultSettingsFile();
+                settings = Settings.CreateDefaultSettings();
                 SaveSettings(settings);
             }
             catch (JsonException je) {
@@ -104,10 +104,12 @@ namespace WinPrint.Core.Services {
         }
 
         /// <summary>
-        /// Saves settings to settings file (WinPrint.config.json). 
+        /// Saves Settings to settings file (WinPrint.config.json). Set `saveCTESettings=true` when
+        /// creating default. `false` otherwise.
         /// </summary>
         /// <param name="settings"></param>
-        public void SaveSettings(Models.Settings settings) {
+        /// <param name="saveCTESettings">If true Content Type Engine settings will be saved. </param>
+        public void SaveSettings(Models.Settings settings, bool saveCTESettings = true) {
             string jsonString = JsonSerializer.Serialize(settings, jsonOptions); ;
 
             var writerOptions = new JsonWriterOptions { Indented = true };
@@ -128,7 +130,8 @@ namespace WinPrint.Core.Services {
                 }
 
                 foreach (JsonProperty property in root.EnumerateObject()) {
-                    property.WriteTo(writer);
+                    if (saveCTESettings || !property.Name.ToLowerInvariant().Contains("contenttypeengine"))
+                        property.WriteTo(writer);
                 }
 
                 writer.WriteEndObject();
