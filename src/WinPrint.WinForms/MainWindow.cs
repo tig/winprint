@@ -298,6 +298,10 @@ namespace WinPrint.Winforms {
 
             // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
+            if (ModelLocator.Current.Settings == null) {
+                MessageBox.Show("WinPrint Settings failed to load. See log file for details.");
+                return;
+            }
             if (ModelLocator.Current.Settings.Size != null)
                 this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
             if (ModelLocator.Current.Settings.Location != null)
@@ -538,6 +542,8 @@ namespace WinPrint.Winforms {
         }
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
+            if (ModelLocator.Current.Settings is null) return;
+
             // Save Window state
             if (this.WindowState == System.Windows.Forms.FormWindowState.Normal) {
                 ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(this.Size.Width, this.Size.Height);

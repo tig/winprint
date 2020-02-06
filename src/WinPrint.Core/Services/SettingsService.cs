@@ -61,6 +61,9 @@ namespace WinPrint.Core.Services {
                 settings = Settings.CreateDefaultSettingsFile();
                 SaveSettings(settings);
             }
+            catch (JsonException je) {
+                Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
+            }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
                 Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
@@ -74,12 +77,26 @@ namespace WinPrint.Core.Services {
                 // watch .command file for changes
                 watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
                 watcher.ChangedEvent += (o, a) => {
-                    jsonString = File.ReadAllText(SettingsFileName);
-                    Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
+                    Log.Debug("Settings file changed: {file}", SettingsFileName);
+                    try {
+                        jsonString = File.ReadAllText(SettingsFileName);
+                        Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
-                    // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
-                    ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
-                    Log.Debug("ReadSettings: Done Copying Properties.");
+                        // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
+                        ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
+                    }
+                    catch (FileNotFoundException fnfe) {
+                        // TODO: Graceful error handling for .config file 
+                        Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
+                    }
+                    catch (JsonException je) {
+                        Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
+                    }
+                    catch (Exception ex) {
+                        // TODO: Graceful error handling for .config file 
+                        Log.Error(ex, "Exception reading {settingsFileName}", SettingsFileName);
+                    }
+                    Log.Debug("Settings file changed: Done.");
                 };
             }
 
@@ -139,8 +156,7 @@ namespace WinPrint.Core.Services {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
                     // Your OSX code here.
                 }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-{
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
                     // 
                 }
                 else {
