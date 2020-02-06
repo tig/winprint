@@ -28,6 +28,7 @@ namespace WinPrint.Core.Models {
         /// </summary>
         /// <param name="source"></param>
         public virtual void CopyPropertiesFrom(ModelBase source) {
+            if (source is null) return;
             var sourceProps = source.GetType().GetProperties().Where(x => x.CanRead).ToList();
             var destProps = this.GetType().GetProperties().Where(x => x.CanWrite).ToList();
             foreach (var (sourceProp, destProp) in
@@ -39,9 +40,19 @@ namespace WinPrint.Core.Models {
             select (sourceProp, destProp)) {
                 // "System.Collections.Generic.IList`
                 if (sourceProp.Name != "Sheets") {
-                    if (sourceProp.PropertyType.IsSubclassOf(typeof(ModelBase)))
+                    if (sourceProp.PropertyType.IsSubclassOf(typeof(ModelBase))) {
                         // Property is subclass of ModelBase - Recurse through sub-objects
-                        ((ModelBase)destProp.GetValue(this)).CopyPropertiesFrom((ModelBase)sourceProp.GetValue(source, null));
+                        if ((ModelBase)sourceProp.GetValue(source, null) != null) {
+                            if ((ModelBase)destProp.GetValue(this) is null) {
+                                // Destination is null. Create it.
+                                destProp.SetValue(this, (ModelBase)Activator.CreateInstance(destProp.PropertyType));
+
+                            }
+                            ((ModelBase)destProp.GetValue(this)).CopyPropertiesFrom((ModelBase)sourceProp.GetValue(source, null));
+                        }
+                        else
+                            destProp.SetValue(this, null);
+                    }
                     else
                         destProp.SetValue(this, sourceProp.GetValue(source, null), null);
                 }

@@ -333,7 +333,7 @@ namespace WinPrint.Core.ContentTypes {
                     g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
                 }
             }
-            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine}", lineOnPage-1, startLine, endLine);
+            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage-1, startLine, endLine);
         }
 
         // TODO: Support setting color of line #s and separator

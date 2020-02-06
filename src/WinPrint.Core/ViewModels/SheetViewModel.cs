@@ -229,7 +229,7 @@ namespace WinPrint.Core {
             newSheet.PropertyChanged += OnSheetPropertyChanged();
             headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
             footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
-            
+
         }
 
         /// <summary>
@@ -265,7 +265,7 @@ namespace WinPrint.Core {
                     ContentEngine = TextFileContent.Create();
                     break;
 
-                    // TODO: Figure out if we really want to use the sourcecode CTE.
+                // TODO: Figure out if we really want to use the sourcecode CTE.
                 case "sourcecode":
                     ContentEngine = CodeFileContent.Create();
                     ((CodeFileContent)ContentEngine).Language = contentType;
@@ -273,7 +273,7 @@ namespace WinPrint.Core {
 
                 default:
                     // Not text or html. Is it a language?
-                    if (((List<Langauge>) ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType)) {
+                    if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType)) {
                         // It's a language. Verify node.js and Prism are installed
                         if (await ServiceLocator.Current.NodeService.IsInstalled()) {
                             // contentType == Language
@@ -285,7 +285,8 @@ namespace WinPrint.Core {
                             contentType = "text/plain";
                             ContentEngine = TextFileContent.Create();
                         }
-                    } else {
+                    }
+                    else {
                         // No language mapping found, just use contentType as the language
                         // TODO: Do more error checking here
                         ContentEngine = PrismFileContent.Create();
@@ -439,17 +440,20 @@ namespace WinPrint.Core {
                 ClearCache();
 
             if (ContentEngine is null) {
-                LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
+                LogService.TraceMessage("SheetViewModel.ReflowAsync - ContentEngine is null");
                 // Causes OnReflowed
                 Reflowing = false;
                 return;
             }
 
-            // TODO: If no font is set, override
-            //if (ContentSettings != null) {
-                //if (ContentSettings.Font != null)
-                    ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
-            //}
+            // Content settings in Sheet take precidence over Engine
+            if (ContentEngine.ContentSettings is null) {
+                ContentEngine.ContentSettings = new ContentSettings();
+                // TODO: set some defaults
+            }
+
+            if (ContentSettings != null)
+                ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
             numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 
@@ -640,8 +644,7 @@ namespace WinPrint.Core {
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         public void PrintSheet(Graphics graphics, int sheetNum) {
             GraphicsState state = graphics.Save();
-
-            Log.Debug(LogService.GetTraceMsg("{n} PageUnit: {pu}"), sheetNum, graphics.PageUnit);
+            //Log.Debug(LogService.GetTraceMsg("{n} PageUnit: {pu}"), sheetNum, graphics.PageUnit);
             if (graphics.PageUnit == GraphicsUnit.Display) {
                 // In print mode, adjust origin to account for hard margins
                 // In print mode, 0,0 is top, left - hard margins

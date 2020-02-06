@@ -497,16 +497,43 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => {
                     printPreview.Text = "Getting Printer Settings...";
                 }));
-                // Set landscape. This causes other DefaultPageSettings to change
-                // These are CPU bound operations. 
-                // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
-                printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-                await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
+
+                try {
+                    // Set landscape. This causes other DefaultPageSettings to change
+                    // These are CPU bound operations. 
+                    // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
+                    printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
+                    await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    Log.Error(e, "Exception Setting Printer Page Settings");
+                    ShowError($"Exception While Setting Printer Page Settings: {e.Message}");
+                    return;
+                }
+                finally {
+                    // Set Relflowing to false in case of an error
+                    //printPreview.SheetViewModel.Reflowing = false;
+                }
 
                 BeginInvoke((Action)(() => {
                     printPreview.Text = Resources.RenderingMsg;
                 }));
-                return printPreview.SheetViewModel.ReflowAsync();
+
+                try {
+                    await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                    Log.Error(e, "Exception While Rendering");
+                    ShowError($"Exception While Rendering: {e.Message}");
+                }
+                finally {
+                    // Set Relflowing to false in case of an error
+                    printPreview.SheetViewModel.Reflowing = false;
+                }
             });
         }
 

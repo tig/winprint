@@ -50,7 +50,7 @@ namespace WinPrint.Core.ContentTypes {
         //}
 
         public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
-        private ContentSettings contentSettings = new ContentSettings();
+        private ContentSettings contentSettings;// = new ContentSettings();
 
         //internal int numPages = 0;
         //public int NumPages {
