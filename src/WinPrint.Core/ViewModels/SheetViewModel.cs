@@ -216,20 +216,23 @@ namespace WinPrint.Core {
             Padding = newSheet.Padding;
             PageSeparator = newSheet.PageSeparator;
             Margins = (Margins)newSheet.Margins.Clone();
-            ContentSettings = newSheet.ContentSettings;
+
+            if (contentSettings != null)
+                contentSettings.PropertyChanged -= OnContentSettingsPropertyChanged();
+            contentSettings = newSheet.ContentSettings;
+            contentSettings.PropertyChanged += OnContentSettingsPropertyChanged();
 
             if (headerVM != null)
                 headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
             Header = new HeaderViewModel(this, newSheet.Header);
+            headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
             if (footerVM != null)
                 footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
             Footer = new FooterViewModel(this, newSheet.Footer);
+            footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
 
             // Subscribe to all settings properties
             newSheet.PropertyChanged += OnSheetPropertyChanged();
-            headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
-            footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
-
         }
 
         /// <summary>
@@ -544,6 +547,41 @@ namespace WinPrint.Core {
 
                 case "PageSeparator":
                     PageSeparator = sheet.PageSeparator;
+                    break;
+
+                default:
+                    // Print/Preview Rule Settings.
+                    //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
+                    //    // Repaint view (no reflow needed)
+                    //    Helpers.Logging.TraceMessage($"Rules Changed");
+                    //}
+                    break;
+            }
+            OnSettingsChanged(reflow);
+        };
+
+        private System.ComponentModel.PropertyChangedEventHandler OnContentSettingsPropertyChanged() => (s, e) => {
+            bool reflow = false;
+            LogService.TraceMessage($"{e.PropertyName}");
+            switch (e.PropertyName) {
+                case "Font":
+                    ContentSettings.Font = sheet.ContentSettings.Font;
+                    reflow = true;
+                    break;
+
+                case "PrintBackground":
+                    ContentSettings.PrintBackground = sheet.ContentSettings.PrintBackground;
+                    reflow = false;
+                    break;
+
+                case "Grayscale":
+                    ContentSettings.Grayscale = sheet.ContentSettings.Grayscale;
+                    reflow = false;
+                    break;
+
+                case "Darkness":
+                    ContentSettings.Darkness = sheet.ContentSettings.Darkness;
+                    reflow = false;
                     break;
 
                 default:
