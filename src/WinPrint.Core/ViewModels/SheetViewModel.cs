@@ -246,12 +246,13 @@ namespace WinPrint.Core {
         public async Task<string> LoadAsync(string filePath, string contentType) {
             LogService.TraceMessage($"{filePath}");
 
+            File = filePath;
             Loading = true;
 
             // Reset the SVM in case it was not already done
             Reset();
 
-            var ext = Path.GetExtension(filePath).ToLower();
+            var ext = Path.GetExtension(File).ToLower();
             //string type = null;
 
             if (string.IsNullOrEmpty(contentType)) {
@@ -301,7 +302,6 @@ namespace WinPrint.Core {
             }
 
             ContentEngine.PropertyChanged += OnContentPropertyChanged();
-            File = filePath;
             Type = contentType;
 
             // Content settings in Sheet take precidence over Engine
@@ -314,8 +314,8 @@ namespace WinPrint.Core {
                 ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
             // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
-            LogService.TraceMessage($"Calling {ContentEngine.GetType()}.LoadAsync({filePath})...");
-            var success = await ContentEngine.LoadAsync(filePath).ConfigureAwait(false);
+            LogService.TraceMessage($"Calling {ContentEngine.GetType()}.LoadAsync({File})...");
+            var success = await ContentEngine.LoadAsync(File).ConfigureAwait(false);
             LogService.TraceMessage($"Read succeeded? {success}");
 
             // Set this last to notify loading is done with File valid

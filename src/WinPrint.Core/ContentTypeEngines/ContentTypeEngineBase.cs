@@ -10,7 +10,7 @@ using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypeEngines {
     /// <summary>
-    /// base class for Content/File types
+    /// Base class for Content/File Type Engines (CTEs)
     /// </summary>
     public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
         public new event PropertyChangedEventHandler PropertyChanged;
@@ -40,14 +40,9 @@ namespace WinPrint.Core.ContentTypeEngines {
         public SizeF PageSize;
 
         /// <summary>
-        /// Default content font for this content type
+        /// Holds content settings for the CTE. These are used as defaults when a Sheet does not
+        /// specify any.
         /// </summary>
-        //private Core.Models.Font font;
-        //public Core.Models.Font Font {
-        //    get => font;
-        //    set => SetField(ref font, value);
-        //}
-
         public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
         private ContentSettings contentSettings;// = new ContentSettings();
 
