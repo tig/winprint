@@ -7,10 +7,19 @@ code[class*="language-"],
 pre[class*="language-"] {
     /* no backgrond 
     background: none;*/
-    /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-all;
+    /* linehtml only supports white-space: pre-wrap. word-break: break-all are not yet supported.*/
+    /* Relevant docs:
+        white-space - https://developer.mozilla.org/en-US/docs/web/css/white-space 
+        word-break - https://developer.mozilla.org/en-US/docs/Web/CSS/word-break 
+        overflow-wrap - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap 
+
+        Default for winprint should be `word-break: break-all` 
+        Ideally would also support `overflow-wrap: break-word`
+    */
+    white-space: pre-wrap; /* not good enuf. does not break at non-whitespace chars*/
+    overflow-wrap: break-word; /* would work well, except broken line will start on a new line (suboptimal) */
+    word-break: break-word; /* ok - may be a preference (breaks at word, then break-all */
+    word-break: break-all; /* idea - breaks anywhere */
     /* Force line-height to 'normal' */
     line-height: normal;
     /* Remove all padding and margins */

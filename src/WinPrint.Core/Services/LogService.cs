@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using WinPrint.Core.Helpers;
 
 namespace WinPrint.Core.Services {
+    /// <summary>
+    /// Configures Serilog for logging to the console and logfiles. Provides simple helper
+    /// functions for tracing. 
+    /// </summary>
     public class LogService {
         public string LogPath { get; set; }
         public LoggingLevelSwitch MasterLevelSwitch { get; set; } = new LoggingLevelSwitch();
@@ -42,17 +43,16 @@ namespace WinPrint.Core.Services {
             string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
             Log.Debug("--------- {app} {v} ---------", AppDomain.CurrentDomain.FriendlyName, productVersion);
             Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);
-            Log.Debug("OS Environment: {os} version: version, architecture: {arch}, .NET version: {dotnet}",
+            Log.Debug("OS Environment: {os}, architecture: {arch}, .NET version: {dotnet}",
                 Environment.OSVersion, Environment.Is64BitProcess ? "x64" : "x86", Environment.Version);
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 Log.Debug("libgdiplus version: {v}", Diagnostics.GetLibgdiplusVersion());
             }
-
         }
 
         public LogService() {
-
         }
+
         public static void TraceMessage(string msg = "",
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
         [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",

@@ -183,8 +183,8 @@ namespace WinPrint.Console {
 
                 if (sheetRangeSet)
                     Log.Information("Printing from sheet {from} to sheet {to}.", print.PrintDocument.PrinterSettings.FromPage, print.PrintDocument.PrinterSettings.ToPage);
-                else
-                    Log.Information("Printing all sheets.");
+                //else
+                //    Log.Information("Printing all sheets.");
                 sheetsCounted += await print.DoPrint();
             }
             return sheetsCounted;

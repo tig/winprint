@@ -317,9 +317,16 @@ namespace WinPrint.Core.ContentTypeEngines {
             int yPos = (int)Math.Round((pageNum - 1) * PageSize.Height) - (int)Math.Round(extraLines);
 
             // Set the clip such that any extraLines are clipped off bottom
-            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height - remainingPartialLineHeight)));
+            if (!ContentSettings.Diagnostics)
+                g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height - remainingPartialLineHeight)));
+
             litehtml.Graphics = g;
+
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Ceiling(PageSize.Height));
+
+            // Note, setting viewport does nothing
+            //litehtml.SetViewport(new LiteHtmlPoint((int)-0, (int)-yPos), new LiteHtmlSize((int)size.Width, (int)size.Height));
+
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {
                 x = 0,
                 y = 0,

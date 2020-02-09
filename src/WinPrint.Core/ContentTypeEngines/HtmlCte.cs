@@ -97,10 +97,9 @@ namespace WinPrint.Core.ContentTypeEngines {
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
+
             LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
-            LogService.TraceMessage($"PageUnit = {g.PageUnit.ToString()}");
-
             litehtml.Grayscale = ContentSettings.Grayscale ;
             litehtml.Darkness = ContentSettings.Darkness;
             litehtml.PrintBackground = ContentSettings.PrintBackground;
@@ -112,13 +111,12 @@ namespace WinPrint.Core.ContentTypeEngines {
             reflowProgress?.Invoke(this, "back from litehtml.Document.CreateFromString(document)");
 
             litehtml.Document.OnMediaChanged();
-            //Logging.TraceMessage("back from litehtml.Document.OnMediaChanged");
 
             // TODO: Use return of Render() to get "best width"
             int bestWidth = litehtml.Document.Render((int)width);
             reflowProgress?.Invoke(this, "Done with Render");
+            // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(width, height));
-            //litehtml.Draw();
             litehtml.Graphics = null;
 
             Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
@@ -195,7 +193,9 @@ namespace WinPrint.Core.ContentTypeEngines {
             litehtml.Graphics = g;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
-            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+
+            if (!ContentSettings.Diagnostics)
+                g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {
