@@ -89,6 +89,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             var resources = new HtmlResources(filePath);
             litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes);
+            litehtml.Diagnostics = ContentSettings.Diagnostics;
             litehtml.Size = new LiteHtmlSize(width, 0);
             litehtml.PageHeight = height;
 
@@ -96,10 +97,13 @@ namespace WinPrint.Core.ContentTypeEngines {
             //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
+            g.TextRenderingHint = textRenderingHint;
+
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
 
             LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
+            litehtml.StringFormat = stringFormat;
             litehtml.Grayscale = ContentSettings.Grayscale ;
             litehtml.Darkness = ContentSettings.Darkness;
             litehtml.PrintBackground = ContentSettings.PrintBackground;
@@ -191,6 +195,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
             litehtml.Graphics = g;
+            g.TextRenderingHint = textRenderingHint;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
 

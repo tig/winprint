@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -54,6 +55,16 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         internal string filePath = null;
         internal string document = null;
+
+        internal StringFormat stringFormat = new StringFormat(StringFormat.GenericTypographic) {
+            FormatFlags = StringFormatFlags.NoClip | StringFormatFlags.LineLimit | StringFormatFlags.FitBlackBox | 
+                            StringFormatFlags.DisplayFormatControl | StringFormatFlags.MeasureTrailingSpaces,
+            Alignment = StringAlignment.Near,
+            LineAlignment = StringAlignment.Near,
+            Trimming = StringTrimming.None
+        };
+        internal const TextRenderingHint textRenderingHint = TextRenderingHint.ClearTypeGridFit;
+
 
         /// <summary>
         /// Loads the file specified into memeory. (holds in document property).

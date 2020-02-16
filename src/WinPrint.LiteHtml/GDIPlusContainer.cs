@@ -38,6 +38,8 @@ namespace WinPrint.LiteHtml {
 
         private Graphics _graphics;
 
+        public StringFormat StringFormat { get; set; }
+
         /// <summary>
         /// If true, all colors will be converted to grayscale. 
         /// </summary>
@@ -52,6 +54,8 @@ namespace WinPrint.LiteHtml {
         /// Darkness factor. 0 = color. 100 = black. Anything inbetween provides a shade of gray (or darker colors).
         /// </summary>
         public int Darkness { get; set; }
+
+        public bool Diagnostics { get; set; }
 
         static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
         static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
@@ -160,6 +164,9 @@ namespace WinPrint.LiteHtml {
                         Rectangle rect = new Rectangle(pos.x, pos.y, pos.width, pos.height);
                         _graphics.FillRectangle(color.GetBrush(), rect);
                     }
+
+                    if (Diagnostics)
+                        DrawRect(pos.x, pos.y, pos.width, pos.height, Pens.Blue);
                     //var geometry = new PathGeometry();
                     //PathSegmentCollection path = new PathSegmentCollection();
 
@@ -215,7 +222,7 @@ namespace WinPrint.LiteHtml {
         public web_color ToGrayScaleColor(web_color originalColor) {
             // (0.21*Red + 0.72*Green + 0.07*Blue)
             byte grayScale = (byte)((originalColor.red * .21) + (originalColor.green * .72) + (originalColor.blue * .07));
-//            byte grayScale = (byte)((originalColor.red * .3) + (originalColor.green * .59) + (originalColor.blue * .11));
+            //            byte grayScale = (byte)((originalColor.red * .3) + (originalColor.green * .59) + (originalColor.blue * .11));
             originalColor.red = originalColor.green = originalColor.blue = grayScale;
 
             var c = ChangeColorBrightness(Color.FromArgb(originalColor.red, originalColor.green, originalColor.blue), -(Darkness / 100F));
@@ -305,7 +312,8 @@ namespace WinPrint.LiteHtml {
             //Logging.TraceMessage();
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
-            text = text.Replace(' ', (char)160);
+           // text = text.Replace(' ', (char)160);
+            text = text.Replace(' ', '_');
             var fontInfo = _fonts[font];
 
             web_color color = textColor;
@@ -313,7 +321,10 @@ namespace WinPrint.LiteHtml {
                 color = ToGrayScaleColor(color);
             }
 
-            _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat.GenericDefault);
+            Debug.Assert(StringFormat != null);
+            _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat);
+            if (Diagnostics)
+                _graphics.DrawLine(Pens.Green, new Point(pos.x, pos.y), new Point(pos.x, pos.y + (fontInfo.LineHeight / 4)));
         }
 
         protected override string GetDefaultFontName() {
@@ -344,9 +355,10 @@ namespace WinPrint.LiteHtml {
             //var g = Graphics.FromImage(bitmap);
             //g.PageUnit = GraphicsUnit.Pixel;
 
-            text = text.Replace(' ', 'x');
+            text = text.Replace(' ', '_');
+            //text = text.Replace(' ', (char)160);
 
-            var size = _graphics.MeasureString(text, fontInfo.Font, (int)Size.Width, StringFormat.GenericTypographic);
+            var size = _graphics.MeasureString(text, fontInfo.Font, (int)Size.Width, StringFormat);
             return (int)Math.Round(size.Width);
             //return (int)Math.Round(formattedText.WidthIncludingTrailingWhitespace + 0.25f);
         }

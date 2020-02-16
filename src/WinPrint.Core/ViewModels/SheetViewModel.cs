@@ -220,9 +220,9 @@ namespace WinPrint.Core {
             if (contentSettings != null)
                 contentSettings.PropertyChanged -= OnContentSettingsPropertyChanged();
 
-            contentSettings = newSheet.ContentSettings;
-            if (contentSettings != null)
-                contentSettings.PropertyChanged += OnContentSettingsPropertyChanged();
+            ContentSettings = newSheet.ContentSettings;
+            if (ContentSettings != null)
+                ContentSettings.PropertyChanged += OnContentSettingsPropertyChanged();
 
             if (headerVM != null)
                 headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);

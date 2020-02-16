@@ -32,18 +32,12 @@ namespace WinPrint.Core.ContentTypeEngines {
             return engine;
         }
 
-        private StringFormat stringFormat = new StringFormat();
-        private const TextRenderingHint textRenderingHint = TextRenderingHint.ClearTypeGridFit;
-
         public static new string ContentType = "text/plain";
         public TextCte() {
             // StringFormat to use throughout
-            stringFormat.FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.FitBlackBox | StringFormatFlags.MeasureTrailingSpaces; // | StringFormatFlags.DisplayFormatControl;
-            stringFormat.Alignment = StringAlignment.Near;
-            stringFormat.LineAlignment = StringAlignment.Near;
-            stringFormat.Trimming = StringTrimming.None;
 
- //           Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
+
+            //           Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
         }
 
         // All of the lines of the text file, after reflow/line-wrap
@@ -109,7 +103,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
             // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
-             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0) 
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0)
                 dpiX = dpiY = 96;
 
             // Create a representative Graphcis used for determining glyph metrics.      
@@ -207,7 +201,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                         // FF was NOT at start of line. Add it.
                         AddLine(g, list, lineToAdd, minLineLen, lineCount);
                         // if we're not at the end of the line t increment line #
-                        if (i < line.Length-1) lineCount++;
+                        if (i < line.Length - 1) lineCount++;
                     }
 
                     // Add blank lines to get to next page
@@ -288,7 +282,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             // determine width     
             float fontHeight = lineHeight;
             // Use page settings including lineNumberWidth
-            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight + (lineHeight/2));
+            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight + (lineHeight / 2));
             SizeF size = g.MeasureString(text, cachedFont, proposedSize, stringFormat, out charsFitted, out linesFilled);
 
             // TODO: HACK to work around MeasureString not working right on Linux
@@ -313,7 +307,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 
             g.TextRenderingHint = textRenderingHint;
- 
+
             PaintLineNumberSeparator(g);
 
             // Print each line of the file.
@@ -332,7 +326,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                         g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
                 }
             }
-            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage-1, startLine, endLine);
+            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage - 1, startLine, endLine);
         }
 
         // TODO: Support setting color of line #s and separator

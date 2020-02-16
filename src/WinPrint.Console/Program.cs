@@ -61,7 +61,7 @@ namespace WinPrint.Console {
             print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
             print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
             print.SheetViewModel.ReflowComplete += SheetViewModel_Reflowed;
-            print.SheetViewModel.ReflowProgress += (s, msg) => Log.Debug("{DateTime:mm:ss.fff}:Reflow Progress {msg}", DateTime.Now, msg);
+            print.SheetViewModel.ReflowProgress += (s, msg) => Log.Debug("Reflow Progress {msg}", msg);
 
             // -g
             if (ModelLocator.Current.Options.Gui) 
@@ -225,47 +225,40 @@ namespace WinPrint.Console {
             switch (e.PropertyName) {
                 case "Landscape":
                     if (ModelLocator.Current.Options.Verbose)
-                        Log.Information("Paper Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
+                        Log.Information("    Paper Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
                     break;
 
                 case "Header":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Header Text: {s}", print.SheetViewModel.Header.Text);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    Header Text:      {s}", print.SheetViewModel.Header.Text);
                     break;
 
                 case "Footer":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Footer Text: {s}", print.SheetViewModel.Footer.Text);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    Footer Text:      {s}", print.SheetViewModel.Footer.Text);
                     break;
 
                 case "Margins":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Margins: {v}", print.SheetViewModel.Margins);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    Margins:          {v}", print.SheetViewModel.Margins);
                     break;
 
                 case "PageSeparator":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("PageSeparator {s}:", print.SheetViewModel.PageSeparator);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    PageSeparator     {s}", print.SheetViewModel.PageSeparator);
                     break;
 
                 case "Rows":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Rows: {s}", print.SheetViewModel.Rows);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    Rows:             {s}", print.SheetViewModel.Rows);
                     break;
 
                 case "Columns":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Columns: {s}", print.SheetViewModel.Columns);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    Columns:          {s}", print.SheetViewModel.Columns);
                     break;
 
+                // TODO: Add INF logging of other sheet properties
                 case "Padding":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Padding: {s}", print.SheetViewModel.Padding / 100M);
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    Padding:          {s}", print.SheetViewModel.Padding / 100M);
                     break;
 
-                case "File":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("File: {s}", print.SheetViewModel.File);
-                    break;
-
-                case "Type":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Type: {s}", print.SheetViewModel.Type);
-                    break;
-
-                case "Content":
-                    if (ModelLocator.Current.Options.Verbose) Log.Information("Content loaded.");
+                case "ContentSettings":
+                    if (ModelLocator.Current.Options.Verbose) Log.Information("    ContentSettings:  {s}", print.SheetViewModel.ContentSettings);
                     break;
 
                 case "Loading":
@@ -277,7 +270,7 @@ namespace WinPrint.Console {
 
                 case "Reflowing":
                     if (print.SheetViewModel.Reflowing)
-                        Log.Information("Formatting as {t}", print.SheetViewModel.Type);
+                        Log.Information("Formatting as {t}.", print.SheetViewModel.Type);
                     else if (ModelLocator.Current.Options.Verbose)
                         Log.Information("Formating complete.");
                     break;

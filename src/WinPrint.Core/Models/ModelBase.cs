@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
@@ -17,6 +18,11 @@ namespace WinPrint.Core.Models {
             field = value;
             OnPropertyChanged(propertyName);
             return true;
+        }
+
+        public override string ToString() {
+            return JsonSerializer.Serialize(this, this.GetType());
+            //return base.ToString();
         }
 
         /// <summary>
