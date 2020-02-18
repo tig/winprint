@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="0002a501-0000-0000-c000-00002000000f" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.200" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
+  <Product Id="0002a501-0000-0000-c000-0000200003c1" Name="WinPrint" Language="1033" Codepage="Windows-1252" Version="2.0.0.890" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
     <Package InstallerVersion="200" Compressed="yes" Platform="x64" SummaryCodepage="Windows-1252" Languages="1033" />
     <Media Id="1" Cabinet="WinPrint.cab" EmbedCab="yes" />
 
@@ -19,104 +19,116 @@
               </File>
             </Component>
 
-            <Component Id="Component.CommandLine.dll_3457475749" Guid="0002a501-0000-0000-c000-0000a6e4cadd" Win64="yes">
-              <File Id="CommandLine.dll_3457475749" Source="CommandLine.dll" />
+            <Component Id="Component.CommandLine.dll_3989444205" Guid="0002a501-0000-0000-c000-0000ad89f9f3" Win64="yes">
+              <File Id="CommandLine.dll_3989444205" Source="CommandLine.dll" />
             </Component>
 
-            <Component Id="Component.GalaSoft.MvvmLight.dll_2973972099" Guid="0002a501-0000-0000-c000-0000bbbd8a0d" Win64="yes">
-              <File Id="GalaSoft.MvvmLight.dll_2973972099" Source="GalaSoft.MvvmLight.dll" />
+            <Component Id="Component.GalaSoft.MvvmLight.dll_1846337950" Guid="0002a501-0000-0000-c000-000069dedc19" Win64="yes">
+              <File Id="GalaSoft.MvvmLight.dll_1846337950" Source="GalaSoft.MvvmLight.dll" />
             </Component>
 
-            <Component Id="Component.LiteHtmlSharp.dll_2960990633" Guid="0002a501-0000-0000-c000-0000e6257cba" Win64="yes">
-              <File Id="LiteHtmlSharp.dll_2960990633" Source="LiteHtmlSharp.dll" />
+            <Component Id="Component.LiteHtmlSharp.dll_493445706" Guid="0002a501-0000-0000-c000-0000c2f23b4a" Win64="yes">
+              <File Id="LiteHtmlSharp.dll_493445706" Source="LiteHtmlSharp.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Configuration.Abstractions.dll_1583386921" Guid="0002a501-0000-0000-c000-000013f68c16" Win64="yes">
-              <File Id="Microsoft.Extensions.Configuration.Abstractions.dll_1583386921" Source="Microsoft.Extensions.Configuration.Abstractions.dll" />
+            <Component Id="Component.Microsoft.Extensions.Configuration.Abstractions.dll_2543247260" Guid="0002a501-0000-0000-c000-00009166df3f" Win64="yes">
+              <File Id="Microsoft.Extensions.Configuration.Abstractions.dll_2543247260" Source="Microsoft.Extensions.Configuration.Abstractions.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Configuration.Binder.dll_1711416835" Guid="0002a501-0000-0000-c000-00000e1f01d9" Win64="yes">
-              <File Id="Microsoft.Extensions.Configuration.Binder.dll_1711416835" Source="Microsoft.Extensions.Configuration.Binder.dll" />
+            <Component Id="Component.Microsoft.Extensions.Configuration.Binder.dll_1286514189" Guid="0002a501-0000-0000-c000-0000e29df3ec" Win64="yes">
+              <File Id="Microsoft.Extensions.Configuration.Binder.dll_1286514189" Source="Microsoft.Extensions.Configuration.Binder.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Configuration.dll_2185664227" Guid="0002a501-0000-0000-c000-000097647f03" Win64="yes">
-              <File Id="Microsoft.Extensions.Configuration.dll_2185664227" Source="Microsoft.Extensions.Configuration.dll" />
+            <Component Id="Component.Microsoft.Extensions.Configuration.dll_206885240" Guid="0002a501-0000-0000-c000-000037cfe600" Win64="yes">
+              <File Id="Microsoft.Extensions.Configuration.dll_206885240" Source="Microsoft.Extensions.Configuration.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.DependencyInjection.Abstractions.dll_4002052668" Guid="0002a501-0000-0000-c000-0000a9d83a7c" Win64="yes">
-              <File Id="Microsoft.Extensions.DependencyInjection.Abstractions.dll_4002052668" Source="Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+            <Component Id="Component.Microsoft.Extensions.DependencyInjection.Abstractions.dll_161982690" Guid="0002a501-0000-0000-c000-0000368021c6" Win64="yes">
+              <File Id="Microsoft.Extensions.DependencyInjection.Abstractions.dll_161982690" Source="Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.DependencyInjection.dll_1762285007" Guid="0002a501-0000-0000-c000-0000aea732bb" Win64="yes">
-              <File Id="Microsoft.Extensions.DependencyInjection.dll_1762285007" Source="Microsoft.Extensions.DependencyInjection.dll" />
+            <Component Id="Component.Microsoft.Extensions.DependencyInjection.dll_1562897118" Guid="0002a501-0000-0000-c000-00009963af02" Win64="yes">
+              <File Id="Microsoft.Extensions.DependencyInjection.dll_1562897118" Source="Microsoft.Extensions.DependencyInjection.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Logging.Abstractions.dll_1546743393" Guid="0002a501-0000-0000-c000-00006c44a517" Win64="yes">
-              <File Id="Microsoft.Extensions.Logging.Abstractions.dll_1546743393" Source="Microsoft.Extensions.Logging.Abstractions.dll" />
+            <Component Id="Component.Microsoft.Extensions.Logging.Abstractions.dll_3326678469" Guid="0002a501-0000-0000-c000-0000fd65c79a" Win64="yes">
+              <File Id="Microsoft.Extensions.Logging.Abstractions.dll_3326678469" Source="Microsoft.Extensions.Logging.Abstractions.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Logging.dll_2060383318" Guid="0002a501-0000-0000-c000-0000c4d1d874" Win64="yes">
-              <File Id="Microsoft.Extensions.Logging.dll_2060383318" Source="Microsoft.Extensions.Logging.dll" />
+            <Component Id="Component.Microsoft.Extensions.Logging.dll_3761780517" Guid="0002a501-0000-0000-c000-000070e2fd99" Win64="yes">
+              <File Id="Microsoft.Extensions.Logging.dll_3761780517" Source="Microsoft.Extensions.Logging.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Options.dll_3477575443" Guid="0002a501-0000-0000-c000-0000704ca5c6" Win64="yes">
-              <File Id="Microsoft.Extensions.Options.dll_3477575443" Source="Microsoft.Extensions.Options.dll" />
+            <Component Id="Component.Microsoft.Extensions.Options.dll_886065570" Guid="0002a501-0000-0000-c000-0000a44ca088" Win64="yes">
+              <File Id="Microsoft.Extensions.Options.dll_886065570" Source="Microsoft.Extensions.Options.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Extensions.Primitives.dll_3002264542" Guid="0002a501-0000-0000-c000-00002af55043" Win64="yes">
-              <File Id="Microsoft.Extensions.Primitives.dll_3002264542" Source="Microsoft.Extensions.Primitives.dll" />
+            <Component Id="Component.Microsoft.Extensions.Primitives.dll_2191064085" Guid="0002a501-0000-0000-c000-00006e07ce99" Win64="yes">
+              <File Id="Microsoft.Extensions.Primitives.dll_2191064085" Source="Microsoft.Extensions.Primitives.dll" />
             </Component>
 
-            <Component Id="Component.Microsoft.Win32.SystemEvents.dll_661768356" Guid="0002a501-0000-0000-c000-0000c789ffe4" Win64="yes">
-              <File Id="Microsoft.Win32.SystemEvents.dll_661768356" Source="Microsoft.Win32.SystemEvents.dll" />
+            <Component Id="Component.Microsoft.Win32.SystemEvents.dll_505797933" Guid="0002a501-0000-0000-c000-000029c7ea49" Win64="yes">
+              <File Id="Microsoft.Win32.SystemEvents.dll_505797933" Source="Microsoft.Win32.SystemEvents.dll" />
             </Component>
 
-            <Component Id="Component.Serilog.dll_940806560" Guid="0002a501-0000-0000-c000-0000e3213ecd" Win64="yes">
-              <File Id="Serilog.dll_940806560" Source="Serilog.dll" />
+            <Component Id="Component.Serilog.dll_2482625690" Guid="0002a501-0000-0000-c000-00000bf71061" Win64="yes">
+              <File Id="Serilog.dll_2482625690" Source="Serilog.dll" />
             </Component>
 
-            <Component Id="Component.Serilog.Sinks.Console.dll_841886768" Guid="0002a501-0000-0000-c000-0000c9801593" Win64="yes">
-              <File Id="Serilog.Sinks.Console.dll_841886768" Source="Serilog.Sinks.Console.dll" />
+            <Component Id="Component.Serilog.Sinks.Console.dll_3418103813" Guid="0002a501-0000-0000-c000-0000cc5d503c" Win64="yes">
+              <File Id="Serilog.Sinks.Console.dll_3418103813" Source="Serilog.Sinks.Console.dll" />
             </Component>
 
-            <Component Id="Component.Serilog.Sinks.Debug.dll_3189322391" Guid="0002a501-0000-0000-c000-0000783f06a0" Win64="yes">
-              <File Id="Serilog.Sinks.Debug.dll_3189322391" Source="Serilog.Sinks.Debug.dll" />
+            <Component Id="Component.Serilog.Sinks.Debug.dll_1196206711" Guid="0002a501-0000-0000-c000-00004be1778a" Win64="yes">
+              <File Id="Serilog.Sinks.Debug.dll_1196206711" Source="Serilog.Sinks.Debug.dll" />
             </Component>
 
-            <Component Id="Component.Serilog.Sinks.File.dll_2317525057" Guid="0002a501-0000-0000-c000-0000b53330d0" Win64="yes">
-              <File Id="Serilog.Sinks.File.dll_2317525057" Source="Serilog.Sinks.File.dll" />
+            <Component Id="Component.Serilog.Sinks.File.dll_2705002948" Guid="0002a501-0000-0000-c000-00006613ae84" Win64="yes">
+              <File Id="Serilog.Sinks.File.dll_2705002948" Source="Serilog.Sinks.File.dll" />
             </Component>
 
-            <Component Id="Component.System.Drawing.Common.dll_3702015273" Guid="0002a501-0000-0000-c000-0000ca613116" Win64="yes">
-              <File Id="System.Drawing.Common.dll_3702015273" Source="System.Drawing.Common.dll" />
+            <Component Id="Component.System.Drawing.Common.dll_2218408729" Guid="0002a501-0000-0000-c000-0000d142b100" Win64="yes">
+              <File Id="System.Drawing.Common.dll_2218408729" Source="System.Drawing.Common.dll" />
             </Component>
 
-            <Component Id="Component.System.Linq.Dynamic.Core.dll_2869695215" Guid="0002a501-0000-0000-c000-0000897cfe6c" Win64="yes">
-              <File Id="System.Linq.Dynamic.Core.dll_2869695215" Source="System.Linq.Dynamic.Core.dll" />
+            <Component Id="Component.System.Linq.Dynamic.Core.dll_3262736072" Guid="0002a501-0000-0000-c000-0000e1b2133e" Win64="yes">
+              <File Id="System.Linq.Dynamic.Core.dll_3262736072" Source="System.Linq.Dynamic.Core.dll" />
             </Component>
 
-            <Component Id="Component.WinPrint.Core.dll_2182204871" Guid="0002a501-0000-0000-c000-0000a43d57e9" Win64="yes">
-              <File Id="WinPrint.Core.dll_2182204871" Source="WinPrint.Core.dll" />
+            <Component Id="Component.WinPrint.Core.dll_1644500892" Guid="0002a501-0000-0000-c000-00007dfcf40b" Win64="yes">
+              <File Id="WinPrint.Core.dll_1644500892" Source="WinPrint.Core.dll" />
             </Component>
 
-            <Component Id="Component.winprint.dll_3866337698" Guid="0002a501-0000-0000-c000-000099b588db" Win64="yes">
-              <File Id="winprint.dll_3866337698" Source="winprint.dll" />
+            <Component Id="Component.winprint.dll_929763881" Guid="0002a501-0000-0000-c000-00004c5605d4" Win64="yes">
+              <File Id="winprint.dll_929763881" Source="winprint.dll" />
             </Component>
 
-            <Component Id="Component.WinPrint.LiteHtml.dll_3178883582" Guid="0002a501-0000-0000-c000-00000127778d" Win64="yes">
-              <File Id="WinPrint.LiteHtml.dll_3178883582" Source="WinPrint.LiteHtml.dll" />
+            <Component Id="Component.WinPrint.LiteHtml.dll_113544235" Guid="0002a501-0000-0000-c000-0000a8ab29e7" Win64="yes">
+              <File Id="WinPrint.LiteHtml.dll_113544235" Source="WinPrint.LiteHtml.dll" />
             </Component>
 
-            <Component Id="Component.winprintgui.dll_4017844992" Guid="0002a501-0000-0000-c000-00001b7efe1b" Win64="yes">
-              <File Id="winprintgui.dll_4017844992" Source="winprintgui.dll" />
+            <Component Id="Component.winprintgui.dll_3603316277" Guid="0002a501-0000-0000-c000-00008b2b31e4" Win64="yes">
+              <File Id="winprintgui.dll_3603316277" Source="winprintgui.dll" />
             </Component>
 
-            <Component Id="Component.winprint.runtimeconfig.json_4286513909" Guid="0002a501-0000-0000-c000-00003ab26cdf" Win64="yes">
-              <File Id="winprint.runtimeconfig.json_4286513909" Source="winprint.runtimeconfig.json" />
+            <Component Id="Component.WinPrint.config.json_841462239" Guid="0002a501-0000-0000-c000-00001079dbf1" Win64="yes">
+              <File Id="WinPrint.config.json_841462239" Source="WinPrint.config.json" />
             </Component>
 
-            <Component Id="Component.winprintgui.runtimeconfig.json_1014415574" Guid="0002a501-0000-0000-c000-0000b4c86f8e" Win64="yes">
-              <File Id="winprintgui.runtimeconfig.json_1014415574" Source="winprintgui.runtimeconfig.json" />
+            <Component Id="Component.winprint.deps.json_1111859072" Guid="0002a501-0000-0000-c000-000082ba34ba" Win64="yes">
+              <File Id="winprint.deps.json_1111859072" Source="winprint.deps.json" />
+            </Component>
+
+            <Component Id="Component.winprint.runtimeconfig.json_1125970311" Guid="0002a501-0000-0000-c000-0000d4fc6020" Win64="yes">
+              <File Id="winprint.runtimeconfig.json_1125970311" Source="winprint.runtimeconfig.json" />
+            </Component>
+
+            <Component Id="Component.winprintgui.deps.json_3688077211" Guid="0002a501-0000-0000-c000-0000790a89b2" Win64="yes">
+              <File Id="winprintgui.deps.json_3688077211" Source="winprintgui.deps.json" />
+            </Component>
+
+            <Component Id="Component.winprintgui.runtimeconfig.json_2178300737" Guid="0002a501-0000-0000-c000-000083b01e1d" Win64="yes">
+              <File Id="winprintgui.runtimeconfig.json_2178300737" Source="winprintgui.runtimeconfig.json" />
             </Component>
 
             <Component Id="Component.Uninstall_WinPrint" Guid="0002a501-0000-0000-c000-000006cef94a" Win64="yes">
@@ -130,10 +142,49 @@
               </RegistryKey>
             </Component>
 
+            <Directory Id="INSTALLDIR.logs" Name="logs">
+
+              <Component Id="Component.INSTALLDIR.logs.EmptyDirectory" Guid="0002a501-0000-0000-c000-00000d3ee7c4" KeyPath="yes" Win64="yes">
+                <CreateFolder />
+                <RemoveFolder Id="INSTALLDIR.logs" On="uninstall" />
+              </Component>
+
+            </Directory>
+
+            <Directory Id="INSTALLDIR.runtimes" Name="runtimes">
+              <Directory Id="INSTALLDIR.runtimes.unix" Name="unix">
+                <Directory Id="INSTALLDIR.runtimes.unix.lib" Name="lib">
+                  <Directory Id="INSTALLDIR.runtimes.unix.lib.netcoreapp3.0" Name="netcoreapp3.0">
+
+                    <Component Id="Component.System.Drawing.Common.dll_1930615101" Guid="0002a501-0000-0000-c000-000051a7e4cf" Win64="yes">
+                      <File Id="System.Drawing.Common.dll_1930615101" Source="runtimes\unix\lib\netcoreapp3.0\System.Drawing.Common.dll" />
+                    </Component>
+
+                  </Directory>
+                </Directory>
+              </Directory>
+
+              <Directory Id="INSTALLDIR.runtimes.win" Name="win">
+                <Directory Id="INSTALLDIR.runtimes.win.lib" Name="lib">
+                  <Directory Id="INSTALLDIR.runtimes.win.lib.netcoreapp3.0" Name="netcoreapp3.0">
+
+                    <Component Id="Component.Microsoft.Win32.SystemEvents.dll_493451995" Guid="0002a501-0000-0000-c000-0000537b0bd7" Win64="yes">
+                      <File Id="Microsoft.Win32.SystemEvents.dll_493451995" Source="runtimes\win\lib\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll" />
+                    </Component>
+
+                    <Component Id="Component.System.Drawing.Common.dll_2169848645" Guid="0002a501-0000-0000-c000-0000620feaf9" Win64="yes">
+                      <File Id="System.Drawing.Common.dll_2169848645" Source="runtimes\win\lib\netcoreapp3.0\System.Drawing.Common.dll" />
+                    </Component>
+
+                  </Directory>
+                </Directory>
+              </Directory>
+            </Directory>
+
             <Directory Id="INSTALLDIR.x64" Name="x64">
 
-              <Component Id="Component.LiteHtmlLib.dll_3802360625" Guid="0002a501-0000-0000-c000-000099bd505b" Win64="yes">
-                <File Id="LiteHtmlLib.dll_3802360625" Source="x64\LiteHtmlLib.dll" />
+              <Component Id="Component.LiteHtmlLib.dll_1376397186" Guid="0002a501-0000-0000-c000-0000ac41ee43" Win64="yes">
+                <File Id="LiteHtmlLib.dll_1376397186" Source="x64\LiteHtmlLib.dll" />
               </Component>
 
             </Directory>
@@ -147,6 +198,7 @@
           </Directory>
 
           <Component Id="ProgramFiles64Folder.Kindel_Systems" Guid="0002a501-0000-0000-c000-0000ac202de3" KeyPath="yes" Win64="yes">
+            <CreateFolder />
             <RemoveFolder Id="ProgramFiles64Folder.Kindel_Systems" On="uninstall" />
           </Component>
 
@@ -232,37 +284,44 @@
       <ComponentRef Id="PATH" />
       <ComponentRef Id="Component.winprint_exe" />
       <ComponentRef Id="Component.winprintgui_exe" />
-      <ComponentRef Id="Component.CommandLine.dll_3457475749" />
-      <ComponentRef Id="Component.GalaSoft.MvvmLight.dll_2973972099" />
-      <ComponentRef Id="Component.LiteHtmlSharp.dll_2960990633" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Configuration.Abstractions.dll_1583386921" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Configuration.Binder.dll_1711416835" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Configuration.dll_2185664227" />
-      <ComponentRef Id="Component.Microsoft.Extensions.DependencyInjection.Abstractions.dll_4002052668" />
-      <ComponentRef Id="Component.Microsoft.Extensions.DependencyInjection.dll_1762285007" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Logging.Abstractions.dll_1546743393" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Logging.dll_2060383318" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Options.dll_3477575443" />
-      <ComponentRef Id="Component.Microsoft.Extensions.Primitives.dll_3002264542" />
-      <ComponentRef Id="Component.Microsoft.Win32.SystemEvents.dll_661768356" />
-      <ComponentRef Id="Component.Serilog.dll_940806560" />
-      <ComponentRef Id="Component.Serilog.Sinks.Console.dll_841886768" />
-      <ComponentRef Id="Component.Serilog.Sinks.Debug.dll_3189322391" />
-      <ComponentRef Id="Component.Serilog.Sinks.File.dll_2317525057" />
-      <ComponentRef Id="Component.System.Drawing.Common.dll_3702015273" />
-      <ComponentRef Id="Component.System.Linq.Dynamic.Core.dll_2869695215" />
-      <ComponentRef Id="Component.WinPrint.Core.dll_2182204871" />
-      <ComponentRef Id="Component.winprint.dll_3866337698" />
-      <ComponentRef Id="Component.WinPrint.LiteHtml.dll_3178883582" />
-      <ComponentRef Id="Component.winprintgui.dll_4017844992" />
-      <ComponentRef Id="Component.winprint.runtimeconfig.json_4286513909" />
-      <ComponentRef Id="Component.winprintgui.runtimeconfig.json_1014415574" />
+      <ComponentRef Id="Component.CommandLine.dll_3989444205" />
+      <ComponentRef Id="Component.GalaSoft.MvvmLight.dll_1846337950" />
+      <ComponentRef Id="Component.LiteHtmlSharp.dll_493445706" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Configuration.Abstractions.dll_2543247260" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Configuration.Binder.dll_1286514189" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Configuration.dll_206885240" />
+      <ComponentRef Id="Component.Microsoft.Extensions.DependencyInjection.Abstractions.dll_161982690" />
+      <ComponentRef Id="Component.Microsoft.Extensions.DependencyInjection.dll_1562897118" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Logging.Abstractions.dll_3326678469" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Logging.dll_3761780517" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Options.dll_886065570" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Primitives.dll_2191064085" />
+      <ComponentRef Id="Component.Microsoft.Win32.SystemEvents.dll_505797933" />
+      <ComponentRef Id="Component.Serilog.dll_2482625690" />
+      <ComponentRef Id="Component.Serilog.Sinks.Console.dll_3418103813" />
+      <ComponentRef Id="Component.Serilog.Sinks.Debug.dll_1196206711" />
+      <ComponentRef Id="Component.Serilog.Sinks.File.dll_2705002948" />
+      <ComponentRef Id="Component.System.Drawing.Common.dll_2218408729" />
+      <ComponentRef Id="Component.System.Linq.Dynamic.Core.dll_3262736072" />
+      <ComponentRef Id="Component.WinPrint.Core.dll_1644500892" />
+      <ComponentRef Id="Component.winprint.dll_929763881" />
+      <ComponentRef Id="Component.WinPrint.LiteHtml.dll_113544235" />
+      <ComponentRef Id="Component.winprintgui.dll_3603316277" />
+      <ComponentRef Id="Component.WinPrint.config.json_841462239" />
+      <ComponentRef Id="Component.winprint.deps.json_1111859072" />
+      <ComponentRef Id="Component.winprint.runtimeconfig.json_1125970311" />
+      <ComponentRef Id="Component.winprintgui.deps.json_3688077211" />
+      <ComponentRef Id="Component.winprintgui.runtimeconfig.json_2178300737" />
       <ComponentRef Id="Component.Uninstall_WinPrint" />
-      <ComponentRef Id="Component.LiteHtmlLib.dll_3802360625" />
+      <ComponentRef Id="Component.INSTALLDIR.logs.EmptyDirectory" />
+      <ComponentRef Id="Component.System.Drawing.Common.dll_1930615101" />
+      <ComponentRef Id="Component.Microsoft.Win32.SystemEvents.dll_493451995" />
+      <ComponentRef Id="Component.System.Drawing.Common.dll_2169848645" />
+      <ComponentRef Id="Component.LiteHtmlLib.dll_1376397186" />
       <ComponentRef Id="Component.Kindel_Systems.WinPrint.EmptyDirectory" />
       <ComponentRef Id="Component.WinPrint___" />
-      <ComponentRef Id="Kindel_Systems" />
       <ComponentRef Id="ProgramFiles64Folder.Kindel_Systems" />
+      <ComponentRef Id="Kindel_Systems" />
       <ComponentRef Id="Kindel_Systems.1" />
     </Feature>
 

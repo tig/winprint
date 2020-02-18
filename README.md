@@ -10,7 +10,7 @@ WinPrint is the perfect tool for printing source code, web pages, reports genera
 
 ## Install
 
-No public releases yet. Feel free to clone and build for now. I use VS 2016 Preview 2. 
+No public releases yet (because I'm embarrased by a few bugs and performance issues; see Issues). Feel free to clone and build for now. I use VS 2016 Preview 2. 
 
 ## History
 

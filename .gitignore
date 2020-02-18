@@ -338,3 +338,4 @@ tests/*_.html
 
 #Wix 
 *.g.wxs
+install/
