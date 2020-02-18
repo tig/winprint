@@ -74,19 +74,21 @@ Print Program.cs using the 2 Up sheet defintion:
 
 * `-p`, `--printer` - Printer name.
 
-* `z`, `--paper-size` - Paper size name.
+* `-z`, `--paper-size` - Paper size name.
 
-* `f`, `--from-sheet` - (Default: 0) Number of first sheet to print (may be used with `--to-sheet`).
+* `-f`, `--from-sheet` - (Default: 0) Number of first sheet to print (may be used with `--to-sheet`).
 
-* `t`, `--to-sheet` - (Default: 0) Number of last sheet to print (may be used with `--from-sheet`).
+* `-t`, `--to-sheet` - (Default: 0) Number of last sheet to print (may be used with `--from-sheet`).
 
-* `c`, `--count-sheet` - (Default: false) Exit code is set to numer of sheet that would be printed. Use `--verbose` to diplsay the count.
+* `-c`, `--count-sheet` - (Default: false) Exit code is set to numer of sheet that would be printed. Use `--verbose` to diplsay the count.
 
-* `v`, `--verbose` - (Default: false) Verbose console output (log is always verbose).
+* `-e`, `--content-type-engine` - Name of the Content Type Engine to use for rendering (`text/plain`, `text/html`, or `<language>`).
 
-* `d`, `--debug` - (Default: false) Debug-level console & log output.
+* `-v`, `--verbose` - (Default: false) Verbose console output (log is always verbose).
 
-* `g`, `--gui` - (Default: false) Show WinPrint GUI (to preview or change sheet settings).
+* `-d`, `--debug` - (Default: false) Debug-level console & log output.
+
+* `-g`, `--gui` - (Default: false) Show WinPrint GUI (to preview or change sheet settings).
 
 * `--help` - Display this help screen.
 
@@ -171,6 +173,8 @@ To associate a file extension with a particular Content Type Engine modify the `
     }
 
 For associating file extentions with a particular programming language using the `sourcecode` File Type Renderer see below.
+
+The commandline option `e`/`--content-type-engine` overrides content type and language detection.
 
 ## Language Associations
 

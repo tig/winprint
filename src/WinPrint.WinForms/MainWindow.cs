@@ -401,7 +401,8 @@ namespace WinPrint.Winforms {
 
             // By running this on a different thread, we enable the main window to show
             // as quickly as possible; making startup seem faster.
-            Task.Run(() => Start());
+            //Task.Run(() => Start());
+            Start();
         }
 
         private void Start() {
@@ -410,7 +411,7 @@ namespace WinPrint.Winforms {
             if (string.IsNullOrEmpty(activeFile)) {
                 // If a file's not been set, juice the print preview and show the file open dialog box
                 //SheetSettingsChanged();
-                fileButton_Click(null, null);
+                ShowFilesDialog();
             }
             else
                 LoadFile();
@@ -489,10 +490,9 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private string ShowFilesDialog() {
-            string file = null;
+        private void ShowFilesDialog() {
             if (InvokeRequired)
-                BeginInvoke((Action)(() => file = ShowFilesDialog()));
+                BeginInvoke((Action)(() => ShowFilesDialog()));
             else {
                 LogService.TraceMessage();
                 using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
@@ -500,12 +500,12 @@ namespace WinPrint.Winforms {
                     openFileDialog.Filter = Resources.FileOpenTemplate;
                     openFileDialog.FilterIndex = 3;
                     openFileDialog.RestoreDirectory = true;
-                    if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                        file = openFileDialog.FileNames.ToList()[0];
+                    if (openFileDialog.ShowDialog(this) == DialogResult.OK) {
+                        activeFile = openFileDialog.FileNames.ToList()[0];
+                        LoadFile();
                     }
                 }
             }
-            return file;
         }
 
         private void SheetChanged() {
@@ -733,9 +733,7 @@ namespace WinPrint.Winforms {
         }
 
         private void fileButton_Click(object sender, EventArgs e) {
-            activeFile = ShowFilesDialog();
-            if (!string.IsNullOrEmpty(activeFile))
-                LoadFile();
+            ShowFilesDialog();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",

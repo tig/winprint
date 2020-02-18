@@ -312,8 +312,8 @@ namespace WinPrint.LiteHtml {
             //Logging.TraceMessage();
             if (_graphics is null) throw new InvalidOperationException("_graphics cannot be null");
 
-           // text = text.Replace(' ', (char)160);
-            text = text.Replace(' ', '_');
+            text = text.Replace(' ', (char)160);
+            //text = text.Replace(' ', '_');
             var fontInfo = _fonts[font];
 
             web_color color = textColor;
@@ -355,8 +355,8 @@ namespace WinPrint.LiteHtml {
             //var g = Graphics.FromImage(bitmap);
             //g.PageUnit = GraphicsUnit.Pixel;
 
-            text = text.Replace(' ', '_');
-            //text = text.Replace(' ', (char)160);
+            //text = text.Replace(' ', '_');
+            text = text.Replace(' ', (char)160);
 
             var size = _graphics.MeasureString(text, fontInfo.Font, (int)Size.Width, StringFormat);
             return (int)Math.Round(size.Width);
