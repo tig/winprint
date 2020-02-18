@@ -8,6 +8,10 @@ WinPrint is the perfect tool for printing source code, web pages, reports genera
 
 ![WinPrint 2.0](https://i.imgur.com/rg2U5pc.png)
 
+## Install
+
+No public releases yet. Feel free to clone and build for now. I use VS 2016 Preview 2. 
+
 ## History
 
 Ever since I started programming on an Apple ][+ in 1981, I've had a thing for printing. My earliest apps focused on printing and my first money-making endeavor was "Tapes", which printed casette tape '[J-cards](https://en.wikipedia.org/wiki/J-card)' for all the mix-tapes of great '80s music me made for the girls. Whenever I learned a new programming language or OS, the first app I'd write was '[Spit](https://github.com/tig/Tigger/blob/a2013af12fef6d9946adea7fe510f8c649766160/College/C_SRC/SPIT153.C)', an app for printing my source code all pretty (it "spits" source code out of a printer). Over the years, I wrote Spit for AppleDOS (Apple BASIC), UCSD-Pascal, CP/M (Turbo Pascal), DOS (8086 assembly and C), VAX/VMS (Pascal and FORTRAN-77, and Mac (Pascal).
