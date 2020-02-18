@@ -31,7 +31,8 @@ namespace WinPrint.WixSharp {
                 Dirs = new[] {
                     new Dir($"%ProgramFiles%\\{companyName}\\{productName}", 
                         new Files(@"*.dll"),
-                        new Files(@"*.json"),
+                        new Files(@"*.deps.json"),
+                        new Files(@"*.runtimeconfig.json"),
                         new File(new Id("winprint_exe"), @"winprint.exe"),
                         new File(new Id("winprintgui_exe"), @"winprintgui.exe", 
                             new FileShortcut("WinPrint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
