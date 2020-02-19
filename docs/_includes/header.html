@@ -6,9 +6,7 @@
     {%- assign titles_size = site.pages | map: 'title' | join: '' | size -%}
     <a class="site-title" rel="author" href="{{ "/" | relative_url }}">{{ site.title | escape }}</a>
 
-    <div class="social-links">
-      {%- include social.html -%}
-    </div>
+    &nbsp;&nbsp;&nbsp;&nbsp;{%- include social.html -%}
 
 
     {%- if titles_size > 0 -%}
