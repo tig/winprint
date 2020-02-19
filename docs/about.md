@@ -15,6 +15,6 @@ This all led to me accidentally finding the old WinPrint 2.0 source code. Remini
 2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. A full command-line interface. It can syntax-highlight over 200 different programming languages. It's cross-platfom. And more.
 3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
 
-So, there you are. I present to you WinPrint 2.0. I hope you enjoy it.
+So, there you are. I present to you winprint 2.0. I hope you enjoy it.
 
 -cek (charlie@kindel.com)
