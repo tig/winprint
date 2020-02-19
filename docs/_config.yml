@@ -1,6 +1,6 @@
 description: WinPrint 2.0 - Copyright Kindel Systems, LLC
 logo: https://tig.github.io/winprint/winprint-icon.jpg
-show_downloads: true
+show_downloads: false
 theme: minima
 header_pages:
   - install.md
