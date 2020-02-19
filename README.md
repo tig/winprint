@@ -18,4 +18,4 @@ WinPrint is the perfect tool for printing source code, web pages, reports genera
 
 ## Contributing
 
-I'm open to pull requests. I'll also take donations, preferably in beer or Scotch. 
+I'm open to pull requests. I'll also take donations, preferably in beer or Scotch.
