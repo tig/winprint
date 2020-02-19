@@ -1,5 +1,6 @@
-# About
-
+---
+title: About
+---
 Ever since I started programming on an Apple ][+ in 1981, I've had a thing for printing. My earliest apps focused on printing and my first money-making endeavor was "Tapes", which printed casette tape '[J-cards](https://en.wikipedia.org/wiki/J-card)' for all the mix-tapes of great '80s music we made for the girls. Whenever I learned a new programming language or OS, the first app I'd write was '[Spit](https://github.com/tig/Tigger/blob/a2013af12fef6d9946adea7fe510f8c649766160/College/C_SRC/SPIT153.C)', an app for printing my source code all pretty (it "spits" source code out of a printer). Over the years, I wrote Spit for AppleDOS (Apple BASIC), UCSD-Pascal, CP/M (Turbo Pascal), DOS (8086 assembly and C), VAX/VMS (Pascal and FORTRAN-77), and Mac (Pascal).
 
 In 1988, as a College Senior, I decided Windows was going to win (over OS/2) and I was going to work for Microsoft. I bought Charles Petzold's "Programming Windows" and conned my dad into buying me a copy of the Windows 2.0 SDK (which was like $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first (useful) app I wrote was WinSpit. In a rare moment of adulting, I renamed it [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For the next 10 years those $25 checks just arrived in the mail. Even better, WinPrint demonstrated to Microsoft I could actually, really write code. So they hired me.
@@ -15,3 +16,5 @@ This all led to me accidentally finding the old WinPrint 2.0 source code. Remini
 3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
 
 So, there you are. I present to you WinPrint 2.0. I hope you enjoy it.
+
+-cek (charlie@kindel.com)
