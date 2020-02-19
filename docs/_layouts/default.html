@@ -13,7 +13,7 @@
       </div>
     </main>
 
-    {%- include footer.html -%}
+    <!-- {%- include footer.html -%} -->
 
   </body>
 
