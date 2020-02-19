@@ -1,4 +1,4 @@
-# WinPrint User's Guide
+# User's Guide
 
 ## Installing
 
