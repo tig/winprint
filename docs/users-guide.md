@@ -1,5 +1,6 @@
-# User's Guide
-
+---
+title: User's Guide
+---
 ## Installing
 
 **On Windows**: Download and run the setup file. Once installed, WinPrint can be started from the Start menu or command line. The installer adds WinPrint to the `PATH` so that typing `winprint` from any command prompt will run the app.
