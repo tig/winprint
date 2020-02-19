@@ -8,43 +8,14 @@ WinPrint is the perfect tool for printing source code, web pages, reports genera
 
 ![WinPrint 2.0](https://i.imgur.com/rg2U5pc.png)
 
-## Install
+## More Info
 
-WinPrint 2.0 is in pre-beta (alpha) stage. I'm embarrased by a few bugs and performance issues that I want to fix before I declare beta; see Issues.
+* [Website](https://tig.github.io/winprint/)
+* [Install](https://tig.github.io/winprint/install.html)
+* [User's Guide](https://tig.github.io/winprint/users-guide.html)
+* [About](https://tig.github.io/winprint/about.html)
+* [Support](https://tig.github.io/winprint/support.html)
 
-Go to Releases to grab the latest MSI for Windows and give it a try.
+## Contributing
 
-## History
-
-Ever since I started programming on an Apple ][+ in 1981, I've had a thing for printing. My earliest apps focused on printing and my first money-making endeavor was "Tapes", which printed casette tape '[J-cards](https://en.wikipedia.org/wiki/J-card)' for all the mix-tapes of great '80s music we made for the girls. Whenever I learned a new programming language or OS, the first app I'd write was '[Spit](https://github.com/tig/Tigger/blob/a2013af12fef6d9946adea7fe510f8c649766160/College/C_SRC/SPIT153.C)', an app for printing my source code all pretty (it "spits" source code out of a printer). Over the years, I wrote Spit for AppleDOS (Apple BASIC), UCSD-Pascal, CP/M (Turbo Pascal), DOS (8086 assembly and C), VAX/VMS (Pascal and FORTRAN-77), and Mac (Pascal).
-
-In 1988, as a College Senior, I decided Windows was going to win (over OS/2) and I was going to work for Microsoft. I bought Charles Petzold's "Programming Windows" and conned my dad into buying me a copy of the Windows 2.0 SDK (which was like $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first (useful) app I wrote was WinSpit. In a rare moment of adulting, I renamed it [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For the next 10 years those $25 checks just arrived in the mail. Even better, WinPrint demonstrated to Microsoft I could actually, really write code. So they hired me.
-
-Several times in the early 1990s I started writing WinPrint 2.0. Each time I had the basics working and realized three things: 1) Nobody cares about printing source code, 3) I'd over-engineered things, and 2) the technology I choose was already dated (e.g. MFC). Two of those abandoned efforts can be found in my archive [here (1992)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRINT) and [here (1994)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRT20).
-
-Last year (2019) I got a wild-hair to write some code as a way of blowing off steam, and proving to myself I was still cool. It all started with MS releasing the [Cascadia Code](https://devblogs.microsoft.com/commandline/cascadia-code/) font. I have a thing for fixed-pitch fonts. It's weird. Anyway, I installed the font in Terminal and VScode but just looking at stuff wasn't enough. I needed to *use the font in anger*!. So I fixed some long-standing issues in [MCE Controller](https://tig.github.io/mcec/) (another app I wrote that nobody uses anymore).
-
-This all led to me accidentally finding the old WinPrint 2.0 source code. Reminiscing on how much time I wasted back then, I just had to try again. So I did. And, just to be clear, here's what I did:
-
-1) I wrote a *printing* app in 2019-2020. Nobody prints these days. *I* don't even print anymore. 
-2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. A full command-line interface. It can syntax-highlight over 200 different programming languages. It's cross-platfom. And more.
-3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
-
-So, there you are. I present to you WinPrint 2.0. I hope you enjoy it.
-
-## Features
-
-* Cross platform. Even though it's named **Win**Print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
-* Use from the Command Line/Console or GUI.
-* Print source code with syntax highlighting and line numbering for over 200 programming langauges and file formats.
-* Print "multiple-pages-up" on one piece of paper (saves trees!)
-* Complete control over all page formatting options, including headers and footers, margins, fonts, page orientation, etc...
-* Simple and elegant graphical user interface with accurate print preview.
-* Complete command line interface. Allows WinPrint to be used from other applications or solutions.
-* Sheet Definitions make it easy to save settings for frequent print jobs.
-* Headers and Footers support detailed file and print information macros with rich date/time formatting.
-
-
-## Support
-
-Use GitHub Issues to ask questions or report bugs. 
+I'm open to pull requests. I'll also take donations, preferably in beer or Scotch. 
