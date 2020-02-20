@@ -7,7 +7,7 @@ title: winprint
 
 ![winprint 2.0](winprint2.jpg)
 
-![winprint 2.0 cmdline](winprint-cmdline.png)
+![winprint command line](winprint-cmdline.jpg)
 
 ## Features
 
