@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
@@ -45,15 +46,8 @@ namespace WinPrint.Winforms {
 
             Color();
 
-            printPreview.KeyUp += (s, e) => {
-                switch (e.KeyCode) {
-                    case Keys.F5:
-                        //printPreview.Invalidate(true);
-                        Log.Debug("-------- F5 ---------");
-                        Task.Run(() => Start());
-                        break;
-                }
-            };
+            // This gets the version # from winprint.core.dll
+            versionLabel.Text = $"v{FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion}";
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 this.panelRight.Controls.Remove(this.dummyButton);
@@ -269,7 +263,7 @@ namespace WinPrint.Winforms {
                         break;
 
                     case "File":
-                        this.Text = $"WinPrint - {printPreview.SheetViewModel.File}";
+                        this.Text = $"winprint - {printPreview.SheetViewModel.File}";
                         printPreview.CurrentSheet = 1;
                         break;
 
@@ -308,7 +302,16 @@ namespace WinPrint.Winforms {
                 this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
-            printPreview.Text = "Getting things ready...";
+            printPreview.KeyUp += (s, e) => {
+                if (e.KeyCode == Keys.F5) {
+                    //printPreview.Invalidate(true);
+                    Log.Debug("-------- F5 ---------");
+                    // TODO: Refactor threading
+                    Task.Run(() => Start());
+                }
+            };
+
+            printPreview.Text = "Hello.";
 
             //this.Cursor = Cursors.WaitCursor;
             var sheets = ModelLocator.Current.Settings.Sheets;
@@ -759,7 +762,7 @@ namespace WinPrint.Winforms {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
             "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void wikiLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args) {
-            string url = "https://github.com/tig/winprint";
+            string url = "https://tig.github.io/winprint";
             Log.Debug($"Browsing to home page: {url}");
             Process proc = null;
             try {
