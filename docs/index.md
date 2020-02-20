@@ -7,6 +7,8 @@ title: winprint
 
 ![winprint 2.0](https://i.imgur.com/rg2U5pc.png)
 
+![winprint 2.0 cmdline](winprint-cmdline.png)
+
 ## Features
 
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
