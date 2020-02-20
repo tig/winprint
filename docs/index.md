@@ -19,6 +19,7 @@ title: winprint
 * Simple and elegant graphical user interface with accurate print preview.
 * Complete command line interface. Allows winprint to be used from other applications or solutions.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
+* Compressive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
 
 See [User's Guide](users-guide.md) for more details.

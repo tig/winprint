@@ -1,6 +1,19 @@
 ---
 title: User's Guide
 ---
+## Features
+
+* Print source code with syntax highlighting and line numbering for over 200 programming langauges and file formats.
+* Print HTML files.
+* Print "multiple-pages-up" on one piece of paper (saves trees!)
+* Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
+* Headers and Footers support detailed file and print information macros with rich date/time formatting.
+* Simple and elegant graphical user interface with accurate print preview.
+* Complete command line interface. Allows winprint to be used from other applications or solutions.
+* Sheet Definitions make it easy to save settings for frequent print jobs.
+* Compressive logging.
+* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
+
 ## Command Line Interface
 
 Examples:
@@ -59,7 +72,7 @@ The **File button** opens a File Open Dialog for choosing the file to preview an
 
 The **Print button** prints the currently selected file.
 
-The **Settings (⚙) button** will open `*winprint*.Config.json` in your favorite text editor. Changes made to the file will be reflected in the GUI automatically.
+The **Settings (⚙) button** will open `WinPrint.config.json` in your favorite text editor. Changes made to the file will be reflected in the GUI automatically.
 
 ## Sheet Definitions
 
@@ -69,7 +82,7 @@ This is called "n-up" printing. The most common form of "n-up" printing is "2-up
 
 The layout and format of the **Sheet** is defined by a set of configuration settings called a **Sheet Definition**. Out of the box *winprint* comes with two: `Default 1 Up` and `Default 2 Up`.
 
-**Sheet Definitions** are defined and stored in the `*winprint*.Config.json` configuration file found in `%appdata%\Kindel Systems\*winprint*`.
+**Sheet Definitions** are defined and stored in the `WinPrint.config.json` configuration file found in `%appdata%\Kindel Systems\winprint`.
 
 ### Headers & Footers Macros
 
@@ -103,25 +116,25 @@ The `{DatePrinted}` and `{DateRevised}` macros support the full set of [standard
 
 ### Modifying Sheet Definitions
 
-The *winprint* GUI can be used to change most Sheet Definition settings. All settings can be changed by editing the `*winprint*.Config.json` file. Note if `*winprint*.Config.json` is changed while the *winprint* GUI App is running, it will detect the change and re-flow the currently loaded file. In other-words, a text editor can be used as the UI for advanced settings.
+The *winprint* GUI can be used to change most Sheet Definition settings. All settings can be changed by editing the `WinPrint.config.json` file. Note if `WinPrint.config.json` is changed while the *winprint* GUI App is running, it will detect the change and re-flow the currently loaded file. In other-words, a text editor can be used as the UI for advanced settings.
 
 ### Creating new Sheet Definitions
 
-*winprint* starts with two "built-in" Sheet Definitions: `Default 1-Up` and `Default 2-Up`. Additional Sheet Definitions can be created by editing `*winprint*.Config.json`, copying one of the existing Sheet Defintions and giving it a new unique `name` and unique `ID`.
+*winprint* starts with two "built-in" Sheet Definitions: `Default 1-Up` and `Default 2-Up`. Additional Sheet Definitions can be created by editing `WinPrint.config.json`, copying one of the existing Sheet Defintions and giving it a new unique `name` and unique `ID`.
 
 ## Content Types
 
 *winprint* supports three types of files. Support for each is provided by a *winprint* Content Type Engine (CTE):
 
-1. **`text/plain`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a differnt font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `*winprint*.Config.json` file. 
+1. **`text/plain`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a differnt font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file. 
 
-2. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\*winprint*` folder. `text/html` does not support line numbers.
+2. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
 
-3. **`text/sourcecode`** - The sourcecode CTE supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` in the `%appdata%\Kindel Systems\*winprint*` folder. The styles defined in this format shold match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with *winprint*.
+3. **`text/sourcecode`** - The sourcecode CTE supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` in the `%appdata%\Kindel Systems\winprint` folder. The styles defined in this format shold match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with *winprint*.
 
 The extension of the file being printed (e.g. `.cs`) is determines which Content Type rendering engine will be used. *winprint* has a built-in library of hundreds of file extension to content type/language mappings.
 
-To associate a file extension with a particular Content Type Engine modify the `files.associations` section of `*winprint*.Config.json` appropriately. For example to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below (the `*winprint*.Config.json` generated when *winprint* runs the first time already provides this example, as an example):
+To associate a file extension with a particular Content Type Engine modify the `files.associations` section of `WinPrint.config.json` appropriately. For example to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below (the `WinPrint.config.json` generated when *winprint* runs the first time already provides this example, as an example):
 
     "files.associations": {
       "*.htm": "text/html",
@@ -137,7 +150,7 @@ The commandline option `-e`/`--content-type-engine` overrides content type and l
 
 ### Adding or Changing `text/sourcecode` Language Associations
 
-To associate a file extension with a language spported by `text/sourcecode` modify the `files.associations` and `languages` sections of `*winprint*.Config.json` appropriately. For example to associate files with a `.config` extension with the JSON langauge  add a line as shown below (the `*winprint*.Config.json` generated when *winprint* runs the first time already provides this example, as an example):
+To associate a file extension with a language spported by `text/sourcecode` modify the `files.associations` and `languages` sections of `WinPrint.config.json` appropriately. For example to associate files with a `.config` extension with the JSON langauge  add a line as shown below (the `WinPrint.config.json` generated when *winprint* runs the first time already provides this example, as an example):
 
     "files.associations": {
       "*.config": "json"
@@ -145,7 +158,7 @@ To associate a file extension with a language spported by `text/sourcecode` modi
 
 To determine the name to use (e.g. `json`) see the [PrismJS](https://prismjs.com/#supported-languages) list of languages.
 
-A new langauge can be defined by aliasing it to an existing language by modifying the `languages` section of `*winprint*.Config.json`. 
+A new langauge can be defined by aliasing it to an existing language by modifying the `languages` section of `WinPrint.config.json`. 
 
 For example to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29) which is a very C-like language the `files.associations` and `languages` sections would look like the following:
 
@@ -163,3 +176,39 @@ For example to enable the [Icon Programming Language](https://en.wikipedia.org/w
         ]
       }
     ]
+
+## Logging & Diagnostics
+
+**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using the command line (`winprint.exe`) specifiying the `-d`/`--debug` command line switch will cause all disagnostic log entries to go to the console as well as the log file.
+
+Additional printing diagnostics can be turned on via settings in the configuration file. 
+
+To help diagnose printer-related rendering issues, or issues with Sheet Definitions, **winprint** set the appropriate diagnostic flags found at the end of the config file to `true` (each flag has a print and print preview variant):
+
+```]  
+  "previewPrintableArea": false,
+  "printPrintableArea": false,
+  "previewPaperSize": false,
+  "printPaperSize": false,
+  "previewMargins": false,
+  "printMargins": false,
+  "previewHardMargins": false,
+  "printHardMargins": false,
+  "printBounds": false,
+  "previewBounds": false,
+  "printContentBounds": false,
+  "previewContentBounds": false,
+  "printHeaderFooterBounds": false,
+  "previewHeaderFooterBounds": false,
+  "previewPageBounds": false,
+  "printPageBounds": false
+```
+
+To help daignose why content may be rendering incorrectly, set `diagnostics` to `true` in any `contentSettings` section. This will cause the Content Type Engine to print/display diagnostic rules.
+
+```
+      "contentSettings": {
+        "diagnostics": false
+      },
+```
+
