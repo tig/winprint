@@ -185,7 +185,7 @@ Additional printing diagnostics can be turned on via settings in the configurati
 
 To help diagnose printer-related rendering issues, or issues with Sheet Definitions, **winprint** set the appropriate diagnostic flags found at the end of the config file to `true` (each flag has a print and print preview variant):
 
-```]  
+```
   "previewPrintableArea": false,
   "printPrintableArea": false,
   "previewPaperSize": false,
