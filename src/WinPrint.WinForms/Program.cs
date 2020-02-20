@@ -56,6 +56,7 @@ namespace WinPrint.Winforms {
             var helpText = HelpText.AutoBuild(result, h => {
                 h.AutoHelp = true;
                 h.AutoVersion = true;
+             
                 //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);
