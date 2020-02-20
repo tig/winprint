@@ -11,11 +11,11 @@ header_pages:
   - users-guide.md
   - support.md
   - about.md
-google-analytics: UA-4945529-9
+google_analytics: UA-4945529-9
 
-#author:
-#  name: GitHub User
-#  email: your-email@domain.com
+author:
+  name: Charlie Kindel
+  email: charlie@kindel.com
 
 show_excerpts: true # set to true to show excerpts on the homepage
 
