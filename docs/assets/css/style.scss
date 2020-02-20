@@ -2,7 +2,7 @@
 # Only the main Sass file needs front matter (the dashes are enough)
 ---
 
-@ximport "{{ site.theme }}";
+@import "{{ xsite.theme }}";
 
 .svg-icon {
     width: 16px;
