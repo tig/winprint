@@ -2,6 +2,7 @@ description: winprint 2.0
 logo: https://tig.github.io/winprint/winprint-icon.jpg
 theme: minima
 minima:
+  skin: solarized-dark
   social_links:
     twitter: ckindel
     github: tig
