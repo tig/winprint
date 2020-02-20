@@ -6,8 +6,7 @@ minima:
   skin: solarized-dark
   social_links:
     twitter: ckindel
-    github: tig
-    stackoverflow: "297526"
+    github: tig/winprint
 header_pages:
   - install.md
   - users-guide.md
