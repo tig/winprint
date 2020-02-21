@@ -5,7 +5,7 @@ theme: minima
 minima:
   social_links:
     twitter: ckindel
-    github: tig/winprint
+    github: tig
 header_pages:
   - install.md
   - users-guide.md
