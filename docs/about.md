@@ -19,7 +19,7 @@ This all led to me re-discovering my old WinPrint 2.0 source code. Reminiscing o
 
 So, there you are. I present to you winprint 2.0. I hope you enjoy it.
 
--tig [@ckindel](twitter.com/ckindel);
+-tig ([@ckindel](twitter.com/ckindel) on twitter; see my [blog](https://ceklog.kindel.com))
 
 ## License (MIT)
 
