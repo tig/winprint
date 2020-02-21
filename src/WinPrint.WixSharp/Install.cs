@@ -35,8 +35,8 @@ namespace WinPrint.WixSharp {
                         new Files(@"*.runtimeconfig.json"),
                         new File(new Id("winprint_exe"), @"winprint.exe"),
                         new File(new Id("winprintgui_exe"), @"winprintgui.exe", 
-                            new FileShortcut("WinPrint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
-                        new ExeFileShortcut("Uninstall WinPrint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),
+                            new FileShortcut("winprint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
+                        new ExeFileShortcut("Uninstall winprint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),
                     new Dir($"%AppData%\\{companyName}\\{productName}"),
                     new Dir($"%ProgramMenu%\\{companyName}\\{productName}",
                         new ExeFileShortcut("WinPrint", "[INSTALLDIR]winprintgui.exe", arguments: ""))
@@ -84,10 +84,10 @@ namespace WinPrint.WixSharp {
             //project.LicenceFile = "license.rtf";
 
             project.ControlPanelInfo.Comments = "WinPrint by Charlie Kindel";
-            project.ControlPanelInfo.Readme = "https://github.com/tig/winprint";
-            project.ControlPanelInfo.HelpLink = "https://github.com/tig/winprint";
-            project.ControlPanelInfo.UrlInfoAbout = "https://github.com/tig/winprint";
-            project.ControlPanelInfo.UrlUpdateInfo = "https://github.com/tig/winprint";
+            project.ControlPanelInfo.Readme = "https://tig.github.io/winprint";
+            project.ControlPanelInfo.HelpLink = "https://tig.github.io/winprint";
+            project.ControlPanelInfo.UrlInfoAbout = "https://tig.github.io/winprint";
+            project.ControlPanelInfo.UrlUpdateInfo = "https://tig.github.io/winprint";
             //project.ControlPanelInfo.ProductIcon = "app_icon.ico";
             project.ControlPanelInfo.Contact = "Charlie Kindel (charlie@kindel.com)";
             project.ControlPanelInfo.Manufacturer = companyName;

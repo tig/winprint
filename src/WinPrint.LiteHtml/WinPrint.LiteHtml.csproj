@@ -3,14 +3,14 @@
   
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyTitle>WinPrint LiteHtml</AssemblyTitle>
+    <AssemblyTitle>winprint LiteHtml</AssemblyTitle>
     <AssemblyName>WinPrint.LiteHtml</AssemblyName>
 
-    <Version>2.0.0.1034</Version>
+    <Version>2.0.0.1054</Version>
     <Company>Kindel Systems</Company>
-    <Product>WinPrint</Product>
+    <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
-    <Description>WinPrint LiteHtml Adapter</Description>
+    <Description>winprint LiteHtml Adapter</Description>
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>

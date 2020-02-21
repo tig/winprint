@@ -92,7 +92,7 @@ namespace WinPrint.Core.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to /**
-        /// * prism.js WinPrint theme for JavaScript, CoffeeScript, CSS and HTML
+        /// * prism.js WinPrint theme 
         /// * Based on prism-coy.css
         /// * @author Charlie Kindel
         /// */
@@ -100,14 +100,16 @@ namespace WinPrint.Core.Properties {
         ///code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
         ///    color: black;
-        ///    background: none;
         ///    /* *font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace; */
-        ///
         ///    /* HACK: note &apos;winprint&apos; font at end. */
         ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
-        ///    font-size: 10pt;
-        ///    
-        ///    text-align: [rest of string was truncated]&quot;;.
+        ///    font-size: 7pt;
+        ///}
+        ///
+        ///code[class*=&quot;language&quot;] {
+        ///    max-height: inherit;
+        ///    height: inherit;
+        ///    displ [rest of string was truncated]&quot;;.
         /// </summary>
         public static string prism_winprint {
             get {
@@ -123,13 +125,11 @@ namespace WinPrint.Core.Properties {
         ///*/
         ///code[class*=&quot;language-&quot;],
         ///pre[class*=&quot;language-&quot;] {
-        ///    /* no backgrond */
-        ///    background: none;
-        ///    /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
-        ///    white-space: pre-wrap;
-        ///    word-wrap: break-word;
-        ///    word-break: break-all;
-        /// [rest of string was truncated]&quot;;.
+        ///    /* no backgrond 
+        ///    background: none;*/
+        ///    /* linehtml only supports white-space: pre-wrap. word-break: break-all are not yet supported.*/
+        ///    /* Relevant docs:
+        ///        white-space - https://developer.mozilla. [rest of string was truncated]&quot;;.
         /// </summary>
         public static string prism_winprint_overrides {
             get {

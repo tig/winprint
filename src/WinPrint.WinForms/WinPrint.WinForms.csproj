@@ -9,14 +9,14 @@
     <StartupObject>WinPrint.Winforms.Program</StartupObject>
     <ApplicationIcon>Document.ico</ApplicationIcon>
 
-    <AssemblyTitle>WinPrint GUI</AssemblyTitle>
+    <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.0.0.1034</Version>
+    <Version>2.0.0.1053</Version>
     <Company>Kindel Systems</Company>
-    <Product>WinPrint</Product>
+    <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
-    <Description>WinPrint GUI App</Description>
+    <Description>winprint GUI App</Description>
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
@@ -40,7 +40,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.20" />
   </ItemGroup>
 
   <ItemGroup>

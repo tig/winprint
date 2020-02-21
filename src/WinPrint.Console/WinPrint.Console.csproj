@@ -5,15 +5,15 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>WinPrint.Console</RootNamespace>
-    <AssemblyTitle>WinPrint Console App</AssemblyTitle>
+    <AssemblyTitle>winprint Console App</AssemblyTitle>
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.1034</Version>
+    <Version>2.0.0.1049</Version>
     <Company>Kindel Systems</Company>
-    <Product>WinPrint</Product>
+    <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
-    <Description>WinPrint Console App</Description>
+    <Description>winprint Console App</Description>
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../WinPrint.Core/WinPrint.Core.csproj" />
+    <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
