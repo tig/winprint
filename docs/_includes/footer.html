@@ -12,6 +12,15 @@
             </svg><span>Subscribe</span>
           </a>
         </p>
+
+        <p class="feed-subscribe">
+          <a rel="me" href="https://github.com/tig/winprint}" title="winprint 2.0 source on GitHub">
+            <svg class="svg-icon grey">
+              <use xlink:href="{{ '/assets/minima-social-icons.svg#github' | relative_url }}"></use>
+            </svg>
+            <span>winprint 2.0 source on GitHub</span>
+          </a>
+        </p>
       {%- if site.author %}
         <ul class="contact-list">
           {% if site.author.name -%}
@@ -27,8 +36,6 @@
         <p>{{ site.description | escape }}</p>
       </div>
     </div>
-
-    <p>Environment = {{ jekyll.environment | escape }}</p>
   </div>
 
 </footer>
