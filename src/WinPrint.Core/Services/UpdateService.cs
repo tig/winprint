@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace WinPrint.Core.Services {
     public class UpdateService {
@@ -17,7 +18,7 @@ namespace WinPrint.Core.Services {
 
         public string Url { get; set; }
 
-        public async void GetLatestStableVersionAsync() {
+        public async Task GetLatestStableVersionAsync() {
             using (var client = new WebClient()) {
                 try {
                     string contents =
@@ -39,6 +40,5 @@ namespace WinPrint.Core.Services {
 
             OnGotLatestVersion(LatestStableRelease);
         }
-   
     }
 }
