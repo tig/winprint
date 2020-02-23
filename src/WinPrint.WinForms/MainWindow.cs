@@ -299,10 +299,12 @@ namespace WinPrint.Winforms {
 
             ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
                 if (v != null && v.CompareTo(new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion)) >= 0) {
-                    BeginInvoke((Action)(() => MessageBox.Show($"A new version of wiprint ({v.ToString()}) is available at {ServiceLocator.Current.UpdateService.DownloadUri}")));
                     Log.Information("Newer version available {v}", v);
+                    BeginInvoke((Action)(() => {
+                        var dlg = new UpdateDialog();
+                        dlg.ShowDialog(this);
+                    }));
                 }
-
             };
 
             await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync();

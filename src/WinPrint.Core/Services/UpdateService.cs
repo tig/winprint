@@ -22,7 +22,7 @@ namespace WinPrint.Core.Services {
         public String ErrorMessage { get; private set; }
         public Version LatestStableVersion { get; private set; }
 
-        public object DownloadUri { get; set; }
+        public string DownloadUri { get; set; }
 
         public async Task GetLatestStableVersionAsync() {
             DownloadUri = "https://github.com/tig/winprint/releases";
