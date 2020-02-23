@@ -70,10 +70,13 @@ namespace WinPrint.Console {
                 StartGui();
 
 
-            ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
-                if (v.CompareTo(new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion)) >= 0)
-                    Log.Information("Newer version available: {v}", v);
-
+            ServiceLocator.Current.UpdateService.GotLatestVersion += async (s, v) => {
+                var cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
+                Log.Debug("Got new version info. Current: {cur}, Available: {v}", cur, v);
+                if (v.CompareTo(cur) >= 0) {
+                    await ServiceLocator.Current.UpdateService.GetLatestRelease();
+                    Log.Information("A newer version ({v}) of winprint is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
+                }
             };
 
             await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync();
