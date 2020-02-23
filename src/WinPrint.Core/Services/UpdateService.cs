@@ -22,7 +22,7 @@ namespace WinPrint.Core.Services {
             using (var client = new WebClient()) {
                 try {
                     string contents =
-                        await client.DownloadStringTaskAsync("https://tig.github.io/winprint/version.txt").ConfigureAwait(true);
+                        await client.DownloadStringTaskAsync("https://tig.github.io/winprint/assets/version.txt").ConfigureAwait(true);
 
                     string[] parts = contents.Split('.');
 

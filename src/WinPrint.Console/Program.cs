@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
@@ -67,6 +68,13 @@ namespace WinPrint.Console {
             if (ModelLocator.Current.Options.Gui) 
                 // This will exit this app
                 StartGui();
+
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
+                if (v.CompareTo(new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion)) >= 0)
+                    Log.Information("Newer version available: {v}", v);
+
+            };
 
             try {
                 // --s
