@@ -28,18 +28,6 @@ namespace WinPrint.Core.Services {
             DownloadUri = "https://github.com/tig/winprint/releases";
             using (var client = new WebClient()) {
                 try {
-                    //string contents =
-                    //    await client.DownloadStringTaskAsync(versionUrl).ConfigureAwait(true);
-
-                    //string[] parts = contents.Split('.');
-
-                    //string version = string.Join(".", parts);
-
-                    //if (version != null)
-                    //    LatestStableVersion = new Version(version);
-                    //else
-                    //    ErrorMessage = "Could not parse version data.";
-
                     var github = new GitHubClient(new Octokit.ProductHeaderValue("tig-winprint"));
                     var release = await github.Repository.Release.GetLatest("tig", "winprint");
                     Log.Debug(
@@ -49,12 +37,14 @@ namespace WinPrint.Core.Services {
                         release.Assets[0].BrowserDownloadUrl);
 
                     var v = release.TagName;
-                    // Remove leading "v" (v2.0.0.1000)
+                    // Remove leading "v" (v2.0.0.1000.alpha)
                     if (v.StartsWith('v'))
                         v = v.Substring(1, v.Length - 1);
+
                     string[] parts = v.Split('.');
 
-                    string version = string.Join(".", parts);
+                    // Get 4 elements which excludes any .alpha or .beta
+                    string version = string.Join(".", parts, 0, 4);
 
                     if (version != null)
                         LatestStableVersion = new Version(version);
@@ -69,16 +59,6 @@ namespace WinPrint.Core.Services {
             }
 
             OnGotLatestVersion(LatestStableVersion);
-        }
-
-        public async Task GetLatestRelease() {
-            var client = new GitHubClient(new Octokit.ProductHeaderValue("tig-winprint"));
-            var release = await client.Repository.Release.GetLatest("tig", "winprint");
-            Log.Debug(
-                "The latest release is tagged at {t} and is named {n}. Download Url: {u}",
-                release.TagName,
-                release.Name,
-                release.Assets[0].BrowserDownloadUrl);
         }
     }
 }
