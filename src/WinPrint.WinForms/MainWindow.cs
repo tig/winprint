@@ -298,7 +298,7 @@ namespace WinPrint.Winforms {
             }
 
             ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
-                if (v != null && v.CompareTo(new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion)) >= 0) {
+                if (v != null && v.CompareTo(new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion)) > 0) {
                     Log.Information("Newer version available {v}", v);
                     BeginInvoke((Action)(() => {
                         var dlg = new UpdateDialog();

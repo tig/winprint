@@ -73,7 +73,7 @@ namespace WinPrint.Console {
             ServiceLocator.Current.UpdateService.GotLatestVersion += async (s, v) => {
                 var cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
                 Log.Debug("Got new version info. Current: {cur}, Available: {v}", cur, v);
-                if (v != null && v.CompareTo(cur) >= 0) {
+                if (v != null && v.CompareTo(cur) > 0) {
                     Log.Information("A newer version ({v}) of winprint is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
                 }
             };
