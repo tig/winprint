@@ -76,6 +76,8 @@ namespace WinPrint.Console {
 
             };
 
+            await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync();
+
             try {
                 // --s
                 string sheetID;
