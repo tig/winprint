@@ -290,6 +290,21 @@ namespace WinPrint.Winforms {
         private void MainWindow_Load(object sender, EventArgs e) {
             LogService.TraceMessage();
 
+            // Check for updates
+            LogService.TraceMessage("First reference to UpdateService");
+            if (ServiceLocator.Current.UpdateService == null) {
+                MessageBox.Show("WinPrint Update Service failed to load. See log file for details.");
+                return;
+            }
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
+                Version cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
+
+                if (cur.CompareTo(v) >= 0)
+                    Log.Information("Newer version available {v}", v);
+
+            };
+
             // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
             if (ModelLocator.Current.Settings == null) {
@@ -406,6 +421,10 @@ namespace WinPrint.Winforms {
             // as quickly as possible; making startup seem faster.
             //Task.Run(() => Start());
             Start();
+        }
+
+        private void UpdateService_GotLatestVersion(object sender, Version e) {
+            throw new NotImplementedException();
         }
 
         private void Start() {
