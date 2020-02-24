@@ -46,12 +46,13 @@ namespace WinPrint.Core.Services {
                     // Get 4 elements which excludes any .alpha or .beta
                     string version = string.Join(".", parts, 0, 4);
 
-                    if (version != null)
+                    if (version != null) {
                         LatestStableVersion = new Version(version);
+                        DownloadUri = release.Assets[0].BrowserDownloadUrl;
+                    }
                     else
                         ErrorMessage = "Could not parse version data.";
 
-                    DownloadUri = release.Assets[0].BrowserDownloadUrl;
                 }
                 catch (Exception e) {
                     ErrorMessage = $"({versionUrl}) {e.Message}";
