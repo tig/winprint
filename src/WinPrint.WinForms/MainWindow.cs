@@ -307,7 +307,7 @@ namespace WinPrint.Winforms {
                 }
             };
 
-            await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync();
+            await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync().ConfigureAwait(false);
 
             // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
