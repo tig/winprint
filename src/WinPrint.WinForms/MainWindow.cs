@@ -287,7 +287,7 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private async void MainWindow_Load(object sender, EventArgs e) {
+        private void MainWindow_Load(object sender, EventArgs e) {
             LogService.TraceMessage();
 
             // Check for updates
@@ -307,7 +307,7 @@ namespace WinPrint.Winforms {
                 }
             };
 
-            await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync().ConfigureAwait(false);
+            ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync().ConfigureAwait(false);
 
             // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
