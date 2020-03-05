@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using GalaSoft.MvvmLight;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Linq;
 
 namespace WinPrint.Core.Models {
     /// <summary>
@@ -58,30 +62,52 @@ namespace WinPrint.Core.Models {
         public string Text { get => text; set => SetField(ref text, value); }
 
         /// <summary>
+        /// Provides a telemetry-safe version of Text (a comma delmited list with only the macros used). See
+        /// HeaderFooterViewModel for more details on how macros are parsed. 
+        /// </summary>
+        [JsonIgnore]
+        [SafeForTelemetry]
+        public string MacrosUsed {
+            get {
+                var matches = Regex.Matches(Text, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+")
+                    .Cast<Match>()
+                    .Select(match => match.Value)
+                    .ToList();
+                return string.Join(", ", from macro in matches select macro); 
+            }
+        }
+
+        /// <summary>
         /// Font used for header or footer text
         /// </summary>
+        [SafeForTelemetry]
         public Font Font { get => font; set => SetField(ref font, value); }
 
         /// <summary>
         /// Enables or disables printing of left border of heder/footer
         /// </summary>
+        [SafeForTelemetry]
         public bool LeftBorder { get => leftBorder; set => SetField(ref leftBorder, value); }
         /// <summary>
         /// Enables or disables printing of Top border of heder/footer
         /// </summary>
+        [SafeForTelemetry]
         public bool TopBorder { get => topBorder; set => SetField(ref topBorder, value); }
         /// <summary>
         /// Enables or disables printing of Right border of heder/footer
         /// </summary>
+        [SafeForTelemetry]
         public bool RightBorder { get => rightBorder; set => SetField(ref rightBorder, value); }
         /// <summary>
         /// Enables or disables printing of Bottom border of heder/footer
         /// </summary>
+        [SafeForTelemetry]
         public bool BottomBorder { get => bottomBorder; set => SetField(ref bottomBorder, value); }
 
         /// <summary>
         /// Enable or disable header/footer
         /// </summary>
+        [SafeForTelemetry]
         public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
 
         public HeaderFooter() {

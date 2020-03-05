@@ -272,7 +272,7 @@ namespace WinPrint.Winforms {
             this.wikiLink.TabStop = true;
             this.wikiLink.Text = "Help && about...";
             this.wikiLink.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.wikiLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.wikiLink_LinkClicked);
+            this.wikiLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.helpaboutLink_LinkClicked);
             // 
             // settingsButton
             // 

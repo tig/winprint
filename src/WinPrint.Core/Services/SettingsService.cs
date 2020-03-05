@@ -55,17 +55,23 @@ namespace WinPrint.Core.Services {
                 Log.Debug("ReadSettings: Deserializing from {settingsFileName}", SettingsFileName);
                 settings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
+                ServiceLocator.Current.LogService.TrackEvent("Read Settings", properties: settings.GetTelemetryDictionary());
             }
             catch (FileNotFoundException) {
                 Log.Information("Settings file was not found; creating {settingsFileName} with defaults.", SettingsFileName);
                 settings = Settings.CreateDefaultSettings();
+
+                ServiceLocator.Current.LogService.TrackEvent("Create Default Settings", properties: settings.GetTelemetryDictionary());
+
                 SaveSettings(settings);
             }
             catch (JsonException je) {
+                ServiceLocator.Current.LogService.TrackException(je, false);
                 Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
             }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
+                ServiceLocator.Current.LogService.TrackException(ex, false);
                 Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
             }
             finally {
@@ -87,12 +93,18 @@ namespace WinPrint.Core.Services {
                     }
                     catch (FileNotFoundException fnfe) {
                         // TODO: Graceful error handling for .config file 
+                        ServiceLocator.Current.LogService.TrackException(fnfe, false);
+
                         Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
                     }
                     catch (JsonException je) {
+                        ServiceLocator.Current.LogService.TrackException(je, false);
+
                         Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
                     }
                     catch (Exception ex) {
+                        ServiceLocator.Current.LogService.TrackException(ex, false);
+
                         // TODO: Graceful error handling for .config file 
                         Log.Error(ex, "Exception reading {settingsFileName}", SettingsFileName);
                     }
@@ -110,6 +122,9 @@ namespace WinPrint.Core.Services {
         /// <param name="settings"></param>
         /// <param name="saveCTESettings">If true Content Type Engine settings will be saved. </param>
         public void SaveSettings(Models.Settings settings, bool saveCTESettings = true) {
+
+            ServiceLocator.Current.LogService.TrackEvent("Save Settings", properties: settings.GetTelemetryDictionary());
+
             string jsonString = JsonSerializer.Serialize(settings, jsonOptions); ;
 
             var writerOptions = new JsonWriterOptions { Indented = true };

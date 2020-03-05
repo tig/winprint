@@ -278,9 +278,11 @@ namespace WinPrint.Core.ContentTypeEngines {
                 sbHtml.AppendLine($"</table></code></pre>");
             }
             catch (Exception e) {
+                ServiceLocator.Current.LogService.TrackException(e, false);
+                Log.Error(e, "Failed to convert to html - {msg}", e.Message);
+
                 // TODO: Decide what to do here. a) Provide error and fail?
                 // b) render without syntax highlighting (call TextFileContent)? Tell the user why?
-                Log.Error(e, "Failed to convert to html");
                 sbHtml.AppendLine($"<p>Failed to convert to html. {e.Message}</p>");
             }
             finally {

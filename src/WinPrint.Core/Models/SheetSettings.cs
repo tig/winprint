@@ -35,37 +35,45 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Sheet name (e.g. "2up Landscape")
         /// </summary>
+        [SafeForTelemetry]
         public string Name { get => name; set => SetField(ref name, value); }
 
         /// <summary>
         /// Landscae or Portrait layout
         /// </summary>
+        [SafeForTelemetry]
         public bool Landscape { get => landscape; set => SetField(ref landscape, value); }
 
         /// <summary>
         /// Number of rows of pages per sheet
         /// </summary>
+        [SafeForTelemetry]
         public int Rows { get => rows; set => SetField(ref rows, value); }
         /// <summary>
         /// Number of columns of pages per sheet
         /// </summary>
+        [SafeForTelemetry]
         public int Columns { get => columns; set => SetField(ref columns, value); }
 
         /// <summary>
         /// Padding between rows and columns of pages on sheet in 100ths of an inch.
         /// </summary>
+        [SafeForTelemetry]
         public int Padding { get => padding; set => SetField(ref padding, value); }
 
+        [SafeForTelemetry]
         public bool PageSeparator { get => pageSeparator; set => SetField(ref pageSeparator, value); }
 
         /// <summary>
         /// Sheet margins in 100ths of an inch. Impacts headers, footers, and content. 
         /// </summary>
+        [SafeForTelemetry]
         public Margins Margins { get => margins; set => SetField(ref margins, value); }
 
         /// <summary>
         /// Font used for content. Will override any content font settings specified by a ContentType provider.
         /// </summary>
+        [SafeForTelemetry]
         public ContentSettings ContentSettings { 
             get {
                 //if (contentSettings is null)
@@ -77,11 +85,13 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Header printed at bottom  of each sheet
         /// </summary>
+        [SafeForTelemetry]
         public Header Header { get => header; set => SetField(ref header, value); }
 
         /// <summary>
         /// Footer printed at top of each sheet
         /// </summary>
+        [SafeForTelemetry]
         public Footer Footer { get => footer; set => SetField(ref footer, value); }
 
         // The following members are runtime-only and do NOT get persisted, hence "internal"

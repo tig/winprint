@@ -47,6 +47,10 @@ namespace WinPrint.Core {
             if (!string.IsNullOrEmpty(printerName)) {
                 try {
                     PrintDocument.PrinterSettings.PrinterName = printerName;
+                    ServiceLocator.Current.LogService.TrackEvent("Set Printer",
+                        properties: new Dictionary<string, string> {
+                                {"printerName", printerName }
+                        });
                 }
                 catch (NullReferenceException) {
                     // On Linux if an invalid printer name is passed in we get a 
@@ -80,6 +84,12 @@ namespace WinPrint.Core {
                     }
                     throw new Exception(sb.ToString());
                 }
+                else {
+                    ServiceLocator.Current.LogService.TrackEvent("Set Paper Size", 
+                        properties: new Dictionary<string, string> {
+                                {"paperSizeName", paperSizeName } 
+                        });
+                }
             }
         }
 
@@ -87,10 +97,23 @@ namespace WinPrint.Core {
             // BUGBUG: Ignores from/to
             await SheetViewModel.SetPrinterPageSettingsAsync(PrintDocument.DefaultPageSettings);
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
+
+            ServiceLocator.Current.LogService.TrackEvent("Count Sheets",
+                properties: new Dictionary<string, string> {
+                                {"type", SheetViewModel.Type },
+                                {"printer", PrintDocument.PrinterSettings.PrinterName },
+                                {"fromSheet", fromSheet.ToString() },
+                                {"toSheet", toSheet.ToString() },
+                },
+                metrics: new Dictionary<string, double> {
+                    {"sheetsPrinted", SheetViewModel.NumSheets}
+                });
             return SheetViewModel.NumSheets;
         }
 
         public async Task<int> DoPrint() {
+
+
             PrintDocument.DocumentName = SheetViewModel.File;
             await SheetViewModel.SetPrinterPageSettingsAsync(PrintDocument.DefaultPageSettings);
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
@@ -100,6 +123,18 @@ namespace WinPrint.Core {
 
             curSheet = PrintDocument.PrinterSettings.FromPage;
             PrintDocument.Print();
+
+            ServiceLocator.Current.LogService.TrackEvent("Print",
+                properties: new Dictionary<string, string> {
+                    {"type", SheetViewModel.Type },
+                    {"printer", PrintDocument.PrinterSettings.PrinterName },
+                    {"fromSheet", PrintDocument.PrinterSettings.FromPage.ToString() },
+                    {"toSheet", PrintDocument.PrinterSettings.ToPage.ToString() },
+                },
+                metrics: new Dictionary<string, double> {
+                    {"sheetsPrinted", sheetsPrinted}
+                });
+
             return sheetsPrinted;
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]

@@ -7,10 +7,13 @@ namespace WinPrint.Core.Models {
 
     public class Langauge {
         [JsonPropertyName("id")]
+        [SafeForTelemetry]
         public string Id { get; set; }
         [JsonPropertyName("extensions")]
+        [SafeForTelemetry]
         public IList<string> Extensions { get; set; }
         [JsonPropertyName("aliases")]
+        [SafeForTelemetry]
         public IList<string> Aliases { get; set; }
 
         public override int GetHashCode() {

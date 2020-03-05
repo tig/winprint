@@ -8,6 +8,11 @@ using System.Text.Json;
 using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
+
+    [System.AttributeUsage(System.AttributeTargets.Property)]
+    public class SafeForTelemetry : System.Attribute {
+    }
+
     public abstract class ModelBase : INotifyPropertyChanged {
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
@@ -23,6 +28,31 @@ namespace WinPrint.Core.Models {
         public override string ToString() {
             return JsonSerializer.Serialize(this, this.GetType());
             //return base.ToString();
+        }
+
+        /// <summary>
+        /// Returns a dictionary containing all of the properites of the object that
+        /// are safe to track via telemetry. Use the [SafeForTelemetry] attribute on any
+        /// property of a class drived from ModelBase to enable emitting to telemetry.
+        /// </summary>
+        /// <returns>A dictionary with the properties and values (as strings). Suitable for calling TrackEvent().</returns>
+        public virtual IDictionary<string, string> GetTelemetryDictionary() {
+            var dictionary = new Dictionary<string, string>(); 
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(this)) {
+                if (property.Attributes.Contains(new SafeForTelemetry())) {
+                    object value = property.GetValue(this);
+                    if (value != null) {
+                        if (property.PropertyType.IsSubclassOf(typeof(ModelBase))) {
+                            // Go deep
+                            var propDict = ((ModelBase)value).GetTelemetryDictionary();
+                            dictionary.Add(property.Name, JsonSerializer.Serialize(propDict, propDict.GetType()));
+                        }
+                        else
+                            dictionary.Add(property.Name, JsonSerializer.Serialize(value, value.GetType()));
+                    }
+                }
+            }
+            return dictionary;
         }
 
         /// <summary>
@@ -63,7 +93,7 @@ namespace WinPrint.Core.Models {
                         destProp.SetValue(this, sourceProp.GetValue(source, null), null);
                 }
                 else {
-                    Dictionary<string,SheetSettings> sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue(source);
+                    Dictionary<string, SheetSettings> sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue(source);
                     Dictionary<string, SheetSettings> destList = (Dictionary<string, SheetSettings>)destProp.GetValue(this);
                     foreach (var src in sourceList) {
                         if (destList.ContainsKey(src.Key))

@@ -57,21 +57,25 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Window location
         /// </summary>
+        [SafeForTelemetry]
         public WindowLocation Location { get => location; set => SetField(ref location, value); }
         private WindowLocation location;
 
         /// <summary>
         /// Window size
         /// </summary>
+        [SafeForTelemetry]
         public WindowSize Size { get => size; set => SetField(ref size, value); }
         private WindowSize size;
 
+        [SafeForTelemetry]
         public FormWindowState WindowState { get => windowState; set => SetField(ref windowState, value); }
         private FormWindowState windowState;
 
         /// <summary>
         /// Default sheet (guid)
         /// </summary>
+        [SafeForTelemetry]
         public Guid DefaultSheet { get => defaultSheet; set => SetField(ref defaultSheet, value); }
         private Guid defaultSheet;
 
@@ -79,6 +83,10 @@ namespace WinPrint.Core.Models {
         /// Sheet definitons
         /// </summary>
         public Dictionary<string, SheetSettings> Sheets { get; set; }
+
+        [JsonIgnore]
+        [SafeForTelemetry]
+        public int NumSheets { get => Sheets.Count; }
 
         /// <summary>
         /// Content type handlers
@@ -90,6 +98,13 @@ namespace WinPrint.Core.Models {
 
         public FileAssociations LanguageAssociations { get; set; }
 
+        [JsonIgnore]
+        [SafeForTelemetry]
+        public int NumFilesAssociations { get => LanguageAssociations.FilesAssociations.Count; }
+        [JsonIgnore]
+        [SafeForTelemetry]
+        public int NumLanguages { get => LanguageAssociations.Languages.Count; }
+
         /// <summary>
         /// Diagnostic settings
         /// </summary>
@@ -97,6 +112,7 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font used for diagnostic rules
         /// </summary>
+        [SafeForTelemetry]
         public Font DiagnosticRulesFont { get => diagnosticRulesFont; set => SetField(ref diagnosticRulesFont, value); }
 
         private Font diagnosticRulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
@@ -116,21 +132,37 @@ namespace WinPrint.Core.Models {
         private bool previewHeaderFooterBounds = false;
         private bool printPageBounds = false;
         private bool previewPageBounds = false;
+        [SafeForTelemetry]
         public bool PreviewPrintableArea { get => previewPrintableArea; set => SetField(ref previewPrintableArea, value); }
+        [SafeForTelemetry]
         public bool PrintPrintableArea { get => printPrintableArea; set => SetField(ref printPrintableArea, value); }
+        [SafeForTelemetry]
         public bool PreviewPaperSize { get => previewPageSize; set => SetField(ref previewPageSize, value); }
+        [SafeForTelemetry]
         public bool PrintPaperSize { get => printPageSize; set => SetField(ref printPageSize, value); }
+        [SafeForTelemetry]
         public bool PreviewMargins { get => previewMargins; set => SetField(ref previewMargins, value); }
+        [SafeForTelemetry]
         public bool PrintMargins { get => printMargins; set => SetField(ref printMargins, value); }
+        [SafeForTelemetry]
         public bool PreviewHardMargins { get => previewHardMargins; set => SetField(ref previewHardMargins, value); }
+        [SafeForTelemetry]
         public bool PrintHardMargins { get => printHardMargins; set => SetField(ref printHardMargins, value); }
+        [SafeForTelemetry]
         public bool PrintBounds { get => printBounds; set => SetField(ref printBounds, value); }
+        [SafeForTelemetry]
         public bool PreviewBounds { get => previewBounds; set => SetField(ref previewBounds, value); }
+        [SafeForTelemetry]
         public bool PrintContentBounds { get => printContentBounds; set => SetField(ref printContentBounds, value); }
+        [SafeForTelemetry]
         public bool PreviewContentBounds { get => previewContentBounds; set => SetField(ref previewContentBounds, value); }
+        [SafeForTelemetry]
         public bool PrintHeaderFooterBounds { get => printHeaderFooterBounds; set => SetField(ref printHeaderFooterBounds, value); }
+        [SafeForTelemetry]
         public bool PreviewHeaderFooterBounds { get => previewHeaderFooterBounds; set => SetField(ref previewHeaderFooterBounds, value); }
+        [SafeForTelemetry]
         public bool PreviewPageBounds { get => previewPageBounds; set => SetField(ref previewPageBounds, value); }
+        [SafeForTelemetry]
         public bool PrintPageBounds { get => printPageBounds; set => SetField(ref printPageBounds, value); }
 
         public Settings() {

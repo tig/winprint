@@ -21,6 +21,7 @@ namespace WinPrint.WinForms {
                 proc = Process.Start(psi);
             }
             catch (Exception e) {
+                ServiceLocator.Current.LogService.TrackException(e, false);
                 // TODO: Better error message (output of stderr?)
                 Log.Error(e, "Couldn't browse to {url}.", url);
             }

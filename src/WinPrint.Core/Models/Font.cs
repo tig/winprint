@@ -15,6 +15,7 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font name or font family name (e.g. "Courier New" or "monospace"
         /// </summary>
+        [SafeForTelemetry]
         public string Family {
             get {
                 return family;
@@ -29,6 +30,7 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font style (Regular, Bold, Italic, Underline, Strikeout)
         /// </summary>
+        [SafeForTelemetry]
         public FontStyle Style { get => style; set {
                 if (!Enum.IsDefined(typeof(FontStyle), value))
                     value = FontStyle.Bold | FontStyle.Italic;
@@ -41,6 +43,7 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Font size in points.
         /// </summary>
+        [SafeForTelemetry]
         public float Size {
             get => size;
             set { size = value;

@@ -204,6 +204,10 @@ namespace WinPrint.Core {
         /// <param name="newSheet">new Sheet defintiion to use</param>
         public void SetSheet(SheetSettings newSheet) {
             LogService.TraceMessage($"{newSheet.Name}");
+            // TODO: Add font info 
+            // TODO: Add header footer details (borders etc...). 
+            ServiceLocator.Current.LogService.TrackEvent("Set Sheet Settings", properties: newSheet.GetTelemetryDictionary());
+
             if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
             if (this.sheet != null)
                 sheet.PropertyChanged -= OnSheetPropertyChanged();

@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.0.2022</Version>
+    <Version>2.0.0.2160</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -12,6 +12,8 @@
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+    <UserSecretsId>265ea952-ae17-47b7-8c8e-2b0bc65a5130</UserSecretsId>
+
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -31,7 +33,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Services\TelemetryService.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TelemetryService.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.7.82" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.2" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="MSBump" Version="2.3.2">
@@ -39,13 +50,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
-    <PackageReference Include="Octokit" Version="0.40.0" />
+    <PackageReference Include="Octokit" Version="0.43.0" />
     <PackageReference Include="Serilog" Version="2.9.1-dev-01154" />
+    <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0-dev-00839" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.2-dev-00020" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00864" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.20" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.21" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,6 +70,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="Services\TelemetryService.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TelemetryService.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -66,6 +83,17 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Services\TelemetryService.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TelemetryService.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

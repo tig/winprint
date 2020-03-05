@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;
@@ -20,6 +17,9 @@ namespace WinPrint.Winforms {
         static void Main(string[] args) {
             ServiceLocator.Current.LogService.Start(SettingsService.SettingsPath);
 
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
             //var settings = new CefSettings();
             //settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";
             //Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);
@@ -36,6 +36,7 @@ namespace WinPrint.Winforms {
                         else {
                             ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
                         }
+                        ServiceLocator.Current.LogService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
                         Log.Information("Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
                         ModelLocator.Current.Options.CopyPropertiesFrom(o);
                     })
@@ -62,6 +63,15 @@ namespace WinPrint.Winforms {
             }, e => e);
             MessageBox.Show(helpText);
             Environment.Exit(0);
+        }
+
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {
+            ServiceLocator.Current.LogService.TrackException(e.Exception);
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            var ex = e.ExceptionObject as Exception;
+            ServiceLocator.Current.LogService.TrackException(ex);
         }
     }
 }

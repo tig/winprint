@@ -45,7 +45,8 @@ namespace WinPrint.Core.Services {
             }
             catch (Exception e) {
                 // TODO: Better error message (output of stderr?)
-                Log.Error(e, "Failed to find node.js using where.exe.");
+                ServiceLocator.Current.LogService.TrackException(e, false);
+                Log.Error(e, "Failed to find node.js using where.exe - {msg}", e.Message);
             }
             finally {
                 proc?.Dispose();
@@ -119,6 +120,7 @@ namespace WinPrint.Core.Services {
             }
             catch (Exception e) {
                 Log.Debug(e, "File: {file}, Args: {args}", psi.FileName, psi.Arguments);
+                ServiceLocator.Current.LogService.TrackException(e);
                 // Node not installed. 
                 // TODO: Install node
             }
@@ -209,6 +211,8 @@ namespace WinPrint.Core.Services {
             }
             catch (Exception e) {
                 LogService.TraceMessage(e.Message);
+                ServiceLocator.Current.LogService.TrackException(e);
+
                 // Node not installed. 
                 // TODO: Install node
                 nodeProc?.Dispose();

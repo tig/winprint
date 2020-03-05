@@ -23,7 +23,11 @@ namespace WinPrint.Console {
         private static ParserResult<Options> result;
 
         static void Main(string[] args) {
+            ServiceLocator.Current.LogService.TelemetryEnabled = true;
             ServiceLocator.Current.LogService.Start(SettingsService.SettingsPath);
+
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             // Parse command line
             using var parser = new Parser(with => {
@@ -32,24 +36,34 @@ namespace WinPrint.Console {
             });
             result = parser.ParseArguments<Options>(args);
             result.WithParsed(o => {
-                    ModelLocator.Current.Options.CopyPropertiesFrom(o);
+                ServiceLocator.Current.LogService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
+                ModelLocator.Current.Options.CopyPropertiesFrom(o);
 
-                    if (o.Debug) {
-                        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                        ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                    }
-                    else {
-                        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
-                    }
-                    Log.Debug("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
-                    if (o.Verbose) Log.Information("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
-                    var program = new Program();
-                    Task.WaitAll(program.Go());
-                })
-                .WithNotParsed((errs) => DisplayHelp(result, errs));
+                if (o.Debug) {
+                    ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+                    ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+                }
+                else {
+                    ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
+                }
+                Log.Debug("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
+                if (o.Verbose) Log.Information("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
+                var program = new Program();
+                Task.WaitAll(program.Go());
+            })
+            .WithNotParsed((errs) => DisplayHelp(result, errs));
 
             Log.Debug($"Exiting Main - This should never happen.");
             Environment.Exit(-1);
+        }
+
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {
+            ServiceLocator.Current.LogService.TrackException(e.Exception);
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            var ex = e.ExceptionObject as Exception;
+            ServiceLocator.Current.LogService.TrackException(ex);
         }
 
         private async Task Go() {
@@ -139,6 +153,7 @@ namespace WinPrint.Console {
             }
             catch (Exception e) {
                 LogException(e);
+
                 // TODO: Should we show usage info on error? 
                 //var helpText = HelpText.AutoBuild(result, h => {
                 //    h.AutoHelp = true;
@@ -150,6 +165,8 @@ namespace WinPrint.Console {
                 //    Log.Information(line);
             }
             finally {
+                ServiceLocator.Current.LogService.Stop();
+
                 if (ModelLocator.Current.Options.Verbose) 
                     Log.Information($"Exiting with exit code {exitCode}.");
                 Log.Debug($"Environment.Exit({exitCode})");
@@ -158,6 +175,8 @@ namespace WinPrint.Console {
         }
 
         private static void LogException(Exception e) {
+            ServiceLocator.Current.LogService.TrackException(e, false);
+
             if (ModelLocator.Current.Options.Debug)
                 Log.Error(e, "{msg}", e.Message);
             else
@@ -206,6 +225,7 @@ namespace WinPrint.Console {
             if (ModelLocator.Current.Options.Verbose)
                 Log.Information("Starting WinPrint GUI App");
 
+            int exitCode = 0;
             Process gui = null;
             var psi = new ProcessStartInfo();
             try {
@@ -215,15 +235,24 @@ namespace WinPrint.Console {
                 psi.FileName = @"winprintgui.exe";
                 psi.Arguments = Parser.Default.FormatCommandLine(ModelLocator.Current.Options);
                 gui = Process.Start(psi);
+                exitCode = gui.ExitCode;
                 Log.Debug("{file} started", psi.FileName);
             }
             catch (Exception e) {
+                ServiceLocator.Current.LogService.TrackException(e, false);
+
                 Log.Error(e, "Could not start WinPrint GUI App ({app})", psi.FileName);
-                Environment.Exit(-1);
+                if (gui != null)
+                    exitCode = gui.ExitCode;
+                else
+                    exitCode = -1;
             }
             finally {
                 gui?.Dispose();
-                Environment.Exit(0);
+
+                ServiceLocator.Current.LogService.Stop();
+
+                Environment.Exit(exitCode);
             }
         }
 
