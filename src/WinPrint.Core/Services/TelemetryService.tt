@@ -5,7 +5,7 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Diagnostics" #>
-<#@ output extension=".cs" #>
+<#@ output extension=".tt.cs" #>
 <#
     string id = System.Environment.GetEnvironmentVariable("winprint_telemetryId");
     if (id == null)

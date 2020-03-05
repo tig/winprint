@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.0.2160</Version>
+    <Version>2.0.0.2166</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -30,14 +30,6 @@
     <EmbeddedResource Include="Resources\prism-winprint-overrides.css">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Services\TelemetryService.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TelemetryService.tt</DependentUpon>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -75,6 +67,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>TelemetryService.tt</DependentUpon>
     </Compile>
+    <Compile Update="Services\TelemetryService.tt.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TelemetryService.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -88,7 +85,7 @@
   <ItemGroup>
     <None Update="Services\TelemetryService.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TelemetryService.cs</LastGenOutput>
+      <LastGenOutput>TelemetryService.tt.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

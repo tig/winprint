@@ -336,6 +336,9 @@ ASALocalRun/
 # temporary files WinPrint creates for debugging
 tests/*_.html
 
+# T4 generated files (for telemety ID)
+*.tt.cs
+
 #Wix 
 *.g.wxs
 install/
