@@ -15,7 +15,7 @@ namespace WinPrint.Winforms {
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
-            ServiceLocator.Current.LogService.Start(SettingsService.SettingsPath);
+            ServiceLocator.Current.LogService.Start();
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;

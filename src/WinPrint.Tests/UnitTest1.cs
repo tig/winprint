@@ -273,7 +273,7 @@ namespace WinPrint.Tests {
 
             settingsService.SaveSettings(settings);
 
-            Core.Models.Settings settingsCopy = settingsService.ReadSettkngs();
+            Core.Models.Settings settingsCopy = settingsService.ReadSettings();
 
             Assert.IsNotNull(settingsCopy);
 

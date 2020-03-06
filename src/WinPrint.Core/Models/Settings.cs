@@ -165,6 +165,9 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public bool PrintPageBounds { get => printPageBounds; set => SetField(ref printPageBounds, value); }
 
+        [SafeForTelemetry]
+        public bool TelemetryEnabled { get; set; }
+
         public Settings() {
 
         }
@@ -194,6 +197,8 @@ namespace WinPrint.Core.Models {
             string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
             var settings = new Settings();
+            settings.TelemetryEnabled = true;
+
             //settings.size = new WindowSize(1024, 800);
             //settings.location = new WindowLocation(100, 100);
 

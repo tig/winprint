@@ -43,7 +43,7 @@ namespace WinPrint.Core.Services {
         /// If file does not exist, it is created.
         /// </summary>
         /// <returns></returns>
-        public Settings ReadSettkngs() {
+        public Settings ReadSettings() {
             Settings settings = null;
             string jsonString;
             FileStream fs = null;
@@ -157,7 +157,7 @@ namespace WinPrint.Core.Services {
         // Factory - creates 
         static public Settings Create() {
             LogService.TraceMessage();
-            var settingsService = ServiceLocator.Current.SettingsService.ReadSettkngs();
+            var settingsService = ServiceLocator.Current.SettingsService.ReadSettings();
             return settingsService;
         }
 

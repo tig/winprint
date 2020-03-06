@@ -23,8 +23,7 @@ namespace WinPrint.Console {
         private static ParserResult<Options> result;
 
         static void Main(string[] args) {
-            ServiceLocator.Current.LogService.TelemetryEnabled = true;
-            ServiceLocator.Current.LogService.Start(SettingsService.SettingsPath);
+            ServiceLocator.Current.LogService.Start();
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;

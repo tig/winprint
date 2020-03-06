@@ -40,7 +40,7 @@ namespace WinPrint.Core.Services {
 
         private Stopwatch runtime;
 
-        public void Start(string path) {
+        public void Start() {
             runtime = System.Diagnostics.Stopwatch.StartNew();
 
             MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
@@ -52,10 +52,13 @@ namespace WinPrint.Core.Services {
 #else
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
-#endif 
+#endif
+
+            // TODO: Move ReadSettings outside of LogService. Do it in a way that allows settings logic to be logged and telemetry to work.
+            ServiceLocator.Current.LogService.TelemetryEnabled = ServiceLocator.Current.SettingsService.ReadSettings().TelemetryEnabled;
 
             string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
-            LogPath = $"{path}logs{Path.DirectorySeparatorChar}{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
+            LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
 
             // Setup telemetry via Azure Application Insights.
             var config = TelemetryConfiguration.CreateDefault();
@@ -70,6 +73,8 @@ namespace WinPrint.Core.Services {
 #else
             config.TelemetryChannel.DeveloperMode = Debugger.IsAttached;
 #endif
+
+
 
             telemetry = new TelemetryClient(config);
             telemetry.Context.Component.Version = productVersion;
@@ -127,7 +132,7 @@ namespace WinPrint.Core.Services {
         }
 
         public void TrackEvent(string key, IDictionary<string, string> properties = null, IDictionary<string, double> metrics = null) {
-            if (TelemetryEnabled) {
+            if (TelemetryEnabled && telemetry != null) {
                 telemetry.TrackEvent(key, properties, metrics);
             }
         }
@@ -136,14 +141,15 @@ namespace WinPrint.Core.Services {
             if (ex != null && log is true)
                 Log.Error(ex, "{msg}", ex.Message);
 
-            if (ex != null && TelemetryEnabled) {
+            if (telemetry != null && ex != null && TelemetryEnabled) {
                 var telex = new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry(ex);
                 telemetry.TrackException(telex);
                 Flush();
             }
         }
         internal void Flush() {
-            telemetry.Flush();
+            if (telemetry != null)
+                telemetry.Flush();
         }
 
         public LogService() {
