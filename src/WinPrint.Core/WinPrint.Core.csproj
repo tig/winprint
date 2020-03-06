@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.0.2175</Version>
+    <Version>2.0.0.2179</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -12,8 +12,7 @@
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-    <UserSecretsId>265ea952-ae17-47b7-8c8e-2b0bc65a5130</UserSecretsId>
-
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
