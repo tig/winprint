@@ -14,13 +14,10 @@ namespace WinPrint.Core {
         // The WinPrint "document"
         private readonly SheetViewModel svm = new SheetViewModel();
         public SheetViewModel SheetViewModel => svm;
-
         // The Windows printer document
         private readonly PrintDocument printDoc = new PrintDocument();
         public PrintDocument PrintDocument => printDoc;
-
         private int curSheet = 0;
-
         private int sheetsPrinted = 0;
 
         public Print() {
@@ -47,10 +44,8 @@ namespace WinPrint.Core {
             if (!string.IsNullOrEmpty(printerName)) {
                 try {
                     PrintDocument.PrinterSettings.PrinterName = printerName;
-                    ServiceLocator.Current.LogService.TrackEvent("Set Printer",
-                        properties: new Dictionary<string, string> {
-                                {"printerName", printerName }
-                        });
+                    ServiceLocator.Current.TelemetryService.TrackEvent("Set Printer",
+                        properties: new Dictionary<string, string> {["printerName"] = printerName});
                 }
                 catch (NullReferenceException) {
                     // On Linux if an invalid printer name is passed in we get a 
@@ -84,12 +79,9 @@ namespace WinPrint.Core {
                     }
                     throw new Exception(sb.ToString());
                 }
-                else {
-                    ServiceLocator.Current.LogService.TrackEvent("Set Paper Size", 
-                        properties: new Dictionary<string, string> {
-                                {"paperSizeName", paperSizeName } 
-                        });
-                }
+                else 
+                    ServiceLocator.Current.TelemetryService.TrackEvent("Set Paper Size", 
+                        properties: new Dictionary<string, string> {["paperSizeName"] = paperSizeName});
             }
         }
 
@@ -98,22 +90,18 @@ namespace WinPrint.Core {
             await SheetViewModel.SetPrinterPageSettingsAsync(PrintDocument.DefaultPageSettings);
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
-            ServiceLocator.Current.LogService.TrackEvent("Count Sheets",
+            ServiceLocator.Current.TelemetryService.TrackEvent("Count Sheets",
                 properties: new Dictionary<string, string> {
-                                {"type", SheetViewModel.Type },
-                                {"printer", PrintDocument.PrinterSettings.PrinterName },
-                                {"fromSheet", fromSheet.ToString() },
-                                {"toSheet", toSheet.ToString() },
+                    ["type"]= SheetViewModel.Type, 
+                    ["printer"] = PrintDocument.PrinterSettings.PrinterName,
+                    ["fromSheet"] = fromSheet.ToString(),
+                    ["toSheet"] = toSheet.ToString(),
                 },
-                metrics: new Dictionary<string, double> {
-                    {"sheetsPrinted", SheetViewModel.NumSheets}
-                });
+                metrics: new Dictionary<string, double> {["sheetsPrinted"] = SheetViewModel.NumSheets});
             return SheetViewModel.NumSheets;
         }
 
         public async Task<int> DoPrint() {
-
-
             PrintDocument.DocumentName = SheetViewModel.File;
             await SheetViewModel.SetPrinterPageSettingsAsync(PrintDocument.DefaultPageSettings);
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
@@ -124,16 +112,14 @@ namespace WinPrint.Core {
             curSheet = PrintDocument.PrinterSettings.FromPage;
             PrintDocument.Print();
 
-            ServiceLocator.Current.LogService.TrackEvent("Print",
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Complete",
                 properties: new Dictionary<string, string> {
-                    {"type", SheetViewModel.Type },
-                    {"printer", PrintDocument.PrinterSettings.PrinterName },
-                    {"fromSheet", PrintDocument.PrinterSettings.FromPage.ToString() },
-                    {"toSheet", PrintDocument.PrinterSettings.ToPage.ToString() },
+                    ["type"] = SheetViewModel.Type,
+                    ["printer"] = PrintDocument.PrinterSettings.PrinterName,
+                    ["fromSheet"] = PrintDocument.PrinterSettings.FromPage.ToString(),
+                    ["toSheet"] = PrintDocument.PrinterSettings.ToPage.ToString(),
                 },
-                metrics: new Dictionary<string, double> {
-                    {"sheetsPrinted", sheetsPrinted}
-                });
+                metrics: new Dictionary<string, double> { ["sheetsPrinted"] = sheetsPrinted });
 
             return sheetsPrinted;
         }

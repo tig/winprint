@@ -22,11 +22,8 @@ namespace WinPrint.Core.Services {
         private FileWatcher watcher;
 
         public SettingsService() {
-            LogService.TraceMessage();
-
             SettingsFileName = $"{SettingsPath}{Path.DirectorySeparatorChar}{SettingsFileName}";
             Log.Debug("Settings file path: {settingsFileName}", SettingsFileName);
-
 
             jsonOptions = new JsonSerializerOptions {
                 WriteIndented = true,
@@ -55,23 +52,23 @@ namespace WinPrint.Core.Services {
                 Log.Debug("ReadSettings: Deserializing from {settingsFileName}", SettingsFileName);
                 settings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
-                ServiceLocator.Current.LogService.TrackEvent("Read Settings", properties: settings.GetTelemetryDictionary());
+                ServiceLocator.Current.TelemetryService.TrackEvent("Read Settings", properties: settings.GetTelemetryDictionary());
             }
             catch (FileNotFoundException) {
                 Log.Information("Settings file was not found; creating {settingsFileName} with defaults.", SettingsFileName);
                 settings = Settings.CreateDefaultSettings();
 
-                ServiceLocator.Current.LogService.TrackEvent("Create Default Settings", properties: settings.GetTelemetryDictionary());
+                ServiceLocator.Current.TelemetryService.TrackEvent("Create Default Settings", properties: settings.GetTelemetryDictionary());
 
                 SaveSettings(settings);
             }
             catch (JsonException je) {
-                ServiceLocator.Current.LogService.TrackException(je, false);
+                ServiceLocator.Current.TelemetryService.TrackException(je, false);
                 Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
             }
             catch (Exception ex) {
                 // TODO: Graceful error handling for .config file 
-                ServiceLocator.Current.LogService.TrackException(ex, false);
+                ServiceLocator.Current.TelemetryService.TrackException(ex, false);
                 Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
             }
             finally {
@@ -80,39 +77,49 @@ namespace WinPrint.Core.Services {
 
             // Enable file watcher
             if (settings != null) {
+                // Disable file watcher if it's active
+                if (watcher != null) {
+                    watcher.ChangedEvent -= Watcher_ChangedEvent;
+                    watcher.Dispose();
+                    watcher = null;
+                }
+
                 // watch .command file for changes
                 watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
-                watcher.ChangedEvent += (o, a) => {
-                    Log.Debug("Settings file changed: {file}", SettingsFileName);
-                    try {
-                        jsonString = File.ReadAllText(SettingsFileName);
-                        Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
-
-                        // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
-                        ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
-                    }
-                    catch (FileNotFoundException fnfe) {
-                        // TODO: Graceful error handling for .config file 
-                        ServiceLocator.Current.LogService.TrackException(fnfe, false);
-
-                        Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
-                    }
-                    catch (JsonException je) {
-                        ServiceLocator.Current.LogService.TrackException(je, false);
-
-                        Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
-                    }
-                    catch (Exception ex) {
-                        ServiceLocator.Current.LogService.TrackException(ex, false);
-
-                        // TODO: Graceful error handling for .config file 
-                        Log.Error(ex, "Exception reading {settingsFileName}", SettingsFileName);
-                    }
-                    Log.Debug("Settings file changed: Done.");
-                };
+                watcher.ChangedEvent += Watcher_ChangedEvent;
             }
 
             return settings;
+        }
+
+        private void Watcher_ChangedEvent(object sender, EventArgs e) {
+            Log.Debug("Settings file changed: {file}", SettingsFileName);
+            ServiceLocator.Current.TelemetryService.TrackEvent("Settings File Changed");
+
+            try {
+                var jsonString = File.ReadAllText(SettingsFileName);
+                Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
+
+                // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
+                ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
+            }
+            catch (FileNotFoundException fnfe) {
+                // TODO: Graceful error handling for .config file 
+                ServiceLocator.Current.TelemetryService.TrackException(fnfe, false);
+
+                Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
+            }
+            catch (JsonException je) {
+                ServiceLocator.Current.TelemetryService.TrackException(je, false);
+
+                Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
+            }
+            catch (Exception ex) {
+                ServiceLocator.Current.TelemetryService.TrackException(ex, false);
+
+                // TODO: Graceful error handling for .config file 
+                Log.Error(ex, "Exception reading {settingsFileName}", SettingsFileName);
+            }
         }
 
         /// <summary>
@@ -121,36 +128,35 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <param name="settings"></param>
         /// <param name="saveCTESettings">If true Content Type Engine settings will be saved. </param>
-        public void SaveSettings(Models.Settings settings, bool saveCTESettings = true) {
+        /// <param name="watchChanges">If true the file change watcher will be activated </param>
+        public void SaveSettings(Models.Settings settings, bool saveCTESettings = true, bool watchChanges = false) {
+            ServiceLocator.Current.TelemetryService.TrackEvent("Save Settings", properties: settings.GetTelemetryDictionary());
+            using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(settings, jsonOptions), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip });
 
-            ServiceLocator.Current.LogService.TrackEvent("Save Settings", properties: settings.GetTelemetryDictionary());
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                return;
 
-            string jsonString = JsonSerializer.Serialize(settings, jsonOptions); ;
+            // Disable file watcher
+            if (watcher != null) {
+                watcher.ChangedEvent -= Watcher_ChangedEvent;
+                watcher.Dispose();
+                watcher = null;
+            }
 
-            var writerOptions = new JsonWriterOptions { Indented = true };
-            var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
+            using FileStream fs = File.Create(SettingsFileName);
+            using var writer = new Utf8JsonWriter(fs, options: new JsonWriterOptions { Indented = true });
+            writer.WriteStartObject();
+            foreach (JsonProperty property in document.RootElement.EnumerateObject()) 
+                if (saveCTESettings || !property.Name.ToLowerInvariant().Contains("contenttypeengine"))
+                    property.WriteTo(writer);
+            
+            writer.WriteEndObject();
+            writer.Flush();
 
-            // Use the name of the test file as the Document.File property
-            using (FileStream fs = File.Create(SettingsFileName))
-
-            using (var writer = new Utf8JsonWriter(fs, options: writerOptions))
-            using (JsonDocument document = JsonDocument.Parse(jsonString, documentOptions)) {
-                JsonElement root = document.RootElement;
-
-                if (root.ValueKind == JsonValueKind.Object) {
-                    writer.WriteStartObject();
-                }
-                else {
-                    return;
-                }
-
-                foreach (JsonProperty property in root.EnumerateObject()) {
-                    if (saveCTESettings || !property.Name.ToLowerInvariant().Contains("contenttypeengine"))
-                        property.WriteTo(writer);
-                }
-
-                writer.WriteEndObject();
-                writer.Flush();
+            if (watchChanges) {
+                // watch .command file for changes
+                watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
+                watcher.ChangedEvent += Watcher_ChangedEvent;
             }
         }
 

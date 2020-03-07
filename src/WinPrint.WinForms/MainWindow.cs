@@ -326,7 +326,7 @@ namespace WinPrint.Winforms {
                     //printPreview.Invalidate(true);
                     Log.Debug("-------- F5 ---------");
 
-                    ServiceLocator.Current.LogService.TrackEvent("Refresh");
+                    ServiceLocator.Current.TelemetryService.TrackEvent("Refresh");
 
                     // TODO: Refactor threading
                     Task.Run(() => Start());
@@ -492,7 +492,7 @@ namespace WinPrint.Winforms {
                         //fileButton_Click(null, null);
                     }
                     catch (InvalidOperationException ioe) {
-                        ServiceLocator.Current.LogService.TrackException(ioe, false);
+                        ServiceLocator.Current.TelemetryService.TrackException(ioe, false);
                         Log.Error(ioe, "Error Operation {file}", activeFile);
                         ShowError($"{stage}: {ioe.Message}{Environment.NewLine}({activeFile})");
                         //                fileButton_Click(null, null);
@@ -500,7 +500,7 @@ namespace WinPrint.Winforms {
 #pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
-                        ServiceLocator.Current.LogService.TrackException(e, false);
+                        ServiceLocator.Current.TelemetryService.TrackException(e, false);
                         Log.Error(e, "Exception {file}", activeFile);
                         ShowError($"{stage}: Exception: {e.Message}{Environment.NewLine}({activeFile})");
                     }
@@ -526,7 +526,7 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => ShowFilesDialog()));
             else {
                 LogService.TraceMessage();
-                ServiceLocator.Current.LogService.TrackEvent("Show Files Dialog");
+                ServiceLocator.Current.TelemetryService.TrackEvent("Show Files Dialog");
 
                 using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                     openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}";
@@ -577,7 +577,7 @@ namespace WinPrint.Winforms {
             }
             ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)this.WindowState;
 
-            ServiceLocator.Current.LogService.TrackEvent("Form Closing",
+            ServiceLocator.Current.TelemetryService.TrackEvent("Form Closing",
                  properties: new Dictionary<string, string> {
                     {"windowState", ModelLocator.Current.Settings.WindowState.ToString() },
                     {"size", $"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}" },
@@ -586,7 +586,7 @@ namespace WinPrint.Winforms {
 
             ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
 
-            ServiceLocator.Current.LogService.Stop();
+            ServiceLocator.Current.TelemetryService.Stop();
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
@@ -609,7 +609,7 @@ namespace WinPrint.Winforms {
                 printDoc.DefaultPageSettings.Landscape =
                 landscapeCheckbox.Checked;
 
-            ServiceLocator.Current.LogService.TrackEvent("landscapeCheckbox_CheckedChanged",
+            ServiceLocator.Current.TelemetryService.TrackEvent("landscapeCheckbox_CheckedChanged",
                  properties: new Dictionary<string, string> {
                                         {"landscape", landscapeCheckbox.Checked.ToString() }
                  });
@@ -619,14 +619,14 @@ namespace WinPrint.Winforms {
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
                 ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
 
-            ServiceLocator.Current.LogService.TrackEvent("headerTextBox_TextChanged");
+            ServiceLocator.Current.TelemetryService.TrackEvent("headerTextBox_TextChanged");
         }
 
         private void footerTextBox_TextChanged(object sender, EventArgs e) {
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
                 ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Text = footerTextBox.Text;
 
-            ServiceLocator.Current.LogService.TrackEvent("footerTextBox_TextChanged");
+            ServiceLocator.Current.TelemetryService.TrackEvent("footerTextBox_TextChanged");
         }
 
         private void printersCB_SelectedIndexChanged(object sender, EventArgs e) {
@@ -634,7 +634,7 @@ namespace WinPrint.Winforms {
                 LogService.TraceMessage("printersCB_SelectedIndexChanged");
                 printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
 
-                ServiceLocator.Current.LogService.TrackEvent("printersCB_SelectedIndexChanged",
+                ServiceLocator.Current.TelemetryService.TrackEvent("printersCB_SelectedIndexChanged",
                      properties: new Dictionary<string, string> {
                             {"printerName", printDoc.PrinterSettings.PrinterName }
                      });
@@ -643,7 +643,7 @@ namespace WinPrint.Winforms {
                 foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
                     paperSizesCB.Items.Add(ps.PaperName);
                 }
-                ServiceLocator.Current.LogService.TrackEvent("printersCB_SelectedIndexChanged",
+                ServiceLocator.Current.TelemetryService.TrackEvent("printersCB_SelectedIndexChanged",
                      properties: new Dictionary<string, string> {
                             {"printerName", printDoc.PrinterSettings.PrinterName }
                      });
@@ -658,7 +658,7 @@ namespace WinPrint.Winforms {
                 // Set the paper size based upon the selection in the combo box.
                 if (paperSizesCB.SelectedIndex != -1) {
                     printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
-                    ServiceLocator.Current.LogService.TrackEvent("paperSizesCB_SelectedIndexChanged",
+                    ServiceLocator.Current.TelemetryService.TrackEvent("paperSizesCB_SelectedIndexChanged",
                          properties: new Dictionary<string, string> {
                             {"paperName", printDoc.DefaultPageSettings.PaperSize.PaperName }
                          });
@@ -755,7 +755,7 @@ namespace WinPrint.Winforms {
             LogService.TraceMessage($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
             if (printersCB.Enabled) {
                 ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
-                ServiceLocator.Current.LogService.TrackEvent("Change Selected Sheet Settings",
+                ServiceLocator.Current.TelemetryService.TrackEvent("Change Selected Sheet Settings",
                     properties: new Dictionary<string, string> {
                                     {"sheetSettingsName", si.Value },
                                     {"sheetSettingsId", si.Key },
@@ -814,7 +814,7 @@ namespace WinPrint.Winforms {
         private void settingsButton_Click(object sender, EventArgs args) {
             Log.Debug($"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}");
 
-            ServiceLocator.Current.LogService.TrackEvent("Settings Button Click");
+            ServiceLocator.Current.TelemetryService.TrackEvent("Settings Button Click");
 
             Process proc = null;
             try {
@@ -825,7 +825,7 @@ namespace WinPrint.Winforms {
             }
             catch (Exception e) {
                 // TODO: Better error message (output of stderr?)
-                ServiceLocator.Current.LogService.TrackException(e, false);
+                ServiceLocator.Current.TelemetryService.TrackException(e, false);
 
                 Log.Error(e, $"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}.");
             }
@@ -840,7 +840,7 @@ namespace WinPrint.Winforms {
             string url = "https://tig.github.io/winprint";
             Log.Debug($"Browsing to home page: {url}");
 
-            ServiceLocator.Current.LogService.TrackEvent("Help/About Link Click");
+            ServiceLocator.Current.TelemetryService.TrackEvent("Help/About Link Click");
 
             Process proc = null;
             try {
@@ -851,7 +851,7 @@ namespace WinPrint.Winforms {
             }
             catch (Exception e) {
                 // TODO: Better error message (output of stderr?)
-                ServiceLocator.Current.LogService.TrackException(e, false);
+                ServiceLocator.Current.TelemetryService.TrackException(e, false);
 
                 Log.Error(e, $"Couldn't browse to {url}.");
             }

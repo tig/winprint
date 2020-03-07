@@ -56,7 +56,7 @@ namespace WinPrint.Core.Services {
                 }
                 catch (Exception e) {
                     ErrorMessage = $"({versionUrl}) {e.Message}";
-                    ServiceLocator.Current.LogService.TrackException(e);
+                    ServiceLocator.Current.TelemetryService.TrackException(e);
                 }
             }
 

@@ -278,7 +278,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 sbHtml.AppendLine($"</table></code></pre>");
             }
             catch (Exception e) {
-                ServiceLocator.Current.LogService.TrackException(e, false);
+                ServiceLocator.Current.TelemetryService.TrackException(e, false);
                 Log.Error(e, "Failed to convert to html - {msg}", e.Message);
 
                 // TODO: Decide what to do here. a) Provide error and fail?

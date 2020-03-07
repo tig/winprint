@@ -206,7 +206,7 @@ namespace WinPrint.Core {
             LogService.TraceMessage($"{newSheet.Name}");
             // TODO: Add font info 
             // TODO: Add header footer details (borders etc...). 
-            ServiceLocator.Current.LogService.TrackEvent("Set Sheet Settings", properties: newSheet.GetTelemetryDictionary());
+            ServiceLocator.Current.TelemetryService.TrackEvent("Set Sheet Settings", properties: newSheet.GetTelemetryDictionary());
 
             if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
             if (this.sheet != null)
@@ -807,6 +807,7 @@ namespace WinPrint.Core {
                 if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax) {
                     using System.Drawing.Font font = new System.Drawing.Font(FontFamily.GenericSansSerif, 14, FontStyle.Bold, GraphicsUnit.Point);
                     string msg = $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
+                    ServiceLocator.Current.TelemetryService.TrackEvent("Margins of of bounds", new Dictionary<string, string> { ["Message"] = msg });
                     SizeF size = g.MeasureString(msg, font);
                     using StringFormat fmt = new StringFormat(StringFormat.GenericDefault) { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                     g.DrawString(msg, font, Brushes.Gray, bounds, fmt);

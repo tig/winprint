@@ -18,14 +18,15 @@ namespace WinPrint.Core.Services {
             SimpleIoc.Default.Register<FileAssociationsService>();
             SimpleIoc.Default.Register<NodeService>();
             SimpleIoc.Default.Register<LogService>(true);
+            SimpleIoc.Default.Register<TelemetryService>(true);
             SimpleIoc.Default.Register<UpdateService>();
         }
 
         public LogService LogService => SimpleIoc.Default.GetInstance<Services.LogService>();
+        public TelemetryService TelemetryService => SimpleIoc.Default.GetInstance<Services.TelemetryService>();
         public SettingsService SettingsService => SimpleIoc.Default.GetInstance<Services.SettingsService>();
         public FileAssociationsService FileAssociationsService => SimpleIoc.Default.GetInstance<Services.FileAssociationsService>();
         public NodeService NodeService => SimpleIoc.Default.GetInstance<Services.NodeService>();
-
         public UpdateService UpdateService => SimpleIoc.Default.GetInstance<UpdateService>();
 
         public void Register<VM, V>()

@@ -20,7 +20,6 @@ namespace menelabs.core {
         /// </summary>
         private bool _delayed;
 
-
         public DelayedEvent(FileSystemEventArgs args) {
             _delayed = false;
             _args = args;

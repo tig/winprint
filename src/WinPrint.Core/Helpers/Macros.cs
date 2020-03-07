@@ -55,7 +55,6 @@ namespace WinPrint.Core {
                     return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", e.Compile().DynamicInvoke(this));
                 else
                     return (e.Compile().DynamicInvoke(this) ?? "").ToString();
-                // TODO: Add telemetry on what macros are used
             });
         }
     }

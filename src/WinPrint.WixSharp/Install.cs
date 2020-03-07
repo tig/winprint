@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using Microsoft.Deployment.WindowsInstaller;
 using WixSharp;
+using WixSharp.CommonTasks;
+using WixSharp.Controls;
 
 //#error "DON'T FORGET to install NuGet package 'WixSharp' and remove this `#error` statement."
 // NuGet console: Install-Package WixSharp
@@ -16,20 +18,19 @@ namespace WinPrint.WixSharp {
             const string sourceBaseDir = @"..\..\release";
             const string outDir = @"..\..\install";
             string versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
-            Debug.WriteLine($"version path: {versionFile}", versionFile);
+            Debug.WriteLine($"version path: {versionFile}");
             var info = FileVersionInfo.GetVersionInfo(versionFile);
-            var companyName = info.CompanyName;
-            var productName = info.ProductName;
-            var productVersion = info.ProductVersion;
 
+            Feature feature = new Feature(new Id("winprint binaries"));
 
-           // Feature Feature = new Feature(new Id("Feature_Run"));
+            var project = new Project(info.ProductName, new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
 
-            var project = new Project(productName, 
-                new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
- 
+                RegValues = new[] {
+                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", 1) { Win64 = true }
+                },
+
                 Dirs = new[] {
-                    new Dir($"%ProgramFiles%\\{companyName}\\{productName}", 
+                    new Dir(feature, $"%ProgramFiles%\\{info.CompanyName}\\{info.ProductName}", 
                         new Files(@"*.dll"),
                         new Files(@"*.deps.json"),
                         new Files(@"*.runtimeconfig.json"),
@@ -37,34 +38,32 @@ namespace WinPrint.WixSharp {
                         new File(new Id("winprintgui_exe"), @"winprintgui.exe", 
                             new FileShortcut("winprint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
                         new ExeFileShortcut("Uninstall winprint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),
-                    new Dir($"%AppData%\\{companyName}\\{productName}"),
-                    new Dir($"%ProgramMenu%\\{companyName}\\{productName}",
+                    new Dir(feature, $"%AppData%\\{info.CompanyName}\\{info.ProductName}"),
+                    new Dir(feature, $"%ProgramMenu%\\{info.CompanyName}\\{info.ProductName}",
                         new ExeFileShortcut("WinPrint", "[INSTALLDIR]winprintgui.exe", arguments: ""))
-                        //new ExeFileShortcut("WinPrint Config Directory", 
-                        //    $"[%AppData%\\{companyName}\\{productName}".ToDirID() +" ]", ""),
-                        //new ExeFileShortcut("Uninstall WinPrint", "[System64Folder]msiexec.exe", "/x [ProductCode]"))
                  },
 
-            //Binaries = new[] {
-            //},
+                //Binaries = new[] {
+                //},
 
-            //Actions = new[] {
-            //    new InstalledFileAction("winprintgui_exe", "")
-            //    {
-            //        Step = Step.InstallFinalize,
-            //        When = When.After,
-            //        Return = Return.asyncNoWait,
-            //        Execute = Execute.immediate,
-            //        Impersonate = true,
-            //        //Condition = Feature.BeingInstall(),
-            //    }
-            //},
+                //Actions = new[] {
+                //    new InstalledFileAction("winprintgui_exe", "")
+                //    {
+                //        Step = Step.InstallFinalize,
+                //        When = When.After,
+                //        Return = Return.asyncNoWait,
+                //        Execute = Execute.immediate,
+                //        Impersonate = true,
+                //        //Condition = Feature.BeingInstall(),
+                //    }
+                //},
 
-            Properties = new[]{
-                    //setting property to be used in install condition
+                Properties = new[]{
+                        //setting property to be used in install condition
                     new Property("ALLUSERS", "1"),
-                }
+                }                
             };
+
 
             // See Core.Models.
             project.GUID = ProductCode;
@@ -90,7 +89,7 @@ namespace WinPrint.WixSharp {
             project.ControlPanelInfo.UrlUpdateInfo = "https://tig.github.io/winprint";
             //project.ControlPanelInfo.ProductIcon = "app_icon.ico";
             project.ControlPanelInfo.Contact = "Charlie Kindel (charlie@kindel.com)";
-            project.ControlPanelInfo.Manufacturer = companyName;
+            project.ControlPanelInfo.Manufacturer = info.CompanyName;
             project.ControlPanelInfo.InstallLocation = "[INSTALLDIR]";
             project.ControlPanelInfo.NoModify = true;
             //project.ControlPanelInfo.NoRepair = true,
@@ -100,6 +99,10 @@ namespace WinPrint.WixSharp {
             project.PreserveTempFiles = true;
 
             //project.UI = WUI.WixUI_ProgressOnly;
+
+            //project.RemoveDialogsBetween(NativeDialogs.WelcomeDlg, NativeDialogs.);
+
+            project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
 
             project.BuildMsi();
         }

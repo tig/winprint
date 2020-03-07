@@ -40,6 +40,7 @@ namespace WinPrint.Winforms {
         }
 
         private void _MouseWheel(object sender, MouseEventArgs e) {
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Mouse Wheel", new Dictionary<string, string> { ["ModifierKeys"] = ModifierKeys.ToString() });
             if (ModifierKeys.HasFlag(Keys.Control)) {
                 if (e.Delta < 0)
                     ZoomOut();
@@ -61,6 +62,7 @@ namespace WinPrint.Winforms {
                 multiplier = 50;
             Zoom += multiplier;
             Invalidate();
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Zoom In", new Dictionary<string, string> { ["Zoom"] = Zoom.ToString() });
         }
 
         private void ZoomOut() {
@@ -72,6 +74,7 @@ namespace WinPrint.Winforms {
             if (Zoom <= 0)
                 Zoom = 10;
             Invalidate();
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Zoom Out", new Dictionary<string, string> { ["Zoom"] = Zoom.ToString() });
         }
 
         protected override void OnResize(EventArgs e) {
@@ -93,6 +96,8 @@ namespace WinPrint.Winforms {
         protected override void OnKeyUp(KeyEventArgs e) {
             if (e is null) 
                 throw new ArgumentNullException(nameof(e));
+
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Key Up", new Dictionary<string, string> { ["KeyCode"] = e.KeyCode.ToString() });
 
             base.OnKeyUp(e);
             switch (e.KeyCode) {
@@ -120,12 +125,11 @@ namespace WinPrint.Winforms {
         }
 
         private void PageUp() {
-            LogService.TraceMessage($"Preview:PageUp");
-
             if (CurrentSheet > 1) {
                 CurrentSheet--;
                 Invalidate();
             }
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Page Up", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
         }
 
         private void PageDown() {
@@ -134,6 +138,7 @@ namespace WinPrint.Winforms {
                 CurrentSheet++;
                 Invalidate();
             }
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Page Down", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
         }
 
         protected override void OnTextChanged(EventArgs e) {

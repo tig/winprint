@@ -15,6 +15,7 @@ namespace WinPrint.Winforms {
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
+            ServiceLocator.Current.TelemetryService.Start();
             ServiceLocator.Current.LogService.Start();
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -36,7 +37,7 @@ namespace WinPrint.Winforms {
                         else {
                             ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
                         }
-                        ServiceLocator.Current.LogService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
+                        ServiceLocator.Current.TelemetryService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
                         Log.Information("Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
                         ModelLocator.Current.Options.CopyPropertiesFrom(o);
                     })
@@ -66,12 +67,12 @@ namespace WinPrint.Winforms {
         }
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {
-            ServiceLocator.Current.LogService.TrackException(e.Exception);
+            ServiceLocator.Current.TelemetryService.TrackException(e.Exception);
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
             var ex = e.ExceptionObject as Exception;
-            ServiceLocator.Current.LogService.TrackException(ex);
+            ServiceLocator.Current.TelemetryService.TrackException(ex);
         }
     }
 }

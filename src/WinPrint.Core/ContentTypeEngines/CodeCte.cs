@@ -181,7 +181,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
             catch (Exception e) {
                 LogService.TraceMessage(e.Message);
-                ServiceLocator.Current.LogService.TrackException(e);
+                ServiceLocator.Current.TelemetryService.TrackException(e);
             }
             LogService.TraceMessage("DocumentToHtmlLines() - exiting");
             return htmlLines;
