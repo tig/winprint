@@ -20,7 +20,9 @@ namespace WinPrint.WinForms {
                 psi.FileName = url;
                 proc = Process.Start(psi);
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
                 ServiceLocator.Current.TelemetryService.TrackException(e, false);
                 // TODO: Better error message (output of stderr?)
                 Log.Error(e, "Couldn't browse to {url}.", url);

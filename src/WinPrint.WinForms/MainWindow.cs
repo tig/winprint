@@ -293,7 +293,7 @@ namespace WinPrint.Winforms {
             // Check for updates
             LogService.TraceMessage("First reference to UpdateService");
             if (ServiceLocator.Current.UpdateService == null) {
-                MessageBox.Show("WinPrint Update Service failed to load. See log file for details.");
+                _ = MessageBox.Show(Resources.UpdateServiceFailure);
                 return;
             }
 
@@ -312,7 +312,7 @@ namespace WinPrint.Winforms {
             // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
             if (ModelLocator.Current.Settings == null) {
-                MessageBox.Show("WinPrint Settings failed to load. See log file for details.");
+                MessageBox.Show(Resources.SettingsLoadMsg);
                 return;
             }
             if (ModelLocator.Current.Settings.Size != null)
@@ -333,7 +333,7 @@ namespace WinPrint.Winforms {
                 }
             };
 
-            printPreview.Text = "Hello.";
+            printPreview.Text = Resources.HelloMsg;
 
             //this.Cursor = Cursors.WaitCursor;
             var sheets = ModelLocator.Current.Settings.Sheets;
@@ -477,7 +477,7 @@ namespace WinPrint.Winforms {
                             printPreview.Text = $"{stage}...";
                         }));
                         printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-                        await printPreview.SheetViewModel.SetPrinterPageSettingsAsync(printDoc.DefaultPageSettings).ConfigureAwait(false);
+                        printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings);
 
                         stage = "Rendering";
                         BeginInvoke((Action)(() => {

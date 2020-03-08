@@ -83,7 +83,7 @@ namespace WinPrint.Console {
                 // This will exit this app
                 StartGui();
 
-            ServiceLocator.Current.UpdateService.GotLatestVersion += async (s, v) => {
+            ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
                 var cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
                 Log.Debug("Got new version info. Current: {cur}, Available: {v}", cur, v);
                 if (v != null && v.CompareTo(cur) > 0) {

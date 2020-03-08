@@ -80,6 +80,15 @@ namespace WinPrint.WinForms {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hello..
+        /// </summary>
+        internal static string HelloMsg {
+            get {
+                return ResourceManager.GetString("HelloMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading....
         /// </summary>
         internal static string LoadingMsg {
@@ -104,6 +113,24 @@ namespace WinPrint.WinForms {
         internal static string RenderingMsg {
             get {
                 return ResourceManager.GetString("RenderingMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WinPrint Settings failed to load. See log file for details..
+        /// </summary>
+        internal static string SettingsLoadMsg {
+            get {
+                return ResourceManager.GetString("SettingsLoadMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WinPrint Update Service failed to load. See log file for details..
+        /// </summary>
+        internal static string UpdateServiceFailure {
+            get {
+                return ResourceManager.GetString("UpdateServiceFailure", resourceCulture);
             }
         }
     }

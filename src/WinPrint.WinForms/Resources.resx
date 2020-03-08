@@ -124,6 +124,9 @@
   <data name="FileOpenTemplate" xml:space="preserve">
     <value>code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*</value>
   </data>
+  <data name="HelloMsg" xml:space="preserve">
+    <value>Hello.</value>
+  </data>
   <data name="LoadingMsg" xml:space="preserve">
     <value>Loading...</value>
   </data>
@@ -132,5 +135,11 @@
   </data>
   <data name="RenderingMsg" xml:space="preserve">
     <value>Rendering...</value>
+  </data>
+  <data name="SettingsLoadMsg" xml:space="preserve">
+    <value>WinPrint Settings failed to load. See log file for details.</value>
+  </data>
+  <data name="UpdateServiceFailure" xml:space="preserve">
+    <value>WinPrint Update Service failed to load. See log file for details.</value>
   </data>
 </root>

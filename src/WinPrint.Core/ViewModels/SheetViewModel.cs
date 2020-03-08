@@ -334,7 +334,7 @@ namespace WinPrint.Core {
         /// </summary>
         /// <param name="pageSettings"></param>
         /// <returns></returns>
-        public async Task SetPrinterPageSettingsAsync(PageSettings pageSettings) {
+        public void SetPrinterPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
 
