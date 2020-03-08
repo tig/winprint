@@ -11,7 +11,7 @@ using WinPrint.Core.Services;
 namespace WinPrint.Winforms {
     static class Program {
         /// <summary>
-        ///  The main entry point for the application.
+        ///  The main entry point for the winprint GUI application.
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
@@ -48,6 +48,8 @@ namespace WinPrint.Winforms {
             var main = new MainWindow();
             Application.Run(main);
             main.Dispose();
+
+            ServiceLocator.Current.TelemetryService.Stop();
         }
 
         static void DisplayHelp<T>(ParserResult<T> result) {

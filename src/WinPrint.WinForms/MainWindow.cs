@@ -430,10 +430,6 @@ namespace WinPrint.Winforms {
             Start();
         }
 
-        private void UpdateService_GotLatestVersion(object sender, Version e) {
-            throw new NotImplementedException();
-        }
-
         private void Start() {
             LogService.TraceMessage();
 
@@ -585,8 +581,6 @@ namespace WinPrint.Winforms {
                  });
 
             ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
-
-            ServiceLocator.Current.TelemetryService.Stop();
         }
 
         private void MainWindow_Layout(object sender, LayoutEventArgs e) {
