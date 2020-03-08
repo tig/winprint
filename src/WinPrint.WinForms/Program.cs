@@ -21,10 +21,6 @@ namespace WinPrint.Winforms {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            //var settings = new CefSettings();
-            //settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";
-            //Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);
-
             if (args.Length > 0) {
                 var parser = new Parser(with => with.EnableDashDash = true);
                 var result = parser.ParseArguments<Options>(args);
@@ -49,9 +45,9 @@ namespace WinPrint.Winforms {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
-            Application.Run(new MainWindow());
-#pragma warning restore CA2000 // Dispose objects before losing scope
+            var main = new MainWindow();
+            Application.Run(main);
+            main.Dispose();
         }
 
         static void DisplayHelp<T>(ParserResult<T> result) {
@@ -63,6 +59,7 @@ namespace WinPrint.Winforms {
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);
             MessageBox.Show(helpText);
+            ServiceLocator.Current.TelemetryService.TrackEvent("Display Help");
             Environment.Exit(0);
         }
 
