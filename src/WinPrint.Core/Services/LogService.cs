@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -24,7 +20,6 @@ namespace WinPrint.Core.Services {
         public LoggingLevelSwitch ConsoleLevelSwitch { get; set; } = new LoggingLevelSwitch();
         public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new LoggingLevelSwitch();
 
-
         public void Start() {
             MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
             DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
@@ -36,11 +31,8 @@ namespace WinPrint.Core.Services {
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
 #endif
-
             string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
             LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
-
-
 
             // Setup logging
             Log.Logger = new LoggerConfiguration()
@@ -63,8 +55,6 @@ namespace WinPrint.Core.Services {
                 Log.Debug("libgdiplus version: {v}", Diagnostics.GetLibgdiplusVersion());
             }
         }
-
-
 
         public LogService() {
         }
@@ -92,7 +82,5 @@ namespace WinPrint.Core.Services {
             [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0) {
             return $"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}: {msg}";
         }
-
-  
     }
 }

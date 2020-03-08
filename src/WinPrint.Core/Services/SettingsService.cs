@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Serilog;
-using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 
