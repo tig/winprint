@@ -3,16 +3,12 @@ using System.Diagnostics;
 using Microsoft.Deployment.WindowsInstaller;
 using WixSharp;
 using WixSharp.CommonTasks;
-using WixSharp.Controls;
+using sys = System.Reflection;
 
-//#error "DON'T FORGET to install NuGet package 'WixSharp' and remove this `#error` statement."
-// NuGet console: Install-Package WixSharp
-// NuGet Manager UI: browse tab
-
-namespace WinPrint.WixSharp {
+namespace WinPrintInstaller {
     class Install {
-        public static readonly Guid UpgradeCode = Guid.Parse("{0002A500-0000-0000-C000-000000000046}");
-        public static readonly Guid ProductCode = Guid.Parse("{0002A501-0000-0000-C000-000000000046}");
+        public static readonly Guid UpgradeCode = new Guid("{0002A500-0000-0000-C000-000000000046}");
+        public static readonly Guid ProductCode = new Guid("{0002A501-0000-0000-C000-000000000046}");
 
         static void Main() {
             const string sourceBaseDir = @"..\..\release";
@@ -30,12 +26,12 @@ namespace WinPrint.WixSharp {
                 },
 
                 Dirs = new[] {
-                    new Dir(feature, $"%ProgramFiles%\\{info.CompanyName}\\{info.ProductName}", 
+                    new Dir(feature, $"%ProgramFiles%\\{info.CompanyName}\\{info.ProductName}",
                         new Files(@"*.dll"),
                         new Files(@"*.deps.json"),
                         new Files(@"*.runtimeconfig.json"),
                         new File(new Id("winprint_exe"), @"winprint.exe"),
-                        new File(new Id("winprintgui_exe"), @"winprintgui.exe", 
+                        new File(new Id("winprintgui_exe"), @"winprintgui.exe",
                             new FileShortcut("winprint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
                         new ExeFileShortcut("Uninstall winprint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),
                     new Dir(feature, $"%AppData%\\{info.CompanyName}\\{info.ProductName}"),
@@ -61,7 +57,7 @@ namespace WinPrint.WixSharp {
                 Properties = new[]{
                         //setting property to be used in install condition
                     new Property("ALLUSERS", "1"),
-                }                
+                }
             };
 
 
@@ -70,7 +66,7 @@ namespace WinPrint.WixSharp {
             project.UpgradeCode = UpgradeCode;
             project.SourceBaseDir = sourceBaseDir;
             project.OutDir = outDir;
-            project.Version = Version.Parse(info.ProductVersion); //new Version("2.0.1.10040"); 
+            project.Version = new Version(info.ProductVersion); //new Version("2.0.1.10040"); 
 
             project.MajorUpgrade = new MajorUpgrade {
                 Schedule = UpgradeSchedule.afterInstallInitialize,
@@ -102,21 +98,13 @@ namespace WinPrint.WixSharp {
 
             //project.RemoveDialogsBetween(NativeDialogs.WelcomeDlg, NativeDialogs.);
 
-            project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
+            //project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
+
+            project.CAConfigFile = "CustomAction.config"; // optional step just for demo
+            project.EmbeddedUI = new EmbeddedAssembly(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            project.PreserveTempFiles = true;
 
             project.BuildMsi();
         }
     }
-
-
-    //public class CustonActions {
-    //    [CustomAction]
-    //    public static ActionResult StartWinPrintGUI(Session session) {
-    //        Record record = new Record();
-    //        record.FormatString = $"{session["INSTALLDIR"]}winprintgui.exe";
-    //        session.Message(InstallMessage.Info, record);
-    //        System.Diagnostics.Process.Start($"{session["INSTALLDIR"]}winprintgui.exe");
-    //        return ActionResult.Success;
-    //    }
-    //}
 }

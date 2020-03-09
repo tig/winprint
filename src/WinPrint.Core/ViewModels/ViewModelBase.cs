@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ViewModels {
     public abstract class ViewModelBase : INotifyPropertyChanged {

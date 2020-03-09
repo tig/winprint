@@ -1,0 +1,67 @@
+﻿<Window
+    x:Class="WinPrintInstaller.SetupWizard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="winprint Setup"
+    Width="540"
+    Height="400"
+    Visibility="Visible">
+    <Grid>
+        <TextBox
+            Name="messagesTextBox"
+            Margin="8,8,8,99"
+            FontFamily="Lucida Console"
+            FontSize="10"
+            HorizontalScrollBarVisibility="Auto"
+            IsReadOnly="True"
+            VerticalScrollBarVisibility="Visible" Initialized="messagesTextBox_Initialized" />
+        <Button
+            Name="installButton"
+            Width="75"
+            Height="23"
+            Margin="0,0,91,8"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Click="installButton_Click">
+            Install
+        </Button>
+        <Button
+            Name="exitButton"
+            Width="75"
+            Height="23"
+            Margin="0,0,8,8"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Click="exitButton_Click"
+            Visibility="Hidden">
+            Exit
+        </Button>
+        <Button
+            Name="cancelButton"
+            Width="75"
+            Height="23"
+            Margin="0,0,8,8"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Click="cancelButton_Click">
+            Cancel
+        </Button>
+        <ProgressBar
+            Name="progressBar"
+            Height="16"
+            Margin="8,0,8,39"
+            VerticalAlignment="Bottom"
+            IsIndeterminate="False"
+            Visibility="Hidden" />
+        <Label
+            Name="progressLabel"
+            Width="120"
+            Height="28"
+            Margin="8,0,0,4.48"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Visibility="Hidden">
+            0%
+        </Label>
+    </Grid>
+</Window>
