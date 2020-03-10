@@ -28,6 +28,9 @@ See [User's Guide](users-guide.md) for more details.
 
 See [About](about.md) for the history prior to *winprint 2.0*.
 
-* 03-Mar-2020 - 2.0.0.2022.alpha - Fixed crashing bug at startup.
-* 20-Feb-2020 - 2.0.0.alpha-1034 - Minor bug fixes. Added version number to GUI. 
-* 18-Feb-2020 - 2.0.0.alpha-1003 - First public build (alpha). I'm embarrased by a few bugs and performance issues that I want to fix before I declare beta; see [Issues](https://github.com/tig/winprint/issues).
+* 09-Mar-2020 - 2.0.0.3002 (Alpha) - Updated installer, Telemetry, Minor bug fixes
+* 03-Mar-2020 - 2.0.0.2022 (Alpha) - Fixed crashing bug at startup.
+* 20-Feb-2020 - 2.0.0.1034 (Alpha) - Minor bug fixes. Added version number to GUI. 
+* 18-Feb-2020 - 2.0.0.1003 (Alpha) - First public build (alpha). 
+
+I'm embarrased by a few bugs and performance issues that I want to fix before I declare beta; see [Issues](https://github.com/tig/winprint/issues).
