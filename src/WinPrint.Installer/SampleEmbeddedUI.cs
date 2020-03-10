@@ -19,6 +19,7 @@ namespace WinPrintInstaller {
     using System.Windows;
     using System.Windows.Threading;
     using Microsoft.Deployment.WindowsInstaller;
+    using WixSharp.CommonTasks;
     using Application = System.Windows.Application;
 
     public class SampleEmbeddedUI : IEmbeddedUI
@@ -28,6 +29,8 @@ namespace WinPrintInstaller {
         private SetupWizard setupWizard;
         private ManualResetEvent installStartEvent;
         private ManualResetEvent installExitEvent;
+
+        private Session session;
 
         /// <summary>
         /// Initializes the embedded UI.
@@ -65,6 +68,8 @@ namespace WinPrintInstaller {
                 }
             }
 
+            this.session = session;
+
             // Start the setup wizard on a separate thread.
             this.installStartEvent = new ManualResetEvent(false);
             this.installExitEvent = new ManualResetEvent(false);
@@ -84,6 +89,8 @@ namespace WinPrintInstaller {
                 // Start the installation with a silenced internal UI.
                 // This "embedded external UI" will handle message types except for source resolution.
                 internalUILevel = InstallUIOptions.NoChange | InstallUIOptions.SourceResolutionOnly;
+
+                
                 return true;
             }
         }
@@ -134,7 +141,11 @@ namespace WinPrintInstaller {
         {
             this.app = new Application();
             this.setupWizard = new SetupWizard(this.installStartEvent);
+            this.setupWizard.Session = session;
             this.setupWizard.InitializeComponent();
+
+            this.setupWizard.Title = $"wiprint {session["ProductVersion"]} installer";
+
             this.app.Run(this.setupWizard);
             this.installExitEvent.Set();
         }

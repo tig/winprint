@@ -2,66 +2,99 @@
     x:Class="WinPrintInstaller.SetupWizard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="winprint Setup"
-    Width="540"
-    Height="400"
-    Visibility="Visible">
-    <Grid>
+    Title="winprint v2.0.0.XXXX installer"
+    Width="501"
+    Height="399"
+    Visibility="Visible" 
+    Initialized="Window_Initialized">
+    <Grid Margin="0,0,0,6">
+        <Grid.RowDefinitions>
+            <RowDefinition Name="textbox" Height="*" MinHeight="225" />
+            <RowDefinition Name="checkboxes" Height="70"/>
+        </Grid.RowDefinitions>
         <TextBox
+            xml:space="preserve"
             Name="messagesTextBox"
-            Margin="8,8,8,99"
+            Margin="8,8,8,8"
             FontFamily="Lucida Console"
             FontSize="10"
             HorizontalScrollBarVisibility="Auto"
             IsReadOnly="True"
-            VerticalScrollBarVisibility="Visible" Initialized="messagesTextBox_Initialized" />
+            VerticalScrollBarVisibility="Visible" 
+            Initialized="messagesTextBox_Initialized" 
+            Grid.Row="0" 
+            TextWrapping="Wrap"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+Copyright (c) Kindel Systems, LLC
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+            
+        </TextBox>
+
+        <TextBlock Margin="0,4,8,0" 
+                   HorizontalAlignment="Right" 
+                   VerticalAlignment="Top" 
+                   Grid.Row="1">           
+            <Hyperlink NavigateUri="https://tig.github.io/winprint" RequestNavigate="hyperlink_RequestNavigate">
+                winprint homepage
+            </Hyperlink>
+        </TextBlock>
+
+        <CheckBox Name="telemetryCheck" 
+                  Content="Telemetry" 
+                  IsChecked="True" 
+                  Grid.Row="1" 
+                  HorizontalAlignment="Left" 
+                  VerticalAlignment="Top"
+                  Margin="10,5,0,0" Width="71" RenderTransformOrigin="0.631,1.401" />
+
         <Button
             Name="installButton"
+            Grid.Row="1"
             Width="75"
             Height="23"
-            Margin="0,0,91,8"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="installButton_Click">
+            Click="installButton_Click" Margin="0,0,96,20"  >
             Install
         </Button>
         <Button
             Name="exitButton"
+            Grid.Row="1"
             Width="75"
             Height="23"
-            Margin="0,0,8,8"
+            Margin="0,0,10,20"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="exitButton_Click"
-            Visibility="Hidden">
+            Visibility="Visible"
+            Click="exitButton_Click">
             Exit
         </Button>
         <Button
             Name="cancelButton"
+            Grid.Row="1"
             Width="75"
             Height="23"
-            Margin="0,0,8,8"
+            Margin="0,0,10,20"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="cancelButton_Click">
+            Click="cancelButton_Click" RenderTransformOrigin="0.471,-0.076">
             Cancel
         </Button>
         <ProgressBar
             Name="progressBar"
+            Grid.Row="1"
             Height="16"
-            Margin="8,0,8,39"
+            Width="417"
             VerticalAlignment="Bottom"
-            IsIndeterminate="False"
-            Visibility="Hidden" />
-        <Label
-            Name="progressLabel"
-            Width="120"
-            Height="28"
-            Margin="8,0,0,4.48"
             HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"
-            Visibility="Hidden">
-            0%
-        </Label>
+            IsIndeterminate="False"
+            Visibility="Hidden"
+            Margin="10,0,96,24" />
     </Grid>
 </Window>

@@ -17,12 +17,12 @@ namespace WinPrintInstaller {
             Debug.WriteLine($"version path: {versionFile}");
             var info = FileVersionInfo.GetVersionInfo(versionFile);
 
-            Feature feature = new Feature(new Id("winprint binaries"));
+            Feature feature = new Feature(new Id("winprint"));
 
             var project = new Project(info.ProductName, new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
 
                 RegValues = new[] {
-                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", 1) { Win64 = true }
+                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", "[TELEMETRY]") { Win64 = true }
                 },
 
                 Dirs = new[] {
@@ -55,8 +55,9 @@ namespace WinPrintInstaller {
                 //},
 
                 Properties = new[]{
-                        //setting property to be used in install condition
+                    //setting property to be used in install condition
                     new Property("ALLUSERS", "1"),
+                    new Property("TELEMETRY", "1"),
                 }
             };
 
@@ -66,14 +67,13 @@ namespace WinPrintInstaller {
             project.UpgradeCode = UpgradeCode;
             project.SourceBaseDir = sourceBaseDir;
             project.OutDir = outDir;
-            project.Version = new Version(info.ProductVersion); //new Version("2.0.1.10040"); 
 
+            project.Version = new Version(info.ProductVersion); //new Version("2.0.1.10040"); 
             project.MajorUpgrade = new MajorUpgrade {
                 Schedule = UpgradeSchedule.afterInstallInitialize,
                 AllowSameVersionUpgrades = true,
                 DowngradeErrorMessage = "A later version of [ProductName] is already installed. Setup will now exit."
             };
-
             project.Platform = Platform.x64;
 
             //project.LicenceFile = "license.rtf";
