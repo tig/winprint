@@ -7,7 +7,7 @@ namespace WinPrint.PowerShell {
 
 
     internal sealed class PrinterLineOutput : LineOutput {
-    }
+    //}
 
         [Cmdlet(VerbsData.Out, "WinPrint")]
     public class OutWinPrintCmdlet : Cmdlet {
