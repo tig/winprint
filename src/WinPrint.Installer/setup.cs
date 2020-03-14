@@ -65,7 +65,6 @@ namespace WinPrintInstaller {
                 }
             };
 
-
             // See Core.Models.
             project.GUID = ProductCode;
             project.UpgradeCode = UpgradeCode;
@@ -82,13 +81,11 @@ namespace WinPrintInstaller {
 
             //project.LicenceFile = "license.rtf";
 
-            project.ControlPanelInfo.Comments = "WinPrint by Charlie Kindel";
+            project.ControlPanelInfo.Comments = $"winprint by Charlie Kindel";
             project.ControlPanelInfo.Readme = "https://tig.github.io/winprint";
             project.ControlPanelInfo.HelpLink = "https://tig.github.io/winprint";
             project.ControlPanelInfo.UrlInfoAbout = "https://tig.github.io/winprint";
             project.ControlPanelInfo.UrlUpdateInfo = "https://tig.github.io/winprint";
-            //project.ControlPanelInfo.ProductIcon = "app_icon.ico";
-            project.ControlPanelInfo.Contact = "Charlie Kindel (charlie@kindel.com)";
             project.ControlPanelInfo.Manufacturer = info.CompanyName;
             project.ControlPanelInfo.InstallLocation = "[INSTALLDIR]";
             project.ControlPanelInfo.NoModify = true;
@@ -104,7 +101,7 @@ namespace WinPrintInstaller {
 
             //project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
 
-            project.CAConfigFile = "CustomAction.config"; // optional step just for demo
+            project.CAConfigFile = "CustomAction.config"; 
             project.EmbeddedUI = new EmbeddedAssembly(System.Reflection.Assembly.GetExecutingAssembly().Location);
             project.PreserveTempFiles = true;
 

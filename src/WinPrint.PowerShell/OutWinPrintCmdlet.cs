@@ -6,7 +6,7 @@ using Microsoft.PowerShell.Commands.Internal.Format;
 namespace WinPrint.PowerShell {
 
 
-    internal sealed class PrinterLineOutput : LineOutput {
+   // internal sealed class PrinterLineOutput : LineOutput {
     //}
 
         [Cmdlet(VerbsData.Out, "WinPrint")]

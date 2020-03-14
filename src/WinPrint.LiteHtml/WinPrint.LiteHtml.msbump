@@ -5,7 +5,7 @@
     },
     
     "Release": {
-      BumpRevision: true
+      BumpRevision: false
     }
   }
 }
