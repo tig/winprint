@@ -290,7 +290,6 @@ namespace WinPrint.Core {
             Reset();
 
             ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(null, contentType);
-            ContentEngine.Document = document;
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null) {
@@ -300,6 +299,8 @@ namespace WinPrint.Core {
 
             if (ContentSettings != null)
                 ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+
+            var success = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
 
             // Set this last to notify loading is done with File valid
             Loading = false;

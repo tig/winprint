@@ -6,7 +6,7 @@
     <RootNamespace>WinPrint.PowerShell</RootNamespace>
     <AssemblyTitle>winprint PowerShell CmdLet</AssemblyTitle>
 
-    <Version>2.0.0.3519</Version>
+    <Version>2.0.0.3545</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -34,5 +34,12 @@
       <Private>true</Private>
     </ProjectReference>
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(SolutionDir)WinPrint.Console\$(OutDir)*.* $(OutDir)\" />
+  </Target>
 
 </Project>

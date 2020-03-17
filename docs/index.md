@@ -9,6 +9,8 @@ title: winprint
 
 ![winprint command line](winprint-cmdline.jpg)
 
+![winprint powershell](out-winprint.jpg)
+
 ## Features
 
 * Print source code with syntax highlighting and line numbering for over 200 programming langauges and file formats.
@@ -18,6 +20,7 @@ title: winprint
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
 * Complete command line interface. Allows winprint to be used from other applications or solutions.
+* PowerShell support; `out-winprint` is a drop-in replacement for `out-print`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Compressive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
@@ -28,6 +31,7 @@ See [User's Guide](users-guide.md) for more details.
 
 See [About](about.md) for the history prior to *winprint 2.0*.
 
+* 16-Mar-2020 - 2.0.0.3800 (Alpha) - PowerShell support.
 * 09-Mar-2020 - 2.0.0.3002 (Alpha) - Updated installer, Telemetry, Minor bug fixes
 * 03-Mar-2020 - 2.0.0.2022 (Alpha) - Fixed crashing bug at startup.
 * 20-Feb-2020 - 2.0.0.1034 (Alpha) - Minor bug fixes. Added version number to GUI. 

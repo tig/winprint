@@ -18,8 +18,12 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
         public override string GetContentType() {
-            return _contentType;
+            if (string.IsNullOrEmpty(Language))
+                return _contentType;
+            else
+                return Language;
         }
+
         public static new PrismCte Create() {
             var content = new PrismCte();
             content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismContentTypeEngineSettings);
@@ -79,6 +83,28 @@ namespace WinPrint.Core.ContentTypeEngines {
 #endif
             return !string.IsNullOrEmpty(document);
         }
+
+        public override async Task<bool> SetDocumentAsync(string doc) {
+            LogService.TraceMessage();
+
+            if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
+                Log.Warning("Prism.js is not installed. Installing...");
+
+                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("-g install prismjs");
+                if (string.IsNullOrEmpty(result)) {
+                    Log.Debug("Could not install PrismJS");
+                    throw new InvalidOperationException("Could not install PrismJS.");
+                }
+            }
+
+            Document = doc;
+            if (!convertedToHtml)
+                Document = await CodeToHtml("", Language);
+            convertedToHtml = true;
+
+            return true;
+        }
+
 
         public override async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();

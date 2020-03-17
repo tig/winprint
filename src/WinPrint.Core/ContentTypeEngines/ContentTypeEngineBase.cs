@@ -166,5 +166,6 @@ namespace WinPrint.Core.ContentTypeEngines {
             return cte;
         }
 
+        public abstract Task<bool> SetDocumentAsync(string document);
     }
 }

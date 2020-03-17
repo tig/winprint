@@ -94,6 +94,11 @@ namespace WinPrint.Core.ContentTypeEngines {
             return await base.LoadAsync(filePath);
         }
 
+        public override async Task<bool> SetDocumentAsync(string doc) {
+            Document = doc;
+            return await Task.FromResult(true);
+        }
+
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage)
         /// </summary>

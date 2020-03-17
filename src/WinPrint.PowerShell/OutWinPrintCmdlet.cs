@@ -164,14 +164,14 @@ namespace WinPrint.PowerShell {
             //var text = this.SessionState.InvokeCommand.InvokeScript(@"Out-String", true, PipelineResultTypes.None, _psObjects, null);
             //this.WriteObject(text, false);
 
-            //var pr = new ProgressRecord(0, "Printing", $"Printing {text[0].ToString().Length} characters...");
-            //this.WriteProgress(pr);
-
             var commandInfo = new CmdletInfo("Out-String", typeof(Microsoft.PowerShell.Commands.OutStringCommand));
             using var ps = System.Management.Automation.PowerShell.Create(RunspaceMode.CurrentRunspace);
             ps.AddCommand(commandInfo);
-            ps.AddParameter("InputObject", this.InputObject);
+            ps.AddParameter("InputObject", _psObjects);
             var text = ps.Invoke<string>()[0];
+
+            this.WriteObject(text, false);
+
             var print = new Print();
 
             if (!string.IsNullOrEmpty(_printerName))
@@ -188,9 +188,9 @@ namespace WinPrint.PowerShell {
             print.SheetViewModel.SetSheet(sheet);
             if (string.IsNullOrEmpty(_cteName))
                 _cteName = "text/plain";
-            await print.SheetViewModel.SetDocumentAsync(text.ToString(), _cteName);
+            await print.SheetViewModel.SetDocumentAsync(text, _cteName).ConfigureAwait(false) ;
 
-            var sheetsCounted = await print.DoPrint();
+            var sheetsCounted = await print.DoPrint().ConfigureAwait(false); 
 
             //this.WriteProgress(new ProgressRecord(0, "Printing", $"Printed {sheetsCounted} sheets"));
 
@@ -209,7 +209,7 @@ namespace WinPrint.PowerShell {
             //    this.WriteObject(selectedObject, false);
             //}
 
-            this.WriteObject(sheetsCounted, false);
+            //this.WriteObject(sheetsCounted, false);
 
             AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;

@@ -30,7 +30,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
         public override string GetContentType() {
-            return _contentType;
+            if (string.IsNullOrEmpty(Language))
+                return _contentType;
+            else
+                return Language;
         }
 
         public static CodeCte Create() {
@@ -94,11 +97,18 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
             return false;
         }
+        public override async Task<bool> SetDocumentAsync(string doc) {
+            Document = doc;
+            if (!convertedToHtml)
+                lines = await DocumentToHtmlLines("", Language);
+            convertedToHtml = true;
+            return true;
+        }
 
         private async Task<List<HtmlLine>> DocumentToHtmlLines(string file, string language) {
             LogService.TraceMessage($"{language}");
 
-           // const string cssTheme = "prism-coy.css";
+            // const string cssTheme = "prism-coy.css";
             //const string cssPrism = "prism.css";
             //const string cssWinPrint = "prism-winprint-overrides.css";
             string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
@@ -358,7 +368,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             //            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
             LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            line.liteHtml.Document.Draw((int)xPos, (int)yPos-2, new position {
+            line.liteHtml.Document.Draw((int)xPos, (int)yPos - 2, new position {
                 x = 0,
                 y = 0,
                 width = (int)Math.Round(size.Width),
