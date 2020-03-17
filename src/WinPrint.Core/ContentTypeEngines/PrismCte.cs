@@ -13,8 +13,13 @@ using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypeEngines {
     public class PrismCte : HtmlCte {
-        public static new string ContentType = "text/code";
-
+        private static readonly string _contentType = "text/code";
+        /// <summary>
+        /// ContentType identifier (shorthand for class name). 
+        /// </summary>
+        public override string GetContentType() {
+            return _contentType;
+        }
         public static new PrismCte Create() {
             var content = new PrismCte();
             content.CopyPropertiesFrom(ModelLocator.Current.Settings.PrismContentTypeEngineSettings);

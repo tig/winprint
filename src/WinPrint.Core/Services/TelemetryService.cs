@@ -20,7 +20,7 @@ namespace WinPrint.Core.Services {
 
         private Stopwatch runtime;
 
-        public void Start() {
+        public void Start(string appName) {
             runtime = System.Diagnostics.Stopwatch.StartNew();
 
             var val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel Systems\winprint", "Telemetry", 0);
@@ -51,7 +51,7 @@ namespace WinPrint.Core.Services {
             telemetry.Context.User.Id = Convert.ToBase64String(h.Hash);
 
             var properties = new Dictionary<string, string> {
-               ["app"] = AppDomain.CurrentDomain.FriendlyName,
+               ["app"] = appName,
                ["version"] = telemetry.Context.Component.Version,
                ["os"] = Environment.OSVersion.ToString(),
                ["arch"] = Environment.Is64BitProcess ? "x64" : "x86",

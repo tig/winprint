@@ -78,7 +78,7 @@ namespace WinPrint.Core {
             }
         }
 
-        internal ContentTypeEngineBase ContentEngine { get => contentEngine; set => SetField(ref contentEngine, value); }
+        public ContentTypeEngineBase ContentEngine { get => contentEngine; set => SetField(ref contentEngine, value); }
         private ContentTypeEngineBase contentEngine;
 
         private Size paperSize;
@@ -112,8 +112,6 @@ namespace WinPrint.Core {
         /// The printable area. Bounds minus margins and header/footer.
         /// </summary>
         public RectangleF ContentBounds { get => contentBounds; private set => contentBounds = value; }
-        public string Type { get => fileType; internal set => SetField(ref fileType, value); }
-        private string fileType;
 
         /// <summary>
         /// Subscribe to know when file has been loaded by the SheetViewModel. 
@@ -241,6 +239,8 @@ namespace WinPrint.Core {
             newSheet.PropertyChanged += OnSheetPropertyChanged();
         }
 
+        
+
         /// <summary>
         /// Loads the specified file via the appropriate Content Type Engine.
         /// </summary>
@@ -256,57 +256,8 @@ namespace WinPrint.Core {
             // Reset the SVM in case it was not already done
             Reset();
 
-            var ext = Path.GetExtension(File).ToLower();
-            //string type = null;
-
-            if (string.IsNullOrEmpty(contentType)) {
-                // Use file assocations to figure it out
-                if (!ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out contentType))
-                    contentType = "text/plain";
-            }
-            Debug.Assert(!string.IsNullOrEmpty(contentType));
-
-            switch (contentType) {
-                case "text/html":
-                    ContentEngine = HtmlCte.Create();
-                    break;
-
-                case "text/plain":
-                    ContentEngine = TextCte.Create();
-                    break;
-
-                // TODO: Figure out if we really want to use the sourcecode CTE.
-                case "sourcecode":
-                    ContentEngine = CodeCte.Create();
-                    ((CodeCte)ContentEngine).Language = contentType;
-                    break;
-
-                default:
-                    // Not text or html. Is it a language?
-                    if (((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType)) {
-                        // It's a language. Verify node.js and Prism are installed
-                        if (await ServiceLocator.Current.NodeService.IsInstalled()) {
-                            // contentType == Language
-                            ContentEngine = PrismCte.Create();
-                            ((PrismCte)ContentEngine).Language = contentType;
-                        }
-                        else {
-                            Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", contentType, "text/plain");
-                            contentType = "text/plain";
-                            ContentEngine = TextCte.Create();
-                        }
-                    }
-                    else {
-                        // No language mapping found, just use contentType as the language
-                        // TODO: Do more error checking here
-                        ContentEngine = PrismCte.Create();
-                        ((PrismCte)ContentEngine).Language = contentType;
-                    }
-                    break;
-            }
-
+            ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(filePath, contentType);
             ContentEngine.PropertyChanged += OnContentPropertyChanged();
-            Type = contentType;
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null) {
@@ -324,17 +275,46 @@ namespace WinPrint.Core {
 
             // Set this last to notify loading is done with File valid
             Loading = false;
-            return Type;
+            return ContentEngine.GetContentType();
         }
 
         /// <summary>
-        /// Set the page setting from a PageSettings instance. Note that accessing
-        /// PageSettings can be expensive so we cache the values instead of just holding
-        /// a PageSettings instance.
+        /// Loads the specified file via the appropriate Content Type Engine.
         /// </summary>
-        /// <param name="pageSettings"></param>
+        /// <param name="document">Document contents to load.</param>
+        /// <param name="contentType">If not null or empty, defines the content type engine to use.</param>
         /// <returns></returns>
-        public void SetPrinterPageSettings(PageSettings pageSettings) {
+        public async Task<string> SetDocumentAsync(string document, string contentType) {
+            LogService.TraceMessage();
+            
+            Reset();
+
+            ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(null, contentType);
+            ContentEngine.Document = document;
+
+            // Content settings in Sheet take precidence over Engine
+            if (ContentEngine.ContentSettings is null) {
+                ContentEngine.ContentSettings = new ContentSettings();
+                // TODO: set some defaults
+            }
+
+            if (ContentSettings != null)
+                ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+
+            // Set this last to notify loading is done with File valid
+            Loading = false;
+
+            return ContentEngine.GetContentType();
+        }
+
+            /// <summary>
+            /// Set the page setting from a PageSettings instance. Note that accessing
+            /// PageSettings can be expensive so we cache the values instead of just holding
+            /// a PageSettings instance.
+            /// </summary>
+            /// <param name="pageSettings"></param>
+            /// <returns></returns>
+            public void SetPrinterPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
 

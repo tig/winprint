@@ -20,7 +20,7 @@ namespace WinPrint.Core.Services {
         public LoggingLevelSwitch ConsoleLevelSwitch { get; set; } = new LoggingLevelSwitch();
         public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new LoggingLevelSwitch();
 
-        public void Start() {
+        public void Start(string appName) {
             MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
             DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 
@@ -43,7 +43,7 @@ namespace WinPrint.Core.Services {
                 ////.WriteTo.ApplicationInsights(config, new CustomConverter(), restrictedToMinimumLevel: LogEventLevel.Information)
                 .CreateLogger();
 
-            Log.Debug("--------- {app} {v} ---------", AppDomain.CurrentDomain.FriendlyName, productVersion);
+            Log.Debug("--------- {app} {v} ---------", appName, productVersion);
             if (ServiceLocator.Current.TelemetryService.TelemetryEnabled) {
                 string msg = string.IsNullOrEmpty(TelemetryService.Key) ? "However, telemetry key is missing so no telemetry will be tracked." : "";
                 Log.Debug($"Telemetry is enabled. {msg}");

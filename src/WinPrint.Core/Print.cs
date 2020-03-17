@@ -92,12 +92,12 @@ namespace WinPrint.Core {
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Count Sheets",
                 properties: new Dictionary<string, string> {
-                    ["type"]= SheetViewModel.Type, 
+                    ["type"]= SheetViewModel.ContentEngine.GetContentType(), 
                     ["printer"] = PrintDocument.PrinterSettings.PrinterName,
                     ["fromSheet"] = fromSheet.ToString(),
                     ["toSheet"] = toSheet.ToString(),
                 },
-                metrics: new Dictionary<string, double> {["sheetsPrinted"] = SheetViewModel.NumSheets});
+                metrics: new Dictionary<string, double> {["sheetsPrinted"] = SheetViewModel.NumSheets});;
             return SheetViewModel.NumSheets;
         }
 
@@ -114,7 +114,7 @@ namespace WinPrint.Core {
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Complete",
                 properties: new Dictionary<string, string> {
-                    ["type"] = SheetViewModel.Type,
+                    ["type"] = SheetViewModel.ContentEngine.GetContentType(),
                     ["printer"] = PrintDocument.PrinterSettings.PrinterName,
                     ["fromSheet"] = PrintDocument.PrinterSettings.FromPage.ToString(),
                     ["toSheet"] = PrintDocument.PrinterSettings.ToPage.ToString(),

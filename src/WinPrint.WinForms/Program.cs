@@ -15,8 +15,8 @@ namespace WinPrint.Winforms {
         /// </summary>
         [STAThread]
         static void Main(string[] args) {
-            ServiceLocator.Current.TelemetryService.Start();
-            ServiceLocator.Current.LogService.Start();
+            ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
+            ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;

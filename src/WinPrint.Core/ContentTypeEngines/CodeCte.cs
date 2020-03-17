@@ -25,13 +25,21 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class CodeCte : ContentTypeEngineBase, IDisposable {
+        private static readonly string _contentType = "text/sourcecode";
+        /// <summary>
+        /// ContentType identifier (shorthand for class name). 
+        /// </summary>
+        public override string GetContentType() {
+            return _contentType;
+        }
+
         public static CodeCte Create() {
+
             var engine = new CodeCte();
             engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
             return engine;
         }
 
-        public static new string ContentType = "Source code";
         public CodeCte() {
         }
 

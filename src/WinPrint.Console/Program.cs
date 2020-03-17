@@ -23,8 +23,8 @@ namespace WinPrint.Console {
         private static ParserResult<Options> result;
 
         static void Main(string[] args) {
-            ServiceLocator.Current.TelemetryService.Start();
-            ServiceLocator.Current.LogService.Start();
+            ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
+            ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -305,7 +305,7 @@ namespace WinPrint.Console {
 
                 case "Reflowing":
                     if (print.SheetViewModel.Reflowing)
-                        Log.Information("Formatting as {t}.", print.SheetViewModel.Type);
+                        Log.Information("Formatting as {t}.", print.SheetViewModel.ContentEngine.GetContentType());
                     else if (ModelLocator.Current.Options.Verbose)
                         Log.Information("Formating complete.");
                     break;

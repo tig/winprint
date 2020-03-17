@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -162,14 +164,18 @@ namespace WinPrint.Core.Services {
             return settingsService;
         }
 
+        /// <summary>
+        /// Gets the path to the settings file.
+        /// Default is %appdata%\Kindel Systems\winprint. 
+        /// However, if the exe was started from somewhere else, work in "portable mode" and
+        /// use the dir containing the exe as the path.
+        /// </summary>
         public static string SettingsPath {
             get {
                 // Get dir of .exe
                 string path = AppDomain.CurrentDomain.BaseDirectory;
-                string programfiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 Log.Debug("path = {path}", path);
-                Log.Debug("programfiles = {programfiles}", programfiles);
                 Log.Debug("appdata = {appdata}", appdata);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
@@ -179,11 +185,14 @@ namespace WinPrint.Core.Services {
                     // 
                 }
                 else {
-                    // is this in Program Files?
-                    if (path.Contains(programfiles)) {
-                        // We're running from the default install location. Use %appdata%.
-                        // strip %programfiles%
-                        path = $@"{appdata}{Path.DirectorySeparatorChar}{path.Substring(programfiles.Length + 1)}";
+                    var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(SettingsService)).Location);
+
+                    // is this in \Kindel Systems\winprint?
+                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}") || 
+                        // TODO: Remove internal knowledge of out-winprint from here
+                        path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell")) {
+                        // We're running %programfiles%\Kindel Systems\winprint; use %appdata%\Kindel Systems\winprint.
+                        path = $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
                     }
                 }
 

@@ -9,13 +9,12 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.3019</Version>
+    <Version>2.0.0.3499</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
     <Description>winprint Console App</Description>
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
-    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
   </PropertyGroup>
 

@@ -15,8 +15,8 @@ namespace WinPrint.Core {
         public string FilePath { get { return string.IsNullOrEmpty(svm.File) ? "" :  Path.GetDirectoryName(FullyQualifiedPath); } }
         public string FullyQualifiedPath { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFullPath(svm.File); } }
         public static DateTime DatePrinted { get { return DateTime.Now; } }
-        public DateTime DateRevised { get { return string.IsNullOrEmpty(svm.File) ? DateTime.Now :  File.GetLastWriteTime(svm.File); } }
-        public string FileType { get { return string.IsNullOrEmpty(svm.File) ? "" : svm.Type; } }
+        public DateTime DateRevised { get { return string.IsNullOrEmpty(svm.File) ? DateTime.Now : File.GetLastWriteTime(svm.File); } }
+        public string FileType { get { return svm.ContentEngine == null ? "" : svm.ContentEngine.GetContentType(); } }
 
         public int Page { get; set; }
 

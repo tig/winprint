@@ -101,10 +101,10 @@ namespace WinPrintInstaller {
 
             //project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
 
-            project.CAConfigFile = "CustomAction.config"; 
             project.EmbeddedUI = new EmbeddedAssembly(System.Reflection.Assembly.GetExecutingAssembly().Location);
             project.PreserveTempFiles = true;
 
+            project.CAConfigFile = "CustomAction.config";
             project.BuildMsi();
         }
     }

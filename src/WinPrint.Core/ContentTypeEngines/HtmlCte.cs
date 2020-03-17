@@ -16,7 +16,13 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Implements generic HTML file type support. 
     /// </summary>
     public class HtmlCte : ContentTypeEngineBase, IDisposable {
-        public static new string ContentType = "text/html";
+        private static readonly string _contentType = "text/html";
+        /// <summary>
+        /// ContentType identifier (shorthand for class name). 
+        /// </summary>
+        public override string GetContentType() {
+            return _contentType;
+        }
 
         public static HtmlCte Create() {
             var content = new HtmlCte();
