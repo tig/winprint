@@ -10,11 +10,16 @@ title: User's Guide
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
 * Complete command line interface. Allows winprint to be used from other applications or solutions.
+* PowerShell support; `out-winprint` is a drop-in replacement for `out-print`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Compressive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
 
 ## Command Line Interface
+
+winprint 2.0 alpha supports two command line interfaces: a traditional interface implemented in `winprint.exe` and a PowerShell CmdLet (`out-winprint`). A future version will combine these.
+
+### Traditional winprint.exe Command Line
 
 Examples:
 
@@ -63,6 +68,87 @@ Print Program.cs using the 2 Up sheet defintion:
 * `--version` - Display version information.
 
 * `<files>` - Required. One or more files to be printed.
+
+### Powershell out-winprint CmdLet
+
+Examples:
+
+Print the `out-winprint` documentation, 1-page up, to the "Microsoft Print to PDF" printer:
+
+    get-help out-winprint -full | out-winprint -p "Microsoft Print to PDF" -s "Default 1-Up"
+
+Print `Program.cs` using the default sheet definition and default printer:
+
+    get-content Program.cs | out-winprint
+
+Help: 
+
+```
+NAME
+    Out-WinPrint
+
+SYNTAX
+    Out-WinPrint [[-Name] <string>] [-SheetDefintion <string>] [-ContentTypeEngine <string>] [-InputObject <psobject>]
+    [<CommonParameters>]
+
+
+PARAMETERS
+    -ContentTypeEngine <string>
+        Name of the WinPrint Content Type Engine to use (default is "text/plain")
+
+        Required?                    false
+        Position?                    Named
+        Accept pipeline input?       false
+        Parameter set name           (All)
+        Aliases                      cte
+        Dynamic?                     false
+
+    -InputObject <psobject>
+
+        Required?                    false
+        Position?                    Named
+        Accept pipeline input?       true (ByValue)
+        Parameter set name           (All)
+        Aliases                      None
+        Dynamic?                     false
+
+    -Name <string>
+        Printer name.
+
+        Required?                    false
+        Position?                    0
+        Accept pipeline input?       false
+        Parameter set name           (All)
+        Aliases                      PrinterName
+        Dynamic?                     false
+
+    -SheetDefintion <string>
+        Name of the WinPrint sheet definition to use (e.g. "Default 2-Up"
+
+        Required?                    false
+        Position?                    Named
+        Accept pipeline input?       false
+        Parameter set name           (All)
+        Aliases                      Sheet
+        Dynamic?                     false
+
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see
+        about_CommonParameters (https://go.microsoft.com/fwlink/?LinkID=113216).
+
+
+INPUTS
+    System.Management.Automation.PSObject
+
+
+OUTPUTS
+    System.Object
+
+ALIASES
+    wp
+```
 
 ## Graphical User Interface
 
