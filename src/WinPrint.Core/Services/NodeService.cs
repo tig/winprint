@@ -18,7 +18,8 @@ namespace WinPrint.Core.Services {
         /// Gets the directory node is installed in. Assumes node is installed.
         /// </summary>
         /// <returns></returns>
-        private async Task<string> GetNodeDirectory() {
+        public async Task<string> GetNodeDirectory() {
+            LogService.TraceMessage();
             if (!string.IsNullOrEmpty(nodeDir)) 
                 return nodeDir;
 
@@ -60,6 +61,8 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> GetModulesDirectory() {
+            LogService.TraceMessage();
+
             string path = "";
             path = (await RunNpmCommand("-g root")).TrimEnd() + "\\";
             return Path.GetDirectoryName(path);
@@ -76,6 +79,8 @@ namespace WinPrint.Core.Services {
         public string Version { get => version; set => version = value; }
 
         private async Task<string> RunNodeCommmand(string nodeCmd) {
+            LogService.TraceMessage();
+
             string result = null;
 
             Process proc = null;
@@ -140,6 +145,8 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> RunNpmCommand(string npmCmd) {
+            LogService.TraceMessage();
+
             var result = await RunNodeCommmand($"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" {npmCmd}");
             return result;
         }

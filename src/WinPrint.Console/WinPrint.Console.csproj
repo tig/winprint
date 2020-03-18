@@ -9,7 +9,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.3503</Version>
+    <Version>2.0.0.3510</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -43,5 +43,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(outdir)*.* $(solutiondir)Winprint.PowerShell\$(outdir)" />
+  </Target>
 
 </Project>

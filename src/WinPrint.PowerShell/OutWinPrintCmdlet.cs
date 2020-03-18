@@ -15,6 +15,8 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using System.Threading.Tasks;
 using Serilog.Events;
+using System.Diagnostics;
+using System.IO;
 
 namespace WinPrint.PowerShell {
     [Cmdlet(VerbsData.Out, nounName: "WinPrint", HelpUri = "https://tig.github.io./winprint")]
@@ -161,16 +163,13 @@ namespace WinPrint.PowerShell {
                 return;
             }
 
-            //var text = this.SessionState.InvokeCommand.InvokeScript(@"Out-String", true, PipelineResultTypes.None, _psObjects, null);
-            //this.WriteObject(text, false);
-
-            var commandInfo = new CmdletInfo("Out-String", typeof(Microsoft.PowerShell.Commands.OutStringCommand));
-            using var ps = System.Management.Automation.PowerShell.Create(RunspaceMode.CurrentRunspace);
-            ps.AddCommand(commandInfo);
-            ps.AddParameter("InputObject", _psObjects);
-            var text = ps.Invoke<string>()[0];
+            // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
+            var result = this.SessionState.InvokeCommand.InvokeScript(@"$input| Out-String", true, PipelineResultTypes.None, _psObjects, null);
+            string text = result[0].ToString();
 
             this.WriteObject(text, false);
+
+            return;
 
             var print = new Print();
 
@@ -188,9 +187,9 @@ namespace WinPrint.PowerShell {
             print.SheetViewModel.SetSheet(sheet);
             if (string.IsNullOrEmpty(_cteName))
                 _cteName = "text/plain";
-            await print.SheetViewModel.SetDocumentAsync(text, _cteName).ConfigureAwait(false) ;
+            await print.SheetViewModel.SetDocumentAsync(text, _cteName).ConfigureAwait(false);
 
-            var sheetsCounted = await print.DoPrint().ConfigureAwait(false); 
+            var sheetsCounted = await print.DoPrint().ConfigureAwait(false);
 
             //this.WriteProgress(new ProgressRecord(0, "Printing", $"Printed {sheetsCounted} sheets"));
 
@@ -216,6 +215,35 @@ namespace WinPrint.PowerShell {
 
         }
 
+        public async Task<string> GetNodeDirectory() {
+            LogService.TraceMessage();
+
+            string path = "";
+            Process proc = null;
+            try {
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.UseShellExecute = false;   // This is important
+                psi.CreateNoWindow = true;     // This is what hides the command window.
+                psi.FileName = @"where.exe";
+                psi.Arguments = "node";
+                psi.RedirectStandardInput = true;
+                psi.RedirectStandardOutput = true;
+
+                proc = Process.Start(psi);
+                //StreamWriter sw = node.StandardInput;
+                //sw.WriteLine("");
+                //sw.Close();
+                path = await proc.StandardOutput.ReadLineAsync();
+            }
+            catch (Exception e) {
+                // TODO: Better error message (output of stderr?)
+                ServiceLocator.Current.TelemetryService.TrackException(e, false);
+            }
+            finally {
+                proc?.Dispose();
+            }
+            return Path.GetDirectoryName(path);
+        }
         public override string GetResourceString(string baseName, string resourceId) {
             return base.GetResourceString(baseName, resourceId);
         }
