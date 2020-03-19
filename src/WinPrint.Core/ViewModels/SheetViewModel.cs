@@ -1,93 +1,89 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
-using WinPrint.Core.Models;
-using System.Diagnostics;
-using Microsoft.Win32;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text;
-using WinPrint.Core.ContentTypeEngines;
-using System.Runtime.CompilerServices;
 using System.Linq;
-using System.Timers;
-using WinPrint.Core.Services;
-using Serilog;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Serilog;
+using WinPrint.Core.ContentTypeEngines;
+using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Core {
     /// <summary>
     /// The WinPrint Document ViewModel - knows how to paint a document, independent of platform
-    /// (assuming System.Drawing and System.Printing). Works with Models.Document, etc...
+    /// (assuming System.Drawing and System.Printing). 
     /// </summary>
     public class SheetViewModel : ViewModels.ViewModelBase {
 
-        private SheetSettings sheet;
+        private SheetSettings _sheet;
 
         // These properties are all defined by user and sync'd with the Sheet model
-        private Margins margins;
-        public Margins Margins { get => margins; set => SetField(ref margins, value); }
+        private Margins _margins;
+        public Margins Margins { get => _margins; set => SetField(ref _margins, value); }
 
-        private bool landscape;
-        public bool Landscape { get => landscape; set => SetField(ref landscape, value); }
+        private bool _landscape;
+        public bool Landscape { get => _landscape; set => SetField(ref _landscape, value); }
 
-        private Core.Models.Font rulesFont;
-        public Core.Models.Font DiagnosticRulesFont { get => rulesFont; set => SetField(ref rulesFont, value); }
+        private Core.Models.Font _rulesFont;
+        public Core.Models.Font DiagnosticRulesFont { get => _rulesFont; set => SetField(ref _rulesFont, value); }
 
-        private HeaderViewModel headerVM;
-        public HeaderViewModel Header { get => headerVM; set => SetField(ref headerVM, value); }
+        private HeaderViewModel _headerVM;
+        public HeaderViewModel Header { get => _headerVM; set => SetField(ref _headerVM, value); }
 
-        private FooterViewModel footerVM;
-        public FooterViewModel Footer { get => footerVM; set => SetField(ref footerVM, value); }
+        private FooterViewModel _footerVM;
+        public FooterViewModel Footer { get => _footerVM; set => SetField(ref _footerVM, value); }
 
-        public int Rows { get => rows; set => SetField(ref rows, value); }
-        private int rows;
+        public int Rows { get => _rows; set => SetField(ref _rows, value); }
+        private int _rows;
 
-        public int Columns { get => cols; set => SetField(ref cols, value); }
-        private int cols;
+        public int Columns { get => _cols; set => SetField(ref _cols, value); }
+        private int _cols;
 
-        public int Padding { get => padding; set => SetField(ref padding, value); }
-        private int padding;
+        public int Padding { get => _padding; set => SetField(ref _padding, value); }
+        private int _padding;
 
-        public bool PageSeparator { get => pageSeparator; set => SetField(ref pageSeparator, value); }
-        private bool pageSeparator;
+        public bool PageSeparator { get => _pageSeparator; set => SetField(ref _pageSeparator, value); }
+        private bool _pageSeparator;
 
-        public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
-        private ContentSettings contentSettings;
+        public ContentSettings ContentSettings { get => _contentSettings; set => SetField(ref _contentSettings, value); }
+        private ContentSettings _contentSettings;
 
-        private string file;
+        // 
         public string File {
-            get => file;
+            get => _file;
             internal set {
-                SetField(ref file, value);
-                LogService.TraceMessage($"SheetViewModel.File set {file}");
+                SetField(ref _file, value);
+                LogService.TraceMessage($"SheetViewModel.File set {_file}");
             }
         }
+        private string _file;
 
-        private int numPages;
+        private int _numPages;
 
         public int NumSheets {
             get {
                 if (ContentEngine == null) return 0;
-                return (int)Math.Ceiling((double)numPages / (Rows * Columns));
+                return (int)Math.Ceiling((double)_numPages / (Rows * Columns));
             }
         }
 
-        public ContentTypeEngineBase ContentEngine { get => contentEngine; set => SetField(ref contentEngine, value); }
-        private ContentTypeEngineBase contentEngine;
+        public ContentTypeEngineBase ContentEngine { get => _contentEngine; set => SetField(ref _contentEngine, value); }
+        private ContentTypeEngineBase _contentEngine;
 
-        private Size paperSize;
-        private RectangleF printableArea;
-        private Rectangle bounds;
-        private RectangleF contentBounds;
+        private Size _paperSize;
+        private RectangleF _printableArea;
+        private Rectangle _bounds;
+        private RectangleF _contentBounds;
 
         // These properties are all either calculated or dependent on printer settings
         /// <summary>
         /// Size of the Sheet of Paper in 100ths of an inch.
         /// </summary>
-        public Size PaperSize { get => paperSize; set => paperSize = value; }
+        public Size PaperSize { get => _paperSize; set => _paperSize = value; }
 
         /// <summary>
         /// Angle pages is rotated by
@@ -101,14 +97,14 @@ namespace WinPrint.Core {
         /// <summary>
         /// The phyisical bounds of the Sheet of paper as provided by PageSettings. 
         /// </summary>
-        public Rectangle Bounds { get => bounds; set => bounds = value; }
+        public Rectangle Bounds { get => _bounds; set => _bounds = value; }
         public float HardMarginX { get; set; }
         public float HardMarginY { get; set; }
 
         /// <summary>
         /// The printable area. Bounds minus margins and header/footer.
         /// </summary>
-        public RectangleF ContentBounds { get => contentBounds; private set => contentBounds = value; }
+        public RectangleF ContentBounds { get => _contentBounds; private set => _contentBounds = value; }
 
         /// <summary>
         /// Subscribe to know when file has been loaded by the SheetViewModel. 
@@ -120,14 +116,14 @@ namespace WinPrint.Core {
         /// True if we're in the middle of loading the file. False otherwise.
         /// </summary>
         public bool Loading {
-            get => loading;
+            get => _loading;
             set {
-                if (value != loading)
+                if (value != _loading)
                     OnLoaded(value);
-                SetField(ref loading, value);
+                SetField(ref _loading, value);
             }
         }
-        private bool loading;
+        private bool _loading;
 
         /// <summary>
         /// Subscribe to know when file has been Reflowed by the SheetViewModel. 
@@ -139,14 +135,14 @@ namespace WinPrint.Core {
         /// True if we're in the middle of reflowing. False otherwise.
         /// </summary>
         public bool Reflowing {
-            get => reflowing;
+            get => _reflowing;
             set {
-                if (value != reflowing)
+                if (value != _reflowing)
                     OnReflowed(value);
-                SetField(ref reflowing, value);
+                SetField(ref _reflowing, value);
             }
         }
-        private bool reflowing;
+        private bool _reflowing;
 
         /// <summary>
         /// Subscribe to be notified when the Printer PageSettings have been set.
@@ -159,8 +155,8 @@ namespace WinPrint.Core {
             ReflowProgress?.Invoke(this, msg);
         }
 
-        public bool CacheEnabled { get => cacheEnabled; set => SetField(ref cacheEnabled, value); }
-        private bool cacheEnabled = false;
+        public bool CacheEnabled { get => _cacheEnabled; set => SetField(ref _cacheEnabled, value); }
+        private bool _cacheEnabled = false;
 
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
@@ -170,7 +166,7 @@ namespace WinPrint.Core {
         }
 
         // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
-        private List<Image> cachedSheets = new List<Image>();
+        private List<Image> _cachedSheets = new List<Image>();
 
         public SheetViewModel() {
         }
@@ -190,7 +186,7 @@ namespace WinPrint.Core {
             }
 
             ClearCache();
-            numPages = 0;
+            _numPages = 0;
         }
 
         /// <summary>
@@ -204,10 +200,10 @@ namespace WinPrint.Core {
             ServiceLocator.Current.TelemetryService.TrackEvent("Set Sheet Settings", properties: newSheet.GetTelemetryDictionary());
 
             if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
-            if (this.sheet != null)
-                sheet.PropertyChanged -= OnSheetPropertyChanged();
+            if (_sheet != null)
+                _sheet.PropertyChanged -= OnSheetPropertyChanged();
 
-            this.sheet = newSheet;
+            _sheet = newSheet;
             Landscape = newSheet.Landscape;
             DiagnosticRulesFont = (Core.Models.Font)ModelLocator.Current.Settings.DiagnosticRulesFont.Clone();
             Rows = newSheet.Rows;
@@ -216,21 +212,21 @@ namespace WinPrint.Core {
             PageSeparator = newSheet.PageSeparator;
             Margins = (Margins)newSheet.Margins.Clone();
 
-            if (contentSettings != null)
-                contentSettings.PropertyChanged -= OnContentSettingsPropertyChanged();
+            if (_contentSettings != null)
+                _contentSettings.PropertyChanged -= OnContentSettingsPropertyChanged();
 
             ContentSettings = newSheet.ContentSettings;
             if (ContentSettings != null)
                 ContentSettings.PropertyChanged += OnContentSettingsPropertyChanged();
 
-            if (headerVM != null)
-                headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+            if (_headerVM != null)
+                _headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
             Header = new HeaderViewModel(this, newSheet.Header);
-            headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
-            if (footerVM != null)
-                footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+            _headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
+            if (_footerVM != null)
+                _footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
             Footer = new FooterViewModel(this, newSheet.Footer);
-            footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
+            _footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
 
             // Subscribe to all settings properties
             newSheet.PropertyChanged += OnSheetPropertyChanged();
@@ -346,33 +342,33 @@ namespace WinPrint.Core {
             //          Left
             // The PageSettings class accesses print APIs and thus is slow
             // Cache settings. 
-            if (sheet != null && sheet.Landscape) {
+            if (_sheet != null && _sheet.Landscape) {
                 // Translate page settings for landscape mode
                 // HardMarginX/Y should NOT be used for anything - use printableArea instead
                 HardMarginX = pageSettings.HardMarginY;
                 HardMarginY = pageSettings.HardMarginX;
 
-                printableArea.X = pageSettings.PrintableArea.Y;
-                printableArea.Y = pageSettings.PrintableArea.X;
+                _printableArea.X = pageSettings.PrintableArea.Y;
+                _printableArea.Y = pageSettings.PrintableArea.X;
 
-                printableArea.Width = pageSettings.PrintableArea.Height;
-                printableArea.Height = pageSettings.PrintableArea.Width;
+                _printableArea.Width = pageSettings.PrintableArea.Height;
+                _printableArea.Height = pageSettings.PrintableArea.Width;
 
-                paperSize.Height = pageSettings.PaperSize.Width;
-                paperSize.Width = pageSettings.PaperSize.Height;
+                _paperSize.Height = pageSettings.PaperSize.Width;
+                _paperSize.Width = pageSettings.PaperSize.Height;
             }
             else {
                 // HardMarginX/Y should NOT be used for anything - use printableArea instead
                 HardMarginX = pageSettings.HardMarginX;
                 HardMarginY = pageSettings.HardMarginY;
 
-                printableArea.X = pageSettings.PrintableArea.X;
-                printableArea.Y = pageSettings.PrintableArea.Y;
-                printableArea.Width = pageSettings.PrintableArea.Width;
-                printableArea.Height = pageSettings.PrintableArea.Height;
+                _printableArea.X = pageSettings.PrintableArea.X;
+                _printableArea.Y = pageSettings.PrintableArea.Y;
+                _printableArea.Width = pageSettings.PrintableArea.Width;
+                _printableArea.Height = pageSettings.PrintableArea.Height;
 
-                paperSize.Width = pageSettings.PaperSize.Width;
-                paperSize.Height = pageSettings.PaperSize.Height;
+                _paperSize.Width = pageSettings.PaperSize.Width;
+                _paperSize.Height = pageSettings.PaperSize.Height;
             }
             PrinterResolution = pageSettings.PrinterResolution;
 
@@ -388,16 +384,16 @@ namespace WinPrint.Core {
             // BUGBUG: On Linux, PageSettings.PrintableArea is all 0s. 
             // BUGBUG: On Linux, not seeing HardMargins > 0 ever (e.g. HP laser should have 0.16". No idea how to fix this.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-                printableArea.X = Bounds.X - HardMarginX;
-                printableArea.Y = Bounds.Y - HardMarginY;
-                printableArea.Width = Bounds.Width - (HardMarginX * 2);
-                printableArea.Height = Bounds.Height - (HardMarginY * 2);
+                _printableArea.X = Bounds.X - HardMarginX;
+                _printableArea.Y = Bounds.Y - HardMarginY;
+                _printableArea.Width = Bounds.Width - (HardMarginX * 2);
+                _printableArea.Height = Bounds.Height - (HardMarginY * 2);
             }
 
             // Content bounds represents printable area, minus margins and header/footer.
-            contentBounds.Location = new PointF(sheet.Margins.Left, sheet.Margins.Top + headerVM.Bounds.Height);
-            contentBounds.Width = Bounds.Width - sheet.Margins.Left - sheet.Margins.Right;
-            contentBounds.Height = Bounds.Height - sheet.Margins.Top - sheet.Margins.Bottom - headerVM.Bounds.Height - footerVM.Bounds.Height;
+            _contentBounds.Location = new PointF(_sheet.Margins.Left, _sheet.Margins.Top + _headerVM.Bounds.Height);
+            _contentBounds.Width = Bounds.Width - _sheet.Margins.Left - _sheet.Margins.Right;
+            _contentBounds.Height = Bounds.Height - _sheet.Margins.Top - _sheet.Margins.Bottom - _headerVM.Bounds.Height - _footerVM.Bounds.Height;
             if (ContentEngine is null)
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
             else
@@ -408,7 +404,7 @@ namespace WinPrint.Core {
             Log.Debug("Paper Size: {w} x {h}\"", PaperSize.Width / 100F, PaperSize.Height / 100F);
             Log.Debug("Hard Margins: {w} x {h}\"", HardMarginX / 100F, HardMarginY / 100F);
             Log.Debug("Printable Area: {left}\", {top}\", {right}\", {bottom}\" ({w} x {h}\")",
-                printableArea.Left / 100F, printableArea.Top / 100F, printableArea.Right / 100, printableArea.Bottom / 100, printableArea.Width / 100, printableArea.Height / 100);
+                _printableArea.Left / 100F, _printableArea.Top / 100F, _printableArea.Right / 100, _printableArea.Bottom / 100, _printableArea.Width / 100, _printableArea.Height / 100);
             Log.Debug("Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
                 Bounds.Left / 100F, Bounds.Top / 100F, Bounds.Right / 100F, Bounds.Bottom / 100F, Bounds.Width / 100F, Bounds.Height / 100F);
             Log.Debug("Content Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w} x {h}\")",
@@ -442,20 +438,20 @@ namespace WinPrint.Core {
                 return;
             }
 
-            numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
+            _numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 
             CheckPrintOutsideHardMargins();
-            Log.Debug("Rreflow complete. {n} pages {w}x{h}\"", numPages, Bounds.Width / 100F, Bounds.Height / 100F);
+            Log.Debug("Rreflow complete. {n} pages {w}x{h}\"", _numPages, Bounds.Width / 100F, Bounds.Height / 100F);
 
             // Causes OnReflowed
             Reflowing = false;
         }
 
         public bool CheckPrintOutsideHardMargins() {
-            int leftMax = (int)Math.Round(printableArea.X);
-            int topMax = (int)Math.Round(printableArea.Top);
-            int rightMax = (int)Math.Round(bounds.Width - printableArea.Right);
-            int bottomMax = (int)Math.Round(bounds.Height - printableArea.Bottom);
+            int leftMax = (int)Math.Round(_printableArea.X);
+            int topMax = (int)Math.Round(_printableArea.Top);
+            int rightMax = (int)Math.Round(_bounds.Width - _printableArea.Right);
+            int bottomMax = (int)Math.Round(_bounds.Height - _printableArea.Bottom);
 
             if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax) {
                 Log.Warning($"Margins are set outside of printable area - Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"");
@@ -490,10 +486,10 @@ namespace WinPrint.Core {
                 return;// throw new InvalidOperationException("Cache is not enabled!");
 
             LogService.TraceMessage();
-            foreach (var i in cachedSheets) {
+            foreach (var i in _cachedSheets) {
                 i.Dispose();
             }
-            cachedSheets.Clear();
+            _cachedSheets.Clear();
         }
 
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
@@ -501,12 +497,12 @@ namespace WinPrint.Core {
             LogService.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Landscape":
-                    Landscape = sheet.Landscape;
+                    Landscape = _sheet.Landscape;
                     reflow = true;
                     break;
 
                 case "Margins":
-                    Margins = sheet.Margins;
+                    Margins = _sheet.Margins;
                     reflow = true;
                     break;
 
@@ -515,22 +511,22 @@ namespace WinPrint.Core {
                     break;
 
                 case "Rows":
-                    Rows = sheet.Rows;
+                    Rows = _sheet.Rows;
                     reflow = true;
                     break;
 
                 case "Columns":
-                    Columns = sheet.Columns;
+                    Columns = _sheet.Columns;
                     reflow = true;
                     break;
 
                 case "Padding":
-                    Padding = sheet.Padding;
+                    Padding = _sheet.Padding;
                     reflow = true;
                     break;
 
                 case "PageSeparator":
-                    PageSeparator = sheet.PageSeparator;
+                    PageSeparator = _sheet.PageSeparator;
                     break;
 
                 default:
@@ -549,22 +545,22 @@ namespace WinPrint.Core {
             LogService.TraceMessage($"{e.PropertyName}");
             switch (e.PropertyName) {
                 case "Font":
-                    ContentSettings.Font = sheet.ContentSettings.Font;
+                    ContentSettings.Font = _sheet.ContentSettings.Font;
                     reflow = true;
                     break;
 
                 case "PrintBackground":
-                    ContentSettings.PrintBackground = sheet.ContentSettings.PrintBackground;
+                    ContentSettings.PrintBackground = _sheet.ContentSettings.PrintBackground;
                     reflow = false;
                     break;
 
                 case "Grayscale":
-                    ContentSettings.Grayscale = sheet.ContentSettings.Grayscale;
+                    ContentSettings.Grayscale = _sheet.ContentSettings.Grayscale;
                     reflow = false;
                     break;
 
                 case "Darkness":
-                    ContentSettings.Darkness = sheet.ContentSettings.Darkness;
+                    ContentSettings.Darkness = _sheet.ContentSettings.Darkness;
                     reflow = false;
                     break;
 
@@ -637,8 +633,8 @@ namespace WinPrint.Core {
         public int GetPageColumn(int n) { return (n - 1) % Columns; }
         public int GetPageRow(int n) { return ((n - 1) % (Rows * Columns)) / Columns; }
 
-        internal float GetXPadding(int n) { return GetPageColumn(n) == 0 ? 0F : (padding / (Columns)); }
-        internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (padding / (Rows)); }
+        internal float GetXPadding(int n) { return GetPageColumn(n) == 0 ? 0F : (_padding / (Columns)); }
+        internal float GetYPadding(int n) { return GetPageRow(n) == 0 ? 0F : (_padding / (Rows)); }
 
         public float GetPageX(int n) {
             //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
@@ -670,7 +666,7 @@ namespace WinPrint.Core {
             if (graphics.PageUnit == GraphicsUnit.Display) {
                 // In print mode, adjust origin to account for hard margins
                 // In print mode, 0,0 is top, left - hard margins
-                graphics.TranslateTransform(-printableArea.Left, -printableArea.Top);
+                graphics.TranslateTransform(-_printableArea.Left, -_printableArea.Top);
                 PaintSheet(graphics, sheetNum);
                 graphics.Restore(state);
             }
@@ -694,7 +690,7 @@ namespace WinPrint.Core {
             float yDpi = PrinterResolution.Y * dpiMultiplier;
             int xRes = (int)(Bounds.Width / 100 * xDpi);
             int yRes = (int)(Bounds.Height / 100 * yDpi);
-            if (cachedSheets.Count < sheetNum) {
+            if (_cachedSheets.Count < sheetNum) {
                 // Create a new bitmap object with the resolution of a printer page
                 Bitmap bmp = new Bitmap(xRes, yRes);
                 //bmp.SetResolution(xDpi, yDpi);
@@ -703,11 +699,11 @@ namespace WinPrint.Core {
                 Graphics g = Graphics.FromImage(bmp);
                 g.PageUnit = GraphicsUnit.Pixel;
                 PaintSheet(g, sheetNum);
-                cachedSheets.Add(bmp);
+                _cachedSheets.Add(bmp);
             }
 
             LogService.TraceMessage($"GetCachedSheet({sheetNum}) returning image.");
-            return cachedSheets[sheetNum - 1];
+            return _cachedSheets[sheetNum - 1];
         }
 
         private void PaintSheet(Graphics g, int sheetNum) {
@@ -715,8 +711,8 @@ namespace WinPrint.Core {
             // background needs to be filled image scaling to work right
             g.FillRectangle(Brushes.White, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
             //PaintRules(g);
-            headerVM.Paint(g, sheetNum);
-            footerVM.Paint(g, sheetNum);
+            _headerVM.Paint(g, sheetNum);
+            _footerVM.Paint(g, sheetNum);
 
             if (Loading) {
                 Log.Debug($"SheetViewModel.PaintSheet - Loading; can't paint");
@@ -728,7 +724,7 @@ namespace WinPrint.Core {
                 return;
             }
 
-            int pagesPerSheet = rows * cols;
+            int pagesPerSheet = _rows * _cols;
             // 1-based; assume 4-up...
             int startPage = (sheetNum - 1) * pagesPerSheet + 1;
             int endPage = startPage + pagesPerSheet - 1;
@@ -745,7 +741,7 @@ namespace WinPrint.Core {
                 if (ModelLocator.Current.Settings.PrintPageBounds || ModelLocator.Current.Settings.PreviewPageBounds)
                     PaintPageNum(g, pageOnSheet);
 
-                if (pageSeparator) {
+                if (_pageSeparator) {
                     // If there will be a page to the left of this page, draw vert separator
                     if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns - 1))
                         g.DrawLine(Pens.Black, w + (Padding / 2), Padding / 2, w + (Padding / 2), h - Padding);
@@ -768,19 +764,19 @@ namespace WinPrint.Core {
                 errorPen.DashStyle = DashStyle.Dash;
                 errorPen.Width = 4;
 
-                int leftMax = (int)Math.Round(printableArea.X);
-                int topMax = (int)Math.Round(printableArea.Top);
-                int rightMax = (int)Math.Round(bounds.Width - printableArea.Right);
-                int bottomMax = (int)Math.Round(bounds.Height - printableArea.Bottom);
+                int leftMax = (int)Math.Round(_printableArea.X);
+                int topMax = (int)Math.Round(_printableArea.Top);
+                int rightMax = (int)Math.Round(_bounds.Width - _printableArea.Right);
+                int bottomMax = (int)Math.Round(_bounds.Height - _printableArea.Bottom);
 
                 if (Margins.Left < leftMax)
-                    g.DrawLine(errorPen, printableArea.X, 0, printableArea.X, bounds.Height);
+                    g.DrawLine(errorPen, _printableArea.X, 0, _printableArea.X, _bounds.Height);
                 if (Margins.Top < topMax)
-                    g.DrawLine(errorPen, 0, printableArea.Top, bounds.Width, printableArea.Top);
+                    g.DrawLine(errorPen, 0, _printableArea.Top, _bounds.Width, _printableArea.Top);
                 if (Margins.Right < rightMax)
-                    g.DrawLine(errorPen, printableArea.Right, 0, printableArea.Right, bounds.Height);
+                    g.DrawLine(errorPen, _printableArea.Right, 0, _printableArea.Right, _bounds.Height);
                 if (Margins.Bottom < bottomMax)
-                    g.DrawLine(errorPen, 0, printableArea.Bottom, bounds.Width, printableArea.Bottom);
+                    g.DrawLine(errorPen, 0, _printableArea.Bottom, _bounds.Width, _printableArea.Bottom);
 
                 if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax) {
                     using System.Drawing.Font font = new System.Drawing.Font(FontFamily.GenericSansSerif, 14, FontStyle.Bold, GraphicsUnit.Point);
@@ -788,14 +784,14 @@ namespace WinPrint.Core {
                     ServiceLocator.Current.TelemetryService.TrackEvent("Margins of of bounds", new Dictionary<string, string> { ["Message"] = msg });
                     SizeF size = g.MeasureString(msg, font);
                     using StringFormat fmt = new StringFormat(StringFormat.GenericDefault) { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(msg, font, Brushes.Gray, bounds, fmt);
+                    g.DrawString(msg, font, Brushes.Gray, _bounds, fmt);
 
                     // Draw hatch outside printable area
-                    g.SetClip(bounds);
-                    Rectangle r = new Rectangle((int)Math.Floor(printableArea.Left), (int)Math.Floor(printableArea.Top), (int)Math.Ceiling(printableArea.Width) + 1, (int)Math.Ceiling(printableArea.Height) + 1);
+                    g.SetClip(_bounds);
+                    Rectangle r = new Rectangle((int)Math.Floor(_printableArea.Left), (int)Math.Floor(_printableArea.Top), (int)Math.Ceiling(_printableArea.Width) + 1, (int)Math.Ceiling(_printableArea.Height) + 1);
                     g.ExcludeClip(r);
                     using HatchBrush brush = new HatchBrush(HatchStyle.LightUpwardDiagonal, Color.Gray, Color.White);
-                    g.FillRectangle(brush, bounds);
+                    g.FillRectangle(brush, _bounds);
 
                 }
             }
@@ -854,10 +850,10 @@ namespace WinPrint.Core {
             // Draw Rules that are physical
             if ((settings.PrintPaperSize && !preview) || (settings.PreviewPaperSize && preview)) {
                 // Draw paper size
-                DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Width / 4, preview ? 0 : (int)-printableArea.Y),
+                DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Width / 4, preview ? 0 : (int)-_printableArea.Y),
                     new Point(PaperSize.Width / 4, PaperSize.Height), 4F, true);
                 DrawRule(g, font, Color.Gray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"",
-                    new Point(preview ? 0 : (int)-printableArea.X, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F, true);
+                    new Point(preview ? 0 : (int)-_printableArea.X, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F, true);
             }
 
             // Hard Margins
@@ -866,17 +862,17 @@ namespace WinPrint.Core {
             if ((settings.PrintHardMargins && !preview) || (settings.PreviewHardMargins && preview)) {
                 //GraphicsState state = g.Save();
                 //g.TranslateTransform(-HardMarginX, -HardMarginY);
-                if (sheet.Landscape) {
+                if (_sheet.Landscape) {
                     g.DrawString($"Landscape Angle = {LandscapeAngle}°", font, Brushes.YellowGreen, HardMarginX, HardMarginY);
                     if (LandscapeAngle == 270) {
                         // 270 degrees - marginX is on bottom and marginY is left
-                        DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"", new Point(sheet.Margins.Left, PaperSize.Height - (int)HardMarginX), new Point(PaperSize.Width - sheet.Margins.Right, PaperSize.Height - (int)HardMarginX), 5F);
-                        DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"", new Point((int)HardMarginY, sheet.Margins.Top), new Point((int)HardMarginY, PaperSize.Height - sheet.Margins.Bottom), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"", new Point(_sheet.Margins.Left, PaperSize.Height - (int)HardMarginX), new Point(PaperSize.Width - _sheet.Margins.Right, PaperSize.Height - (int)HardMarginX), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"", new Point((int)HardMarginY, _sheet.Margins.Top), new Point((int)HardMarginY, PaperSize.Height - _sheet.Margins.Bottom), 5F);
                     }
                     else {
                         // 90 degrees - marginX is on top and marginY is on right
-                        DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"", new Point(sheet.Margins.Left, (int)HardMarginX), new Point(PaperSize.Width - sheet.Margins.Right, (int)HardMarginX), 5F);
-                        DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"", new Point(PaperSize.Width - (int)HardMarginY, sheet.Margins.Top), new Point(PaperSize.Width - (int)HardMarginY, PaperSize.Height - sheet.Margins.Bottom), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginX - {HardMarginX / 100F}\"", new Point(_sheet.Margins.Left, (int)HardMarginX), new Point(PaperSize.Width - _sheet.Margins.Right, (int)HardMarginX), 5F);
+                        DrawRule(g, font, Color.YellowGreen, $"HardMarginY - {HardMarginY / 100F}\"", new Point(PaperSize.Width - (int)HardMarginY, _sheet.Margins.Top), new Point(PaperSize.Width - (int)HardMarginY, PaperSize.Height - _sheet.Margins.Bottom), 5F);
                     }
                 }
                 else {
@@ -893,10 +889,10 @@ namespace WinPrint.Core {
 
             // Margins       
             if ((settings.PrintMargins && !preview) || (settings.PreviewMargins && preview)) {
-                DrawRule(g, font, Color.Blue, $"Left Margin - {sheet.Margins.Left / 100F}\"", new Point(sheet.Margins.Left, sheet.Margins.Top), new Point(sheet.Margins.Left, Bounds.Bottom - sheet.Margins.Bottom), 2F);
-                DrawRule(g, font, Color.Blue, $"Right Margin - {sheet.Margins.Right / 100F}\"", new Point(Bounds.Right - sheet.Margins.Right, sheet.Margins.Top), new Point(Bounds.Right - sheet.Margins.Right, Bounds.Bottom - sheet.Margins.Bottom), 2F);
-                DrawRule(g, font, Color.Blue, $"Top Margin - {sheet.Margins.Top / 100F}\"", new Point(sheet.Margins.Left, sheet.Margins.Top), new Point(Bounds.Right - sheet.Margins.Right, sheet.Margins.Top), 2F);
-                DrawRule(g, font, Color.Blue, $"Bottom Margin - {sheet.Margins.Bottom / 100F}\"", new Point(sheet.Margins.Left, Bounds.Bottom - sheet.Margins.Bottom), new Point(Bounds.Right - sheet.Margins.Right, Bounds.Bottom - sheet.Margins.Bottom), 2F);
+                DrawRule(g, font, Color.Blue, $"Left Margin - {_sheet.Margins.Left / 100F}\"", new Point(_sheet.Margins.Left, _sheet.Margins.Top), new Point(_sheet.Margins.Left, Bounds.Bottom - _sheet.Margins.Bottom), 2F);
+                DrawRule(g, font, Color.Blue, $"Right Margin - {_sheet.Margins.Right / 100F}\"", new Point(Bounds.Right - _sheet.Margins.Right, _sheet.Margins.Top), new Point(Bounds.Right - _sheet.Margins.Right, Bounds.Bottom - _sheet.Margins.Bottom), 2F);
+                DrawRule(g, font, Color.Blue, $"Top Margin - {_sheet.Margins.Top / 100F}\"", new Point(_sheet.Margins.Left, _sheet.Margins.Top), new Point(Bounds.Right - _sheet.Margins.Right, _sheet.Margins.Top), 2F);
+                DrawRule(g, font, Color.Blue, $"Bottom Margin - {_sheet.Margins.Bottom / 100F}\"", new Point(_sheet.Margins.Left, Bounds.Bottom - _sheet.Margins.Bottom), new Point(Bounds.Right - _sheet.Margins.Right, Bounds.Bottom - _sheet.Margins.Bottom), 2F);
             }
 
             // These rules depend on Hard Margins
@@ -910,13 +906,13 @@ namespace WinPrint.Core {
 
             // Header
             if ((settings.PreviewHeaderFooterBounds && preview) || (settings.PrintHeaderFooterBounds && !preview)) {
-                g.FillRectangle(Brushes.Gray, headerVM.Bounds);
-                g.FillRectangle(Brushes.Gray, footerVM.Bounds);
+                g.FillRectangle(Brushes.Gray, _headerVM.Bounds);
+                g.FillRectangle(Brushes.Gray, _footerVM.Bounds);
             }
 
             // ContentBounds - between headers & footers
             if ((settings.PrintContentBounds && !preview) || (settings.PreviewContentBounds && preview)) {
-                g.FillRectangle(Brushes.LightGray, contentBounds);
+                g.FillRectangle(Brushes.LightGray, _contentBounds);
             }
 
             // Printable area 
