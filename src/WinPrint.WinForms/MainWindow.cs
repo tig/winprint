@@ -463,7 +463,7 @@ namespace WinPrint.Winforms {
                         }));
                         // This is an IO bound operation. 
                         // TODO: This does not need to run on another thread if we are using async/await correctly
-                        await printPreview.SheetViewModel.LoadAsync(activeFile, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+                        await printPreview.SheetViewModel.LoadFileAsync(activeFile, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                         // Set landscape. This causes other DefaultPageSettings to change
                         // These are CPU bound operations. 
@@ -670,7 +670,7 @@ namespace WinPrint.Winforms {
             print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             print.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
-            await print.SheetViewModel.LoadAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+            await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);

@@ -197,7 +197,7 @@ namespace WinPrint.Console {
             int sheetsCounted = 0;
 
             Log.Debug("awaiting LoadAsync {file}, contentType = {t}.", file, ModelLocator.Current.Options.ContentType);
-            var type = await print.SheetViewModel.LoadAsync(file, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+            var type = await print.SheetViewModel.LoadFileAsync(file, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
             Log.Debug("back from LoadAsync. Type is {type}", type);
 
             // --c

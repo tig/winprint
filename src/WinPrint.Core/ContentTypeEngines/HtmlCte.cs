@@ -57,12 +57,12 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         private Bitmap htmlBitmap;
 
-        public async override Task<bool> LoadAsync(string filePath) {
-            ready = false;
-            litehtml = null;
-            htmlBitmap = null;
-            return await base.LoadAsync(filePath);
-        }
+        //public async override Task<bool> LoadAsync(string filePath) {
+        //    ready = false;
+        //    litehtml = null;
+        //    htmlBitmap = null;
+        //    return await base.LoadAsync(filePath);
+        //}
 
         public override async Task<bool> SetDocumentAsync(string doc) {
             ready = false;

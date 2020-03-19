@@ -46,43 +46,43 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         private bool convertedToHtml = false;
 
-        public async override Task<bool> LoadAsync(string filePath) {
-            LogService.TraceMessage();
+//        public async override Task<bool> LoadAsync(string filePath) {
+//            LogService.TraceMessage();
 
-            if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
-                Log.Warning("Prism.js is not installed. Installing...");
+//            if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
+//                Log.Warning("Prism.js is not installed. Installing...");
 
-                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("-g install prismjs");
-                if (string.IsNullOrEmpty(result)) {
-                    Log.Debug("Could not install PrismJS");
-                    throw new InvalidOperationException("Could not install PrismJS.");
-                }
-            }
+//                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("-g install prismjs");
+//                if (string.IsNullOrEmpty(result)) {
+//                    Log.Debug("Could not install PrismJS");
+//                    throw new InvalidOperationException("Could not install PrismJS.");
+//                }
+//            }
 
-            if (!await base.LoadAsync(filePath)) return false;
+//            if (!await base.LoadAsync(filePath)) return false;
 
-            if (!convertedToHtml)
-                document = await CodeToHtml(filePath, Language);
-            convertedToHtml = true;
+//            if (!convertedToHtml)
+//                document = await CodeToHtml(filePath, Language);
+//            convertedToHtml = true;
 
-            //Helpers.Logging.TraceMessage(document);
+//            //Helpers.Logging.TraceMessage(document);
 
-#if DEBUG
-            var w = new StreamWriter(filePath + "_.html");
-            w.Write(document);
-            w.Close();
-#endif
+//#if DEBUG
+//            var w = new StreamWriter(filePath + "_.html");
+//            w.Write(document);
+//            w.Close();
+//#endif
 
-#if USE_COLORCODE
-            var formatter = new HtmlFormatter();
-            var language = ColorCode.Languages.FindById(Type);
-            document = formatter.GetHtmlString(document, language);
-            StreamWriter w = new StreamWriter(title + "_.html");
-            w.Write(document);
-            w.Close();
-#endif
-            return !string.IsNullOrEmpty(document);
-        }
+//#if USE_COLORCODE
+//            var formatter = new HtmlFormatter();
+//            var language = ColorCode.Languages.FindById(Type);
+//            document = formatter.GetHtmlString(document, language);
+//            StreamWriter w = new StreamWriter(title + "_.html");
+//            w.Write(document);
+//            w.Close();
+//#endif
+//            return !string.IsNullOrEmpty(document);
+//        }
 
         public override async Task<bool> SetDocumentAsync(string doc) {
             LogService.TraceMessage();

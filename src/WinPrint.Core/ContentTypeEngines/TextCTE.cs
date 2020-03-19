@@ -89,10 +89,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             disposed = true;
         }
 
-        public override async Task<bool> LoadAsync(string filePath) {
-            LogService.TraceMessage();
-            return await base.LoadAsync(filePath);
-        }
+        //public override async Task<bool> LoadAsync(string filePath) {
+        //    LogService.TraceMessage();
+        //    return await base.LoadAsync(filePath);
+        //}
 
         public override async Task<bool> SetDocumentAsync(string doc) {
             Document = doc;

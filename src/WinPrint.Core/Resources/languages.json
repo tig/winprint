@@ -245,6 +245,7 @@
     "*.gedcom": "gedcom",
     "*.gherkin": "gherkin",
     "*.git": "git",
+    "*.gitconfig":  "ini",
     "*.glsl": "glsl",
     "*.fp": "glsl",
     "*.frg": "glsl",

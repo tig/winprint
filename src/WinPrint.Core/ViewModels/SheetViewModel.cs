@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -52,12 +53,13 @@ namespace WinPrint.Core {
         public ContentSettings ContentSettings { get => _contentSettings; set => SetField(ref _contentSettings, value); }
         private ContentSettings _contentSettings;
 
-        // 
+        /// <summary>
+        /// The path of the file being printed. Used for header/footer display purposes only.
+        /// </summary>
         public string File {
             get => _file;
             internal set {
                 SetField(ref _file, value);
-                LogService.TraceMessage($"SheetViewModel.File set {_file}");
             }
         }
         private string _file;
@@ -232,57 +234,45 @@ namespace WinPrint.Core {
             newSheet.PropertyChanged += OnSheetPropertyChanged();
         }
 
-        
-
         /// <summary>
         /// Loads the specified file via the appropriate Content Type Engine.
         /// </summary>
         /// <param name="filePath">File to load.</param>
-        /// <param name="contentType">If not null or empty, defines the content type engine to use.</param>
-        /// <returns></returns>
-        public async Task<string> LoadAsync(string filePath, string contentType) {
-            LogService.TraceMessage($"{filePath}");
-
+        /// <param name="contentType">If null or empty, the file extension will be used to determine content type engine.</param>
+        /// <returns>True if content type engine was initialized. False otherwise.</returns>
+        public async Task<bool> LoadFileAsync(string filePath, string contentType = null) {
+            LogService.TraceMessage($"{filePath} - {contentType}");
             File = filePath;
-            Loading = true;
 
-            // Reset the SVM in case it was not already done
-            Reset();
+            //filePath = Path.GetFullPath(filePath);
+            //Log.Debug("full path = {path}", filePath);
 
-            ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(filePath, contentType);
-            ContentEngine.PropertyChanged += OnContentPropertyChanged();
-
-            // Content settings in Sheet take precidence over Engine
-            if (ContentEngine.ContentSettings is null) {
-                ContentEngine.ContentSettings = new ContentSettings();
-                // TODO: set some defaults
+            if (string.IsNullOrEmpty(contentType)) {
+                // Use file extension to determine contentType
+                contentType = ContentTypeEngineBase.GetContentType(filePath);
             }
 
-            if (ContentSettings != null)
-                ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
-
             // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
-            LogService.TraceMessage($"Calling {ContentEngine.GetType()}.LoadAsync({File})...");
-            var success = await ContentEngine.LoadAsync(File).ConfigureAwait(false);
-            LogService.TraceMessage($"Read succeeded? {success}");
-
-            // Set this last to notify loading is done with File valid
-            Loading = false;
-            return ContentEngine.GetContentType();
+            using StreamReader streamToPrint = new StreamReader(filePath);
+            return await LoadStringAsync(await streamToPrint.ReadToEndAsync(), contentType);
         }
 
         /// <summary>
         /// Loads the specified file via the appropriate Content Type Engine.
         /// </summary>
         /// <param name="document">Document contents to load.</param>
-        /// <param name="contentType">If not null or empty, defines the content type engine to use.</param>
-        /// <returns></returns>
-        public async Task<string> SetDocumentAsync(string document, string contentType) {
+        /// <param name="contentType">The content type engine to use.</param>
+        /// <returns>True if content type engine was initialized. False otherwise.</returns>
+        public async Task<bool> LoadStringAsync(string document, string contentType) {
             LogService.TraceMessage();
-            
+            if (document == null) throw new ArgumentNullException("document can't be null");
+            if (contentType == null) throw new ArgumentNullException("contentType can't be null");
+
+            Loading = true;
+
             Reset();
 
-            ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(null, contentType);
+            ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType);
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null) {
@@ -298,7 +288,7 @@ namespace WinPrint.Core {
             // Set this last to notify loading is done with File valid
             Loading = false;
 
-            return ContentEngine.GetContentType();
+            return success;
         }
 
             /// <summary>

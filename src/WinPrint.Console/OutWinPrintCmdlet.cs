@@ -194,7 +194,7 @@ namespace WinPrint.Console {
             print.SheetViewModel.SetSheet(sheet);
             if (string.IsNullOrEmpty(_cteName))
                 _cteName = "text/plain";
-            await print.SheetViewModel.SetDocumentAsync(text, _cteName).ConfigureAwait(false);
+            await print.SheetViewModel.LoadStringAsync(text, _cteName).ConfigureAwait(false);
 
             var sheetsCounted = await print.DoPrint().ConfigureAwait(false);
 
