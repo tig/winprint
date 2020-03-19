@@ -27,9 +27,6 @@ namespace WinPrint.Core {
         private SheetSettings sheet;
 
         // These properties are all defined by user and sync'd with the Sheet model
-        private string title;
-        public string Title { get => title; set => SetField(ref title, value); }
-
         private Margins margins;
         public Margins Margins { get => margins; set => SetField(ref margins, value); }
 
