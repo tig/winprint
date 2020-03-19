@@ -119,15 +119,12 @@ namespace WinPrint.Core.ContentTypeEngines {
                 dpiX = dpiY = 96;
 
             // Create a representative Graphcis used for determining glyph metrics.      
-            LogService.TraceMessage();
-
             using Bitmap bitmap = new Bitmap(1, 1);
             bitmap.SetResolution(dpiX, dpiY);
             var g = Graphics.FromImage(bitmap);
             g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
 
             // Calculate the number of lines per page.
-            LogService.TraceMessage();
             cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size / 72F * 96, ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
             //lineHeight = cachedFont.GetHeight(g) ;
 
@@ -145,8 +142,6 @@ namespace WinPrint.Core.ContentTypeEngines {
             //lineHeight = lineSize.Height;
 
             lineHeight = cachedFont.GetHeight(dpiY);
-            Log.Debug("lineHeight = {h}\"", lineHeight / 100F);
-
             linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
             Log.Debug("linesPerPage = {l}", linesPerPage);
 

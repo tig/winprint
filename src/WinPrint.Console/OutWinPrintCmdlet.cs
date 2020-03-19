@@ -1,27 +1,24 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Management.Automation;
-using System.Management.Automation.Internal;
-using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.PowerShell.Commands.Internal.Format;
-using Microsoft.PowerShell.Commands;
-using WinPrint.Core;
-using System.Linq;
-using System.Management.Automation.Runspaces;
-using System.Globalization;
-using WinPrint.Core.Models;
-using WinPrint.Core.Services;
-using System.Threading.Tasks;
-using Serilog.Events;
 using System.Diagnostics;
 using System.IO;
+using System.Management.Automation;
+using System.Management.Automation.Internal;
+using System.Management.Automation.Runspaces;
+using System.Reflection;
+using System.Threading.Tasks;
+using Serilog;
+using Serilog.Events;
+using WinPrint.Core;
+using WinPrint.Core.Models;
+using WinPrint.Core.Services;
+using TTRider.PowerShellAsync;
 
-namespace WinPrint.PowerShell {
+namespace WinPrint.Console {
     [Cmdlet(VerbsData.Out, nounName: "WinPrint", HelpUri = "https://tig.github.io./winprint")]
     [Alias("wp")]
-    public class OutWinPrintCmdlet : PSCmdlet {
+    public class OutWinPrintCmdlet : AsyncCmdlet {
 
         private const string DataNotQualifiedForWinprint = "DataNotQualifiedForWinPrint";
 
@@ -30,6 +27,8 @@ namespace WinPrint.PowerShell {
         public OutWinPrintCmdlet() {
             //this.implementation = new OutputManagerInner();
         }
+
+        #region Command Line Switches
 
         /// <summary>
         /// Optional name of the printer to print to.
@@ -48,7 +47,7 @@ namespace WinPrint.PowerShell {
         /// <summary>
         /// Optional name of the WinPrint sheet definition to use.
         /// </summary>
-        [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\"")]
+        [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")")]
         [Alias("Sheet")]
         public string SheetDefintion {
             get { return _sheetDefintion; }
@@ -62,19 +61,21 @@ namespace WinPrint.PowerShell {
         /// Optional name of the WinPrint Content Type Engine to use.
         /// </summary>
         [Parameter(HelpMessage = "Name of the WinPrint Content Type Engine to use (default is \"text/plain\")")]
-        [Alias("cte")]
+        [Alias("Engine")]
         public string ContentTypeEngine {
             get { return _cteName; }
 
             set { _cteName = value; }
         }
-
         private string _cteName;
 
-        #region Command Line Switches
+        private bool _verbose = false;
 
         [Parameter(ValueFromPipeline = true)]
         public PSObject InputObject { set; get; } = AutomationNull.Value;
+
+        [Parameter(HelpMessage = "Exit code is set to number of sheets that would be printed. Use -Verbose to display the count.")]
+        public SwitchParameter CountSheets { get; set; }
 
         #endregion
 
@@ -83,22 +84,16 @@ namespace WinPrint.PowerShell {
         /// Read command line parameters. 
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
-        protected override void BeginProcessing() {
-            // set up the Scree Host interface
-            //OutputManagerInner outInner = (OutputManagerInner)this.implementation;
-
-            ////outInner.LineOutput = InstantiateLineOutputInterface();
-            //this.implementation.OuterCmdletCall = new ImplementationCommandBase.OuterCmdletCallback(this.OuterCmdletCall);
-            //this.implementation.InputObjectCall = new ImplementationCommandBase.InputObjectCallback(this.InputObjectCall);
-            //this.implementation.WriteObjectCall = new ImplementationCommandBase.WriteObjectCallback(this.WriteObjectCall);
-
-            //this.implementation.CreateTerminatingErrorContext();
-
-            //implementation.BeginProcessing();
-            // finally call the base class for general hookup
-
+        protected override async Task BeginProcessingAsync() {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+            ServiceLocator.Current.TelemetryService.Start("out-winprint");
+            ServiceLocator.Current.LogService.Start("out-winprint");
+
+            if(MyInvocation.BoundParameters.TryGetValue("Verbose", out object verbose)) {
+                _verbose = true;
+            }
 
             if (MyInvocation.BoundParameters.TryGetValue("Debug", out object debug)) {
                 ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
@@ -108,14 +103,12 @@ namespace WinPrint.PowerShell {
                 ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
             }
 
-            ServiceLocator.Current.TelemetryService.Start("out-winprint");
-            ServiceLocator.Current.LogService.Start("out-winprint");
-
-            base.BeginProcessing();
+            await base.BeginProcessingAsync();
         }
 
         // This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called
-        protected override void ProcessRecord() {
+        protected override async Task ProcessRecordAsync() {
+            await base.ProcessRecordAsync();
             if (InputObject == null || InputObject == AutomationNull.Value) {
                 return;
             }
@@ -130,7 +123,6 @@ namespace WinPrint.PowerShell {
             else {
                 ProcessObject(InputObject);
             }
-
         }
 
         private void ProcessObject(PSObject input) {
@@ -155,8 +147,8 @@ namespace WinPrint.PowerShell {
         }
 
         // This method will be called once at the end of pipeline execution; if no input is received, this method is not called
-        protected override async void EndProcessing() {
-            base.EndProcessing();
+        protected override async Task EndProcessingAsync() {
+            await base.EndProcessingAsync();
 
             //Return if no objects
             if (_psObjects.Count == 0) {
@@ -167,9 +159,10 @@ namespace WinPrint.PowerShell {
             var result = this.SessionState.InvokeCommand.InvokeScript(@"$input| Out-String", true, PipelineResultTypes.None, _psObjects, null);
             string text = result[0].ToString();
 
-            this.WriteObject(text, false);
+            //this.WriteObject(text, false);
 
-            return;
+            ServiceLocator.Current.UpdateService.GotLatestVersion += LogUpdateResults();
+            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
 
             var print = new Print();
 
@@ -181,8 +174,22 @@ namespace WinPrint.PowerShell {
             //print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
             //print.SheetViewModel.ReflowProgress += (s, msg) => this.WriteInformation(new InformationRecord($"Reflow Progress {msg}", "script"));
 
+            print.PrintingSheet += (s, sheetNum) => {
+                //if (_verbose)
+                Log.Information("Printing sheet {sheetNum}", sheetNum);
+            };
+
+
             string sheetID;
             SheetSettings sheet = print.SheetViewModel.FindSheet(_sheetDefintion, out sheetID);
+
+            if (_verbose) {
+                Log.Information("    Printer:          {printer}", print.PrintDocument.PrinterSettings.PrinterName);
+                Log.Information("    Paper Size:       {size}", print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
+                Log.Information("    Orientation:      {s}", print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
+                Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
+            }
+
             print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
             print.SheetViewModel.SetSheet(sheet);
             if (string.IsNullOrEmpty(_cteName))
@@ -190,6 +197,13 @@ namespace WinPrint.PowerShell {
             await print.SheetViewModel.SetDocumentAsync(text, _cteName).ConfigureAwait(false);
 
             var sheetsCounted = await print.DoPrint().ConfigureAwait(false);
+
+            if (_verbose) {
+                if (ModelLocator.Current.Options.CountPages)
+                    Log.Information("Would have printed a total of {pagesCounted} sheets.", sheetsCounted);
+                else
+                    Log.Information("Printed a total of {pagesCounted} sheets.", sheetsCounted);
+            }
 
             //this.WriteProgress(new ProgressRecord(0, "Printing", $"Printed {sheetsCounted} sheets"));
 
@@ -210,9 +224,22 @@ namespace WinPrint.PowerShell {
 
             //this.WriteObject(sheetsCounted, false);
 
+            ServiceLocator.Current.UpdateService.GotLatestVersion -= LogUpdateResults();
             AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+        }
 
+        private static EventHandler<Version> LogUpdateResults() {
+            return (s, v) => {
+                var cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
+                Log.Debug("Got new version info. Current: {cur}, Available: {version}", cur, v);
+                if (v != null && v.CompareTo(cur) > 0) {
+                    Log.Information("A newer version of winprint ({v}) is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
+                }
+                else {
+                    Log.Information("This is the most up-to-date version of winprint");
+                }
+            };
         }
 
         public async Task<string> GetNodeDirectory() {
@@ -248,8 +275,8 @@ namespace WinPrint.PowerShell {
             return base.GetResourceString(baseName, resourceId);
         }
 
-        protected override void StopProcessing() {
-            base.StopProcessing();
+        protected override async Task StopProcessingAsync() {
+            await base.StopProcessingAsync();
         }
 
         /// <summary>

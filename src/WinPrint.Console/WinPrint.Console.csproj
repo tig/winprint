@@ -9,7 +9,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.3511</Version>
+    <Version>2.0.0.3717</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -23,6 +23,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Management.Automation" Version="7.0.0" />
+    <PackageReference Include="TTRider.PowerShellAsync" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,9 +45,5 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(outdir)*.* $(solutiondir)Winprint.PowerShell\$(outdir)" />
-  </Target>
 
 </Project>

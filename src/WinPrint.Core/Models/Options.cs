@@ -52,7 +52,7 @@ namespace WinPrint.Core.Models {
         public int ToPage { get; set; }
 
         [SafeForTelemetry]
-        [Option('c', "count-sheets", Default = false, Required = false, HelpText = "Exit code is set to numer of sheets that would be printed. Use --verbose to diplsay the count.")]
+        [Option('c', "count-sheets", Default = false, Required = false, HelpText = "Exit code is set to number of sheets that would be printed. Use --verbose to display the count.")]
         public bool CountPages { get; set; }
 
         [SafeForTelemetry]

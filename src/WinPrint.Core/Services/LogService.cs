@@ -32,7 +32,7 @@ namespace WinPrint.Core.Services {
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
 #endif
             string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
-            LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
+            LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{appName}.txt".Replace(@"file:\", "");
 
             // Setup logging
             Log.Logger = new LoggerConfiguration()

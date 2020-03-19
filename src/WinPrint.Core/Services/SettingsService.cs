@@ -175,8 +175,8 @@ namespace WinPrint.Core.Services {
                 // Get dir of .exe
                 string path = AppDomain.CurrentDomain.BaseDirectory;
                 string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                Log.Debug("path = {path}", path);
-                Log.Debug("appdata = {appdata}", appdata);
+                //Log.Debug("path = {path}", path);
+                //Log.Debug("appdata = {appdata}", appdata);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
                     // Your OSX code here.

@@ -46,8 +46,6 @@ namespace WinPrint.Console {
                 else {
                     ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
                 }
-                Log.Debug("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
-                if (o.Verbose) Log.Information("Command Line: {CmdLine}", Parser.Default.FormatCommandLine(o));
                 var program = new Program();
                 Task.WaitAll(program.Go());
             })
@@ -70,6 +68,13 @@ namespace WinPrint.Console {
             int exitCode = -1;
 
             Log.Debug(LogService.GetTraceMsg(), "Go");
+
+            if (ModelLocator.Current.Options.Verbose) {
+                var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location);
+                Log.Information("{appname} {version} - {copyright} - {link}", AppDomain.CurrentDomain.FriendlyName, ver.FileVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
+                Log.Information("Command Line: {cmdline}", Parser.Default.FormatCommandLine(ModelLocator.Current.Options));
+            }
+
             print = new Print();
 
             print.PrintingSheet += (s, sheetNum) => Log.Information("Printing sheet {pageNum}", sheetNum);
@@ -82,15 +87,8 @@ namespace WinPrint.Console {
                 // This will exit this app
                 StartGui();
 
-            ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
-                var cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
-                Log.Debug("Got new version info. Current: {cur}, Available: {v}", cur, v);
-                if (v != null && v.CompareTo(cur) > 0) {
-                    Log.Information("A newer version ({v}) of winprint is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
-                }
-            };
-
-            await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync();
+            ServiceLocator.Current.UpdateService.GotLatestVersion += LogUpdateResults();
+            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
 
             try {
                 // --s
@@ -111,13 +109,12 @@ namespace WinPrint.Console {
                 if (ModelLocator.Current.Options.Verbose) {
                     Log.Information("    Printer:          {printer}", print.PrintDocument.PrinterSettings.PrinterName);
                     Log.Information("    Paper Size:       {size}", print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
-                    Log.Information("    Orientation:      {s}", print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
+                    Log.Information("    Orientation:      {orientation}", print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
                     Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
                 }
 
                 // Must set landsacpe after printer/paper selection
                 print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
-                Log.Debug("Calling SetSheet");
                 print.SheetViewModel.SetSheet(sheet);
 
                 // Go through each file on command line and print them
@@ -166,11 +163,25 @@ namespace WinPrint.Console {
             finally {
                 ServiceLocator.Current.TelemetryService.Stop();
 
+                ServiceLocator.Current.UpdateService.GotLatestVersion -= LogUpdateResults();
+
                 if (ModelLocator.Current.Options.Verbose) 
                     Log.Information($"Exiting with exit code {exitCode}.");
                 Log.Debug($"Environment.Exit({exitCode})");
                 Environment.Exit(exitCode);
             }
+        }
+
+        private static EventHandler<Version> LogUpdateResults() {
+            return (s, v) => {
+                var cur = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion);
+                Log.Debug("Got new version info. Current: {cur}, Available: {version}", cur, v);
+                if (v != null && v.CompareTo(cur) > 0) {
+                    Log.Information("A newer version of winprint ({v}) is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
+                }else {
+                    Log.Information("This is the most up-to-date version of winprint");
+                }
+            };
         }
 
         private static void LogException(Exception e) {
