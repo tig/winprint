@@ -156,7 +156,7 @@ namespace WinPrint.Console {
             }
 
             // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
-            var result = this.SessionState.InvokeCommand.InvokeScript(@"$input| Out-String", true, PipelineResultTypes.None, _psObjects, null);
+            var result = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null);
             string text = result[0].ToString();
 
             //this.WriteObject(text, false);

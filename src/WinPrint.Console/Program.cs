@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Linq;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 using System.Reflection;
 using System.Threading.Tasks;
 using CommandLine;
@@ -23,36 +25,95 @@ namespace WinPrint.Console {
         private static ParserResult<Options> result;
 
         static void Main(string[] args) {
-            ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
-            ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
+            //ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
 
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+            //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
 
-            // Parse command line
-            using var parser = new Parser(with => {
-                with.EnableDashDash = true;
-                with.HelpWriter = null;
-            });
-            result = parser.ParseArguments<Options>(args);
-            result.WithParsed(o => {
-                ServiceLocator.Current.TelemetryService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
-                ModelLocator.Current.Options.CopyPropertiesFrom(o);
+            //Runspace runspace = RunspaceFactory.CreateRunspace(runspaceConfiguration);
+            //runspace.Open();
 
-                if (o.Debug) {
-                    ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                    ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                }
-                else {
-                    ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
-                }
-                var program = new Program();
-                Task.WaitAll(program.Go());
-            })
-            .WithNotParsed((errs) => DisplayHelp(result, errs));
+            //RunspaceInvoke scriptInvoker = new RunspaceInvoke(runspace);
 
-            Log.Debug($"Exiting Main - This should never happen.");
-            Environment.Exit(-1);
+            //Pipeline pipeline = runspace.CreatePipeline();
+
+            ////Here's how you add a new script with arguments
+            //Command myCommand = new Command(scriptfile);
+            //CommandParameter testParam = new CommandParameter("key", "value");
+            //myCommand.Parameters.Add(testParam);
+
+            //pipeline.Commands.Add(myCommand);
+
+            //// Execute PowerShell script
+            //results = pipeline.Invoke();
+
+            //var script = "get-process";
+
+            Runspace runspace = RunspaceFactory.CreateRunspace();
+            runspace.Open();
+            Pipeline pipeline = runspace.CreatePipeline();
+
+            Command importCmd = new Command(@"import-module .\winprint.dll -verbose; get-content .\winprint.config.json | out-winprint -p ""Microsoft Print to PDF""", true);
+            pipeline.Commands.Add(importCmd);
+            
+            // Execute PowerShell script
+            var results = pipeline.Invoke();
+            if (pipeline.HadErrors) {
+                Log.Debug("error: {error}", pipeline.Error.ReadToEnd());
+                return;
+            }
+            foreach (dynamic result in results) {
+                Log.Debug("result: {result}", result.ToString());
+            }
+
+
+            //_powershell.AddCommand(script);
+            //_powershell.Invoke();
+            //foreach (var rec in _powershell.Streams.Progress)
+            //    Log.Debug("progress: {progress}", rec.StatusDescription);
+
+            //foreach (var rec in _powershell.Streams.Error)
+            //    Log.Debug("error: {message}", rec.ErrorDetails.Message);
+
+            //foreach (var rec in _powershell.Streams.Warning)
+            //    Log.Debug("warning: {message}", rec.Message);
+
+            //foreach (var rec in _powershell.Streams.Information)
+            //    Log.Debug("info: {info}", rec.ToString());
+
+            //foreach (var rec in _powershell.Streams.Verbose)
+            //    Log.Debug("verbose: {message}", rec.Message);
+
+
+
+            //ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
+
+            //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+            //// Parse command line
+            //using var parser = new Parser(with => {
+            //    with.EnableDashDash = true;
+            //    with.HelpWriter = null;
+            //});
+            //result = parser.ParseArguments<Options>(args);
+            //result.WithParsed(o => {
+            //    ServiceLocator.Current.TelemetryService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
+            //    ModelLocator.Current.Options.CopyPropertiesFrom(o);
+
+            //    if (o.Debug) {
+            //        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+            //        ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
+            //    }
+            //    else {
+            //        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
+            //    }
+            //    var program = new Program();
+            //    Task.WaitAll(program.Go());
+            //})
+            //.WithNotParsed((errs) => DisplayHelp(result, errs));
+
+            //Log.Debug($"Exiting Main - This should never happen.");
+            //Environment.Exit(-1);
         }
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {

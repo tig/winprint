@@ -9,7 +9,7 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.0.0.3733</Version>
+    <Version>2.0.0.3783</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -19,6 +19,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.PowerShell.Commands.Diagnostics" Version="7.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.Commands.Management" Version="7.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.Commands.Utility" Version="7.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.ConsoleHost" Version="7.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0" />
+    <PackageReference Include="Microsoft.WSMan.Management" Version="7.0.0" />
     <PackageReference Include="MSBump" Version="2.3.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
