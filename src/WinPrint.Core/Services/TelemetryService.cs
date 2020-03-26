@@ -49,6 +49,9 @@ namespace WinPrint.Core.Services {
             h.Initialize();
             h.ComputeHash(Encoding.UTF8.GetBytes($"{Environment.UserName}/{Environment.MachineName}"));
             telemetry.Context.User.Id = Convert.ToBase64String(h.Hash);
+            // See: https://stackoverflow.com/questions/42861344/how-to-overwrite-or-ignore-cloud-roleinstance-with-application-insights
+            telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
+
 
             var properties = new Dictionary<string, string> {
                ["app"] = appName,
