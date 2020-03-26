@@ -26,6 +26,7 @@ namespace WinPrint.Console {
 
         static void Main(string[] args) {
             //ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
+            //Log.Debug("hola");
 
             //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
 
@@ -52,7 +53,7 @@ namespace WinPrint.Console {
             runspace.Open();
             Pipeline pipeline = runspace.CreatePipeline();
 
-            Command importCmd = new Command(@"import-module .\winprint.dll -verbose; get-content .\winprint.config.json | out-winprint -p ""Microsoft Print to PDF""", true);
+            Command importCmd = new Command(@$"import-module .\winprint.dll -verbose; get-content {args[0]} | out-winprint {args[1]}", true);
             pipeline.Commands.Add(importCmd);
             
             // Execute PowerShell script

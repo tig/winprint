@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -20,7 +21,7 @@ namespace WinPrint.Core.Services {
 
         private Stopwatch runtime;
 
-        public void Start(string appName) {
+        public void Start(string appName, IDictionary<string, string> startProperties = null) {
             runtime = System.Diagnostics.Stopwatch.StartNew();
 
             var val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel Systems\winprint", "Telemetry", 0);
@@ -53,14 +54,18 @@ namespace WinPrint.Core.Services {
             telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
 
 
-            var properties = new Dictionary<string, string> {
-               ["app"] = appName,
-               ["version"] = telemetry.Context.Component.Version,
-               ["os"] = Environment.OSVersion.ToString(),
-               ["arch"] = Environment.Is64BitProcess ? "x64" : "x86",
-               ["dotNetVersion"] = Environment.Version.ToString()
-            };
-            TrackEvent("Application Started", properties);
+            if (startProperties == null)
+                startProperties = new Dictionary<string, string>();
+
+            // Merged passed in properites
+            startProperties.Concat(new Dictionary<string, string> {
+                ["app"] = appName,
+                ["version"] = telemetry.Context.Component.Version,
+                ["os"] = Environment.OSVersion.ToString(),
+                ["arch"] = Environment.Is64BitProcess ? "x64" : "x86",
+                ["dotNetVersion"] = Environment.Version.ToString()
+            }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            TrackEvent("Application Started", startProperties);
         }
 
         public void Stop() {

@@ -58,7 +58,7 @@ namespace WinPrint.Core {
         /// </summary>
         public string File {
             get => _file;
-            internal set {
+            set {
                 SetField(ref _file, value);
             }
         }

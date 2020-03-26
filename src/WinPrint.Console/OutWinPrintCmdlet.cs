@@ -14,6 +14,11 @@ using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using TTRider.PowerShellAsync;
+using System.Threading;
+using Serilog.Core;
+using System.Drawing.Printing;
+using System.Text.Json;
+using System.ComponentModel;
 
 namespace WinPrint.Console {
     [Cmdlet(VerbsData.Out, nounName: "WinPrint", HelpUri = "https://tig.github.io./winprint")]
@@ -69,7 +74,25 @@ namespace WinPrint.Console {
         }
         private string _cteName;
 
+        /// <summary>
+        /// Optional FileName - will be displayed in header/footer and as title of print job.
+        /// </summary>
+        [Parameter(HelpMessage = "Filename to be displayed in header/footer and as title of print job.")]
+        [Alias("File")]
+        public string Filename {
+            get { return _fileName; }
+
+            set { _fileName = value; }
+        }
+        private string _fileName;
+
         private bool _verbose = false;
+
+#if DEBUG
+        private bool _debug = true;
+#else
+        private bool _debug = false;
+#endif
 
         [Parameter(ValueFromPipeline = true)]
         public PSObject InputObject { set; get; } = AutomationNull.Value;
@@ -78,6 +101,8 @@ namespace WinPrint.Console {
         public SwitchParameter CountSheets { get; set; }
 
         #endregion
+
+        private Print print;
 
         #region Overrides
         /// <summary>
@@ -88,20 +113,23 @@ namespace WinPrint.Console {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            ServiceLocator.Current.TelemetryService.Start("out-winprint");
-            ServiceLocator.Current.LogService.Start("out-winprint");
-
-            if(MyInvocation.BoundParameters.TryGetValue("Verbose", out object verbose)) {
+            if (MyInvocation.BoundParameters.TryGetValue("Verbose", out object verbose))
                 _verbose = true;
-            }
+            if (MyInvocation.BoundParameters.TryGetValue("Debug", out object debug))
+                _debug = true;
 
-            if (MyInvocation.BoundParameters.TryGetValue("Debug", out object debug)) {
-                ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-                ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-            }
-            else {
-                ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
-            }
+            ServiceLocator.Current.TelemetryService.Start(this.MyInvocation.MyCommand.Name,
+                startProperties: new Dictionary<string, string> {
+                    ["PowerShellVersion"] = this.Host.Version.ToString(),
+                    ["InvocationName"] = this.MyInvocation.InvocationName,
+                    ["Debug"] = _debug.ToString(),
+                    ["Verbose"] = _verbose.ToString()
+                }); ;
+
+            ServiceLocator.Current.LogService.Start(this.MyInvocation.MyCommand.Name, new PowerShellSink(this), _debug, _verbose);
+
+            var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location);
+            Log.Information("{appname} {version} - {copyright} - {link}", this.MyInvocation.MyCommand.Name, ver.FileVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
 
             await base.BeginProcessingAsync();
         }
@@ -150,6 +178,11 @@ namespace WinPrint.Console {
         protected override async Task EndProcessingAsync() {
             await base.EndProcessingAsync();
 
+            //ProgressRecord rec = new ProgressRecord(1, "Printing", "Printing...");
+            //rec.PercentComplete = 0;
+            //rec.CurrentOperation = "Initializing winprint";
+            //WriteProgress(rec);
+
             //Return if no objects
             if (_psObjects.Count == 0) {
                 return;
@@ -159,15 +192,31 @@ namespace WinPrint.Console {
             var result = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null);
             string text = result[0].ToString();
 
-            //this.WriteObject(text, false);
-
-            ServiceLocator.Current.UpdateService.GotLatestVersion += LogUpdateResults();
-            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
+            //ServiceLocator.Current.UpdateService.GotLatestVersion += LogUpdateResults();
+            //await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
 
             var print = new Print();
+            if (!string.IsNullOrEmpty(_printerName)) {
+                try {
+                    //rec.PercentComplete = 10;
+                    //rec.CurrentOperation = $"Setting printer name to {_printerName}";
+                    //WriteProgress(rec);
+                    print.SetPrinter(_printerName);
+                }
+                catch (InvalidPrinterException e) {
+                    //Log.Error<InvalidPrinterException>(e, "", e);
+                    Log.Information("Installed printers:");
+                    foreach (string printer in PrinterSettings.InstalledPrinters)
+                        Log.Information("   {printer}", printer);
+                    Log.Fatal(e, "");
+                }
+            }
 
-            if (!string.IsNullOrEmpty(_printerName))
-                print.SetPrinter(_printerName);
+            if (!string.IsNullOrEmpty(_fileName)) {
+                _fileName = this.MyInvocation.MyCommand.Name;
+            }
+
+            print.SheetViewModel.File = _fileName;
 
             //print.PrintingSheet += (s, sheetNum) => this.WriteProgress(new ProgressRecord(0, "Printing", $"Printing sheet {sheetNum}"));
             //print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
@@ -175,7 +224,9 @@ namespace WinPrint.Console {
             //print.SheetViewModel.ReflowProgress += (s, msg) => this.WriteInformation(new InformationRecord($"Reflow Progress {msg}", "script"));
 
             print.PrintingSheet += (s, sheetNum) => {
-                //if (_verbose)
+                //rec.PercentComplete = 40 + (sheetNum);
+                //rec.CurrentOperation = $"Printing sheet {sheetNum}";
+                //WriteProgress(rec);
                 Log.Information("Printing sheet {sheetNum}", sheetNum);
             };
 
@@ -190,12 +241,24 @@ namespace WinPrint.Console {
                 Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
             }
 
+
+            //rec.PercentComplete = 20;
+            //rec.CurrentOperation = $"Setting Sheet Settings for {sheet.Name}";
+            //WriteProgress(rec);
+
             print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
             print.SheetViewModel.SetSheet(sheet);
             if (string.IsNullOrEmpty(_cteName))
                 _cteName = "text/plain";
+
+            //rec.PercentComplete = 30;
+            //rec.CurrentOperation = $"Loading content";
+            //WriteProgress(rec);
             await print.SheetViewModel.LoadStringAsync(text, _cteName).ConfigureAwait(false);
 
+            //rec.PercentComplete = 40;
+            //rec.CurrentOperation = $"Printing";
+            //WriteProgress(rec);
             var sheetsCounted = await print.DoPrint().ConfigureAwait(false);
 
             if (_verbose) {
@@ -224,9 +287,64 @@ namespace WinPrint.Console {
 
             //this.WriteObject(sheetsCounted, false);
 
+            //rec.PercentComplete = 100;
+            //rec.CurrentOperation = $"Complete";
+            //rec.PercentComplete = 1;
+            //WriteProgress(rec);
+
             ServiceLocator.Current.UpdateService.GotLatestVersion -= LogUpdateResults();
             AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+        }
+
+        private void PropertyChangedEventHandler(object o, PropertyChangedEventArgs e) {
+            Log.Debug("SheetViewModel.PropertyChanged: {s}", e.PropertyName);
+            switch (e.PropertyName) {
+                case "Landscape":
+                    Log.Information("    Paper Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
+                    break;
+
+                case "Header":
+                    Log.Information("    Header Text:      {s}", print.SheetViewModel.Header.Text);
+                    break;
+
+                case "Footer":
+                    Log.Information("    Footer Text:      {s}", print.SheetViewModel.Footer.Text);
+                    break;
+
+                case "Margins":
+                    Log.Information("    Margins:          {v}", print.SheetViewModel.Margins);
+                    break;
+
+                case "PageSeparator":
+                    Log.Information("    PageSeparator     {s}", print.SheetViewModel.PageSeparator);
+                    break;
+
+                case "Rows":
+                    Log.Information("    Rows:             {s}", print.SheetViewModel.Rows);
+                    break;
+
+                case "Columns":
+                    Log.Information("    Columns:          {s}", print.SheetViewModel.Columns);
+                    break;
+
+                // TODO: Add INF logging of other sheet properties
+                case "Padding":
+                    Log.Information("    Padding:          {s}", print.SheetViewModel.Padding / 100M);
+                    break;
+
+                case "ContentSettings":
+                    Log.Information("    ContentSettings:  {s}", print.SheetViewModel.ContentSettings);
+                    break;
+
+                case "Loading":
+                    //WriteProgress(new ProgressRecord(0, "Reading", "reading..."));
+                    break;
+
+                case "Reflowing":
+                    //WriteProgress(new ProgressRecord(0, "Formatting", "formatting..."));
+                    break;
+            }
         }
 
         private static EventHandler<Version> LogUpdateResults() {
