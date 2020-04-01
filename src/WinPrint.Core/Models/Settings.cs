@@ -86,7 +86,12 @@ namespace WinPrint.Core.Models {
 
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumSheets { get => Sheets.Count; }
+        public int NumSheets { get {
+                if (Sheets == null)
+                    return 0;
+                return Sheets.Count;
+            }
+        }
 
         /// <summary>
         /// Content type handlers
@@ -100,10 +105,22 @@ namespace WinPrint.Core.Models {
 
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumFilesAssociations { get => LanguageAssociations.FilesAssociations.Count; }
+        public int NumFilesAssociations { get {
+                if (LanguageAssociations == null || LanguageAssociations.FilesAssociations == null)
+                    return 0;
+                return LanguageAssociations.FilesAssociations.Count;
+            }
+        }
+
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumLanguages { get => LanguageAssociations.Languages.Count; }
+        public int NumLanguages {
+            get {
+                if (LanguageAssociations == null || LanguageAssociations.Languages == null)
+                    return 0;
+                return LanguageAssociations.Languages.Count;
+            }
+        }
 
         /// <summary>
         /// Diagnostic settings

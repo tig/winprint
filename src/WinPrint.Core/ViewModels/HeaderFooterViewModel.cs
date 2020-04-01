@@ -106,7 +106,8 @@ namespace WinPrint.Core {
                 g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
 
             Macros macros = new Macros(svm);
-            string[] parts = macros.ReplaceMacro(Text, sheetNum).Split('\t', '|');
+            macros.Page = sheetNum;
+            string[] parts = macros.ReplaceMacro(Text).Split('\t', '|');
 
             // Left\tCenter\tRight
             if (parts == null || parts.Length == 0) {

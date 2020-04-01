@@ -6,12 +6,13 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace WinPrint.Core {
-    sealed internal class Macros {
+    sealed public class Macros {
         public SheetViewModel svm;
 
         public int NumPages { get { return svm.NumSheets; } }
         public string FileExtension { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File); } }
         public string FileName { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileName(svm.File); } }
+        public string FileNameWithoutExtension { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileNameWithoutExtension(svm.File); } }
         public string FilePath { get { return string.IsNullOrEmpty(svm.File) ? "" :  Path.GetDirectoryName(FullyQualifiedPath); } }
         public string FullyQualifiedPath { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFullPath(svm.File); } }
         public static DateTime DatePrinted { get { return DateTime.Now; } }
@@ -20,7 +21,7 @@ namespace WinPrint.Core {
 
         public int Page { get; set; }
 
-        internal Macros(SheetViewModel svm) {
+        public Macros(SheetViewModel svm) {
             this.svm = svm;
         }
 
@@ -29,9 +30,10 @@ namespace WinPrint.Core {
         /// From https://stackoverflow.com/questions/39874172/dynamic-string-interpolation/39900731#39900731
         /// and  https://haacked.com/archive/2009/01/14/named-formats-redux.aspx/
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">A string with macros to be replaced</param>
+        /// <param name="sheetNum"><Page #/param>
         /// <returns></returns>
-        internal string ReplaceMacro(string value, int sheetNum) {
+        public string ReplaceMacro(string value) {
             return Regex.Replace(value, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match => {
                 var p = System.Linq.Expressions.Expression.Parameter(typeof(Macros), "Macros");
 
@@ -40,9 +42,6 @@ namespace WinPrint.Core {
                 Group formatGroup = match.Groups["format"];
                 Group endGroup = match.Groups["end"];
 
-                // TODO: BUGBUG: As written this is not thread-safe. We have to figure out a way
-                // of passing pageNum through to the macro parser in a threadsafe way
-                Page = sheetNum;
                 LambdaExpression e;
                 try {
                     e = DynamicExpressionParser.ParseLambda(new[] { p }, null, propertyGroup.Value);

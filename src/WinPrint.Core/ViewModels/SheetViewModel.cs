@@ -68,7 +68,7 @@ namespace WinPrint.Core {
 
         public int NumSheets {
             get {
-                if (ContentEngine == null) return 0;
+                if (ContentEngine == null || Rows == 0 || Columns == 0) return 0;
                 return (int)Math.Ceiling((double)_numPages / (Rows * Columns));
             }
         }
