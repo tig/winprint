@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Windows;
-using System.Globalization;
 using System.Drawing;
-using System.Diagnostics;
 
 namespace WinPrint.LiteHtml {
 
@@ -154,7 +148,7 @@ namespace WinPrint.LiteHtml {
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
- 
+
         protected virtual void Dispose(bool disposing) {
             if (!disposedValue) {
                 if (disposing) {

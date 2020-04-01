@@ -4,14 +4,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Linq;
-using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
 using Serilog;
-using Serilog.Events;
 using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -55,7 +53,7 @@ namespace WinPrint.Console {
 
             Command importCmd = new Command(@$"import-module .\winprint.dll -verbose; get-content {args[0]} | out-winprint {args[1]}", true);
             pipeline.Commands.Add(importCmd);
-            
+
             // Execute PowerShell script
             var results = pipeline.Invoke();
             if (pipeline.HadErrors) {
@@ -145,7 +143,7 @@ namespace WinPrint.Console {
             print.SheetViewModel.ReflowProgress += (s, msg) => Log.Debug("Reflow Progress {msg}", msg);
 
             // -g
-            if (ModelLocator.Current.Options.Gui) 
+            if (ModelLocator.Current.Options.Gui)
                 // This will exit this app
                 StartGui();
 
@@ -198,7 +196,7 @@ namespace WinPrint.Console {
                 LogException(e);
                 Log.Information("Installed printers:");
                 foreach (string printer in PrinterSettings.InstalledPrinters)
-                    Log.Information($"   {printer}");                  
+                    Log.Information($"   {printer}");
             }
             catch (InvalidOperationException e) {
                 LogException(e);
@@ -227,7 +225,7 @@ namespace WinPrint.Console {
 
                 ServiceLocator.Current.UpdateService.GotLatestVersion -= LogUpdateResults();
 
-                if (ModelLocator.Current.Options.Verbose) 
+                if (ModelLocator.Current.Options.Verbose)
                     Log.Information($"Exiting with exit code {exitCode}.");
                 Log.Debug($"Environment.Exit({exitCode})");
                 Environment.Exit(exitCode);
@@ -240,7 +238,8 @@ namespace WinPrint.Console {
                 Log.Debug("Got new version info. Current: {cur}, Available: {version}", cur, v);
                 if (v != null && v.CompareTo(cur) > 0) {
                     Log.Information("A newer version of winprint ({v}) is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
-                }else {
+                }
+                else {
                     Log.Information("This is the most up-to-date version of winprint");
                 }
             };

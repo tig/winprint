@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Management.Automation;
-using System.Management.Automation.Host;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
@@ -56,7 +55,7 @@ namespace WinPrint.Core.Services {
                         //_cmdlet.WriteDebug("fatal: " + strWriter.ToString());
                         ErrorRecord fatal = new ErrorRecord(logEvent.Exception, errorId: strWriter.ToString(), errorCategory: ErrorCategory.InvalidOperation, targetObject: null);
                         _cmdlet.ThrowTerminatingError(fatal);
-                    break;
+                        break;
 
                     default:
                         _cmdlet.WriteDebug(strWriter.ToString());

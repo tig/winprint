@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Drawing.Printing;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json.Serialization;
 using WinPrint.Core.ContentTypeEngines;
 
@@ -86,7 +83,8 @@ namespace WinPrint.Core.Models {
 
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumSheets { get {
+        public int NumSheets {
+            get {
                 if (Sheets == null)
                     return 0;
                 return Sheets.Count;
@@ -105,7 +103,8 @@ namespace WinPrint.Core.Models {
 
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumFilesAssociations { get {
+        public int NumFilesAssociations {
+            get {
                 if (LanguageAssociations == null || LanguageAssociations.FilesAssociations == null)
                     return 0;
                 return LanguageAssociations.FilesAssociations.Count;

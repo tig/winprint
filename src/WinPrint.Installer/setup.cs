@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using Microsoft.Deployment.WindowsInstaller;
 using WixSharp;
-using WixSharp.CommonTasks;
-using sys = System.Reflection;
 
 namespace WinPrintInstaller {
     class Install {
@@ -22,10 +19,10 @@ namespace WinPrintInstaller {
             var project = new Project(info.ProductName, new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
 
                 RegValues = new[] {
-                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", "[TELEMETRY]") { 
+                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", "[TELEMETRY]") {
                         Win64 = true,
                         // https://github.com/oleg-shilo/wixsharp/issues/818#issuecomment-597058371
-                        AttributesDefinition = "Type=integer" 
+                        AttributesDefinition = "Type=integer"
                     }
                 },
 

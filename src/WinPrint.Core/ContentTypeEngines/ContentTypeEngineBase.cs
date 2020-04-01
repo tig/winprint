@@ -7,7 +7,6 @@ using System.Drawing.Text;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using GalaSoft.MvvmLight.Helpers;
 using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;

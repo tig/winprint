@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing.Printing;
 using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
@@ -9,16 +11,10 @@ using System.Management.Automation.Runspaces;
 using System.Reflection;
 using System.Threading.Tasks;
 using Serilog;
-using Serilog.Events;
+using TTRider.PowerShellAsync;
 using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
-using TTRider.PowerShellAsync;
-using System.Threading;
-using Serilog.Core;
-using System.Drawing.Printing;
-using System.Text.Json;
-using System.ComponentModel;
 
 namespace WinPrint.Console {
     [Cmdlet(VerbsData.Out, nounName: "WinPrint", HelpUri = "https://tig.github.io./winprint")]

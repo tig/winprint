@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
-using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
 
@@ -37,7 +35,7 @@ namespace WinPrint.Core.Models {
         /// </summary>
         /// <returns>A dictionary with the properties and values (as strings). Suitable for calling TrackEvent().</returns>
         public virtual IDictionary<string, string> GetTelemetryDictionary() {
-            var dictionary = new Dictionary<string, string>(); 
+            var dictionary = new Dictionary<string, string>();
             foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(this)) {
                 if (property.Attributes.Contains(new SafeForTelemetry())) {
                     object value = property.GetValue(this);

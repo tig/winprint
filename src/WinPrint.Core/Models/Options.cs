@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
 using CommandLine;
 using CommandLine.Text;
@@ -84,7 +82,7 @@ namespace WinPrint.Core.Models {
                         Files = new List<string>() { { "*.cs" } },
                         Printer = "Fabricam 535",
                         PaperSize = "A4"
-                    }),                    
+                    }),
                     new Example("Print the first two sheets of Program.cs", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         FromPage = 1,

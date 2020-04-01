@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WinPrint.Core.Models {
+﻿namespace WinPrint.Core.Models {
     /// <summary>
     /// Model for page content (properties that impact how content w/in a page is printed).
     /// Each Sheet prints sheet.Columns by sheet.Rows Pages. 

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Serilog;
@@ -20,7 +18,7 @@ namespace WinPrint.Core.Services {
         /// <returns></returns>
         public async Task<string> GetNodeDirectory() {
             LogService.TraceMessage();
-            if (!string.IsNullOrEmpty(nodeDir)) 
+            if (!string.IsNullOrEmpty(nodeDir))
                 return nodeDir;
 
             string path = "";
@@ -118,7 +116,7 @@ namespace WinPrint.Core.Services {
                 }
 
                 // Process output
-                if (stdOut.Length > 0) 
+                if (stdOut.Length > 0)
                     result = stdOut.ToString();
 
                 // TODO: Implement better error handling of stdErr

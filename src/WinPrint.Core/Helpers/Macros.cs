@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.Exceptions;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
@@ -13,7 +12,7 @@ namespace WinPrint.Core {
         public string FileExtension { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File); } }
         public string FileName { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileName(svm.File); } }
         public string FileNameWithoutExtension { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileNameWithoutExtension(svm.File); } }
-        public string FilePath { get { return string.IsNullOrEmpty(svm.File) ? "" :  Path.GetDirectoryName(FullyQualifiedPath); } }
+        public string FilePath { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetDirectoryName(FullyQualifiedPath); } }
         public string FullyQualifiedPath { get { return string.IsNullOrEmpty(svm.File) ? "" : Path.GetFullPath(svm.File); } }
         public static DateTime DatePrinted { get { return DateTime.Now; } }
         public DateTime DateRevised { get { return string.IsNullOrEmpty(svm.File) ? DateTime.Now : File.GetLastWriteTime(svm.File); } }

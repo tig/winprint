@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace WinPrint.Core.Models {
@@ -28,7 +26,7 @@ namespace WinPrint.Core.Models {
     /// https://stackoverflow.com/questions/59516258/database-of-file-extensions-to-file-type-language-mappings
     /// </summary>
     /// 
-    public class FileAssociations: ModelBase {
+    public class FileAssociations : ModelBase {
         //"files.associations": {
         //    "*.myphp": "php"
         //}

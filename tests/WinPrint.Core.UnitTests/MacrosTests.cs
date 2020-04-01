@@ -3,7 +3,8 @@ using WinPrint.Core.ContentTypeEngines;
 using Xunit;
 
 
-namespace WinPrint.Core {
+namespace WinPrint.Core
+{
     public class MacrosTests
     {
         [Fact]

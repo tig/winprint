@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Printing;
-using System.Drawing.Text;
-using GalaSoft.MvvmLight;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core {

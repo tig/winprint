@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
 using Serilog;
@@ -118,7 +116,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
             litehtml.StringFormat = stringFormat;
-            litehtml.Grayscale = ContentSettings.Grayscale ;
+            litehtml.Grayscale = ContentSettings.Grayscale;
             litehtml.Darkness = ContentSettings.Darkness;
             litehtml.PrintBackground = ContentSettings.PrintBackground;
 

@@ -291,14 +291,14 @@ namespace WinPrint.Core {
             return success;
         }
 
-            /// <summary>
-            /// Set the page setting from a PageSettings instance. Note that accessing
-            /// PageSettings can be expensive so we cache the values instead of just holding
-            /// a PageSettings instance.
-            /// </summary>
-            /// <param name="pageSettings"></param>
-            /// <returns></returns>
-            public void SetPrinterPageSettings(PageSettings pageSettings) {
+        /// <summary>
+        /// Set the page setting from a PageSettings instance. Note that accessing
+        /// PageSettings can be expensive so we cache the values instead of just holding
+        /// a PageSettings instance.
+        /// </summary>
+        /// <param name="pageSettings"></param>
+        /// <returns></returns>
+        public void SetPrinterPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
             if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
 

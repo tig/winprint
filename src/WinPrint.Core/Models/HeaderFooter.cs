@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Drawing;
-using GalaSoft.MvvmLight;
+﻿using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Text.Json;
-using System.Linq;
 
 namespace WinPrint.Core.Models {
     /// <summary>
@@ -73,7 +67,7 @@ namespace WinPrint.Core.Models {
                     .Cast<Match>()
                     .Select(match => match.Value)
                     .ToList();
-                return string.Join(", ", from macro in matches select macro); 
+                return string.Join(", ", from macro in matches select macro);
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using GalaSoft.MvvmLight.Ioc;
-using WinPrint.Core.Services;
 
 namespace WinPrint {
     //public class Logger {

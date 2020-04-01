@@ -555,7 +555,7 @@ namespace WinPrint.Winforms {
         //    LogService.TraceMessage();
 
         //    Task.Run(async () => {
-                
+
         //    });
         //}
 

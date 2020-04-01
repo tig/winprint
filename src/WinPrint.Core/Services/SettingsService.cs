@@ -143,10 +143,10 @@ namespace WinPrint.Core.Services {
             using FileStream fs = File.Create(SettingsFileName);
             using var writer = new Utf8JsonWriter(fs, options: new JsonWriterOptions { Indented = true });
             writer.WriteStartObject();
-            foreach (JsonProperty property in document.RootElement.EnumerateObject()) 
+            foreach (JsonProperty property in document.RootElement.EnumerateObject())
                 if (saveCTESettings || !property.Name.ToLowerInvariant().Contains("contenttypeengine"))
                     property.WriteTo(writer);
-            
+
             writer.WriteEndObject();
             writer.Flush();
 
@@ -188,7 +188,7 @@ namespace WinPrint.Core.Services {
                     var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(SettingsService)).Location);
 
                     // is this in \Kindel Systems\winprint?
-                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}") || 
+                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}") ||
                         // TODO: Remove internal knowledge of out-winprint from here
                         path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell")) {
                         // We're running %programfiles%\Kindel Systems\winprint; use %appdata%\Kindel Systems\winprint.

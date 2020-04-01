@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
+using System;
 using System.Collections.Generic;
 using System.Drawing.Printing;
 using System.Text;
@@ -46,7 +49,7 @@ namespace WinPrint.Core {
                 try {
                     PrintDocument.PrinterSettings.PrinterName = printerName;
                     ServiceLocator.Current.TelemetryService.TrackEvent("Set Printer",
-                        properties: new Dictionary<string, string> {["printerName"] = printerName});
+                        properties: new Dictionary<string, string> { ["printerName"] = printerName });
                 }
                 catch (NullReferenceException) {
                     // On Linux if an invalid printer name is passed in we get a 
@@ -78,15 +81,15 @@ namespace WinPrint.Core {
                     sb.Append(Environment.NewLine);
                     sb.Append($"'{PrintDocument.PrinterSettings.PrinterName}' supports these printer sizes:");
                     sb.Append(Environment.NewLine);
-                    foreach (PaperSize size in PrintDocument.PrinterSettings.PaperSizes) { 
+                    foreach (PaperSize size in PrintDocument.PrinterSettings.PaperSizes) {
                         sb.Append($"    {size.PaperName}");
                         sb.Append(Environment.NewLine);
                     }
                     throw new Exception(sb.ToString());
                 }
-                else 
-                    ServiceLocator.Current.TelemetryService.TrackEvent("Set Paper Size", 
-                        properties: new Dictionary<string, string> {["paperSizeName"] = paperSizeName});
+                else
+                    ServiceLocator.Current.TelemetryService.TrackEvent("Set Paper Size",
+                        properties: new Dictionary<string, string> { ["paperSizeName"] = paperSizeName });
             }
         }
 
@@ -104,12 +107,12 @@ namespace WinPrint.Core {
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Count Sheets",
                 properties: new Dictionary<string, string> {
-                    ["type"]= SheetViewModel.ContentEngine.GetContentType(), 
+                    ["type"] = SheetViewModel.ContentEngine.GetContentType(),
                     ["printer"] = PrintDocument.PrinterSettings.PrinterName,
                     ["fromSheet"] = fromSheet.ToString(),
                     ["toSheet"] = toSheet.ToString(),
                 },
-                metrics: new Dictionary<string, double> {["sheetsPrinted"] = SheetViewModel.NumSheets});;
+                metrics: new Dictionary<string, double> { ["sheetsPrinted"] = SheetViewModel.NumSheets }); ;
             return SheetViewModel.NumSheets;
         }
 
@@ -123,7 +126,7 @@ namespace WinPrint.Core {
             await SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
             PrintDocument.PrinterSettings.FromPage = PrintDocument.PrinterSettings.FromPage == 0 ? 1 : PrintDocument.PrinterSettings.FromPage;
-            PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetViewModel.NumSheets : PrintDocument.PrinterSettings.ToPage ;
+            PrintDocument.PrinterSettings.ToPage = PrintDocument.PrinterSettings.ToPage == 0 ? SheetViewModel.NumSheets : PrintDocument.PrinterSettings.ToPage;
 
             curSheet = PrintDocument.PrinterSettings.FromPage;
             PrintDocument.Print();

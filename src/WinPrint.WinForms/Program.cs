@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommandLine;
@@ -56,7 +59,7 @@ namespace WinPrint.Winforms {
             var helpText = HelpText.AutoBuild(result, h => {
                 h.AutoHelp = true;
                 h.AutoVersion = true;
-             
+
                 //h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");
                 return HelpText.DefaultParsingErrorsHandler(result, h);
             }, e => e);

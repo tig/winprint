@@ -2,10 +2,10 @@
 // No support is provided and this code has NOT been tested.
 
 using System;
-using System.IO;
-using System.Timers;
 using System.Collections;
 using System.ComponentModel;
+using System.IO;
+using System.Timers;
 
 namespace menelabs.core {
 

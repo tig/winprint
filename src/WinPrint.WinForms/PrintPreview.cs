@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Text;
-using System.Windows.Forms;
-using System.Drawing.Printing;
 using System.Drawing.Drawing2D;
-using System.IO;
-using WinPrint.Core;
-using System.Diagnostics;
-using WinPrint.Core.Services;
+using System.Windows.Forms;
 using Serilog;
+using WinPrint.Core;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Winforms {
     /// <summary>
@@ -94,7 +88,7 @@ namespace WinPrint.Winforms {
         }
 
         protected override void OnKeyUp(KeyEventArgs e) {
-            if (e is null) 
+            if (e is null)
                 throw new ArgumentNullException(nameof(e));
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Key Up", new Dictionary<string, string> { ["KeyCode"] = e.KeyCode.ToString() });
