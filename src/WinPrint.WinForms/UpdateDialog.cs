@@ -11,13 +11,13 @@ namespace WinPrint.WinForms {
         }
 
         private void downloadButton_Click(object sender, EventArgs args) {
-            string url = ServiceLocator.Current.UpdateService.DownloadUri;
+            Uri url = ServiceLocator.Current.UpdateService.DownloadUri;
             Log.Debug($"Browsing to download: {url}");
             Process proc = null;
             try {
                 ProcessStartInfo psi = new ProcessStartInfo();
                 psi.UseShellExecute = true;   // This is important
-                psi.FileName = url;
+                psi.FileName = url.AbsoluteUri;
                 proc = Process.Start(psi);
             }
 #pragma warning disable CA1031 // Do not catch general exception types

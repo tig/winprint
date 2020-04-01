@@ -297,16 +297,8 @@ namespace WinPrint.Winforms {
                 return;
             }
 
-            ServiceLocator.Current.UpdateService.GotLatestVersion += (s, v) => {
-                if (v != null && v.CompareTo(new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion)) > 0) {
-                    Log.Information("Newer version available {v}", v);
-                    BeginInvoke((Action)(() => {
-                        var dlg = new UpdateDialog();
-                        dlg.ShowDialog(this);
-                    }));
-                }
-            };
-
+            ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadComplete += UpdateService_DownloadComplete; 
             ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync().ConfigureAwait(false);
 
             // Load settings by referencing ModelLocator.Current
@@ -430,6 +422,41 @@ namespace WinPrint.Winforms {
             Start();
         }
 
+        private void UpdateService_DownloadComplete(object sender, string path) {
+            //Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);
+            BeginInvoke((Action)(() => Close() ));
+        }
+
+        private void UpdateService_GotLatestVersion(object sender, Version version) {
+            if (InvokeRequired)
+                BeginInvoke((Action)(() => UpdateService_GotLatestVersion(sender, version)));
+            else {
+
+                if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+                    Log.Information($"Could not access tig.github.io/winprint to see if a newer version is available. {ServiceLocator.Current.UpdateService.ErrorMessage}");
+                }
+                else if (ServiceLocator.Current.UpdateService.CompareVersions() < 0) {
+                    Log.Information("------------------------------------------------");
+                    Log.Information($"A newer version of winprint ({version}) is available at");
+                    Log.Information($"   {ServiceLocator.Current.UpdateService.ReleasePageUri}");
+                    Log.Information("------------------------------------------------");
+
+                    var result = MessageBox.Show(this, $"A newer version of winprint ({version}) is available at\n\n" +
+                        $"{ServiceLocator.Current.UpdateService.ReleasePageUri}\n\n" +
+                        $"Upgrade now?", this.Text, MessageBoxButtons.OKCancel);
+                    if (result == DialogResult.OK) {
+                        ServiceLocator.Current.UpdateService.StartUpgrade();
+                    }
+
+                }
+                else if (ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
+                    Log.Information($"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})");
+                }
+                else {
+                    Log.Information("You are running the most recent version of winprint");
+                }
+            }
+        }
         private void Start() {
             LogService.TraceMessage();
 
@@ -561,6 +588,9 @@ namespace WinPrint.Winforms {
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
             if (ModelLocator.Current.Settings is null) return;
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete; ;
 
             // Save Window state
             if (this.WindowState == System.Windows.Forms.FormWindowState.Normal) {
