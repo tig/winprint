@@ -1,11 +1,9 @@
-﻿using System;
-using Xunit;
-using WinPrint.Core;
+﻿using System.IO;
 using WinPrint.Core.ContentTypeEngines;
-using System.IO;
+using Xunit;
 
-namespace WinPrint.Core
-{
+
+namespace WinPrint.Core {
     public class MacrosTests
     {
         [Fact]

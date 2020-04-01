@@ -1,0 +1,424 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\source\winprint2\tests\Test 100 Lines.c</title>
+<meta charset="utf-8"/>
+<style>
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+ code[class*="language-"],
+ pre[class*="language-"] {
+     color: black;
+     background: none;
+     text-shadow: 0 1px white;
+     font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+     font-size: 1em;
+     text-align: left;
+     white-space: pre;
+     word-spacing: normal;
+     word-break: normal;
+     word-wrap: normal;
+     line-height: 1.5;
+ 
+     -moz-tab-size: 4;
+     -o-tab-size: 4;
+     tab-size: 4;
+ 
+     -webkit-hyphens: none;
+     -moz-hyphens: none;
+     -ms-hyphens: none;
+     hyphens: none;
+ }
+ 
+ pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+ code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+     text-shadow: none;
+     background: #b3d4fc;
+ }
+ 
+ pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+ code[class*="language-"]::selection, code[class*="language-"] ::selection {
+     text-shadow: none;
+     background: #b3d4fc;
+ }
+ 
+ @media print {
+     code[class*="language-"],
+     pre[class*="language-"] {
+         text-shadow: none;
+     }
+ }
+ 
+ /* Code blocks */
+ pre[class*="language-"] {
+     padding: 1em;
+     margin: .5em 0;
+     overflow: auto;
+ }
+ 
+ :not(pre) > code[class*="language-"],
+ pre[class*="language-"] {
+     background: #f5f2f0;
+ }
+ 
+ /* Inline code */
+ :not(pre) > code[class*="language-"] {
+     padding: .1em;
+     border-radius: .3em;
+     white-space: normal;
+ }
+ 
+ .token.comment,
+ .token.prolog,
+ .token.doctype,
+ .token.cdata {
+     color: slategray;
+ }
+ 
+ .token.punctuation {
+     color: #999;
+ }
+ 
+ .namespace {
+     opacity: .7;
+ }
+ 
+ .token.property,
+ .token.tag,
+ .token.boolean,
+ .token.number,
+ .token.constant,
+ .token.symbol,
+ .token.deleted {
+     color: #905;
+ }
+ 
+ .token.selector,
+ .token.attr-name,
+ .token.string,
+ .token.char,
+ .token.builtin,
+ .token.inserted {
+     color: #690;
+ }
+ 
+ .token.operator,
+ .token.entity,
+ .token.url,
+ .language-css .token.string,
+ .style .token.string {
+     color: #9a6e3a;
+     background: hsla(0, 0%, 100%, .5);
+ }
+ 
+ .token.atrule,
+ .token.attr-value,
+ .token.keyword {
+     color: #07a;
+ }
+ 
+ .token.function,
+ .token.class-name {
+     color: #DD4A68;
+ }
+ 
+ .token.regex,
+ .token.important,
+ .token.variable {
+     color: #e90;
+ }
+ 
+ .token.important,
+ .token.bold {
+     font-weight: bold;
+ }
+ .token.italic {
+     font-style: italic;
+ }
+ 
+ .token.entity {
+     cursor: help;
+ }
+ 
+/* These style override Prism built-in (and any provided theme), 
+   optimizing for rendering for print. E.g. Colored backgrounds
+    make no sense when printing. Also turns off some stuff 
+    litehtml does not support correctly.
+*/
+code[class*="language-"],
+pre[class*="language-"] {
+    /* no backgrond 
+    background: none;*/
+    /* linehtml only supports pre-wrap. break-word, break-all are not yet supported.*/
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    /* Force line-height to 'normal' */
+    line-height: normal;
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+    hyphens: auto;
+    text-align: left;
+    tab-size: 4;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    position: relative;
+    /* Remove all padding and margins */
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Background & border */
+pre[class*="language-"] > code {
+    /* turn off all background features */
+    /* no backgrond 
+    background: none;*/
+    background-image: none;
+    /* background-color: transparent;*/
+    /* turn off all borders (winprint provides own border mechansim) */
+    border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+code[class*="language"] {
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    /* Remove all padding and margins (prism-coy) */
+    all: unset;
+}
+
+    /* Remove any before/after fancy formatting (like coy's shadows) */
+    pre[class*="language-"]:before,
+    pre[class*="language-"]:after {
+        all: initial;
+    }
+
+    :not(pre) > code[class*="language-"]:after,
+    pre[class*="language-"]:after {
+        all: unset;
+    }
+
+/* disable operator background found in default prism.js */
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata,
+.token.punctuation,
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted,
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted,
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable,
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name,
+.token.regex,
+.token.important,
+.language-css .token.string,
+.style .token.string,
+.token.important,
+.token.bold,
+.token.italic,
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    /* no backgrond 
+    background: none;*/
+}
+
+ol {
+    display: block;
+    /* This works around a bug in litehmtl where it renders lists too far down */
+    margin-top: -0.5em;
+    margin-bottom: 0;
+    margin-left: 30px;
+    margin-right: 0;
+    list-style-type: decimal;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+}
+
+li:first-child {
+    margin-top: 0;
+}
+
+li {
+    padding: 0px;
+    margin: 0;
+    line-height: 0px;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+}
+
+table {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+tr {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+td {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+td[class*="line-number"] {
+    padding-left: 0.5em;
+    padding-right: 0.2em;
+    margin-right: 0.5em;
+    text-align: right;
+    vertical-align: top;
+    border-right: 1px solid darkgray;
+    color: darkgray;
+}
+
+</style>
+</head><body><pre class="language-c "><code class="language-c"><table>
+<tr><td class="line-number">1</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">2</td><td><span class="token number">1</span>         <span class="token number">2</span>         <span class="token number">3</span>         <span class="token number">4</span>         <span class="token number">5</span>         <span class="token number">6</span>         <span class="token number">7</span>         </td></tr>
+<tr><td class="line-number">3</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">4</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">5</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">6</td><td><span class="token number">1</span>         <span class="token number">2</span>         <span class="token number">3</span>         <span class="token number">4</span>         <span class="token number">5</span>         <span class="token number">6</span>         <span class="token number">7</span>         </td></tr>
+<tr><td class="line-number">7</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">8</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">9</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">10</td><td><span class="token function">printf</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">11</td><td>This is a test of the emergency broadcast system of America<span class="token punctuation">.</span> This is o</td></tr>
+<tr><td class="line-number">12</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">13</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">14</td><td>Unicode Power Symobls<span class="token operator">:</span> <span class="token operator">?</span> <span class="token operator">?</span> <span class="token operator">?</span> <span class="token operator">?</span> <span class="token operator">?</span></td></tr>
+<tr><td class="line-number">15</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">16</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">17</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">18</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">19</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">20</td><td><span class="token function">printf</span><span class="token punctuation">(</span><span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">21</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">22</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">23</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">24</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">25</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">26</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">27</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">28</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">29</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">30</td><td><span class="token function">printf</span><span class="token punctuation">(</span><span class="token number">30</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">31</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">32</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">33</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">34</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">35</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">36</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">37</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">38</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">39</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">40</td><td><span class="token function">printf</span><span class="token punctuation">(</span><span class="token number">40</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">41</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">42</td><td><span class="token number">012345678901234567890123456789012345678901234567890123456789012345678</span></td></tr>
+<tr><td class="line-number">43</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567</span></td></tr>
+<tr><td class="line-number">44</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456</span></td></tr>
+<tr><td class="line-number">45</td><td><span class="token number">012345678901234567890123456789012345678901234567890123456789012345</span></td></tr>
+<tr><td class="line-number">46</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678906789</span></td></tr>
+<tr><td class="line-number">47</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890678</span></td></tr>
+<tr><td class="line-number">48</td><td><span class="token number">012345678901234567890123456789012345678901234567890123456789067</span></td></tr>
+<tr><td class="line-number">49</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">50</td><td><span class="token number">1</span>         <span class="token number">2</span>         <span class="token number">3</span>         <span class="token number">4</span>         <span class="token number">5</span>         <span class="token number">6</span>         <span class="token number">7</span>         </td></tr>
+<tr><td class="line-number">51</td><td>Line <span class="token number">51</span></td></tr>
+<tr><td class="line-number">52</td><td>Line <span class="token number">52</span></td></tr>
+<tr><td class="line-number">53</td><td>Line <span class="token number">53</span></td></tr>
+<tr><td class="line-number">54</td><td>Tab tests<span class="token operator">:</span></td></tr>
+<tr><td class="line-number">55</td><td><span class="token number">0123456789012345678901234567890123456789012345678901234567890123456789</span></td></tr>
+<tr><td class="line-number">56</td><td><span class="token number">1</span>         <span class="token number">2</span>         <span class="token number">3</span>         <span class="token number">4</span>         <span class="token number">5</span>         <span class="token number">6</span>         <span class="token number">7</span>         </td></tr>
+<tr><td class="line-number">57</td><td>	<span class="token operator">&lt;</span><span class="token operator">-</span>Tab</td></tr>
+<tr><td class="line-number">58</td><td>    <span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">4</span> spaces </td></tr>
+<tr><td class="line-number">59</td><td>	<span class="token operator">&lt;</span><span class="token operator">-</span>Tab<span class="token operator">-></span>	<span class="token operator">&lt;</span><span class="token operator">-</span>Tab</td></tr>
+<tr><td class="line-number">60</td><td>    <span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">4</span> spaces<span class="token operator">-></span>    <span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">4</span> spaces</td></tr>
+<tr><td class="line-number">61</td><td>		<span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">2</span> tabs</td></tr>
+<tr><td class="line-number">62</td><td>			<span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">3</span> tabs</td></tr>
+<tr><td class="line-number">63</td><td><span class="token number">0123</span>			<span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">3</span> tabs</td></tr>
+<tr><td class="line-number">64</td><td><span class="token number">01230123</span>		<span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">2</span> tabs</td></tr>
+<tr><td class="line-number">65</td><td><span class="token number">012301230123</span>	<span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">1</span> tabs</td></tr>
+<tr><td class="line-number">66</td><td><span class="token number">0123012301230123</span><span class="token operator">&lt;</span><span class="token operator">-</span><span class="token number">0</span> tabs</td></tr>
+<tr><td class="line-number">67</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">68</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">69</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">70</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">71</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">72</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">73</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">74</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">75</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">76</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">77</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">78</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">79</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">80</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">81</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">82</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">83</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">84</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">85</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">86</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">87</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">88</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">89</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">90</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">91</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">92</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">93</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">94</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">95</td><td><span class="token comment">// Commment</span></td></tr>
+<tr><td class="line-number">96</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">97</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">98</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">99</td><td><span class="token number">01234567890123456789012345678901234567890123456789012345678901234567890</span></td></tr>
+<tr><td class="line-number">100</td><td><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Line 100 - END OF FILE"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+</table></code></pre>
+</body></html>

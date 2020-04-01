@@ -1,0 +1,427 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\s\winprint\tests\doc.cpp</title>
+<meta charset="utf-8"/>
+<style>
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+ code[class*="language-"],
+ pre[class*="language-"] {
+     color: black;
+     background: none;
+     font-family: 'Cascadia Code', Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+     font-size: 8pt;
+     text-align: left;
+     word-spacing: normal;
+     word-break: normal;
+     word-wrap: normal;
+     line-height: normal;
+     tab-size: 4;
+     hyphens: none;
+ }
+ 
+ pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+ code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+     text-shadow: none;
+     background: #b3d4fc;
+ }
+ 
+ pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+ code[class*="language-"]::selection, code[class*="language-"] ::selection {
+     text-shadow: none;
+     background: #b3d4fc;
+ }
+ 
+ @media print {
+     code[class*="language-"],
+     pre[class*="language-"] {
+         text-shadow: none;
+     }
+ }
+ 
+ /* Code blocks */
+ pre[class*="language-"] {
+     overflow: auto;
+ }
+ 
+ :not(pre) > code[class*="language-"],
+ pre[class*="language-"] {
+     background: #f5f2f0;
+ }
+ 
+ /* Inline code */
+ :not(pre) > code[class*="language-"] {
+ }
+ 
+ .token.comment,
+ .token.prolog,
+ .token.doctype,
+ .token.cdata {
+     color: slategray;
+ }
+ 
+ .token.punctuation {
+     color: #999;
+ }
+ 
+ .namespace {
+     opacity: .7;
+ }
+ 
+ .token.property,
+ .token.tag,
+ .token.boolean,
+ .token.number,
+ .token.constant,
+ .token.symbol,
+ .token.deleted {
+     color: #905;
+ }
+ 
+ .token.selector,
+ .token.attr-name,
+ .token.string,
+ .token.char,
+ .token.builtin,
+ .token.inserted {
+     color: #690;
+ }
+ 
+ .token.operator,
+ .token.entity,
+ .token.url,
+ .language-css .token.string,
+ .style .token.string {
+     color: #9a6e3a;
+ }
+ 
+ .token.atrule,
+ .token.attr-value,
+ .token.keyword {
+     color: #07a;
+ }
+ 
+ .token.function,
+ .token.class-name {
+     color: #DD4A68;
+ }
+ 
+ .token.regex,
+ .token.important,
+ .token.variable {
+     color: #e90;
+ }
+ 
+ .token.important,
+ .token.bold {
+     font-weight: bold;
+ }
+ .token.italic {
+     font-style: italic;
+ }
+ 
+ .token.entity {
+     cursor: help;
+ }
+
+ .token {
+     background-color: yellow;
+ }
+
+ span {
+    padding: unset;
+    padding-left: 0px;
+    padding-right: 0px;
+    border: none;
+    margin-left: 0px;
+    margin-right: 0px;
+ }
+ 
+code[class*="language-"], pre[class*="language-"] {
+font-family: 'Consolas', winprint;
+font-size: 8pt;
+font-weight: Regular;}
+/* These style override Prism built-in (and any provided theme), 
+   optimizing for rendering for print. E.g. Colored backgrounds
+    make no sense when printing. Also turns off some stuff 
+    litehtml does not support correctly.
+*/
+code[class*="language-"],
+pre[class*="language-"] {
+    /* no backgrond 
+    background: none;*/
+    /* linehtml only supports white-space: pre-wrap. word-break: break-all are not yet supported.*/
+    /* Relevant docs:
+        white-space - https://developer.mozilla.org/en-US/docs/web/css/white-space 
+        word-break - https://developer.mozilla.org/en-US/docs/Web/CSS/word-break 
+        overflow-wrap - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap 
+
+        Default for winprint should be `word-break: break-all` 
+        Ideally would also support `overflow-wrap: break-word`
+    */
+    white-space: pre-wrap; /* not good enuf. does not break at non-whitespace chars*/
+    overflow-wrap: break-word; /* would work well, except broken line will start on a new line (suboptimal) */
+    word-break: break-word; /* ok - may be a preference (breaks at word, then break-all */
+    word-break: break-all; /* idea - breaks anywhere */
+    /* Force line-height to 'normal' */
+    line-height: normal;
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+    hyphens: auto;
+    text-align: left;
+    tab-size: 4;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    position: relative;
+    /* Remove all padding and margins */
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Background & border */
+pre[class*="language-"] > code {
+    /* turn off all background features */
+    /* no backgrond 
+    background: none;*/
+    background-image: none;
+    /* background-color: transparent;*/
+    /* turn off all borders (winprint provides own border mechansim) */
+    border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+code[class*="language"] {
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    /* Remove all padding and margins (prism-coy) */
+    all: unset;
+}
+
+    /* Remove any before/after fancy formatting (like coy's shadows) */
+    pre[class*="language-"]:before,
+    pre[class*="language-"]:after {
+        all: initial;
+    }
+
+    :not(pre) > code[class*="language-"]:after,
+    pre[class*="language-"]:after {
+        all: unset;
+    }
+
+/* disable operator background found in default prism.js */
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata,
+.token.punctuation,
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted,
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted,
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable,
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name,
+.token.regex,
+.token.important,
+.language-css .token.string,
+.style .token.string,
+.token.important,
+.token.bold,
+.token.italic,
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    /* no backgrond 
+    background: none;*/
+}
+
+ol {
+    display: block;
+    /* This works around a bug in litehmtl where it renders lists too far down */
+    margin-top: -0.5em;
+    margin-bottom: 0;
+    margin-left: 30px;
+    margin-right: 0;
+    list-style-type: decimal;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+}
+
+li:first-child {
+    margin-top: 0;
+}
+
+li {
+    padding: 0px;
+    margin: 0;
+    line-height: 0px;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+}
+
+table {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+tr {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+td {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+td[class*="line-number"] {
+    padding-left: 0.5em;
+    padding-right: 0.2em;
+    margin-right: 0.5em;
+    text-align: right;
+    vertical-align: top;
+    border-right: 1px solid darkgray;
+    color: darkgray;
+}
+
+</style>
+</head><body><pre class="language-cpp "><code class="language-cpp"><table>
+<tr><td class="line-number">1</td><td><span class="token comment">// doc.cpp : implementation of the COle2ViewDoc class</span></td></tr>
+<tr><td class="line-number">2</td><td><span class="token comment">//</span></td></tr>
+<tr><td class="line-number">3</td><td></td></tr>
+<tr><td class="line-number">4</td><td><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"stdafx.h"</span></span></td></tr>
+<tr><td class="line-number">5</td><td><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"Ole2View.h"</span></span></td></tr>
+<tr><td class="line-number">6</td><td></td></tr>
+<tr><td class="line-number">7</td><td><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">"doc.h"</span></span></td></tr>
+<tr><td class="line-number">8</td><td></td></tr>
+<tr><td class="line-number">9</td><td><span class="token macro property">#<span class="token directive keyword">ifdef</span> _DEBUG</span></td></tr>
+<tr><td class="line-number">10</td><td><span class="token macro property">#<span class="token directive keyword">undef</span> THIS_FILE</span></td></tr>
+<tr><td class="line-number">11</td><td><span class="token keyword">static</span> <span class="token keyword">char</span> BASED_CODE THIS_FILE<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token constant">__FILE__</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">12</td><td><span class="token macro property">#<span class="token directive keyword">endif</span></span></td></tr>
+<tr><td class="line-number">13</td><td></td></tr>
+<tr><td class="line-number">14</td><td><span class="token comment">/////////////////////////////////////////////////////////////////////////////</span></td></tr>
+<tr><td class="line-number">15</td><td><span class="token comment">// COle2ViewDoc</span></td></tr>
+<tr><td class="line-number">16</td><td></td></tr>
+<tr><td class="line-number">17</td><td><span class="token function">IMPLEMENT_DYNCREATE</span><span class="token punctuation">(</span>COle2ViewDoc<span class="token punctuation">,</span> CDocument<span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">18</td><td><span class="token macro property">#<span class="token directive keyword">define</span> new DEBUG_NEW</span></td></tr>
+<tr><td class="line-number">19</td><td></td></tr>
+<tr><td class="line-number">20</td><td><span class="token function">BEGIN_MESSAGE_MAP</span><span class="token punctuation">(</span>COle2ViewDoc<span class="token punctuation">,</span> CDocument<span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">21</td><td>    <span class="token comment">//{{AFX_MSG_MAP(COle2ViewDoc)</span></td></tr>
+<tr><td class="line-number">22</td><td>        <span class="token comment">// NOTE - the ClassWizard will add and remove mapping macros here.</span></td></tr>
+<tr><td class="line-number">23</td><td>        <span class="token comment">//    DO NOT EDIT what you see in these blocks of generated code !</span></td></tr>
+<tr><td class="line-number">24</td><td>    <span class="token comment">//}}AFX_MSG_MAP</span></td></tr>
+<tr><td class="line-number">25</td><td><span class="token function">END_MESSAGE_MAP</span><span class="token punctuation">(</span><span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">26</td><td></td></tr>
+<tr><td class="line-number">27</td><td><span class="token comment">/////////////////////////////////////////////////////////////////////////////</span></td></tr>
+<tr><td class="line-number">28</td><td><span class="token comment">// COle2ViewDoc construction/destruction</span></td></tr>
+<tr><td class="line-number">29</td><td></td></tr>
+<tr><td class="line-number">30</td><td>COle2ViewDoc<span class="token operator">::</span><span class="token function">COle2ViewDoc</span><span class="token punctuation">(</span><span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">31</td><td><span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">32</td><td>    m_clsidCur <span class="token operator">=</span> GUID_NULL <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">33</td><td>    m_szObjectCur <span class="token operator">=</span> <span class="token string">""</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">34</td><td>	m_nType <span class="token operator">=</span> CObjectData<span class="token operator">::</span>typeUnknown <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">35</td><td>    CString szSection <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">36</td><td>    CString szKey <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">37</td><td>    szSection<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CONFIG <span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">38</td><td></td></tr>
+<tr><td class="line-number">39</td><td>    szKey<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CLSCTX <span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">40</td><td>    m_dwClsCtx <span class="token operator">=</span> <span class="token punctuation">(</span>DWORD<span class="token punctuation">)</span>theApp<span class="token punctuation">.</span><span class="token function">GetProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> CLSCTX_LOCAL_SERVER <span class="token operator">|</span> CLSCTX_INPROC_SERVER <span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">41</td><td></td></tr>
+<tr><td class="line-number">42</td><td>    szKey <span class="token operator">=</span> <span class="token function">_T</span><span class="token punctuation">(</span><span class="token string">"ViewHiddenComCats"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">43</td><td>    m_fViewHiddenComCats <span class="token operator">=</span> <span class="token punctuation">(</span>BOOL<span class="token punctuation">)</span>theApp<span class="token punctuation">.</span><span class="token function">GetProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> FALSE<span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">44</td><td><span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">45</td><td></td></tr>
+<tr><td class="line-number">46</td><td>COle2ViewDoc<span class="token operator">::</span><span class="token operator">~</span><span class="token function">COle2ViewDoc</span><span class="token punctuation">(</span><span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">47</td><td><span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">48</td><td></td></tr>
+<tr><td class="line-number">49</td><td>    CString szSection <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">50</td><td>    CString szKey <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">51</td><td>    szSection<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CONFIG <span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">52</td><td></td></tr>
+<tr><td class="line-number">53</td><td>    szKey<span class="token punctuation">.</span><span class="token function">LoadString</span><span class="token punctuation">(</span> IDS_INI_CLSCTX <span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">54</td><td>    theApp<span class="token punctuation">.</span><span class="token function">WriteProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> <span class="token punctuation">(</span>WORD<span class="token punctuation">)</span>m_dwClsCtx <span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">55</td><td></td></tr>
+<tr><td class="line-number">56</td><td>    szKey <span class="token operator">=</span> <span class="token function">_T</span><span class="token punctuation">(</span><span class="token string">"ViewHiddenComCats"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">57</td><td>    theApp<span class="token punctuation">.</span><span class="token function">WriteProfileInt</span><span class="token punctuation">(</span> szSection<span class="token punctuation">,</span> szKey<span class="token punctuation">,</span> m_fViewHiddenComCats<span class="token punctuation">)</span> <span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">58</td><td><span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">59</td><td></td></tr>
+<tr><td class="line-number">60</td><td>BOOL COle2ViewDoc<span class="token operator">::</span><span class="token function">OnNewDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">61</td><td><span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">62</td><td><span class="token comment">//    if (!CDocument::OnNewDocument())</span></td></tr>
+<tr><td class="line-number">63</td><td><span class="token comment">//        return FALSE;</span></td></tr>
+<tr><td class="line-number">64</td><td>    <span class="token keyword">return</span> TRUE<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">65</td><td><span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">66</td><td></td></tr>
+<tr><td class="line-number">67</td><td><span class="token keyword">void</span> COle2ViewDoc<span class="token operator">::</span><span class="token function">OnCloseDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">68</td><td><span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">69</td><td>    CDocument<span class="token operator">::</span><span class="token function">OnCloseDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">70</td><td><span class="token punctuation">}</span>       </td></tr>
+<tr><td class="line-number">71</td><td></td></tr>
+<tr><td class="line-number">72</td><td></td></tr>
+<tr><td class="line-number">73</td><td><span class="token comment">/////////////////////////////////////////////////////////////////////////////</span></td></tr>
+<tr><td class="line-number">74</td><td><span class="token comment">// COle2ViewDoc diagnostics</span></td></tr>
+<tr><td class="line-number">75</td><td></td></tr>
+<tr><td class="line-number">76</td><td><span class="token macro property">#<span class="token directive keyword">ifdef</span> _DEBUG</span></td></tr>
+<tr><td class="line-number">77</td><td><span class="token keyword">void</span> COle2ViewDoc<span class="token operator">::</span><span class="token function">AssertValid</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">const</span></td></tr>
+<tr><td class="line-number">78</td><td><span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">79</td><td>    CDocument<span class="token operator">::</span><span class="token function">AssertValid</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">80</td><td><span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">81</td><td></td></tr>
+<tr><td class="line-number">82</td><td><span class="token keyword">void</span> COle2ViewDoc<span class="token operator">::</span><span class="token function">Dump</span><span class="token punctuation">(</span>CDumpContext<span class="token operator">&amp;</span> dc<span class="token punctuation">)</span> <span class="token keyword">const</span></td></tr>
+<tr><td class="line-number">83</td><td><span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">84</td><td>    CDocument<span class="token operator">::</span><span class="token function">Dump</span><span class="token punctuation">(</span>dc<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">85</td><td><span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">86</td><td></td></tr>
+<tr><td class="line-number">87</td><td><span class="token macro property">#<span class="token directive keyword">endif</span> </span><span class="token comment">//_DEBUG</span></td></tr>
+<tr><td class="line-number">88</td><td></td></tr>
+<tr><td class="line-number">89</td><td><span class="token comment">/////////////////////////////////////////////////////////////////////////////</span></td></tr>
+<tr><td class="line-number">90</td><td><span class="token comment">// COle2ViewDoc commands</span></td></tr>
+<tr><td class="line-number">91</td><td></td></tr>
+<tr><td class="line-number">92</td><td></td></tr>
+</table></code></pre>
+</body></html>

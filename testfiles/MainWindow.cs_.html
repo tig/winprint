@@ -1,0 +1,798 @@
+<!DOCTYPE html><html><head><title>C:\Users\ckindel\s\winprint\tests\MainWindow.cs</title>
+<meta charset="utf-8"/>
+<style>
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+ code[class*="language-"],
+ pre[class*="language-"] {
+     color: black;
+     background: none;
+     font-family: 'Cascadia Code', Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+     font-size: 8pt;
+     text-align: left;
+     word-spacing: normal;
+     word-break: normal;
+     word-wrap: normal;
+     line-height: normal;
+     tab-size: 4;
+     hyphens: none;
+ }
+ 
+ pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+ code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+     text-shadow: none;
+     background: #b3d4fc;
+ }
+ 
+ pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+ code[class*="language-"]::selection, code[class*="language-"] ::selection {
+     text-shadow: none;
+     background: #b3d4fc;
+ }
+ 
+ @media print {
+     code[class*="language-"],
+     pre[class*="language-"] {
+         text-shadow: none;
+     }
+ }
+ 
+ /* Code blocks */
+ pre[class*="language-"] {
+     overflow: auto;
+ }
+ 
+ :not(pre) > code[class*="language-"],
+ pre[class*="language-"] {
+     background: #f5f2f0;
+ }
+ 
+ /* Inline code */
+ :not(pre) > code[class*="language-"] {
+ }
+ 
+ .token.comment,
+ .token.prolog,
+ .token.doctype,
+ .token.cdata {
+     color: slategray;
+ }
+ 
+ .token.punctuation {
+     color: #999;
+ }
+ 
+ .namespace {
+     opacity: .7;
+ }
+ 
+ .token.property,
+ .token.tag,
+ .token.boolean,
+ .token.number,
+ .token.constant,
+ .token.symbol,
+ .token.deleted {
+     color: #905;
+ }
+ 
+ .token.selector,
+ .token.attr-name,
+ .token.string,
+ .token.char,
+ .token.builtin,
+ .token.inserted {
+     color: #690;
+ }
+ 
+ .token.operator,
+ .token.entity,
+ .token.url,
+ .language-css .token.string,
+ .style .token.string {
+     color: #9a6e3a;
+ }
+ 
+ .token.atrule,
+ .token.attr-value,
+ .token.keyword {
+     color: #07a;
+ }
+ 
+ .token.function,
+ .token.class-name {
+     color: #DD4A68;
+ }
+ 
+ .token.regex,
+ .token.important,
+ .token.variable {
+     color: #e90;
+ }
+ 
+ .token.important,
+ .token.bold {
+     font-weight: bold;
+ }
+ .token.italic {
+     font-style: italic;
+ }
+ 
+ .token.entity {
+     cursor: help;
+ }
+
+ .token {
+ }
+
+ span {
+    padding: unset;
+    padding-left: 0px;
+    padding-right: 0px;
+    border: none;
+    margin-left: 0px;
+    margin-right: 0px;
+ }
+ 
+code[class*="language-"], pre[class*="language-"] {
+font-family: 'Consolas', winprint;
+font-size: 8pt;
+font-weight: Regular;}
+/* These style override Prism built-in (and any provided theme), 
+   optimizing for rendering for print. E.g. Colored backgrounds
+    make no sense when printing. Also turns off some stuff 
+    litehtml does not support correctly.
+*/
+code[class*="language-"],
+pre[class*="language-"] {
+    /* no backgrond 
+    background: none;*/
+    /* linehtml only supports white-space: pre-wrap. word-break: break-all are not yet supported.*/
+    /* Relevant docs:
+        white-space - https://developer.mozilla.org/en-US/docs/web/css/white-space 
+        word-break - https://developer.mozilla.org/en-US/docs/Web/CSS/word-break 
+        overflow-wrap - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap 
+
+        Default for winprint should be `word-break: break-all` 
+        Ideally would also support `overflow-wrap: break-word`
+    */
+    white-space: pre-wrap; /* not good enuf. does not break at non-whitespace chars*/
+    overflow-wrap: break-word; /* would work well, except broken line will start on a new line (suboptimal) */
+    word-break: break-word; /* ok - may be a preference (breaks at word, then break-all */
+    word-break: break-all; /* idea - breaks anywhere */
+    /* Force line-height to 'normal' */
+    line-height: normal;
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+    hyphens: auto;
+    text-align: left;
+    tab-size: 4;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+    position: relative;
+    /* Remove all padding and margins */
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* Background & border */
+pre[class*="language-"] > code {
+    /* turn off all background features */
+    /* no backgrond 
+    background: none;*/
+    background-image: none;
+    /* background-color: transparent;*/
+    /* turn off all borders (winprint provides own border mechansim) */
+    border-left: 0px;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+code[class*="language"] {
+    /* Remove all padding and margins */
+    padding: 0;
+    margin: 0;
+}
+
+/* Margin bottom to accommodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+    /* Remove all padding and margins (prism-coy) */
+    all: unset;
+}
+
+    /* Remove any before/after fancy formatting (like coy's shadows) */
+    pre[class*="language-"]:before,
+    pre[class*="language-"]:after {
+        all: initial;
+    }
+
+    :not(pre) > code[class*="language-"]:after,
+    pre[class*="language-"]:after {
+        all: unset;
+    }
+
+/* disable operator background found in default prism.js */
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata,
+.token.punctuation,
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted,
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted,
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable,
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name,
+.token.regex,
+.token.important,
+.language-css .token.string,
+.style .token.string,
+.token.important,
+.token.bold,
+.token.italic,
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    /* no backgrond 
+    background: none;*/
+}
+
+ol {
+    display: block;
+    /* This works around a bug in litehmtl where it renders lists too far down */
+    margin-top: -0.5em;
+    margin-bottom: 0;
+    margin-left: 30px;
+    margin-right: 0;
+    list-style-type: decimal;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+}
+
+li:first-child {
+    margin-top: 0;
+}
+
+li {
+    padding: 0px;
+    margin: 0;
+    line-height: 0px;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+}
+
+table {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+tr {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+td {
+    border: 0;
+    border-spacing: 0;
+    padding: 0px;
+    margin: 0;
+}
+
+td[class*="line-number"] {
+    padding-left: 0.5em;
+    padding-right: 0.2em;
+    margin-right: 0.5em;
+    text-align: right;
+    vertical-align: top;
+    border-right: 1px solid darkgray;
+    color: darkgray;
+}
+
+</style>
+</head><body><pre class="language-csharp "><code class="language-csharp"><table>
+<tr><td class="line-number">1</td><td><span class="token keyword">using</span> System<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">2</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>Collections<span class="token punctuation">.</span>Generic<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">3</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>ComponentModel<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">4</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>Diagnostics<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">5</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>Drawing<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">6</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>Drawing<span class="token punctuation">.</span>Printing<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">7</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>IO<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">8</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>Linq<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">9</td><td><span class="token keyword">using</span> System<span class="token punctuation">.</span>Windows<span class="token punctuation">.</span>Forms<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">10</td><td><span class="token keyword">using</span> WinPrint<span class="token punctuation">.</span>Core<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">11</td><td><span class="token keyword">using</span> WinPrint<span class="token punctuation">.</span>Core<span class="token punctuation">.</span>Models<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">12</td><td><span class="token keyword">using</span> WinPrint<span class="token punctuation">.</span>Core<span class="token punctuation">.</span>Services<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">13</td><td></td></tr>
+<tr><td class="line-number">14</td><td><span class="token keyword">namespace</span> WinPrint <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">15</td><td>    <span class="token keyword">public</span> <span class="token keyword">partial</span> <span class="token keyword">class</span> <span class="token class-name">MainWindow</span> <span class="token punctuation">:</span> <span class="token class-name">Form</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">16</td><td></td></tr>
+<tr><td class="line-number">17</td><td>        <span class="token comment">// The Windows printer document</span></td></tr>
+<tr><td class="line-number">18</td><td>        <span class="token keyword">private</span> <span class="token class-name">PrintDocument</span> printDoc <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PrintDocument</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">19</td><td></td></tr>
+<tr><td class="line-number">20</td><td>        <span class="token comment">// Winprint Print Preview control</span></td></tr>
+<tr><td class="line-number">21</td><td>        <span class="token keyword">private</span> <span class="token class-name">PrintPreview</span> printPreview<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">22</td><td></td></tr>
+<tr><td class="line-number">23</td><td>        <span class="token comment">//private string file = "..\..\..\..\..\..\tests\formfeeds.txt";</span></td></tr>
+<tr><td class="line-number">24</td><td>        <span class="token comment">//private string file = "..\..\..\..\..\..\tests\TEST.TXT";</span></td></tr>
+<tr><td class="line-number">25</td><td>        <span class="token comment">//private string file = "..\..\..\..\..\..\tests\long html doc as text.TXT";</span></td></tr>
+<tr><td class="line-number">26</td><td>        <span class="token comment">//private string file = @"C:Usersckindelsourcewinprint	ests	est.html";</span></td></tr>
+<tr><td class="line-number">27</td><td>        <span class="token keyword">private</span> <span class="token keyword">string</span> file <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span> <span class="token comment">//@"............protowinformsWinPrintViewModelsSheetViewModel.cs";</span></td></tr>
+<tr><td class="line-number">28</td><td></td></tr>
+<tr><td class="line-number">29</td><td>        <span class="token punctuation">[</span><span class="token class-name">System<span class="token punctuation">.</span>Diagnostics<span class="token punctuation">.</span>CodeAnalysis<span class="token punctuation">.</span>SuppressMessage</span><span class="token punctuation">(</span><span class="token string">"Globalization"</span><span class="token punctuation">,</span> <span class="token string">"CA1303:Do not pass literals as localized parameters"</span><span class="token punctuation">,</span> Justification <span class="token operator">=</span> <span class="token string">"&lt;Pending>"</span><span class="token punctuation">)</span><span class="token punctuation">]</span></td></tr>
+<tr><td class="line-number">30</td><td>        <span class="token keyword">public</span> <span class="token function">MainWindow</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">31</td><td>            <span class="token function">InitializeComponent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">32</td><td></td></tr>
+<tr><td class="line-number">33</td><td>            Icon <span class="token operator">=</span> Resources<span class="token punctuation">.</span>printer_and_fax_w<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">34</td><td></td></tr>
+<tr><td class="line-number">35</td><td>            printPreview <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PrintPreview</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">36</td><td>            printPreview<span class="token punctuation">.</span>Anchor <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>dummyButton<span class="token punctuation">.</span>Anchor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">37</td><td>            printPreview<span class="token punctuation">.</span>BackColor <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>dummyButton<span class="token punctuation">.</span>BackColor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">38</td><td>            printPreview<span class="token punctuation">.</span>Location <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>dummyButton<span class="token punctuation">.</span>Location<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">39</td><td>            printPreview<span class="token punctuation">.</span>Margin <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>dummyButton<span class="token punctuation">.</span>Margin<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">40</td><td>            printPreview<span class="token punctuation">.</span>Name <span class="token operator">=</span> <span class="token string">"printPreview"</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">41</td><td>            printPreview<span class="token punctuation">.</span>Size <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>dummyButton<span class="token punctuation">.</span>Size<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">42</td><td>            printPreview<span class="token punctuation">.</span>TabIndex <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span><span class="token comment">// this.dummyButton.TabIndex;</span></td></tr>
+<tr><td class="line-number">43</td><td>            printPreview<span class="token punctuation">.</span>TabStop <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">44</td><td></td></tr>
+<tr><td class="line-number">45</td><td></td></tr>
+<tr><td class="line-number">46</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>LicenseManager<span class="token punctuation">.</span>UsageMode <span class="token operator">!=</span> LicenseUsageMode<span class="token punctuation">.</span>Designtime<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">47</td><td>                <span class="token keyword">this</span><span class="token punctuation">.</span>panelRight<span class="token punctuation">.</span>Controls<span class="token punctuation">.</span><span class="token function">Remove</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>dummyButton<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">48</td><td>                <span class="token keyword">this</span><span class="token punctuation">.</span>panelRight<span class="token punctuation">.</span>Controls<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>printPreview<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">49</td><td>                printersCB<span class="token punctuation">.</span>Enabled <span class="token operator">=</span> <span class="token keyword">false</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">50</td><td>                paperSizesCB<span class="token punctuation">.</span>Enabled <span class="token operator">=</span> <span class="token keyword">false</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">51</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">52</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">53</td><td></td></tr>
+<tr><td class="line-number">54</td><td>        <span class="token comment">// Flag: Has Dispose already been called?</span></td></tr>
+<tr><td class="line-number">55</td><td>        <span class="token keyword">bool</span> disposed <span class="token operator">=</span> <span class="token keyword">false</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">56</td><td>        <span class="token comment">// Protected implementation of Dispose pattern.</span></td></tr>
+<tr><td class="line-number">57</td><td>        <span class="token comment">/// &lt;summary></span></td></tr>
+<tr><td class="line-number">58</td><td>        <span class="token comment">///  Clean up any resources being used.</span></td></tr>
+<tr><td class="line-number">59</td><td>        <span class="token comment">/// &lt;/summary></span></td></tr>
+<tr><td class="line-number">60</td><td>        <span class="token comment">/// &lt;param name="disposing">true if managed resources should be disposed; otherwise, false.&lt;/param></span></td></tr>
+<tr><td class="line-number">61</td><td>        <span class="token keyword">protected</span> <span class="token keyword">override</span> <span class="token keyword">void</span> <span class="token function">Dispose</span><span class="token punctuation">(</span><span class="token keyword">bool</span> disposing<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">62</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>disposed<span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">63</td><td>                <span class="token keyword">return</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">64</td><td></td></tr>
+<tr><td class="line-number">65</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>disposing <span class="token operator">&amp;&amp;</span> <span class="token punctuation">(</span>components <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">66</td><td>                components<span class="token punctuation">.</span><span class="token function">Dispose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">67</td><td>                <span class="token comment">//if (streamToPrint != null) streamToPrint.Dispose();</span></td></tr>
+<tr><td class="line-number">68</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>printDoc <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> printDoc<span class="token punctuation">.</span><span class="token function">Dispose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">69</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>printPreview <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> printPreview<span class="token punctuation">.</span><span class="token function">Dispose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">70</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">71</td><td>            disposed <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">72</td><td>            <span class="token keyword">base</span><span class="token punctuation">.</span><span class="token function">Dispose</span><span class="token punctuation">(</span>disposing<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">73</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">74</td><td></td></tr>
+<tr><td class="line-number">75</td><td>        <span class="token keyword">private</span> <span class="token class-name">SheetViewModel</span> <span class="token function">CreatePreviewSheetViewModel</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">76</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"CreateSheetViewModel"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">77</td><td>            <span class="token class-name">SheetViewModel</span> svm <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SheetViewModel</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">78</td><td></td></tr>
+<tr><td class="line-number">79</td><td>            svm<span class="token punctuation">.</span><span class="token function">SetSettings</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">80</td><td></td></tr>
+<tr><td class="line-number">81</td><td>            landscapeCheckbox<span class="token punctuation">.</span>Checked <span class="token operator">=</span> svm<span class="token punctuation">.</span>Landscape<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">82</td><td>            enableHeader<span class="token punctuation">.</span>Checked <span class="token operator">=</span> svm<span class="token punctuation">.</span>Header<span class="token punctuation">.</span>Enabled<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">83</td><td>            headerTextBox<span class="token punctuation">.</span>Text <span class="token operator">=</span> svm<span class="token punctuation">.</span>Header<span class="token punctuation">.</span>Text<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">84</td><td>            enableFooter<span class="token punctuation">.</span>Checked <span class="token operator">=</span> svm<span class="token punctuation">.</span>Footer<span class="token punctuation">.</span>Enabled<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">85</td><td>            footerTextBox<span class="token punctuation">.</span>Text <span class="token operator">=</span> svm<span class="token punctuation">.</span>Footer<span class="token punctuation">.</span>Text<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">86</td><td></td></tr>
+<tr><td class="line-number">87</td><td>            topMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Top <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">88</td><td>            leftMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Left <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">89</td><td>            rightMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Right <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">90</td><td>            bottomMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Bottom <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">91</td><td></td></tr>
+<tr><td class="line-number">92</td><td>            pageSeparator<span class="token punctuation">.</span>Checked <span class="token operator">=</span> svm<span class="token punctuation">.</span>PageSepartor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">93</td><td>            rows<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Rows<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">94</td><td>            columns<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Columns<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">95</td><td>            padding<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Padding <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">96</td><td></td></tr>
+<tr><td class="line-number">97</td><td>            svm<span class="token punctuation">.</span>PropertyChanged <span class="token operator">+=</span> <span class="token punctuation">(</span>s<span class="token punctuation">,</span> e<span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token function">BeginInvoke</span><span class="token punctuation">(</span><span class="token punctuation">(</span>Action<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">98</td><td>                Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"SheetViewModel.PropertyChanged: {e.PropertyName}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">99</td><td>                <span class="token keyword">switch</span> <span class="token punctuation">(</span>e<span class="token punctuation">.</span>PropertyName<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">100</td><td>                    <span class="token keyword">case</span> <span class="token string">"Landscape"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">101</td><td>                        Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">102</td><td>                        landscapeCheckbox<span class="token punctuation">.</span>Checked <span class="token operator">=</span> svm<span class="token punctuation">.</span>Landscape<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">103</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">104</td><td></td></tr>
+<tr><td class="line-number">105</td><td>                    <span class="token keyword">case</span> <span class="token string">"Header"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">106</td><td>                        headerTextBox<span class="token punctuation">.</span>Text <span class="token operator">=</span> svm<span class="token punctuation">.</span>Header<span class="token punctuation">.</span>Text<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">107</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">108</td><td></td></tr>
+<tr><td class="line-number">109</td><td>                    <span class="token keyword">case</span> <span class="token string">"Footer"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">110</td><td>                        footerTextBox<span class="token punctuation">.</span>Text <span class="token operator">=</span> svm<span class="token punctuation">.</span>Footer<span class="token punctuation">.</span>Text<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">111</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">112</td><td></td></tr>
+<tr><td class="line-number">113</td><td>                    <span class="token keyword">case</span> <span class="token string">"Margins"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">114</td><td>                        topMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Top <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">115</td><td>                        leftMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Left <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">116</td><td>                        rightMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Right <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">117</td><td>                        bottomMargin<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span>Bottom <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">118</td><td></td></tr>
+<tr><td class="line-number">119</td><td>                        <span class="token comment">// Keep PrintDocument updated for WinForms.PrintPreview</span></td></tr>
+<tr><td class="line-number">120</td><td>                        printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>Margins <span class="token operator">=</span> <span class="token punctuation">(</span>Margins<span class="token punctuation">)</span>svm<span class="token punctuation">.</span>Margins<span class="token punctuation">.</span><span class="token function">Clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">121</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">122</td><td></td></tr>
+<tr><td class="line-number">123</td><td>                    <span class="token keyword">case</span> <span class="token string">"PageSeparator"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">124</td><td>                        pageSeparator<span class="token punctuation">.</span>Checked <span class="token operator">=</span> svm<span class="token punctuation">.</span>PageSepartor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">125</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">126</td><td></td></tr>
+<tr><td class="line-number">127</td><td>                    <span class="token keyword">case</span> <span class="token string">"Rows"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">128</td><td>                        rows<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Rows<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">129</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">130</td><td></td></tr>
+<tr><td class="line-number">131</td><td>                    <span class="token keyword">case</span> <span class="token string">"Columns"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">132</td><td>                        columns<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Columns<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">133</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">134</td><td></td></tr>
+<tr><td class="line-number">135</td><td>                    <span class="token keyword">case</span> <span class="token string">"Padding"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">136</td><td>                        padding<span class="token punctuation">.</span>Value <span class="token operator">=</span> svm<span class="token punctuation">.</span>Padding <span class="token operator">/</span> <span class="token number">100</span>M<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">137</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">138</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">139</td><td>            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">140</td><td></td></tr>
+<tr><td class="line-number">141</td><td>            svm<span class="token punctuation">.</span>SettingsChanged <span class="token operator">+=</span> <span class="token punctuation">(</span>s<span class="token punctuation">,</span> reflow<span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token function">BeginInvoke</span><span class="token punctuation">(</span><span class="token punctuation">(</span>Action<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">142</td><td>                Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"SheetViewModel.SettingsChanged: {reflow}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">143</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>reflow<span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">144</td><td>                    <span class="token function">SheetSettingsChanged</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">145</td><td>                <span class="token keyword">else</span></td></tr>
+<tr><td class="line-number">146</td><td>                    printPreview<span class="token punctuation">.</span><span class="token function">Invalidate</span><span class="token punctuation">(</span><span class="token keyword">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">147</td><td>            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">148</td><td></td></tr>
+<tr><td class="line-number">149</td><td>            printPreview<span class="token punctuation">.</span>SheetViewModel <span class="token operator">=</span> svm<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">150</td><td></td></tr>
+<tr><td class="line-number">151</td><td>            <span class="token comment">// TODO: Batch Print</span></td></tr>
+<tr><td class="line-number">152</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span></td></tr>
+<tr><td class="line-number">153</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files<span class="token punctuation">.</span><span class="token function">Any</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span></td></tr>
+<tr><td class="line-number">154</td><td>                <span class="token operator">!</span><span class="token keyword">string</span><span class="token punctuation">.</span><span class="token function">IsNullOrEmpty</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files<span class="token punctuation">.</span><span class="token function">ToList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">155</td><td>                List<span class="token operator">&lt;</span><span class="token keyword">string</span><span class="token operator">></span> list <span class="token operator">=</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files<span class="token punctuation">.</span><span class="token function">ToList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">156</td><td>                file <span class="token operator">=</span> list<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">157</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">158</td><td></td></tr>
+<tr><td class="line-number">159</td><td>            svm<span class="token punctuation">.</span>File <span class="token operator">=</span> file<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">160</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Text <span class="token operator">=</span> $<span class="token string">"WinPrint - {file}"</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">161</td><td>            <span class="token keyword">return</span> svm<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">162</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">163</td><td></td></tr>
+<tr><td class="line-number">164</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">landscapeCheckbox_CheckedChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">165</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"landscapeCheckbox_CheckedChanged: {landscapeCheckbox.Checked}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">166</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printersCB<span class="token punctuation">.</span>Enabled<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">167</td><td>                <span class="token comment">// TODO: This should find the Preview SheetViewModel instance and set the property on this, not</span></td></tr>
+<tr><td class="line-number">168</td><td>                <span class="token comment">// the model</span></td></tr>
+<tr><td class="line-number">169</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Landscape <span class="token operator">=</span></td></tr>
+<tr><td class="line-number">170</td><td>                    printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>Landscape <span class="token operator">=</span></td></tr>
+<tr><td class="line-number">171</td><td>                    landscapeCheckbox<span class="token punctuation">.</span>Checked<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">172</td><td></td></tr>
+<tr><td class="line-number">173</td><td>                <span class="token comment">// We do NOT force settings reflow here; as it will come through with a SettingsChanged from viewmodel</span></td></tr>
+<tr><td class="line-number">174</td><td>                <span class="token comment">//SheetSettingsChanged();</span></td></tr>
+<tr><td class="line-number">175</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">176</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">177</td><td></td></tr>
+<tr><td class="line-number">178</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">MainWindow_Load</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">179</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Cursor <span class="token operator">=</span> Cursors<span class="token punctuation">.</span>WaitCursor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">180</td><td>            <span class="token comment">// Load settings</span></td></tr>
+<tr><td class="line-number">181</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"First reference to ModelLocator.Current.Settings"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">182</td><td>            <span class="token keyword">var</span> sheets <span class="token operator">=</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">183</td><td></td></tr>
+<tr><td class="line-number">184</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>PropertyChanged <span class="token operator">+=</span> <span class="token punctuation">(</span>s<span class="token punctuation">,</span> e<span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token function">BeginInvoke</span><span class="token punctuation">(</span><span class="token punctuation">(</span>Action<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">185</td><td>                Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"Settings.PropertyChanged: {e.PropertyName}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">186</td><td>                <span class="token keyword">switch</span> <span class="token punctuation">(</span>e<span class="token punctuation">.</span>PropertyName<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">187</td><td>                    <span class="token keyword">case</span> <span class="token string">"DefaultSheet"</span><span class="token punctuation">:</span></td></tr>
+<tr><td class="line-number">188</td><td>                        comboBoxSheet<span class="token punctuation">.</span>Text <span class="token operator">=</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Name<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">189</td><td>                        <span class="token function">ChangeSheet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">190</td><td>                        <span class="token keyword">break</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">191</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">192</td><td>            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">193</td><td></td></tr>
+<tr><td class="line-number">194</td><td>            comboBoxSheet<span class="token punctuation">.</span>DisplayMember <span class="token operator">=</span> <span class="token string">"Value"</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">195</td><td>            comboBoxSheet<span class="token punctuation">.</span>ValueMember <span class="token operator">=</span> <span class="token string">"Key"</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">196</td><td>            <span class="token keyword">foreach</span> <span class="token punctuation">(</span><span class="token keyword">var</span> s <span class="token keyword">in</span> sheets<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">197</td><td>                comboBoxSheet<span class="token punctuation">.</span>Items<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token generic-method"><span class="token function">KeyValuePair</span><span class="token punctuation">&lt;</span><span class="token keyword">string</span><span class="token punctuation">,</span> <span class="token keyword">string</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>s<span class="token punctuation">.</span>Key<span class="token punctuation">,</span> s<span class="token punctuation">.</span>Value<span class="token punctuation">.</span>Name<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">198</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">199</td><td></td></tr>
+<tr><td class="line-number">200</td><td>            <span class="token comment">// Select default printer and paper size</span></td></tr>
+<tr><td class="line-number">201</td><td>            <span class="token keyword">foreach</span> <span class="token punctuation">(</span><span class="token keyword">string</span> printer <span class="token keyword">in</span> System<span class="token punctuation">.</span>Drawing<span class="token punctuation">.</span>Printing<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>InstalledPrinters<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">202</td><td>                printersCB<span class="token punctuation">.</span>Items<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span>printer<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">203</td><td>                <span class="token comment">//printersCB.Text = "OneNote";</span></td></tr>
+<tr><td class="line-number">204</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>IsDefaultPrinter<span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">205</td><td>                    printersCB<span class="token punctuation">.</span>Text <span class="token operator">=</span> printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrinterName<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">206</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">207</td><td>            printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrinterName <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">)</span>printersCB<span class="token punctuation">.</span>SelectedItem<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">208</td><td>            <span class="token keyword">foreach</span> <span class="token punctuation">(</span><span class="token class-name">PaperSize</span> ps <span class="token keyword">in</span> printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PaperSizes<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">209</td><td>                paperSizesCB<span class="token punctuation">.</span>Items<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span>ps<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">210</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">211</td><td>            paperSizesCB<span class="token punctuation">.</span>Text <span class="token operator">=</span> printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>PaperSize<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">212</td><td></td></tr>
+<tr><td class="line-number">213</td><td>            <span class="token comment">// We kept these disabled during load</span></td></tr>
+<tr><td class="line-number">214</td><td>            printersCB<span class="token punctuation">.</span>Enabled <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">215</td><td>            paperSizesCB<span class="token punctuation">.</span>Enabled <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">216</td><td></td></tr>
+<tr><td class="line-number">217</td><td>            <span class="token comment">// Select default Sheet </span></td></tr>
+<tr><td class="line-number">218</td><td>            comboBoxSheet<span class="token punctuation">.</span>Text <span class="token operator">=</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Name<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">219</td><td></td></tr>
+<tr><td class="line-number">220</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span></td></tr>
+<tr><td class="line-number">221</td><td>                <span class="token comment">//&amp;&amp;</span></td></tr>
+<tr><td class="line-number">222</td><td>                <span class="token comment">//  ModelLocator.Current.Options.Files.Any() &amp;&amp;</span></td></tr>
+<tr><td class="line-number">223</td><td>                <span class="token comment">//  !string.IsNullOrEmpty(ModelLocator.Current.Options.Files.ToList&lt;string>()[0])) </span></td></tr>
+<tr><td class="line-number">224</td><td>            <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">225</td><td>                file <span class="token operator">=</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Options<span class="token punctuation">.</span>Files<span class="token punctuation">.</span><span class="token function">ToList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">226</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">227</td><td></td></tr>
+<tr><td class="line-number">228</td><td>            printPreview<span class="token punctuation">.</span><span class="token function">Select</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">229</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Size <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Size</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Size<span class="token punctuation">.</span>Width<span class="token punctuation">,</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Size<span class="token punctuation">.</span>Height<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">230</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Location <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Point</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Location<span class="token punctuation">.</span>X<span class="token punctuation">,</span> ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Location<span class="token punctuation">.</span>Y<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">231</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>WindowState <span class="token operator">=</span> <span class="token punctuation">(</span>System<span class="token punctuation">.</span>Windows<span class="token punctuation">.</span>Forms<span class="token punctuation">.</span>FormWindowState<span class="token punctuation">)</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>WindowState<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">232</td><td></td></tr>
+<tr><td class="line-number">233</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Cursor <span class="token operator">=</span> Cursors<span class="token punctuation">.</span>Default<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">234</td><td></td></tr>
+<tr><td class="line-number">235</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">.</span><span class="token function">IsNullOrEmpty</span><span class="token punctuation">(</span>file<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">236</td><td>                <span class="token keyword">using</span> <span class="token punctuation">(</span><span class="token class-name">OpenFileDialog</span> openFileDialog <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">OpenFileDialog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">237</td><td>                    </td></tr>
+<tr><td class="line-number">238</td><td>                    openFileDialog<span class="token punctuation">.</span>InitialDirectory <span class="token operator">=</span> $<span class="token string">"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\source\winprint\tests"</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">239</td><td>                    openFileDialog<span class="token punctuation">.</span>Filter <span class="token operator">=</span> <span class="token string">"code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*"</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">240</td><td>                    openFileDialog<span class="token punctuation">.</span>FilterIndex <span class="token operator">=</span> <span class="token number">3</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">241</td><td>                    openFileDialog<span class="token punctuation">.</span>RestoreDirectory <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">242</td><td>                    <span class="token keyword">if</span> <span class="token punctuation">(</span>openFileDialog<span class="token punctuation">.</span><span class="token function">ShowDialog</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> DialogResult<span class="token punctuation">.</span>OK<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">243</td><td>                        file <span class="token operator">=</span> openFileDialog<span class="token punctuation">.</span>FileNames<span class="token punctuation">.</span><span class="token generic-method"><span class="token function">ToList</span><span class="token punctuation">&lt;</span><span class="token keyword">string</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">244</td><td>                    <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">245</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">246</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">247</td><td>            <span class="token comment">// Go!</span></td></tr>
+<tr><td class="line-number">248</td><td>            <span class="token function">ChangeSheet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">249</td><td></td></tr>
+<tr><td class="line-number">250</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">251</td><td></td></tr>
+<tr><td class="line-number">252</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">ChangeSheet</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">253</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Cursor <span class="token operator">=</span> Cursors<span class="token punctuation">.</span>WaitCursor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">254</td><td>            printPreview<span class="token punctuation">.</span>SheetViewModel <span class="token operator">=</span> <span class="token function">CreatePreviewSheetViewModel</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">255</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Cursor <span class="token operator">=</span> Cursors<span class="token punctuation">.</span>Default<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">256</td><td>            <span class="token function">SheetSettingsChanged</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">257</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">258</td><td></td></tr>
+<tr><td class="line-number">259</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">MainWindow_FormClosing</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">FormClosingEventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">260</td><td>            <span class="token comment">// Save Window state</span></td></tr>
+<tr><td class="line-number">261</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>WindowState <span class="token operator">==</span> System<span class="token punctuation">.</span>Windows<span class="token punctuation">.</span>Forms<span class="token punctuation">.</span>FormWindowState<span class="token punctuation">.</span>Normal<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">262</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Size <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Core<span class="token punctuation">.</span>Models<span class="token punctuation">.</span>WindowSize</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>Size<span class="token punctuation">.</span>Width<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>Size<span class="token punctuation">.</span>Height<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">263</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Location <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Core<span class="token punctuation">.</span>Models<span class="token punctuation">.</span>WindowLocation</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>Location<span class="token punctuation">.</span>X<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>Location<span class="token punctuation">.</span>Y<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">264</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">265</td><td>            <span class="token keyword">else</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">266</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Size <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Core<span class="token punctuation">.</span>Models<span class="token punctuation">.</span>WindowSize</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>RestoreBounds<span class="token punctuation">.</span>Width<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>RestoreBounds<span class="token punctuation">.</span>Height<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">267</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Location <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Core<span class="token punctuation">.</span>Models<span class="token punctuation">.</span>WindowLocation</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>RestoreBounds<span class="token punctuation">.</span>X<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>RestoreBounds<span class="token punctuation">.</span>Y<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">268</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">269</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>WindowState <span class="token operator">=</span> <span class="token punctuation">(</span>Core<span class="token punctuation">.</span>Models<span class="token punctuation">.</span>FormWindowState<span class="token punctuation">)</span><span class="token keyword">this</span><span class="token punctuation">.</span>WindowState<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">270</td><td>            ServiceLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>SettingsService<span class="token punctuation">.</span><span class="token function">SaveSettings</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">271</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">272</td><td></td></tr>
+<tr><td class="line-number">273</td><td>        <span class="token keyword">internal</span> <span class="token keyword">void</span> <span class="token function">SheetSettingsChanged</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">274</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"SheetSettingsChanged()"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">275</td><td></td></tr>
+<tr><td class="line-number">276</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Cursor <span class="token operator">=</span> Cursors<span class="token punctuation">.</span>WaitCursor<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">277</td><td>            <span class="token comment">// Set landscape. This causes other DefaultPageSettings to change</span></td></tr>
+<tr><td class="line-number">278</td><td>            printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>Landscape <span class="token operator">=</span> landscapeCheckbox<span class="token punctuation">.</span>Checked<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">279</td><td>            printPreview<span class="token punctuation">.</span>SheetViewModel<span class="token punctuation">.</span><span class="token function">Reflow</span><span class="token punctuation">(</span>printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">280</td><td>            printPreview<span class="token punctuation">.</span><span class="token function">Invalidate</span><span class="token punctuation">(</span><span class="token keyword">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">281</td><td>            <span class="token function">SizePreview</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">282</td><td></td></tr>
+<tr><td class="line-number">283</td><td>            <span class="token keyword">this</span><span class="token punctuation">.</span>Cursor <span class="token operator">=</span> Cursors<span class="token punctuation">.</span>Default<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">284</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">285</td><td></td></tr>
+<tr><td class="line-number">286</td><td>        <span class="token keyword">internal</span> <span class="token keyword">void</span> <span class="token function">SizePreview</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">287</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"SizePreview()"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">288</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printPreview <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> printPreview<span class="token punctuation">.</span>SheetViewModel <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">289</td><td>            <span class="token class-name">Size</span> size <span class="token operator">=</span> panelRight<span class="token punctuation">.</span>Size<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">290</td><td>            size<span class="token punctuation">.</span>Height <span class="token operator">-=</span> headerTextBox<span class="token punctuation">.</span>Height <span class="token operator">*</span> <span class="token number">3</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">291</td><td>            size<span class="token punctuation">.</span>Width <span class="token operator">-=</span> headerTextBox<span class="token punctuation">.</span>Height<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">292</td><td></td></tr>
+<tr><td class="line-number">293</td><td>            <span class="token keyword">double</span> w <span class="token operator">=</span> printPreview<span class="token punctuation">.</span>SheetViewModel<span class="token punctuation">.</span>Bounds<span class="token punctuation">.</span>Width<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">294</td><td>            <span class="token keyword">double</span> h <span class="token operator">=</span> printPreview<span class="token punctuation">.</span>SheetViewModel<span class="token punctuation">.</span>Bounds<span class="token punctuation">.</span>Height<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">295</td><td></td></tr>
+<tr><td class="line-number">296</td><td>            <span class="token keyword">var</span> scalingX <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">double</span><span class="token punctuation">)</span>size<span class="token punctuation">.</span>Width <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token keyword">double</span><span class="token punctuation">)</span>w<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">297</td><td>            <span class="token keyword">var</span> scalingY <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">double</span><span class="token punctuation">)</span>size<span class="token punctuation">.</span>Height <span class="token operator">/</span> <span class="token punctuation">(</span><span class="token keyword">double</span><span class="token punctuation">)</span>h<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">298</td><td></td></tr>
+<tr><td class="line-number">299</td><td>            <span class="token comment">// Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.</span></td></tr>
+<tr><td class="line-number">300</td><td>            <span class="token keyword">var</span> scale <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">Min</span><span class="token punctuation">(</span>scalingY<span class="token punctuation">,</span> scalingX<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">301</td><td></td></tr>
+<tr><td class="line-number">302</td><td>            printPreview<span class="token punctuation">.</span>Size <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Size</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>w <span class="token operator">*</span> scale<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>h <span class="token operator">*</span> scale<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">303</td><td></td></tr>
+<tr><td class="line-number">304</td><td>            <span class="token comment">// Now center</span></td></tr>
+<tr><td class="line-number">305</td><td>            printPreview<span class="token punctuation">.</span>Location <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Point</span><span class="token punctuation">(</span><span class="token punctuation">(</span>panelRight<span class="token punctuation">.</span>Width <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token punctuation">(</span>printPreview<span class="token punctuation">.</span>Width <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">,</span></td></tr>
+<tr><td class="line-number">306</td><td>                <span class="token punctuation">(</span>panelRight<span class="token punctuation">.</span>Height <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token punctuation">(</span>printPreview<span class="token punctuation">.</span>Height <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">307</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">308</td><td></td></tr>
+<tr><td class="line-number">309</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">MainWindow_Layout</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">LayoutEventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">310</td><td>            <span class="token comment">// This event is raised once at startup with the AffectedControl</span></td></tr>
+<tr><td class="line-number">311</td><td>            <span class="token comment">// and AffectedProperty properties on the LayoutEventArgs as null. </span></td></tr>
+<tr><td class="line-number">312</td><td>            <span class="token comment">// The event provides size preferences for that case.</span></td></tr>
+<tr><td class="line-number">313</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span>AffectedControl <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token punctuation">(</span>e<span class="token punctuation">.</span>AffectedProperty <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">314</td><td>                <span class="token comment">// Ensure that the affected property is the Bounds property</span></td></tr>
+<tr><td class="line-number">315</td><td>                <span class="token comment">// of the form.</span></td></tr>
+<tr><td class="line-number">316</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>e<span class="token punctuation">.</span>AffectedProperty<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">Equals</span><span class="token punctuation">(</span><span class="token string">"Bounds"</span><span class="token punctuation">,</span> StringComparison<span class="token punctuation">.</span>InvariantCultureIgnoreCase<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">317</td><td>                    Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"MainWindow_Layout bounds changed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">318</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">319</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">320</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">321</td><td></td></tr>
+<tr><td class="line-number">322</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">headerTextBox_TextChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">323</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span></td></tr>
+<tr><td class="line-number">324</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Header<span class="token punctuation">.</span>Text <span class="token operator">=</span> headerTextBox<span class="token punctuation">.</span>Text<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">325</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">326</td><td></td></tr>
+<tr><td class="line-number">327</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">footerTextBox_TextChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">328</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span></td></tr>
+<tr><td class="line-number">329</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Footer<span class="token punctuation">.</span>Text <span class="token operator">=</span> footerTextBox<span class="token punctuation">.</span>Text<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">330</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">331</td><td></td></tr>
+<tr><td class="line-number">332</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">printersCB_SelectedIndexChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">333</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printersCB<span class="token punctuation">.</span>Enabled<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">334</td><td>                Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"printersCB_SelectedIndexChanged"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">335</td><td>                printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrinterName <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">string</span><span class="token punctuation">)</span>printersCB<span class="token punctuation">.</span>SelectedItem<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">336</td><td>                paperSizesCB<span class="token punctuation">.</span>Items<span class="token punctuation">.</span><span class="token function">Clear</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">337</td><td>                <span class="token keyword">foreach</span> <span class="token punctuation">(</span><span class="token class-name">PaperSize</span> ps <span class="token keyword">in</span> printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PaperSizes<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">338</td><td>                    paperSizesCB<span class="token punctuation">.</span>Items<span class="token punctuation">.</span><span class="token function">Add</span><span class="token punctuation">(</span>ps<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">339</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">340</td><td>                paperSizesCB<span class="token punctuation">.</span>Text <span class="token operator">=</span> printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>PaperSize<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">341</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">342</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">343</td><td></td></tr>
+<tr><td class="line-number">344</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">paperSizesCB_SelectedIndexChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">345</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printersCB<span class="token punctuation">.</span>Enabled<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">346</td><td>                Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span><span class="token string">"paperSizesCB_SelectedIndexChanged"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">347</td><td>                <span class="token comment">// Set the paper size based upon the selection in the combo box.</span></td></tr>
+<tr><td class="line-number">348</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>paperSizesCB<span class="token punctuation">.</span>SelectedIndex <span class="token operator">!=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">349</td><td>                    printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>PaperSize <span class="token operator">=</span> printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PaperSizes<span class="token punctuation">[</span>paperSizesCB<span class="token punctuation">.</span>SelectedIndex<span class="token punctuation">]</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">350</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">351</td><td>                <span class="token function">SheetSettingsChanged</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">352</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">353</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">354</td><td></td></tr>
+<tr><td class="line-number">355</td><td>        <span class="token punctuation">[</span><span class="token class-name">System<span class="token punctuation">.</span>Diagnostics<span class="token punctuation">.</span>CodeAnalysis<span class="token punctuation">.</span>SuppressMessage</span><span class="token punctuation">(</span><span class="token string">"Design"</span><span class="token punctuation">,</span> <span class="token string">"CA1031:Do not catch general exception types"</span><span class="token punctuation">,</span> Justification <span class="token operator">=</span> <span class="token string">"&lt;Pending>"</span><span class="token punctuation">)</span><span class="token punctuation">]</span></td></tr>
+<tr><td class="line-number">356</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">printButton_Click</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">357</td><td>            <span class="token keyword">using</span> <span class="token keyword">var</span> print <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Core<span class="token punctuation">.</span>Print</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">358</td><td>            <span class="token comment">// TODO: It's hokey that Landscape is the only printer setting that's treated specially</span></td></tr>
+<tr><td class="line-number">359</td><td>            <span class="token comment">// </span></td></tr>
+<tr><td class="line-number">360</td><td>            print<span class="token punctuation">.</span>PrintDocument<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>Landscape <span class="token operator">=</span> landscapeCheckbox<span class="token punctuation">.</span>Checked<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">361</td><td>            print<span class="token punctuation">.</span>SheetVM<span class="token punctuation">.</span>File <span class="token operator">=</span> file<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">362</td><td>            print<span class="token punctuation">.</span>SheetVM<span class="token punctuation">.</span><span class="token function">SetSettings</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">363</td><td>            print<span class="token punctuation">.</span><span class="token function">SetPrinter</span><span class="token punctuation">(</span>printDoc<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrinterName<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">364</td><td>            print<span class="token punctuation">.</span><span class="token function">SetPaperSize</span><span class="token punctuation">(</span>printDoc<span class="token punctuation">.</span>DefaultPageSettings<span class="token punctuation">.</span>PaperSize<span class="token punctuation">.</span>PaperName<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">365</td><td></td></tr>
+<tr><td class="line-number">366</td><td>            <span class="token comment">// TODO: Decide how to make showing the print dialog a setting (or if needed at all)</span></td></tr>
+<tr><td class="line-number">367</td><td>            <span class="token comment">// the only reason I can think of now is from/to page support.</span></td></tr>
+<tr><td class="line-number">368</td><td>            <span class="token keyword">bool</span> showPrintDialog <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">369</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>showPrintDialog<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">370</td><td>                <span class="token keyword">using</span> <span class="token class-name">PrintDialog</span> printDialog <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PrintDialog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">371</td><td>                printDialog<span class="token punctuation">.</span>AllowSomePages <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">372</td><td>                printDialog<span class="token punctuation">.</span>ShowHelp <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">373</td><td>                <span class="token comment">// printDialog.AllowSelection = true;</span></td></tr>
+<tr><td class="line-number">374</td><td></td></tr>
+<tr><td class="line-number">375</td><td>                printDialog<span class="token punctuation">.</span>Document <span class="token operator">=</span> print<span class="token punctuation">.</span>PrintDocument<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">376</td><td>                printDialog<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>FromPage <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">377</td><td>                <span class="token comment">// Ideally we'd get NumSheets from print.SheetSVM but that would cause a</span></td></tr>
+<tr><td class="line-number">378</td><td>                <span class="token comment">// un-needed Reflow. So use the printPreview VM.</span></td></tr>
+<tr><td class="line-number">379</td><td>                printDialog<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>ToPage <span class="token operator">=</span> printPreview<span class="token punctuation">.</span>SheetViewModel<span class="token punctuation">.</span>NumSheets<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">380</td><td>                <span class="token comment">//If the result is OK then print the document.</span></td></tr>
+<tr><td class="line-number">381</td><td>                <span class="token keyword">if</span> <span class="token punctuation">(</span>printDialog<span class="token punctuation">.</span><span class="token function">ShowDialog</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> DialogResult<span class="token punctuation">.</span>OK <span class="token operator">&amp;&amp;</span> printDialog<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrintRange <span class="token operator">==</span> PrintRange<span class="token punctuation">.</span>SomePages<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">382</td><td>                    print<span class="token punctuation">.</span>PrintDocument<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrintRange <span class="token operator">=</span> printDialog<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>PrintRange<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">383</td><td>                    print<span class="token punctuation">.</span>PrintDocument<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>FromPage <span class="token operator">=</span> printDialog<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>FromPage<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">384</td><td>                    print<span class="token punctuation">.</span>PrintDocument<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>ToPage <span class="token operator">=</span> printDialog<span class="token punctuation">.</span>PrinterSettings<span class="token punctuation">.</span>ToPage<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">385</td><td>                <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">386</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">387</td><td>            print<span class="token punctuation">.</span><span class="token function">DoPrint</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">388</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">389</td><td></td></tr>
+<tr><td class="line-number">390</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">panelRight_Resize</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">391</td><td>            <span class="token function">SizePreview</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">392</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">393</td><td></td></tr>
+<tr><td class="line-number">394</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">enableHeader_CheckedChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">395</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"enableHeader_CheckedChanged: {enableHeader.Checked}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">396</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printersCB<span class="token punctuation">.</span>Enabled<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">397</td><td>                <span class="token comment">// TODO: This should find the Preview SheetViewModel instance and set the property on this, not</span></td></tr>
+<tr><td class="line-number">398</td><td>                <span class="token comment">// the model</span></td></tr>
+<tr><td class="line-number">399</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Header<span class="token punctuation">.</span>Enabled <span class="token operator">=</span></td></tr>
+<tr><td class="line-number">400</td><td>                    enableHeader<span class="token punctuation">.</span>Checked<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">401</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">402</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">403</td><td></td></tr>
+<tr><td class="line-number">404</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">enableFooter_CheckedChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">405</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"enableFooter_CheckedChanged: {enableFooter.Checked}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">406</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printersCB<span class="token punctuation">.</span>Enabled<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">407</td><td>                <span class="token comment">// TODO: This should find the Preview SheetViewModel instance and set the property on this, not</span></td></tr>
+<tr><td class="line-number">408</td><td>                <span class="token comment">// the model</span></td></tr>
+<tr><td class="line-number">409</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Footer<span class="token punctuation">.</span>Enabled <span class="token operator">=</span></td></tr>
+<tr><td class="line-number">410</td><td>                    enableFooter<span class="token punctuation">.</span>Checked<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">411</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">412</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">413</td><td></td></tr>
+<tr><td class="line-number">414</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">comboBoxSheet_SelectedIndexChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">415</td><td>            KeyValuePair<span class="token operator">&lt;</span><span class="token keyword">string</span><span class="token punctuation">,</span> <span class="token keyword">string</span><span class="token operator">></span> si <span class="token operator">=</span> <span class="token punctuation">(</span>KeyValuePair<span class="token operator">&lt;</span><span class="token keyword">string</span><span class="token punctuation">,</span> <span class="token keyword">string</span><span class="token operator">></span><span class="token punctuation">)</span>comboBoxSheet<span class="token punctuation">.</span>SelectedItem<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">416</td><td>            Debug<span class="token punctuation">.</span><span class="token function">WriteLine</span><span class="token punctuation">(</span>$<span class="token string">"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}"</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">417</td><td>            <span class="token keyword">if</span> <span class="token punctuation">(</span>printersCB<span class="token punctuation">.</span>Enabled<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">418</td><td>                ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet <span class="token operator">=</span> Guid<span class="token punctuation">.</span><span class="token function">Parse</span><span class="token punctuation">(</span>si<span class="token punctuation">.</span>Key<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">419</td><td>                <span class="token comment">//ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);</span></td></tr>
+<tr><td class="line-number">420</td><td>            <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">421</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">422</td><td></td></tr>
+<tr><td class="line-number">423</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">topMargin_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">424</td><td>            <span class="token class-name">Margins</span> margins <span class="token operator">=</span> <span class="token punctuation">(</span>Margins<span class="token punctuation">)</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins<span class="token punctuation">.</span><span class="token function">Clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">425</td><td>            margins<span class="token punctuation">.</span>Top <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>topMargin<span class="token punctuation">.</span>Value <span class="token operator">*</span> <span class="token number">100</span>M<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">426</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins <span class="token operator">=</span> margins<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">427</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">428</td><td></td></tr>
+<tr><td class="line-number">429</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">leftMargin_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">430</td><td>            <span class="token class-name">Margins</span> margins <span class="token operator">=</span> <span class="token punctuation">(</span>Margins<span class="token punctuation">)</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins<span class="token punctuation">.</span><span class="token function">Clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">431</td><td>            margins<span class="token punctuation">.</span>Left <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>leftMargin<span class="token punctuation">.</span>Value <span class="token operator">*</span> <span class="token number">100</span>M<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">432</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins <span class="token operator">=</span> margins<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">433</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">434</td><td></td></tr>
+<tr><td class="line-number">435</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">rightMargin_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">436</td><td>            <span class="token class-name">Margins</span> margins <span class="token operator">=</span> <span class="token punctuation">(</span>Margins<span class="token punctuation">)</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins<span class="token punctuation">.</span><span class="token function">Clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">437</td><td>            margins<span class="token punctuation">.</span>Right <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>rightMargin<span class="token punctuation">.</span>Value <span class="token operator">*</span> <span class="token number">100</span>M<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">438</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins <span class="token operator">=</span> margins<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">439</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">440</td><td></td></tr>
+<tr><td class="line-number">441</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">bottomMargin_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">442</td><td>            <span class="token class-name">Margins</span> margins <span class="token operator">=</span> <span class="token punctuation">(</span>Margins<span class="token punctuation">)</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins<span class="token punctuation">.</span><span class="token function">Clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">443</td><td>            margins<span class="token punctuation">.</span>Bottom <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>bottomMargin<span class="token punctuation">.</span>Value <span class="token operator">*</span> <span class="token number">100</span>M<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">444</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Margins <span class="token operator">=</span> margins<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">445</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">446</td><td></td></tr>
+<tr><td class="line-number">447</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">pageSeparator_CheckedChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">448</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>PageSeparator <span class="token operator">=</span> pageSeparator<span class="token punctuation">.</span>Checked<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">449</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">450</td><td></td></tr>
+<tr><td class="line-number">451</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">rows_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">452</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Rows <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span>rows<span class="token punctuation">.</span>Value<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">453</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">454</td><td></td></tr>
+<tr><td class="line-number">455</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">columns_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">456</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Columns <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span>columns<span class="token punctuation">.</span>Value<span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">457</td><td></td></tr>
+<tr><td class="line-number">458</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">459</td><td></td></tr>
+<tr><td class="line-number">460</td><td>        <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">padding_ValueChanged</span><span class="token punctuation">(</span><span class="token keyword">object</span> sender<span class="token punctuation">,</span> <span class="token class-name">EventArgs</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span></td></tr>
+<tr><td class="line-number">461</td><td>            ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>Sheets<span class="token punctuation">.</span><span class="token function">GetValueOrDefault</span><span class="token punctuation">(</span>ModelLocator<span class="token punctuation">.</span>Current<span class="token punctuation">.</span>Settings<span class="token punctuation">.</span>DefaultSheet<span class="token punctuation">.</span><span class="token function">ToString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>Padding <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">(</span>padding<span class="token punctuation">.</span>Value <span class="token operator">*</span> <span class="token number">100</span>M<span class="token punctuation">)</span><span class="token punctuation">;</span></td></tr>
+<tr><td class="line-number">462</td><td>        <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">463</td><td>    <span class="token punctuation">}</span></td></tr>
+<tr><td class="line-number">464</td><td><span class="token punctuation">}</span></td></tr>
+</table></code></pre>
+</body></html>

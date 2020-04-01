@@ -47,13 +47,24 @@ namespace WinPrint.Core.Services {
                 ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
 
             // Setup logging
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(MasterLevelSwitch)
-                //.WriteTo.Console(levelSwitch: ConsoleLevelSwitch)
-                .WriteTo.Sink((ILogEventSink)consoleSink, levelSwitch: ConsoleLevelSwitch)
-                .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
-                .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
-                .CreateLogger();
+            if (consoleSink == null) {
+                // GUI
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.ControlledBy(MasterLevelSwitch)
+                    .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
+                    .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
+                    .CreateLogger();
+            }
+            else {
+                // Console / Powershell
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.ControlledBy(MasterLevelSwitch)
+                    //.WriteTo.Console(levelSwitch: ConsoleLevelSwitch)
+                    .WriteTo.Sink((ILogEventSink)consoleSink, levelSwitch: ConsoleLevelSwitch)
+                    .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
+                    .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
+                    .CreateLogger();
+            }
 
             Log.Debug("--------- {app} {v} ---------", appName, productVersion);
             if (ServiceLocator.Current.TelemetryService.TelemetryEnabled) {
