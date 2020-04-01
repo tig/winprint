@@ -40,7 +40,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.21" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.23" />
   </ItemGroup>
 
   <ItemGroup>
