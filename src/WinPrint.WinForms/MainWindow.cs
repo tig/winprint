@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -441,13 +444,8 @@ namespace WinPrint.Winforms {
                     Log.Information($"   {ServiceLocator.Current.UpdateService.ReleasePageUri}");
                     Log.Information("------------------------------------------------");
 
-                    var result = MessageBox.Show(this, $"A newer version of winprint ({version}) is available at\n\n" +
-                        $"{ServiceLocator.Current.UpdateService.ReleasePageUri}\n\n" +
-                        $"Upgrade now?", this.Text, MessageBoxButtons.OKCancel);
-                    if (result == DialogResult.OK) {
-                        ServiceLocator.Current.UpdateService.StartUpgrade();
-                    }
-
+                    using var dlg = new UpdateDialog();
+                    dlg.ShowDialog(this);
                 }
                 else if (ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
                     Log.Information($"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})");
@@ -457,6 +455,7 @@ namespace WinPrint.Winforms {
                 }
             }
         }
+
         private void Start() {
             LogService.TraceMessage();
 

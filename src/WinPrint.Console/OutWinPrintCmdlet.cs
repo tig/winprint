@@ -348,7 +348,7 @@ namespace WinPrint.Console {
                 var cur = UpdateService.CurrentVersion;
                 Log.Debug("Got new version info. Current: {cur}, Available: {version}", cur, v);
                 if (v != null && ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
-                    Log.Information("A newer version of winprint ({v}) is available at {l}.", v, ServiceLocator.Current.UpdateService.DownloadUri);
+                    Log.Information("A newer version of winprint ({v}) is available at {l}.", v, ServiceLocator.Current.UpdateService.InstallerUri);
                 }
                 else {
                     Log.Information("This is the most up-to-date version of winprint");
