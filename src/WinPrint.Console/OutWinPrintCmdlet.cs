@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
+using System.Globalization;
 using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
@@ -146,16 +147,16 @@ namespace WinPrint.Console {
         private async Task<bool> DoUpdateAsync() {
 
             Debug.WriteLine("Kicking off update check thread...");
-            var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token);
+            var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(true);
             Debug.WriteLine($"Starting update...");
-            var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync();
+            var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(true);
 
 #if DEBUG
             string log = "-lv winprint.msiexec.log";
 #else
             string log = "";
 #endif
-            var p = new Process {
+            using var p = new Process {
                 StartInfo = {
                         FileName = $"msiexec.exe",
                         Arguments = $"{log} -i {path}",
@@ -226,8 +227,8 @@ namespace WinPrint.Console {
                 startProperties: new Dictionary<string, string> {
                     ["PowerShellVersion"] = this.Host.Version.ToString(),
                     ["InvocationName"] = this.MyInvocation.InvocationName,
-                    ["Debug"] = _debug.ToString(),
-                    ["Verbose"] = _verbose.ToString()
+                    ["Debug"] = _debug.ToString(CultureInfo.CurrentCulture),
+                    ["Verbose"] = _verbose.ToString(CultureInfo.CurrentCulture)
                 }); ;
 
             ServiceLocator.Current.LogService.Start(this.MyInvocation.MyCommand.Name, new PowerShellSink(this), _debug, _verbose);
@@ -235,13 +236,13 @@ namespace WinPrint.Console {
             var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location);
             Log.Information("{appname} {version} - {copyright} - {link}", this.MyInvocation.MyCommand.Name, ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
 
-            await base.BeginProcessingAsync();
+            await base.BeginProcessingAsync().ConfigureAwait(true);
         }
 
         // This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called
         protected override async Task ProcessRecordAsync() {
             //Log.Debug("ProcessRecordAsync");
-            await base.ProcessRecordAsync();
+            await base.ProcessRecordAsync().ConfigureAwait(true);
 
             if (InputObject == null || InputObject == AutomationNull.Value) {
                 return;
@@ -282,7 +283,7 @@ namespace WinPrint.Console {
 
         // This method will be called once at the end of pipeline execution; if no input is received, this method is not called
         protected override async Task EndProcessingAsync() {
-            await base.EndProcessingAsync();
+            await base.EndProcessingAsync().ConfigureAwait(true);
 
             //Log.Debug("EndProcessingAsync");
 
@@ -290,7 +291,7 @@ namespace WinPrint.Console {
 
             // Check for new version
             if (_installUpdate) {
-                await DoUpdateAsync();
+                await DoUpdateAsync().ConfigureAwait(true);
                 CleanUp();
                 return;
             }
@@ -298,8 +299,8 @@ namespace WinPrint.Console {
             // Whenever we run, check for an update. We use the cancellation token to kill the thread that's doing this
             // if we exit before getting a version info result back. Checking for updates should never shlow cmd line down.
             Log.Debug("Kicking off update check thread...");
-            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(false),
-                _cancellationToken.Token);
+            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(true),
+                _cancellationToken.Token).ConfigureAwait(true);
 
             //Return if no objects
             if (_psObjects.Count == 0) {
@@ -375,17 +376,17 @@ namespace WinPrint.Console {
             rec.PercentComplete = 30;
             rec.StatusDescription = $"Loading content";
             WriteProgress(rec);
-            await _print.SheetViewModel.LoadStringAsync(text, ContentTypeEngine).ConfigureAwait(false);
+            await _print.SheetViewModel.LoadStringAsync(text, ContentTypeEngine).ConfigureAwait(true);
 
             rec.PercentComplete = 40;
             rec.StatusDescription = _whatIf ? "Counting" : $"Printing";
             WriteProgress(rec);
             var sheetsCounted = 0;
             if (_whatIf) {
-                sheetsCounted = await _print.CountSheets().ConfigureAwait(false);
+                sheetsCounted = await _print.CountSheets().ConfigureAwait(true);
             }
             else {
-                sheetsCounted = await _print.DoPrint().ConfigureAwait(false);
+                sheetsCounted = await _print.DoPrint().ConfigureAwait(true);
             }
 
             if (_verbose) {
@@ -506,20 +507,24 @@ namespace WinPrint.Console {
         /// Default implementation just delegates to internal helper.
         /// </summary>
         /// <remarks>This method calls GC.SuppressFinalize</remarks>
-        public void Dispose() {
+        public new void  Dispose() {
             Dispose(true);
 
-            GC.SuppressFinalize(this);
+            //GC.SuppressFinalize(this);
         }
 
         /// <summary>
         /// Dispose pattern implementation.
         /// </summary>
         /// <param name="disposing"></param>
-        protected void Dispose(bool disposing) {
+        protected new void Dispose(bool disposing) {
+            base.Dispose(disposing);
             if (disposing) {
                 AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
                 TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+
+                _print?.Dispose();
+                _cancellationToken?.Dispose();
             }
         }
 

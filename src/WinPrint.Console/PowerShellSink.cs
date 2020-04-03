@@ -23,7 +23,7 @@ namespace WinPrint.Console {
 
         public void Emit(LogEvent logEvent) {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
-            StringWriter strWriter = new StringWriter();
+            using StringWriter strWriter = new StringWriter();
             TextFormatter.Format(logEvent, strWriter);
 
             lock (_syncRoot) {

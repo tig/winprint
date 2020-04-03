@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
@@ -212,7 +213,7 @@ namespace WinPrint.Console {
                 throw new ArgumentNullException(nameof(formatArguments));
 
 
-            progressRecord.StatusDescription = String.Format(messageOrFormat, formatArguments);
+            progressRecord.StatusDescription = string.Format(CultureInfo.CurrentCulture, messageOrFormat, formatArguments);
             WriteVerboseProgress(progressRecord);
         }
 
@@ -242,7 +243,7 @@ namespace WinPrint.Console {
                 throw new ArgumentNullException(nameof(formatArguments));
 
 
-            progressRecord.StatusDescription = String.Format(completionMessageOrFormat, formatArguments);
+            progressRecord.StatusDescription = string.Format(CultureInfo.CurrentCulture, completionMessageOrFormat, formatArguments);
             progressRecord.PercentComplete = 100;
             progressRecord.RecordType = ProgressRecordType.Completed;
             WriteProgress(progressRecord);

@@ -17,9 +17,14 @@
     <Copyright>Copyright Kindel Systems, LLC</Copyright>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.PowerShell.Commands.Diagnostics" Version="7.0.0" />
     <PackageReference Include="Microsoft.PowerShell.Commands.Management" Version="7.0.0" />
     <PackageReference Include="Microsoft.PowerShell.ConsoleHost" Version="7.0.0" />

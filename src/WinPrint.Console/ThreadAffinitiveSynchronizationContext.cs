@@ -31,7 +31,7 @@ namespace WinPrint.Console {
         /// <summary>
         ///		Dispose of resources being used by the synchronisation context.
         /// </summary>
-        void IDisposable.Dispose() {
+        public void Dispose() {
             if (_workItemQueue != null) {
                 _workItemQueue.Dispose();
                 _workItemQueue = null;
