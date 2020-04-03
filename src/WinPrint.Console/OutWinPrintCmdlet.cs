@@ -9,6 +9,8 @@ using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
+using System.Security.Policy;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using TTRider.PowerShellAsync;
@@ -17,16 +19,23 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Console {
-    [Cmdlet(VerbsData.Out, nounName: "WinPrint", HelpUri = "https://tig.github.io./winprint")]
+    [Cmdlet(VerbsData.Out,
+        nounName: "WinPrint",
+        HelpUri = "https://tig.github.io./winprint",
+        DefaultParameterSetName = "print")]
     [Alias("wp")]
     public class OutWinPrintCmdlet : AsyncCmdlet {
-
         private const string DataNotQualifiedForWinprint = "DataNotQualifiedForWinPrint";
 
+        // Private fields
         private List<PSObject> _psObjects = new List<PSObject>();
+        private Print _print = new WinPrint.Core.Print();
 
         public OutWinPrintCmdlet() {
             //this.implementation = new OutputManagerInner();
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+            BoundedCapacity = 500;
         }
 
         #region Command Line Switches
@@ -34,85 +43,220 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the printer to print to.
         /// The alias allows "lp -P printer".
+        /// Name alias: becuase that's what out-printer uses.
         /// </summary>
-        [Parameter(Position = 0, HelpMessage = "Printer name.")]
-        [Alias("PrinterName")]
-        public string Name {
-            get { return _printerName; }
-
-            set { _printerName = value; }
-        }
-
-        private string _printerName;
+        [Parameter(Position = 0, HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",
+            ParameterSetName = "Print")]
+        [Alias("Name")]
+        public string PrinterName { get; set; }
 
         /// <summary>
         /// Optional name of the WinPrint sheet definition to use.
         /// </summary>
-        [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")")]
+        [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
+            ParameterSetName = "Print")]
         [Alias("Sheet")]
-        public string SheetDefintion {
-            get { return _sheetDefintion; }
-
-            set { _sheetDefintion = value; }
-        }
-
-        private string _sheetDefintion;
+        public string SheetDefintion { get; set; }
 
         /// <summary>
         /// Optional name of the WinPrint Content Type Engine to use.
         /// </summary>
-        [Parameter(HelpMessage = "Name of the WinPrint Content Type Engine to use (default is \"text/plain\")")]
+        [Parameter(HelpMessage = "Name of the WinPrint Content Type Engine to use (default is \"text/plain\")",
+            ParameterSetName = "Print")]
         [Alias("Engine")]
-        public string ContentTypeEngine {
-            get { return _cteName; }
-
-            set { _cteName = value; }
-        }
-        private string _cteName;
+        public string ContentTypeEngine { get; set; }
 
         /// <summary>
         /// Optional FileName - will be displayed in header/footer and as title of print job.
         /// </summary>
-        [Parameter(HelpMessage = "Filename to be displayed in header/footer and as title of print job.")]
+        [Parameter(HelpMessage = "Filename to be displayed in header/footer and as title of print job.",
+            ParameterSetName = "Print")]
         [Alias("File")]
-        public string Filename {
-            get { return _fileName; }
+        public string FileName { get; set; }
 
-            set { _fileName = value; }
-        }
-        private string _fileName;
+        /// <summary>
+        /// For the -Verbose switch
+        /// </summary>
+        private bool _verbose { get => MyInvocation.BoundParameters.TryGetValue("Verbose", out object o); }
 
-        private bool _verbose = false;
-
+        /// <summary>
+        /// For the -Debug switch
+        /// </summary>
 #if DEBUG
         private bool _debug = true;
 #else
-        private bool _debug = false;
+        private bool _debug = { get => MyInvocation.BoundParameters.TryGetValue("Debug", out object o); }
 #endif
 
-        [Parameter(ValueFromPipeline = true)]
+        /// <summary>
+        /// Input stream.
+        /// </summary>
+        [Parameter(ValueFromPipeline = true,
+            ParameterSetName = "Print")]
         public PSObject InputObject { set; get; } = AutomationNull.Value;
 
-        [Parameter(HelpMessage = "Exit code is set to number of sheets that would be printed. Use -Verbose to display the count.")]
-        public SwitchParameter CountSheets { get; set; }
+        /// <summary>
+        /// -WhatIf switch
+        /// </summary>
+        [Parameter(HelpMessage = "Output is the number of sheets that would be printed. Use -Verbose to print the count of pages.",
+            ParameterSetName = "Print")]
+        public SwitchParameter WhatIf { get; set; }
+        private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out object o); }
 
+        /// <summary>
+        /// -InstallUpdate switch
+        /// </summary>
+        [Parameter(HelpMessage = "If an updated version of winprint is available online, download and install it.",
+            ParameterSetName = "Updates")]
+        public SwitchParameter InstallUpdate { get; set; }
+        private bool _installUpdate { get => MyInvocation.BoundParameters.TryGetValue("InstallUpdate", out object o); }
+
+        /// <summary>
+        /// -Force switch
+        /// </summary>
+        [Parameter(HelpMessage = "Allows winprint to kill the host Powershell process when updating.",
+            ParameterSetName = "Updates")]
+        public SwitchParameter Force { get; set; }
+        private bool _force { get => MyInvocation.BoundParameters.TryGetValue("Force", out object o); }
         #endregion
 
-        private Print print;
+        #region Update Service Related Code
 
-        #region Overrides
+        CancellationTokenSource _cancellationToken;
+
+        // Update stuff
+        private void Setup() {
+            _cancellationToken = new CancellationTokenSource();
+            ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadProgressChanged += UpdateService_DownloadProgressChanged;
+        }
+        private void CleanUp() {
+            ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadProgressChanged -= UpdateService_DownloadProgressChanged;
+            _cancellationToken?.Cancel();
+        }
+
+        private void UpdateService_DownloadProgressChanged(object sender, System.Net.DownloadProgressChangedEventArgs e) {
+            //Debug.WriteLine("UpdateService_DownloadProgressChanged");
+            ProgressRecord rec = new ProgressRecord(0, "Downloading", "Downloading");
+            rec.CurrentOperation = $"Downloading";
+            rec.PercentComplete = e.ProgressPercentage;
+            WriteProgress(rec);
+        }
+        private async Task<bool> DoUpdateAsync() {
+
+            Debug.WriteLine("Kicking off update check thread...");
+            var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token);
+            Debug.WriteLine($"Starting update...");
+            var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync();
+
+#if DEBUG
+            string log = "-lv winprint.msiexec.log";
+#else
+                string log = ";
+#endif
+            var p = new Process {
+                StartInfo = {
+                        FileName = $"msiexec.exe",
+                        Arguments = $"{log} -i {path}",
+                        UseShellExecute = true
+                    },
+            };
+
+            Log.Information($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
+            ProgressRecord rec = new ProgressRecord(0, "Installing", $"Download Complete");
+            rec.CurrentOperation = $"Installing";
+            rec.PercentComplete = -1;
+            await Task.Run(() => WriteProgress(rec));
+            Debug.WriteLine($"wrote progress");
+
+            try {
+                p.Start();
+            }
+            catch (Win32Exception we) {
+                Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
+                return false;
+            }
+
+            if (_force ||
+                await Task.Run(() => ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
+                "Exit this Powershell instance?"))) {
+                // Kill process?
+                System.Environment.Exit(0);
+            }
+            return true;
+        }
+//            Debug.WriteLine("Kicking off update check thread...");
+//            var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token);
+
+//            Debug.WriteLine($"Starting update...");
+//            var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync();
+
+//#if DEBUG
+//            string log = "-lv winprint.msiexec.log";
+//#else
+//            string log = ";
+//#endif
+//            var p = new Process {
+//                StartInfo = {
+//                        FileName = $"msiexec.exe",
+//                        Arguments = $"{log} -i {path}",
+//                        UseShellExecute = true
+//                    },
+//            };
+
+//            Debug.WriteLine($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
+//            Log.Information($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
+//            ProgressRecord rec = new ProgressRecord(1, "Installing", $"Download Complete. Running installer ({ p.StartInfo.FileName } { p.StartInfo.Arguments})");
+//            rec.CurrentOperation = $"Installing";
+//            rec.PercentComplete = 100;
+//            WriteProgress(rec);
+//            Debug.WriteLine($"wrote progress");
+
+//            try {
+//                p.Start();
+//            }
+//            catch (Win32Exception we) {
+//                Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
+//            }
+
+//            Debug.WriteLine($"about to exit");
+//            if (_force || ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.", "Exit this Powershell instance?")) {
+//                // Kill process?
+//                System.Environment.Exit(0);
+//            }
+//            return;
+//        }
+
+        private void UpdateService_GotLatestVersion(object sender, Version version) {
+            Debug.WriteLine("UpdateService_GotLatestVersion");
+            if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+                Log.Information($"Could not access tig.github.io/winprint to see if a newer version is available" +
+                    $" {ServiceLocator.Current.UpdateService.ErrorMessage}");
+                return;
+            }
+
+            if (ServiceLocator.Current.UpdateService.CompareVersions() < 0) {
+                Log.Information("A newer version of winprint ({version}) is available at {url}", version, ServiceLocator.Current.UpdateService.ReleasePageUri);
+                Log.Information($"Run '{MyInvocation.InvocationName} -InstallUpdate' to upgrade");
+            }
+            else if (ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
+                Log.Information($"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})");
+            }
+            else {
+                Log.Information("You are running the most recent version of winprint");
+            }
+        }
+        #endregion
+
+
+        #region PowerShell AsyncCmdlet Overrides
         /// <summary>
         /// Read command line parameters. 
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
         protected override async Task BeginProcessingAsync() {
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-
-            if (MyInvocation.BoundParameters.TryGetValue("Verbose", out object verbose))
-                _verbose = true;
-            if (MyInvocation.BoundParameters.TryGetValue("Debug", out object debug))
-                _debug = true;
+            //Log.Debug("BeginProcessingAsync");
 
             ServiceLocator.Current.TelemetryService.Start(this.MyInvocation.MyCommand.Name,
                 startProperties: new Dictionary<string, string> {
@@ -132,7 +276,9 @@ namespace WinPrint.Console {
 
         // This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called
         protected override async Task ProcessRecordAsync() {
+            //Log.Debug("ProcessRecordAsync");
             await base.ProcessRecordAsync();
+
             if (InputObject == null || InputObject == AutomationNull.Value) {
                 return;
             }
@@ -159,7 +305,7 @@ namespace WinPrint.Console {
                 baseObject is PSReference ||
                 baseObject is PSObject) {
                 ErrorRecord error = new ErrorRecord(
-                    new FormatException("Invalid data type for Out-WinPrint"),
+                    new FormatException($"Invalid data type for {MyInvocation.InvocationName}"),
                     DataNotQualifiedForWinprint,
                     ErrorCategory.InvalidType,
                     null);
@@ -170,34 +316,63 @@ namespace WinPrint.Console {
             _psObjects.Add(input);
         }
 
+        //protected override async Task EndProcessingAsync() {
+        //    _cancellationToken = new CancellationTokenSource();
+        //    var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token);
+        //    Debug.WriteLine($"Version: {version}");
+        //    var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync();
+        //    Debug.WriteLine($"path: {path}");
+        //    if (await Task.Run(() => ShouldContinue("my message.", "Exit this Powershell instance?")))
+        //        Log.Information($"Yes.");
+        //    else
+        //        Log.Information($"No.");
+        //    await base.EndProcessingAsync();
+        //}
+
         // This method will be called once at the end of pipeline execution; if no input is received, this method is not called
         protected override async Task EndProcessingAsync() {
             await base.EndProcessingAsync();
 
-            //ProgressRecord rec = new ProgressRecord(1, "Printing", "Printing...");
-            //rec.PercentComplete = 0;
-            //rec.CurrentOperation = "Initializing winprint";
-            //WriteProgress(rec);
+            //Log.Debug("EndProcessingAsync");
+
+            Setup();
+
+            // Check for new version
+            if (_installUpdate) {
+                await DoUpdateAsync();
+                CleanUp();
+                return;
+            }
+
+            // Whenever we run, check for an update. We use the cancellation token to kill the thread that's doing this
+            // if we exit before getting a version info result back. Checking for updates should never shlow cmd line down.
+            Log.Debug("Kicking off update check thread...");
+            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(false),
+                _cancellationToken.Token);
 
             //Return if no objects
             if (_psObjects.Count == 0) {
+                Log.Debug("No objects...");
+                CleanUp();
                 return;
             }
+
+            ProgressRecord rec = new ProgressRecord(1, "Printing", "Printing...");
+            rec.PercentComplete = 0;
+            rec.StatusDescription = "Initializing winprint";
+            WriteProgress(rec);
 
             // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
             var result = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null);
             string text = result[0].ToString();
 
-            //ServiceLocator.Current.UpdateService.GotLatestVersion += LogUpdateResults();
-            //await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
-
-            var print = new Print();
-            if (!string.IsNullOrEmpty(_printerName)) {
+            Debug.Assert(_print != null);
+            if (!string.IsNullOrEmpty(PrinterName)) {
                 try {
-                    //rec.PercentComplete = 10;
-                    //rec.CurrentOperation = $"Setting printer name to {_printerName}";
-                    //WriteProgress(rec);
-                    print.SetPrinter(_printerName);
+                    rec.PercentComplete = 10;
+                    rec.StatusDescription = $"Setting printer name to {PrinterName}";
+                    WriteProgress(rec);
+                    _print.SetPrinter(PrinterName);
                 }
                 catch (InvalidPrinterException e) {
                     //Log.Error<InvalidPrinterException>(e, "", e);
@@ -208,54 +383,59 @@ namespace WinPrint.Console {
                 }
             }
 
-            if (!string.IsNullOrEmpty(_fileName)) {
-                _fileName = this.MyInvocation.MyCommand.Name;
+            if (!string.IsNullOrEmpty(FileName)) {
+                FileName = this.MyInvocation.MyCommand.Name;
             }
 
-            print.SheetViewModel.File = _fileName;
+            _print.SheetViewModel.File = FileName;
 
-            //print.PrintingSheet += (s, sheetNum) => this.WriteProgress(new ProgressRecord(0, "Printing", $"Printing sheet {sheetNum}"));
-            //print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
-            //print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
-            //print.SheetViewModel.ReflowProgress += (s, msg) => this.WriteInformation(new InformationRecord($"Reflow Progress {msg}", "script"));
+            //_print.PrintingSheet += (s, sheetNum) => this.WriteProgress(new ProgressRecord(0, "Printing", $"Printing sheet {sheetNum}"));
+            //_print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
+            //_print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
+            //_print.SheetViewModel.ReflowProgress += (s, msg) => this.WriteInformation(new InformationRecord($"Reflow Progress {msg}", "script"));
 
-            print.PrintingSheet += (s, sheetNum) => {
-                //rec.PercentComplete = 40 + (sheetNum);
-                //rec.CurrentOperation = $"Printing sheet {sheetNum}";
-                //WriteProgress(rec);
+            _print.PrintingSheet += (s, sheetNum) => {
+                rec.PercentComplete = 40 + (sheetNum);
+                rec.StatusDescription = $"Printing sheet {sheetNum}";
+                WriteProgress(rec);
                 Log.Information("Printing sheet {sheetNum}", sheetNum);
             };
 
 
             string sheetID;
-            SheetSettings sheet = print.SheetViewModel.FindSheet(_sheetDefintion, out sheetID);
+            SheetSettings sheet = _print.SheetViewModel.FindSheet(SheetDefintion, out sheetID);
 
             if (_verbose) {
-                Log.Information("    Printer:          {printer}", print.PrintDocument.PrinterSettings.PrinterName);
-                Log.Information("    Paper Size:       {size}", print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
-                Log.Information("    Orientation:      {s}", print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
+                Log.Information("    Printer:          {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
+                Log.Information("    Paper Size:       {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
+                Log.Information("    Orientation:      {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
                 Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
             }
 
+            rec.PercentComplete = 20;
+            rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
+            WriteProgress(rec);
 
-            //rec.PercentComplete = 20;
-            //rec.CurrentOperation = $"Setting Sheet Settings for {sheet.Name}";
-            //WriteProgress(rec);
+            _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
+            _print.SheetViewModel.SetSheet(sheet);
+            if (string.IsNullOrEmpty(ContentTypeEngine))
+                ContentTypeEngine = "text/plain";
 
-            print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
-            print.SheetViewModel.SetSheet(sheet);
-            if (string.IsNullOrEmpty(_cteName))
-                _cteName = "text/plain";
+            rec.PercentComplete = 30;
+            rec.StatusDescription = $"Loading content";
+            WriteProgress(rec);
+            await _print.SheetViewModel.LoadStringAsync(text, ContentTypeEngine).ConfigureAwait(false);
 
-            //rec.PercentComplete = 30;
-            //rec.CurrentOperation = $"Loading content";
-            //WriteProgress(rec);
-            await print.SheetViewModel.LoadStringAsync(text, _cteName).ConfigureAwait(false);
-
-            //rec.PercentComplete = 40;
-            //rec.CurrentOperation = $"Printing";
-            //WriteProgress(rec);
-            var sheetsCounted = await print.DoPrint().ConfigureAwait(false);
+            rec.PercentComplete = 40;
+            rec.StatusDescription = _whatIf ? "Counting" : $"Printing";
+            WriteProgress(rec);
+            var sheetsCounted = 0;
+            if (_whatIf) {
+                sheetsCounted = await _print.CountSheets().ConfigureAwait(false);
+            }
+            else {
+                sheetsCounted = await _print.DoPrint().ConfigureAwait(false);
+            }
 
             if (_verbose) {
                 if (ModelLocator.Current.Options.CountPages)
@@ -264,73 +444,58 @@ namespace WinPrint.Console {
                     Log.Information("Printed a total of {pagesCounted} sheets.", sheetsCounted);
             }
 
-            //this.WriteProgress(new ProgressRecord(0, "Printing", $"Printed {sheetsCounted} sheets"));
-
             // Don't write anything out to the pipeline if PassThru wasn't specified.
             //if (!PassThru.IsPresent) {
             //    return;
             //}
 
-            //var selectedIndexes = _consoleGui.SelectedIndexes;
-
-            //foreach (int idx in selectedIndexes) {
-            //    var selectedObject = _psObjects[idx];
-            //    if (selectedObject == null) {
-            //        continue;
-            //    }
-            //    this.WriteObject(selectedObject, false);
-            //}
-
             //this.WriteObject(sheetsCounted, false);
 
-            //rec.PercentComplete = 100;
-            //rec.CurrentOperation = $"Complete";
-            //rec.PercentComplete = 1;
-            //WriteProgress(rec);
+            rec.PercentComplete = -1;
+            rec.StatusDescription = $"Complete";
+            WriteProgress(rec);
 
-            ServiceLocator.Current.UpdateService.GotLatestVersion -= LogUpdateResults();
-            AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
-            TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+            CleanUp();
         }
 
         private void PropertyChangedEventHandler(object o, PropertyChangedEventArgs e) {
             Log.Debug("SheetViewModel.PropertyChanged: {s}", e.PropertyName);
             switch (e.PropertyName) {
                 case "Landscape":
-                    Log.Information("    Paper Orientation: {s}", print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
+                    Log.Information("    Paper Orientation: {s}", _print.SheetViewModel.Landscape ? "Landscape" : "Portrait");
                     break;
 
                 case "Header":
-                    Log.Information("    Header Text:      {s}", print.SheetViewModel.Header.Text);
+                    Log.Information("    Header Text:      {s}", _print.SheetViewModel.Header.Text);
                     break;
 
                 case "Footer":
-                    Log.Information("    Footer Text:      {s}", print.SheetViewModel.Footer.Text);
+                    Log.Information("    Footer Text:      {s}", _print.SheetViewModel.Footer.Text);
                     break;
 
                 case "Margins":
-                    Log.Information("    Margins:          {v}", print.SheetViewModel.Margins);
+                    Log.Information("    Margins:          {v}", _print.SheetViewModel.Margins);
                     break;
 
                 case "PageSeparator":
-                    Log.Information("    PageSeparator     {s}", print.SheetViewModel.PageSeparator);
+                    Log.Information("    PageSeparator     {s}", _print.SheetViewModel.PageSeparator);
                     break;
 
                 case "Rows":
-                    Log.Information("    Rows:             {s}", print.SheetViewModel.Rows);
+                    Log.Information("    Rows:             {s}", _print.SheetViewModel.Rows);
                     break;
 
                 case "Columns":
-                    Log.Information("    Columns:          {s}", print.SheetViewModel.Columns);
+                    Log.Information("    Columns:          {s}", _print.SheetViewModel.Columns);
                     break;
 
                 // TODO: Add INF logging of other sheet properties
                 case "Padding":
-                    Log.Information("    Padding:          {s}", print.SheetViewModel.Padding / 100M);
+                    Log.Information("    Padding:          {s}", _print.SheetViewModel.Padding / 100M);
                     break;
 
                 case "ContentSettings":
-                    Log.Information("    ContentSettings:  {s}", print.SheetViewModel.ContentSettings);
+                    Log.Information("    ContentSettings:  {s}", _print.SheetViewModel.ContentSettings);
                     break;
 
                 case "Loading":
@@ -343,48 +508,7 @@ namespace WinPrint.Console {
             }
         }
 
-        private static EventHandler<Version> LogUpdateResults() {
-            return (s, v) => {
-                var cur = UpdateService.CurrentVersion;
-                Log.Debug("Got new version info. Current: {cur}, Available: {version}", cur, v);
-                if (v != null && ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
-                    Log.Information("A newer version of winprint ({v}) is available at {l}.", v, ServiceLocator.Current.UpdateService.InstallerUri);
-                }
-                else {
-                    Log.Information("This is the most up-to-date version of winprint");
-                }
-            };
-        }
 
-        public async Task<string> GetNodeDirectory() {
-            LogService.TraceMessage();
-
-            string path = "";
-            Process proc = null;
-            try {
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.UseShellExecute = false;   // This is important
-                psi.CreateNoWindow = true;     // This is what hides the command window.
-                psi.FileName = @"where.exe";
-                psi.Arguments = "node";
-                psi.RedirectStandardInput = true;
-                psi.RedirectStandardOutput = true;
-
-                proc = Process.Start(psi);
-                //StreamWriter sw = node.StandardInput;
-                //sw.WriteLine("");
-                //sw.Close();
-                path = await proc.StandardOutput.ReadLineAsync();
-            }
-            catch (Exception e) {
-                // TODO: Better error message (output of stderr?)
-                ServiceLocator.Current.TelemetryService.TrackException(e, false);
-            }
-            finally {
-                proc?.Dispose();
-            }
-            return Path.GetDirectoryName(path);
-        }
         public override string GetResourceString(string baseName, string resourceId) {
             return base.GetResourceString(baseName, resourceId);
         }
@@ -418,9 +542,9 @@ namespace WinPrint.Console {
             // just call Monad API
             this.WriteObject(value);
         }
-        #endregion
+#endregion
 
-        #region IDisposable Implementation
+#region IDisposable Implementation
 
         /// <summary>
         /// Default implementation just delegates to internal helper.
@@ -436,30 +560,14 @@ namespace WinPrint.Console {
         /// Dispose pattern implementation.
         /// </summary>
         /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing) {
+        protected void Dispose(bool disposing) {
             if (disposing) {
-                //InternalDispose();
+                AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
+                TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
             }
         }
 
-        /// <summary>
-        /// Do-nothing implementation: derived classes will override as see fit.
-        /// </summary>
-        //protected virtual void InternalDispose() {
-        //    if (this.implementation == null)
-        //        return;
-
-        //    this.implementation.Dispose();
-        //    this.implementation = null;
-        #endregion
-
-        /// <summary>
-        /// One-time initialization: acquire a screen host interface by creating one on top of a memory buffer.
-        /// </summary>
-        private WinPrint.Core.Print InstantiateWinPrint() {
-            WinPrint.Core.Print print = new WinPrint.Core.Print();
-            return (WinPrint.Core.Print)print;
-        }
+#endregion
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {
             ServiceLocator.Current.TelemetryService.TrackException(e.Exception);

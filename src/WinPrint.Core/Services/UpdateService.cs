@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Resolvers;
 using Octokit;
@@ -29,6 +30,9 @@ namespace WinPrint.Core.Services {
         /// </summary>
         public event EventHandler<string> DownloadComplete;
         protected void OnDownloadComplete(string path) => DownloadComplete?.Invoke(this, path);
+
+        public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressChanged;
+        protected void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e) => DownloadProgressChanged?.Invoke(this, e);
 
         /// <summary>
         /// Any error messages from failed update checks or downloads
@@ -78,12 +82,19 @@ namespace WinPrint.Core.Services {
         /// Checks for updated version online. 
         /// </summary>
         /// <returns></returns>
-        public async Task GetLatestStableVersionAsync() {
+        public async Task<Version> GetLatestStableVersionAsync(CancellationToken token) {
             InstallerUri = new Uri("https://github.com/tig/winprint/releases");
             using var client = new WebClient();
             try {
                 var github = new GitHubClient(new Octokit.ProductHeaderValue("tig-winprint"));
                 var allReleases = await github.Repository.Release.GetAll("tig", "winprint").ConfigureAwait(false);
+
+//#if DEBUG
+//                Debug.WriteLine("Pausing 2s to simulate version check taking a long time...");
+//                Thread.Sleep(2000);
+//                Debug.WriteLine("Done pausing.");
+//#endif
+                token.ThrowIfCancellationRequested();
 
                 // Get all releases and pre-releases
 #if DEBUG
@@ -93,8 +104,8 @@ namespace WinPrint.Core.Services {
 #endif
                 //Log.Debug("Releases {releases}", JsonSerializer.Serialize(releases, options: new JsonSerializerOptions() { WriteIndented = true }));
                 if (releases.Length > 0) {
-                    Log.Debug("The latest release is tagged at {TagName} and is named {Name}. Download Url: {BrowserDownloadUrl}",
-                        releases[0].TagName, releases[0].Name, releases[0].Assets[0].BrowserDownloadUrl);
+                    //Log.Debug("The latest release is tagged at {TagName} and is named {Name}. Download Url: {BrowserDownloadUrl}",
+                    //    releases[0].TagName, releases[0].Name, releases[0].Assets[0].BrowserDownloadUrl);
 
                     LatestVersion = new Version(releases[0].TagName.Replace('v', ' '));
                     ReleasePageUri = new Uri(releases[0].HtmlUrl);
@@ -110,64 +121,48 @@ namespace WinPrint.Core.Services {
             }
 
             OnGotLatestVersion(LatestVersion);
+            return LatestVersion;
         }
 
         /// <summary>
         /// Starts an upgrade. Must be called after GotLatestVersion has been fired.
         /// </summary>
-        public async Task StartUpgradeAsync() {
+        public async Task<string> StartUpgradeAsync() {
+            Debug.WriteLine("StartUpgradeAsync");
             // Download file
             _tempFilename = Path.GetTempFileName() + ".msi";
-            Log.Information($"{this.GetType().Name}: Downloading {InstallerUri.AbsoluteUri} to {_tempFilename}...");
+            //Log.Information($"{this.GetType().Name}: Downloading {InstallerUri.AbsoluteUri} to {_tempFilename}...");
 
-            await Task.Run(() => {
-                var client = new WebClient();
-                client.DownloadDataCompleted += Client_DownloadDataCompleted;
-                client.DownloadProgressChanged += Client_DownloadProgressChanged;
-                client.DownloadDataAsync(InstallerUri);
-            }); ;
+            var client = new WebClient();
+            client.DownloadDataCompleted += Client_DownloadDataCompleted;
+            client.DownloadProgressChanged += Client_DownloadProgressChanged;
+            File.WriteAllBytes(_tempFilename, (byte[])await client.DownloadDataTaskAsync(InstallerUri)) ;
+            return _tempFilename;
         }
 
         private void Client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e) {
-            if (e.ProgressPercentage % 33 == 0) {
-                Log.Information($"{this.GetType().Name}: Download progress...");
-            }
+            //Log.Debug($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
+            //if (e.ProgressPercentage % 33 == 0) {
+            //    Log.Information($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
+            //}
+            OnDownloadProgressChanged(e);
         }
 
         private void Client_DownloadDataCompleted(object sender, DownloadDataCompletedEventArgs e) {
-            try {
-                // If the request was not canceled and did not throw
-                // an exception, display the resource.
-                if (!e.Cancelled && e.Error == null) {
-                    File.WriteAllBytes(_tempFilename, (byte[])e.Result);
-                }
-            }
-            finally {
+            //try {
+            //    // If the request was not canceled and did not throw
+            //    // an exception, display the resource.
+            //    if (!e.Cancelled && e.Error == null) {
+            //        //File.WriteAllBytes(_tempFilename, (byte[])e.Result);
+            //    }
+            //}
+            //finally {
 
-            }
-            Log.Information($"{this.GetType().Name}: Download complete");
-            Log.Information($"{this.GetType().Name}: Exiting and running installer ({_tempFilename})...");
+            //}
+            ////Log.Information($"{this.GetType().Name}: Download complete");
+            ////Log.Information($"{this.GetType().Name}: Exiting and running installer ({_tempFilename})...");
 
-#if DEBUG
-            string log = "-lv winprint.msiexec.log";
-#else
-            string log = ";
-#endif
-            var p = new Process {
-                StartInfo = {
-                        FileName = $"msiexec.exe",
-                        Arguments = $"{log} -i {_tempFilename}",
-                        UseShellExecute = true
-                    },
-            };
-            try {
-                p.Start();
-                //p.WaitForInputIdle(1000);
-            }
-            catch (Win32Exception we) {
-                Log.Information($"{this.GetType().Name}: {_tempFilename} failed to run with error: {we.Message}");
-            }
-            //Process.Start(ReleasePageUri.AbsoluteUri);
+
             OnDownloadComplete(_tempFilename);
         }
     }

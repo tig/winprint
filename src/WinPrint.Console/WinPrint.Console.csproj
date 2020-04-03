@@ -30,11 +30,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Management.Automation" Version="7.0.0" />
-    <PackageReference Include="TTRider.PowerShellAsync" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="TTRider.PowerShellAsync">
+      <HintPath>..\..\..\powershellasync\PowerShellAsync\bin\Debug\netcoreapp3.1\TTRider.PowerShellAsync.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

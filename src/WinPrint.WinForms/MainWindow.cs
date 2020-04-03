@@ -10,6 +10,7 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
@@ -290,6 +291,8 @@ namespace WinPrint.Winforms {
             }
         }
 
+        CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+
         private void MainWindow_Load(object sender, EventArgs e) {
             LogService.TraceMessage();
 
@@ -302,7 +305,7 @@ namespace WinPrint.Winforms {
 
             ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
             ServiceLocator.Current.UpdateService.DownloadComplete += UpdateService_DownloadComplete; 
-            ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync().ConfigureAwait(false);
+            ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(false);
 
             // Load settings by referencing ModelLocator.Current
             LogService.TraceMessage("First reference to ModelLocator.Current.Settings");
@@ -427,6 +430,26 @@ namespace WinPrint.Winforms {
 
         private void UpdateService_DownloadComplete(object sender, string path) {
             //Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);
+#if DEBUG
+            string log = "-lv winprint.msiexec.log";
+#else
+                string log = ";
+#endif
+            using var p = new Process {
+                StartInfo = {
+                        FileName = $"msiexec.exe",
+                        Arguments = $"{log} -i {path}",
+                        UseShellExecute = true
+                    },
+            };
+
+            try {
+                p.Start();
+            }
+            catch (Win32Exception we) {
+                Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
+            }
+
             BeginInvoke((Action)(() => Close() ));
         }
 

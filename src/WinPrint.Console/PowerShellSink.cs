@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Management.Automation;
+using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
@@ -62,8 +63,6 @@ namespace WinPrint.Core.Services {
                         break;
                 }
             }
-
         }
-
     }
 }

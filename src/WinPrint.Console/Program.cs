@@ -3,9 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
+using System.Globalization;
 using System.Linq;
+using System.Management.Automation;
+using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
@@ -18,101 +23,177 @@ using WinPrint.Core.Services;
 /// Implements the WinPrint console/command line app. 
 /// </summary>
 namespace WinPrint.Console {
+
+    public static class WinPrintToPS {
+        public static string InvokePS(string command) {
+            WinPrintPSHost host = new WinPrintPSHost();
+
+            using (Runspace runspace = RunspaceFactory.CreateRunspace(host)) {
+                runspace.Open();
+
+                using (Pipeline pipeline = runspace.CreatePipeline()) {
+                    pipeline.Commands.AddScript(command);
+                    pipeline.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output); 
+                    pipeline.Commands.Add("out-default");
+
+                    pipeline.Invoke();
+                }
+            }
+
+            return ((WinPrintPSHostUserInterface)host.UI).Output;
+        }
+    }
+
+    internal class WinPrintPSHost : PSHost {
+        private Guid _hostId = Guid.NewGuid();
+        private WinPrintPSHostUserInterface _ui = new WinPrintPSHostUserInterface();
+
+        public override Guid InstanceId {
+            get { return _hostId; }
+        }
+
+        public override string Name {
+            get { return "WinPrintPSHost"; }
+        }
+
+        public override Version Version {
+            get { return new Version(1, 0); }
+        }
+
+        public override PSHostUserInterface UI {
+            get { return _ui; }
+        }
+
+        public override CultureInfo CurrentCulture {
+            get { return Thread.CurrentThread.CurrentCulture; }
+        }
+
+        public override CultureInfo CurrentUICulture {
+            get { return Thread.CurrentThread.CurrentUICulture; }
+        }
+
+        public override void EnterNestedPrompt() {
+            throw new NotImplementedException();
+        }
+
+        public override void ExitNestedPrompt() {
+            throw new NotImplementedException();
+        }
+
+        public override void NotifyBeginApplication() {
+            return;
+        }
+
+        public override void NotifyEndApplication() {
+            return;
+        }
+
+        public override void SetShouldExit(int exitCode) {
+            return;
+        }
+    }
+
+    internal class WinPrintPSHostUserInterface : PSHostUserInterface {
+        private StringBuilder _sb;
+
+        public WinPrintPSHostUserInterface() {
+            _sb = new StringBuilder();
+        }
+
+        public override void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value) {
+            _sb.Append(value);
+        }
+
+        public override void Write(string value) {
+            _sb.Append(value);
+        }
+
+        public override void WriteDebugLine(string message) {
+            _sb.AppendLine("DEBUG: " + message);
+            System.Console.WriteLine("DEBUG: " + message);
+        }
+
+        public override void WriteErrorLine(string value) {
+            _sb.AppendLine("ERROR: " + value);
+            System.Console.WriteLine("DEBUG: " + value);
+        }
+
+        public override void WriteLine(string value) {
+            _sb.AppendLine(value);
+        }
+
+        public override void WriteVerboseLine(string message) {
+            _sb.AppendLine("VERBOSE: " + message);
+            System.Console.WriteLine("VERBOSE: " + message);
+        }
+
+        public override void WriteWarningLine(string message) {
+            _sb.AppendLine("WARNING: " + message);
+            System.Console.WriteLine("WARNING: " + message);
+        }
+
+        public override void WriteProgress(long sourceId, ProgressRecord record) {
+            return;
+        }
+
+        public string Output {
+            get {
+                return _sb.ToString();
+            }
+        }
+
+        public override Dictionary<string, PSObject> Prompt(string caption, string message, System.Collections.ObjectModel.Collection<FieldDescription> descriptions) {
+            throw new NotImplementedException();
+        }
+
+        public override int PromptForChoice(string caption, string message, System.Collections.ObjectModel.Collection<ChoiceDescription> choices, int defaultChoice) {
+            throw new NotImplementedException();
+        }
+
+        public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options) {
+            throw new NotImplementedException();
+        }
+
+        public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName) {
+            throw new NotImplementedException();
+        }
+
+        public override PSHostRawUserInterface RawUI {
+            get { return null; }
+        }
+
+        public override string ReadLine() {
+            throw new NotImplementedException();
+        }
+
+        public override System.Security.SecureString ReadLineAsSecureString() {
+            throw new NotImplementedException();
+        }
+    }
+
     class Program {
         private Print print;
         private static ParserResult<Options> result;
 
         static void Main(string[] args) {
-            //ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
-            //Log.Debug("hola");
 
-            //RunspaceConfiguration runspaceConfiguration = RunspaceConfiguration.Create();
+            //WinPrintToPS.InvokePS($@"import-module .\winprint.dll -verbose; out-winprint -verbose -debug");
 
-            //Runspace runspace = RunspaceFactory.CreateRunspace(runspaceConfiguration);
-            //runspace.Open();
-
-            //RunspaceInvoke scriptInvoker = new RunspaceInvoke(runspace);
-
-            //Pipeline pipeline = runspace.CreatePipeline();
-
-            ////Here's how you add a new script with arguments
-            //Command myCommand = new Command(scriptfile);
-            //CommandParameter testParam = new CommandParameter("key", "value");
-            //myCommand.Parameters.Add(testParam);
-
-            //pipeline.Commands.Add(myCommand);
-
-            //// Execute PowerShell script
-            //results = pipeline.Invoke();
-
-            //var script = "get-process";
-
-            Runspace runspace = RunspaceFactory.CreateRunspace();
-            runspace.Open();
-            Pipeline pipeline = runspace.CreatePipeline();
-
-            Command importCmd = new Command(@$"import-module .\winprint.dll -verbose; get-content {args[0]} | out-winprint {args[1]}", true);
-            pipeline.Commands.Add(importCmd);
-
-            // Execute PowerShell script
-            var results = pipeline.Invoke();
-            if (pipeline.HadErrors) {
-                Log.Debug("error: {error}", pipeline.Error.ReadToEnd());
-                return;
-            }
-            foreach (dynamic result in results) {
-                Log.Debug("result: {result}", result.ToString());
+            var sb = new StringBuilder();
+            foreach (var a in args) {
+                sb.Append(a);
+                sb.Append(" ");
             }
 
-
-            //_powershell.AddCommand(script);
-            //_powershell.Invoke();
-            //foreach (var rec in _powershell.Streams.Progress)
-            //    Log.Debug("progress: {progress}", rec.StatusDescription);
-
-            //foreach (var rec in _powershell.Streams.Error)
-            //    Log.Debug("error: {message}", rec.ErrorDetails.Message);
-
-            //foreach (var rec in _powershell.Streams.Warning)
-            //    Log.Debug("warning: {message}", rec.Message);
-
-            //foreach (var rec in _powershell.Streams.Information)
-            //    Log.Debug("info: {info}", rec.ToString());
-
-            //foreach (var rec in _powershell.Streams.Verbose)
-            //    Log.Debug("verbose: {message}", rec.Message);
-
-
-
-            //ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
-
-            //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-
-            //// Parse command line
-            //using var parser = new Parser(with => {
-            //    with.EnableDashDash = true;
-            //    with.HelpWriter = null;
-            //});
-            //result = parser.ParseArguments<Options>(args);
-            //result.WithParsed(o => {
-            //    ServiceLocator.Current.TelemetryService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
-            //    ModelLocator.Current.Options.CopyPropertiesFrom(o);
-
-            //    if (o.Debug) {
-            //        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-            //        ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-            //    }
-            //    else {
-            //        ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
-            //    }
-            //    var program = new Program();
-            //    Task.WaitAll(program.Go());
-            //})
-            //.WithNotParsed((errs) => DisplayHelp(result, errs));
-
-            //Log.Debug($"Exiting Main - This should never happen.");
-            //Environment.Exit(-1);
+            ConsoleColor color = System.Console.ForegroundColor;
+            ProcessStartInfo startinfo = new ProcessStartInfo();
+            startinfo.FileName = "pwsh";
+            startinfo.Arguments = $@"-noprofile -command ""import-module .\winprint.dll; out-winprint {sb}""";
+            startinfo.CreateNoWindow = false;
+            startinfo.UseShellExecute = false;
+            Process p = Process.Start(startinfo);
+            p.WaitForExit();
+            Environment.Exit(p.ExitCode);
         }
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {
@@ -148,7 +229,7 @@ namespace WinPrint.Console {
                 StartGui();
 
             ServiceLocator.Current.UpdateService.GotLatestVersion += LogUpdateResults();
-            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
+//            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync());
 
             try {
                 // --s
