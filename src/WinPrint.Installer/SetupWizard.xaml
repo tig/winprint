@@ -60,7 +60,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             Height="23"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="installButton_Click" Margin="0,0,96,20"  >
+            Click="installButton_Click" Margin="0,0,96,20" IsDefault="True"  >
             Install
         </Button>
         <Button
@@ -83,7 +83,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             Margin="0,0,10,20"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="cancelButton_Click" RenderTransformOrigin="0.471,-0.076">
+            Click="cancelButton_Click" RenderTransformOrigin="0.471,-0.076" IsCancel="True">
             Cancel
         </Button>
         <ProgressBar

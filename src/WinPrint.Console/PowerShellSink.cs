@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
-using TTRider.PowerShellAsync;
+//using TTRider.PowerShellAsync;
 
-namespace WinPrint.Core.Services {
+namespace WinPrint.Console {
 
     public class PowerShellSink : ILogEventSink {
         readonly object _syncRoot = new object();

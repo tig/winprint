@@ -13,7 +13,7 @@ using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
-using TTRider.PowerShellAsync;
+//using TTRider.PowerShellAsync;
 using WinPrint.Core;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -35,7 +35,7 @@ namespace WinPrint.Console {
             //this.implementation = new OutputManagerInner();
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-            BoundedCapacity = 500;
+            //BoundedCapacity = 500;
         }
 
         #region Command Line Switches
@@ -85,7 +85,7 @@ namespace WinPrint.Console {
 #if DEBUG
         private bool _debug = true;
 #else
-        private bool _debug = { get => MyInvocation.BoundParameters.TryGetValue("Debug", out object o); }
+        private bool _debug { get => MyInvocation.BoundParameters.TryGetValue("Debug", out object o); }
 #endif
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace WinPrint.Console {
 #if DEBUG
             string log = "-lv winprint.msiexec.log";
 #else
-                string log = ";
+            string log = "";
 #endif
             var p = new Process {
                 StartInfo = {
@@ -167,7 +167,8 @@ namespace WinPrint.Console {
             ProgressRecord rec = new ProgressRecord(0, "Installing", $"Download Complete");
             rec.CurrentOperation = $"Installing";
             rec.PercentComplete = -1;
-            await Task.Run(() => WriteProgress(rec));
+            //await Task.Run(() => WriteProgress(rec));
+            WriteProgress(rec);
             Debug.WriteLine($"wrote progress");
 
             try {
@@ -179,72 +180,35 @@ namespace WinPrint.Console {
             }
 
             if (_force ||
-                await Task.Run(() => ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
-                "Exit this Powershell instance?"))) {
-                // Kill process?
-                System.Environment.Exit(0);
+                //await Task.Run(() => ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
+                //"Exit this Powershell instance?"))) {
+                ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
+                "Exit this Powershell instance?")) {
+                    // Kill process?
+                    System.Environment.Exit(0);
             }
             return true;
         }
-//            Debug.WriteLine("Kicking off update check thread...");
-//            var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token);
 
-//            Debug.WriteLine($"Starting update...");
-//            var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync();
-
-//#if DEBUG
-//            string log = "-lv winprint.msiexec.log";
-//#else
-//            string log = ";
-//#endif
-//            var p = new Process {
-//                StartInfo = {
-//                        FileName = $"msiexec.exe",
-//                        Arguments = $"{log} -i {path}",
-//                        UseShellExecute = true
-//                    },
-//            };
-
-//            Debug.WriteLine($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
-//            Log.Information($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
-//            ProgressRecord rec = new ProgressRecord(1, "Installing", $"Download Complete. Running installer ({ p.StartInfo.FileName } { p.StartInfo.Arguments})");
-//            rec.CurrentOperation = $"Installing";
-//            rec.PercentComplete = 100;
-//            WriteProgress(rec);
-//            Debug.WriteLine($"wrote progress");
-
-//            try {
-//                p.Start();
-//            }
-//            catch (Win32Exception we) {
-//                Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
-//            }
-
-//            Debug.WriteLine($"about to exit");
-//            if (_force || ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.", "Exit this Powershell instance?")) {
-//                // Kill process?
-//                System.Environment.Exit(0);
-//            }
-//            return;
-//        }
+        private string _updateMsg;
 
         private void UpdateService_GotLatestVersion(object sender, Version version) {
             Debug.WriteLine("UpdateService_GotLatestVersion");
             if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
-                Log.Information($"Could not access tig.github.io/winprint to see if a newer version is available" +
-                    $" {ServiceLocator.Current.UpdateService.ErrorMessage}");
+                _updateMsg = $"Could not access github.com/tig/winprint to see if a newer version is available" +
+                    $" {ServiceLocator.Current.UpdateService.ErrorMessage}";
                 return;
             }
 
             if (ServiceLocator.Current.UpdateService.CompareVersions() < 0) {
-                Log.Information("A newer version of winprint ({version}) is available at {url}", version, ServiceLocator.Current.UpdateService.ReleasePageUri);
-                Log.Information($"Run '{MyInvocation.InvocationName} -InstallUpdate' to upgrade");
+                _updateMsg = $"An update to winprint is available at {ServiceLocator.Current.UpdateService.ReleasePageUri}. " +
+                    $"Run '{MyInvocation.InvocationName} -InstallUpdate' to upgrade";
             }
             else if (ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
-                Log.Information($"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})");
+                _updateMsg = $"This is a MORE recent version than can be found at github.com/tig/winprint ({version})";
             }
             else {
-                Log.Information("You are running the most recent version of winprint");
+                _updateMsg = "This is lastest version of winprint";
             }
         }
         #endregion
@@ -315,19 +279,6 @@ namespace WinPrint.Console {
 
             _psObjects.Add(input);
         }
-
-        //protected override async Task EndProcessingAsync() {
-        //    _cancellationToken = new CancellationTokenSource();
-        //    var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token);
-        //    Debug.WriteLine($"Version: {version}");
-        //    var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync();
-        //    Debug.WriteLine($"path: {path}");
-        //    if (await Task.Run(() => ShouldContinue("my message.", "Exit this Powershell instance?")))
-        //        Log.Information($"Yes.");
-        //    else
-        //        Log.Information($"No.");
-        //    await base.EndProcessingAsync();
-        //}
 
         // This method will be called once at the end of pipeline execution; if no input is received, this method is not called
         protected override async Task EndProcessingAsync() {
@@ -455,6 +406,11 @@ namespace WinPrint.Console {
             rec.StatusDescription = $"Complete";
             WriteProgress(rec);
 
+
+            // End by sharing update info, if any
+            if (!string.IsNullOrEmpty(_updateMsg))
+                Log.Information(_updateMsg);
+
             CleanUp();
         }
 
@@ -513,9 +469,9 @@ namespace WinPrint.Console {
             return base.GetResourceString(baseName, resourceId);
         }
 
-        protected override async Task StopProcessingAsync() {
-            await base.StopProcessingAsync();
-        }
+        //protected override async Task StopProcessingAsync() {
+        //    await base.StopProcessingAsync();
+        //}
 
         /// <summary>
         /// Callback for the implementation to obtain a reference to the Cmdlet object.

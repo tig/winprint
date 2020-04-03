@@ -433,7 +433,7 @@ namespace WinPrint.Winforms {
 #if DEBUG
             string log = "-lv winprint.msiexec.log";
 #else
-                string log = ";
+            string log = "";
 #endif
             using var p = new Process {
                 StartInfo = {

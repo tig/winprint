@@ -89,11 +89,11 @@ namespace WinPrint.Core.Services {
                 var github = new GitHubClient(new Octokit.ProductHeaderValue("tig-winprint"));
                 var allReleases = await github.Repository.Release.GetAll("tig", "winprint").ConfigureAwait(false);
 
-//#if DEBUG
-//                Debug.WriteLine("Pausing 2s to simulate version check taking a long time...");
-//                Thread.Sleep(2000);
-//                Debug.WriteLine("Done pausing.");
-//#endif
+#if DEBUG
+                Debug.WriteLine("Pausing 2s to simulate version check taking a long time...");
+                Thread.Sleep(2000);
+                Debug.WriteLine("Done pausing.");
+#endif
                 token.ThrowIfCancellationRequested();
 
                 // Get all releases and pre-releases
