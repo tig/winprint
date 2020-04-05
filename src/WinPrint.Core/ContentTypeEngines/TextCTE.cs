@@ -340,7 +340,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
-            PaintLineNumberSeparator(g);
+            //PaintLineNumberSeparator(g);
 
             // Print each line of the file.
             int startLine = linesPerPage * (pageNum - 1);
@@ -353,20 +353,18 @@ namespace WinPrint.Core.ContentTypeEngines {
                         PaintLineNumber(g, pageNum, lineInDocument);
                     float xPos = leftMargin + lineNumberWidth;
                     float yPos = lineOnPage * lineHeight;
+
+                    // Line # separator
+                    // TODO: Support setting color of line #s and separator
+                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos+lineHeight);
+
+                    // Text
                     g.DrawString(wrappedLines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, ContentTypeEngineBase.StringFormat);
                     if (ContentSettings.Diagnostics)
                         g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
                 }
             }
             Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage - 1, startLine, endLine);
-        }
-
-        // TODO: Support setting color of line #s and separator
-        // TODO: Only paint Line Number Separator if there's an actual line
-        private void PaintLineNumberSeparator(Graphics g) {
-            if (LineNumbers && LineNumberSeparator && lineNumberWidth != 0) {
-                g.DrawLine(Pens.Gray, lineNumberWidth - 2, 0, lineNumberWidth - 2, PageSize.Height);
-            }
         }
 
         // TODO: Allow a different (non-monospace) font for line numbers

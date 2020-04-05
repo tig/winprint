@@ -404,11 +404,21 @@ namespace WinPrint.Console {
             WriteProgress(rec);
 
             var sheetsCounted = 0;
-            if (_whatIf) {
-                sheetsCounted = await _print.CountSheets().ConfigureAwait(true);
-            }
-            else {
-                sheetsCounted = await _print.DoPrint().ConfigureAwait(true);
+            try {
+                if (_whatIf) {
+                    sheetsCounted = await _print.CountSheets().ConfigureAwait(true);
+                }
+                else {
+                    sheetsCounted = await _print.DoPrint().ConfigureAwait(true);
+                }
+            } catch (System.ComponentModel.Win32Exception w32e) {
+                Log.Error(w32e, "Print failed.");
+                CleanUp();
+                return;
+            } catch (Exception e) {
+                Log.Error(e, "Print failed.");
+                CleanUp();
+                return;
             }
 
             if (_verbose) {
