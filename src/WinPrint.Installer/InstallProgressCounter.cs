@@ -78,9 +78,9 @@ namespace WinPrintInstaller {
                 return;
             }
 
-            int fieldCount = progressRecord.FieldCount;
-            int progressType = progressRecord.GetInteger(1);
-            string progressTypeString = String.Empty;
+            var fieldCount = progressRecord.FieldCount;
+            var progressType = progressRecord.GetInteger(1);
+            var progressTypeString = String.Empty;
             switch (progressType) {
                 case 0: // Master progress reset
                     if (fieldCount < 4) {

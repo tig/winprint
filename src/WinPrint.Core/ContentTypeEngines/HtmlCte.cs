@@ -43,8 +43,9 @@ namespace WinPrint.Core.ContentTypeEngines {
         // Flag: Has Dispose already been called?
         bool disposed = false;
         void Dispose(bool disposing) {
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing) {
                 //if (litehtml != null)
@@ -83,14 +84,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             reflowProgress?.Invoke(this, "HtmlFileContent.RenderAsync");
             await base.RenderAsync(printerResolution, reflowProgress);
 
-            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
-            int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
+            var width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+            var height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             LogService.TraceMessage($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
             string css;
             try {
                 // TODO: Make sure wiprint.css is in the same dir as .config file once setup is impl
-                using StreamReader cssStream = new StreamReader("winprint.css");
+                using var cssStream = new StreamReader("winprint.css");
                 css = await cssStream.ReadToEndAsync();
                 cssStream.Close();
                 reflowProgress?.Invoke(this, "Read winprint.css");
@@ -129,7 +130,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             litehtml.Document.OnMediaChanged();
 
             // TODO: Use return of Render() to get "best width"
-            int bestWidth = litehtml.Document.Render((int)width);
+            var bestWidth = litehtml.Document.Render((int)width);
             reflowProgress?.Invoke(this, "Done with Render");
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(width, height));
@@ -209,12 +210,13 @@ namespace WinPrint.Core.ContentTypeEngines {
             litehtml.Graphics = g;
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
-            int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
+            var yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
 
-            if (!ContentSettings.Diagnostics)
+            if (!ContentSettings.Diagnostics) {
                 g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+            }
 
-            LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
+            var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {
                 x = 0,
                 y = 0,

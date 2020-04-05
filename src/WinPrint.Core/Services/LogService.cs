@@ -40,11 +40,12 @@ namespace WinPrint.Core.Services {
             // TODO: Keep this at Debug until after Beta, then change it to Information
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #endif
-            string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
+            var productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
             LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{appName}.log".Replace(@"file:\", "");
 
-            if (consoleSink == null)
+            if (consoleSink == null) {
                 ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+            }
 
             // Setup logging
             if (consoleSink == null) {
@@ -68,7 +69,7 @@ namespace WinPrint.Core.Services {
 
             Log.Debug("--------- {app} {v} ---------", appName, productVersion);
             if (ServiceLocator.Current.TelemetryService.TelemetryEnabled) {
-                string msg = string.IsNullOrEmpty(TelemetryService.Key) ? "However, telemetry key is missing so no telemetry will be tracked." : "";
+                var msg = string.IsNullOrEmpty(TelemetryService.Key) ? "However, telemetry key is missing so no telemetry will be tracked." : "";
                 Log.Debug($"Telemetry is enabled. {msg}");
             }
             Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);

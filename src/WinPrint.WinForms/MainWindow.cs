@@ -71,8 +71,8 @@ namespace WinPrint.Winforms {
         }
 
         private void Color() {
-            Color back = System.Drawing.Color.FromName("white");
-            Color text = System.Drawing.SystemColors.ControlText;
+            var back = System.Drawing.Color.FromName("white");
+            var text = System.Drawing.SystemColors.ControlText;
             dummyButton.BackColor = back;
             printersCB.BackColor = back;
 
@@ -164,14 +164,20 @@ namespace WinPrint.Winforms {
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing) {
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing && (components != null)) {
                 components.Dispose();
                 //if (streamToPrint != null) streamToPrint.Dispose();
-                if (printDoc != null) printDoc.Dispose();
-                if (printPreview != null) printPreview.Dispose();
+                if (printDoc != null) {
+                    printDoc.Dispose();
+                }
+
+                if (printPreview != null) {
+                    printPreview.Dispose();
+                }
             }
             disposed = true;
             base.Dispose(disposing);
@@ -198,30 +204,37 @@ namespace WinPrint.Winforms {
         }
 
         private void FileLoadedEventHandler(object sender, bool loading) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => FileLoadedEventHandler(sender, loading)));
+            }
             else {
                 LogService.TraceMessage($"{loading}");
-                if (loading) return;
+                if (loading) {
+                    return;
+                }
                 // This kicks off Relfow
                 //SheetSettingsChanged();
             }
         }
 
         private void PageSettingsSetEventHandler(object sender, EventArgs e) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => PageSettingsSetEventHandler(sender, e)));
+            }
             else {
                 LogService.TraceMessage();
             }
         }
 
         private void ReflowCompleteEventHandler(object sender, bool reflowing) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => ReflowCompleteEventHandler(sender, reflowing)));
+            }
             else {
                 LogService.TraceMessage($"{reflowing}");
-                if (reflowing) return;
+                if (reflowing) {
+                    return;
+                }
 
                 printPreview.Text = "";
                 printPreview.Invalidate();
@@ -229,8 +242,9 @@ namespace WinPrint.Winforms {
         }
 
         private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => PropertyChangedEventHandler(sender, e)));
+            }
             else {
                 LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
@@ -289,14 +303,17 @@ namespace WinPrint.Winforms {
         }
 
         private void SettingsChangedEventHandler(object o, bool reflow) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
+            }
             else {
                 LogService.TraceMessage($"{reflow}");
-                if (reflow)
+                if (reflow) {
                     LoadFile();
-                else
+                }
+                else {
                     printPreview.Invalidate();
+                }
             }
         }
 
@@ -322,10 +339,14 @@ namespace WinPrint.Winforms {
                 MessageBox.Show(Resources.SettingsLoadMsg);
                 return;
             }
-            if (ModelLocator.Current.Settings.Size != null)
+            if (ModelLocator.Current.Settings.Size != null) {
                 this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
-            if (ModelLocator.Current.Settings.Location != null)
+            }
+
+            if (ModelLocator.Current.Settings.Location != null) {
                 this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+            }
+
             this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
             printPreview.KeyUp += (s, e) => {
@@ -367,8 +388,9 @@ namespace WinPrint.Winforms {
             // Select default printer and paper size
             foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
                 printersCB.Items.Add(printer);
-                if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName)
+                if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName) {
                     printersCB.Text = printDoc.PrinterSettings.PrinterName;
+                }
             }
 
             // --p
@@ -376,14 +398,17 @@ namespace WinPrint.Winforms {
                 printDoc.PrinterSettings.PrinterName = printersCB.Text = ModelLocator.Current.Options.Printer;
             }
 
-            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
+            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes) {
                 paperSizesCB.Items.Add(ps.PaperName);
+            }
 
             // --z
-            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize))
+            if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize)) {
                 paperSizesCB.Text = ModelLocator.Current.Options.PaperSize;
-            else
+            }
+            else {
                 paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
+            }
 
             // We kept these disabled during load
             printersCB.Enabled = true;
@@ -406,8 +431,7 @@ namespace WinPrint.Winforms {
             // Select default Sheet 
             var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
             if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Sheet)) {
-                string sheetID;
-                newSheet = printPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out sheetID);
+                newSheet = printPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out var sheetID);
             }
             comboBoxSheet.Text = newSheet.Name;
             // This will cause a flurry of property change notifications, setting all UI elements
@@ -415,8 +439,13 @@ namespace WinPrint.Winforms {
 
             // Must set landscape after printer/paper selection
             // --l and --o
-            if (ModelLocator.Current.Options.Landscape) printPreview.SheetViewModel.Landscape = true;
-            if (ModelLocator.Current.Options.Portrait) printPreview.SheetViewModel.Landscape = false;
+            if (ModelLocator.Current.Options.Landscape) {
+                printPreview.SheetViewModel.Landscape = true;
+            }
+
+            if (ModelLocator.Current.Options.Portrait) {
+                printPreview.SheetViewModel.Landscape = false;
+            }
 
             // Override content-type
             // --t
@@ -428,8 +457,9 @@ namespace WinPrint.Winforms {
             printPreview.Focus();
             //this.Cursor = Cursors.Default;
 
-            if (ModelLocator.Current.Options.Files != null && ModelLocator.Current.Options.Files.ToList().Count > 0)
+            if (ModelLocator.Current.Options.Files != null && ModelLocator.Current.Options.Files.ToList().Count > 0) {
                 activeFile = ModelLocator.Current.Options.Files.ToList()[0];
+            }
 
             // By running this on a different thread, we enable the main window to show
             // as quickly as possible; making startup seem faster.
@@ -440,7 +470,7 @@ namespace WinPrint.Winforms {
         private void UpdateService_DownloadComplete(object sender, string path) {
             //Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);
 #if DEBUG
-            string log = "-lv winprint.msiexec.log";
+            var log = "-lv winprint.msiexec.log";
 #else
             string log = "";
 #endif
@@ -463,8 +493,9 @@ namespace WinPrint.Winforms {
         }
 
         private void UpdateService_GotLatestVersion(object sender, Version version) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => UpdateService_GotLatestVersion(sender, version)));
+            }
             else {
 
                 if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
@@ -496,13 +527,15 @@ namespace WinPrint.Winforms {
                 //SheetSettingsChanged();
                 ShowFilesDialog();
             }
-            else
+            else {
                 LoadFile();
+            }
         }
 
         private void LoadFile() {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => LoadFile()));
+            }
             else {
                 // Reset View Model
                 printPreview.SheetViewModel.Reset();
@@ -514,7 +547,7 @@ namespace WinPrint.Winforms {
                 //    - set printer page settings
                 //    - reflow
                 Task.Run(async () => {
-                    string stage = "Loading";
+                    var stage = "Loading";
                     try {
                         BeginInvoke((Action)(() => {
                             printPreview.Text = $"{stage}...";
@@ -568,16 +601,18 @@ namespace WinPrint.Winforms {
         }
 
         private void ShowError(string str) {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => ShowError(str)));
+            }
             else {
                 printPreview.Text = new String(str);
             }
         }
 
         private void ShowFilesDialog() {
-            if (InvokeRequired)
+            if (InvokeRequired) {
                 BeginInvoke((Action)(() => ShowFilesDialog()));
+            }
             else {
                 LogService.TraceMessage();
                 ServiceLocator.Current.TelemetryService.TrackEvent("Show Files Dialog");
@@ -614,7 +649,9 @@ namespace WinPrint.Winforms {
         //}
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e) {
-            if (ModelLocator.Current.Settings is null) return;
+            if (ModelLocator.Current.Settings is null) {
+                return;
+            }
 
             ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
             ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete; ;
@@ -732,20 +769,21 @@ namespace WinPrint.Winforms {
             print.SetPrinter(printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
 
-            int from = 0, to = 0;
-            if (!int.TryParse(fromText.Text, out from))
+            if (!int.TryParse(fromText.Text, out var from)) {
                 from = 0;
+            }
             // Ideally we'd get NumSheets from print.SheetSVM but that would cause a
             // un-needed Reflow. So use the printPreview VM.
-            if (!int.TryParse(toText.Text, out to))
+            if (!int.TryParse(toText.Text, out var to)) {
                 to = 0;// printPreview.SheetViewModel.NumSheets;
+            }
 
             // TODO: Decide how to make showing the print dialog a setting (or if needed at all)
             // the only reason I can think of now is from/to page support.
-            bool showPrintDialog = true;
-            if (showPrintDialog)
+            var showPrintDialog = true;
+            if (showPrintDialog) {
                 BeginInvoke((Action)(async () => {
-                    using PrintDialog printDialog = new PrintDialog();
+                    using var printDialog = new PrintDialog();
                     printDialog.AllowSomePages = true;
                     printDialog.ShowHelp = true;
                     // printDialog.AllowSelection = true;
@@ -767,6 +805,7 @@ namespace WinPrint.Winforms {
                         await print.DoPrint().ConfigureAwait(false);
                     }
                 }));
+            }
             else {
                 if (from > 0 && to > 0) {
                     print.PrintDocument.PrinterSettings.PrintRange = PrintRange.SomePages;
@@ -802,7 +841,7 @@ namespace WinPrint.Winforms {
         }
 
         private void comboBoxSheet_SelectedIndexChanged(object sender, EventArgs e) {
-            KeyValuePair<string, string> si = (KeyValuePair<string, string>)comboBoxSheet.SelectedItem;
+            var si = (KeyValuePair<string, string>)comboBoxSheet.SelectedItem;
             LogService.TraceMessage($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
             if (printersCB.Enabled) {
                 ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
@@ -816,25 +855,25 @@ namespace WinPrint.Winforms {
         }
 
         private void topMargin_ValueChanged(object sender, EventArgs e) {
-            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
             margins.Top = (int)(topMargin.Value * 100M);
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
         }
 
         private void leftMargin_ValueChanged(object sender, EventArgs e) {
-            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
             margins.Left = (int)(leftMargin.Value * 100M);
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
         }
 
         private void rightMargin_ValueChanged(object sender, EventArgs e) {
-            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
             margins.Right = (int)(rightMargin.Value * 100M);
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
         }
 
         private void bottomMargin_ValueChanged(object sender, EventArgs e) {
-            Margins margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
             margins.Bottom = (int)(bottomMargin.Value * 100M);
             ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
         }
@@ -869,7 +908,7 @@ namespace WinPrint.Winforms {
 
             Process proc = null;
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
+                var psi = new ProcessStartInfo();
                 psi.UseShellExecute = true;   // This is important
                 psi.FileName = ServiceLocator.Current.SettingsService.SettingsFileName;
                 proc = Process.Start(psi);
@@ -888,14 +927,14 @@ namespace WinPrint.Winforms {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
             "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         private void helpaboutLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args) {
-            string url = "https://tig.github.io/winprint";
+            var url = "https://tig.github.io/winprint";
             Log.Debug($"Browsing to home page: {url}");
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Help/About Link Click");
 
             Process proc = null;
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
+                var psi = new ProcessStartInfo();
                 psi.UseShellExecute = true;   // This is important
                 psi.FileName = url;
                 proc = Process.Start(psi);

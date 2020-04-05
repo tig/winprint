@@ -68,7 +68,7 @@ namespace WinPrint.Core {
         /// <param name="paperSizeName"></param>
         public void SetPaperSize(string paperSizeName) {
             if (!string.IsNullOrEmpty(paperSizeName)) {
-                bool found = false;
+                var found = false;
                 foreach (PaperSize size in PrintDocument.PrinterSettings.PaperSizes) {
                     if (size.PaperName.Equals(paperSizeName, StringComparison.InvariantCultureIgnoreCase)) {
                         PrintDocument.DefaultPageSettings.PaperSize = size;
@@ -76,7 +76,7 @@ namespace WinPrint.Core {
                     }
                 }
                 if (!found) {
-                    StringBuilder sb = new StringBuilder();
+                    var sb = new StringBuilder();
                     sb.Append($"'{paperSizeName}' is not a valid paper size for the '{PrintDocument.PrinterSettings.PrinterName}' printer.");
                     sb.Append(Environment.NewLine);
                     sb.Append($"'{PrintDocument.PrinterSettings.PrinterName}' supports these printer sizes:");
@@ -87,9 +87,10 @@ namespace WinPrint.Core {
                     }
                     throw new Exception(sb.ToString());
                 }
-                else
+                else {
                     ServiceLocator.Current.TelemetryService.TrackEvent("Set Paper Size",
                         properties: new Dictionary<string, string> { ["paperSizeName"] = paperSizeName });
+                }
             }
         }
 
@@ -195,11 +196,14 @@ namespace WinPrint.Core {
         bool disposed = false;
 
         protected virtual void Dispose(bool disposing) {
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing) {
-                if (printDoc != null) printDoc.Dispose();
+                if (printDoc != null) {
+                    printDoc.Dispose();
+                }
             }
             disposed = true;
         }

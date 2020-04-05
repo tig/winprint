@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows.Forms;
-using Serilog;
 using WinPrint.Core.Services;
 
 namespace WinPrint.WinForms {

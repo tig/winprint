@@ -30,8 +30,10 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public FontStyle Style {
             get => style; set {
-                if (!Enum.IsDefined(typeof(FontStyle), value))
+                if (!Enum.IsDefined(typeof(FontStyle), value)) {
                     value = FontStyle.Bold | FontStyle.Italic;
+                }
+
                 style = value;
                 //                SetField(ref style, value);
 

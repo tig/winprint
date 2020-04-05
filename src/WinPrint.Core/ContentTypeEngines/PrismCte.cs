@@ -17,10 +17,12 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
         public override string GetContentTypeName() {
-            if (string.IsNullOrEmpty(Language))
+            if (string.IsNullOrEmpty(Language)) {
                 return _contentType;
-            else
+            }
+            else {
                 return Language;
+            }
         }
 
         public static new PrismCte Create() {
@@ -97,8 +99,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
 
             Document = doc;
-            if (!convertedToHtml)
+            if (!convertedToHtml) {
                 Document = await CodeToHtml("", Language);
+            }
+
             convertedToHtml = true;
 
             return true;
@@ -129,8 +133,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         private SizeF MeasureString(Graphics g, string text) {
-            int charsFitted, linesFilled;
-            return MeasureString(g, text, out charsFitted, out linesFilled);
+            return MeasureString(g, text, out var charsFitted, out var linesFilled);
         }
 
         /// <summary>
@@ -144,17 +147,17 @@ namespace WinPrint.Core.ContentTypeEngines {
         private SizeF MeasureString(Graphics g, string text, out int charsFitted, out int linesFilled) {
             if (g is null) {
                 // define context used for determining glyph metrics.        
-                using Bitmap bitmap = new Bitmap(1, 1);
+                using var bitmap = new Bitmap(1, 1);
                 g = Graphics.FromImage(bitmap);
                 //g = Graphics.FromHwnd(PrintPreview.Instance.Handle);
                 g.PageUnit = GraphicsUnit.Document;
             }
 
             // determine width     
-            float fontHeight = lineHeight;
+            var fontHeight = lineHeight;
             // Use page settings including lineNumberWidth
-            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
-            SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
+            var proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
+            var size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
         }
 
@@ -179,7 +182,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             //    Use user provided sheet
             // Else 
             //    Use sheet in prismjs\themes
-            string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
+            var appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             var cssUri = new UriBuilder();
             cssUri.Scheme = "file";
             cssUri.Host = @"";
@@ -229,7 +232,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             //         else 
             //             Built-in WinPrint Prism Overrides (makes Prism work with printing).
             //      </style>
-            string themePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssUserProvidePrismThemeFile;
+            var themePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssUserProvidePrismThemeFile;
             if (File.Exists(themePath)) {
                 //string themePath = $"{prismThemes}/{cssUserProvidePrismThemeFile}";
                 Log.Debug("Using user provided Prism theme: {prism}", themePath);
@@ -238,16 +241,18 @@ namespace WinPrint.Core.ContentTypeEngines {
                 // "winprint" in style specifier (see GDIPlusContainer.cs)
                 sbHtml.AppendLine(File.ReadAllText(cssUserProvidePrismThemeFile));
             }
-            else
+            else {
                 sbHtml.AppendLine(Properties.Resources.prism_winprint);
+            }
 
             // If prismContentType settings specifies a font, override what's in CSS.
-            if (ContentSettings.Font != null)
+            if (ContentSettings.Font != null) {
                 sbHtml.AppendLine($"code[class*=\"language-\"], pre[class*=\"language-\"] {{" + Environment.NewLine +
                     $"font-family: '{ContentSettings.Font.Family}', winprint;" + Environment.NewLine +
                     $"font-size: {ContentSettings.Font.Size}pt;" + Environment.NewLine +
                     // BUGBUG: This ain't right
                     $"font-weight: {ContentSettings.Font.Style};}}");
+            }
 
             // TODO: If Sheet settings specifies a font, override what's in CSS.
             //if (sheet.Font != null)
@@ -259,14 +264,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             // User can put a prism-winprint-overrides.css in the app dir to override built-in overrides
             cssUri.Path = appDir;
             // Strip "file:/" off of appDir for local
-            string overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrintOverrides;
+            var overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrintOverrides;
             if (File.Exists(overridePath)) {
                 Log.Debug("Using user provided css overrides: {prism}", overridePath);
 
                 sbHtml.AppendLine(File.ReadAllText(overridePath));
             }
-            else
+            else {
                 sbHtml.AppendLine(Properties.Resources.prism_winprint_overrides);
+            }
 
             sbHtml.AppendLine($"</style>");
 
@@ -274,7 +280,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             // Run node
             Process node = null;
-            ProcessStartInfo psi = new ProcessStartInfo();
+            var psi = new ProcessStartInfo();
             try {
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
@@ -285,7 +291,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
                 Log.Debug("Starting Process: '{f} {a}'", psi.FileName, psi.Arguments);
                 node = Process.Start(psi);
-                StreamWriter sw = node.StandardInput;
+                var sw = node.StandardInput;
                 Log.Debug("Writing {n} chars to stdin", document.Length);
                 await sw.WriteLineAsync(sbNodeJS.ToString());
                 sw.Close();
@@ -345,16 +351,17 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
             //Helpers.Logging.TraceMessage($"PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
-            double extraLines = (pageNum - 1) * remainingPartialLineHeight;
-            int yPos = (int)Math.Round((pageNum - 1) * PageSize.Height) - (int)Math.Round(extraLines);
+            var extraLines = (pageNum - 1) * remainingPartialLineHeight;
+            var yPos = (int)Math.Round((pageNum - 1) * PageSize.Height) - (int)Math.Round(extraLines);
 
             // Set the clip such that any extraLines are clipped off bottom
-            if (!ContentSettings.Diagnostics)
+            if (!ContentSettings.Diagnostics) {
                 g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height - remainingPartialLineHeight)));
+            }
 
             litehtml.Graphics = g;
 
-            LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Ceiling(PageSize.Height));
+            var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Ceiling(PageSize.Height));
 
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint((int)-0, (int)-yPos), new LiteHtmlSize((int)size.Width, (int)size.Height));
@@ -373,17 +380,17 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Diagnostics
             if (ContentSettings.Diagnostics) {
                 g.ResetClip();
-                int startLine = linesPerPage * (pageNum - 1);
-                int endLine = startLine + linesPerPage;
+                var startLine = linesPerPage * (pageNum - 1);
+                var endLine = startLine + linesPerPage;
                 int lineOnPage;
                 //int linesInDocument = (int)Math.Round(litehtml.Document.Height() / lineHeight);
                 for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
-                    int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
+                    var lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
                     if (lineInDocument < linesInDocument && lineInDocument >= startLine) {// && lineInDocument <= endLine) {
                                                                                           //if (lines[lineInDocument].lineNumber > 0)
                         PaintLineNumber(g, pageNum, lineInDocument);
-                        int x = (int)leftMargin;
-                        int y = lineOnPage * (int)lineHeight;
+                        var x = (int)leftMargin;
+                        var y = lineOnPage * (int)lineHeight;
                         //RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
                         g.DrawRectangle(Pens.Red, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
                     }
@@ -403,10 +410,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         // TODO: Allow a different (non-monospace) font for line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (LineNumbers == true && lineNumberWidth != 0) {
-                int lineOnPage = lineNumber % linesPerPage;
+                var lineOnPage = lineNumber % linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
                 lineNumber++;
-                int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lineNumber}").Width) : 0;
+                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lineNumber}").Width) : 0;
                 g.DrawString($"{lineNumber}", cachedFont, Brushes.Orange, x - lineNumberWidth, lineOnPage * lineHeight, StringFormat.GenericDefault);
             }
         }

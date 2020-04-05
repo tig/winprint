@@ -67,7 +67,9 @@ namespace WinPrint.Core.Services {
                 ReportUnknownFileError(ex);
             }
             finally {
-                if (fs != null) fs.Close();
+                if (fs != null) {
+                    fs.Close();
+                }
             }
 
             // Enable file watcher
@@ -94,8 +96,8 @@ namespace WinPrint.Core.Services {
         private void ReportJsonParsingError(JsonException je) {
             ServiceLocator.Current.TelemetryService.TrackException(je, false);
             // je.Message is of form: Message = "<goblygook>. Path: $.sheets | LineNumber: 6 | BytePositionInLine: 42."
-            string toFind = " Path: ";
-            string path = je.Message[(je.Message.IndexOf(toFind) + toFind.Length)..^0];
+            var toFind = " Path: ";
+            var path = je.Message[(je.Message.IndexOf(toFind) + toFind.Length)..^0];
             var ex = new Exception($"Error parsing {SettingsFileName} at {path}");
             Log.Error(ex, "Error parsing {file} at {path}", SettingsFileName, path);
         }
@@ -106,7 +108,7 @@ namespace WinPrint.Core.Services {
 
             try {
                 var jsonString = File.ReadAllText(SettingsFileName);
-                Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
+                var changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
                 if (ModelLocator.Current.Settings == null) {
                     // This can happen if settings failed to load when app started. 
@@ -138,10 +140,11 @@ namespace WinPrint.Core.Services {
         /// <param name="watchChanges">If true the file change watcher will be activated </param>
         public void SaveSettings(Models.Settings settings, bool saveCTESettings = true, bool watchChanges = false) {
             ServiceLocator.Current.TelemetryService.TrackEvent("Save Settings", properties: settings.GetTelemetryDictionary());
-            using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(settings, jsonOptions), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip });
+            using var document = JsonDocument.Parse(JsonSerializer.Serialize(settings, jsonOptions), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip });
 
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            if (document.RootElement.ValueKind != JsonValueKind.Object) {
                 return;
+            }
 
             // Disable file watcher
             if (watcher != null) {
@@ -150,12 +153,14 @@ namespace WinPrint.Core.Services {
                 watcher = null;
             }
 
-            using FileStream fs = File.Create(SettingsFileName);
+            using var fs = File.Create(SettingsFileName);
             using var writer = new Utf8JsonWriter(fs, options: new JsonWriterOptions { Indented = true });
             writer.WriteStartObject();
-            foreach (JsonProperty property in document.RootElement.EnumerateObject())
-                if (saveCTESettings || !property.Name.ToLowerInvariant().Contains("contenttypeengine"))
+            foreach (var property in document.RootElement.EnumerateObject()) {
+                if (saveCTESettings || !property.Name.ToLowerInvariant().Contains("contenttypeengine")) {
                     property.WriteTo(writer);
+                }
+            }
 
             writer.WriteEndObject();
             writer.Flush();
@@ -183,8 +188,8 @@ namespace WinPrint.Core.Services {
         public static string SettingsPath {
             get {
                 // Get dir of .exe
-                string path = AppDomain.CurrentDomain.BaseDirectory;
-                string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var path = AppDomain.CurrentDomain.BaseDirectory;
+                var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 //Log.Debug("path = {path}", path);
                 //Log.Debug("appdata = {appdata}", appdata);
 
@@ -198,7 +203,7 @@ namespace WinPrint.Core.Services {
                     var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(SettingsService)).Location);
 
                     // is this in \Kindel Systems\winprint?
-                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}")) { 
+                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}")) {
                         // We're running %programfiles%\Kindel Systems\winprint; use %appdata%\Kindel Systems\winprint.
                         path = $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
                     }

@@ -43,8 +43,9 @@ namespace WinPrint.Console {
         ///		Check if the synchronisation context has been disposed.
         /// </summary>
         void CheckDisposed() {
-            if (_workItemQueue == null)
+            if (_workItemQueue == null) {
                 throw new ObjectDisposedException(GetType().Name);
+            }
         }
 
 
@@ -55,14 +56,14 @@ namespace WinPrint.Console {
             CheckDisposed();
 
 
-            KeyValuePair<SendOrPostCallback, object> workItem;
-            while (_workItemQueue.TryTake(out workItem, Timeout.InfiniteTimeSpan)) {
+            while (_workItemQueue.TryTake(out var workItem, Timeout.InfiniteTimeSpan)) {
                 workItem.Key(workItem.Value);
 
 
                 // Has the synchronisation context been disposed?
-                if (_workItemQueue == null)
+                if (_workItemQueue == null) {
                     break;
+                }
             }
         }
 
@@ -91,9 +92,9 @@ namespace WinPrint.Console {
         ///		The message pump has already been started, and then terminated by calling <see cref="TerminateMessagePump"/>.
         /// </exception>
         public override void Post(SendOrPostCallback callback, object callbackState) {
-            if (callback == null)
+            if (callback == null) {
                 throw new ArgumentNullException(nameof(callback));
-
+            }
 
             CheckDisposed();
 
@@ -105,7 +106,8 @@ namespace WinPrint.Console {
                         value: callbackState
                     )
                 );
-            } catch (InvalidOperationException eMessagePumpAlreadyTerminated) {
+            }
+            catch (InvalidOperationException eMessagePumpAlreadyTerminated) {
                 throw new InvalidOperationException(
                     "Cannot enqueue the specified callback because the synchronisation context's message pump has already been terminated.",
                     eMessagePumpAlreadyTerminated
@@ -121,20 +123,20 @@ namespace WinPrint.Console {
         ///		A <see cref="Func{TResult}"/> delegate representing the asynchronous operation to run.
         /// </param>
         public static void RunSynchronized(Func<Task> asyncOperation) {
-            if (asyncOperation == null)
+            if (asyncOperation == null) {
                 throw new ArgumentNullException(nameof(asyncOperation));
+            }
 
-
-            SynchronizationContext savedContext = Current;
+            var savedContext = Current;
             try {
-                using (ThreadAffinitiveSynchronizationContext synchronizationContext = new ThreadAffinitiveSynchronizationContext()) {
+                using (var synchronizationContext = new ThreadAffinitiveSynchronizationContext()) {
                     SetSynchronizationContext(synchronizationContext);
 
 
-                    Task rootOperationTask = asyncOperation();
-                    if (rootOperationTask == null)
+                    var rootOperationTask = asyncOperation();
+                    if (rootOperationTask == null) {
                         throw new InvalidOperationException("The asynchronous operation delegate cannot return null.");
-
+                    }
 
                     rootOperationTask.ContinueWith(
                         operationTask =>
@@ -151,12 +153,14 @@ namespace WinPrint.Console {
                         rootOperationTask
                             .GetAwaiter()
                             .GetResult();
-                    } catch (AggregateException eWaitForTask) // The TPL will almost always wrap an AggregateException around any exception thrown by the async operation.
-                      {
+                    }
+                    catch (AggregateException eWaitForTask) // The TPL will almost always wrap an AggregateException around any exception thrown by the async operation.
+                    {
                         // Is this just a wrapped exception?
-                        AggregateException flattenedAggregate = eWaitForTask.Flatten();
-                        if (flattenedAggregate.InnerExceptions.Count != 1)
+                        var flattenedAggregate = eWaitForTask.Flatten();
+                        if (flattenedAggregate.InnerExceptions.Count != 1) {
                             throw; // Nope, genuine aggregate.
+                        }
 
 
                         // Yep, so rethrow (preserving original stack-trace).
@@ -168,7 +172,8 @@ namespace WinPrint.Console {
                             .Throw();
                     }
                 }
-            } finally {
+            }
+            finally {
                 SetSynchronizationContext(savedContext);
             }
         }
@@ -187,20 +192,20 @@ namespace WinPrint.Console {
         ///		The operation result.
         /// </returns>
         public static TResult RunSynchronized<TResult>(Func<Task<TResult>> asyncOperation) {
-            if (asyncOperation == null)
+            if (asyncOperation == null) {
                 throw new ArgumentNullException(nameof(asyncOperation));
+            }
 
-
-            SynchronizationContext savedContext = Current;
+            var savedContext = Current;
             try {
-                using (ThreadAffinitiveSynchronizationContext synchronizationContext = new ThreadAffinitiveSynchronizationContext()) {
+                using (var synchronizationContext = new ThreadAffinitiveSynchronizationContext()) {
                     SetSynchronizationContext(synchronizationContext);
 
 
-                    Task<TResult> rootOperationTask = asyncOperation();
-                    if (rootOperationTask == null)
+                    var rootOperationTask = asyncOperation();
+                    if (rootOperationTask == null) {
                         throw new InvalidOperationException("The asynchronous operation delegate cannot return null.");
-
+                    }
 
                     rootOperationTask.ContinueWith(
                         operationTask =>
@@ -218,12 +223,14 @@ namespace WinPrint.Console {
                             rootOperationTask
                                 .GetAwaiter()
                                 .GetResult();
-                    } catch (AggregateException eWaitForTask) // The TPL will almost always wrap an AggregateException around any exception thrown by the async operation.
-                      {
+                    }
+                    catch (AggregateException eWaitForTask) // The TPL will almost always wrap an AggregateException around any exception thrown by the async operation.
+                    {
                         // Is this just a wrapped exception?
-                        AggregateException flattenedAggregate = eWaitForTask.Flatten();
-                        if (flattenedAggregate.InnerExceptions.Count != 1)
+                        var flattenedAggregate = eWaitForTask.Flatten();
+                        if (flattenedAggregate.InnerExceptions.Count != 1) {
                             throw; // Nope, genuine aggregate.
+                        }
 
 
                         // Yep, so rethrow (preserving original stack-trace).
@@ -238,7 +245,8 @@ namespace WinPrint.Console {
                         throw; // Never reached.
                     }
                 }
-            } finally {
+            }
+            finally {
                 SetSynchronizationContext(savedContext);
             }
         }

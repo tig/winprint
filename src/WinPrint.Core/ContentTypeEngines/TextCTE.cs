@@ -80,11 +80,15 @@ namespace WinPrint.Core.ContentTypeEngines {
         void Dispose(bool disposing) {
             LogService.TraceMessage($"disposing: {disposing}");
 
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing) {
-                if (cachedFont != null) cachedFont.Dispose();
+                if (cachedFont != null) {
+                    cachedFont.Dispose();
+                }
+
                 wrappedLines = null;
             }
             disposed = true;
@@ -109,18 +113,21 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage();
             //await base.RenderAsync(printerResolution);
 
-            if (document == null) throw new ArgumentNullException("document can't be null for Render");
+            if (document == null) {
+                throw new ArgumentNullException("document can't be null for Render");
+            }
 
-            int dpiX = printerResolution.X;
-            int dpiY = printerResolution.Y;
+            var dpiX = printerResolution.X;
+            var dpiY = printerResolution.Y;
 
             // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
             // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0)
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0) {
                 dpiX = dpiY = 96;
+            }
 
             // Create a representative Graphcis used for determining glyph metrics.      
-            using Bitmap bitmap = new Bitmap(1, 1);
+            using var bitmap = new Bitmap(1, 1);
             bitmap.SetResolution(dpiX, dpiY);
             var g = Graphics.FromImage(bitmap);
             g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
@@ -143,9 +150,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             //lineHeight = lineSize.Height;
 
             lineHeight = cachedFont.GetHeight(dpiY);
-            
-            if (PageSize.Height < lineHeight)
+
+            if (PageSize.Height < lineHeight) {
                 throw new InvalidOperationException("The line height is greater than page height.");
+            }
 
             // Round down to ensure lines don't clip on bottom
             linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
@@ -158,7 +166,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             wrappedLines = MeasureLines(g, document); // new List<string>();
 
-            int n = (int)Math.Ceiling((double)wrappedLines.Count / (double)linesPerPage);
+            var n = (int)Math.Ceiling((double)wrappedLines.Count / (double)linesPerPage);
 
             Log.Debug("Rendered {pages} of {linesperpage} for a total of {lines}.", n, linesPerPage, wrappedLines.Count);
 
@@ -171,15 +179,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             var wrapped = new List<WrappedLine>();
 
             minCharWidth = MeasureString(g, "W").Width;
-            int minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
+            var minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
             string line;
-            int lineCount = 0;
+            var lineCount = 0;
 
             // convert string to stream
-            byte[] byteArray = Encoding.UTF8.GetBytes(document);
-            MemoryStream stream = new MemoryStream(byteArray);
-            StreamReader reader = new StreamReader(stream);
+            var byteArray = Encoding.UTF8.GetBytes(document);
+            var stream = new MemoryStream(byteArray);
+            var reader = new StreamReader(stream);
             while ((line = reader.ReadLine()) != null) {
                 // Expand tabs
                 if (tabSpaces > 0) {
@@ -207,15 +215,17 @@ namespace WinPrint.Core.ContentTypeEngines {
             // next page
             // FF at end of line - Next line should be top of next page
 
-            string lineToAdd = "";
+            var lineToAdd = "";
 
-            for (int i = 0; i < line.Length; i++) {
+            for (var i = 0; i < line.Length; i++) {
                 if (line[i] == '\f') {
                     if (lineToAdd.Length > 0) {
                         // FF was NOT at start of line. Add it.
                         AddLine(g, list, lineToAdd, minLineLen, lineCount);
                         // if we're not at the end of the line t increment line #
-                        if (i < line.Length - 1) lineCount++;
+                        if (i < line.Length - 1) {
+                            lineCount++;
+                        }
                     }
 
                     // Add blank lines to get to next page
@@ -233,25 +243,27 @@ namespace WinPrint.Core.ContentTypeEngines {
                     lineToAdd += line[i];
                 }
             }
-            if (lineToAdd.Length > 0)
+            if (lineToAdd.Length > 0) {
                 AddLine(g, list, lineToAdd, minLineLen, lineCount);
+            }
+
             return lineCount;
         }
 
         // TODO: Profile AddLine for performance
         private int AddLine(Graphics g, List<WrappedLine> wrappedList, string lineToAdd, int minLineLen, int lineCount) {
-            MeasureString(g, lineToAdd, out int numCharsThatFit, out int l1);
+            MeasureString(g, lineToAdd, out var numCharsThatFit, out var l1);
             //Log.Debug("   AddLine: {lineToAdd} - this line should {not}wrap", lineToAdd, lineToAdd.Length <= numCharsThatFit ? "not " : "");
             if (lineToAdd.Length > numCharsThatFit) { // TODO: should this be >?
                 // This line wraps. Figure out by how much.
                 // Starting at minLineLen into the line, keep trying until it wraps again
                 // For fixed-pitch fonts, minLineLen will match exactly, so all this is not needed
                 // But for variable-pitched fonts, we have to char-by-char
-                int start = 0;
-                int end = minLineLen;
-                for (int i = minLineLen; i <= lineToAdd.Length; i++) {
-                    string truncatedLine = lineToAdd[start..end++];
-                    MeasureString(g, truncatedLine, out int numCharsThatFitTruncated, out int l2);
+                var start = 0;
+                var end = minLineLen;
+                for (var i = minLineLen; i <= lineToAdd.Length; i++) {
+                    var truncatedLine = lineToAdd[start..end++];
+                    MeasureString(g, truncatedLine, out var numCharsThatFitTruncated, out var l2);
                     if (truncatedLine.Length > numCharsThatFitTruncated) {
 
                         // The truncated line fnow too big, so shorten it by one char and add it
@@ -267,7 +279,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                         AddLine(g, wrappedList, lineToAdd[truncatedLine.Length..^0], minLineLen, 0);
 
                         // exit for loop
-                        break; 
+                        break;
                     }
                 }
             }
@@ -283,8 +295,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         private SizeF MeasureString(Graphics g, string text) {
-            int charsFitted, linesFilled;
-            return MeasureString(g, text, out charsFitted, out linesFilled);
+            return MeasureString(g, text, out var charsFitted, out var linesFilled);
         }
 
 
@@ -299,7 +310,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         private SizeF MeasureString(Graphics g, string text, out int charsFitted, out int linesFilled) {
             if (g is null) {
                 // define context used for determining glyph metrics.        
-                using Bitmap bitmap = new Bitmap(1, 1);
+                using var bitmap = new Bitmap(1, 1);
                 g = Graphics.FromImage(bitmap);
                 //g = Graphics.FromHwnd(PrintPreview.Instance.Handle);
                 g.PageUnit = GraphicsUnit.Display;
@@ -308,10 +319,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             // determine width     
-            float fontHeight = lineHeight;
+            var fontHeight = lineHeight;
             // Use page settings including lineNumberWidth
-            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight + (lineHeight / 2));
-            SizeF size = g.MeasureString(text, cachedFont, proposedSize, ContentTypeEngineBase.StringFormat, out charsFitted, out linesFilled);
+            var proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight + (lineHeight / 2));
+            var size = g.MeasureString(text, cachedFont, proposedSize, ContentTypeEngineBase.StringFormat, out charsFitted, out linesFilled);
 
             // TODO: HACK to work around MeasureString not working right on Linux
             //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -328,40 +339,36 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage($"{pageNum}");
             if (wrappedLines == null) {
                 Log.Debug("wrappedLines must not be null");
-                return; 
+                return;
             }
 
-            //if (pageNum > NumPages) {
-            //    Helpers.Logging.TraceMessage($"TextFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
-            //    return;
-            //}
-
-            float leftMargin = 0;// containingSheet.GetPageX(pageNum);
+            float leftMargin = 0;
 
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
-            //PaintLineNumberSeparator(g);
-
             // Print each line of the file.
-            int startLine = linesPerPage * (pageNum - 1);
-            int endLine = startLine + linesPerPage;
+            var startLine = linesPerPage * (pageNum - 1);
+            var endLine = startLine + linesPerPage;
             int lineOnPage;
             for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
-                int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
+                var lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
                 if (lineInDocument < wrappedLines.Count && lineInDocument >= startLine && lineInDocument <= endLine) {
-                    if (wrappedLines[lineInDocument].nonWrappedLineNumber > 0)
+                    if (wrappedLines[lineInDocument].nonWrappedLineNumber > 0) {
                         PaintLineNumber(g, pageNum, lineInDocument);
-                    float xPos = leftMargin + lineNumberWidth;
-                    float yPos = lineOnPage * lineHeight;
+                    }
+
+                    var xPos = leftMargin + lineNumberWidth;
+                    var yPos = lineOnPage * lineHeight;
 
                     // Line # separator
                     // TODO: Support setting color of line #s and separator
-                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos+lineHeight);
+                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + lineHeight);
 
                     // Text
                     g.DrawString(wrappedLines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, ContentTypeEngineBase.StringFormat);
-                    if (ContentSettings.Diagnostics)
+                    if (ContentSettings.Diagnostics) {
                         g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
+                    }
                 }
             }
             Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage - 1, startLine, endLine);
@@ -370,9 +377,9 @@ namespace WinPrint.Core.ContentTypeEngines {
         // TODO: Allow a different (non-monospace) font for line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (LineNumbers == true && lineNumberWidth != 0) {
-                int lineOnPage = lineNumber % linesPerPage;
+                var lineOnPage = lineNumber % linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
-                int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{wrappedLines[lineNumber].nonWrappedLineNumber}").Width) : 0;
+                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{wrappedLines[lineNumber].nonWrappedLineNumber}").Width) : 0;
                 g.DrawString($"{wrappedLines[lineNumber].nonWrappedLineNumber}", cachedFont, Brushes.Gray, x, lineOnPage * lineHeight, ContentTypeEngineBase.StringFormat);
             }
         }

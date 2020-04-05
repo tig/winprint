@@ -27,8 +27,9 @@ namespace LiteHtmlSharp {
             }
 
             ~LibraryUnloader() {
-                if (handle != null)
+                if (handle != null) {
                     FreeLibrary(handle);
+                }
             }
 
             private IntPtr handle;
@@ -40,15 +41,18 @@ namespace LiteHtmlSharp {
         static NativeMethods() {
             string path;
 
-            if (IntPtr.Size == 4)
+            if (IntPtr.Size == 4) {
                 path = "path/to/the/32/bit/Foo.dll";
-            else
+            }
+            else {
                 path = "path/to/the/64/bit/Foo.dll";
+            }
 
-            IntPtr handle = LoadLibrary(path);
+            var handle = LoadLibrary(path);
 
-            if (handle == null)
+            if (handle == null) {
                 throw new DllNotFoundException("unable to find the native Foo library: " + path);
+            }
 
             unloader = new LibraryUnloader(handle);
         }

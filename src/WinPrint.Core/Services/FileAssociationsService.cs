@@ -48,8 +48,8 @@ namespace WinPrint.Core.Services {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }
 
-            List<Langauge> langs = new List<Langauge>(associations.Languages);
-            List<Langauge> langsSettings = new List<Langauge>(ModelLocator.Current.Settings.LanguageAssociations.Languages);
+            var langs = new List<Langauge>(associations.Languages);
+            var langsSettings = new List<Langauge>(ModelLocator.Current.Settings.LanguageAssociations.Languages);
 
             // TODO: overide Equals and GetHashCode for Langauge
             var result = langsSettings.Union(langs).ToList();

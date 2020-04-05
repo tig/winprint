@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Resolvers;
 using Octokit;
-using Serilog;
 
 namespace WinPrint.Core.Services {
     /// <summary>
@@ -136,7 +131,7 @@ namespace WinPrint.Core.Services {
             var client = new WebClient();
             client.DownloadDataCompleted += Client_DownloadDataCompleted;
             client.DownloadProgressChanged += Client_DownloadProgressChanged;
-            File.WriteAllBytes(_tempFilename, (byte[])await client.DownloadDataTaskAsync(InstallerUri)) ;
+            File.WriteAllBytes(_tempFilename, (byte[])await client.DownloadDataTaskAsync(InstallerUri));
             return _tempFilename;
         }
 

@@ -21,7 +21,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         protected new bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null) {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            if (EqualityComparer<T>.Default.Equals(field, value)) {
+                return false;
+            }
+
             field = value;
             OnPropertyChanged(propertyName);
             OnSettingsChanged(true);
@@ -101,8 +104,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <returns>Number of sheets.</returns>
         public virtual async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
-            if (Document == null)
+            if (Document == null) {
                 throw new ArgumentNullException("Document can't be null for Render");
+            }
+
             return await Task.FromResult(0);
         }
 
@@ -163,10 +168,11 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <param name="filePath"></param>
         /// <returns>The content type</returns>
         public static string GetContentType(string filePath) {
-            string contentType = "text/plain";
+            var contentType = "text/plain";
 
-            if (string.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath)) {
                 return contentType;
+            }
 
             // Expand path
             filePath = Path.GetFullPath(filePath);
@@ -174,13 +180,13 @@ namespace WinPrint.Core.ContentTypeEngines {
             // If there's a file extension get the content type from the file type association mapper
             var ext = Path.GetExtension(filePath).ToLower();
             if (ext != string.Empty) {
-                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out string ct)) {
+                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out var ct)) {
                     contentType = ct;
                 }
             }
             else {
                 // Empty means no extension (e.g. .\.ssh\config) - use filename
-                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + Path.GetFileName(filePath), out string ct)) {
+                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + Path.GetFileName(filePath), out var ct)) {
                     contentType = ct;
                 }
             }

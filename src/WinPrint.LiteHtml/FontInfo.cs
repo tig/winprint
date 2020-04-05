@@ -32,7 +32,7 @@ namespace WinPrint.LiteHtml {
             float em_height = the_font.FontFamily.GetEmHeight(the_font.Style);
             EmHeightPixels = ConvertUnits(gr, the_font.Size,
                 the_font.Unit, GraphicsUnit.Pixel);
-            float design_to_pixels = EmHeightPixels / em_height;
+            var design_to_pixels = EmHeightPixels / em_height;
 
             AscentPixels = design_to_pixels *
                 the_font.FontFamily.GetCellAscent(the_font.Style);
@@ -51,20 +51,22 @@ namespace WinPrint.LiteHtml {
         }
 
         public FontInfo(Graphics gr, string faceName, FontStyle style, int size, FontFamily fontFamily = null) {
-            using Bitmap bitmap = new Bitmap(1, 1);
+            using var bitmap = new Bitmap(1, 1);
             if (gr == null) {
                 gr = Graphics.FromImage(bitmap);
                 gr.PageUnit = GraphicsUnit.Pixel;
             }
 
             Font = new Font(familyName: faceName, size, style, GraphicsUnit.Pixel);
-            if (!Font.FontFamily.Name.Equals(faceName, StringComparison.OrdinalIgnoreCase))
+            if (!Font.FontFamily.Name.Equals(faceName, StringComparison.OrdinalIgnoreCase)) {
                 throw new Exception($"{faceName} not found");
+            }
+
             Family = Font.FontFamily;
 
             float em_height = Font.FontFamily.GetEmHeight(Font.Style);
             EmHeightPixels = ConvertUnits(gr, Font.Size, Font.Unit, GraphicsUnit.Pixel);
-            float design_to_pixels = EmHeightPixels / em_height;
+            var design_to_pixels = EmHeightPixels / em_height;
 
             AscentPixels = design_to_pixels * Font.FontFamily.GetCellAscent(Font.Style);
             DescentPixels = design_to_pixels * Font.FontFamily.GetCellDescent(Font.Style);
@@ -88,7 +90,9 @@ namespace WinPrint.LiteHtml {
         // Convert from one type of unit to another.
         // I don't know how to do Display or World.
         private float ConvertUnits(Graphics gr, float value, GraphicsUnit from_unit, GraphicsUnit to_unit) {
-            if (from_unit == to_unit) return value;
+            if (from_unit == to_unit) {
+                return value;
+            }
 
             // Convert to pixels. 
             switch (from_unit) {
@@ -153,8 +157,9 @@ namespace WinPrint.LiteHtml {
             if (!disposedValue) {
                 if (disposing) {
                     // TODO: dispose managed state (managed objects).
-                    if (Font != null)
+                    if (Font != null) {
                         Font.Dispose();
+                    }
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

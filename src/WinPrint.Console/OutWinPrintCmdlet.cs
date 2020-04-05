@@ -5,12 +5,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Globalization;
-using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
-using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -87,7 +85,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// For the -Verbose switch
         /// </summary>
-        private bool _verbose { get => MyInvocation.BoundParameters.TryGetValue("Verbose", out object o); }
+        private bool _verbose { get => MyInvocation.BoundParameters.TryGetValue("Verbose", out var o); }
 
         /// <summary>
         /// For the -Debug switch
@@ -111,7 +109,7 @@ namespace WinPrint.Console {
         [Parameter(HelpMessage = "Output is the number of sheets that would be printed. Use -Verbose to print the count of pages.",
             ParameterSetName = "Print")]
         public SwitchParameter WhatIf { get; set; }
-        private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out object o); }
+        private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out var o); }
 
         /// <summary>
         /// -InstallUpdate switch
@@ -119,7 +117,7 @@ namespace WinPrint.Console {
         [Parameter(HelpMessage = "If an updated version of winprint is available online, download and install it.",
             ParameterSetName = "Updates")]
         public SwitchParameter InstallUpdate { get; set; }
-        private bool _installUpdate { get => MyInvocation.BoundParameters.TryGetValue("InstallUpdate", out object o); }
+        private bool _installUpdate { get => MyInvocation.BoundParameters.TryGetValue("InstallUpdate", out var o); }
 
         /// <summary>
         /// -Force switch
@@ -127,7 +125,7 @@ namespace WinPrint.Console {
         [Parameter(HelpMessage = "Allows winprint to kill the host Powershell process when updating.",
             ParameterSetName = "Updates")]
         public SwitchParameter Force { get; set; }
-        private bool _force { get => MyInvocation.BoundParameters.TryGetValue("Force", out object o); }
+        private bool _force { get => MyInvocation.BoundParameters.TryGetValue("Force", out var o); }
         #endregion
 
         #region Update Service Related Code
@@ -148,7 +146,7 @@ namespace WinPrint.Console {
 
         private void UpdateService_DownloadProgressChanged(object sender, System.Net.DownloadProgressChangedEventArgs e) {
             //Debug.WriteLine("UpdateService_DownloadProgressChanged");
-            ProgressRecord rec = new ProgressRecord(0, "Downloading", "Downloading");
+            var rec = new ProgressRecord(0, "Downloading", "Downloading");
             rec.CurrentOperation = $"Downloading";
             rec.PercentComplete = e.ProgressPercentage;
             WriteProgress(rec);
@@ -161,7 +159,7 @@ namespace WinPrint.Console {
             var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(true);
 
 #if DEBUG
-            string log = "-lv winprint.msiexec.log";
+            var log = "-lv winprint.msiexec.log";
 #else
             string log = "";
 #endif
@@ -174,7 +172,7 @@ namespace WinPrint.Console {
             };
 
             Log.Information($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
-            ProgressRecord rec = new ProgressRecord(0, "Installing", $"Download Complete");
+            var rec = new ProgressRecord(0, "Installing", $"Download Complete");
             rec.CurrentOperation = $"Installing";
             rec.PercentComplete = -1;
             //await Task.Run(() => WriteProgress(rec));
@@ -194,8 +192,8 @@ namespace WinPrint.Console {
                 //"Exit this Powershell instance?"))) {
                 ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
                 "Exit this Powershell instance?")) {
-                    // Kill process?
-                    System.Environment.Exit(0);
+                // Kill process?
+                System.Environment.Exit(0);
             }
             return true;
         }
@@ -258,7 +256,7 @@ namespace WinPrint.Console {
                 return;
             }
 
-            IDictionary dictionary = InputObject.BaseObject as IDictionary;
+            var dictionary = InputObject.BaseObject as IDictionary;
             if (dictionary != null) {
                 // Dictionaries should be enumerated through because the pipeline does not enumerate through them.
                 foreach (DictionaryEntry entry in dictionary) {
@@ -272,14 +270,14 @@ namespace WinPrint.Console {
 
         private void ProcessObject(PSObject input) {
 
-            object baseObject = input.BaseObject;
+            var baseObject = input.BaseObject;
 
             // Throw a terminating error for types that are not supported.
             if (baseObject is ScriptBlock ||
                 baseObject is SwitchParameter ||
                 baseObject is PSReference ||
                 baseObject is PSObject) {
-                ErrorRecord error = new ErrorRecord(
+                var error = new ErrorRecord(
                     new FormatException($"Invalid data type for {MyInvocation.InvocationName}"),
                     DataNotQualifiedForWinprint,
                     ErrorCategory.InvalidType,
@@ -321,14 +319,14 @@ namespace WinPrint.Console {
 
             //var settings = ServiceLocator.Current.SettingsService.ReadSettings();
 
-            ProgressRecord rec = new ProgressRecord(1, "Printing", "Printing...");
+            var rec = new ProgressRecord(1, "Printing", "Printing...");
             rec.PercentComplete = 0;
             rec.StatusDescription = "Initializing winprint";
             WriteProgress(rec);
 
             // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
             var result = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null);
-            string text = result[0].ToString();
+            var text = result[0].ToString();
 
             Debug.Assert(_print != null);
             if (!string.IsNullOrEmpty(PrinterName)) {
@@ -341,8 +339,10 @@ namespace WinPrint.Console {
                 catch (InvalidPrinterException e) {
                     //Log.Error<InvalidPrinterException>(e, "", e);
                     Log.Information("Installed printers:");
-                    foreach (string printer in PrinterSettings.InstalledPrinters)
+                    foreach (string printer in PrinterSettings.InstalledPrinters) {
                         Log.Information("   {printer}", printer);
+                    }
+
                     Log.Fatal(e, "");
                 }
             }
@@ -367,8 +367,7 @@ namespace WinPrint.Console {
 
 
             try {
-                string sheetID;
-                SheetSettings sheet = _print.SheetViewModel.FindSheet(SheetDefintion, out sheetID);
+                var sheet = _print.SheetViewModel.FindSheet(SheetDefintion, out var sheetID);
 
                 if (_verbose) {
                     Log.Information("    Printer:          {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
@@ -385,7 +384,7 @@ namespace WinPrint.Console {
                 _print.SheetViewModel.SetSheet(sheet);
             }
             catch (InvalidOperationException e) {
-                Log.Debug("Could not find sheet settings");
+                Log.Error(e, "Could not find sheet settings");
                 CleanUp();
                 return;
             }
@@ -411,21 +410,21 @@ namespace WinPrint.Console {
                 else {
                     sheetsCounted = await _print.DoPrint().ConfigureAwait(true);
                 }
-            } catch (System.ComponentModel.Win32Exception w32e) {
+            }
+            catch (System.ComponentModel.Win32Exception w32e) {
+                // This can happen when PDF driver can't access PDF file.
                 Log.Error(w32e, "Print failed.");
-                CleanUp();
-                return;
-            } catch (Exception e) {
-                Log.Error(e, "Print failed.");
                 CleanUp();
                 return;
             }
 
             if (_verbose) {
-                if (ModelLocator.Current.Options.CountPages)
+                if (ModelLocator.Current.Options.CountPages) {
                     Log.Information("Would have printed a total of {pagesCounted} sheets.", sheetsCounted);
-                else
+                }
+                else {
                     Log.Information("Printed a total of {pagesCounted} sheets.", sheetsCounted);
+                }
             }
 
             // Don't write anything out to the pipeline if PassThru wasn't specified.
@@ -441,8 +440,9 @@ namespace WinPrint.Console {
 
 
             // End by sharing update info, if any
-            if (!string.IsNullOrEmpty(_updateMsg))
+            if (!string.IsNullOrEmpty(_updateMsg)) {
                 Log.Information(_updateMsg);
+            }
 
             CleanUp();
         }
@@ -531,15 +531,15 @@ namespace WinPrint.Console {
             // just call Monad API
             this.WriteObject(value);
         }
-#endregion
+        #endregion
 
-#region IDisposable Implementation
+        #region IDisposable Implementation
 
         /// <summary>
         /// Default implementation just delegates to internal helper.
         /// </summary>
         /// <remarks>This method calls GC.SuppressFinalize</remarks>
-        public new void  Dispose() {
+        public new void Dispose() {
             Dispose(true);
 
             //GC.SuppressFinalize(this);
@@ -560,7 +560,7 @@ namespace WinPrint.Console {
             }
         }
 
-#endregion
+        #endregion
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e) {
             ServiceLocator.Current.TelemetryService.TrackException(e.Exception);

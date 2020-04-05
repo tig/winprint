@@ -10,11 +10,11 @@ namespace WinPrintInstaller {
         static void Main() {
             const string sourceBaseDir = @"..\..\release";
             const string outDir = @"..\..\install";
-            string versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
+            var versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
             Debug.WriteLine($"version path: {versionFile}");
             var info = FileVersionInfo.GetVersionInfo(versionFile);
 
-            Feature feature = new Feature(new Id("winprint"));
+            var feature = new Feature(new Id("winprint"));
 
             var project = new Project(info.ProductName, new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
 

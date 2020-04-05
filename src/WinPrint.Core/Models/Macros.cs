@@ -18,7 +18,7 @@ namespace WinPrint.Core {
         /// <summary>
         /// The extension (including the period ".").
         /// </summary>
-        public string FileExtension { get => string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File);  }
+        public string FileExtension { get => string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File); }
         /// <summary>
         /// The file name and extension. If FileName was not provided, Title will be used.
         /// </summary>
@@ -38,7 +38,7 @@ namespace WinPrint.Core {
         /// <summary>
         /// The absolute path for the file.
         /// </summary>
-        public string FullPath { get => IsValidFilename(svm.File) ?  Path.GetFullPath(svm.File) : (string.IsNullOrEmpty(svm.File) ? "" : svm.File) ; }
+        public string FullPath { get => IsValidFilename(svm.File) ? Path.GetFullPath(svm.File) : (string.IsNullOrEmpty(svm.File) ? "" : svm.File); }
         /// <summary>
         /// The time and date when printed.
         /// </summary>
@@ -46,11 +46,11 @@ namespace WinPrint.Core {
         /// <summary>
         /// The time and date teh file was last revised.
         /// </summary>
-        public DateTime DateRevised { get => IsValidFilename(svm.File) ?  File.GetLastWriteTime(svm.File) : DateTime.MinValue; }
+        public DateTime DateRevised { get => IsValidFilename(svm.File) ? File.GetLastWriteTime(svm.File) : DateTime.MinValue; }
         /// <summary>
         /// The file type (e.g. "text/plain" or "csharp").
         /// </summary>
-        public DateTime DateCreated { get => IsValidFilename(svm.File) ?  File.GetCreationTime(svm.File) : DateTime.MinValue; }
+        public DateTime DateCreated { get => IsValidFilename(svm.File) ? File.GetCreationTime(svm.File) : DateTime.MinValue; }
         /// <summary>
         /// The file type (e.g. "text/plain" or "csharp").
         /// </summary>
@@ -67,23 +67,30 @@ namespace WinPrint.Core {
 
         // https://stackoverflow.com/questions/62771/how-do-i-check-if-a-given-string-is-a-legal-valid-file-name-under-windows#62855
         bool IsValidFilename(string testName) {
-            if (string.IsNullOrEmpty(testName)) return false;
-            Regex containsABadCharacter = new Regex("["
+            if (string.IsNullOrEmpty(testName)) {
+                return false;
+            }
+
+            var containsABadCharacter = new Regex("["
                   + Regex.Escape(new string(System.IO.Path.GetInvalidPathChars())) + "]");
             if (containsABadCharacter.IsMatch(testName)) { return false; };
 
             // other checks for UNC, drive-path format, etc
 
-            if (!File.Exists(testName)) return false;
+            if (!File.Exists(testName)) {
+                return false;
+            }
 
             return true;
         }
 
         // Title and FileName are synomous. 
         private string GetFileNameOrTitle() {
-            string retval = "";
+            var retval = "";
 
-            if (string.IsNullOrEmpty(svm.File)) return retval;
+            if (string.IsNullOrEmpty(svm.File)) {
+                return retval;
+            }
 
             try {
                 retval = Path.GetFileName(svm.File);
@@ -108,10 +115,10 @@ namespace WinPrint.Core {
             return Regex.Replace(value, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match => {
                 var p = System.Linq.Expressions.Expression.Parameter(typeof(Macros), "Macros");
 
-                Group startGroup = match.Groups["start"];
-                Group propertyGroup = match.Groups["property"];
-                Group formatGroup = match.Groups["format"];
-                Group endGroup = match.Groups["end"];
+                var startGroup = match.Groups["start"];
+                var propertyGroup = match.Groups["property"];
+                var formatGroup = match.Groups["format"];
+                var endGroup = match.Groups["end"];
 
                 LambdaExpression e;
                 try {
@@ -121,10 +128,12 @@ namespace WinPrint.Core {
                     // Non-existant Property or other parse error
                     return propertyGroup.Value;
                 }
-                if (formatGroup.Success)
+                if (formatGroup.Success) {
                     return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", e.Compile().DynamicInvoke(this));
-                else
+                }
+                else {
                     return (e.Compile().DynamicInvoke(this) ?? "").ToString();
+                }
             });
         }
     }

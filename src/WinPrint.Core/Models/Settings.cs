@@ -85,8 +85,10 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public int NumSheets {
             get {
-                if (Sheets == null)
+                if (Sheets == null) {
                     return 0;
+                }
+
                 return Sheets.Count;
             }
         }
@@ -105,8 +107,10 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public int NumFilesAssociations {
             get {
-                if (LanguageAssociations == null || LanguageAssociations.FilesAssociations == null)
+                if (LanguageAssociations == null || LanguageAssociations.FilesAssociations == null) {
                     return 0;
+                }
+
                 return LanguageAssociations.FilesAssociations.Count;
             }
         }
@@ -115,8 +119,10 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public int NumLanguages {
             get {
-                if (LanguageAssociations == null || LanguageAssociations.Languages == null)
+                if (LanguageAssociations == null || LanguageAssociations.Languages == null) {
                     return 0;
+                }
+
                 return LanguageAssociations.Languages.Count;
             }
         }
@@ -191,23 +197,23 @@ namespace WinPrint.Core.Models {
         /// </summary>
         /// <returns>A Settings object with default settings.</returns>
         public static Settings CreateDefaultSettings() {
-            string monoSpaceFamily = "monospace";
-            string sansSerifFamily = "sansserif";
+            var monoSpaceFamily = "monospace";
+            var sansSerifFamily = "sansserif";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 monoSpaceFamily = "Consolas";
                 sansSerifFamily = "Microsoft Sans Serif";
             }
 
-            string defaultContentFontFamily = monoSpaceFamily;
-            float defaultContentFontSize = 8F;
-            FontStyle defaultContentFontStyle = FontStyle.Regular;
+            var defaultContentFontFamily = monoSpaceFamily;
+            var defaultContentFontSize = 8F;
+            var defaultContentFontStyle = FontStyle.Regular;
 
-            string defaultHFFontFamily = sansSerifFamily;
-            float defaultHFFontSize = 10F;
-            FontStyle defaultHFFontStyle = FontStyle.Bold;
+            var defaultHFFontFamily = sansSerifFamily;
+            var defaultHFFontSize = 10F;
+            var defaultHFFontStyle = FontStyle.Bold;
 
-            string defaultHeaderText = "{DateRevised:D}|{FullyQualifiedPath}|Type: {FileType}";
-            string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
+            var defaultHeaderText = "{DateRevised:D}|{FullyQualifiedPath}|Type: {FileType}";
+            var defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
             var settings = new Settings();
 

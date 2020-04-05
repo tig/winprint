@@ -52,7 +52,7 @@ namespace WinPrint.Core.UnitTests.Models
 
             Assert.True(json.Length > 0);
 
-            var doc2 = JsonSerializer.Deserialize<Core.Models.SheetSettings>(json);
+            SheetSettings doc2 = JsonSerializer.Deserialize<Core.Models.SheetSettings>(json);
             Assert.NotNull(doc2);
         }
 
@@ -67,13 +67,13 @@ namespace WinPrint.Core.UnitTests.Models
 
             string jsonString = JsonSerializer.Serialize(doc, jsonOptions); ;
 
-            var writerOptions = new JsonWriterOptions { Indented = true };
-            var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
+            JsonWriterOptions writerOptions = new JsonWriterOptions { Indented = true };
+            JsonDocumentOptions documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
 
             // Use the name of the test file as the Document.File property
             using (FileStream fs = File.Create(file))
 
-            using (var writer = new Utf8JsonWriter(fs, options: writerOptions))
+            using (Utf8JsonWriter writer = new Utf8JsonWriter(fs, options: writerOptions))
             using (JsonDocument document = JsonDocument.Parse(jsonString, documentOptions))
             {
                 JsonElement root = document.RootElement;
@@ -97,7 +97,7 @@ namespace WinPrint.Core.UnitTests.Models
                 writer.Flush();
             }
 
-            var docCopy = DeserializeFromFile(file);
+            SheetSettings docCopy = DeserializeFromFile(file);
             string jsonCopy = JsonSerializer.Serialize(docCopy, jsonOptions);
             Assert.NotNull(jsonCopy);
 
@@ -217,7 +217,7 @@ namespace WinPrint.Core.UnitTests.Models
             Assert.NotNull(json);
             Assert.True(json.Length > 0);
 
-            var font2 = JsonSerializer.Deserialize<Core.Models.Font>(json);
+            Core.Models.Font font2 = JsonSerializer.Deserialize<Core.Models.Font>(json);
             Assert.NotNull(font2);
             Assert.Equal(font.Family, font2.Family);
             Assert.Equal(font.Size, font2.Size);
@@ -229,7 +229,7 @@ namespace WinPrint.Core.UnitTests.Models
         {
             // Defaults
             string json = "{\"Family\":\"Microsoft Sans Serif\",\"Style\":\"Regular\",\"Size\":8}";
-            var font = JsonSerializer.Deserialize<Core.Models.Font>(json, jsonOptions);
+            Core.Models.Font font = JsonSerializer.Deserialize<Core.Models.Font>(json, jsonOptions);
             Assert.NotNull(font);
             Assert.Equal("Microsoft Sans Serif", font.Family);
             Assert.Equal(8, font.Size);
@@ -276,7 +276,7 @@ namespace WinPrint.Core.UnitTests.Models
             settings.Sheets = new Dictionary<string, SheetSettings>() {
                 { "test", new SheetSettings() }
             };
-            var dict = settings.GetTelemetryDictionary();
+            IDictionary<string, string> dict = settings.GetTelemetryDictionary();
             Assert.NotNull(dict);
         }
 

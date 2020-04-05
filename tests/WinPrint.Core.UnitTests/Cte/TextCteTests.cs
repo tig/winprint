@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Text;
-using System.IO;
-using System.Text;
+﻿using System.Drawing;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -23,14 +18,14 @@ namespace WinPrint.Core.UnitTests.Cte
         [Fact]
         public void GetContentTypeNameTest()
         {
-            var cte = new TextCte();
+            TextCte cte = new TextCte();
             Assert.Equal("text/plain", cte.GetContentTypeName());
         }
 
         [Fact]
         public async void CreateContentTypeEngineTest()
         {
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
 
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
             Assert.Equal("text/plain", svm.ContentEngine.GetContentTypeName());
@@ -44,12 +39,12 @@ namespace WinPrint.Core.UnitTests.Cte
         {
             //
             // Setup FileAssocaitons service
-            var settings = Settings.CreateDefaultSettings();
+            Settings settings = Settings.CreateDefaultSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
             // obviouslly text
             string path = "foo.txt";
-            var type = ContentTypeEngineBase.GetContentType(path);
+            string type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/plain", type);
 
             // html
@@ -93,12 +88,12 @@ namespace WinPrint.Core.UnitTests.Cte
         public async void RenderAsyncTest_FixedPitch()
         {
             string shortLine = "This is a line 0123456789";
-            string longLine =  "This is a line 01234567890";
+            string longLine = "This is a line 01234567890";
 
-            var settings = Settings.CreateDefaultSettings();
+            Settings settings = Settings.CreateDefaultSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
             svm.ContentEngine.ContentSettings = new ContentSettings();
 
@@ -108,13 +103,13 @@ namespace WinPrint.Core.UnitTests.Cte
             // Setup page so 10 chars can fit across
             using Bitmap bitmap = new Bitmap(1, 1);
             bitmap.SetResolution(96, 96);
-            var g = Graphics.FromImage(bitmap);
+            Graphics g = Graphics.FromImage(bitmap);
             g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             // Set a font that's 1" high
             svm.ContentEngine.ContentSettings.Font = new Core.Models.Font() { Family = "Courier New", Size = 72 }; // 72 points is 1" high
-            var font = new System.Drawing.Font(svm.ContentEngine.ContentSettings.Font.Family,
+            System.Drawing.Font font = new System.Drawing.Font(svm.ContentEngine.ContentSettings.Font.Family,
                 svm.ContentEngine.ContentSettings.Font.Size / 72F * 96,
                 svm.ContentEngine.ContentSettings.Font.Style, GraphicsUnit.Pixel);
 
@@ -157,12 +152,12 @@ namespace WinPrint.Core.UnitTests.Cte
         public async void RenderAsyncTest_VariablePitch()
         {
             string shortLine = "1 01234567890123456789";
-            string longLine  = "2 01234567890123456789A";
+            string longLine = "2 01234567890123456789A";
 
-            var settings = Settings.CreateDefaultSettings();
+            Settings settings = Settings.CreateDefaultSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
             svm.ContentEngine.ContentSettings = new ContentSettings();
 
@@ -172,13 +167,13 @@ namespace WinPrint.Core.UnitTests.Cte
             // Setup page so 10 chars can fit across
             using Bitmap bitmap = new Bitmap(1, 1);
             bitmap.SetResolution(96, 96);
-            var g = Graphics.FromImage(bitmap);
+            Graphics g = Graphics.FromImage(bitmap);
             g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             // Set a font that's 1" high
             svm.ContentEngine.ContentSettings.Font = new Core.Models.Font() { Family = "Arial", Size = 72 }; // 72 points is 1" high
-            var font = new System.Drawing.Font(svm.ContentEngine.ContentSettings.Font.Family,
+            System.Drawing.Font font = new System.Drawing.Font(svm.ContentEngine.ContentSettings.Font.Family,
                 svm.ContentEngine.ContentSettings.Font.Size / 72F * 96,
                 svm.ContentEngine.ContentSettings.Font.Style, GraphicsUnit.Pixel);
 

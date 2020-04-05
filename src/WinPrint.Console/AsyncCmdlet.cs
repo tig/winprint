@@ -52,8 +52,9 @@ namespace WinPrint.Console {
         ///		Explicit disposal?
         /// </param>
         protected virtual void Dispose(bool disposing) {
-            if (disposing)
+            if (disposing) {
                 _cancellationSource.Dispose();
+            }
         }
 
         public int ProcessingCount { get; set; } = 0;
@@ -183,9 +184,9 @@ namespace WinPrint.Console {
         ///		The progress record to write.
         /// </param>
         protected void WriteVerboseProgress(ProgressRecord progressRecord) {
-            if (progressRecord == null)
+            if (progressRecord == null) {
                 throw new ArgumentNullException(nameof(progressRecord));
-
+            }
 
             WriteProgress(progressRecord);
             WriteVerbose(progressRecord.StatusDescription);
@@ -205,17 +206,17 @@ namespace WinPrint.Console {
         ///		Optional format arguments.
         /// </param>
         protected void WriteVerboseProgress(ProgressRecord progressRecord, string messageOrFormat, params object[] formatArguments) {
-            if (progressRecord == null)
+            if (progressRecord == null) {
                 throw new ArgumentNullException(nameof(progressRecord));
+            }
 
-
-            if (String.IsNullOrWhiteSpace(messageOrFormat))
+            if (String.IsNullOrWhiteSpace(messageOrFormat)) {
                 throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'messageOrFormat'.", nameof(messageOrFormat));
+            }
 
-
-            if (formatArguments == null)
+            if (formatArguments == null) {
                 throw new ArgumentNullException(nameof(formatArguments));
-
+            }
 
             progressRecord.StatusDescription = string.Format(CultureInfo.CurrentCulture, messageOrFormat, formatArguments);
             WriteVerboseProgress(progressRecord);
@@ -235,17 +236,17 @@ namespace WinPrint.Console {
         ///		Optional format arguments.
         /// </param>
         protected void WriteProgressCompletion(ProgressRecord progressRecord, string completionMessageOrFormat, params object[] formatArguments) {
-            if (progressRecord == null)
+            if (progressRecord == null) {
                 throw new ArgumentNullException(nameof(progressRecord));
+            }
 
-
-            if (String.IsNullOrWhiteSpace(completionMessageOrFormat))
+            if (String.IsNullOrWhiteSpace(completionMessageOrFormat)) {
                 throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'completionMessageOrFormat'.", nameof(completionMessageOrFormat));
+            }
 
-
-            if (formatArguments == null)
+            if (formatArguments == null) {
                 throw new ArgumentNullException(nameof(formatArguments));
-
+            }
 
             progressRecord.StatusDescription = string.Format(CultureInfo.CurrentCulture, completionMessageOrFormat, formatArguments);
             progressRecord.PercentComplete = 100;

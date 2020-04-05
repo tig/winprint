@@ -68,7 +68,7 @@ namespace WinPrintInstaller {
             this.appThread.Start();
 
             // Wait for the setup wizard to either kickoff the install or prematurely exit.
-            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { this.installStartEvent, this.installExitEvent });
+            var waitResult = WaitHandle.WaitAny(new WaitHandle[] { this.installStartEvent, this.installExitEvent });
             if (waitResult == 1) {
                 // The setup wizard set the exit event instead of the start event. Cancel the installation.
                 throw new InstallCanceledException();
@@ -95,7 +95,7 @@ namespace WinPrintInstaller {
         public MessageResult ProcessMessage(InstallMessage messageType, Record messageRecord,
             MessageButtons buttons, MessageIcon icon, MessageDefaultButton defaultButton) {
             // Synchronously send the message to the setup wizard window on its thread.
-            object result = this.setupWizard.Dispatcher.Invoke(DispatcherPriority.Send,
+            var result = this.setupWizard.Dispatcher.Invoke(DispatcherPriority.Send,
                 new Func<MessageResult>(delegate () {
                     return this.setupWizard.ProcessMessage(messageType, messageRecord, buttons, icon, defaultButton);
                 }));

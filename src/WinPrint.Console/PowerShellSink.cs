@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Management.Automation;
-using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
@@ -17,13 +16,18 @@ namespace WinPrint.Console {
         public ITextFormatter TextFormatter { get; set; }
 
         public PowerShellSink(AsyncCmdlet cmdlet) {
-            if (cmdlet == null) throw new ArgumentNullException(nameof(cmdlet));
+            if (cmdlet == null) {
+                throw new ArgumentNullException(nameof(cmdlet));
+            }
+
             _cmdlet = cmdlet;
             TextFormatter = new Serilog.Formatting.Display.MessageTemplateTextFormatter("{Message:lj}");
         }
 
         public void Emit(LogEvent logEvent) {
-            if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
+            if (logEvent == null) {
+                throw new ArgumentNullException(nameof(logEvent));
+            }
 
             lock (_syncRoot) {
                 if (_cmdlet.ProcessingCount == 0) {
@@ -31,7 +35,7 @@ namespace WinPrint.Console {
                     return;
                 }
 
-                using StringWriter strWriter = new StringWriter();
+                using var strWriter = new StringWriter();
                 TextFormatter.Format(logEvent, strWriter);
                 try {
                     switch (logEvent.Level) {
@@ -56,15 +60,17 @@ namespace WinPrint.Console {
                         case LogEventLevel.Error:
                             //_cmdlet.WriteDebug("error: " + strWriter.ToString());
                             var ex = logEvent.Exception;
-                            if (logEvent.Exception == null)
+                            if (logEvent.Exception == null) {
                                 ex = new Exception();
-                            ErrorRecord er = new ErrorRecord(ex, errorId: strWriter.ToString(), errorCategory: ErrorCategory.NotSpecified, targetObject: null);
+                            }
+
+                            var er = new ErrorRecord(ex, errorId: strWriter.ToString(), errorCategory: ErrorCategory.NotSpecified, targetObject: null);
                             _cmdlet.WriteError(er);
                             break;
 
                         case LogEventLevel.Fatal:
                             //_cmdlet.WriteDebug("fatal: " + strWriter.ToString());
-                            ErrorRecord fatal = new ErrorRecord(logEvent.Exception, errorId: strWriter.ToString(), errorCategory: ErrorCategory.InvalidOperation, targetObject: null);
+                            var fatal = new ErrorRecord(logEvent.Exception, errorId: strWriter.ToString(), errorCategory: ErrorCategory.InvalidOperation, targetObject: null);
                             _cmdlet.ThrowTerminatingError(fatal);
                             break;
 

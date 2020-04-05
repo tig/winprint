@@ -54,8 +54,9 @@ namespace WinPrint.Core.Services {
             telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
 
 
-            if (startProperties == null)
+            if (startProperties == null) {
                 startProperties = new Dictionary<string, string>();
+            }
 
             // Merged passed in properites
             startProperties.Concat(new Dictionary<string, string> {
@@ -88,8 +89,9 @@ namespace WinPrint.Core.Services {
         }
 
         public void TrackException(Exception ex, bool log = false) {
-            if (ex != null && log is true)
+            if (ex != null && log is true) {
                 Log.Error(ex, "{msg}", ex.Message);
+            }
 
             if (telemetry != null && ex != null && TelemetryEnabled) {
                 var telex = new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry(ex);
@@ -98,8 +100,9 @@ namespace WinPrint.Core.Services {
             }
         }
         internal void Flush() {
-            if (telemetry != null)
+            if (telemetry != null) {
                 telemetry.Flush();
+            }
         }
 
         //private class CustomConverter : TraceTelemetryConverter {

@@ -76,7 +76,10 @@ namespace WinPrint.Core {
 
         public int NumSheets {
             get {
-                if (ContentEngine == null || Rows == 0 || Columns == 0) return 0;
+                if (ContentEngine == null || Rows == 0 || Columns == 0) {
+                    return 0;
+                }
+
                 return (int)Math.Ceiling((double)_numPages / (Rows * Columns));
             }
         }
@@ -128,8 +131,10 @@ namespace WinPrint.Core {
         public bool Loading {
             get => _loading;
             set {
-                if (value != _loading)
+                if (value != _loading) {
                     OnLoaded(value);
+                }
+
                 SetField(ref _loading, value);
             }
         }
@@ -147,8 +152,10 @@ namespace WinPrint.Core {
         public bool Reflowing {
             get => _reflowing;
             set {
-                if (value != _reflowing)
+                if (value != _reflowing) {
                     OnReflowed(value);
+                }
+
                 SetField(ref _reflowing, value);
             }
         }
@@ -209,9 +216,13 @@ namespace WinPrint.Core {
             // TODO: Add header footer details (borders etc...). 
             ServiceLocator.Current.TelemetryService.TrackEvent("Set Sheet Settings", properties: newSheet.GetTelemetryDictionary());
 
-            if (newSheet is null) throw new ArgumentNullException(nameof(newSheet));
-            if (_sheet != null)
+            if (newSheet is null) {
+                throw new ArgumentNullException(nameof(newSheet));
+            }
+
+            if (_sheet != null) {
                 _sheet.PropertyChanged -= OnSheetPropertyChanged();
+            }
 
             _sheet = newSheet;
             Landscape = newSheet.Landscape;
@@ -222,19 +233,25 @@ namespace WinPrint.Core {
             PageSeparator = newSheet.PageSeparator;
             Margins = (Margins)newSheet.Margins.Clone();
 
-            if (_contentSettings != null)
+            if (_contentSettings != null) {
                 _contentSettings.PropertyChanged -= OnContentSettingsPropertyChanged();
+            }
 
             ContentSettings = newSheet.ContentSettings;
-            if (ContentSettings != null)
+            if (ContentSettings != null) {
                 ContentSettings.PropertyChanged += OnContentSettingsPropertyChanged();
+            }
 
-            if (_headerVM != null)
+            if (_headerVM != null) {
                 _headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+            }
+
             Header = new HeaderViewModel(this, newSheet.Header);
             _headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
-            if (_footerVM != null)
+            if (_footerVM != null) {
                 _footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+            }
+
             Footer = new FooterViewModel(this, newSheet.Footer);
             _footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
 
@@ -264,7 +281,7 @@ namespace WinPrint.Core {
             var detected = CharsetDetector.DetectFromFile(filePath).Detected;
             Log.Debug("File encoding: {encoding}", detected);
             Encoding = detected.Encoding;
-            using StreamReader streamToPrint = new StreamReader(filePath, Encoding);
+            using var streamToPrint = new StreamReader(filePath, Encoding);
             return await LoadStringAsync(await streamToPrint.ReadToEndAsync(), contentType);
         }
 
@@ -276,7 +293,9 @@ namespace WinPrint.Core {
         /// <returns>True if content type engine was initialized. False otherwise.</returns>
         public async Task<bool> LoadStringAsync(string document, string contentType) {
             LogService.TraceMessage();
-            if (document == null) throw new ArgumentNullException("document can't be null");
+            if (document == null) {
+                throw new ArgumentNullException("document can't be null");
+            }
 
             Loading = true;
             Reset();
@@ -289,8 +308,9 @@ namespace WinPrint.Core {
                 // TODO: set some defaults
             }
 
-            if (ContentSettings != null)
+            if (ContentSettings != null) {
                 ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+            }
 
             var success = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
 
@@ -309,12 +329,15 @@ namespace WinPrint.Core {
         /// <returns></returns>
         public void SetPrinterPageSettings(PageSettings pageSettings) {
             LogService.TraceMessage();
-            if (pageSettings is null) throw new ArgumentNullException(nameof(pageSettings));
+            if (pageSettings is null) {
+                throw new ArgumentNullException(nameof(pageSettings));
+            }
 
             // On Linux, PageSettings.Bounds is determined from PageSettings.Margins. 
             // On Windows, it has no effect. Regardelss, here we set Bounds to 0 to work around this.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
                 pageSettings.Margins = new Margins(0, 0, 0, 0);
+            }
 
             // The following elements of PageSettings are dependent
             // Landscape
@@ -393,11 +416,13 @@ namespace WinPrint.Core {
             _contentBounds.Location = new PointF(_sheet.Margins.Left, _sheet.Margins.Top + _headerVM.Bounds.Height);
             _contentBounds.Width = Bounds.Width - _sheet.Margins.Left - _sheet.Margins.Right;
             _contentBounds.Height = Bounds.Height - _sheet.Margins.Top - _sheet.Margins.Bottom - _headerVM.Bounds.Height - _footerVM.Bounds.Height;
-            if (ContentEngine is null)
+            if (ContentEngine is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - Content is null");
-            else
+            }
+            else {
                 // TODO: Figure out a better way for the content engine to get page size.
                 ContentEngine.PageSize = new SizeF(GetPageWidth(), GetPageHeight());
+            }
 
             Log.Debug("Printer Resolution: {w} x {h}DPI", PrinterResolution.X, PrinterResolution.Y);
             Log.Debug("Paper Size: {w} x {h}\"", PaperSize.Width / 100F, PaperSize.Height / 100F);
@@ -427,8 +452,9 @@ namespace WinPrint.Core {
 
             Reflowing = true;
 
-            if (CacheEnabled)
+            if (CacheEnabled) {
                 ClearCache();
+            }
 
             if (ContentEngine is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - ContentEngine is null");
@@ -447,10 +473,10 @@ namespace WinPrint.Core {
         }
 
         public bool CheckPrintOutsideHardMargins() {
-            int leftMax = (int)Math.Round(_printableArea.X);
-            int topMax = (int)Math.Round(_printableArea.Top);
-            int rightMax = (int)Math.Round(_bounds.Width - _printableArea.Right);
-            int bottomMax = (int)Math.Round(_bounds.Height - _printableArea.Bottom);
+            var leftMax = (int)Math.Round(_printableArea.X);
+            var topMax = (int)Math.Round(_printableArea.Top);
+            var rightMax = (int)Math.Round(_bounds.Width - _printableArea.Right);
+            var bottomMax = (int)Math.Round(_bounds.Height - _printableArea.Bottom);
 
             if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax) {
                 Log.Warning($"Margins are set outside of printable area - Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"");
@@ -461,8 +487,9 @@ namespace WinPrint.Core {
 
         public SheetSettings FindSheet(string sheetName, out string sheetID) {
             SheetSettings sheet = null;
-            if (ModelLocator.Current.Settings == null)
+            if (ModelLocator.Current.Settings == null) {
                 throw new InvalidOperationException($"Find Sheet failed. Settings are invalid.");
+            }
 
             sheetID = ModelLocator.Current.Settings.DefaultSheet.ToString();
             if (!string.IsNullOrEmpty(sheetName) && !sheetName.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
@@ -472,20 +499,25 @@ namespace WinPrint.Core {
                     .Where(s => s.Value.Name.Equals(sheetName, StringComparison.InvariantCultureIgnoreCase))
                     .FirstOrDefault();
 
-                    if (s.Value is null)
+                    if (s.Value is null) {
                         throw new InvalidOperationException($"Sheet definiton not found ({sheetName}).");
+                    }
+
                     sheetID = s.Key;
                     sheet = s.Value;
                 }
             }
-            else
+            else {
                 sheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(sheetID);
+            }
+
             return sheet;
         }
 
         private void ClearCache() {
-            if (!CacheEnabled)
+            if (!CacheEnabled) {
                 return;// throw new InvalidOperationException("Cache is not enabled!");
+            }
 
             LogService.TraceMessage();
             foreach (var i in _cachedSheets) {
@@ -495,7 +527,7 @@ namespace WinPrint.Core {
         }
 
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
-            bool reflow = false;
+            var reflow = false;
             LogService.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Landscape":
@@ -543,7 +575,7 @@ namespace WinPrint.Core {
         };
 
         private System.ComponentModel.PropertyChangedEventHandler OnContentSettingsPropertyChanged() => (s, e) => {
-            bool reflow = false;
+            var reflow = false;
             LogService.TraceMessage($"{e.PropertyName}");
             switch (e.PropertyName) {
                 case "Font":
@@ -578,7 +610,7 @@ namespace WinPrint.Core {
         };
 
         private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() => (s, e) => {
-            bool reflow = false;
+            var reflow = false;
             LogService.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName) {
                 case "Font":
@@ -604,7 +636,10 @@ namespace WinPrint.Core {
                 default:
                     break;
             }
-            if (e.PropertyName == "NumPages") return;
+            if (e.PropertyName == "NumPages") {
+                return;
+            }
+
             OnSettingsChanged(reflow);
         };
 
@@ -615,10 +650,12 @@ namespace WinPrint.Core {
             System.Drawing.Font f = null;
             float h = 0;
             try {
-                if (font != null)
+                if (font != null) {
                     f = new System.Drawing.Font(font.Family, font.Size, font.Style, GraphicsUnit.Point);
-                else
+                }
+                else {
                     f = System.Drawing.SystemFonts.DefaultFont;
+                }
 
                 h = f.GetHeight(100);
             }
@@ -641,14 +678,14 @@ namespace WinPrint.Core {
         public float GetPageX(int n) {
             //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
 
-            float f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
+            var f = ContentBounds.Left + (GetPageWidth() * GetPageColumn(n));
             f += Padding * GetPageColumn(n);
             return f;
         }
         public float GetPageY(int n) {
             //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
 
-            float f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
+            var f = ContentBounds.Top + (GetPageHeight() * GetPageRow(n));
             f += Padding * GetPageRow(n);
             return f;
         }
@@ -663,7 +700,7 @@ namespace WinPrint.Core {
         /// <param name="g">Graphics to print on</param>
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         public void PrintSheet(Graphics graphics, int sheetNum) {
-            GraphicsState state = graphics.Save();
+            var state = graphics.Save();
             //Log.Debug(LogService.GetTraceMsg("{n} PageUnit: {pu}"), sheetNum, graphics.PageUnit);
             if (graphics.PageUnit == GraphicsUnit.Display) {
                 // In print mode, adjust origin to account for hard margins
@@ -684,21 +721,22 @@ namespace WinPrint.Core {
         /// <param name="sheetNum">Sheet to print. 1-based.</param>
         /// <returns></returns>
         public Image GetCachedSheet(Graphics graphics, int sheetNum) {
-            if (!CacheEnabled)
+            if (!CacheEnabled) {
                 throw new InvalidOperationException("Cache is not enabled!");
+            }
 
             const int dpiMultiplier = 1;
             float xDpi = PrinterResolution.X * dpiMultiplier;
             float yDpi = PrinterResolution.Y * dpiMultiplier;
-            int xRes = (int)(Bounds.Width / 100 * xDpi);
-            int yRes = (int)(Bounds.Height / 100 * yDpi);
+            var xRes = (int)(Bounds.Width / 100 * xDpi);
+            var yRes = (int)(Bounds.Height / 100 * yDpi);
             if (_cachedSheets.Count < sheetNum) {
                 // Create a new bitmap object with the resolution of a printer page
-                Bitmap bmp = new Bitmap(xRes, yRes);
+                var bmp = new Bitmap(xRes, yRes);
                 //bmp.SetResolution(xDpi, yDpi);
 
                 // Obtain a Graphics object from that bitmap
-                Graphics g = Graphics.FromImage(bmp);
+                var g = Graphics.FromImage(bmp);
                 g.PageUnit = GraphicsUnit.Pixel;
                 PaintSheet(g, sheetNum);
                 _cachedSheets.Add(bmp);
@@ -726,35 +764,39 @@ namespace WinPrint.Core {
                 return;
             }
 
-            int pagesPerSheet = _rows * _cols;
+            var pagesPerSheet = _rows * _cols;
             // 1-based; assume 4-up...
-            int startPage = (sheetNum - 1) * pagesPerSheet + 1;
-            int endPage = startPage + pagesPerSheet - 1;
+            var startPage = (sheetNum - 1) * pagesPerSheet + 1;
+            var endPage = startPage + pagesPerSheet - 1;
 
-            for (int pageOnSheet = startPage; pageOnSheet <= endPage; pageOnSheet++) {
-                float xPos = GetPageX(pageOnSheet);
-                float yPos = GetPageY(pageOnSheet);
-                float w = GetPageWidth();
-                float h = GetPageHeight();
+            for (var pageOnSheet = startPage; pageOnSheet <= endPage; pageOnSheet++) {
+                var xPos = GetPageX(pageOnSheet);
+                var yPos = GetPageY(pageOnSheet);
+                var w = GetPageWidth();
+                var h = GetPageHeight();
 
                 // Move origin to page's x & y
                 g.TranslateTransform(xPos, yPos);
 
-                if (ModelLocator.Current.Settings.PrintPageBounds || ModelLocator.Current.Settings.PreviewPageBounds)
+                if (ModelLocator.Current.Settings.PrintPageBounds || ModelLocator.Current.Settings.PreviewPageBounds) {
                     PaintPageNum(g, pageOnSheet);
+                }
 
                 if (_pageSeparator) {
                     // If there will be a page to the left of this page, draw vert separator
-                    if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns - 1))
+                    if (Columns > 1 && GetPageColumn(pageOnSheet) < (Columns - 1)) {
                         g.DrawLine(Pens.Black, w + (Padding / 2), Padding / 2, w + (Padding / 2), h - Padding);
+                    }
 
                     // If there will be a page below this one, draw a horz separator
-                    if (Rows > 1 && GetPageRow(pageOnSheet) < (Rows - 1))
+                    if (Rows > 1 && GetPageRow(pageOnSheet) < (Rows - 1)) {
                         g.DrawLine(Pens.Black, Padding / 2, h + (Padding / 2), w - Padding, h + (Padding / 2));
+                    }
                 }
 
-                if (ContentEngine != null)
+                if (ContentEngine != null) {
                     ContentEngine.PaintPage(g, pageOnSheet);
+                }
 
                 // Translate back
                 g.TranslateTransform(-xPos, -yPos);
@@ -762,37 +804,44 @@ namespace WinPrint.Core {
 
             // If margins are too big, warn by printing a red border
             if (g.PageUnit != GraphicsUnit.Display) {
-                using Pen errorPen = new Pen(Color.Gray);
+                using var errorPen = new Pen(Color.Gray);
                 errorPen.DashStyle = DashStyle.Dash;
                 errorPen.Width = 4;
 
-                int leftMax = (int)Math.Round(_printableArea.X);
-                int topMax = (int)Math.Round(_printableArea.Top);
-                int rightMax = (int)Math.Round(_bounds.Width - _printableArea.Right);
-                int bottomMax = (int)Math.Round(_bounds.Height - _printableArea.Bottom);
+                var leftMax = (int)Math.Round(_printableArea.X);
+                var topMax = (int)Math.Round(_printableArea.Top);
+                var rightMax = (int)Math.Round(_bounds.Width - _printableArea.Right);
+                var bottomMax = (int)Math.Round(_bounds.Height - _printableArea.Bottom);
 
-                if (Margins.Left < leftMax)
+                if (Margins.Left < leftMax) {
                     g.DrawLine(errorPen, _printableArea.X, 0, _printableArea.X, _bounds.Height);
-                if (Margins.Top < topMax)
+                }
+
+                if (Margins.Top < topMax) {
                     g.DrawLine(errorPen, 0, _printableArea.Top, _bounds.Width, _printableArea.Top);
-                if (Margins.Right < rightMax)
+                }
+
+                if (Margins.Right < rightMax) {
                     g.DrawLine(errorPen, _printableArea.Right, 0, _printableArea.Right, _bounds.Height);
-                if (Margins.Bottom < bottomMax)
+                }
+
+                if (Margins.Bottom < bottomMax) {
                     g.DrawLine(errorPen, 0, _printableArea.Bottom, _bounds.Width, _printableArea.Bottom);
+                }
 
                 if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax) {
-                    using System.Drawing.Font font = new System.Drawing.Font(FontFamily.GenericSansSerif, 14, FontStyle.Bold, GraphicsUnit.Point);
-                    string msg = $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
+                    using var font = new System.Drawing.Font(FontFamily.GenericSansSerif, 14, FontStyle.Bold, GraphicsUnit.Point);
+                    var msg = $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
                     ServiceLocator.Current.TelemetryService.TrackEvent("Margins of of bounds", new Dictionary<string, string> { ["Message"] = msg });
-                    SizeF size = g.MeasureString(msg, font);
-                    using StringFormat fmt = new StringFormat(StringFormat.GenericDefault) { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    var size = g.MeasureString(msg, font);
+                    using var fmt = new StringFormat(StringFormat.GenericDefault) { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                     g.DrawString(msg, font, Brushes.Gray, _bounds, fmt);
 
                     // Draw hatch outside printable area
                     g.SetClip(_bounds);
-                    Rectangle r = new Rectangle((int)Math.Floor(_printableArea.Left), (int)Math.Floor(_printableArea.Top), (int)Math.Ceiling(_printableArea.Width) + 1, (int)Math.Ceiling(_printableArea.Height) + 1);
+                    var r = new Rectangle((int)Math.Floor(_printableArea.Left), (int)Math.Floor(_printableArea.Top), (int)Math.Ceiling(_printableArea.Width) + 1, (int)Math.Ceiling(_printableArea.Height) + 1);
                     g.ExcludeClip(r);
-                    using HatchBrush brush = new HatchBrush(HatchStyle.LightUpwardDiagonal, Color.Gray, Color.White);
+                    using var brush = new HatchBrush(HatchStyle.LightUpwardDiagonal, Color.Gray, Color.White);
                     g.FillRectangle(brush, _bounds);
 
                 }
@@ -828,7 +877,7 @@ namespace WinPrint.Core {
             //g.DrawString($"{GetPageColumn(pageNum)},{GetPageRow(pageNum)}", font, Brushes.Orange, xPos, yPos, StringFormat.GenericTypographic);
 
             // Draw page # in center
-            SizeF size = g.MeasureString($"{pageNum}", font);
+            var size = g.MeasureString($"{pageNum}", font);
             g.DrawString($"{pageNum}", font, Brushes.DarkGray, xPos + (GetPageWidth() / 2 - size.Width / 2), yPos + (GetPageHeight() / 2 - size.Height / 2), StringFormat.GenericTypographic);
             font.Dispose();
         }
@@ -839,7 +888,7 @@ namespace WinPrint.Core {
         /// <param name="g"></param>
         internal void PaintRules(Graphics g) {
             var settings = ModelLocator.Current.Settings;
-            bool preview = g.PageUnit != GraphicsUnit.Display;
+            var preview = g.PageUnit != GraphicsUnit.Display;
             System.Drawing.Font font;
             if (g.PageUnit == GraphicsUnit.Display) {
                 font = new System.Drawing.Font(settings.DiagnosticRulesFont.Family, settings.DiagnosticRulesFont.Size, settings.DiagnosticRulesFont.Style, GraphicsUnit.Point);
@@ -929,7 +978,7 @@ namespace WinPrint.Core {
         }
 
         internal static void DrawRule(Graphics g, System.Drawing.Font font, Color color, string text, Point start, Point end, float labelDiv, bool arrow = false) {
-            using Pen pen = new Pen(color);
+            using var pen = new Pen(color);
 
             if (arrow) {
                 pen.Width = 3;
@@ -937,21 +986,21 @@ namespace WinPrint.Core {
                 pen.EndCap = LineCap.ArrowAnchor;
             }
             g.DrawLine(pen, start, end);
-            SizeF textSize = g.MeasureString(text, font);
+            var textSize = g.MeasureString(text, font);
             using Brush brush = new SolidBrush(color);
             if (start.X == end.X) {
                 // Vertical
 
-                GraphicsState state = g.Save();
+                var state = g.Save();
                 g.RotateTransform(90);
-                Single x = start.X + (textSize.Height / 2F);
-                Single y = (start.Y + end.Y) / labelDiv - (textSize.Width / 2F);
+                var x = start.X + (textSize.Height / 2F);
+                var y = (start.Y + end.Y) / labelDiv - (textSize.Width / 2F);
 
                 // Weird hack - If we're zoomed, we need to multiply by the zoom factor (element[1]).
                 using var tx = g.Transform;
                 g.TranslateTransform(x * tx.Elements[1], y * tx.Elements[1], MatrixOrder.Append);
 
-                RectangleF textRect = new RectangleF(new PointF(0, 0), textSize);
+                var textRect = new RectangleF(new PointF(0, 0), textSize);
                 g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
                 g.DrawString(text, font, brush, 0, 0);
                 g.Restore(state);
@@ -959,9 +1008,9 @@ namespace WinPrint.Core {
             }
             else {
                 // Horizontal
-                float x = ((start.X + end.X) / labelDiv) - (textSize.Width / 2F);
-                float y = start.Y - (textSize.Height / 2F);
-                RectangleF textRect = new RectangleF(new PointF(x, y), textSize);
+                var x = ((start.X + end.X) / labelDiv) - (textSize.Width / 2F);
+                var y = start.Y - (textSize.Height / 2F);
+                var textRect = new RectangleF(new PointF(x, y), textSize);
                 g.FillRectangles(Brushes.White, new RectangleF[] { textRect });
                 g.DrawString(text, font, brush, x, y);
             }

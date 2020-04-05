@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using WinPrint.Core.ContentTypeEngines;
 using Xunit;
@@ -13,12 +12,12 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void RealFileName_Test()
         {
-            var file = Path.GetTempFileName();
+            string file = Path.GetTempFileName();
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.File = file;
             svm.ContentEngine = new TextCte();
-            var macros = new Macros(svm);
+            Macros macros = new Macros(svm);
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacro(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacro(@"{FileName}"));
@@ -35,13 +34,13 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void NonExistantGoodFileName_Test()
         {
-            var file = Path.GetTempFileName();
+            string file = Path.GetTempFileName();
             File.Delete(file);
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.File = file;
             svm.ContentEngine = new TextCte();
-            var macros = new Macros(svm);
+            Macros macros = new Macros(svm);
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacro(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacro(@"{FileName}"));
@@ -57,16 +56,16 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void NonExistantBogusPathFileName_Test()
         {
-            var file = Path.GetTempFileName();
+            string file = Path.GetTempFileName();
             File.Delete(file);
 
             // Relpace the T in Temp with an invalid char
             file = file.Replace('T', Path.GetInvalidPathChars()[0]);
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.File = file;
             svm.ContentEngine = new TextCte();
-            var macros = new Macros(svm);
+            Macros macros = new Macros(svm);
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacro(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacro(@"{FileName}"));
@@ -83,16 +82,16 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void NonExistantBogusFileNameFileName_Test()
         {
-            var file = Path.GetTempFileName();
+            string file = Path.GetTempFileName();
             File.Delete(file);
 
             // Make filename invalid 
             file = file.Replace(@"\tmp", @$"\{Path.GetInvalidFileNameChars()[0]}mp");
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.File = file;
             svm.ContentEngine = new TextCte();
-            var macros = new Macros(svm);
+            Macros macros = new Macros(svm);
 
             // return original file
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacro(@"{FileExtension}"));
@@ -109,12 +108,12 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void TitleAsFileName_Test()
         {
-            var title = $"Invalid File Char:{Path.GetInvalidFileNameChars()[1]}. Invalid Path Char: {Path.GetInvalidPathChars()[1]}.";
+            string title = $"Invalid File Char:{Path.GetInvalidFileNameChars()[1]}. Invalid Path Char: {Path.GetInvalidPathChars()[1]}.";
 
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.File = title;
             svm.ContentEngine = new TextCte();
-            var macros = new Macros(svm);
+            Macros macros = new Macros(svm);
 
             // return original file
             Assert.Equal("", macros.ReplaceMacro(@"{FileExtension}"));
@@ -130,21 +129,24 @@ namespace WinPrint.Core.UnitTests.Models
 
         private SheetViewModel SetupSVM()
         {
-            var svm = new SheetViewModel();
+            SheetViewModel svm = new SheetViewModel();
             svm.ContentEngine = new TextCte();
             return svm;
         }
 
         // Test file paths
         private string ExistingFile => Path.GetTempFileName();
-        private string ExistingFileNoExtension { get {
-                var f = Path.GetTempPath() + Path.GetFileNameWithoutExtension(Path.GetTempFileName());
+        private string ExistingFileNoExtension
+        {
+            get
+            {
+                string f = Path.GetTempPath() + Path.GetFileNameWithoutExtension(Path.GetTempFileName());
                 File.Create(f).Close();
                 return f;
             }
         }
-        private string NonExistingFile { get { var f = ExistingFile; File.Delete(f); return f; } }
-        private string NonExistingFileNoExtension { get { var f = ExistingFileNoExtension; File.Delete(f); return f; } }
+        private string NonExistingFile { get { string f = ExistingFile; File.Delete(f); return f; } }
+        private string NonExistingFileNoExtension { get { string f = ExistingFileNoExtension; File.Delete(f); return f; } }
         private string InvalidFileName => Path.GetTempFileName().Replace(@"\tmp", @$"\{Path.GetInvalidFileNameChars()[0]}mp");
         private string InvalidDirectoryName => Path.GetTempFileName().Replace(@"\Temp", $@"\{Path.GetInvalidPathChars()[0]}emp");
 
@@ -154,7 +156,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void FileExtension()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -187,7 +189,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void FileName()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -220,7 +222,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void Title()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -253,7 +255,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void FileNameWithoutExtension()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -286,7 +288,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void FileDirectoryName()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -319,7 +321,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void FullPath()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -358,7 +360,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void DateRevised()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -392,7 +394,7 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void DateCreated()
         {
-            var svm = SetupSVM();
+            SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
             svm.File = ExistingFile;
@@ -428,8 +430,8 @@ namespace WinPrint.Core.UnitTests.Models
             // https://stackoverflow.com/questions/22598323/movenext-instead-of-actual-method-task-name
             string macroName = "FileType";
 
-            var svm = new SheetViewModel();
-            var macros = new Macros(svm);
+            SheetViewModel svm = new SheetViewModel();
+            Macros macros = new Macros(svm);
 
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
             Assert.Equal("text/plain", svm.ContentEngine.GetContentTypeName());
