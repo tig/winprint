@@ -29,7 +29,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public override string GetContentType() {
+        public override string GetContentTypeName() {
             if (string.IsNullOrEmpty(Language))
                 return _contentType;
             else

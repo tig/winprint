@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Serilog;
 //using TTRider.PowerShellAsync;
 using WinPrint.Core;
+using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -34,8 +35,8 @@ namespace WinPrint.Console {
 
         public OutWinPrintCmdlet() {
             //this.implementation = new OutputManagerInner();
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+            //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             //BoundedCapacity = 500;
         }
 
@@ -62,7 +63,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the WinPrint Content Type Engine to use.
         /// </summary>
-        [Parameter(HelpMessage = "Name of the WinPrint Content Type Engine to use (default is \"text/plain\")",
+        [Parameter(HelpMessage = "Name of the WinPrint Content Type Engine to use (default is \"text/plain\").",
             ParameterSetName = "Print")]
         [Alias("Engine")]
         public string ContentTypeEngine { get; set; }
@@ -70,10 +71,18 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional FileName - will be displayed in header/footer and as title of print job.
         /// </summary>
-        [Parameter(HelpMessage = "Filename to be displayed in header/footer and as title of print job.",
+        [Parameter(HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +
+            "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use.",
             ParameterSetName = "Print")]
         [Alias("File")]
         public string FileName { get; set; }
+
+        /// <summary>
+        /// Optional FileName - will be displayed in header/footer and as title of print job.
+        /// </summary>
+        [Parameter(HelpMessage = "Title to be displayed in header/footer with the {Title} or {FileName} macros.",
+            ParameterSetName = "Print")]
+        public string Title { get; set; }
 
         /// <summary>
         /// For the -Verbose switch
@@ -214,7 +223,6 @@ namespace WinPrint.Console {
         }
         #endregion
 
-
         #region PowerShell AsyncCmdlet Overrides
         /// <summary>
         /// Read command line parameters. 
@@ -222,6 +230,8 @@ namespace WinPrint.Console {
         /// </summary>
         protected override async Task BeginProcessingAsync() {
             //Log.Debug("BeginProcessingAsync");
+            //ServiceLocator.Reset();
+            //ModelLocator.Reset();
 
             ServiceLocator.Current.TelemetryService.Start(this.MyInvocation.MyCommand.Name,
                 startProperties: new Dictionary<string, string> {
@@ -309,6 +319,8 @@ namespace WinPrint.Console {
                 return;
             }
 
+            //var settings = ServiceLocator.Current.SettingsService.ReadSettings();
+
             ProgressRecord rec = new ProgressRecord(1, "Printing", "Printing...");
             rec.PercentComplete = 0;
             rec.StatusDescription = "Initializing winprint";
@@ -335,11 +347,11 @@ namespace WinPrint.Console {
                 }
             }
 
-            if (!string.IsNullOrEmpty(FileName)) {
-                FileName = this.MyInvocation.MyCommand.Name;
+            if (string.IsNullOrEmpty(Title)) {
+                Title = this.MyInvocation.MyCommand.Name;
             }
 
-            _print.SheetViewModel.File = FileName;
+            _print.SheetViewModel.File = Title;
 
             //_print.PrintingSheet += (s, sheetNum) => this.WriteProgress(new ProgressRecord(0, "Printing", $"Printing sheet {sheetNum}"));
             //_print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
@@ -354,24 +366,33 @@ namespace WinPrint.Console {
             };
 
 
-            string sheetID;
-            SheetSettings sheet = _print.SheetViewModel.FindSheet(SheetDefintion, out sheetID);
+            try {
+                string sheetID;
+                SheetSettings sheet = _print.SheetViewModel.FindSheet(SheetDefintion, out sheetID);
 
-            if (_verbose) {
-                Log.Information("    Printer:          {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
-                Log.Information("    Paper Size:       {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
-                Log.Information("    Orientation:      {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
-                Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
+                if (_verbose) {
+                    Log.Information("    Printer:          {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
+                    Log.Information("    Paper Size:       {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
+                    Log.Information("    Orientation:      {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
+                    Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
+                }
+
+                rec.PercentComplete = 20;
+                rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
+                WriteProgress(rec);
+
+                _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
+                _print.SheetViewModel.SetSheet(sheet);
+            }
+            catch (InvalidOperationException e) {
+                Log.Debug("Could not find sheet settings");
+                CleanUp();
+                return;
             }
 
-            rec.PercentComplete = 20;
-            rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
-            WriteProgress(rec);
-
-            _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
-            _print.SheetViewModel.SetSheet(sheet);
-            if (string.IsNullOrEmpty(ContentTypeEngine))
-                ContentTypeEngine = "text/plain";
+            if (string.IsNullOrEmpty(ContentTypeEngine) && !string.IsNullOrEmpty(FileName)) {
+                ContentTypeEngine = ContentTypeEngineBase.GetContentType(FileName);
+            }
 
             rec.PercentComplete = 30;
             rec.StatusDescription = $"Loading content";
@@ -381,6 +402,7 @@ namespace WinPrint.Console {
             rec.PercentComplete = 40;
             rec.StatusDescription = _whatIf ? "Counting" : $"Printing";
             WriteProgress(rec);
+
             var sheetsCounted = 0;
             if (_whatIf) {
                 sheetsCounted = await _print.CountSheets().ConfigureAwait(true);

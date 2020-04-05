@@ -18,7 +18,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public override string GetContentType() {
+        public override string GetContentTypeName() {
             return _contentType;
         }
 
@@ -109,13 +109,13 @@ namespace WinPrint.Core.ContentTypeEngines {
             //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
-            g.TextRenderingHint = textRenderingHint;
+            g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
 
             LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
-            litehtml.StringFormat = stringFormat;
+            litehtml.StringFormat = ContentTypeEngineBase.StringFormat;
             litehtml.Grayscale = ContentSettings.Grayscale;
             litehtml.Darkness = ContentSettings.Darkness;
             litehtml.PrintBackground = ContentSettings.PrintBackground;
@@ -207,7 +207,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
             litehtml.Graphics = g;
-            g.TextRenderingHint = textRenderingHint;
+            g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
 

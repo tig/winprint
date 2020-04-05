@@ -56,6 +56,8 @@ namespace WinPrint.Console {
                 _cancellationSource.Dispose();
         }
 
+        public int ProcessingCount { get; set; } = 0;
+
         /// <summary>
         ///		Asynchronously perform Cmdlet pre-processing.
         /// </summary>
@@ -135,6 +137,7 @@ namespace WinPrint.Console {
         ///		Perform Cmdlet pre-processing.
         /// </summary>
         protected sealed override void BeginProcessing() {
+            ++ProcessingCount;
             ThreadAffinitiveSynchronizationContext.RunSynchronized(
                 () => BeginProcessingAsync()
             );
@@ -158,6 +161,7 @@ namespace WinPrint.Console {
             ThreadAffinitiveSynchronizationContext.RunSynchronized(
                 () => EndProcessingAsync()
             );
+            ProcessingCount--;
         }
 
 

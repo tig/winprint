@@ -19,12 +19,20 @@ namespace WinPrint.Core.Models {
         }
 
         public Models.Settings Settings => SimpleIoc.Default.GetInstance<Models.Settings>();
+
         public Models.Options Options => SimpleIoc.Default.GetInstance<Models.Options>();
         public Models.FileAssociations Associations => SimpleIoc.Default.GetInstance<Models.FileAssociations>();
 
         public void Register<VM, V>()
             where VM : class {
             SimpleIoc.Default.Register<VM>();
+        }
+
+        public static void Reset() {
+            _current = null;
+            SimpleIoc.Default.Unregister<Settings>();
+            SimpleIoc.Default.Unregister<FileAssociations>();
+            SimpleIoc.Default.Unregister<Options>();
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GalaSoft.MvvmLight.Ioc;
 using Serilog;
 using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
@@ -60,33 +61,43 @@ namespace WinPrint.Core.Services {
                 SaveSettings(settings);
             }
             catch (JsonException je) {
-                ServiceLocator.Current.TelemetryService.TrackException(je, false);
-                Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
+                ReportJsonParsingError(je);
             }
             catch (Exception ex) {
-                // TODO: Graceful error handling for .config file 
-                ServiceLocator.Current.TelemetryService.TrackException(ex, false);
-                Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
+                ReportUnknownFileError(ex);
             }
             finally {
                 if (fs != null) fs.Close();
             }
 
             // Enable file watcher
-            if (settings != null) {
-                // Disable file watcher if it's active
-                if (watcher != null) {
-                    watcher.ChangedEvent -= Watcher_ChangedEvent;
-                    watcher.Dispose();
-                    watcher = null;
-                }
-
-                // watch .command file for changes
-                watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
-                watcher.ChangedEvent += Watcher_ChangedEvent;
+            // Disable file watcher if it's active
+            if (watcher != null) {
+                watcher.ChangedEvent -= Watcher_ChangedEvent;
+                watcher.Dispose();
+                watcher = null;
             }
 
+            // watch .command file for changes
+            watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
+            watcher.ChangedEvent += Watcher_ChangedEvent;
+
             return settings;
+        }
+
+        private void ReportUnknownFileError(Exception ex) {
+            // TODO: Graceful error handling for .config file 
+            ServiceLocator.Current.TelemetryService.TrackException(ex, false);
+            Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
+        }
+
+        private void ReportJsonParsingError(JsonException je) {
+            ServiceLocator.Current.TelemetryService.TrackException(je, false);
+            // je.Message is of form: Message = "<goblygook>. Path: $.sheets | LineNumber: 6 | BytePositionInLine: 42."
+            string toFind = " Path: ";
+            string path = je.Message[(je.Message.IndexOf(toFind) + toFind.Length)..^0];
+            var ex = new Exception($"Error parsing {SettingsFileName} at {path}");
+            Log.Error(ex, "Error parsing {file} at {path}", SettingsFileName, path);
         }
 
         private void Watcher_ChangedEvent(object sender, EventArgs e) {
@@ -97,25 +108,24 @@ namespace WinPrint.Core.Services {
                 var jsonString = File.ReadAllText(SettingsFileName);
                 Settings changedSettings = JsonSerializer.Deserialize<Settings>(jsonString, jsonOptions);
 
+                if (ModelLocator.Current.Settings == null) {
+                    // This can happen if settings failed to load when app started. 
+                    SimpleIoc.Default.Unregister<Settings>();
+                    SimpleIoc.Default.Register<Settings>();
+                }
                 // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
                 ModelLocator.Current.Settings.CopyPropertiesFrom(changedSettings);
             }
             catch (FileNotFoundException fnfe) {
                 // TODO: Graceful error handling for .config file 
                 ServiceLocator.Current.TelemetryService.TrackException(fnfe, false);
-
                 Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
             }
             catch (JsonException je) {
-                ServiceLocator.Current.TelemetryService.TrackException(je, false);
-
-                Log.Error("Error parsing {file} at {path}", SettingsFileName, je.Path);
+                ReportJsonParsingError(je);
             }
             catch (Exception ex) {
-                ServiceLocator.Current.TelemetryService.TrackException(ex, false);
-
-                // TODO: Graceful error handling for .config file 
-                Log.Error(ex, "Exception reading {settingsFileName}", SettingsFileName);
+                ReportUnknownFileError(ex);
             }
         }
 
@@ -188,11 +198,13 @@ namespace WinPrint.Core.Services {
                     var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(SettingsService)).Location);
 
                     // is this in \Kindel Systems\winprint?
-                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}") ||
-                        // TODO: Remove internal knowledge of out-winprint from here
-                        path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell")) {
+                    if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}")) { 
                         // We're running %programfiles%\Kindel Systems\winprint; use %appdata%\Kindel Systems\winprint.
                         path = $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
+                    }
+                    // TODO: Remove internal knowledge of out-winprint from here
+                    if (path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell")) {
+                        path = Path.GetDirectoryName(Assembly.GetAssembly(typeof(SettingsService)).Location);
                     }
                 }
 

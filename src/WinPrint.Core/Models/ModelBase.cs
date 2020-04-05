@@ -92,7 +92,11 @@ namespace WinPrint.Core.Models {
                 }
                 else {
                     Dictionary<string, SheetSettings> sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue(source);
+                    if (sourceList == null)
+                        sourceList = new Dictionary<string, SheetSettings>();
                     Dictionary<string, SheetSettings> destList = (Dictionary<string, SheetSettings>)destProp.GetValue(this);
+                    if (destList == null)
+                        destList = new Dictionary<string, SheetSettings>();
                     foreach (var src in sourceList) {
                         if (destList.ContainsKey(src.Key))
                             destList[src.Key].CopyPropertiesFrom(src.Value);
@@ -101,6 +105,8 @@ namespace WinPrint.Core.Models {
                             destList[src.Key].CopyPropertiesFrom(src.Value);
                         }
                     }
+                    if (destProp.GetValue(this) is null)
+                        destProp.SetValue(this, destList, null);
                 }
             }
         }

@@ -7,7 +7,7 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Xunit;
 
-namespace WinPrint.Core
+namespace WinPrint.Core.UnitTests.Models
 {
 
     public class TestBase
@@ -27,7 +27,7 @@ namespace WinPrint.Core
         }
     }
 
-    public class DocumentTests : TestBase
+    public class SheetSettingsTests : TestBase
     {
 
         [Fact]

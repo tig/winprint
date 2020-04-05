@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using Serilog;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core {
@@ -101,6 +102,7 @@ namespace WinPrint.Core {
             if (BottomBorder)
                 g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
 
+            Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
             Macros macros = new Macros(svm);
             macros.Page = sheetNum;
             string[] parts = macros.ReplaceMacro(Text).Split('\t', '|');

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Management.Automation;
 using System.Threading.Tasks;
@@ -23,44 +24,60 @@ namespace WinPrint.Console {
 
         public void Emit(LogEvent logEvent) {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
-            using StringWriter strWriter = new StringWriter();
-            TextFormatter.Format(logEvent, strWriter);
 
             lock (_syncRoot) {
-                switch (logEvent.Level) {
-                    // -Verbose
-                    case LogEventLevel.Verbose:
-                    case LogEventLevel.Information:
-                        _cmdlet.WriteVerbose(strWriter.ToString());
-                        break;
+                if (_cmdlet.ProcessingCount == 0) {
+                    Debug.WriteLine("PowerShellSink is disabled because a cmdlet is not processing.");
+                    return;
+                }
 
-                    // -Debug
-                    case LogEventLevel.Debug:
-                        _cmdlet.WriteDebug(strWriter.ToString());
-                        break;
+                using StringWriter strWriter = new StringWriter();
+                TextFormatter.Format(logEvent, strWriter);
+                try {
+                    switch (logEvent.Level) {
+                        // -Verbose
+                        case LogEventLevel.Verbose:
+                        case LogEventLevel.Information:
+                            _cmdlet.WriteVerbose(strWriter.ToString());
+                            break;
 
-                    // The Write-Warning cmdlet writes a warning message to the PowerShell host
-                    // The response to the warning depends on the value of the user's $WarningPreference variable and the use of the WarningAction common parameter.
-                    case LogEventLevel.Warning:
-                        _cmdlet.WriteWarning(strWriter.ToString());
-                        break;
+                        // -Debug
+                        case LogEventLevel.Debug:
+                            _cmdlet.WriteDebug(strWriter.ToString());
+                            break;
 
-                    // The Write-Error cmdlet declares a non-terminating error.
-                    case LogEventLevel.Error:
-                        //_cmdlet.WriteDebug("error: " + strWriter.ToString());
-                        ErrorRecord er = new ErrorRecord(logEvent.Exception, errorId: strWriter.ToString(), errorCategory: ErrorCategory.InvalidOperation, targetObject: null);
-                        _cmdlet.WriteError(er);
-                        break;
+                        // The Write-Warning cmdlet writes a warning message to the PowerShell host
+                        // The response to the warning depends on the value of the user's $WarningPreference variable and the use of the WarningAction common parameter.
+                        case LogEventLevel.Warning:
+                            _cmdlet.WriteWarning(strWriter.ToString());
+                            break;
 
-                    case LogEventLevel.Fatal:
-                        //_cmdlet.WriteDebug("fatal: " + strWriter.ToString());
-                        ErrorRecord fatal = new ErrorRecord(logEvent.Exception, errorId: strWriter.ToString(), errorCategory: ErrorCategory.InvalidOperation, targetObject: null);
-                        _cmdlet.ThrowTerminatingError(fatal);
-                        break;
+                        // The Write-Error cmdlet declares a non-terminating error.
+                        case LogEventLevel.Error:
+                            //_cmdlet.WriteDebug("error: " + strWriter.ToString());
+                            var ex = logEvent.Exception;
+                            if (logEvent.Exception == null)
+                                ex = new Exception();
+                            ErrorRecord er = new ErrorRecord(ex, errorId: strWriter.ToString(), errorCategory: ErrorCategory.NotSpecified, targetObject: null);
+                            _cmdlet.WriteError(er);
+                            break;
 
-                    default:
-                        _cmdlet.WriteDebug(strWriter.ToString());
-                        break;
+                        case LogEventLevel.Fatal:
+                            //_cmdlet.WriteDebug("fatal: " + strWriter.ToString());
+                            ErrorRecord fatal = new ErrorRecord(logEvent.Exception, errorId: strWriter.ToString(), errorCategory: ErrorCategory.InvalidOperation, targetObject: null);
+                            _cmdlet.ThrowTerminatingError(fatal);
+                            break;
+
+                        default:
+                            _cmdlet.WriteDebug(strWriter.ToString());
+                            break;
+                    }
+                }
+                catch (PipelineStoppedException pse) {
+                    Debug.WriteLine(pse.Message);
+                }
+                catch (PSInvalidOperationException psiop) {
+                    Debug.WriteLine(psiop.Message);
                 }
             }
         }

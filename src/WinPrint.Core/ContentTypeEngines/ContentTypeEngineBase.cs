@@ -35,10 +35,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public virtual string GetContentType() {
-            return _contentType;
+        public virtual string GetContentTypeName() {
+            return _contentTypeName;
         }
-        private static readonly string _contentType = "base";
+        private static readonly string _contentTypeName = "base";
 
         /// <summary>
         /// Calculated page size. Set by Sheet view model.
@@ -71,14 +71,14 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
         internal string document = null;
 
-        internal StringFormat stringFormat = new StringFormat(StringFormat.GenericTypographic) {
+        public static readonly StringFormat StringFormat = new StringFormat(StringFormat.GenericTypographic) {
             FormatFlags = StringFormatFlags.NoClip | StringFormatFlags.LineLimit | StringFormatFlags.FitBlackBox |
                             StringFormatFlags.DisplayFormatControl | StringFormatFlags.MeasureTrailingSpaces,
             Alignment = StringAlignment.Near,
             LineAlignment = StringAlignment.Near,
             Trimming = StringTrimming.None
         };
-        internal const TextRenderingHint textRenderingHint = TextRenderingHint.ClearTypeGridFit;
+        public static readonly TextRenderingHint TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
 
         ///// <summary>
@@ -157,13 +157,16 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Returns the content type name and language name given a file path. If the content type
+        /// Returns the content type name (e.g. "text/plain") given a file path. If the content type
         /// cannot be determiend from FilesAssocaitons the default of "text/plain" is returned.
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>The content type</returns>
         public static string GetContentType(string filePath) {
             string contentType = "text/plain";
+
+            if (string.IsNullOrEmpty(filePath))
+                return contentType;
 
             // Expand path
             filePath = Path.GetFullPath(filePath);

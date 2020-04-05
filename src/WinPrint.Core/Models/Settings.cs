@@ -190,7 +190,7 @@ namespace WinPrint.Core.Models {
         /// the .config.json file. 
         /// </summary>
         /// <returns>A Settings object with default settings.</returns>
-        internal static Settings CreateDefaultSettings() {
+        public static Settings CreateDefaultSettings() {
             string monoSpaceFamily = "monospace";
             string sansSerifFamily = "sansserif";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
@@ -222,10 +222,10 @@ namespace WinPrint.Core.Models {
                 //    Grayscale = false,
                 //    PrintBackground = true
                 //},
-                //LineNumbers = true,
-                //LineNumberSeparator = false,
-                //NewPageOnFormFeed = false,
-                //TabSpaces = 4
+                LineNumbers = true,
+                LineNumberSeparator = false,
+                NewPageOnFormFeed = false,
+                TabSpaces = 4
             };
 
             // Html fonts are determined by:

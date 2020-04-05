@@ -7,8 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Serilog;
+using UtfUnknown;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -63,6 +65,12 @@ namespace WinPrint.Core {
             }
         }
         private string _file;
+
+        /// <summary>
+        /// The charcter encoding of the document
+        /// </summary>
+        public Encoding Encoding { get => _encoding; set => SetField(ref _encoding, value); }
+        private Encoding _encoding;
 
         private int _numPages;
 
@@ -253,7 +261,10 @@ namespace WinPrint.Core {
             }
 
             // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
-            using StreamReader streamToPrint = new StreamReader(filePath);
+            var detected = CharsetDetector.DetectFromFile(filePath).Detected;
+            Log.Debug("File encoding: {encoding}", detected);
+            Encoding = detected.Encoding;
+            using StreamReader streamToPrint = new StreamReader(filePath, Encoding);
             return await LoadStringAsync(await streamToPrint.ReadToEndAsync(), contentType);
         }
 
@@ -266,10 +277,8 @@ namespace WinPrint.Core {
         public async Task<bool> LoadStringAsync(string document, string contentType) {
             LogService.TraceMessage();
             if (document == null) throw new ArgumentNullException("document can't be null");
-            if (contentType == null) throw new ArgumentNullException("contentType can't be null");
 
             Loading = true;
-
             Reset();
 
             ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType);
@@ -452,6 +461,9 @@ namespace WinPrint.Core {
 
         public SheetSettings FindSheet(string sheetName, out string sheetID) {
             SheetSettings sheet = null;
+            if (ModelLocator.Current.Settings == null)
+                throw new InvalidOperationException($"Find Sheet failed. Settings are invalid.");
+
             sheetID = ModelLocator.Current.Settings.DefaultSheet.ToString();
             if (!string.IsNullOrEmpty(sheetName) && !sheetName.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
                 if (!ModelLocator.Current.Settings.Sheets.TryGetValue(sheetName, out sheet)) {

@@ -31,6 +31,8 @@ namespace WinPrint.Winforms {
         // The active file
         private string activeFile;
 
+        OpenFileDialog openFileDialog = new OpenFileDialog();
+
         public MainWindow() {
             InitializeComponent();
 
@@ -59,6 +61,13 @@ namespace WinPrint.Winforms {
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
+
+#if DEBUG
+            openFileDialog.InitialDirectory = $@"..\..\..\..\..\testfiles\";
+#else
+            openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}";
+#endif
+
         }
 
         private void Color() {
@@ -304,7 +313,7 @@ namespace WinPrint.Winforms {
             }
 
             ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
-            ServiceLocator.Current.UpdateService.DownloadComplete += UpdateService_DownloadComplete; 
+            ServiceLocator.Current.UpdateService.DownloadComplete += UpdateService_DownloadComplete;
             ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(false);
 
             // Load settings by referencing ModelLocator.Current
@@ -450,7 +459,7 @@ namespace WinPrint.Winforms {
                 Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
             }
 
-            BeginInvoke((Action)(() => Close() ));
+            BeginInvoke((Action)(() => Close()));
         }
 
         private void UpdateService_GotLatestVersion(object sender, Version version) {
@@ -572,16 +581,12 @@ namespace WinPrint.Winforms {
             else {
                 LogService.TraceMessage();
                 ServiceLocator.Current.TelemetryService.TrackEvent("Show Files Dialog");
-
-                using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                    openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}";
-                    openFileDialog.Filter = Resources.FileOpenTemplate;
-                    openFileDialog.FilterIndex = 3;
-                    openFileDialog.RestoreDirectory = true;
-                    if (openFileDialog.ShowDialog(this) == DialogResult.OK) {
-                        activeFile = openFileDialog.FileNames.ToList()[0];
-                        LoadFile();
-                    }
+                openFileDialog.Filter = Resources.FileOpenTemplate;
+                openFileDialog.FilterIndex = 3;
+                //openFileDialog.RestoreDirectory = true;
+                if (openFileDialog.ShowDialog(this) == DialogResult.OK) {
+                    activeFile = openFileDialog.FileNames.ToList()[0];
+                    LoadFile();
                 }
             }
         }
