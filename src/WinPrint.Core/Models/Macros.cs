@@ -42,7 +42,7 @@ namespace WinPrint.Core {
         /// <summary>
         /// The time and date when printed.
         /// </summary>
-        public static DateTime DatePrinted { get => DateTime.Now; }
+        public DateTime DatePrinted { get => DateTime.Now; }
         /// <summary>
         /// The time and date teh file was last revised.
         /// </summary>

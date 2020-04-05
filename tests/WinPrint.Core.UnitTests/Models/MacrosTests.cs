@@ -361,6 +361,13 @@ namespace WinPrint.Core.UnitTests.Models
         public void DatePrinted()
         {
             // No way to test since uses DateTime.Now - assume DateRevised tests cover
+            SheetViewModel svm = SetupSVM();
+            Macros macros = new Macros(svm);
+
+            // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
+            //  "u" Universal sortable date / time pattern.
+            //  2009 - 06 - 15 13:45:30Z
+            Assert.StartsWith($"{DateTime.Now:u}"[..^3], macros.ReplaceMacro($"{{{MethodBase.GetCurrentMethod().Name}:u}}"));
         }
 
         [Fact]

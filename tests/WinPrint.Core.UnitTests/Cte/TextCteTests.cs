@@ -120,7 +120,7 @@ namespace WinPrint.Core.UnitTests.Cte
             SizeF proposedSize = new SizeF(10000, font.GetHeight() + (font.GetHeight() / 2));
             SizeF size = g.MeasureString(shortLine, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
 
-            ((TextCte)svm.ContentEngine).LineNumbers = false;
+            ((TextCte)svm.ContentEngine).ContentSettings.LineNumbers = false;
             svm.ContentEngine.PageSize = new System.Drawing.SizeF(size.Width, font.GetHeight()); // a line will be about 108 high
 
             Assert.True(await svm.ContentEngine.SetDocumentAsync(shortLine));
@@ -184,7 +184,7 @@ namespace WinPrint.Core.UnitTests.Cte
             SizeF proposedSize = new SizeF(10000, font.GetHeight() + (font.GetHeight() / 2));
             SizeF size = g.MeasureString(shortLine, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
 
-            ((TextCte)svm.ContentEngine).LineNumbers = false;
+            ((TextCte)svm.ContentEngine).ContentSettings.LineNumbers = false;
             svm.ContentEngine.PageSize = new System.Drawing.SizeF(size.Width, font.GetHeight()); // a line will be about 108 high
 
             Assert.True(await svm.ContentEngine.SetDocumentAsync(shortLine));

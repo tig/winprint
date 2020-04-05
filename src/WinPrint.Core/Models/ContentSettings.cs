@@ -40,5 +40,11 @@
         [SafeForTelemetry]
         public bool Diagnostics { get => diagnostics; set => SetField(ref diagnostics, value); }
         private bool diagnostics = false;
+        /// <summary>
+        /// If true, content will be drawn with line numbers (if supported) 
+        /// </summary>
+        [SafeForTelemetry]
+        public bool LineNumbers { get => linenumbers; set => SetField(ref linenumbers, value); }
+        private bool linenumbers = true;
     }
 }

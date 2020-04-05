@@ -57,8 +57,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         private System.Drawing.Font cachedFont;
 
         // Publics
-        public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
-        private bool lineNumbers = true;
+        //public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
+        //private bool lineNumbers = true;
 
         public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
         private bool lineNumberSeparator = true;
@@ -161,7 +161,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
             // TODO: Make line number width dynamic
             // Note, Measure string is actually dependent on lineNumberWidth!
-            lineNumberWidth = LineNumbers ? MeasureString(g, new string('0', 4)).Width : 0;
+            lineNumberWidth = ContentSettings.LineNumbers ? MeasureString(g, new string('0', 4)).Width : 0;
 
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             wrappedLines = MeasureLines(g, document); // new List<string>();
@@ -362,7 +362,8 @@ namespace WinPrint.Core.ContentTypeEngines {
 
                     // Line # separator
                     // TODO: Support setting color of line #s and separator
-                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + lineHeight);
+                    if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
+                        g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + lineHeight);
 
                     // Text
                     g.DrawString(wrappedLines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, ContentTypeEngineBase.StringFormat);
@@ -376,7 +377,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         // TODO: Allow a different (non-monospace) font for line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
-            if (LineNumbers == true && lineNumberWidth != 0) {
+            if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
                 var lineOnPage = lineNumber % linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
                 var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{wrappedLines[lineNumber].nonWrappedLineNumber}").Width) : 0;

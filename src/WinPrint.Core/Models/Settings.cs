@@ -228,7 +228,7 @@ namespace WinPrint.Core.Models {
                 //    Grayscale = false,
                 //    PrintBackground = true
                 //},
-                LineNumbers = true,
+                //LineNumbers = true,
                 LineNumberSeparator = false,
                 NewPageOnFormFeed = false,
                 TabSpaces = 4

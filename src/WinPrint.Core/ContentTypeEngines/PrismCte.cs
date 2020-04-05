@@ -105,6 +105,12 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             convertedToHtml = true;
 
+#if DEBUG
+            var w = new StreamWriter("PrismCte.html");
+            w.Write(document);
+            w.Close();
+#endif
+
             return true;
         }
 
@@ -311,6 +317,17 @@ namespace WinPrint.Core.ContentTypeEngines {
                     //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
                 }
                 Log.Debug("Read {n} lines from stdout", linesInDocument);
+
+                if (linesInDocument == 0) {
+
+                    Log.Debug($"Reading stdErr...");
+                    StringBuilder stdErr = new StringBuilder();
+                    while (!node.StandardError.EndOfStream) {
+                        var outputLine = await node.StandardError.ReadLineAsync();
+                        Log.Debug("stdErr: {stdErr}", outputLine);
+                    }
+                }
+
                 sbHtml.AppendLine($"</table></code></pre>");
             }
             catch (Exception e) {

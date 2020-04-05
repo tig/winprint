@@ -19,11 +19,10 @@ title: winprint
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* Complete command line interface. Allows winprint to be used from other applications or solutions.
-* PowerShell support; `out-winprint` is a drop-in replacement for `out-print`.
+* PowerShell-based command line interface. Allows winprint to be used from other applications or solutions. `out-winprint` is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
-* Compressive logging.
-* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
+* Comprehensive logging.
+* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
 
 See [User's Guide](users-guide.md) for more details.
 

@@ -9,79 +9,45 @@ title: User's Guide
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* Complete command line interface. Allows winprint to be used from other applications or solutions.
-* PowerShell support; `out-winprint` is a drop-in replacement for `out-print`.
+* PowerShell-based command line interface. Allows winprint to be used from other applications or solutions. `out-winprint` is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
-* Compressive logging.
-* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only), and (not yet tested) Mac OS.
+* Comprehensive logging.
+* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
 
-## Command Line Interface
+## Command Line Interfaces
 
-winprint 2.0 alpha supports two command line interfaces: a traditional interface implemented in `winprint.exe` and a PowerShell CmdLet (`out-winprint`). A future version will combine these.
-
-### Traditional winprint.exe Command Line
-
-Examples:
-
-Print Program.cs in landscape mode:
-
-    winprint --landscape Program.cs
-
-Print all .cs files on a specific printer with a specific paper size:
-
-    winprint --printer "Fabricam 535" --paper-size A4 *.cs
-
-Print the first two pages of Program.cs:
-
-    winprint --from-sheet 1 --to-sheet 2 Program.cs
-
-Print Program.cs using the 2 Up sheet defintion:
-
-    winprint --sheet "2 Up" Program.cs
-
-* `-s`, `--sheet` - Sheet defintion to use for formatting. Use sheet ID or friendly name.
-
-* `-l`, `--landscape` - Force landscape orientation.
-
-* `-r`, `--portrait` - Force portrait orientation.
-
-* `-p`, `--printer` - Printer name.
-
-* `-z`, `--paper-size` - Paper size name.
-
-* `-f`, `--from-sheet` - (Default: 0) Number of first sheet to print (may be used with `--to-sheet`).
-
-* `-t`, `--to-sheet` - (Default: 0) Number of last sheet to print (may be used with `--from-sheet`).
-
-* `-c`, `--count-sheet` - (Default: false) Exit code is set to numer of sheet that would be printed. Use `--verbose` to diplsay the count.
-
-* `-e`, `--content-type-engine` - Name of the Content Type Engine to use for rendering (`text/plain`, `text/html`, or `<language>`).
-
-* `-v`, `--verbose` - (Default: false) Verbose console output (log is always verbose).
-
-* `-d`, `--debug` - (Default: false) Debug-level console & log output.
-
-* `-g`, `--gui` - (Default: false) Show *winprint* GUI (to preview or change sheet settings).
-
-* `--help` - Display this help screen.
-
-* `--version` - Display version information.
-
-* `<files>` - Required. One or more files to be printed.
+winprint 2.0 alpha supports two command line interfaces: a traditional interface implemented in `winprint.exe` and a PowerShell CmdLet (`out-winprint`). The `winprint.exe` version is really just a simple wrapper that invokes the `out-winprint` PowerShell Cmdlet. 
 
 ### Powershell out-winprint CmdLet
 
-Examples:
+The CmdLet version of **winprint** is designed to be a stand-in for the `out-printer` CmdLet PowerShell already provides.
 
-Print the `out-winprint` documentation, 1-page up, to the "Microsoft Print to PDF" printer:
+Invoke the CmdLet using either `out-winprint` or the shortcut, `wp`. 
 
-    get-help out-winprint -full | out-winprint -p "Microsoft Print to PDF" -s "Default 1-Up"
+#### Examples:
 
 Print `Program.cs` using the default sheet definition and default printer:
 
     get-content Program.cs | out-winprint
 
-Help: 
+Or:
+
+    cat program.cs | wp
+
+Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, showing verbose output along the way:
+
+    ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winPrint -p "HP LaserJet" -FileName $_.FullName}
+
+
+#### CmdLet Help
+
+Access the built-in help by typing `get-help out-winprint` or `get-help out-winprint -full`.
+
+To create a nice PDF version of the help, do this:
+
+    get-help out-winprint -full | out-winprint -p "Microsoft Print to PDF" -s "Default 1-Up" -Title "winprint Help" -LineNumbers No
+
+
 
 ```
 NAME
@@ -149,6 +115,64 @@ OUTPUTS
 ALIASES
     wp
 ```
+
+### Traditional winprint.exe Command Line
+
+Tunning `winprint.exe` from any command-line is effectively the same as doing the following in PowerShell:
+
+```powershell
+pwsh.exe -noprofile -command "import-module .\winprint.dll; out-winprint $args"
+```
+
+Examples:
+
+Print Program.cs in landscape mode:
+
+    winprint --landscape Program.cs
+
+Print all .cs files on a specific printer with a specific paper size:
+
+    winprint --printer "Fabricam 535" --paper-size A4 *.cs
+
+Print the first two pages of Program.cs:
+
+    winprint --from-sheet 1 --to-sheet 2 Program.cs
+
+Print Program.cs using the 2 Up sheet defintion:
+
+    winprint --sheet "2 Up" Program.cs
+
+* `-s`, `--sheet` - Sheet defintion to use for formatting. Use sheet ID or friendly name.
+
+* `-l`, `--landscape` - Force landscape orientation.
+
+* `-r`, `--portrait` - Force portrait orientation.
+
+* `-p`, `--printer` - Printer name.
+
+* `-z`, `--paper-size` - Paper size name.
+
+* `-f`, `--from-sheet` - (Default: 0) Number of first sheet to print (may be used with `--to-sheet`).
+
+* `-t`, `--to-sheet` - (Default: 0) Number of last sheet to print (may be used with `--from-sheet`).
+
+* `-c`, `--count-sheet` - (Default: false) Exit code is set to numer of sheet that would be printed. Use `--verbose` to diplsay the count.
+
+* `-e`, `--content-type-engine` - Name of the Content Type Engine to use for rendering (`text/plain`, `text/html`, or `<language>`).
+
+* `-v`, `--verbose` - (Default: false) Verbose console output (log is always verbose).
+
+* `-d`, `--debug` - (Default: false) Debug-level console & log output.
+
+* `-g`, `--gui` - (Default: false) Show *winprint* GUI (to preview or change sheet settings).
+
+* `--help` - Display this help screen.
+
+* `--version` - Display version information.
+
+* `<files>` - Required. One or more files to be printed.
+
+
 
 ## Graphical User Interface
 

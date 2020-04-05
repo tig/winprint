@@ -24,14 +24,14 @@ namespace WinPrint.Console {
         HelpUri = "https://tig.github.io./winprint",
         DefaultParameterSetName = "print")]
     [Alias("wp")]
-    public class OutWinPrintCmdlet : AsyncCmdlet {
+    public class OutWinPrint : AsyncCmdlet {
         private const string DataNotQualifiedForWinprint = "DataNotQualifiedForWinPrint";
 
         // Private fields
         private List<PSObject> _psObjects = new List<PSObject>();
         private Print _print = new WinPrint.Core.Print();
 
-        public OutWinPrintCmdlet() {
+        public OutWinPrint() {
             //this.implementation = new OutputManagerInner();
             //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -57,6 +57,26 @@ namespace WinPrint.Console {
             ParameterSetName = "Print")]
         [Alias("Sheet")]
         public string SheetDefintion { get; set; }
+
+
+        /// <summary>
+        /// If specfied, overrides the landscape setting in the sheet defintion.
+        /// </summary>
+        [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet defintion.",
+            ParameterSetName = "Print")]
+        public YesNo? Landscape { get; set; }
+
+        public enum YesNo {
+            No = 0,
+            Yes = 1
+        }
+        /// <summary>
+        /// If specfied, overrides the line numbers setting in the sheet defintion.
+        /// </summary>
+        [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet defintion (Yes, No).",
+            ParameterSetName = "Print")]
+        public YesNo? LineNumbers { get; set; }
+
 
         /// <summary>
         /// Optional name of the WinPrint Content Type Engine to use.
@@ -109,7 +129,7 @@ namespace WinPrint.Console {
         [Parameter(HelpMessage = "Output is the number of sheets that would be printed. Use -Verbose to print the count of pages.",
             ParameterSetName = "Print")]
         public SwitchParameter WhatIf { get; set; }
-        private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out var o); }
+        //private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out var o); }
 
         /// <summary>
         /// -InstallUpdate switch
@@ -344,8 +364,11 @@ namespace WinPrint.Console {
                     }
 
                     Log.Fatal(e, "");
+                    CleanUp();
+                    return;
                 }
             }
+
 
             if (string.IsNullOrEmpty(Title)) {
                 Title = this.MyInvocation.MyCommand.Name;
@@ -380,6 +403,15 @@ namespace WinPrint.Console {
                 rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
                 WriteProgress(rec);
 
+                if (Landscape.HasValue) {
+                    sheet.Landscape = Landscape == YesNo.Yes;
+                }
+
+                if (LineNumbers.HasValue) {
+                    sheet.ContentSettings.LineNumbers = LineNumbers == YesNo.Yes;
+                }
+
+                // Must set landsacpe after printer/paper selection
                 _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
                 _print.SheetViewModel.SetSheet(sheet);
             }
@@ -389,7 +421,7 @@ namespace WinPrint.Console {
                 return;
             }
 
-            if (string.IsNullOrEmpty(ContentTypeEngine) && !string.IsNullOrEmpty(FileName)) {
+            if (string.IsNullOrEmpty(ContentTypeEngine)) {
                 ContentTypeEngine = ContentTypeEngineBase.GetContentType(FileName);
             }
 
@@ -399,12 +431,12 @@ namespace WinPrint.Console {
             await _print.SheetViewModel.LoadStringAsync(text, ContentTypeEngine).ConfigureAwait(true);
 
             rec.PercentComplete = 40;
-            rec.StatusDescription = _whatIf ? "Counting" : $"Printing";
+            rec.StatusDescription = WhatIf ? "Counting" : $"Printing";
             WriteProgress(rec);
 
             var sheetsCounted = 0;
             try {
-                if (_whatIf) {
+                if (WhatIf) {
                     sheetsCounted = await _print.CountSheets().ConfigureAwait(true);
                 }
                 else {
