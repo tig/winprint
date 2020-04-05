@@ -3,12 +3,16 @@ using System.IO;
 using System.Reflection;
 using WinPrint.Core.ContentTypeEngines;
 using Xunit;
-
+using Xunit.Abstractions;
 
 namespace WinPrint.Core.UnitTests.Models
 {
-    public class MacrosTests
+    public class MacrosTests : TestModelsBase
     {
+        public MacrosTests(ITestOutputHelper output) : base(output)
+        {
+        }
+
         [Fact]
         public void RealFileName_Test()
         {
@@ -152,6 +156,8 @@ namespace WinPrint.Core.UnitTests.Models
 
         private string NullName => null;
         private string EmptyName = "";
+
+
 
         [Fact]
         public void FileExtension()

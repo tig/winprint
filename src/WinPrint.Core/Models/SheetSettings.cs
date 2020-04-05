@@ -111,8 +111,6 @@ namespace WinPrint.Core.Models {
         private int darkness = 0;
 
         public SheetSettings() {
-            LogService.TraceMessage();
-
             // Don't specify defaults in constructor; do it through default settings in
             // SettingsService.CreateDefaultSettingsFile
         }

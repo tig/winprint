@@ -389,7 +389,7 @@ namespace WinPrint.LiteHtml {
         }
 
         protected override int PTtoPX(int pt) {
-            Logging.TraceMessage();
+            //Logging.TraceMessage();
 
             if (_graphics is null) {
                 throw new InvalidOperationException("_graphics cannot be null");

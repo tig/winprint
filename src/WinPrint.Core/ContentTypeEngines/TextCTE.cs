@@ -168,7 +168,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             var n = (int)Math.Ceiling((double)wrappedLines.Count / (double)linesPerPage);
 
-            Log.Debug("Rendered {pages} of {linesperpage} for a total of {lines}.", n, linesPerPage, wrappedLines.Count);
+            Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, linesPerPage, wrappedLines.Count);
 
             return await Task.FromResult(n);
         }

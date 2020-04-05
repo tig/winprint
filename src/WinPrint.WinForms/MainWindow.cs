@@ -189,7 +189,7 @@ namespace WinPrint.Winforms {
         /// </summary>
         // TODO: Refactor PropertyChanged lambdas to be functions so they can be -=
         private void SetupSheetViewModelNotifications() {
-            LogService.TraceMessage();
+            //LogService.TraceMessage();
             if (printPreview.SheetViewModel != null) {
                 LogService.TraceMessage("SetupSheetViewModelNotifications was already called");
                 return;
@@ -320,8 +320,6 @@ namespace WinPrint.Winforms {
         CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         private void MainWindow_Load(object sender, EventArgs e) {
-            LogService.TraceMessage();
-
             // Check for updates
             LogService.TraceMessage("First reference to UpdateService");
             if (ServiceLocator.Current.UpdateService == null) {

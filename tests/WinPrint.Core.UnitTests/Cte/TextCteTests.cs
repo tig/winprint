@@ -1,18 +1,20 @@
-﻿using System.Drawing;
+﻿using Serilog.Sinks.XUnit;
+using System.Drawing;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace WinPrint.Core.UnitTests.Cte
 {
     public class TextCteTests
     {
-        public TextCteTests()
+        public TextCteTests(ITestOutputHelper output)
         {
-            ServiceLocator.Current.LogService.Start("TextCteTests");
-
+            ServiceLocator.Current.LogService.Start(GetType().Name, new TestOutputSink(output, new Serilog.Formatting.Display.MessageTemplateTextFormatter("{Message:lj}")), true, true);
         }
+
         // ContentTypeEngineBase tests
         // Using TextCte since CTE is abstract
         [Fact]

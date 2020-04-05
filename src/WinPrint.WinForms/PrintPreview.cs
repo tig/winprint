@@ -44,7 +44,7 @@ namespace WinPrint.Winforms {
                 }
             }
             else {
-                LogService.TraceMessage($"_MouseWheel page {e.Delta}");
+                // LogService.TraceMessage($"_MouseWheel page {e.Delta}");
                 if (e.Delta < 0) {
                     PageDown();
                 }

@@ -103,7 +103,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <param name="e"></param>
         /// <returns>Number of sheets.</returns>
         public virtual async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
-            LogService.TraceMessage();
             if (Document == null) {
                 throw new ArgumentNullException("Document can't be null for Render");
             }
