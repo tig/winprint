@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Serilog;
@@ -72,6 +73,19 @@ namespace WinPrint.Core.ContentTypeEngines {
                 SetField(ref document, value);
             }
         }
+
+        /// <summary>
+        /// https://stackoverflow.com/questions/5411694/get-all-inherited-classes-of-an-abstract-class
+        /// </summary>
+        public static ICollection<ContentTypeEngineBase> GetDerivedClassesCollection() {
+            List<ContentTypeEngineBase> objects = new List<ContentTypeEngineBase>();
+            foreach (Type type in typeof(ContentTypeEngineBase).Assembly.GetTypes()
+                .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(ContentTypeEngineBase)))) {
+                objects.Add((ContentTypeEngineBase)Activator.CreateInstance(type));
+            }
+            return objects;
+        }
+
         internal string document = null;
 
         public static readonly StringFormat StringFormat = new StringFormat(StringFormat.GenericTypographic) {

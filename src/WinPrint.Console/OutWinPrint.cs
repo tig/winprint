@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Globalization;
+using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Runspaces;
@@ -24,47 +27,45 @@ namespace WinPrint.Console {
         HelpUri = "https://tig.github.io./winprint",
         DefaultParameterSetName = "print")]
     [Alias("wp")]
-    public class OutWinPrint : AsyncCmdlet {
-        private const string DataNotQualifiedForWinprint = "DataNotQualifiedForWinPrint";
-
+    public partial class OutWinPrint : AsyncCmdlet, IDynamicParameters {
         // Private fields
         private List<PSObject> _psObjects = new List<PSObject>();
         private Print _print = new WinPrint.Core.Print();
 
         public OutWinPrint() {
-            //this.implementation = new OutputManagerInner();
-            //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-            //BoundedCapacity = 500;
         }
 
         #region Command Line Switches
-
         /// <summary>
         /// Optional name of the printer to print to.
         /// The alias allows "lp -P printer".
         /// Name alias: becuase that's what out-printer uses.
         /// </summary>
         [Parameter(Position = 0, HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",
-            ParameterSetName = "Print")]
+            ParameterSetName = "Print"), ArgumentCompleter(typeof(PrinterNameCompleter))]
         [Alias("Name")]
         public string PrinterName { get; set; }
 
         /// <summary>
+        /// Optional The paper size name.
+        /// </summary>
+        /// PaperSize - Implemented via IDynamicParameters.GetDynamicParameters
+
+        /// <summary>
         /// Optional name of the WinPrint sheet definition to use.
         /// </summary>
-        [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
-            ParameterSetName = "Print")]
-        [Alias("Sheet")]
-        public string SheetDefintion { get; set; }
+        /// SheetDefintion - Implemented via IDynamicParameters.GetDynamicParameters
 
-
+        public enum PortraitLandscape {
+            Portrait = 0,
+            Landscape = 1
+        }
         /// <summary>
         /// If specfied, overrides the landscape setting in the sheet defintion.
         /// </summary>
         [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet defintion.",
             ParameterSetName = "Print")]
-        public YesNo? Landscape { get; set; }
+        public PortraitLandscape? Orientation { get; set; }
 
         public enum YesNo {
             No = 0,
@@ -77,14 +78,22 @@ namespace WinPrint.Console {
             ParameterSetName = "Print")]
         public YesNo? LineNumbers { get; set; }
 
-
         /// <summary>
         /// Optional name of the WinPrint Content Type Engine to use.
         /// </summary>
-        [Parameter(HelpMessage = "Name of the WinPrint Content Type Engine to use (default is \"text/plain\").",
-            ParameterSetName = "Print")]
-        [Alias("Engine")]
-        public string ContentTypeEngine { get; set; }
+        // ContentTypeEngine - Implemented via IDynamicParameters.GetDynamicParameters
+
+        //// -Language
+
+        /// <summary>
+        /// Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.
+        /// </summary>
+        [Parameter(Position = 0, HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",
+            ParameterSetName = "Print"), ArgumentCompleter(typeof(LanguageCompleter))]
+        [Alias("Lang")]
+        public string Language { get; set; }
+
+
 
         /// <summary>
         /// Optional FileName - will be displayed in header/footer and as title of print job.
@@ -102,6 +111,25 @@ namespace WinPrint.Console {
             ParameterSetName = "Print")]
         public string Title { get; set; }
 
+        /// <summary>
+        ///  Number of first sheet to print(may be used with `-ToSheet`)
+        /// </summary>
+        [Parameter(HelpMessage = "Number of first sheet to print (may be used with `-ToSheet`).",
+        ParameterSetName = "Print")]
+        public int FromSheet { get; set; } = 0;
+
+        /// <summary>
+        ///  Number of last sheet to print(may be used with `-Fromsheet`)
+        /// </summary>
+        [Parameter(HelpMessage = "Number of last sheet to print(may be used with `--Fromsheet`).",
+        ParameterSetName = "Print")]
+        public int ToSheet { get; set; } = 0;
+
+        /// <summary>
+        /// Show *winprint* GUI (to preview or change sheet settings).
+        /// </summary>
+        [Parameter(HelpMessage = "Show *winprint* GUI (to preview or change sheet settings).", ParameterSetName = "Print")]
+        public SwitchParameter Gui { get; set; }
         /// <summary>
         /// For the -Verbose switch
         /// </summary>
@@ -299,7 +327,7 @@ namespace WinPrint.Console {
                 baseObject is PSObject) {
                 var error = new ErrorRecord(
                     new FormatException($"Invalid data type for {MyInvocation.InvocationName}"),
-                    DataNotQualifiedForWinprint,
+                    "DataNotQualifiedForWinprint",
                     ErrorCategory.InvalidType,
                     null);
 
@@ -369,6 +397,9 @@ namespace WinPrint.Console {
                 }
             }
 
+            //if (!string.IsNullOrEmpty(PaperSize)) {
+            //    _print.SetPaperSize(PaperSize);
+            //}
 
             if (string.IsNullOrEmpty(Title)) {
                 Title = this.MyInvocation.MyCommand.Name;
@@ -388,9 +419,9 @@ namespace WinPrint.Console {
                 Log.Information("Printing sheet {sheetNum}", sheetNum);
             };
 
-
             try {
-                var sheet = _print.SheetViewModel.FindSheet(SheetDefintion, out var sheetID);
+                MyInvocation.BoundParameters.TryGetValue("SheetDefintion", out object sheetDefintion);
+                var sheet = _print.SheetViewModel.FindSheet((string)sheetDefintion, out var sheetID);
 
                 if (_verbose) {
                     Log.Information("    Printer:          {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
@@ -403,8 +434,8 @@ namespace WinPrint.Console {
                 rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
                 WriteProgress(rec);
 
-                if (Landscape.HasValue) {
-                    sheet.Landscape = Landscape == YesNo.Yes;
+                if (Orientation.HasValue) {
+                    sheet.Landscape = Orientation == PortraitLandscape.Landscape;
                 }
 
                 if (LineNumbers.HasValue) {
@@ -421,14 +452,18 @@ namespace WinPrint.Console {
                 return;
             }
 
-            if (string.IsNullOrEmpty(ContentTypeEngine)) {
-                ContentTypeEngine = ContentTypeEngineBase.GetContentType(FileName);
+            // If Langauge is provided, use it instead of CTE. 
+            if (!MyInvocation.BoundParameters.TryGetValue("Language", out object contentTypeEngine)) {
+                if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentTypeEngine)) {
+                    // If neither were specified, smartly pick CTE
+                    contentTypeEngine = (object)ContentTypeEngineBase.GetContentType(FileName);
+                }
             }
 
             rec.PercentComplete = 30;
             rec.StatusDescription = $"Loading content";
             WriteProgress(rec);
-            await _print.SheetViewModel.LoadStringAsync(text, ContentTypeEngine).ConfigureAwait(true);
+            await _print.SheetViewModel.LoadStringAsync(text, (string)contentTypeEngine).ConfigureAwait(true);
 
             rec.PercentComplete = 40;
             rec.StatusDescription = WhatIf ? "Counting" : $"Printing";
@@ -436,6 +471,26 @@ namespace WinPrint.Console {
 
             var sheetsCounted = 0;
             try {
+                bool sheetRangeSet = false;
+                if (FromSheet != 0) {
+                    _print.PrintDocument.PrinterSettings.FromPage = FromSheet;
+                    sheetRangeSet = true;
+                }
+                else {
+                    _print.PrintDocument.PrinterSettings.FromPage = 0;
+                }
+
+                if (ToSheet != 0) {
+                    _print.PrintDocument.PrinterSettings.ToPage = ToSheet;
+                    sheetRangeSet = true;
+                }
+                else {
+                    _print.PrintDocument.PrinterSettings.ToPage = 0;
+                }
+
+                if (sheetRangeSet)
+                    Log.Information("Printing from sheet {from} to sheet {to}.", _print.PrintDocument.PrinterSettings.FromPage, _print.PrintDocument.PrinterSettings.ToPage);
+
                 if (WhatIf) {
                     sheetsCounted = await _print.CountSheets().ConfigureAwait(true);
                 }
@@ -601,6 +656,66 @@ namespace WinPrint.Console {
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e) {
             var ex = e.ExceptionObject as Exception;
             ServiceLocator.Current.TelemetryService.TrackException(ex);
+        }
+
+        /// <summary>
+        /// See https://stackoverflow.com/questions/25823910/pscmdlet-dynamic-auto-complete-a-parameter-like-get-process
+        /// </summary>
+        /// <returns></returns>
+        public object GetDynamicParameters() {
+            var runtimeDict = new RuntimeDefinedParameterDictionary();
+
+            // -PrinterName
+            List<string> printerNames = new List<String>();
+            using var pd = new PrintDocument();
+
+            if (!string.IsNullOrEmpty(PrinterName)) {
+                PrinterName = PrinterName.Trim('\"').Trim('\'');
+                pd.PrinterSettings.PrinterName = PrinterName;
+
+                foreach (PaperSize size in pd.PrinterSettings.PaperSizes) {
+                    printerNames.Add(size.PaperName);
+                }
+            }
+
+            runtimeDict.Add("PaperSize", new RuntimeDefinedParameter("PaperSize", typeof(String), new Collection<Attribute>() {
+                    new ParameterAttribute() {
+                        HelpMessage = "The paper size name.",
+                        ParameterSetName = "Print"
+                    },
+                    printerNames.Count > 0 ? new ValidateSetAttribute(printerNames.ToArray()) : null
+            }));
+
+            // -SheetDefintion
+            //  [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
+            //    ParameterSetName = "Print")]
+            runtimeDict.Add("SheetDefintion", new RuntimeDefinedParameter("SheetDefintion", typeof(String), new Collection<Attribute>() {
+                    new ParameterAttribute() {
+                        HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\").",
+                        ParameterSetName = "Print"
+                    },
+                    ModelLocator.Current.Settings.Sheets.Count > 0 ? new ValidateSetAttribute(ModelLocator.Current.Settings.Sheets.Values.Select(s => s.Name).ToArray()) : null
+            }));
+
+            // -ContentTypeEngine
+            runtimeDict.Add("ContentTypeEngine", new RuntimeDefinedParameter("ContentTypeEngine", typeof(String), new Collection<Attribute>() {
+                    new ParameterAttribute() {
+                        HelpMessage = "Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"text/plain\" or \"csharp\". Specifying a langauge will choose the \"text/code\" CTE.",
+                        ParameterSetName = "Print"
+                    },
+                    new ValidateSetAttribute(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.GetContentTypeName()).ToArray())
+            }));
+
+            //// -Language
+            //runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {
+            //        new ParameterAttribute() {
+            //            HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",
+            //            ParameterSetName = "Print"
+            //        },
+            //        new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())
+            //}));
+
+            return runtimeDict;
         }
     }
 }
