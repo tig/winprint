@@ -7,9 +7,7 @@ title: winprint
 
 ![winprint 2.0](winprint2.jpg)
 
-![winprint command line](winprint-cmdline.jpg)
-
-![winprint powershell](out-winprint.jpg)
+![winprint 2.0 powershell](out-winprint.png)
 
 ## Features
 
@@ -19,7 +17,9 @@ title: winprint
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* PowerShell-based command line interface. Allows winprint to be used from other applications or solutions. `out-winprint` is a drop-in replacement for `out-printer`.
+* PowerShell-based command line interface. 
+  * Complete control of printing features with dozens of paramters, including *Intellicode* parameter completion (using `tab` key).
+  * Allows **winprint** to be used from other applications or solutions. `out-winprint` is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
@@ -30,6 +30,7 @@ See [User's Guide](users-guide.md) for more details.
 
 See [About](about.md) for the history prior to *winprint 2.0*.
 
+* 04-Apr-2020 - 2.0.0.4000 (Beta1) - Finished PowerShell implementation. Auto-Update.
 * 16-Mar-2020 - 2.0.0.3800 (Alpha) - PowerShell support.
 * 09-Mar-2020 - 2.0.0.3002 (Alpha) - Updated installer, Telemetry, Minor bug fixes
 * 03-Mar-2020 - 2.0.0.2022 (Alpha) - Fixed crashing bug at startup.
