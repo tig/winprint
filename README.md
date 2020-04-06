@@ -8,9 +8,9 @@
 
 ![winprint 2.0](https://tig.github.io/winprint/winprint2.jpg)
 
-![winprint command line](https://tig.github.io/winprint/winprint-cmdline.jpg)
+![winprint command line](https://tig.github.io/winprint/out-winprint.png)
 
-* [Website](https://tig.github.io/winprint/)
+* [Overview](https://tig.github.io/winprint/)
 * [Install](https://tig.github.io/winprint/install.html)
 * [User's Guide](https://tig.github.io/winprint/users-guide.html)
 * [About](https://tig.github.io/winprint/about.html)
