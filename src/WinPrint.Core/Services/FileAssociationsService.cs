@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.Win32;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core.Services {
@@ -53,8 +48,8 @@ namespace WinPrint.Core.Services {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }
 
-            List<Langauge> langs = new List<Langauge>(associations.Languages);
-            List<Langauge> langsSettings = new List<Langauge>(ModelLocator.Current.Settings.LanguageAssociations.Languages);
+            var langs = new List<Langauge>(associations.Languages);
+            var langsSettings = new List<Langauge>(ModelLocator.Current.Settings.LanguageAssociations.Languages);
 
             // TODO: overide Equals and GetHashCode for Langauge
             var result = langsSettings.Union(langs).ToList();

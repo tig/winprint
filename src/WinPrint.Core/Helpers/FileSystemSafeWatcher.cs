@@ -2,10 +2,10 @@
 // No support is provided and this code has NOT been tested.
 
 using System;
-using System.IO;
-using System.Timers;
 using System.Collections;
 using System.ComponentModel;
+using System.IO;
+using System.Timers;
 
 namespace menelabs.core {
 
@@ -43,13 +43,15 @@ namespace menelabs.core {
 #pragma warning disable CA1720 // Identifier contains type name
         public virtual bool IsDuplicate(object obj) {
 #pragma warning restore CA1720 // Identifier contains type name
-            DelayedEvent delayedEvent = obj as DelayedEvent;
-            if (delayedEvent == null)
+            var delayedEvent = obj as DelayedEvent;
+            if (delayedEvent == null) {
                 return false; // this is not null so they are different
-            FileSystemEventArgs eO1 = _args;
-            RenamedEventArgs reO1 = _args as RenamedEventArgs;
-            FileSystemEventArgs eO2 = delayedEvent._args;
-            RenamedEventArgs reO2 = delayedEvent._args as RenamedEventArgs;
+            }
+
+            var eO1 = _args;
+            var reO1 = _args as RenamedEventArgs;
+            var eO2 = delayedEvent._args;
+            var reO2 = delayedEvent._args as RenamedEventArgs;
             // The events are equal only if they are of the same type (reO1 and reO2
             // are both null or NOT NULL) and have all properties equal.        
             // We also eliminate Changed events that follow recent Created events
@@ -246,40 +248,45 @@ namespace menelabs.core {
         /// </summary>
         /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
         protected void OnChanged(FileSystemEventArgs e) {
-            if (Changed != null)
+            if (Changed != null) {
                 Changed(this, e);
+            }
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Created event.
         /// </summary>
         /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
         protected void OnCreated(FileSystemEventArgs e) {
-            if (Created != null)
+            if (Created != null) {
                 Created(this, e);
+            }
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Deleted event.
         /// </summary>
         /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
         protected void OnDeleted(FileSystemEventArgs e) {
-            if (Deleted != null)
+            if (Deleted != null) {
                 Deleted(this, e);
+            }
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Error event.
         /// </summary>
         /// <param name="e">An System.IO.ErrorEventArgs that contains the event data.</param>
         protected void OnError(ErrorEventArgs e) {
-            if (Error != null)
+            if (Error != null) {
                 Error(this, e);
+            }
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Renamed event.
         /// </summary>
         /// <param name="e">A System.IO.RenamedEventArgs that contains the event data.</param>
         protected void OnRenamed(RenamedEventArgs e) {
-            if (Renamed != null)
+            if (Renamed != null) {
                 Renamed(this, e);
+            }
         }
         /// <summary>
         /// A synchronous method that returns a structure that contains specific information on the change that occurred, given the type of change you want to monitor.
@@ -320,10 +327,13 @@ namespace menelabs.core {
         }
 
         private void Uninitialize() {
-            if (_fileSystemWatcher != null)
+            if (_fileSystemWatcher != null) {
                 _fileSystemWatcher.Dispose();
-            if (_serverTimer != null)
+            }
+
+            if (_serverTimer != null) {
                 _serverTimer.Dispose();
+            }
         }
 
         private void FileSystemEventHandler(object sender, FileSystemEventArgs e) {
@@ -349,12 +359,12 @@ namespace menelabs.core {
                     // Lock the collection while processing the events
                     lock (_events.SyncRoot) {
                         DelayedEvent current;
-                        for (int i = 0; i < _events.Count; i++) {
+                        for (var i = 0; i < _events.Count; i++) {
                             current = _events[i] as DelayedEvent;
                             if (current.Delayed) {
                                 // This event has been delayed already so we can fire it
                                 // We just need to remove any duplicates
-                                for (int j = i + 1; j < _events.Count; j++) {
+                                for (var j = i + 1; j < _events.Count; j++) {
                                     if (current.IsDuplicate(_events[j])) {
                                         // Removing later duplicates
                                         _events.RemoveAt(j);
@@ -362,7 +372,7 @@ namespace menelabs.core {
                                     }
                                 }
 
-                                bool raiseEvent = true;
+                                var raiseEvent = true;
                                 if (current.Args.ChangeType == WatcherChangeTypes.Created || current.Args.ChangeType == WatcherChangeTypes.Changed) {
                                     //check if the file has been completely copied (can be opened for read)
                                     FileStream stream = null;
@@ -374,7 +384,9 @@ namespace menelabs.core {
                                         raiseEvent = false;
                                     }
                                     finally {
-                                        if (stream != null) stream.Close();
+                                        if (stream != null) {
+                                            stream.Close();
+                                        }
                                     }
                                 }
 

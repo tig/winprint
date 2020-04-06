@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Serilog;
@@ -18,14 +16,16 @@ namespace WinPrint.Core.Services {
         /// Gets the directory node is installed in. Assumes node is installed.
         /// </summary>
         /// <returns></returns>
-        private async Task<string> GetNodeDirectory() {
-            if (!string.IsNullOrEmpty(nodeDir)) 
+        public async Task<string> GetNodeDirectory() {
+            LogService.TraceMessage();
+            if (!string.IsNullOrEmpty(nodeDir)) {
                 return nodeDir;
+            }
 
-            string path = "";
+            var path = "";
             Process proc = null;
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
+                var psi = new ProcessStartInfo();
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
                 psi.FileName = @"where.exe";
@@ -60,7 +60,9 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> GetModulesDirectory() {
-            string path = "";
+            LogService.TraceMessage();
+
+            var path = "";
             path = (await RunNpmCommand("-g root")).TrimEnd() + "\\";
             return Path.GetDirectoryName(path);
         }
@@ -76,10 +78,12 @@ namespace WinPrint.Core.Services {
         public string Version { get => version; set => version = value; }
 
         private async Task<string> RunNodeCommmand(string nodeCmd) {
+            LogService.TraceMessage();
+
             string result = null;
 
             Process proc = null;
-            ProcessStartInfo psi = new ProcessStartInfo();
+            var psi = new ProcessStartInfo();
             try {
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
@@ -94,7 +98,7 @@ namespace WinPrint.Core.Services {
                 stdErr.Clear();
                 Log.Debug("Starting Process: {f}, {a}", psi.FileName, psi.Arguments);
                 proc = Process.Start(psi);
-                StreamWriter sw = proc.StandardInput;
+                var sw = proc.StandardInput;
                 Log.Debug("Sending: {cmd}", stdIn.ToString());
                 await sw.WriteLineAsync(stdIn.ToString());
                 // This terminates the session
@@ -113,8 +117,9 @@ namespace WinPrint.Core.Services {
                 }
 
                 // Process output
-                if (stdOut.Length > 0) 
+                if (stdOut.Length > 0) {
                     result = stdOut.ToString();
+                }
 
                 // TODO: Implement better error handling of stdErr
             }
@@ -140,6 +145,8 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> RunNpmCommand(string npmCmd) {
+            LogService.TraceMessage();
+
             var result = await RunNodeCommmand($"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" {npmCmd}");
             return result;
         }
@@ -150,7 +157,7 @@ namespace WinPrint.Core.Services {
         /// <returns></returns>
         public async Task<bool> IsInstalled() {
             LogService.TraceMessage();
-            bool installed = false;
+            var installed = false;
 
             var result = await RunNpmCommand("version");
             if (!string.IsNullOrEmpty(result)) {
@@ -174,11 +181,11 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         private async Task<bool> InstallPrismJS() {
-            bool installed = false;
+            var installed = false;
             Process proc = null;
             var nodeDir = await GetNodeDirectory(); ;
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
+                var psi = new ProcessStartInfo();
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
                 psi.FileName = @"node";
@@ -189,7 +196,7 @@ namespace WinPrint.Core.Services {
 
                 LogService.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
                 nodeProc = Process.Start(psi);
-                StreamWriter sw = nodeProc.StandardInput;
+                var sw = nodeProc.StandardInput;
                 LogService.TraceMessage($"Process started: {proc.ProcessName}");
                 LogService.TraceMessage($"Sending: {stdIn.ToString()}");
                 await sw.WriteLineAsync(stdIn.ToString());

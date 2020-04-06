@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Printing;
-using System.Linq;
-using GalaSoft.MvvmLight;
+﻿using System.Drawing.Printing;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Core.Models {
@@ -18,7 +13,7 @@ namespace WinPrint.Core.Models {
         private int columns = 1;
         private int padding = 3;
         private bool pageSeparator;
-        private Margins margins = new Margins(0,0,0,0);
+        private Margins margins = new Margins(0, 0, 0, 0);
 
         private bool landscape;
 
@@ -74,13 +69,14 @@ namespace WinPrint.Core.Models {
         /// Font used for content. Will override any content font settings specified by a ContentType provider.
         /// </summary>
         [SafeForTelemetry]
-        public ContentSettings ContentSettings { 
+        public ContentSettings ContentSettings {
             get {
                 //if (contentSettings is null)
                 //    contentSettings = new ContentSettings();
-                 return contentSettings; 
-            } 
-            set => SetField(ref contentSettings, value); }
+                return contentSettings;
+            }
+            set => SetField(ref contentSettings, value);
+        }
 
         /// <summary>
         /// Header printed at bottom  of each sheet
@@ -115,8 +111,6 @@ namespace WinPrint.Core.Models {
         private int darkness = 0;
 
         public SheetSettings() {
-            LogService.TraceMessage();
-
             // Don't specify defaults in constructor; do it through default settings in
             // SettingsService.CreateDefaultSettingsFile
         }

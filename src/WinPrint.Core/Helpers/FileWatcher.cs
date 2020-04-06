@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using menelabs.core;
 using WinPrint.Core.Services;
 
@@ -28,7 +23,7 @@ namespace WinPrint.Core.Helpers {
             // Make a temporary copy of the event to avoid possibility of
             // a race condition if the last subscriber unsubscribes
             // immediately after the null check and before the event is raised.
-            EventHandler handler = ChangedEvent;
+            var handler = ChangedEvent;
 
             // Event will be null if there are no subscribers
             if (handler != null) {

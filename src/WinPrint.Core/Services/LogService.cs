@@ -20,32 +20,56 @@ namespace WinPrint.Core.Services {
         public LoggingLevelSwitch ConsoleLevelSwitch { get; set; } = new LoggingLevelSwitch();
         public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new LoggingLevelSwitch();
 
-        public void Start() {
+        /// <summary>
+        /// Starts Serilog-based logging. 
+        /// </summary>
+        /// <param name="appName">The name used to identify the log entries; emitted in the first log entry of each run.</param>
+        /// <param name="consoleSink">Provides the ILogEventSink for the console.</param>
+        /// <param name="debug">If true, the console log will emit LogEventLevel.Debug entries</param>
+        /// <param name="verbose">If true, the console log will emit LogEventLevel.Information entries.</param>
+        public void Start(string appName, ILogEventSink consoleSink = null, bool debug = false, bool verbose = false) {
             MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
             DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 
+            ConsoleLevelSwitch.MinimumLevel = (verbose ? LogEventLevel.Information : LogEventLevel.Warning);
+            ConsoleLevelSwitch.MinimumLevel = (debug ? LogEventLevel.Debug : ConsoleLevelSwitch.MinimumLevel);
+
 #if DEBUG
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-            ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #else
+            // TODO: Keep this at Debug until after Beta, then change it to Information
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
-            ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
 #endif
-            string productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
-            LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{AppDomain.CurrentDomain.FriendlyName}.txt".Replace(@"file:\", "");
+            var productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
+            LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{appName}.log".Replace(@"file:\", "");
+
+            if (consoleSink == null) {
+                ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
+            }
 
             // Setup logging
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(MasterLevelSwitch)
-                .WriteTo.Console(levelSwitch: ConsoleLevelSwitch)
-                .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
-                .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
-                ////.WriteTo.ApplicationInsights(config, new CustomConverter(), restrictedToMinimumLevel: LogEventLevel.Information)
-                .CreateLogger();
+            if (consoleSink == null) {
+                // GUI
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.ControlledBy(MasterLevelSwitch)
+                    .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
+                    .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
+                    .CreateLogger();
+            }
+            else {
+                // Console / Powershell
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.ControlledBy(MasterLevelSwitch)
+                    //.WriteTo.Console(levelSwitch: ConsoleLevelSwitch)
+                    .WriteTo.Sink((ILogEventSink)consoleSink, levelSwitch: ConsoleLevelSwitch)
+                    .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
+                    .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
+                    .CreateLogger();
+            }
 
             Log.Debug("--------- {app} {v} ---------", AppDomain.CurrentDomain.FriendlyName, productVersion);
             if (ServiceLocator.Current.TelemetryService.TelemetryEnabled) {
-                string msg = string.IsNullOrEmpty(TelemetryService.Key) ? "However, telemetry key is missing so no telemetry will be tracked." : "";
+                var msg = string.IsNullOrEmpty(TelemetryService.Key) ? "However, telemetry key is missing so no telemetry will be tracked." : "";
                 Log.Debug($"Telemetry is enabled. {msg}");
             }
             Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);

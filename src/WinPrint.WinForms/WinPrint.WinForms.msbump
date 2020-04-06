@@ -1,7 +1,7 @@
 {
   Configurations: {
     "Debug": {
-      BumpRevision: true
+      BumpRevision: false
     },
     
     "Release": {

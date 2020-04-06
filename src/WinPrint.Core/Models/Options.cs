@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
 using CommandLine;
 using CommandLine.Text;
@@ -52,7 +50,7 @@ namespace WinPrint.Core.Models {
         public int ToPage { get; set; }
 
         [SafeForTelemetry]
-        [Option('c', "count-sheets", Default = false, Required = false, HelpText = "Exit code is set to numer of sheets that would be printed. Use --verbose to diplsay the count.")]
+        [Option('c', "count-sheets", Default = false, Required = false, HelpText = "Exit code is set to number of sheets that would be printed. Use --verbose to display the count.")]
         public bool CountPages { get; set; }
 
         [SafeForTelemetry]
@@ -84,7 +82,7 @@ namespace WinPrint.Core.Models {
                         Files = new List<string>() { { "*.cs" } },
                         Printer = "Fabricam 535",
                         PaperSize = "A4"
-                    }),                    
+                    }),
                     new Example("Print the first two sheets of Program.cs", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         FromPage = 1,

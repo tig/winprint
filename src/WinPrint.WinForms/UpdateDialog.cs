@@ -8,30 +8,36 @@ namespace WinPrint.WinForms {
     public partial class UpdateDialog : Form {
         public UpdateDialog() {
             InitializeComponent();
+            StartPosition = FormStartPosition.CenterParent;
+            this.labelNewVersion.Text = $"A newer version ({ServiceLocator.Current.UpdateService.LatestVersion}) is available.";
+            this.linkReleasePage.Links[0].LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri;
         }
 
         private void downloadButton_Click(object sender, EventArgs args) {
-            string url = ServiceLocator.Current.UpdateService.DownloadUri;
-            Log.Debug($"Browsing to download: {url}");
+            ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(false);
+        }
+
+        private void linkReleasePage_LinkClicked(object sender, LinkLabelLinkClickedEventArgs args) {
+            Log.Debug($"Browsing to release page: {(string)linkReleasePage.Links[0].LinkData}");
+
+            ServiceLocator.Current.TelemetryService.TrackEvent("Release Page Click");
+
             Process proc = null;
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
+                var psi = new ProcessStartInfo();
                 psi.UseShellExecute = true;   // This is important
-                psi.FileName = url;
+                psi.FileName = (string)linkReleasePage.Links[0].LinkData;
                 proc = Process.Start(psi);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
-                ServiceLocator.Current.TelemetryService.TrackException(e, false);
                 // TODO: Better error message (output of stderr?)
-                Log.Error(e, "Couldn't browse to {url}.", url);
+                ServiceLocator.Current.TelemetryService.TrackException(e, false);
+
+                Log.Error(e, $"Couldn't browse to {(string)linkReleasePage.Links[0].LinkData}.");
             }
             finally {
                 proc?.Dispose();
             }
-            //Log.Debug("Exiting app.");
-            //Application.Exit();
         }
     }
 }

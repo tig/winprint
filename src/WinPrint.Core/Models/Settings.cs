@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Drawing.Printing;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json.Serialization;
 using WinPrint.Core.ContentTypeEngines;
 
@@ -86,7 +83,15 @@ namespace WinPrint.Core.Models {
 
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumSheets { get => Sheets.Count; }
+        public int NumSheets {
+            get {
+                if (Sheets == null) {
+                    return 0;
+                }
+
+                return Sheets.Count;
+            }
+        }
 
         /// <summary>
         /// Content type handlers
@@ -100,10 +105,27 @@ namespace WinPrint.Core.Models {
 
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumFilesAssociations { get => LanguageAssociations.FilesAssociations.Count; }
+        public int NumFilesAssociations {
+            get {
+                if (LanguageAssociations == null || LanguageAssociations.FilesAssociations == null) {
+                    return 0;
+                }
+
+                return LanguageAssociations.FilesAssociations.Count;
+            }
+        }
+
         [JsonIgnore]
         [SafeForTelemetry]
-        public int NumLanguages { get => LanguageAssociations.Languages.Count; }
+        public int NumLanguages {
+            get {
+                if (LanguageAssociations == null || LanguageAssociations.Languages == null) {
+                    return 0;
+                }
+
+                return LanguageAssociations.Languages.Count;
+            }
+        }
 
         /// <summary>
         /// Diagnostic settings
@@ -174,24 +196,24 @@ namespace WinPrint.Core.Models {
         /// the .config.json file. 
         /// </summary>
         /// <returns>A Settings object with default settings.</returns>
-        internal static Settings CreateDefaultSettings() {
-            string monoSpaceFamily = "monospace";
-            string sansSerifFamily = "sansserif";
+        public static Settings CreateDefaultSettings() {
+            var monoSpaceFamily = "monospace";
+            var sansSerifFamily = "sansserif";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 monoSpaceFamily = "Consolas";
                 sansSerifFamily = "Microsoft Sans Serif";
             }
 
-            string defaultContentFontFamily = monoSpaceFamily;
-            float defaultContentFontSize = 8F;
-            FontStyle defaultContentFontStyle = FontStyle.Regular;
+            var defaultContentFontFamily = monoSpaceFamily;
+            var defaultContentFontSize = 8F;
+            var defaultContentFontStyle = FontStyle.Regular;
 
-            string defaultHFFontFamily = sansSerifFamily;
-            float defaultHFFontSize = 10F;
-            FontStyle defaultHFFontStyle = FontStyle.Bold;
+            var defaultHFFontFamily = sansSerifFamily;
+            var defaultHFFontSize = 10F;
+            var defaultHFFontStyle = FontStyle.Bold;
 
-            string defaultHeaderText = "{DateRevised:D}|{FullyQualifiedPath}|Type: {FileType}";
-            string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
+            var defaultHeaderText = "{DateRevised:D}|{Title}|Type: {FileType}";
+            var defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
             var settings = new Settings();
 
@@ -207,9 +229,9 @@ namespace WinPrint.Core.Models {
                 //    PrintBackground = true
                 //},
                 //LineNumbers = true,
-                //LineNumberSeparator = false,
-                //NewPageOnFormFeed = false,
-                //TabSpaces = 4
+                LineNumberSeparator = false,
+                NewPageOnFormFeed = false,
+                TabSpaces = 4
             };
 
             // Html fonts are determined by:

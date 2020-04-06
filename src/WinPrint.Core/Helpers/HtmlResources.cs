@@ -15,7 +15,7 @@ namespace WinPrint.LiteHtml {
 
         public byte[] GetResourceBytes(string resource) {
             LogService.TraceMessage($"{resource}");
-            byte[] data = new byte[0];
+            var data = new byte[0];
             if (string.IsNullOrWhiteSpace(resource)) {
                 return data;
             }
@@ -31,14 +31,14 @@ namespace WinPrint.LiteHtml {
 
         public string GetResourceString(string resource) {
             LogService.TraceMessage($"{resource}");
-            string data = string.Empty;
+            var data = string.Empty;
             if (string.IsNullOrWhiteSpace(resource)) {
                 return data;
             }
             try {
                 if (resource.StartsWith("file:")) {
-                    UriBuilder urlBuilder = new UriBuilder(resource);
-                    using StreamReader reader = new StreamReader(urlBuilder.Path);
+                    var urlBuilder = new UriBuilder(resource);
+                    using var reader = new StreamReader(urlBuilder.Path);
                     data = reader.ReadToEnd();
                 }
                 else {

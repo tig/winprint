@@ -1,5 +1,4 @@
 ﻿using GalaSoft.MvvmLight.Ioc;
-using WinPrint.Core.Services;
 
 namespace WinPrint {
     //public class Logger {
@@ -32,6 +31,16 @@ namespace WinPrint.Core.Services {
         public void Register<VM, V>()
             where VM : class {
             SimpleIoc.Default.Register<VM>();
+        }
+
+        public static void Reset() {
+            _current = null;
+            SimpleIoc.Default.Unregister<SettingsService>();
+            SimpleIoc.Default.Unregister<FileAssociationsService>();
+            SimpleIoc.Default.Unregister<NodeService>();
+            SimpleIoc.Default.Unregister<LogService>();
+            SimpleIoc.Default.Unregister<TelemetryService>();
+            SimpleIoc.Default.Unregister<UpdateService>();
         }
     }
 }

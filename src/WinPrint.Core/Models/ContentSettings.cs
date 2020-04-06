@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WinPrint.Core.Models {
+﻿namespace WinPrint.Core.Models {
     /// <summary>
     /// Model for page content (properties that impact how content w/in a page is printed).
     /// Each Sheet prints sheet.Columns by sheet.Rows Pages. 
@@ -44,5 +40,11 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public bool Diagnostics { get => diagnostics; set => SetField(ref diagnostics, value); }
         private bool diagnostics = false;
+        /// <summary>
+        /// If true, content will be drawn with line numbers (if supported) 
+        /// </summary>
+        [SafeForTelemetry]
+        public bool LineNumbers { get => linenumbers; set => SetField(ref linenumbers, value); }
+        private bool linenumbers = true;
     }
 }

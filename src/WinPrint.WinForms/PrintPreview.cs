@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Text;
-using System.Windows.Forms;
-using System.Drawing.Printing;
 using System.Drawing.Drawing2D;
-using System.IO;
-using WinPrint.Core;
-using System.Diagnostics;
-using WinPrint.Core.Services;
+using System.Windows.Forms;
 using Serilog;
+using WinPrint.Core;
+using WinPrint.Core.Services;
 
 namespace WinPrint.Winforms {
     /// <summary>
@@ -42,37 +36,47 @@ namespace WinPrint.Winforms {
         private void _MouseWheel(object sender, MouseEventArgs e) {
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Mouse Wheel", new Dictionary<string, string> { ["ModifierKeys"] = ModifierKeys.ToString() });
             if (ModifierKeys.HasFlag(Keys.Control)) {
-                if (e.Delta < 0)
+                if (e.Delta < 0) {
                     ZoomOut();
-                else
+                }
+                else {
                     ZoomIn();
+                }
             }
             else {
-                LogService.TraceMessage($"_MouseWheel page {e.Delta}");
-                if (e.Delta < 0)
+                // LogService.TraceMessage($"_MouseWheel page {e.Delta}");
+                if (e.Delta < 0) {
                     PageDown();
-                else
+                }
+                else {
                     PageUp();
+                }
             }
         }
 
         private void ZoomIn() {
-            int multiplier = 10;
-            if (Zoom >= 200)
+            var multiplier = 10;
+            if (Zoom >= 200) {
                 multiplier = 50;
+            }
+
             Zoom += multiplier;
             Invalidate();
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Zoom In", new Dictionary<string, string> { ["Zoom"] = Zoom.ToString() });
         }
 
         private void ZoomOut() {
-            int multiplier = 10;
-            if (Zoom >= 200)
+            var multiplier = 10;
+            if (Zoom >= 200) {
                 multiplier = 50;
+            }
+
             Zoom -= multiplier;
 
-            if (Zoom <= 0)
+            if (Zoom <= 0) {
                 Zoom = 10;
+            }
+
             Invalidate();
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Zoom Out", new Dictionary<string, string> { ["Zoom"] = Zoom.ToString() });
         }
@@ -94,8 +98,9 @@ namespace WinPrint.Winforms {
         }
 
         protected override void OnKeyUp(KeyEventArgs e) {
-            if (e is null) 
+            if (e is null) {
                 throw new ArgumentNullException(nameof(e));
+            }
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Key Up", new Dictionary<string, string> { ["KeyCode"] = e.KeyCode.ToString() });
 
@@ -148,7 +153,9 @@ namespace WinPrint.Winforms {
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
-            if (e is null) throw new ArgumentNullException(nameof(e));
+            if (e is null) {
+                throw new ArgumentNullException(nameof(e));
+            }
 
             LogService.TraceMessage($"Text: {Text}");
             //base.OnPaint(e);
@@ -157,7 +164,7 @@ namespace WinPrint.Winforms {
                 // Paint background
                 //using var backBrush = new SolidBrush(BackColor);
                 //e.Graphics.FillRectangle(backBrush, ClientRectangle);
-                GraphicsState state = e.Graphics.Save();
+                var state = e.Graphics.Save();
 
                 // Calculate scale and location
                 double w = svm.Bounds.Width;
@@ -176,8 +183,9 @@ namespace WinPrint.Winforms {
                 if (previewSize.Width > 10 && previewSize.Height > 10) {
 
                     // Center
-                    if (Zoom <= 100)
+                    if (Zoom <= 100) {
                         e.Graphics.TranslateTransform((ClientSize.Width / 2) - (previewSize.Width / 2), (ClientSize.Height / 2) - (previewSize.Height / 2));
+                    }
 
                     // Scale for client size & zoom
                     e.Graphics.ScaleTransform((float)scale, (float)scale);
@@ -185,7 +193,7 @@ namespace WinPrint.Winforms {
                     //if (!svm.Loading && !svm.Reflowing) {
                     if (svm.CacheEnabled) {
                         e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                        Image img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
+                        var img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
                         //e.Graphics.DrawImage(img,
                         //    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
                         //    0F, 0F, img.Width, img.Height,
@@ -194,8 +202,9 @@ namespace WinPrint.Winforms {
                             new Rectangle((int)svm.Bounds.Left, (int)svm.Bounds.Top, (int)(svm.Bounds.Width), (int)(svm.Bounds.Height)));
                         e.Graphics.Restore(state);
                     }
-                    else
+                    else {
                         svm.PrintSheet(e.Graphics, CurrentSheet);
+                    }
                     //}
                 }
                 e.Graphics.Restore(state);
@@ -205,7 +214,7 @@ namespace WinPrint.Winforms {
             Log.Information("Status: {status}", Text);
             if (!string.IsNullOrEmpty(Text)) {
                 using var font = new Font(Font.FontFamily, 18F, FontStyle.Regular, GraphicsUnit.Point);
-                using StringFormat sf = new StringFormat();
+                using var sf = new StringFormat();
                 sf.LineAlignment = StringAlignment.Center;
                 sf.Alignment = StringAlignment.Center;
                 sf.Trimming = StringTrimming.EllipsisWord;

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using Microsoft.Deployment.WindowsInstaller;
 using WixSharp;
-using WixSharp.CommonTasks;
-using sys = System.Reflection;
 
 namespace WinPrintInstaller {
     class Install {
@@ -13,16 +10,20 @@ namespace WinPrintInstaller {
         static void Main() {
             const string sourceBaseDir = @"..\..\release";
             const string outDir = @"..\..\install";
-            string versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
+            var versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
             Debug.WriteLine($"version path: {versionFile}");
             var info = FileVersionInfo.GetVersionInfo(versionFile);
 
-            Feature feature = new Feature(new Id("winprint"));
+            var feature = new Feature(new Id("winprint"));
 
             var project = new Project(info.ProductName, new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
 
                 RegValues = new[] {
-                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", "[TELEMETRY]") { Win64 = true }
+                    new RegValue(feature, RegistryHive.LocalMachine, $@"Software\{info.CompanyName}\{info.ProductName}", "Telemetry", "[TELEMETRY]") {
+                        Win64 = true,
+                        // https://github.com/oleg-shilo/wixsharp/issues/818#issuecomment-597058371
+                        AttributesDefinition = "Type=integer"
+                    }
                 },
 
                 Dirs = new[] {

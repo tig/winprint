@@ -13,7 +13,7 @@ namespace WinPrint {
             uint pcchOut = 0;
             AssocQueryString(AssocF.Verify, assocStr, doctype, null, null, ref pcchOut);
 
-            StringBuilder pszOut = new StringBuilder((int)pcchOut);
+            var pszOut = new StringBuilder((int)pcchOut);
             AssocQueryString(AssocF.Verify, assocStr, doctype, null, pszOut, ref pcchOut);
             return pszOut.ToString();
         }

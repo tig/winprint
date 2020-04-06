@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -20,7 +21,7 @@ namespace WinPrint.Core.Services {
 
         private Stopwatch runtime;
 
-        public void Start() {
+        public void Start(string appName, IDictionary<string, string> startProperties = null) {
             runtime = System.Diagnostics.Stopwatch.StartNew();
 
             var val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel Systems\winprint", "Telemetry", 0);
@@ -49,15 +50,23 @@ namespace WinPrint.Core.Services {
             h.Initialize();
             h.ComputeHash(Encoding.UTF8.GetBytes($"{Environment.UserName}/{Environment.MachineName}"));
             telemetry.Context.User.Id = Convert.ToBase64String(h.Hash);
+            // See: https://stackoverflow.com/questions/42861344/how-to-overwrite-or-ignore-cloud-roleinstance-with-application-insights
+            telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
 
-            var properties = new Dictionary<string, string> {
-               ["app"] = AppDomain.CurrentDomain.FriendlyName,
-               ["version"] = telemetry.Context.Component.Version,
-               ["os"] = Environment.OSVersion.ToString(),
-               ["arch"] = Environment.Is64BitProcess ? "x64" : "x86",
-               ["dotNetVersion"] = Environment.Version.ToString()
-            };
-            TrackEvent("Application Started", properties);
+
+            if (startProperties == null) {
+                startProperties = new Dictionary<string, string>();
+            }
+
+            // Merged passed in properites
+            startProperties.Concat(new Dictionary<string, string> {
+                ["app"] = appName,
+                ["version"] = telemetry.Context.Component.Version,
+                ["os"] = Environment.OSVersion.ToString(),
+                ["arch"] = Environment.Is64BitProcess ? "x64" : "x86",
+                ["dotNetVersion"] = Environment.Version.ToString()
+            }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            TrackEvent("Application Started", startProperties);
         }
 
         public void Stop() {
@@ -80,8 +89,9 @@ namespace WinPrint.Core.Services {
         }
 
         public void TrackException(Exception ex, bool log = false) {
-            if (ex != null && log is true)
+            if (ex != null && log is true) {
                 Log.Error(ex, "{msg}", ex.Message);
+            }
 
             if (telemetry != null && ex != null && TelemetryEnabled) {
                 var telex = new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry(ex);
@@ -90,8 +100,9 @@ namespace WinPrint.Core.Services {
             }
         }
         internal void Flush() {
-            if (telemetry != null)
+            if (telemetry != null) {
                 telemetry.Flush();
+            }
         }
 
         //private class CustomConverter : TraceTelemetryConverter {

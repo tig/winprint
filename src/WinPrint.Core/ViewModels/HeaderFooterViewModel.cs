@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Printing;
-using System.Drawing.Text;
-using GalaSoft.MvvmLight;
+using Serilog;
 using WinPrint.Core.Models;
 
 namespace WinPrint.Core {
@@ -68,8 +65,9 @@ namespace WinPrint.Core {
         // Flag: Has Dispose already been called?
         bool disposed = false;
         protected virtual void Dispose(bool disposing) {
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing) {
                 //if (Font != null) Font.Dispose();
@@ -86,36 +84,47 @@ namespace WinPrint.Core {
         internal abstract bool IsAlignTop();
 
         public void Paint(Graphics g, int sheetNum) {
-            if (!Enabled) return;
-            if (g is null) throw new ArgumentNullException(nameof(g));
+            if (!Enabled) {
+                return;
+            }
 
-            RectangleF boundsHF = CalcBounds();
+            if (g is null) {
+                throw new ArgumentNullException(nameof(g));
+            }
+
+            var boundsHF = CalcBounds();
             boundsHF.Y += IsAlignTop() ? 0 : verticalPadding;
             boundsHF.Height -= verticalPadding;
 
-            if (LeftBorder)
+            if (LeftBorder) {
                 g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
+            }
 
-            if (TopBorder)
+            if (TopBorder) {
                 g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Right, boundsHF.Top);
+            }
 
-            if (RightBorder)
+            if (RightBorder) {
                 g.DrawLine(Pens.Black, boundsHF.Right, boundsHF.Top, boundsHF.Right, boundsHF.Bottom);
+            }
 
-            if (BottomBorder)
+            if (BottomBorder) {
                 g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
+            }
 
-            Macros macros = new Macros(svm);
-            string[] parts = macros.ReplaceMacro(Text, sheetNum).Split('\t', '|');
+            Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
+            var macros = new Macros(svm);
+            macros.Page = sheetNum;
+            var parts = macros.ReplaceMacro(Text).Split('\t', '|');
 
             // Left\tCenter\tRight
             if (parts == null || parts.Length == 0) {
                 return;
             }
 
-            using System.Drawing.Font tempFont = CreateTempFont(g);
+            using var tempFont = CreateTempFont(g);
 
-            using StringFormat fmt = new StringFormat(StringFormat.GenericTypographic) {
+            using var fmt = new StringFormat(StringFormat.GenericTypographic) {
                 Trimming = StringTrimming.None,
                 // BUGBUG: This is a work around for https://stackoverflow.com/questions/59159919/stringformat-trimming-changes-vertical-placement-of-text
                 //         (turning on NoWrap). 
@@ -126,7 +135,7 @@ namespace WinPrint.Core {
 
             // Center goes first - it has priority - ensure it gets drawn completely where
             // Left & Right can be trimmed
-            SizeF sizeCenter = new SizeF(0, 0);
+            var sizeCenter = new SizeF(0, 0);
 
             if (parts.Length > 1) {
                 fmt.Alignment = StringAlignment.Center;
@@ -137,10 +146,10 @@ namespace WinPrint.Core {
 
             // Left
             // Remove the space taken up by the center from the bounds
-            float textCenterBounds = (boundsHF.Width - sizeCenter.Width) / 2;
+            var textCenterBounds = (boundsHF.Width - sizeCenter.Width) / 2;
 
-            RectangleF boundsLeft = new RectangleF(boundsHF.X, boundsHF.Y, textCenterBounds, boundsHF.Height);
-            SizeF sizeLeft = g.MeasureString(parts[0], tempFont, (int)textCenterBounds, fmt);
+            var boundsLeft = new RectangleF(boundsHF.X, boundsHF.Y, textCenterBounds, boundsHF.Height);
+            var sizeLeft = g.MeasureString(parts[0], tempFont, (int)textCenterBounds, fmt);
 
             fmt.Alignment = StringAlignment.Near;
             fmt.Trimming = StringTrimming.None;
@@ -148,7 +157,7 @@ namespace WinPrint.Core {
             g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
 
             //Right
-            RectangleF boundsRight = new RectangleF(boundsHF.X + (boundsHF.Width - textCenterBounds), boundsHF.Y, textCenterBounds, boundsHF.Height);
+            var boundsRight = new RectangleF(boundsHF.X + (boundsHF.Width - textCenterBounds), boundsHF.Y, textCenterBounds, boundsHF.Height);
             if (parts.Length > 2) {
                 fmt.Alignment = StringAlignment.Far;
                 fmt.Trimming = StringTrimming.None;
@@ -165,8 +174,9 @@ namespace WinPrint.Core {
         private System.Drawing.Font CreateTempFont(Graphics g) {
             System.Drawing.Font tempFont;
 
-            if (Font == null)
+            if (Font == null) {
                 return System.Drawing.SystemFonts.DefaultFont;
+            }
 
             if (g.PageUnit == GraphicsUnit.Display) {
                 tempFont = new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point);
@@ -185,8 +195,14 @@ namespace WinPrint.Core {
         protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
 
         public HeaderFooterViewModel(SheetViewModel svm, HeaderFooter hf) {
-            if (svm is null) throw new ArgumentNullException(nameof(svm));
-            if (hf is null) throw new ArgumentNullException(nameof(hf));
+            if (svm is null) {
+                throw new ArgumentNullException(nameof(svm));
+            }
+
+            if (hf is null) {
+                throw new ArgumentNullException(nameof(hf));
+            }
+
             this.svm = svm;
 
             Text = hf.Text;
@@ -196,13 +212,15 @@ namespace WinPrint.Core {
             BottomBorder = hf.BottomBorder;
 
             // Font can be null (provided by Sheet definition)
-            if (hf.Font != null)
+            if (hf.Font != null) {
                 Font = (Core.Models.Font)hf.Font.Clone();
+            }
+
             Enabled = hf.Enabled;
 
             // Wire up changes from Header / Footer models
             hf.PropertyChanged += (s, e) => {
-                bool reflow = false;
+                var reflow = false;
                 switch (e.PropertyName) {
                     case "Text": Text = hf.Text; break;
                     case "LeftBorder": LeftBorder = hf.LeftBorder; break;
@@ -221,14 +239,16 @@ namespace WinPrint.Core {
         public HeaderViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) { }
 
         internal override RectangleF CalcBounds() {
-            float h = SheetViewModel.GetFontHeight(Font) + verticalPadding;
-            if (Enabled)
+            var h = SheetViewModel.GetFontHeight(Font) + verticalPadding;
+            if (Enabled) {
                 return new RectangleF(svm.Bounds.Left + svm.Margins.Left,
                             svm.Bounds.Top + svm.Margins.Top,
                             svm.Bounds.Width - svm.Margins.Left - svm.Margins.Right,
                             h);
-            else
+            }
+            else {
                 return new RectangleF(0, 0, 0, 0);
+            }
         }
 
         internal override bool IsAlignTop() {
@@ -239,15 +259,16 @@ namespace WinPrint.Core {
         public FooterViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) { }
 
         internal override RectangleF CalcBounds() {
-            float h = SheetViewModel.GetFontHeight(Font) + verticalPadding;
-            if (Enabled)
+            var h = SheetViewModel.GetFontHeight(Font) + verticalPadding;
+            if (Enabled) {
                 return new RectangleF(svm.Bounds.Left + svm.Margins.Left,
                                 svm.Bounds.Bottom - svm.Margins.Bottom - h,
                                 svm.Bounds.Width - svm.Margins.Left - svm.Margins.Right,
                                 h);
-            else
+            }
+            else {
                 return new RectangleF(0, 0, 0, 0);
-
+            }
         }
         internal override bool IsAlignTop() {
             return false;

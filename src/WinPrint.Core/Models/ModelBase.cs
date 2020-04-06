@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
-using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
 
@@ -19,7 +17,10 @@ namespace WinPrint.Core.Models {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null) {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            if (EqualityComparer<T>.Default.Equals(field, value)) {
+                return false;
+            }
+
             field = value;
             OnPropertyChanged(propertyName);
             return true;
@@ -37,18 +38,19 @@ namespace WinPrint.Core.Models {
         /// </summary>
         /// <returns>A dictionary with the properties and values (as strings). Suitable for calling TrackEvent().</returns>
         public virtual IDictionary<string, string> GetTelemetryDictionary() {
-            var dictionary = new Dictionary<string, string>(); 
+            var dictionary = new Dictionary<string, string>();
             foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(this)) {
                 if (property.Attributes.Contains(new SafeForTelemetry())) {
-                    object value = property.GetValue(this);
+                    var value = property.GetValue(this);
                     if (value != null) {
                         if (property.PropertyType.IsSubclassOf(typeof(ModelBase))) {
                             // Go deep
                             var propDict = ((ModelBase)value).GetTelemetryDictionary();
                             dictionary.Add(property.Name, JsonSerializer.Serialize(propDict, propDict.GetType()));
                         }
-                        else
+                        else {
                             dictionary.Add(property.Name, JsonSerializer.Serialize(value, value.GetType()));
+                        }
                     }
                 }
             }
@@ -64,7 +66,10 @@ namespace WinPrint.Core.Models {
         /// </summary>
         /// <param name="source"></param>
         public virtual void CopyPropertiesFrom(ModelBase source) {
-            if (source is null) return;
+            if (source is null) {
+                return;
+            }
+
             var sourceProps = source.GetType().GetProperties().Where(x => x.CanRead).ToList();
             var destProps = this.GetType().GetProperties().Where(x => x.CanWrite).ToList();
             foreach (var (sourceProp, destProp) in
@@ -86,22 +91,36 @@ namespace WinPrint.Core.Models {
                             }
                             ((ModelBase)destProp.GetValue(this)).CopyPropertiesFrom((ModelBase)sourceProp.GetValue(source, null));
                         }
-                        else
+                        else {
                             destProp.SetValue(this, null);
+                        }
                     }
-                    else
+                    else {
                         destProp.SetValue(this, sourceProp.GetValue(source, null), null);
+                    }
                 }
                 else {
-                    Dictionary<string, SheetSettings> sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue(source);
-                    Dictionary<string, SheetSettings> destList = (Dictionary<string, SheetSettings>)destProp.GetValue(this);
+                    var sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue(source);
+                    if (sourceList == null) {
+                        sourceList = new Dictionary<string, SheetSettings>();
+                    }
+
+                    var destList = (Dictionary<string, SheetSettings>)destProp.GetValue(this);
+                    if (destList == null) {
+                        destList = new Dictionary<string, SheetSettings>();
+                    }
+
                     foreach (var src in sourceList) {
-                        if (destList.ContainsKey(src.Key))
+                        if (destList.ContainsKey(src.Key)) {
                             destList[src.Key].CopyPropertiesFrom(src.Value);
+                        }
                         else {
                             destList[src.Key] = new SheetSettings();
                             destList[src.Key].CopyPropertiesFrom(src.Value);
                         }
+                    }
+                    if (destProp.GetValue(this) is null) {
+                        destProp.SetValue(this, destList, null);
                     }
                 }
             }

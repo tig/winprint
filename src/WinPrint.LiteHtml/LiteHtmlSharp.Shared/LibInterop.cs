@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 #if AUTO_UTF8
 using Utf8Str = System.String;
@@ -8,8 +7,7 @@ using Utf8Str = System.String;
 using Utf8Str = System.IntPtr;
 #endif
 
-namespace LiteHtmlSharp
-{
+namespace LiteHtmlSharp {
 
     public static class NativeMethods {
         // here we just use "Foo" and at runtime we load "Foo.dll" dynamically
@@ -23,14 +21,15 @@ namespace LiteHtmlSharp
         [DllImport("kernel32")]
         private static extern void FreeLibrary(IntPtr handle);
 
-        private sealed  class LibraryUnloader {
+        private sealed class LibraryUnloader {
             internal LibraryUnloader(IntPtr handle) {
                 this.handle = handle;
             }
 
             ~LibraryUnloader() {
-                if (handle != null)
+                if (handle != null) {
                     FreeLibrary(handle);
+                }
             }
 
             private IntPtr handle;
@@ -42,21 +41,23 @@ namespace LiteHtmlSharp
         static NativeMethods() {
             string path;
 
-            if (IntPtr.Size == 4)
+            if (IntPtr.Size == 4) {
                 path = "path/to/the/32/bit/Foo.dll";
-            else
+            }
+            else {
                 path = "path/to/the/64/bit/Foo.dll";
+            }
 
-                IntPtr handle = LoadLibrary(path);
+            var handle = LoadLibrary(path);
 
-                if (handle == null)
-                    throw new DllNotFoundException("unable to find the native Foo library: " + path);
+            if (handle == null) {
+                throw new DllNotFoundException("unable to find the native Foo library: " + path);
+            }
 
-                unloader = new LibraryUnloader(handle);
+            unloader = new LibraryUnloader(handle);
         }
     }
-    public class LibInterop : ILibInterop
-    {
+    public class LibInterop : ILibInterop {
 
 #if WINDOWS
         const string LiteHtmlLibFile = "LiteHtmlLib.dll";
@@ -74,10 +75,8 @@ namespace LiteHtmlSharp
         readonly static Lazy<LibInterop> _instance = new Lazy<LibInterop>(() => new LibInterop());
         public static LibInterop Instance => _instance.Value;
 
-        LibInterop()
-        {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
+        LibInterop() {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
                 LoadLibrary(Environment.Is64BitProcess ? LiteHtmlLibFile_x64 : LiteHtmlLibFile_x86);
             }
         }

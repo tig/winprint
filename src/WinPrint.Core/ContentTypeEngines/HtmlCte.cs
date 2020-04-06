@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
 using Serilog;
@@ -16,7 +14,13 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Implements generic HTML file type support. 
     /// </summary>
     public class HtmlCte : ContentTypeEngineBase, IDisposable {
-        public static new string ContentType = "text/html";
+        private static readonly string _contentType = "text/html";
+        /// <summary>
+        /// ContentType identifier (shorthand for class name). 
+        /// </summary>
+        public override string GetContentTypeName() {
+            return _contentType;
+        }
 
         public static HtmlCte Create() {
             var content = new HtmlCte();
@@ -39,8 +43,9 @@ namespace WinPrint.Core.ContentTypeEngines {
         // Flag: Has Dispose already been called?
         bool disposed = false;
         void Dispose(bool disposing) {
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing) {
                 //if (litehtml != null)
@@ -51,11 +56,19 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         private Bitmap htmlBitmap;
 
-        public async override Task<bool> LoadAsync(string filePath) {
+        //public async override Task<bool> LoadAsync(string filePath) {
+        //    ready = false;
+        //    litehtml = null;
+        //    htmlBitmap = null;
+        //    return await base.LoadAsync(filePath);
+        //}
+
+        public override async Task<bool> SetDocumentAsync(string doc) {
             ready = false;
             litehtml = null;
             htmlBitmap = null;
-            return await base.LoadAsync(filePath);
+            Document = doc;
+            return await Task.FromResult(true);
         }
 
         /// <summary>
@@ -71,14 +84,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             reflowProgress?.Invoke(this, "HtmlFileContent.RenderAsync");
             await base.RenderAsync(printerResolution, reflowProgress);
 
-            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
-            int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
+            var width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+            var height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             LogService.TraceMessage($"HtmlFileContent.RenderAsync - Page size: {width}x{height} @ {printerResolution.X}x{printerResolution.Y} dpi");
 
             string css;
             try {
                 // TODO: Make sure wiprint.css is in the same dir as .config file once setup is impl
-                using StreamReader cssStream = new StreamReader("winprint.css");
+                using var cssStream = new StreamReader("winprint.css");
                 css = await cssStream.ReadToEndAsync();
                 cssStream.Close();
                 reflowProgress?.Invoke(this, "Read winprint.css");
@@ -97,14 +110,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
-            g.TextRenderingHint = textRenderingHint;
+            g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
 
             LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
             litehtml.Graphics = g;
-            litehtml.StringFormat = stringFormat;
-            litehtml.Grayscale = ContentSettings.Grayscale ;
+            litehtml.StringFormat = ContentTypeEngineBase.StringFormat;
+            litehtml.Grayscale = ContentSettings.Grayscale;
             litehtml.Darkness = ContentSettings.Darkness;
             litehtml.PrintBackground = ContentSettings.PrintBackground;
 
@@ -117,7 +130,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             litehtml.Document.OnMediaChanged();
 
             // TODO: Use return of Render() to get "best width"
-            int bestWidth = litehtml.Document.Render((int)width);
+            var bestWidth = litehtml.Document.Render((int)width);
             reflowProgress?.Invoke(this, "Done with Render");
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(width, height));
@@ -195,14 +208,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
             litehtml.Graphics = g;
-            g.TextRenderingHint = textRenderingHint;
+            g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
-            int yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
+            var yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
 
-            if (!ContentSettings.Diagnostics)
+            if (!ContentSettings.Diagnostics) {
                 g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
+            }
 
-            LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
+            var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
             litehtml.Document.Draw((int)-0, (int)-yPos, new position {
                 x = 0,
                 y = 0,

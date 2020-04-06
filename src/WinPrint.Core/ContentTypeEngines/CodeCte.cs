@@ -25,6 +25,19 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// </summary>
     // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class CodeCte : ContentTypeEngineBase, IDisposable {
+        private static readonly string _contentType = "text/sourcecode";
+        /// <summary>
+        /// ContentType identifier (shorthand for class name). 
+        /// </summary>
+        public override string GetContentTypeName() {
+            if (string.IsNullOrEmpty(Language)) {
+                return _contentType;
+            }
+            else {
+                return Language;
+            }
+        }
+
         public static CodeCte Create() {
             var engine = new CodeCte();
             engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
@@ -65,11 +78,15 @@ namespace WinPrint.Core.ContentTypeEngines {
         // Flag: Has Dispose already been called?
         bool disposed = false;
         void Dispose(bool disposing) {
-            if (disposed)
+            if (disposed) {
                 return;
+            }
 
             if (disposing) {
-                if (cachedFont != null) cachedFont.Dispose();
+                if (cachedFont != null) {
+                    cachedFont.Dispose();
+                }
+
                 lines = null;
             }
             disposed = true;
@@ -77,23 +94,33 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         private bool convertedToHtml = false;
 
-        public async override Task<bool> LoadAsync(string filePath) {
-            if (await base.LoadAsync(filePath)) {
-                if (!convertedToHtml)
-                    lines = await DocumentToHtmlLines(filePath, Language);
-                convertedToHtml = true;
-                return true;
+        //public async override Task<bool> LoadAsync(string filePath) {
+        //    if (await base.LoadAsync(filePath)) {
+        //        if (!convertedToHtml)
+        //            lines = await DocumentToHtmlLines(filePath, Language);
+        //        convertedToHtml = true;
+        //        return true;
+        //    }
+        //    return false;
+        //}
+
+        public override async Task<bool> SetDocumentAsync(string doc) {
+            Document = doc;
+            if (!convertedToHtml) {
+                lines = await DocumentToHtmlLines("", Language);
             }
-            return false;
+
+            convertedToHtml = true;
+            return true;
         }
 
         private async Task<List<HtmlLine>> DocumentToHtmlLines(string file, string language) {
             LogService.TraceMessage($"{language}");
 
-           // const string cssTheme = "prism-coy.css";
+            // const string cssTheme = "prism-coy.css";
             //const string cssPrism = "prism.css";
             //const string cssWinPrint = "prism-winprint-overrides.css";
-            string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
+            var appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             var cssUri = new UriBuilder();
             cssUri.Scheme = "file";
             cssUri.Host = @"";
@@ -110,25 +137,25 @@ namespace WinPrint.Core.ContentTypeEngines {
             sbNodeJS.AppendLine($"console.log(html);");
             var nodeJS = sbNodeJS.ToString();
 
-            List<HtmlLine> htmlLines = new List<HtmlLine>();
+            var htmlLines = new List<HtmlLine>();
             try {
-                ProcessStartInfo psi = new ProcessStartInfo();
+                var psi = new ProcessStartInfo();
                 psi.UseShellExecute = false;   // This is important
                 psi.CreateNoWindow = true;     // This is what hides the command window.
                 psi.FileName = @"node";
                 psi.RedirectStandardInput = true;
                 psi.RedirectStandardOutput = true;
                 using (var node = Process.Start(psi)) {
-                    StreamWriter sw = node.StandardInput;
+                    var sw = node.StandardInput;
                     //Helpers.Logging.TraceMessage(sbNodeJS.ToString());
                     await sw.WriteLineAsync(sbNodeJS.ToString());
                     sw.Close();
 
-                    int n = 1;
+                    var n = 1;
                     string css;
                     try {
                         // TODO: Make sure wiprint.css is in the same dir as .config file once setup is impl
-                        using StreamReader cssStream = new StreamReader("winprint.css");
+                        using var cssStream = new StreamReader("winprint.css");
                         css = await cssStream.ReadToEndAsync();
                         cssStream.Close();
                     }
@@ -190,7 +217,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         public string Language { get; internal set; }
 
         private string GetPrismThemesPath() {
-            string path = @"C:\Users\ckindel\source\node_modules";
+            var path = @"C:\Users\ckindel\source\node_modules";
             //try {
             //    ProcessStartInfo psi = new ProcessStartInfo();
             //    psi.UseShellExecute = false;   // This is important
@@ -220,7 +247,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         public new async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             //await base.RenderAsync(printerResolution, reflowProgress);
 
-            if (document == null) throw new ArgumentNullException("document can't be null for Render");
+            if (document == null) {
+                throw new ArgumentNullException("document can't be null for Render");
+            }
+
             LogService.TraceMessage("CodeFileContent.Render");
 
             // Calculate the number of lines per page.
@@ -251,22 +281,23 @@ namespace WinPrint.Core.ContentTypeEngines {
         private async Task<List<HtmlLine>> MeasureLines(string document) {
             LogService.TraceMessage("CodeFileContent.MeasureLines");
 
-            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
-            int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
+            var width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+            var height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
 
-            foreach (var l in lines)
+            foreach (var l in lines) {
                 await Task.Run(() => RenderLine(l));
+            }
             //await RenderLine(l);
 
             minCharWidth = MeasureString(null, "W").Width;
-            int minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
+            var minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
             return lines;
         }
 
         private async Task RenderLine(HtmlLine line) {
-            int width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
-            int height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
+            var width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
+            var height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
             var htmlBitmap = new Bitmap(width, height);
             var g = Graphics.FromImage(htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
@@ -282,8 +313,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         private SizeF MeasureString(Graphics g, string text) {
-            int charsFitted, linesFilled;
-            return MeasureString(g, text, out charsFitted, out linesFilled);
+            return MeasureString(g, text, out var charsFitted, out var linesFilled);
         }
 
         /// <summary>
@@ -297,17 +327,17 @@ namespace WinPrint.Core.ContentTypeEngines {
         private SizeF MeasureString(Graphics g, string text, out int charsFitted, out int linesFilled) {
             if (g is null) {
                 // define context used for determining glyph metrics.        
-                using Bitmap bitmap = new Bitmap(1, 1);
+                using var bitmap = new Bitmap(1, 1);
                 g = Graphics.FromImage(bitmap);
                 //g = Graphics.FromHwnd(PrintPreview.Instance.Handle);
                 g.PageUnit = GraphicsUnit.Document;
             }
 
             // determine width     
-            float fontHeight = lineHeight;
+            var fontHeight = lineHeight;
             // Use page settings including lineNumberWidth
-            SizeF proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
-            SizeF size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
+            var proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
+            var size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
         }
 
@@ -327,16 +357,18 @@ namespace WinPrint.Core.ContentTypeEngines {
             PaintLineNumberSeparator(g);
 
             // Print each line of the file.
-            int startLine = linesPerPage * (pageNum - 1);
-            int endLine = startLine + linesPerPage;
+            var startLine = linesPerPage * (pageNum - 1);
+            var endLine = startLine + linesPerPage;
             int lineOnPage;
             for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
-                int lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
+                var lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
                 if (lineInDocument < lines.Count && lineInDocument >= startLine && lineInDocument <= endLine) {
-                    if (lines[lineInDocument].lineNumber > 0)
+                    if (lines[lineInDocument].lineNumber > 0) {
                         PaintLineNumber(g, pageNum, lineInDocument);
-                    float xPos = leftMargin + lineNumberWidth;
-                    float yPos = lineOnPage * lineHeight;
+                    }
+
+                    var xPos = leftMargin + lineNumberWidth;
+                    var yPos = lineOnPage * lineHeight;
                     RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
                 }
             }
@@ -349,8 +381,8 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             //            g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height)));
 
-            LiteHtmlSize size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            line.liteHtml.Document.Draw((int)xPos, (int)yPos-2, new position {
+            var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
+            line.liteHtml.Document.Draw((int)xPos, (int)yPos - 2, new position {
                 x = 0,
                 y = 0,
                 width = (int)Math.Round(size.Width),
@@ -370,9 +402,9 @@ namespace WinPrint.Core.ContentTypeEngines {
         // TODO: Allow a different (non-monospace) font for line numbers
         internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
             if (LineNumbers == true && lineNumberWidth != 0) {
-                int lineOnPage = lineNumber % linesPerPage;
+                var lineOnPage = lineNumber % linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
-                int x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lines[lineNumber].lineNumber}").Width) : 0;
+                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lines[lineNumber].lineNumber}").Width) : 0;
                 g.DrawString($"{lines[lineNumber].lineNumber}", cachedFont, Brushes.Gray, x, lineOnPage * lineHeight, StringFormat.GenericDefault);
             }
         }

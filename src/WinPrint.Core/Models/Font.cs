@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.InteropServices;
-using GalaSoft.MvvmLight;
 
 namespace WinPrint.Core.Models {
     public class Font : ICloneable {
@@ -31,11 +28,14 @@ namespace WinPrint.Core.Models {
         /// Font style (Regular, Bold, Italic, Underline, Strikeout)
         /// </summary>
         [SafeForTelemetry]
-        public FontStyle Style { get => style; set {
-                if (!Enum.IsDefined(typeof(FontStyle), value))
+        public FontStyle Style {
+            get => style; set {
+                if (!Enum.IsDefined(typeof(FontStyle), value)) {
                     value = FontStyle.Bold | FontStyle.Italic;
+                }
+
                 style = value;
-//                SetField(ref style, value);
+                //                SetField(ref style, value);
 
             }
         }
@@ -46,7 +46,8 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public float Size {
             get => size;
-            set { size = value;
+            set {
+                size = value;
                 //SetField(ref size, value);
             }
         }

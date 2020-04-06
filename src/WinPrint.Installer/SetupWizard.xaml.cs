@@ -12,45 +12,30 @@
 
 namespace WinPrintInstaller {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Data;
-    using System.Windows.Documents;
-    using System.Windows.Input;
-    using System.Windows.Media;
-    using System.Windows.Media.Imaging;
     using System.Windows.Navigation;
-    using System.Windows.Shapes;
     using Microsoft.Deployment.WindowsInstaller;
-    using WixSharp;
 
     /// <summary>
     /// Interaction logic for SetupWizard.xaml
     /// </summary>
-    public partial class SetupWizard : Window
-    {
+    public partial class SetupWizard : Window {
         private ManualResetEvent installStartEvent;
         private InstallProgressCounter progressCounter;
         private bool canceled;
         public Session Session;
         private string productVersion;
 
-        public SetupWizard(ManualResetEvent installStartEvent)
-        {
+        public SetupWizard(ManualResetEvent installStartEvent) {
             this.installStartEvent = installStartEvent;
             this.progressCounter = new InstallProgressCounter(0.5);
         }
 
         public MessageResult ProcessMessage(InstallMessage messageType, Record messageRecord,
-            MessageButtons buttons, MessageIcon icon, MessageDefaultButton defaultButton)
-        {
-            try
-            {
+            MessageButtons buttons, MessageIcon icon, MessageDefaultButton defaultButton) {
+            try {
                 WixSharp.CommonTasks.UACRevealer.Exit();
 
                 this.progressCounter.ProcessMessage(messageType, messageRecord);
@@ -58,9 +43,8 @@ namespace WinPrintInstaller {
                     this.progressCounter.Progress * (this.progressBar.Maximum - this.progressBar.Minimum);
                 //this.progressLabel.Content = "" + (int)Math.Round(100 * this.progressCounter.Progress) + "%";
 
-                string message = String.Format("{0}: {1}", messageType, messageRecord);
-                switch (messageType)
-                {
+                var message = String.Format("{0}: {1}", messageType, messageRecord);
+                switch (messageType) {
                     case InstallMessage.Error:
                     case InstallMessage.Warning:
                         this.LogMessage(message);
@@ -76,14 +60,12 @@ namespace WinPrintInstaller {
                         break;
                 }
 
-                if (this.canceled)
-                {
+                if (this.canceled) {
                     this.canceled = false;
                     return MessageResult.Cancel;
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 this.LogMessage(ex.ToString());
                 this.LogMessage(ex.StackTrace);
             }
@@ -91,14 +73,12 @@ namespace WinPrintInstaller {
             return MessageResult.OK;
         }
 
-        private void LogMessage(string message)
-        {
+        private void LogMessage(string message) {
             this.messagesTextBox.Text += Environment.NewLine + message;
             this.messagesTextBox.ScrollToEnd();
         }
 
-        internal void EnableExit()
-        {
+        internal void EnableExit() {
             this.progressBar.Visibility = Visibility.Hidden;
             //this.progressLabel.Visibility = Visibility.Hidden;
             this.cancelButton.Visibility = Visibility.Hidden;
@@ -106,8 +86,7 @@ namespace WinPrintInstaller {
             this.exitButton.Visibility = Visibility.Visible;
         }
 
-        private void installButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void installButton_Click(object sender, RoutedEventArgs e) {
             this.Session["TELEMETRY"] = (bool)this.telemetryCheck.IsChecked ? "1" : "0";
             WixSharp.CommonTasks.UACRevealer.Enter();
             this.telemetryCheck.Visibility = Visibility.Hidden;
@@ -117,19 +96,15 @@ namespace WinPrintInstaller {
             this.installStartEvent.Set();
         }
 
-        private void exitButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void exitButton_Click(object sender, RoutedEventArgs e) {
             this.Close();
         }
 
-        private void cancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.installButton.Visibility == Visibility.Visible)
-            {
+        private void cancelButton_Click(object sender, RoutedEventArgs e) {
+            if (this.installButton.Visibility == Visibility.Visible) {
                 this.Close();
             }
-            else
-            {
+            else {
                 this.canceled = true;
                 this.cancelButton.IsEnabled = false;
             }
