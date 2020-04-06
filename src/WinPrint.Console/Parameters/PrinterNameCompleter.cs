@@ -24,10 +24,9 @@ namespace WinPrint.Console {
             // Must provide the quotes
             // https://stackoverflow.com/questions/30633098/powershell-param-validateset-values-with-spaces-and-tab-completion
             return PrinterSettings.InstalledPrinters
-                .AsQueryable()
                 .Cast<string>()
-                .Select(printerName => printerName.Contains(" ", System.StringComparison.OrdinalIgnoreCase) ? new CompletionResult($"'{printerName}'") : new CompletionResult(printerName)
-            );
+                .Select(printerName => printerName.Contains(" ", System.StringComparison.OrdinalIgnoreCase) ? new CompletionResult($"'{printerName}'") : new CompletionResult(printerName))
+                .ToArray<CompletionResult>();
         }
     }
 }
