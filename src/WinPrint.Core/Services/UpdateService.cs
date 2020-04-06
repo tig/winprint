@@ -77,7 +77,7 @@ namespace WinPrint.Core.Services {
         /// Checks for updated version online. 
         /// </summary>
         /// <returns></returns>
-        public async Task<Version> GetLatestStableVersionAsync(CancellationToken token) {
+        public async Task<Version> GetLatestVersionAsync(CancellationToken token) {
             InstallerUri = new Uri("https://github.com/tig/winprint/releases");
             using var client = new WebClient();
             try {

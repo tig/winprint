@@ -188,7 +188,7 @@ namespace WinPrint.Core.Services {
         public static string SettingsPath {
             get {
                 // Get dir of .exe
-                var path = AppDomain.CurrentDomain.BaseDirectory;
+                var path = Path.GetDirectoryName(Assembly.GetAssembly(typeof(SettingsService)).Location);
                 var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 //Log.Debug("path = {path}", path);
                 //Log.Debug("appdata = {appdata}", appdata);
@@ -202,7 +202,7 @@ namespace WinPrint.Core.Services {
                 else {
                     var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(SettingsService)).Location);
 
-                    // is this in \Kindel Systems\winprint?
+                    // is this in Kindel Systems\winprint?
                     if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}")) {
                         // We're running %programfiles%\Kindel Systems\winprint; use %appdata%\Kindel Systems\winprint.
                         path = $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";

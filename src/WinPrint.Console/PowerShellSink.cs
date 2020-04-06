@@ -30,10 +30,10 @@ namespace WinPrint.Console {
             }
 
             lock (_syncRoot) {
-                if (_cmdlet.ProcessingCount == 0) {
-                    Debug.WriteLine("PowerShellSink is disabled because a cmdlet is not processing.");
-                    return;
-                }
+                //if (_cmdlet.ProcessingCount == 0) {
+                //    Debug.WriteLine("PowerShellSink is disabled because a cmdlet is not processing.");
+                //    return;
+                //}
 
                 using var strWriter = new StringWriter();
                 TextFormatter.Format(logEvent, strWriter);

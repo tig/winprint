@@ -6,15 +6,18 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
+using Serilog.Events;
 //using TTRider.PowerShellAsync;
 using WinPrint.Core;
 using WinPrint.Core.ContentTypeEngines;
@@ -99,7 +102,8 @@ namespace WinPrint.Console {
         /// Optional FileName - will be displayed in header/footer and as title of print job.
         /// </summary>
         [Parameter(HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +
-            "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use.",
+            "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. " +
+            "If $input is not available, FileName will be used as the path to the file to print.",
             ParameterSetName = "Print")]
         [Alias("File")]
         public string FileName { get; set; }
@@ -138,11 +142,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// For the -Debug switch
         /// </summary>
-#if DEBUG
-        private bool _debug = true;
-#else
         private bool _debug { get => MyInvocation.BoundParameters.TryGetValue("Debug", out object o); }
-#endif
 
         /// <summary>
         /// Input stream.
@@ -178,18 +178,20 @@ namespace WinPrint.Console {
 
         #region Update Service Related Code
 
-        CancellationTokenSource _cancellationToken;
+        CancellationTokenSource _getVersionCancellationToken;
 
         // Update stuff
-        private void Setup() {
-            _cancellationToken = new CancellationTokenSource();
+        private void SetupUpdateHandler() {
+            Log.Debug("Update Handler Setup");
+            _getVersionCancellationToken = new CancellationTokenSource();
             ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
             ServiceLocator.Current.UpdateService.DownloadProgressChanged += UpdateService_DownloadProgressChanged;
         }
-        private void CleanUp() {
+        private void CleanUpUpdateHandler() {
+            Log.Debug("Update Handler Cleanup");
             ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
             ServiceLocator.Current.UpdateService.DownloadProgressChanged -= UpdateService_DownloadProgressChanged;
-            _cancellationToken?.Cancel();
+            _getVersionCancellationToken?.Cancel();
         }
 
         private void UpdateService_DownloadProgressChanged(object sender, System.Net.DownloadProgressChangedEventArgs e) {
@@ -202,7 +204,7 @@ namespace WinPrint.Console {
         private async Task<bool> DoUpdateAsync() {
 
             Debug.WriteLine("Kicking off update check thread...");
-            var version = await ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(true);
+            var version = await ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true);
             Debug.WriteLine($"Starting update...");
             var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(true);
 
@@ -249,7 +251,9 @@ namespace WinPrint.Console {
         private string _updateMsg;
 
         private void UpdateService_GotLatestVersion(object sender, Version version) {
-            Debug.WriteLine("UpdateService_GotLatestVersion");
+            if (_getVersionCancellationToken.IsCancellationRequested)
+                return;
+
             if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
                 _updateMsg = $"Could not access github.com/tig/winprint to see if a newer version is available" +
                     $" {ServiceLocator.Current.UpdateService.ErrorMessage}";
@@ -275,24 +279,35 @@ namespace WinPrint.Console {
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
         protected override async Task BeginProcessingAsync() {
+            await base.BeginProcessingAsync().ConfigureAwait(true);
             //Log.Debug("BeginProcessingAsync");
             //ServiceLocator.Reset();
             //ModelLocator.Reset();
 
-            ServiceLocator.Current.TelemetryService.Start(this.MyInvocation.MyCommand.Name,
-                startProperties: new Dictionary<string, string> {
-                    ["PowerShellVersion"] = this.Host.Version.ToString(),
-                    ["InvocationName"] = this.MyInvocation.InvocationName,
-                    ["Debug"] = _debug.ToString(CultureInfo.CurrentCulture),
-                    ["Verbose"] = _verbose.ToString(CultureInfo.CurrentCulture)
-                }); ;
+            // If this is the first invoke since loading start telemetry and logging
+            if (ServiceLocator.Current.TelemetryService.GetTelemetryClient() == null) {
+                ServiceLocator.Current.TelemetryService.Start("out-winprint");
+                ServiceLocator.Current.LogService.Start("out-winprint", new PowerShellSink(this), debug: _debug, verbose:_verbose);
+            }
 
-            ServiceLocator.Current.LogService.Start(this.MyInvocation.MyCommand.Name, new PowerShellSink(this), _debug, _verbose);
+            // Change Console logging as specififed by paramters (e.g. -verbose and/or -debug)
+            ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_verbose ? LogEventLevel.Information : LogEventLevel.Warning);
+            ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_debug ? LogEventLevel.Debug : ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel);
 
             var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location);
-            Log.Information("{appname} {version} - {copyright} - {link}", this.MyInvocation.MyCommand.Name, ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
+            Log.Information("out-winprint v{version} - {copyright} - {link}", ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
 
-            await base.BeginProcessingAsync().ConfigureAwait(true);
+            Log.Debug("PowerShell Invoked: command: {appname}, module: {modulename}", MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
+
+            //foreach (var param in MyInvocation.MyCommand.Parameters) {
+            //    Log.Debug("Parameter: {name} SwitchParamter = {switch}, IsDynamic = {IsDyanmic}", param.Key, param.Value.SwitchParameter, param.Value.IsDynamic);
+            //}
+
+            Dictionary<string, string> dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");
+            Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
+
+            ServiceLocator.Current.TelemetryService.TrackEvent($"{MyInvocation.MyCommand.Name} BeginProcessing", properties: dict);
+
         }
 
         // This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called
@@ -341,29 +356,32 @@ namespace WinPrint.Console {
         protected override async Task EndProcessingAsync() {
             await base.EndProcessingAsync().ConfigureAwait(true);
 
-            //Log.Debug("EndProcessingAsync");
+            Log.Debug("EndProcessingAsync");
 
-            Setup();
+            SetupUpdateHandler();
 
             // Check for new version
             if (_installUpdate) {
                 await DoUpdateAsync().ConfigureAwait(true);
-                CleanUp();
+                CleanUpUpdateHandler();
                 return;
+            }
+
+            if (_psObjects.Count == 0) {
+                Log.Debug("No objects...");
+
+                if (string.IsNullOrEmpty(FileName)) {
+                    //Return if no objects or file specified
+                    CleanUpUpdateHandler();
+                    return;
+                }
             }
 
             // Whenever we run, check for an update. We use the cancellation token to kill the thread that's doing this
             // if we exit before getting a version info result back. Checking for updates should never shlow cmd line down.
             Log.Debug("Kicking off update check thread...");
-            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestStableVersionAsync(_cancellationToken.Token).ConfigureAwait(true),
-                _cancellationToken.Token).ConfigureAwait(true);
-
-            //Return if no objects
-            if (_psObjects.Count == 0) {
-                Log.Debug("No objects...");
-                CleanUp();
-                return;
-            }
+            //await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true),
+            //    _getVersionCancellationToken.Token).ConfigureAwait(true);
 
             //var settings = ServiceLocator.Current.SettingsService.ReadSettings();
 
@@ -371,10 +389,6 @@ namespace WinPrint.Console {
             rec.PercentComplete = 0;
             rec.StatusDescription = "Initializing winprint";
             WriteProgress(rec);
-
-            // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
-            var result = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null);
-            var text = result[0].ToString();
 
             Debug.Assert(_print != null);
             if (!string.IsNullOrEmpty(PrinterName)) {
@@ -392,7 +406,7 @@ namespace WinPrint.Console {
                     }
 
                     Log.Fatal(e, "");
-                    CleanUp();
+                    CleanUpUpdateHandler();
                     return;
                 }
             }
@@ -448,7 +462,7 @@ namespace WinPrint.Console {
             }
             catch (InvalidOperationException e) {
                 Log.Error(e, "Could not find sheet settings");
-                CleanUp();
+                CleanUpUpdateHandler();
                 return;
             }
 
@@ -463,7 +477,17 @@ namespace WinPrint.Console {
             rec.PercentComplete = 30;
             rec.StatusDescription = $"Loading content";
             WriteProgress(rec);
-            await _print.SheetViewModel.LoadStringAsync(text, (string)contentTypeEngine).ConfigureAwait(true);
+
+            if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
+                await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine);
+            }
+            else {
+                // Get $input into a string we can use
+                // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
+                var textToPrint = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
+
+                await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
+            }
 
             rec.PercentComplete = 40;
             rec.StatusDescription = WhatIf ? "Counting" : $"Printing";
@@ -501,7 +525,7 @@ namespace WinPrint.Console {
             catch (System.ComponentModel.Win32Exception w32e) {
                 // This can happen when PDF driver can't access PDF file.
                 Log.Error(w32e, "Print failed.");
-                CleanUp();
+                CleanUpUpdateHandler();
                 return;
             }
 
@@ -531,7 +555,7 @@ namespace WinPrint.Console {
                 Log.Information(_updateMsg);
             }
 
-            CleanUp();
+            CleanUpUpdateHandler();
         }
 
         private void PropertyChangedEventHandler(object o, PropertyChangedEventArgs e) {
@@ -643,7 +667,7 @@ namespace WinPrint.Console {
                 TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
 
                 _print?.Dispose();
-                _cancellationToken?.Dispose();
+                _getVersionCancellationToken?.Dispose();
             }
         }
 

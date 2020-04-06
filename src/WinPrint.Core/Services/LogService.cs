@@ -41,7 +41,7 @@ namespace WinPrint.Core.Services {
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #endif
             var productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion;
-            LogPath = $"{SettingsService.SettingsPath}logs{Path.DirectorySeparatorChar}{appName}.log".Replace(@"file:\", "");
+            LogPath = $"{SettingsService.SettingsPath}{Path.DirectorySeparatorChar}logs{Path.DirectorySeparatorChar}{appName}.log".Replace(@"file:\", "");
 
             if (consoleSink == null) {
                 ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Fatal;

@@ -15,10 +15,6 @@ namespace WinPrint.Console {
                                                                               string wordToComplete,
                                                                               CommandAst commandAst,
                                                                               IDictionary fakeBoundParameters) {
-            return GetPrinterNames();
-        }
-
-        private static IEnumerable<CompletionResult> GetPrinterNames() {
             return ModelLocator.Current.Associations.Languages.Select(l => new CompletionResult(l.Id));
         }
     }

@@ -17,10 +17,6 @@ namespace WinPrint.Console {
                                                                               string wordToComplete,
                                                                               CommandAst commandAst,
                                                                               IDictionary fakeBoundParameters) {
-            return GetPrinterNames();
-        }
-
-        private static IEnumerable<CompletionResult> GetPrinterNames() {
             // Must provide the quotes
             // https://stackoverflow.com/questions/30633098/powershell-param-validateset-values-with-spaces-and-tab-completion
             return PrinterSettings.InstalledPrinters
