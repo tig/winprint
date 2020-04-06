@@ -1,7 +1,7 @@
 ---
 title: Install
 ---
-***winprint*** 2.0 is in pre-beta (alpha) stage. It works well (on my machine), but I'm embarrased by a few bugs and performance issues that I want to fix before I declare beta; see [Issues](https://github.com/tig/winprint/issues).*
+***winprint*** 2.0 is in beta. It works well (on my machine), and I've had a dozen or so users verify it works well for them; see [Issues](https://github.com/tig/winprint/issues).*
 
 *Please report any problems or feature requests [here](https://github.com/tig/winprint/issues).*
 
@@ -9,7 +9,9 @@ title: Install
 
 ### On Windows
 
-Go to [Releases](https://github.com/tig/winprint/releases). Copy the install script from the release page an paste into a PowerShell console. Once installed, *winprint* can be started from the Start menu or command line (`winprint.exe` as a traditional console app or `out-winprint` as a PowerShell CmdLet). The installer adds *winprint* to the `PATH`.
+Go to [Releases](https://github.com/tig/winprint/releases). Copy the install script from the release page an paste into a PowerShell console. 
+
+Once installed, *winprint* can be started from the Start menu or command line (`winprint.exe` as a traditional console app or `out-winprint` as a PowerShell CmdLet). The installer adds *winprint* to the `PATH`.
 
 ### On Linux
 
