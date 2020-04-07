@@ -95,7 +95,7 @@ namespace WinPrint.Core {
             try {
                 retval = Path.GetFileName(svm.File);
             }
-            catch (ArgumentException ae) {
+            catch (ArgumentException) {
                 // invalid char in path 
                 retval = svm.File;
             }

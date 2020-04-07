@@ -435,7 +435,7 @@ For example to enable the [Icon Programming Language](https://en.wikipedia.org/w
 
 ## Logging & Diagnostics
 
-**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using the command line (`out-winprint` or `winprint.exe`) specifiying the `-Debug` parameter switch will cause all diagnostic log entries to go to the console as well as the log file.
+**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using the command line (`out-winprint`) specifiying the `-Debug` parameter switch will cause all diagnostic log entries to go to the console as well as the log file.
 
 Additional printing diagnostics can be turned on via settings in the configuration file.
 

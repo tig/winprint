@@ -11,7 +11,7 @@ title: Install
 
 Go to [Releases](https://github.com/tig/winprint/releases). Copy the install script from the release page an paste into a PowerShell console. 
 
-Once installed, *winprint* can be started from the Start menu or command line (`winprint.exe` as a traditional console app or `out-winprint` as a PowerShell CmdLet). The installer adds *winprint* to the `PATH`.
+Once installed, *winprint* can be started from the Start menu or as PowerShell CmdLet (`out-winprint`). The installer adds *winprint* to the `PATH`, but does _not_ automatically add an `import-module` command to the Powershell profile.
 
 ### On Linux
 

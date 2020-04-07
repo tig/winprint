@@ -34,15 +34,6 @@ namespace WinPrint.Console {
         private List<PSObject> _psObjects = new List<PSObject>();
         private Print _print = new WinPrint.Core.Print();
 
-        public OutWinPrint() {
-  //          System.Console.WriteLine($"{this.GetHashCode()}: Constructor");
-            //BoundedCapacity = 1000;
-        }
-
-        ~OutWinPrint() {
-//            System.Console.WriteLine($"{this.GetHashCode()}: Finalizer");
-        }
-
         #region Command Line Switches
         /// <summary>
         /// Optional name of the printer to print to.
@@ -643,7 +634,7 @@ namespace WinPrint.Console {
         /// Default implementation just delegates to internal helper.
         /// </summary>
         /// <remarks>This method calls GC.SuppressFinalize</remarks>
-        public void Dispose() {
+        public new void Dispose() {
             Dispose(true);
 
             //GC.SuppressFinalize(this);
@@ -653,7 +644,7 @@ namespace WinPrint.Console {
         /// Dispose pattern implementation.
         /// </summary>
         /// <param name="disposing"></param>
-        protected void Dispose(bool disposing) {
+        protected new void Dispose(bool disposing) {
             //base.Dispose(disposing);
             if (disposing) {
                 AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
