@@ -31,7 +31,6 @@ namespace WinPrintInstaller {
                         new Files(@"*.dll"),
                         new Files(@"*.deps.json"),
                         new Files(@"*.runtimeconfig.json"),
-                        new File(new Id("winprint_exe"), @"winprint.exe"),
                         new File(new Id("winprintgui_exe"), @"winprintgui.exe",
                             new FileShortcut("winprint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
                         new ExeFileShortcut("Uninstall winprint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),

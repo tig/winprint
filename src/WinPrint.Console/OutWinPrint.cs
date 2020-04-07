@@ -28,7 +28,7 @@ namespace WinPrint.Console {
         nounName: "WinPrint",
         HelpUri = "https://tig.github.io./winprint",
         DefaultParameterSetName = "print")]
-    [Alias("wp")]
+    [Alias("winprint", "wp")]
     public partial class OutWinPrint : AsyncCmdlet, IDynamicParameters {
         // Private fields
         private List<PSObject> _psObjects = new List<PSObject>();

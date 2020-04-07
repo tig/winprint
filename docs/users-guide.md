@@ -18,13 +18,11 @@ title: User's Guide
 
 ## Command Line Interfaces
 
-**winprint** supports two command line interfaces: a traditional interface implemented in `winprint.exe` and a PowerShell CmdLet (`out-winprint`). The `winprint.exe` version is really just a simple wrapper that invokes the `out-winprint` PowerShell Cmdlet.
+Use **winprint** from the command line as a PowerShell CmdLet (`out-winprint`). 
 
-### Powershell `out-winprint` CmdLet
+**`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet PowerShell already provides.
 
-The CmdLet version of **winprint** is designed to be a stand-in for the `out-printer` CmdLet PowerShell already provides.
-
-To use `out-winprint` the **winprint** CmdLet must be imported into PowerShell. This is typically done by adding an `import-module` statement in the Powershell profile:
+The **winprint** CmdLet must be imported into PowerShell for `out-winprint` to work. This is done by adding an `import-module` statement in the Powershell profile:
 
 ```powershell
 import-module 'C:\Program Files\Kindel Systems\winprint\winprint.dll'
@@ -32,9 +30,9 @@ import-module 'C:\Program Files\Kindel Systems\winprint\winprint.dll'
 
 The **winprint** installer does not currently add this line.
 
-Invoke the CmdLet using either `out-winprint` or the shortcut, `wp`.
+Invoke the CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
 
-Specify the `-Verbose` parameter switch to have **winprint** show progress.
+Specify the `-Verbose` parameter switch to have **winprint** show progress. Otherwise, **winprint** is pretty darn quiet, respecting the norms of PowerShell. 
 
 #### Examples
 
@@ -73,11 +71,13 @@ VERBOSE: Printed a total of 2 sheets.
 PS >
 ```
 
-Or, without piping:
+The following all do the same thing:
 
 ```powershell
-wp -FileName program.cs
+out-winprint -FileName program.cs
 wp program.cs
+winprint program.cs
+cat program.cs | wp
 ```
 
 Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
@@ -298,20 +298,6 @@ ALIASES
 
 REMARKS
     None
-```
-
-### Traditional `winprint.exe` Command Line
-
-Running `winprint.exe` from any command-line is effectively the same as doing the following in PowerShell:
-
-```powershell
-pwsh.exe -noprofile -command "import-module .\winprint.dll; out-winprint $args"
-```
-
-For example, printing **winprint**'s help as above, would look like this:
-
-```powershell
-.\winprint.exe winprint.txt -p 'Microsoft Print to PDF' -s 'Default 1-Up' -Title 'winprint Help' -LineNumbers No
 ```
 
 ## Graphical User Interface
