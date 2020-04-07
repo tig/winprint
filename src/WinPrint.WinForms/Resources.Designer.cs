@@ -80,7 +80,7 @@ namespace WinPrint.WinForms {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hello..
+        ///   Looks up a localized string similar to Hello. Click here to open a file to preview before printing..
         /// </summary>
         internal static string HelloMsg {
             get {

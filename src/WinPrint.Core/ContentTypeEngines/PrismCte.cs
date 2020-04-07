@@ -189,10 +189,11 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Else 
             //    Use sheet in prismjs\themes
             var appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
-            var cssUri = new UriBuilder();
-            cssUri.Scheme = "file";
-            cssUri.Host = @"";
-            cssUri.Path = appDir;
+            var cssUri = new UriBuilder {
+                Scheme = "file",
+                Host = @"",
+                Path = appDir
+            };
 
             // TODO: detect node and prism installation
             // TODO: implement theme choice

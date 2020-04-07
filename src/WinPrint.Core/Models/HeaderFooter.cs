@@ -49,6 +49,7 @@ namespace WinPrint.Core.Models {
         private bool rightBorder;
         private bool bottomBorder;
         private bool enabled;
+        private int verticalPadding;
 
         /// <summary>
         /// Header text. May contain macros (e.g. {FileName} or {Page}
@@ -103,6 +104,12 @@ namespace WinPrint.Core.Models {
         /// </summary>
         [SafeForTelemetry]
         public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
+
+        /// <summary>
+        /// Vertical padding below header / above footer in 100ths of an inch
+        /// </summary>
+        [SafeForTelemetry]
+        public int VerticalPadding { get => verticalPadding; set => SetField(ref verticalPadding, value); }
 
         public HeaderFooter() {
         }

@@ -23,9 +23,10 @@ namespace WinPrint.Core.UnitTests.Models
         [Fact]
         public void TestSetFamily()
         {
-            Core.Models.Font font = new Core.Models.Font();
-
-            font.Family = "Cascadia Code";
+            Core.Models.Font font = new Core.Models.Font
+            {
+                Family = "Cascadia Code"
+            };
             Assert.Equal("Cascadia Code", font.Family);
 
         }

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Serilog.Sinks.XUnit;
+﻿using Serilog.Sinks.XUnit;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WinPrint.Core.Services;

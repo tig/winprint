@@ -85,11 +85,7 @@ namespace WinPrint.Core.Models {
         /// Provides some interesting information for the Font in String form.
         /// </summary>
         public override string ToString() {
-            return "[Font"
-                + " Family=" + Family
-                + " Size=" + Size.ToString(CultureInfo.InvariantCulture)
-                + " Style=" + Style.ToString()
-                + "]";
+            return $"{Family}, {Size.ToString(CultureInfo.InvariantCulture)}pt, {Style.ToString()}";
         }
 
         //public Font() {

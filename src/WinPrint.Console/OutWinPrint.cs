@@ -199,9 +199,10 @@ namespace WinPrint.Console {
 
         private void UpdateService_DownloadProgressChanged(object sender, System.Net.DownloadProgressChangedEventArgs e) {
             //Debug.WriteLine("UpdateService_DownloadProgressChanged");
-            var rec = new ProgressRecord(0, "Downloading", "Downloading");
-            rec.CurrentOperation = $"Downloading";
-            rec.PercentComplete = e.ProgressPercentage;
+            var rec = new ProgressRecord(0, "Downloading", "Downloading") {
+                CurrentOperation = $"Downloading",
+                PercentComplete = e.ProgressPercentage
+            };
             WriteProgress(rec);
         }
         private async Task<bool> DoUpdateAsync() {
@@ -221,9 +222,10 @@ namespace WinPrint.Console {
             };
 
             Log.Information($"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})...");
-            var rec = new ProgressRecord(0, "Installing", $"Download Complete");
-            rec.CurrentOperation = $"Installing";
-            rec.PercentComplete = -1;
+            var rec = new ProgressRecord(0, "Installing", $"Download Complete") {
+                CurrentOperation = $"Installing",
+                PercentComplete = -1
+            };
             WriteProgress(rec);
 
             try {
@@ -268,7 +270,7 @@ namespace WinPrint.Console {
             else {
                 _updateMsg = "This is lastest version of winprint";
             }
-            Log.Debug("UpdateService_GotLatestVersion"+ _updateMsg);
+            Log.Debug("UpdateService_GotLatestVersion" + _updateMsg);
 
         }
         #endregion
@@ -299,9 +301,9 @@ namespace WinPrint.Console {
             var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location);
             Log.Information("out-winprint v{version} - {copyright} - {link}", ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
             Log.Debug("PowerShell Invoked: command: {appname}, module: {modulename}", MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
-            
+
             Dictionary<string, string> dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");
-            Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = false })); 
+            Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = false }));
             ServiceLocator.Current.TelemetryService.TrackEvent($"{MyInvocation.MyCommand.Name} BeginProcessing", properties: dict);
 
             await base.BeginProcessingAsync().ConfigureAwait(true);
@@ -355,9 +357,10 @@ namespace WinPrint.Console {
             if (Config) {
                 Process proc = null;
                 try {
-                    var psi = new ProcessStartInfo();
-                    psi.UseShellExecute = true;   // This is important
-                    psi.FileName = ServiceLocator.Current.SettingsService.SettingsFileName;
+                    var psi = new ProcessStartInfo {
+                        UseShellExecute = true,   // This is important
+                        FileName = ServiceLocator.Current.SettingsService.SettingsFileName
+                    };
                     proc = Process.Start(psi);
                 }
                 catch (Win32Exception e) {
@@ -402,9 +405,10 @@ namespace WinPrint.Console {
             await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true),
                 _getVersionCancellationToken.Token).ConfigureAwait(true);
 
-            var rec = new ProgressRecord(1, "Printing", "Printing...");
-            rec.PercentComplete = 0;
-            rec.StatusDescription = "Initializing winprint";
+            var rec = new ProgressRecord(1, "Printing", "Printing...") {
+                PercentComplete = 0,
+                StatusDescription = "Initializing winprint"
+            };
             WriteProgress(rec);
 
             Debug.Assert(_print != null);

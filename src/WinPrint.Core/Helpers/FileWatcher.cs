@@ -34,12 +34,13 @@ namespace WinPrint.Core.Helpers {
         private FileSystemSafeWatcher CreateFileWatcher(string path) {
 
             // Create a new FileSystemSafeWatcher and set its properties.
-            var watcher = new FileSystemSafeWatcher();
-            watcher.Path = Path.GetDirectoryName(path);
-            /* Watch for changes in LastAccess and LastWrite times, and 
-               the renaming of files or directories. */
-            watcher.NotifyFilter = NotifyFilters.LastWrite;
-            watcher.Filter = Path.GetFileName(path);
+            var watcher = new FileSystemSafeWatcher {
+                Path = Path.GetDirectoryName(path),
+                /* Watch for changes in LastAccess and LastWrite times, and 
+                   the renaming of files or directories. */
+                NotifyFilter = NotifyFilters.LastWrite,
+                Filter = Path.GetFileName(path)
+            };
 
             // Add event handlers.
             watcher.Changed += new FileSystemEventHandler(OnChanged);

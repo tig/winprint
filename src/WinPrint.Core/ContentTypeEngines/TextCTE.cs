@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -22,10 +25,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         internal string textNonWrapped;
 #endif
     }
+
     /// <summary>
     /// Implements text/plain file type support. 
     /// </summary>
-    // TOOD: Color code c# kewoards https://www.c-sharpcorner.com/UploadFile/kirtan007/syntax-highlighting-in-richtextbox-using-C-Sharp/
     public class TextCte : ContentTypeEngineBase, IDisposable {
         private static readonly string _contentType = "text/plain";
         /// <summary>
@@ -37,37 +40,30 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         public static TextCte Create() {
             var engine = new TextCte();
+            // Populate it with the common settings
             engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
             return engine;
         }
 
-        public TextCte() {
-            // StringFormat to use throughout
-
-
-            //           Font = new WinPrint.Core.Models.Font() { Family = "Lucida Sans Console", Size = 8F, Style = FontStyle.Regular };
-        }
-
         // All of the lines of the text file, after reflow/line-wrap
-        private List<WrappedLine> wrappedLines;
-        private float lineHeight;
-        private int linesPerPage;
+        private List<WrappedLine> _wrappedLines;
+
+        private float _lineHeight;
+        private int _linesPerPage;
+
         private float lineNumberWidth;
-        private float minCharWidth;
-        private System.Drawing.Font cachedFont;
+        private int _minLineLen;
+        private System.Drawing.Font _cachedFont;
 
         // Publics
-        //public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
-        //private bool lineNumbers = true;
+        public bool LineNumberSeparator { get => _lineNumberSeparator; set => SetField(ref _lineNumberSeparator, value); }
+        private bool _lineNumberSeparator = true;
 
-        public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
-        private bool lineNumberSeparator = true;
+        public int TabSpaces { get => _tabSpaces; set => SetField(ref _tabSpaces, value); }
+        private int _tabSpaces;
 
-        public int TabSpaces { get => tabSpaces; set => SetField(ref tabSpaces, value); }
-        private int tabSpaces = 4;
-
-        public bool NewPageOnFormFeed { get => newPageOnFormFeed; set => SetField(ref newPageOnFormFeed, value); }
-        private bool newPageOnFormFeed = false;
+        public bool NewPageOnFormFeed { get => _newPageOnFormFeed; set => SetField(ref _newPageOnFormFeed, value); }
+        private bool _newPageOnFormFeed = false;
 
         public void Dispose() {
             Dispose(true);
@@ -76,42 +72,37 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        bool disposed = false;
+        bool _disposed = false;
         void Dispose(bool disposing) {
             LogService.TraceMessage($"disposing: {disposing}");
 
-            if (disposed) {
+            if (_disposed) {
                 return;
             }
 
             if (disposing) {
-                if (cachedFont != null) {
-                    cachedFont.Dispose();
+                if (_cachedFont != null) {
+                    _cachedFont.Dispose();
                 }
 
-                wrappedLines = null;
+                _wrappedLines = null;
             }
-            disposed = true;
+            _disposed = true;
         }
 
-        //public override async Task<bool> LoadAsync(string filePath) {
-        //    LogService.TraceMessage();
-        //    return await base.LoadAsync(filePath);
-        //}
-
+        // TODO: Pass doc around by ref to save copies
         public override async Task<bool> SetDocumentAsync(string doc) {
             Document = doc;
             return await Task.FromResult(true);
         }
 
         /// <summary>
-        /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage)
+        /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
-            //await base.RenderAsync(printerResolution);
 
             if (document == null) {
                 throw new ArgumentNullException("document can't be null for Render");
@@ -132,54 +123,59 @@ namespace WinPrint.Core.ContentTypeEngines {
             var g = Graphics.FromImage(bitmap);
             g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
 
-            // Calculate the number of lines per page.
-            cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size / 72F * 96, ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
-            //lineHeight = cachedFont.GetHeight(g) ;
-
-            Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
+            // Calculate the number of lines per page; first we need our font. Keep it around.
+            _cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size / 72F * 96, ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
+            Log.Debug("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints, _cachedFont.Style);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-                cachedFont.Dispose();
-                cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size, ContentSettings.Font.Style, GraphicsUnit.Point);
-                Log.Debug("Font: {f}, {s} ({p}), {st}", cachedFont.Name, cachedFont.Size, cachedFont.SizeInPoints, cachedFont.Style);
+                _cachedFont.Dispose();
+                _cachedFont = new System.Drawing.Font(ContentSettings.Font.Family, ContentSettings.Font.Size, ContentSettings.Font.Style, GraphicsUnit.Point);
+                Log.Debug("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints, _cachedFont.Style);
                 g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             }
 
-            //var lineSize = g.MeasureString("Tigger", cachedFont) ;
-            //Log.Debug("lineSize (Tigger) = {h}x{w} pixels", lineSize.Width, lineSize.Height);
-            //lineHeight = lineSize.Height;
+            _lineHeight = _cachedFont.GetHeight(dpiY);
 
-            lineHeight = cachedFont.GetHeight(dpiY);
-
-            if (PageSize.Height < lineHeight) {
+            if (PageSize.Height < _lineHeight) {
                 throw new InvalidOperationException("The line height is greater than page height.");
             }
 
-            // Round down to ensure lines don't clip on bottom
-            linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
+            // Round down # of lines per page to ensure lines don't clip on bottom
+            _linesPerPage = (int)Math.Floor(PageSize.Height / _lineHeight);
 
             // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
             // TODO: Make line number width dynamic
-            // Note, Measure string is actually dependent on lineNumberWidth!
+            // Note, MeasureString is actually dependent on lineNumberWidth!
             lineNumberWidth = ContentSettings.LineNumbers ? MeasureString(g, new string('0', 4)).Width : 0;
 
+            // This is the shortest line length (in chars) that we think we'll see. 
+            // This is used as a performance optimization (probably premature) and
+            // could be 0 with no functional change.
+            _minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / MeasureString(g, "W").Width));
+
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
-            wrappedLines = MeasureLines(g, document); // new List<string>();
+            _wrappedLines = LineWrapDocument(g, document); // new List<string>();
 
-            var n = (int)Math.Ceiling((double)wrappedLines.Count / (double)linesPerPage);
+            var n = (int)Math.Ceiling((double)_wrappedLines.Count / (double)_linesPerPage);
 
-            Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, linesPerPage, wrappedLines.Count);
+            Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, _linesPerPage, _wrappedLines.Count);
 
             return await Task.FromResult(n);
         }
 
-        // TODO: Profile for performance
-        private List<WrappedLine> MeasureLines(Graphics g, string document) {
-            LogService.TraceMessage();
+        /// <summary>
+        /// This does the heavy-weight task of ensuring each line will fit PageSize.Width by
+        /// wrapping them. It also does tab expansion (which is naive for variable-pitched fonts) and
+        /// Supports form-feeds.
+        /// </summary>
+        /// <param name="g"></param>
+        /// <param name="document"></param>
+        /// <returns></returns>
+        private List<WrappedLine> LineWrapDocument(Graphics g, string document) {
+            // TODO: Profile for performance
+            // LogService.TraceMessage();
             var wrapped = new List<WrappedLine>();
 
-            minCharWidth = MeasureString(g, "W").Width;
-            var minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / minCharWidth));
 
             string line;
             var lineCount = 0;
@@ -190,38 +186,44 @@ namespace WinPrint.Core.ContentTypeEngines {
             var reader = new StreamReader(stream);
             while ((line = reader.ReadLine()) != null) {
                 // Expand tabs
-                if (tabSpaces > 0) {
-                    line = line.Replace("\t", new String(' ', tabSpaces));
+                if (_tabSpaces > 0) {
+                    line = line.Replace("\t", new String(' ', _tabSpaces));
                 }
 
                 ++lineCount;
-                if (newPageOnFormFeed && line.Contains("\f")) {
-                    lineCount = ExpandFormFeeds(g, wrapped, line, minLineLen, lineCount);
+                if (_newPageOnFormFeed && line.Contains("\f")) {
+                    lineCount = ExpandFormFeeds(g, wrapped, line, lineCount);
                 }
                 else {
                     //Log.Debug("Line {num}: {line}", lineCount, line);
-                    lineCount = AddLine(g, wrapped, line, minLineLen, lineCount);
+                    lineCount = AddLine(g, wrapped, line, lineCount);
                 }
             }
-
             return wrapped;
         }
 
-        private int ExpandFormFeeds(Graphics g, List<WrappedLine> list, string line, int minLineLen, int lineCount) {
-            // Form feeds
-            // treat a FF the same as the end of a line; next line is first line of next page
-            // FF at start of line - That line should be at top of next page
-            // FF in middle of line - Text up to FF should be on current page, text after should be at top of
-            // next page
-            // FF at end of line - Next line should be top of next page
-
+        /// <summary>
+        /// Form feeds
+        /// treat a FF the same as the end of a line; next line is first line of next page
+        /// FF at start of line - That line should be at top of next page
+        /// FF in middle of line - Text up to FF should be on current page, text after should be at top of
+        /// next page
+        /// FF at end of line - Next line should be top of next page
+        /// </summary>
+        /// <param name="g"></param>
+        /// <param name="list"></param>
+        /// <param name="line"></param>
+        /// <param name="minLineLen"></param>
+        /// <param name="lineCount"></param>
+        /// <returns></returns>
+        private int ExpandFormFeeds(Graphics g, List<WrappedLine> list, string line, int lineCount) {
             var lineToAdd = "";
 
             for (var i = 0; i < line.Length; i++) {
                 if (line[i] == '\f') {
                     if (lineToAdd.Length > 0) {
                         // FF was NOT at start of line. Add it.
-                        AddLine(g, list, lineToAdd, minLineLen, lineCount);
+                        AddLine(g, list, lineToAdd, lineCount);
                         // if we're not at the end of the line t increment line #
                         if (i < line.Length - 1) {
                             lineCount++;
@@ -229,7 +231,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     }
 
                     // Add blank lines to get to next page
-                    while (list.Count % linesPerPage != 0) {
+                    while (list.Count % _linesPerPage != 0) {
                         var newLine = new WrappedLine() { text = "", nonWrappedLineNumber = 0 };
 #if DEBUG
                         newLine.textNonWrapped = line;
@@ -244,14 +246,26 @@ namespace WinPrint.Core.ContentTypeEngines {
                 }
             }
             if (lineToAdd.Length > 0) {
-                AddLine(g, list, lineToAdd, minLineLen, lineCount);
+                AddLine(g, list, lineToAdd, lineCount);
             }
 
             return lineCount;
         }
 
-        // TODO: Profile AddLine for performance
-        private int AddLine(Graphics g, List<WrappedLine> wrappedList, string lineToAdd, int minLineLen, int lineCount) {
+        /// <summary>
+        /// Add a 'full length' line to the wrapped lines list. This function (which is recursive)
+        /// parses the passed line, finding the truncated version that will JUST fit in Page.Width
+        /// using GDI+'s MeasureString functionality. It then adds that truncated line to the wrapped line
+        /// list and runs recursively on the remainder.
+        /// </summary>
+        /// <param name="g"></param>
+        /// <param name="wrappedList"></param>
+        /// <param name="lineToAdd">The, potentially, too-long line to wrap.</param>
+        /// <param name="minLineLen"></param>
+        /// <param name="lineCount"></param>
+        /// <returns></returns>
+        private int AddLine(Graphics g, List<WrappedLine> wrappedList, string lineToAdd, int lineCount) {
+            // TODO: Profile AddLine for performance
             MeasureString(g, lineToAdd, out var numCharsThatFit, out var l1);
             //Log.Debug("   AddLine: {lineToAdd} - this line should {not}wrap", lineToAdd, lineToAdd.Length <= numCharsThatFit ? "not " : "");
             if (lineToAdd.Length > numCharsThatFit) { // TODO: should this be >?
@@ -260,8 +274,8 @@ namespace WinPrint.Core.ContentTypeEngines {
                 // For fixed-pitch fonts, minLineLen will match exactly, so all this is not needed
                 // But for variable-pitched fonts, we have to char-by-char
                 var start = 0;
-                var end = minLineLen;
-                for (var i = minLineLen; i <= lineToAdd.Length; i++) {
+                var end = _minLineLen;
+                for (var i = _minLineLen; i <= lineToAdd.Length; i++) {
                     var truncatedLine = lineToAdd[start..end++];
                     MeasureString(g, truncatedLine, out var numCharsThatFitTruncated, out var l2);
                     if (truncatedLine.Length > numCharsThatFitTruncated) {
@@ -276,7 +290,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                         wrappedList.Add(wl);
 
                         // Recurse with the rest of the line
-                        AddLine(g, wrappedList, lineToAdd[truncatedLine.Length..^0], minLineLen, 0);
+                        AddLine(g, wrappedList, lineToAdd[truncatedLine.Length..^0], 0);
 
                         // exit for loop
                         break;
@@ -298,7 +312,6 @@ namespace WinPrint.Core.ContentTypeEngines {
             return MeasureString(g, text, out var charsFitted, out var linesFilled);
         }
 
-
         /// <summary>
         /// Measures how much width a string will take, given current page settings (including line numbers)
         /// </summary>
@@ -319,10 +332,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             // determine width     
-            var fontHeight = lineHeight;
+            var fontHeight = _lineHeight;
             // Use page settings including lineNumberWidth
-            var proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight + (lineHeight / 2));
-            var size = g.MeasureString(text, cachedFont, proposedSize, ContentTypeEngineBase.StringFormat, out charsFitted, out linesFilled);
+            var proposedSize = new SizeF(PageSize.Width - lineNumberWidth, _lineHeight + (_lineHeight / 2));
+            var size = g.MeasureString(text, _cachedFont, proposedSize, ContentTypeEngineBase.StringFormat, out charsFitted, out linesFilled);
 
             // TODO: HACK to work around MeasureString not working right on Linux
             //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -331,58 +344,52 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Paints a single page
+        /// Paints a single page. 
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             LogService.TraceMessage($"{pageNum}");
-            if (wrappedLines == null) {
+            if (_wrappedLines == null) {
                 Log.Debug("wrappedLines must not be null");
                 return;
             }
 
-            float leftMargin = 0;
-
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
-            // Print each line of the file.
-            var startLine = linesPerPage * (pageNum - 1);
-            var endLine = startLine + linesPerPage;
-            int lineOnPage;
-            for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
-                var lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
-                if (lineInDocument < wrappedLines.Count && lineInDocument >= startLine && lineInDocument <= endLine) {
-                    if (wrappedLines[lineInDocument].nonWrappedLineNumber > 0) {
-                        PaintLineNumber(g, pageNum, lineInDocument);
+            // Paint each line of the file (each element of _wrappedLines)
+            // startline is the index of the first line of this page in _wrappedLines, endLine is the index of the last
+            var startLine = _linesPerPage * (pageNum - 1); 
+            var endLine = startLine + _linesPerPage;
+            int i;
+            for (i = 0; i < _linesPerPage; i++) {
+                var lineInWrappedLines = i + (_linesPerPage * (pageNum - 1));
+                if (lineInWrappedLines < _wrappedLines.Count && lineInWrappedLines >= startLine && lineInWrappedLines <= endLine) {
+                    var yPos = i * _lineHeight;
+
+                    // Line #s
+                    if (_wrappedLines[lineInWrappedLines].nonWrappedLineNumber > 0) {
+                        if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
+                            // TOOD: Figure out how to make the spacig around separator more dynamic
+                            // TODO: Allow a different (non-monospace) font for line numbers
+                            var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}").Width) : 0;
+                            g.DrawString($"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
+                        }
                     }
 
-                    var xPos = leftMargin + lineNumberWidth;
-                    var yPos = lineOnPage * lineHeight;
-
-                    // Line # separator
+                    // Line # separator (draw even if there's no line number, but stop at end of doc)
                     // TODO: Support setting color of line #s and separator
                     if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
-                        g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + lineHeight);
+                        g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
 
                     // Text
-                    g.DrawString(wrappedLines[lineInDocument].text, cachedFont, Brushes.Black, xPos, yPos, ContentTypeEngineBase.StringFormat);
+                    g.DrawString(_wrappedLines[lineInWrappedLines].text, _cachedFont, Brushes.Black, lineNumberWidth, yPos, ContentTypeEngineBase.StringFormat);
                     if (ContentSettings.Diagnostics) {
-                        g.DrawRectangle(Pens.Red, xPos, yPos, PageSize.Width - lineNumberWidth, lineHeight);
+                        g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
                     }
                 }
             }
-            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", lineOnPage - 1, startLine, endLine);
-        }
-
-        // TODO: Allow a different (non-monospace) font for line numbers
-        internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
-            if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
-                var lineOnPage = lineNumber % linesPerPage;
-                // TOOD: Figure out how to make the spacig around separator more dynamic
-                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{wrappedLines[lineNumber].nonWrappedLineNumber}").Width) : 0;
-                g.DrawString($"{wrappedLines[lineNumber].nonWrappedLineNumber}", cachedFont, Brushes.Gray, x, lineOnPage * lineHeight, ContentTypeEngineBase.StringFormat);
-            }
+            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", i - 1, startLine, endLine);
         }
     }
 }

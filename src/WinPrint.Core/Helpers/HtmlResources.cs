@@ -60,17 +60,19 @@ namespace WinPrint.LiteHtml {
                 UriBuilder urlBuilder;
 
                 if (resource.StartsWith("file:")) {
-                    urlBuilder = new UriBuilder();
-                    urlBuilder.Scheme = "file";
-                    urlBuilder.Host = "";
-                    urlBuilder.Path = resource;
+                    urlBuilder = new UriBuilder {
+                        Scheme = "file",
+                        Host = "",
+                        Path = resource
+                    };
                 }
                 else if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
                     urlBuilder = new UriBuilder(resource.TrimStart(new char[] { '/' }));
                 }
                 else {
-                    urlBuilder = new UriBuilder(_lastUrl);
-                    urlBuilder.Path = resource;
+                    urlBuilder = new UriBuilder(_lastUrl) {
+                        Path = resource
+                    };
                 }
                 var requestUrl = urlBuilder.ToString();
                 return requestUrl;

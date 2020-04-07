@@ -97,20 +97,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         };
         public static readonly TextRenderingHint TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-
-        ///// <summary>
-        ///// Loads the file specified into Document property.
-        ///// </summary>
-        ///// <param name="filePath"></param>
-        ///// <returns>True if file was read. False if the file was empty or failed to read.</returns>
-        //public async virtual Task<bool> LoadAsync(string filePath) {
-        //    LogService.TraceMessage();
-        //    this.filePath = filePath;
-        //    using StreamReader streamToPrint = new StreamReader(filePath);
-        //    Document = await streamToPrint.ReadToEndAsync();
-        //    return !String.IsNullOrEmpty(Document);
-        //}
-
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
         /// </summary>

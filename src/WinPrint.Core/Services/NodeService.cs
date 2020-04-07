@@ -25,13 +25,14 @@ namespace WinPrint.Core.Services {
             var path = "";
             Process proc = null;
             try {
-                var psi = new ProcessStartInfo();
-                psi.UseShellExecute = false;   // This is important
-                psi.CreateNoWindow = true;     // This is what hides the command window.
-                psi.FileName = @"where.exe";
-                psi.Arguments = "node";
-                psi.RedirectStandardInput = true;
-                psi.RedirectStandardOutput = true;
+                var psi = new ProcessStartInfo {
+                    UseShellExecute = false,   // This is important
+                    CreateNoWindow = true,     // This is what hides the command window.
+                    FileName = @"where.exe",
+                    Arguments = "node",
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true
+                };
 
                 stdIn.Clear();
                 stdOut.Clear();
@@ -185,14 +186,15 @@ namespace WinPrint.Core.Services {
             Process proc = null;
             var nodeDir = await GetNodeDirectory(); ;
             try {
-                var psi = new ProcessStartInfo();
-                psi.UseShellExecute = false;   // This is important
-                psi.CreateNoWindow = true;     // This is what hides the command window.
-                psi.FileName = @"node";
-                psi.Arguments = $"\"{nodeDir}\\node_modules\\npm\\bin\\npm-cli.js\" install prismjs";
-                psi.RedirectStandardInput = true;
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
+                var psi = new ProcessStartInfo {
+                    UseShellExecute = false,   // This is important
+                    CreateNoWindow = true,     // This is what hides the command window.
+                    FileName = @"node",
+                    Arguments = $"\"{nodeDir}\\node_modules\\npm\\bin\\npm-cli.js\" install prismjs",
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
 
                 LogService.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
                 nodeProc = Process.Start(psi);
