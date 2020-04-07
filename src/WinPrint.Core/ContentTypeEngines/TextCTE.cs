@@ -357,39 +357,66 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
-            // Paint each line of the file (each element of _wrappedLines)
-            // startline is the index of the first line of this page in _wrappedLines, endLine is the index of the last
-            var startLine = _linesPerPage * (pageNum - 1); 
-            var endLine = startLine + _linesPerPage;
+            // Paint each line of the file (each element of _wrappedLines that go on pageNum
+            var firstLineInWrappedLines = _linesPerPage * (pageNum - 1);
             int i;
-            for (i = 0; i < _linesPerPage; i++) {
-                var lineInWrappedLines = i + (_linesPerPage * (pageNum - 1));
-                if (lineInWrappedLines < _wrappedLines.Count && lineInWrappedLines >= startLine && lineInWrappedLines <= endLine) {
-                    var yPos = i * _lineHeight;
-
-                    // Line #s
-                    if (_wrappedLines[lineInWrappedLines].nonWrappedLineNumber > 0) {
-                        if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
-                            // TOOD: Figure out how to make the spacig around separator more dynamic
-                            // TODO: Allow a different (non-monospace) font for line numbers
-                            var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}").Width) : 0;
-                            g.DrawString($"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
-                        }
-                    }
-
-                    // Line # separator (draw even if there's no line number, but stop at end of doc)
-                    // TODO: Support setting color of line #s and separator
-                    if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
-                        g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
-
-                    // Text
-                    g.DrawString(_wrappedLines[lineInWrappedLines].text, _cachedFont, Brushes.Black, lineNumberWidth, yPos, ContentTypeEngineBase.StringFormat);
-                    if (ContentSettings.Diagnostics) {
-                        g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
+            for (i = firstLineInWrappedLines; i < firstLineInWrappedLines + _linesPerPage && i < _wrappedLines.Count; i++) {
+                var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
+                // Line #s
+                if (_wrappedLines[i].nonWrappedLineNumber > 0) {
+                    if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
+                        // TOOD: Figure out how to make the spacig around separator more dynamic
+                        // TODO: Allow a different (non-monospace) font for line numbers
+                        var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i].nonWrappedLineNumber}").Width) : 0;
+                        g.DrawString($"{_wrappedLines[i].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
                     }
                 }
+
+                // Line # separator (draw even if there's no line number, but stop at end of doc)
+                // TODO: Support setting color of line #s and separator
+                if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
+                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
+
+                // Text
+                g.DrawString(_wrappedLines[i].text, _cachedFont, Brushes.Black, lineNumberWidth, yPos, ContentTypeEngineBase.StringFormat);
+                if (ContentSettings.Diagnostics) {
+                    g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
+                }
             }
-            Log.Debug("Painted {lineOnPage} lines ({startLine} through {endLine})", i - 1, startLine, endLine);
+            
+            
+            //// startline is the index of the first line of this page in _wrappedLines, endLine is the index of the last
+            //var startLine = _linesPerPage * (pageNum - 1); 
+            //var endLine = startLine + _linesPerPage;
+            //int i;
+            //for (i = 0; i < _linesPerPage; i++) {
+            //    var lineInWrappedLines = i + (_linesPerPage * (pageNum - 1));
+            //    if (lineInWrappedLines < _wrappedLines.Count && lineInWrappedLines >= startLine && lineInWrappedLines <= endLine) {
+            //        var yPos = i * _lineHeight;
+
+            //        // Line #s
+            //        if (_wrappedLines[lineInWrappedLines].nonWrappedLineNumber > 0) {
+            //            if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
+            //                // TOOD: Figure out how to make the spacig around separator more dynamic
+            //                // TODO: Allow a different (non-monospace) font for line numbers
+            //                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}").Width) : 0;
+            //                g.DrawString($"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
+            //            }
+            //        }
+
+            //        // Line # separator (draw even if there's no line number, but stop at end of doc)
+            //        // TODO: Support setting color of line #s and separator
+            //        if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
+            //            g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
+
+            //        // Text
+            //        g.DrawString(_wrappedLines[lineInWrappedLines].text, _cachedFont, Brushes.Black, lineNumberWidth, yPos, ContentTypeEngineBase.StringFormat);
+            //        if (ContentSettings.Diagnostics) {
+            //            g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
+            //        }
+            //    }
+            //}
+            Log.Debug("Painted {lineOnPage} lines.", i - 1);
         }
     }
 }
