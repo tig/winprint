@@ -111,28 +111,32 @@ namespace WinPrint.Core {
         /// <param name="value">A string with macros to be replaced</param>
         /// <param name="sheetNum"><Page #/param>
         /// <returns></returns>
-        public string ReplaceMacro(string value) {
+        public string ReplaceMacros(string value) {
             return Regex.Replace(value, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match => {
-                var p = System.Linq.Expressions.Expression.Parameter(typeof(Macros), "Macros");
+                var p = Expression.Parameter(typeof(Macros), "Macros");
 
                 var startGroup = match.Groups["start"];
                 var propertyGroup = match.Groups["property"];
                 var formatGroup = match.Groups["format"];
                 var endGroup = match.Groups["end"];
 
-                LambdaExpression e;
                 try {
-                    e = DynamicExpressionParser.ParseLambda(new[] { p }, null, propertyGroup.Value);
+                    // Generate and parse a LambdaExpression
+                    var e = DynamicExpressionParser.ParseLambda(new[] { p }, null, propertyGroup.Value);
+                    var computedValue = e.Compile().DynamicInvoke(this);
+                    if (formatGroup.Success) {
+                        // There's a format specifier
+                        // The following does: string.Format("{0:formatGroup.Value}", computedValue)
+                        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", computedValue);
+                    }
+                    else {
+                        // Get here when there is no format specifier.
+                        return (computedValue ?? "").ToString();
+                    }
                 }
                 catch { //(ParseException ex) {
                     // Non-existant Property or other parse error
-                    return propertyGroup.Value;
-                }
-                if (formatGroup.Success) {
-                    return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", e.Compile().DynamicInvoke(this));
-                }
-                else {
-                    return (e.Compile().DynamicInvoke(this) ?? "").ToString();
+                    return match.Groups[0].Value;
                 }
             });
         }

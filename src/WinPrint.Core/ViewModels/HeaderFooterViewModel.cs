@@ -115,7 +115,7 @@ namespace WinPrint.Core {
             Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
             var macros = new Macros(svm);
             macros.Page = sheetNum;
-            var parts = macros.ReplaceMacro(Text).Split('\t', '|');
+            var parts = macros.ReplaceMacros(Text).Split('\t', '|');
 
             // Left\tCenter\tRight
             if (parts == null || parts.Length == 0) {
