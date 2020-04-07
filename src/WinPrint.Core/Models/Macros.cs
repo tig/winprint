@@ -107,6 +107,9 @@ namespace WinPrint.Core {
         /// Replaces macros of the form "{property:format}" using regex and Dynamic Invoke
         /// From https://stackoverflow.com/questions/39874172/dynamic-string-interpolation/39900731#39900731
         /// and  https://haacked.com/archive/2009/01/14/named-formats-redux.aspx/
+        /// 
+        /// Note this does not work perfectly. Specifically some invalid format specifiers just cause
+        /// string.Format to generate garbage (e.g. {DatePrinted:HelloWorld})
         /// </summary>
         /// <param name="value">A string with macros to be replaced</param>
         /// <param name="sheetNum"><Page #/param>
