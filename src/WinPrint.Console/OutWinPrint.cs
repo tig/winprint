@@ -149,7 +149,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// -WhatIf switch
         /// </summary>
-        [Parameter(HelpMessage = "Output is the number of sheets that would be printed. Use -Verbose to print the count of pages.",
+        [Parameter(HelpMessage = "Output is the number of sheets that would be printed. Use -Verbose to print the count of .",
             ParameterSetName = "Print")]
         public SwitchParameter WhatIf { get; set; }
         //private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out var o); }
@@ -169,6 +169,14 @@ namespace WinPrint.Console {
             ParameterSetName = "Updates")]
         public SwitchParameter Force { get; set; }
         private bool _force { get => MyInvocation.BoundParameters.TryGetValue("Force", out var o); }
+
+        /// <summary>
+        /// -InstallUpdate switch
+        /// </summary>
+        [Parameter(HelpMessage = "Outputs the path the the winprint config file.",
+            ParameterSetName = "Config")]
+        public SwitchParameter Config { get; set; }
+
         #endregion
 
         #region Update Service Related Code
@@ -240,6 +248,7 @@ namespace WinPrint.Console {
         private string _updateMsg;
 
         private void UpdateService_GotLatestVersion(object sender, Version version) {
+            Log.Debug("UpdateService_GotLatestVersion");
             if (_getVersionCancellationToken.IsCancellationRequested)
                 return;
 
@@ -259,6 +268,8 @@ namespace WinPrint.Console {
             else {
                 _updateMsg = "This is lastest version of winprint";
             }
+            Log.Debug("UpdateService_GotLatestVersion"+ _updateMsg);
+
         }
         #endregion
 
@@ -268,9 +279,7 @@ namespace WinPrint.Console {
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
         protected override async Task BeginProcessingAsync() {
-            //Log.Debug("BeginProcessingAsync");
-            //ServiceLocator.Reset();
-            //ModelLocator.Reset();
+            Log.Debug("BeginProcessingAsync");
 
             // If this is the first invoke since loading start telemetry and logging
             if (ServiceLocator.Current.TelemetryService.GetTelemetryClient() == null) {
@@ -292,7 +301,7 @@ namespace WinPrint.Console {
             Log.Debug("PowerShell Invoked: command: {appname}, module: {modulename}", MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
             
             Dictionary<string, string> dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");
-            Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
+            Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = false })); 
             ServiceLocator.Current.TelemetryService.TrackEvent($"{MyInvocation.MyCommand.Name} BeginProcessing", properties: dict);
 
             await base.BeginProcessingAsync().ConfigureAwait(true);
@@ -341,8 +350,32 @@ namespace WinPrint.Console {
         // This method will be called once at the end of pipeline execution; if no input is received, this method is not called
         protected override async Task EndProcessingAsync() {
             await base.EndProcessingAsync().ConfigureAwait(true);
-
             Log.Debug("EndProcessingAsync");
+
+            if (Config) {
+                Process proc = null;
+                try {
+                    var psi = new ProcessStartInfo();
+                    psi.UseShellExecute = true;   // This is important
+                    psi.FileName = ServiceLocator.Current.SettingsService.SettingsFileName;
+                    proc = Process.Start(psi);
+                }
+                catch (Win32Exception e) {
+                    // TODO: Better error message (output of stderr?)
+                    ServiceLocator.Current.TelemetryService.TrackException(e, false);
+
+                    Log.Error(e, $"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}.");
+                }
+                finally {
+                    proc?.Dispose();
+                }
+                return;
+            }
+
+            if (WinPrint.Core.Models.ModelLocator.Current.Settings == null) {
+                Log.Fatal(new Exception($"Settings are invalid. See {ServiceLocator.Current.LogService.LogPath} for more information."), "");
+                return;
+            }
 
             SetupUpdateHandler();
 
@@ -366,10 +399,8 @@ namespace WinPrint.Console {
             // Whenever we run, check for an update. We use the cancellation token to kill the thread that's doing this
             // if we exit before getting a version info result back. Checking for updates should never shlow cmd line down.
             Log.Debug("Kicking off update check thread...");
-            //await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true),
-            //    _getVersionCancellationToken.Token).ConfigureAwait(true);
-
-            //var settings = ServiceLocator.Current.SettingsService.ReadSettings();
+            await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true),
+                _getVersionCancellationToken.Token).ConfigureAwait(true);
 
             var rec = new ProgressRecord(1, "Printing", "Printing...");
             rec.PercentComplete = 0;
@@ -385,50 +416,29 @@ namespace WinPrint.Console {
                     _print.SetPrinter(PrinterName);
                 }
                 catch (InvalidPrinterException e) {
-                    //Log.Error<InvalidPrinterException>(e, "", e);
                     Log.Information("Installed printers:");
                     foreach (string printer in PrinterSettings.InstalledPrinters) {
                         Log.Information("   {printer}", printer);
                     }
-
-                    Log.Fatal(e, "");
+                    Log.Fatal(new Exception($"{PrinterName} is not a valid printer name. Valid printer names include " +
+                        $"{string.Join(", ", PrinterSettings.InstalledPrinters.ToDynamicList().ToArray())}."), "");
                     CleanUpUpdateHandler();
                     return;
                 }
             }
 
-            //if (!string.IsNullOrEmpty(PaperSize)) {
-            //    _print.SetPaperSize(PaperSize);
-            //}
-
             if (string.IsNullOrEmpty(Title)) {
-                Title = this.MyInvocation.MyCommand.Name;
+                if (string.IsNullOrEmpty(FileName))
+                    Title = this.MyInvocation.MyCommand.Name;
+                else
+                    Title = FileName;
             }
 
-            _print.SheetViewModel.File = Title;
-
-            //_print.PrintingSheet += (s, sheetNum) => this.WriteProgress(new ProgressRecord(0, "Printing", $"Printing sheet {sheetNum}"));
-            //_print.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
-            //_print.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
-            //_print.SheetViewModel.ReflowProgress += (s, msg) => this.WriteInformation(new InformationRecord($"Reflow Progress {msg}", "script"));
-
-            _print.PrintingSheet += (s, sheetNum) => {
-                rec.PercentComplete = 40 + (sheetNum);
-                rec.StatusDescription = $"Printing sheet {sheetNum}";
-                WriteProgress(rec);
-                Log.Information("Printing sheet {sheetNum}", sheetNum);
-            };
-
+            SheetSettings sheet = null;
+            string sheetID = null;
             try {
                 MyInvocation.BoundParameters.TryGetValue("SheetDefintion", out object sheetDefintion);
-                var sheet = _print.SheetViewModel.FindSheet((string)sheetDefintion, out var sheetID);
-
-                if (_verbose) {
-                    Log.Information("    Printer:          {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
-                    Log.Information("    Paper Size:       {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
-                    Log.Information("    Orientation:      {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
-                    Log.Information("    Sheet Definition: {name} ({id})", sheet.Name, sheetID);
-                }
+                sheet = _print.SheetViewModel.FindSheet((string)sheetDefintion, out sheetID);
 
                 rec.PercentComplete = 20;
                 rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
@@ -447,7 +457,7 @@ namespace WinPrint.Console {
                 _print.SheetViewModel.SetSheet(sheet);
             }
             catch (InvalidOperationException e) {
-                Log.Error(e, "Could not find sheet settings");
+                Log.Fatal(new Exception($"Could not find sheet settings. {e.Message}. See {ServiceLocator.Current.LogService.LogPath} for more information."), "");
                 CleanUpUpdateHandler();
                 return;
             }
@@ -460,9 +470,34 @@ namespace WinPrint.Console {
                 }
             }
 
+            if (MyInvocation.BoundParameters.TryGetValue("PaperSize", out object paperSize)) {
+                _print.SetPaperSize((string)paperSize);
+            }
+
             rec.PercentComplete = 30;
             rec.StatusDescription = $"Loading content";
             WriteProgress(rec);
+
+            if (_verbose) {
+                Log.Information("FileName/Title:      {FileName}", FileName);
+                Log.Information("Title:               {title}", Title);
+                Log.Information("Content Type Engine: {cte}", contentTypeEngine);
+                Log.Information("Printer:             {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
+                Log.Information("Paper Size:          {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
+                Log.Information("Orientation:         {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
+                Log.Information("Sheet Definition:    {name} ({id})", sheet.Name, sheetID);
+            }
+
+            _print.SheetViewModel.File = Title;
+
+            _print.PrintingSheet += (s, sheetNum) => {
+                rec.PercentComplete = 40 + (sheetNum);
+                if (rec.PercentComplete > 100)
+                    rec.PercentComplete = 100;
+                rec.StatusDescription = $"Printing sheet {sheetNum}";
+                WriteProgress(rec);
+                Log.Information("Printing sheet {sheetNum}", sheetNum);
+            };
 
             if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
                 await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
@@ -515,30 +550,26 @@ namespace WinPrint.Console {
                 return;
             }
 
-            if (_verbose) {
-                if (ModelLocator.Current.Options.CountPages) {
-                    Log.Information("Would have printed a total of {pagesCounted} sheets.", sheetsCounted);
-                }
-                else {
-                    Log.Information("Printed a total of {pagesCounted} sheets.", sheetsCounted);
-                }
-            }
-
-            // Don't write anything out to the pipeline if PassThru wasn't specified.
-            //if (!PassThru.IsPresent) {
-            //    return;
-            //}
-
-            //this.WriteObject(sheetsCounted, false);
-
+            // Finalize Progress
             rec.PercentComplete = -1;
             rec.StatusDescription = $"Complete";
             WriteProgress(rec);
 
+            // Output via verbose how much printing got done
+            if (_verbose) {
+                Log.Information($"{(WhatIf ? "Would have printed" : "Printed")} {{sheetsCounted}} sheets.", sheetsCounted);
+            }
 
             // End by sharing update info, if any
             if (!string.IsNullOrEmpty(_updateMsg)) {
                 Log.Information(_updateMsg);
+            }
+
+            CleanUpUpdateHandler();
+
+            // Very last thing we do is write to the output if WhatIf was specified
+            if (WhatIf) {
+                this.WriteObject(sheetsCounted, false);
             }
         }
 
@@ -671,6 +702,13 @@ namespace WinPrint.Console {
         /// </summary>
         /// <returns></returns>
         public object GetDynamicParameters() {
+
+            // We can't report errors here
+            if (WinPrint.Core.Models.ModelLocator.Current.Settings == null) {
+                //System.Console.WriteLine($"Settings are not valid. Check {ServiceLocator.Current.SettingsService.SettingsFileName}.");
+                return null;
+            }
+
             var runtimeDict = new RuntimeDefinedParameterDictionary();
 
             // -PrinterName

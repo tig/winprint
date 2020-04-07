@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Management.Automation;
-using System.Threading;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
-using TTRider.PowerShellAsync;
 //using TTRider.PowerShellAsync;
 
 namespace WinPrint.Console {

@@ -517,5 +517,19 @@ namespace WinPrint.Core.UnitTests.Models
             Assert.Equal($"{0:X8}", macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}:X8}}"));
 
         }
+
+
+        [Fact]
+        public void Page()
+        {
+            SheetViewModel svm = SetupSVM();
+            Macros macros = new Macros(svm);
+
+            Assert.Equal($"{0}", macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
+
+            // Hex
+            Assert.Equal($"{0:X8}", macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}:X8}}"));
+
+        }
     }
 }
