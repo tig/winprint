@@ -1,5 +1,5 @@
 ---
-title: winprint
+title: Overview
 ---
 *A modern take on the the classic source code printing app from [1988](about.md).*
 

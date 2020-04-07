@@ -5,8 +5,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Management.Automation;
@@ -25,6 +23,7 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Console {
+
     [Cmdlet(VerbsData.Out,
         nounName: "WinPrint",
         HelpUri = "https://tig.github.io./winprint",
@@ -36,6 +35,12 @@ namespace WinPrint.Console {
         private Print _print = new WinPrint.Core.Print();
 
         public OutWinPrint() {
+  //          System.Console.WriteLine($"{this.GetHashCode()}: Constructor");
+            //BoundedCapacity = 1000;
+        }
+
+        ~OutWinPrint() {
+//            System.Console.WriteLine($"{this.GetHashCode()}: Finalizer");
         }
 
         #region Command Line Switches
@@ -44,7 +49,7 @@ namespace WinPrint.Console {
         /// The alias allows "lp -P printer".
         /// Name alias: becuase that's what out-printer uses.
         /// </summary>
-        [Parameter(Position = 0, HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",
+        [Parameter(HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",
             ParameterSetName = "Print"), ArgumentCompleter(typeof(PrinterNameCompleter))]
         [Alias("Name")]
         public string PrinterName { get; set; }
@@ -91,17 +96,16 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.
         /// </summary>
-        [Parameter(Position = 0, HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",
+        [Parameter(HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",
             ParameterSetName = "Print"), ArgumentCompleter(typeof(LanguageCompleter))]
         [Alias("Lang")]
         public string Language { get; set; }
 
-
-
         /// <summary>
         /// Optional FileName - will be displayed in header/footer and as title of print job.
+        /// If $input is not available, FileName will be used as the path to the file to print.
         /// </summary>
-        [Parameter(HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +
+        [Parameter(Position = 0, HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +
             "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. " +
             "If $input is not available, FileName will be used as the path to the file to print.",
             ParameterSetName = "Print")]
@@ -202,12 +206,8 @@ namespace WinPrint.Console {
             WriteProgress(rec);
         }
         private async Task<bool> DoUpdateAsync() {
-
-            Debug.WriteLine("Kicking off update check thread...");
             var version = await ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true);
-            Debug.WriteLine($"Starting update...");
             var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(true);
-
 #if DEBUG
             var log = "-lv winprint.msiexec.log";
 #else
@@ -225,9 +225,7 @@ namespace WinPrint.Console {
             var rec = new ProgressRecord(0, "Installing", $"Download Complete");
             rec.CurrentOperation = $"Installing";
             rec.PercentComplete = -1;
-            //await Task.Run(() => WriteProgress(rec));
             WriteProgress(rec);
-            Debug.WriteLine($"wrote progress");
 
             try {
                 p.Start();
@@ -279,7 +277,6 @@ namespace WinPrint.Console {
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
         protected override async Task BeginProcessingAsync() {
-            await base.BeginProcessingAsync().ConfigureAwait(true);
             //Log.Debug("BeginProcessingAsync");
             //ServiceLocator.Reset();
             //ModelLocator.Reset();
@@ -287,27 +284,27 @@ namespace WinPrint.Console {
             // If this is the first invoke since loading start telemetry and logging
             if (ServiceLocator.Current.TelemetryService.GetTelemetryClient() == null) {
                 ServiceLocator.Current.TelemetryService.Start("out-winprint");
-                ServiceLocator.Current.LogService.Start("out-winprint", new PowerShellSink(this), debug: _debug, verbose:_verbose);
-            }
 
-            // Change Console logging as specififed by paramters (e.g. -verbose and/or -debug)
-            ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_verbose ? LogEventLevel.Information : LogEventLevel.Warning);
-            ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_debug ? LogEventLevel.Debug : ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel);
+                // AsyncCmdlet base adds each cmdlet instance to PowerShellSink.Instance; this call configures
+                // the Debug and File LogEventLevel's only 
+                ServiceLocator.Current.LogService.Start("out-winprint", PowerShellSink.Instance, debug: _debug, verbose: _verbose);
+            }
+            else {
+                // Change Console logging as specififed by paramters (e.g. -verbose and/or -debug)
+                // ConsoleLevelSwitch is for the PowerShellSink logger only
+                ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_verbose ? LogEventLevel.Information : LogEventLevel.Warning);
+                ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_debug ? LogEventLevel.Debug : ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel);
+            }
 
             var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location);
             Log.Information("out-winprint v{version} - {copyright} - {link}", ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
-
             Log.Debug("PowerShell Invoked: command: {appname}, module: {modulename}", MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
-
-            //foreach (var param in MyInvocation.MyCommand.Parameters) {
-            //    Log.Debug("Parameter: {name} SwitchParamter = {switch}, IsDynamic = {IsDyanmic}", param.Key, param.Value.SwitchParameter, param.Value.IsDynamic);
-            //}
-
+            
             Dictionary<string, string> dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");
             Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true }));
-
             ServiceLocator.Current.TelemetryService.TrackEvent($"{MyInvocation.MyCommand.Name} BeginProcessing", properties: dict);
 
+            await base.BeginProcessingAsync().ConfigureAwait(true);
         }
 
         // This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called
@@ -332,7 +329,6 @@ namespace WinPrint.Console {
         }
 
         private void ProcessObject(PSObject input) {
-
             var baseObject = input.BaseObject;
 
             // Throw a terminating error for types that are not supported.
@@ -348,7 +344,6 @@ namespace WinPrint.Console {
 
                 this.ThrowTerminatingError(error);
             }
-
             _psObjects.Add(input);
         }
 
@@ -479,7 +474,7 @@ namespace WinPrint.Console {
             WriteProgress(rec);
 
             if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
-                await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine);
+                await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
             }
             else {
                 // Get $input into a string we can use
@@ -554,8 +549,6 @@ namespace WinPrint.Console {
             if (!string.IsNullOrEmpty(_updateMsg)) {
                 Log.Information(_updateMsg);
             }
-
-            CleanUpUpdateHandler();
         }
 
         private void PropertyChangedEventHandler(object o, PropertyChangedEventArgs e) {
@@ -650,7 +643,7 @@ namespace WinPrint.Console {
         /// Default implementation just delegates to internal helper.
         /// </summary>
         /// <remarks>This method calls GC.SuppressFinalize</remarks>
-        public new void Dispose() {
+        public void Dispose() {
             Dispose(true);
 
             //GC.SuppressFinalize(this);
@@ -660,8 +653,8 @@ namespace WinPrint.Console {
         /// Dispose pattern implementation.
         /// </summary>
         /// <param name="disposing"></param>
-        protected new void Dispose(bool disposing) {
-            base.Dispose(disposing);
+        protected void Dispose(bool disposing) {
+            //base.Dispose(disposing);
             if (disposing) {
                 AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
                 TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;

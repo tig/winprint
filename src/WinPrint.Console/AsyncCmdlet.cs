@@ -57,8 +57,6 @@ namespace WinPrint.Console {
             }
         }
 
-        public int ProcessingCount { get; set; } = 0;
-
         /// <summary>
         ///		Asynchronously perform Cmdlet pre-processing.
         /// </summary>
@@ -138,7 +136,8 @@ namespace WinPrint.Console {
         ///		Perform Cmdlet pre-processing.
         /// </summary>
         protected sealed override void BeginProcessing() {
-            ++ProcessingCount;
+            PowerShellSink.Instance.Register(this);
+
             ThreadAffinitiveSynchronizationContext.RunSynchronized(
                 () => BeginProcessingAsync()
             );
@@ -162,7 +161,7 @@ namespace WinPrint.Console {
             ThreadAffinitiveSynchronizationContext.RunSynchronized(
                 () => EndProcessingAsync()
             );
-            ProcessingCount--;
+            PowerShellSink.Instance.UnRegister(this.GetHashCode());
         }
 
 
@@ -171,9 +170,8 @@ namespace WinPrint.Console {
         /// </summary>
         protected sealed override void StopProcessing() {
             _cancellationSource.Cancel();
-
-
             base.StopProcessing();
+            PowerShellSink.Instance.UnRegister(this.GetHashCode());
         }
 
 

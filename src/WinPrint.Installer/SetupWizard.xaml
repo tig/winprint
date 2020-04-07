@@ -92,7 +92,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             Name="progressBar"
             Grid.Row="1"
             Height="16"
-            Width="417"
+            Width="387"
             VerticalAlignment="Bottom"
             HorizontalAlignment="Left"
             IsIndeterminate="False"

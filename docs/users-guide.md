@@ -73,6 +73,13 @@ VERBOSE: Printed a total of 2 sheets.
 PS >
 ```
 
+Or, without piping:
+
+```powershell
+wp -FileName program.cs
+wp program.cs
+```
+
 Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
 
 ```powershell
