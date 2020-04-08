@@ -968,7 +968,7 @@ namespace WinPrint.Winforms {
             fontDialog.ShowEffects = false;
             fontDialog.ShowColor = true;
             fontDialog.AllowScriptChange = false;
-            fontDialog.AllowSimulations = false;
+            fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
             // fontDialog.AllowVectorFonts = false;
             // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;

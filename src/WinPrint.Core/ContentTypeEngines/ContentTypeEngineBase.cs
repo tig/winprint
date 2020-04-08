@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -55,14 +58,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// </summary>
         public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
         private ContentSettings contentSettings;// = new ContentSettings();
-
-        //internal int numPages = 0;
-        //public int NumPages {
-        //    get => numPages;
-        //    set => SetField(ref numPages, value);
-        //}
-
-        internal string filePath = null;
 
         /// <summary>
         /// The contents of the file to be printed.

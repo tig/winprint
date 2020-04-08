@@ -173,7 +173,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// -InstallUpdate switch
         /// </summary>
-        [Parameter(HelpMessage = "Outputs the path the the winprint config file.",
+        [Parameter(HelpMessage = "Edit the winprint config file in the editor configured for .json files.",
             ParameterSetName = "Config")]
         public SwitchParameter Config { get; set; }
 

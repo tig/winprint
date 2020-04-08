@@ -100,7 +100,8 @@ namespace WinPrint.Core.ContentTypeEngines {
                 css = IncludedWinPrintCss.CssString;
             }
 
-            var resources = new HtmlResources(filePath);
+            // BUGBUG: wihtout knowing the relative root path fo the html document we can't load any resources
+            var resources = new HtmlResources("");
             litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes) {
                 Diagnostics = ContentSettings.Diagnostics,
                 Size = new LiteHtmlSize(width, 0),

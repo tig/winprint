@@ -1,5 +1,9 @@
 ﻿using Serilog.Sinks.XUnit;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Windows.Media;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;

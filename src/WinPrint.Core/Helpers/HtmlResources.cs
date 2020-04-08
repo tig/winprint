@@ -42,8 +42,9 @@ namespace WinPrint.LiteHtml {
                     data = reader.ReadToEnd();
                 }
                 else {
-                    var url = GetUrlForRequest(resource);
-                    data = _httpClient.GetStringAsync(url).Result;
+                    // TODO: Implement loading external html resources
+                    //var url = GetUrlForRequest(resource);
+                    //data = _httpClient.GetStringAsync(url).Result;
                 }
                 return data;
             }
