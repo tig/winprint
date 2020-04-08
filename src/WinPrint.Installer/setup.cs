@@ -3,11 +3,11 @@ using System.Diagnostics;
 using WixSharp;
 
 namespace WinPrintInstaller {
-    class Install {
+    internal class Install {
         public static readonly Guid UpgradeCode = new Guid("{0002A500-0000-0000-C000-000000000046}");
         public static readonly Guid ProductCode = new Guid("{0002A501-0000-0000-C000-000000000046}");
 
-        static void Main() {
+        private static void Main() {
             const string sourceBaseDir = @"..\..\release";
             const string outDir = @"..\..\install";
             var versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";

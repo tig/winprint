@@ -18,7 +18,7 @@ namespace WinPrint.Console {
         /// <summary>
         ///		The source for cancellation tokens that can be used to cancel the operation.
         /// </summary>
-        readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
 
         /// <summary>
@@ -208,7 +208,7 @@ namespace WinPrint.Console {
                 throw new ArgumentNullException(nameof(progressRecord));
             }
 
-            if (String.IsNullOrWhiteSpace(messageOrFormat)) {
+            if (string.IsNullOrWhiteSpace(messageOrFormat)) {
                 throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'messageOrFormat'.", nameof(messageOrFormat));
             }
 
@@ -238,7 +238,7 @@ namespace WinPrint.Console {
                 throw new ArgumentNullException(nameof(progressRecord));
             }
 
-            if (String.IsNullOrWhiteSpace(completionMessageOrFormat)) {
+            if (string.IsNullOrWhiteSpace(completionMessageOrFormat)) {
                 throw new ArgumentException("Argument cannot be null, empty, or composed entirely of whitespace: 'completionMessageOrFormat'.", nameof(completionMessageOrFormat));
             }
 

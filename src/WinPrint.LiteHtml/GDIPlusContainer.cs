@@ -13,21 +13,24 @@ namespace WinPrint.LiteHtml {
     }
 
     public class GDIPlusContainer : ViewportContainer {
+        private IResourceLoader _loader;
 
-        IResourceLoader _loader;
-
-
-        class ResourceLoader : IResourceLoader {
-            Func<string, string> _getStringResource;
-            Func<string, byte[]> _getBytesResource;
+        private class ResourceLoader : IResourceLoader {
+            private Func<string, string> _getStringResource;
+            private Func<string, byte[]> _getBytesResource;
 
             public ResourceLoader(Func<string, string> getStringResource, Func<string, byte[]> getBytesResource) {
                 _getStringResource = getStringResource;
                 _getBytesResource = getBytesResource;
             }
 
-            public byte[] GetResourceBytes(string resource) => _getBytesResource(resource);
-            public string GetResourceString(string resource) => _getStringResource(resource);
+            public byte[] GetResourceBytes(string resource) {
+                return _getBytesResource(resource);
+            }
+
+            public string GetResourceString(string resource) {
+                return _getStringResource(resource);
+            }
         }
 
         public string DefaultFontName { get; set; } = "Arial";
@@ -57,8 +60,8 @@ namespace WinPrint.LiteHtml {
 
         public bool Diagnostics { get; set; }
 
-        static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
-        static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
+        private static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
+        private static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
 
 
         public GDIPlusContainer(string masterCssData, ILibInterop libInterop) : base(masterCssData, libInterop) {
@@ -161,7 +164,7 @@ namespace WinPrint.LiteHtml {
             }
 
             if (pos.width > 0 && pos.height > 0) {
-                if (!String.IsNullOrEmpty(image)) {
+                if (!string.IsNullOrEmpty(image)) {
                     var bitmap = LoadImage(image);
                     if (bitmap != null) {
                         _graphics.DrawImage(bitmap, new Rectangle(pos.x, pos.y, pos.width, pos.height));

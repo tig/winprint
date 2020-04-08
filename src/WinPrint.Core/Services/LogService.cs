@@ -60,7 +60,7 @@ namespace WinPrint.Core.Services {
                 // Console / Powershell
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.ControlledBy(MasterLevelSwitch)
-                    .WriteTo.Sink((ILogEventSink)consoleSink, levelSwitch: ConsoleLevelSwitch)
+                    .WriteTo.Sink(consoleSink, levelSwitch: ConsoleLevelSwitch)
                     .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
                     .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
                     .CreateLogger();

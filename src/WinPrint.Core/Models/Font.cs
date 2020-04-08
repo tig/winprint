@@ -14,14 +14,9 @@ namespace WinPrint.Core.Models {
         /// </summary>
         [SafeForTelemetry]
         public string Family {
-            get {
-                return family;
-            }
+            get => family;
 
-            set {
-                family = value;
-                //SetField(ref family, value); 
-            }
+            set => family = value;//SetField(ref family, value); 
         }
 
         /// <summary>
@@ -46,15 +41,16 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public float Size {
             get => size;
-            set {
-                size = value;
-                //SetField(ref size, value);
-            }
+            set => size = value;//SetField(ref size, value);
         }
 
-        public object Clone() => MemberwiseClone();
+        public object Clone() {
+            return MemberwiseClone();
+        }
 
-        public override int GetHashCode() => HashCode.Combine(Family, Size, Style);
+        public override int GetHashCode() {
+            return HashCode.Combine(Family, Size, Style);
+        }
 
         public override bool Equals(object obj) {
             if (!(obj is Font font)) {
@@ -79,7 +75,9 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Tests whether two <see cref='Font'/> objects are different.
         /// </summary>
-        public static bool operator !=(Font m1, Font m2) => !(m1 == m2);
+        public static bool operator !=(Font m1, Font m2) {
+            return !(m1 == m2);
+        }
 
         /// <summary>
         /// Provides some interesting information for the Font in String form.

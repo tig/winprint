@@ -9,7 +9,11 @@
     <AssemblyName>winprint</AssemblyName>
     <StartupObject></StartupObject>
 
-    <Version>2.0.0.5015</Version>
+<<<<<<< HEAD
+    <Version>2.0.0.4144</Version>
+=======
+    <Version>2.0.0.5013</Version>
+>>>>>>> fd1538b58b74220b77dfe1ec716f4cd4c752dbc3
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>

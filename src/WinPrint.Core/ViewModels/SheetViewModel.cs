@@ -60,9 +60,7 @@ namespace WinPrint.Core {
         /// </summary>
         public string File {
             get => _file;
-            set {
-                SetField(ref _file, value);
-            }
+            set => SetField(ref _file, value);
         }
         private string _file;
 
@@ -123,7 +121,9 @@ namespace WinPrint.Core {
         /// Subscribe to know when file has been loaded by the SheetViewModel. 
         /// </summary>
         public event EventHandler<bool> Loaded;
-        protected void OnLoaded(bool l) => Loaded?.Invoke(this, l);
+        protected void OnLoaded(bool l) {
+            Loaded?.Invoke(this, l);
+        }
 
         /// <summary>
         /// True if we're in the middle of loading the file. False otherwise.
@@ -144,7 +144,9 @@ namespace WinPrint.Core {
         /// Subscribe to know when file has been Reflowed by the SheetViewModel. 
         /// </summary>
         public event EventHandler<bool> ReflowComplete;
-        protected void OnReflowed(bool r) => ReflowComplete?.Invoke(this, r);
+        protected void OnReflowed(bool r) {
+            ReflowComplete?.Invoke(this, r);
+        }
 
         /// <summary>
         /// True if we're in the middle of reflowing. False otherwise.
@@ -165,7 +167,9 @@ namespace WinPrint.Core {
         /// Subscribe to be notified when the Printer PageSettings have been set.
         /// </summary>
         public event EventHandler PageSettingsSet;
-        protected void OnPageSettingsSet() => PageSettingsSet?.Invoke(this, null);
+        protected void OnPageSettingsSet() {
+            PageSettingsSet?.Invoke(this, null);
+        }
 
         public event EventHandler<string> ReflowProgress;
         protected void OnReflowProgress(string msg) {
@@ -280,7 +284,7 @@ namespace WinPrint.Core {
 
             // If there's no file, this sets things up with an empty file which is good for 
             // print preview during startup.
-            string document = "";
+            var document = "";
             Encoding = Encoding.UTF8;
             if (!string.IsNullOrEmpty(File)) {
                 var detected = CharsetDetector.DetectFromFile(File).Detected;
@@ -534,122 +538,128 @@ namespace WinPrint.Core {
             _cachedSheets.Clear();
         }
 
-        private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() => (s, e) => {
-            var reflow = false;
-            LogService.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
-            switch (e.PropertyName) {
-                case "Landscape":
-                    Landscape = _sheet.Landscape;
-                    reflow = true;
-                    break;
+        private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() {
+            return (s, e) => {
+                var reflow = false;
+                LogService.TraceMessage($"sheet.PropertyChanged: {e.PropertyName}");
+                switch (e.PropertyName) {
+                    case "Landscape":
+                        Landscape = _sheet.Landscape;
+                        reflow = true;
+                        break;
 
-                case "Margins":
-                    Margins = _sheet.Margins;
-                    reflow = true;
-                    break;
+                    case "Margins":
+                        Margins = _sheet.Margins;
+                        reflow = true;
+                        break;
 
-                case "DiagnosticRulesFont":
-                    DiagnosticRulesFont = ModelLocator.Current.Settings.DiagnosticRulesFont;
-                    break;
+                    case "DiagnosticRulesFont":
+                        DiagnosticRulesFont = ModelLocator.Current.Settings.DiagnosticRulesFont;
+                        break;
 
-                case "Rows":
-                    Rows = _sheet.Rows;
-                    reflow = true;
-                    break;
+                    case "Rows":
+                        Rows = _sheet.Rows;
+                        reflow = true;
+                        break;
 
-                case "Columns":
-                    Columns = _sheet.Columns;
-                    reflow = true;
-                    break;
+                    case "Columns":
+                        Columns = _sheet.Columns;
+                        reflow = true;
+                        break;
 
-                case "Padding":
-                    Padding = _sheet.Padding;
-                    reflow = true;
-                    break;
+                    case "Padding":
+                        Padding = _sheet.Padding;
+                        reflow = true;
+                        break;
 
-                case "PageSeparator":
-                    PageSeparator = _sheet.PageSeparator;
-                    break;
+                    case "PageSeparator":
+                        PageSeparator = _sheet.PageSeparator;
+                        break;
 
-                default:
-                    // Print/Preview Rule Settings.
-                    //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
-                    //    // Repaint view (no reflow needed)
-                    //    Helpers.Logging.TraceMessage($"Rules Changed");
-                    //}
-                    break;
-            }
-            OnSettingsChanged(reflow);
-        };
+                    default:
+                        // Print/Preview Rule Settings.
+                        //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
+                        //    // Repaint view (no reflow needed)
+                        //    Helpers.Logging.TraceMessage($"Rules Changed");
+                        //}
+                        break;
+                }
+                OnSettingsChanged(reflow);
+            };
+        }
 
-        private System.ComponentModel.PropertyChangedEventHandler OnContentSettingsPropertyChanged() => (s, e) => {
-            var reflow = false;
-            LogService.TraceMessage($"{e.PropertyName}");
-            switch (e.PropertyName) {
-                case "Font":
-                    ContentSettings.Font = _sheet.ContentSettings.Font;
-                    reflow = true;
-                    break;
+        private System.ComponentModel.PropertyChangedEventHandler OnContentSettingsPropertyChanged() {
+            return (s, e) => {
+                var reflow = false;
+                LogService.TraceMessage($"{e.PropertyName}");
+                switch (e.PropertyName) {
+                    case "Font":
+                        ContentSettings.Font = _sheet.ContentSettings.Font;
+                        reflow = true;
+                        break;
 
-                case "PrintBackground":
-                    ContentSettings.PrintBackground = _sheet.ContentSettings.PrintBackground;
-                    reflow = false;
-                    break;
+                    case "PrintBackground":
+                        ContentSettings.PrintBackground = _sheet.ContentSettings.PrintBackground;
+                        reflow = false;
+                        break;
 
-                case "Grayscale":
-                    ContentSettings.Grayscale = _sheet.ContentSettings.Grayscale;
-                    reflow = false;
-                    break;
+                    case "Grayscale":
+                        ContentSettings.Grayscale = _sheet.ContentSettings.Grayscale;
+                        reflow = false;
+                        break;
 
-                case "Darkness":
-                    ContentSettings.Darkness = _sheet.ContentSettings.Darkness;
-                    reflow = false;
-                    break;
+                    case "Darkness":
+                        ContentSettings.Darkness = _sheet.ContentSettings.Darkness;
+                        reflow = false;
+                        break;
 
-                default:
-                    // Print/Preview Rule Settings.
-                    //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
-                    //    // Repaint view (no reflow needed)
-                    //    Helpers.Logging.TraceMessage($"Rules Changed");
-                    //}
-                    break;
-            }
-            OnSettingsChanged(reflow);
-        };
+                    default:
+                        // Print/Preview Rule Settings.
+                        //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
+                        //    // Repaint view (no reflow needed)
+                        //    Helpers.Logging.TraceMessage($"Rules Changed");
+                        //}
+                        break;
+                }
+                OnSettingsChanged(reflow);
+            };
+        }
 
-        private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() => (s, e) => {
-            var reflow = false;
-            LogService.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
-            switch (e.PropertyName) {
-                case "Font":
-                    reflow = true;
-                    break;
+        private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() {
+            return (s, e) => {
+                var reflow = false;
+                LogService.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
+                switch (e.PropertyName) {
+                    case "Font":
+                        reflow = true;
+                        break;
 
-                case "LineNumbers":
-                    reflow = true;
-                    break;
+                    case "LineNumbers":
+                        reflow = true;
+                        break;
 
-                case "LineNumberSeparator":
-                    reflow = true;
-                    break;
+                    case "LineNumberSeparator":
+                        reflow = true;
+                        break;
 
-                case "TabSpaces":
-                    reflow = true;
-                    break;
+                    case "TabSpaces":
+                        reflow = true;
+                        break;
 
-                case "PageSize":
-                    reflow = true;
-                    break;
+                    case "PageSize":
+                        reflow = true;
+                        break;
 
-                default:
-                    break;
-            }
-            if (e.PropertyName == "NumPages") {
-                return;
-            }
+                    default:
+                        break;
+                }
+                if (e.PropertyName == "NumPages") {
+                    return;
+                }
 
-            OnSettingsChanged(reflow);
-        };
+                OnSettingsChanged(reflow);
+            };
+        }
 
         public static float GetFontHeight(Core.Models.Font font) {
             //if (font is null) throw new ArgumentNullException(nameof(font));
@@ -912,7 +922,7 @@ namespace WinPrint.Core {
                 // Draw paper size
                 DrawRule(g, font, Color.Gray, $"", new Point(PaperSize.Width / 4, preview ? 0 : (int)-_printableArea.Y),
                     new Point(PaperSize.Width / 4, PaperSize.Height), 4F, true);
-                DrawRule(g, font, Color.Gray, $"{(float)PaperSize.Width / 100F}\"x{(float)PaperSize.Height / 100F}\"",
+                DrawRule(g, font, Color.Gray, $"{PaperSize.Width / 100F}\"x{PaperSize.Height / 100F}\"",
                     new Point(preview ? 0 : (int)-_printableArea.X, PaperSize.Height / 4), new Point(PaperSize.Width, PaperSize.Height / 4), 4F, true);
             }
 

@@ -322,7 +322,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 if (linesInDocument == 0) {
 
                     Log.Debug($"Reading stdErr...");
-                    StringBuilder stdErr = new StringBuilder();
+                    var stdErr = new StringBuilder();
                     while (!node.StandardError.EndOfStream) {
                         var outputLine = await node.StandardError.ReadLineAsync();
                         Log.Debug("stdErr: {stdErr}", outputLine);
@@ -384,7 +384,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint((int)-0, (int)-yPos), new LiteHtmlSize((int)size.Width, (int)size.Height));
 
-            litehtml.Document.Draw((int)-0, (int)-yPos, new position {
+            litehtml.Document.Draw(-0, -yPos, new position {
                 x = 0,
                 y = 0,
                 width = (int)size.Width,

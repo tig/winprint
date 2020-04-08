@@ -69,11 +69,10 @@ namespace WinPrint.Core.Models {
         /// </summary>
         [SafeForTelemetry]
         public ContentSettings ContentSettings {
-            get {
+            get =>
                 //if (contentSettings is null)
                 //    contentSettings = new ContentSettings();
-                return contentSettings;
-            }
+                contentSettings;
             set => SetField(ref contentSettings, value);
         }
 

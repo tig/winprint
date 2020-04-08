@@ -16,10 +16,9 @@ namespace WinPrint.WinForms {
     public partial class PrintPreview : Control {
         private SheetViewModel svm;
         public SheetViewModel SheetViewModel {
-            get => svm; set {
+            get => svm; set =>
                 // Wire up notificatins?
                 svm = value;
-            }
         }
 
         [
@@ -181,8 +180,8 @@ namespace WinPrint.WinForms {
                 // Calculate scale and location
                 double w = svm.Bounds.Width;
                 double h = svm.Bounds.Height;
-                var scalingX = (double)(ClientSize.Width) / (double)w;
-                var scalingY = (double)(ClientSize.Height) / (double)h;
+                var scalingX = ClientSize.Width / w;
+                var scalingY = ClientSize.Height / h;
 
                 // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
                 var scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
@@ -211,7 +210,7 @@ namespace WinPrint.WinForms {
                         //    0F, 0F, img.Width, img.Height,
                         //    GraphicsUnit.Pixel);
                         e.Graphics.DrawImageUnscaledAndClipped(img,
-                            new Rectangle((int)svm.Bounds.Left, (int)svm.Bounds.Top, (int)(svm.Bounds.Width), (int)(svm.Bounds.Height)));
+                            new Rectangle(svm.Bounds.Left, svm.Bounds.Top, svm.Bounds.Width, svm.Bounds.Height));
                         e.Graphics.Restore(state);
                     }
                     else {

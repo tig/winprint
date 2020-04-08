@@ -72,8 +72,9 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        bool _disposed = false;
-        void Dispose(bool disposing) {
+        private bool _disposed = false;
+
+        private void Dispose(bool disposing) {
             LogService.TraceMessage($"disposing: {disposing}");
 
             if (_disposed) {
@@ -151,12 +152,12 @@ namespace WinPrint.Core.ContentTypeEngines {
             // This is the shortest line length (in chars) that we think we'll see. 
             // This is used as a performance optimization (probably premature) and
             // could be 0 with no functional change.
-            _minLineLen = (int)((float)((PageSize.Width - lineNumberWidth) / MeasureString(g, "W").Width));
+            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / MeasureString(g, "W").Width);
 
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             _wrappedLines = LineWrapDocument(g, document); // new List<string>();
 
-            var n = (int)Math.Ceiling((double)_wrappedLines.Count / (double)_linesPerPage);
+            var n = (int)Math.Ceiling(_wrappedLines.Count / (double)_linesPerPage);
 
             Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, _linesPerPage, _wrappedLines.Count);
 
@@ -187,7 +188,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             while ((line = reader.ReadLine()) != null) {
                 // Expand tabs
                 if (_tabSpaces > 0) {
-                    line = line.Replace("\t", new String(' ', _tabSpaces));
+                    line = line.Replace("\t", new string(' ', _tabSpaces));
                 }
 
                 ++lineCount;
@@ -374,8 +375,9 @@ namespace WinPrint.Core.ContentTypeEngines {
 
                 // Line # separator (draw even if there's no line number, but stop at end of doc)
                 // TODO: Support setting color of line #s and separator
-                if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
+                if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
                     g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
+                }
 
                 // Text
                 g.DrawString(_wrappedLines[i].text, _cachedFont, Brushes.Black, lineNumberWidth, yPos, ContentTypeEngineBase.StringFormat);
@@ -383,8 +385,8 @@ namespace WinPrint.Core.ContentTypeEngines {
                     g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
                 }
             }
-            
-            
+
+
             //// startline is the index of the first line of this page in _wrappedLines, endLine is the index of the last
             //var startLine = _linesPerPage * (pageNum - 1); 
             //var endLine = startLine + _linesPerPage;

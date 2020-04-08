@@ -43,7 +43,7 @@ namespace WinPrintInstaller {
                     this.progressCounter.Progress * (this.progressBar.Maximum - this.progressBar.Minimum);
                 //this.progressLabel.Content = "" + (int)Math.Round(100 * this.progressCounter.Progress) + "%";
 
-                var message = String.Format("{0}: {1}", messageType, messageRecord);
+                var message = string.Format("{0}: {1}", messageType, messageRecord);
                 switch (messageType) {
                     case InstallMessage.Error:
                     case InstallMessage.Warning:

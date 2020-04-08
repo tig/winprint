@@ -27,8 +27,7 @@ namespace WinPrint.Winforms {
 
         // The active file
         private string activeFile;
-
-        OpenFileDialog openFileDialog = new OpenFileDialog();
+        private OpenFileDialog openFileDialog = new OpenFileDialog();
 
         private WinPrint.WinForms.PrintPreview printPreview;
 
@@ -159,7 +158,7 @@ namespace WinPrint.Winforms {
         }
 
         // Flag: Has Dispose already been called?
-        bool disposed = false;
+        private bool disposed = false;
         // Protected implementation of Dispose pattern.
         /// <summary>
         ///  Clean up any resources being used.
@@ -330,7 +329,7 @@ namespace WinPrint.Winforms {
             }
         }
 
-        CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         private void MainWindow_Load(object sender, EventArgs e) {
             // Check for updates
@@ -507,7 +506,7 @@ namespace WinPrint.Winforms {
             }
             else {
 
-                if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+                if (version == null && !string.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
                     Log.Information($"Could not access tig.github.io/winprint to see if a newer version is available. {ServiceLocator.Current.UpdateService.ErrorMessage}");
                 }
                 else if (ServiceLocator.Current.UpdateService.CompareVersions() < 0) {
@@ -615,7 +614,7 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => ShowError(str)));
             }
             else {
-                printPreview.Text = new String(str);
+                printPreview.Text = new string(str);
             }
         }
 
@@ -999,8 +998,9 @@ namespace WinPrint.Winforms {
         }
 
         private void printPreview_Click(object sender, EventArgs e) {
-            if (string.IsNullOrEmpty(activeFile))
+            if (string.IsNullOrEmpty(activeFile)) {
                 ShowFilesDialog();
+            }
         }
     }
 }

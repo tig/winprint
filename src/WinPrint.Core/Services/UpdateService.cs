@@ -18,16 +18,22 @@ namespace WinPrint.Core.Services {
         /// Fired whenever a check for latest version has completed. 
         /// </summary>
         public event EventHandler<Version> GotLatestVersion;
-        protected void OnGotLatestVersion(Version latestVersion) => GotLatestVersion?.Invoke(this, latestVersion);
+        protected void OnGotLatestVersion(Version latestVersion) {
+            GotLatestVersion?.Invoke(this, latestVersion);
+        }
 
         /// <summary>
         /// Fired when a download kicked off by StartUpgrade completes
         /// </summary>
         public event EventHandler<string> DownloadComplete;
-        protected void OnDownloadComplete(string path) => DownloadComplete?.Invoke(this, path);
+        protected void OnDownloadComplete(string path) {
+            DownloadComplete?.Invoke(this, path);
+        }
 
         public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressChanged;
-        protected void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e) => DownloadProgressChanged?.Invoke(this, e);
+        protected void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e) {
+            DownloadProgressChanged?.Invoke(this, e);
+        }
 
         /// <summary>
         /// Any error messages from failed update checks or downloads
@@ -37,9 +43,7 @@ namespace WinPrint.Core.Services {
         /// <summary>
         /// Provides the current version number
         /// </summary>
-        public static Version CurrentVersion {
-            get { return new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location).ProductVersion); }
-        }
+        public static Version CurrentVersion => new Version(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location).ProductVersion);
 
         /// <summary>
         /// Contains the version number of the latest version found online (only valid after GotLatestVersion)
@@ -131,7 +135,7 @@ namespace WinPrint.Core.Services {
             var client = new WebClient();
             client.DownloadDataCompleted += Client_DownloadDataCompleted;
             client.DownloadProgressChanged += Client_DownloadProgressChanged;
-            File.WriteAllBytes(_tempFilename, (byte[])await client.DownloadDataTaskAsync(InstallerUri));
+            File.WriteAllBytes(_tempFilename, await client.DownloadDataTaskAsync(InstallerUri));
             return _tempFilename;
         }
 

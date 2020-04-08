@@ -41,8 +41,9 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        bool disposed = false;
-        void Dispose(bool disposing) {
+        private bool disposed = false;
+
+        private void Dispose(bool disposing) {
             if (disposed) {
                 return;
             }
@@ -132,7 +133,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             litehtml.Document.OnMediaChanged();
 
             // TODO: Use return of Render() to get "best width"
-            var bestWidth = litehtml.Document.Render((int)width);
+            var bestWidth = litehtml.Document.Render(width);
             reflowProgress?.Invoke(this, "Done with Render");
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(width, height));
@@ -140,7 +141,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
 
-            var n = (int)(litehtml.Document.Height() / height) + 1;
+            var n = litehtml.Document.Height() / height + 1;
             Logging.TraceMessage($"HtmlFileContent.RenderAsync - {n} pages.");
             ready = true;
             return n;
@@ -219,7 +220,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
 
             var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            litehtml.Document.Draw((int)-0, (int)-yPos, new position {
+            litehtml.Document.Draw(-0, -yPos, new position {
                 x = 0,
                 y = 0,
                 width = (int)size.Width,

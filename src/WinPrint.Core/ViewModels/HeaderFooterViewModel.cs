@@ -65,7 +65,7 @@ namespace WinPrint.Core {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        bool disposed = false;
+        private bool disposed = false;
         protected virtual void Dispose(bool disposing) {
             if (disposed) {
                 return;
@@ -195,7 +195,9 @@ namespace WinPrint.Core {
 
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
-        protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
+        protected void OnSettingsChanged(bool reflow) {
+            SettingsChanged?.Invoke(this, reflow);
+        }
 
         public HeaderFooterViewModel(SheetViewModel svm, HeaderFooter hf) {
             if (svm is null) {

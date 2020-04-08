@@ -12,10 +12,9 @@ namespace WinPrint.Console {
 
     public class PowerShellSink : ILogEventSink {
         public static PowerShellSink Instance => _instance.Value;
-        readonly static Lazy<PowerShellSink> _instance = new Lazy<PowerShellSink>(() => new PowerShellSink());
 
-
-        readonly object _syncRoot = new object();
+        private static readonly Lazy<PowerShellSink> _instance = new Lazy<PowerShellSink>(() => new PowerShellSink());
+        private readonly object _syncRoot = new object();
 
         // TODO: This is not thread-safe
         private Dictionary<int, AsyncCmdlet> _cmdlets = new Dictionary<int, AsyncCmdlet>();
@@ -49,8 +48,9 @@ namespace WinPrint.Console {
                 //    Debug.WriteLine("PowerShellSink is disabled because a cmdlet is not processing.");
                 //    return;
                 //}
-                foreach (var cmdlet in _cmdlets.Values)
+                foreach (var cmdlet in _cmdlets.Values) {
                     EmitToCmdLet(cmdlet, logEvent);
+                }
             }
         }
 
@@ -58,7 +58,7 @@ namespace WinPrint.Console {
             using var strWriter = new StringWriter();
             TextFormatter.Format(logEvent, strWriter);
             try {
-                string msg = $"{strWriter}";
+                var msg = $"{strWriter}";
                 switch (logEvent.Level) {
                     // -Verbose
                     case LogEventLevel.Verbose:

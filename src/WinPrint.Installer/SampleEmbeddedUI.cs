@@ -50,7 +50,7 @@ namespace WinPrintInstaller {
                     // built-in MSI basic UI.
                 }
 
-                if (String.Equals(session["REMOVE"], "All", StringComparison.OrdinalIgnoreCase)) {
+                if (string.Equals(session["REMOVE"], "All", StringComparison.OrdinalIgnoreCase)) {
                     // Don't show custom UI when uninstalling.
                     return false;
 

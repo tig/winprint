@@ -18,13 +18,13 @@ namespace WinPrint.Console {
         /// <summary>
         ///		A blocking collection (effectively a queue) of work items to execute, consisting of callback delegates and their callback state (if any).
         /// </summary>
-        BlockingCollection<KeyValuePair<SendOrPostCallback, object>> _workItemQueue = new BlockingCollection<KeyValuePair<SendOrPostCallback, object>>();
+        private BlockingCollection<KeyValuePair<SendOrPostCallback, object>> _workItemQueue = new BlockingCollection<KeyValuePair<SendOrPostCallback, object>>();
 
 
         /// <summary>
         ///		Create a new thread-affinitive synchronisation context.
         /// </summary>
-        ThreadAffinitiveSynchronizationContext() {
+        private ThreadAffinitiveSynchronizationContext() {
         }
 
 
@@ -42,7 +42,7 @@ namespace WinPrint.Console {
         /// <summary>
         ///		Check if the synchronisation context has been disposed.
         /// </summary>
-        void CheckDisposed() {
+        private void CheckDisposed() {
             if (_workItemQueue == null) {
                 throw new ObjectDisposedException(GetType().Name);
             }
@@ -52,7 +52,7 @@ namespace WinPrint.Console {
         /// <summary>
         ///		Run the message pump for the callback queue on the current thread.
         /// </summary>
-        void RunMessagePump() {
+        private void RunMessagePump() {
             CheckDisposed();
 
 
@@ -71,7 +71,7 @@ namespace WinPrint.Console {
         /// <summary>
         ///		Terminate the message pump once all callbacks have completed.
         /// </summary>
-        void TerminateMessagePump() {
+        private void TerminateMessagePump() {
             CheckDisposed();
 
 

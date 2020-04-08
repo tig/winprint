@@ -14,11 +14,11 @@ namespace WinPrint.Core {
         /// <summary>
         /// Number of sheets to be printed.
         /// </summary>
-        public int NumPages { get => svm.NumSheets; }
+        public int NumPages => svm.NumSheets;
         /// <summary>
         /// The extension (including the period ".").
         /// </summary>
-        public string FileExtension { get => string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File); }
+        public string FileExtension => string.IsNullOrEmpty(svm.File) ? "" : Path.GetExtension(svm.File);
         /// <summary>
         /// The file name and extension. If FileName was not provided, Title will be used.
         /// </summary>
@@ -30,31 +30,31 @@ namespace WinPrint.Core {
         /// <summary>
         /// The file name of the file without the extension and period ".".
         /// </summary>
-        public string FileNameWithoutExtension { get => string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileNameWithoutExtension(svm.File); }
+        public string FileNameWithoutExtension => string.IsNullOrEmpty(svm.File) ? "" : Path.GetFileNameWithoutExtension(svm.File);
         /// <summary>
         /// The directory for the specified string without the filename or extension.
         /// </summary>
-        public string FileDirectoryName { get => string.IsNullOrEmpty(svm.File) ? "" : Path.GetDirectoryName(FullPath); }
+        public string FileDirectoryName => string.IsNullOrEmpty(svm.File) ? "" : Path.GetDirectoryName(FullPath);
         /// <summary>
         /// The absolute path for the file.
         /// </summary>
-        public string FullPath { get => IsValidFilename(svm.File) ? Path.GetFullPath(svm.File) : (string.IsNullOrEmpty(svm.File) ? "" : svm.File); }
+        public string FullPath => IsValidFilename(svm.File) ? Path.GetFullPath(svm.File) : (string.IsNullOrEmpty(svm.File) ? "" : svm.File);
         /// <summary>
         /// The time and date when printed.
         /// </summary>
-        public DateTime DatePrinted { get => DateTime.Now; }
+        public DateTime DatePrinted => DateTime.Now;
         /// <summary>
         /// The time and date teh file was last revised.
         /// </summary>
-        public DateTime DateRevised { get => IsValidFilename(svm.File) ? File.GetLastWriteTime(svm.File) : DateTime.MinValue; }
+        public DateTime DateRevised => IsValidFilename(svm.File) ? File.GetLastWriteTime(svm.File) : DateTime.MinValue;
         /// <summary>
         /// The file type (e.g. "text/plain" or "csharp").
         /// </summary>
-        public DateTime DateCreated { get => IsValidFilename(svm.File) ? File.GetCreationTime(svm.File) : DateTime.MinValue; }
+        public DateTime DateCreated => IsValidFilename(svm.File) ? File.GetCreationTime(svm.File) : DateTime.MinValue;
         /// <summary>
         /// The file type (e.g. "text/plain" or "csharp").
         /// </summary>
-        public string FileType { get => svm.ContentEngine == null ? "" : svm.ContentEngine.GetContentTypeName(); }
+        public string FileType => svm.ContentEngine == null ? "" : svm.ContentEngine.GetContentTypeName();
 
         /// <summary>
         /// The current sheet number.
@@ -66,7 +66,7 @@ namespace WinPrint.Core {
         }
 
         // https://stackoverflow.com/questions/62771/how-do-i-check-if-a-given-string-is-a-legal-valid-file-name-under-windows#62855
-        bool IsValidFilename(string testName) {
+        private bool IsValidFilename(string testName) {
             if (string.IsNullOrEmpty(testName)) {
                 return false;
             }

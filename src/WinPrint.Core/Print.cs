@@ -37,7 +37,9 @@ namespace WinPrint.Core {
         /// Invoked after each sheet has been printed.
         /// </summary>
         public event EventHandler<int> PrintingSheet;
-        protected void OnPrintingSheet(int sheetNum) => PrintingSheet?.Invoke(this, sheetNum);
+        protected void OnPrintingSheet(int sheetNum) {
+            PrintingSheet?.Invoke(this, sheetNum);
+        }
 
         /// <summary>
         /// Sets the printer to be used for printing. 
@@ -193,7 +195,7 @@ namespace WinPrint.Core {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        bool disposed = false;
+        private bool disposed = false;
 
         protected virtual void Dispose(bool disposing) {
             if (disposed) {

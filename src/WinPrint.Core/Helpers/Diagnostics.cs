@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 namespace WinPrint.Core.Helpers {
-    class Diagnostics {
+    internal class Diagnostics {
 
         [DllImport("libgdiplus", ExactSpelling = true)]
         internal static extern string GetLibgdiplusVersion();

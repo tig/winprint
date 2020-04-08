@@ -16,7 +16,10 @@ namespace WinPrint.Core.Services {
     public partial class TelemetryService {
         public bool TelemetryEnabled { get; set; }
 
-        public TelemetryClient GetTelemetryClient() => telemetry;
+        public TelemetryClient GetTelemetryClient() {
+            return telemetry;
+        }
+
         private TelemetryClient telemetry;
 
         private Stopwatch runtime;

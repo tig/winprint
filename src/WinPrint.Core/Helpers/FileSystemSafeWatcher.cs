@@ -25,19 +25,11 @@ namespace menelabs.core {
             _args = args;
         }
 
-        public FileSystemEventArgs Args {
-            get {
-                return _args;
-            }
-        }
+        public FileSystemEventArgs Args => _args;
 
         public bool Delayed {
-            get {
-                return _delayed;
-            }
-            set {
-                _delayed = value;
-            }
+            get => _delayed;
+            set => _delayed = value;
         }
 
 #pragma warning disable CA1720 // Identifier contains type name
@@ -116,9 +108,7 @@ namespace menelabs.core {
         /// </summary>
         /// <value>true if the component is enabled; otherwise, false. The default is false. If you are using the component on a designer in Visual Studio 2005, the default is true.</value>
         public bool EnableRaisingEvents {
-            get {
-                return _fileSystemWatcher.EnableRaisingEvents;
-            }
+            get => _fileSystemWatcher.EnableRaisingEvents;
             set {
                 _fileSystemWatcher.EnableRaisingEvents = value;
                 if (value) {
@@ -135,36 +125,24 @@ namespace menelabs.core {
         /// </summary>
         /// <value>The filter string. The default is "*.*" (Watches all files.)</value>
         public string Filter {
-            get {
-                return _fileSystemWatcher.Filter;
-            }
-            set {
-                _fileSystemWatcher.Filter = value;
-            }
+            get => _fileSystemWatcher.Filter;
+            set => _fileSystemWatcher.Filter = value;
         }
         /// <summary>
         /// Gets or sets a value indicating whether subdirectories within the specified path should be monitored.
         /// </summary>
         /// <value>true if you want to monitor subdirectories; otherwise, false. The default is false.</value>
         public bool IncludeSubdirectories {
-            get {
-                return _fileSystemWatcher.IncludeSubdirectories;
-            }
-            set {
-                _fileSystemWatcher.IncludeSubdirectories = value;
-            }
+            get => _fileSystemWatcher.IncludeSubdirectories;
+            set => _fileSystemWatcher.IncludeSubdirectories = value;
         }
         /// <summary>
         /// Gets or sets the size of the internal buffer.
         /// </summary>
         /// <value>The internal buffer size. The default is 8192 (8K).</value>
         public int InternalBufferSize {
-            get {
-                return _fileSystemWatcher.InternalBufferSize;
-            }
-            set {
-                _fileSystemWatcher.InternalBufferSize = value;
-            }
+            get => _fileSystemWatcher.InternalBufferSize;
+            set => _fileSystemWatcher.InternalBufferSize = value;
         }
         /// <summary>
         /// Gets or sets the type of changes to watch for.
@@ -172,12 +150,8 @@ namespace menelabs.core {
         /// <value>One of the System.IO.NotifyFilters values. The default is the bitwise OR combination of LastWrite, FileName, and DirectoryName.</value>
         /// <exception cref="System.ArgumentException">The value is not a valid bitwise OR combination of the System.IO.NotifyFilters values.</exception>
         public NotifyFilters NotifyFilter {
-            get {
-                return _fileSystemWatcher.NotifyFilter;
-            }
-            set {
-                _fileSystemWatcher.NotifyFilter = value;
-            }
+            get => _fileSystemWatcher.NotifyFilter;
+            set => _fileSystemWatcher.NotifyFilter = value;
         }
         /// <summary>
         /// Gets or sets the path of the directory to watch.
@@ -185,24 +159,16 @@ namespace menelabs.core {
         /// <value>The path to monitor. The default is an empty string ("").</value>
         /// <exception cref="System.ArgumentException">The specified path contains wildcard characters.-or- The specified path contains invalid path characters.</exception>
         public string Path {
-            get {
-                return _fileSystemWatcher.Path;
-            }
-            set {
-                _fileSystemWatcher.Path = value;
-            }
+            get => _fileSystemWatcher.Path;
+            set => _fileSystemWatcher.Path = value;
         }
         /// <summary>
         /// Gets or sets the object used to marshal the event handler calls issued as a result of a directory change.
         /// </summary>
         /// <value>The System.ComponentModel.ISynchronizeInvoke that represents the object used to marshal the event handler calls issued as a result of a directory change. The default is null.</value>
         public ISynchronizeInvoke SynchronizingObject {
-            get {
-                return _fileSystemWatcher.SynchronizingObject;
-            }
-            set {
-                _fileSystemWatcher.SynchronizingObject = value;
-            }
+            get => _fileSystemWatcher.SynchronizingObject;
+            set => _fileSystemWatcher.SynchronizingObject = value;
         }
         /// <summary>
         /// Occurs when a file or directory in the specified System.IO.FileSystemWatcher.Path is changed.
@@ -348,7 +314,7 @@ namespace menelabs.core {
             _events.Add(new DelayedEvent(e));
         }
 
-        private void ElapsedEventHandler(Object sender, ElapsedEventArgs e) {
+        private void ElapsedEventHandler(object sender, ElapsedEventArgs e) {
             // We don't fire the events inside the lock. We will queue them here until
             // the code exits the locks.
             Queue eventsToBeFired = null;
@@ -417,9 +383,7 @@ namespace menelabs.core {
         }
 
         public int ConsolidationInterval {
-            get {
-                return _consolidationInterval;
-            }
+            get => _consolidationInterval;
             set {
                 _consolidationInterval = value;
                 _serverTimer.Interval = value;

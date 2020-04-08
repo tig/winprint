@@ -12,12 +12,12 @@ using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Winforms {
-    static class Program {
+    internal static class Program {
         /// <summary>
         ///  The main entry point for the winprint GUI application.
         /// </summary>
         [STAThread]
-        static void Main(string[] args) {
+        private static void Main(string[] args) {
             ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
             ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
 
@@ -55,7 +55,7 @@ namespace WinPrint.Winforms {
             ServiceLocator.Current.TelemetryService.Stop();
         }
 
-        static void DisplayHelp<T>(ParserResult<T> result) {
+        private static void DisplayHelp<T>(ParserResult<T> result) {
             var helpText = HelpText.AutoBuild(result, h => {
                 h.AutoHelp = true;
                 h.AutoVersion = true;

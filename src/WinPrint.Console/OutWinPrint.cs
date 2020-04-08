@@ -132,12 +132,12 @@ namespace WinPrint.Console {
         /// <summary>
         /// For the -Verbose switch
         /// </summary>
-        private bool _verbose { get => MyInvocation.BoundParameters.TryGetValue("Verbose", out var o); }
+        private bool _verbose => MyInvocation.BoundParameters.TryGetValue("Verbose", out var o);
 
         /// <summary>
         /// For the -Debug switch
         /// </summary>
-        private bool _debug { get => MyInvocation.BoundParameters.TryGetValue("Debug", out object o); }
+        private bool _debug => MyInvocation.BoundParameters.TryGetValue("Debug", out var o);
 
         /// <summary>
         /// Input stream.
@@ -160,7 +160,7 @@ namespace WinPrint.Console {
         [Parameter(HelpMessage = "If an updated version of winprint is available online, download and install it.",
             ParameterSetName = "Updates")]
         public SwitchParameter InstallUpdate { get; set; }
-        private bool _installUpdate { get => MyInvocation.BoundParameters.TryGetValue("InstallUpdate", out var o); }
+        private bool _installUpdate => MyInvocation.BoundParameters.TryGetValue("InstallUpdate", out var o);
 
         /// <summary>
         /// -Force switch
@@ -168,7 +168,7 @@ namespace WinPrint.Console {
         [Parameter(HelpMessage = "Allows winprint to kill the host Powershell process when updating.",
             ParameterSetName = "Updates")]
         public SwitchParameter Force { get; set; }
-        private bool _force { get => MyInvocation.BoundParameters.TryGetValue("Force", out var o); }
+        private bool _force => MyInvocation.BoundParameters.TryGetValue("Force", out var o);
 
         /// <summary>
         /// -InstallUpdate switch
@@ -181,7 +181,7 @@ namespace WinPrint.Console {
 
         #region Update Service Related Code
 
-        CancellationTokenSource _getVersionCancellationToken;
+        private CancellationTokenSource _getVersionCancellationToken;
 
         // Update stuff
         private void SetupUpdateHandler() {
@@ -251,10 +251,11 @@ namespace WinPrint.Console {
 
         private void UpdateService_GotLatestVersion(object sender, Version version) {
             Log.Debug("UpdateService_GotLatestVersion");
-            if (_getVersionCancellationToken.IsCancellationRequested)
+            if (_getVersionCancellationToken.IsCancellationRequested) {
                 return;
+            }
 
-            if (version == null && !String.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+            if (version == null && !string.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
                 _updateMsg = $"Could not access github.com/tig/winprint to see if a newer version is available" +
                     $" {ServiceLocator.Current.UpdateService.ErrorMessage}";
                 return;
@@ -302,7 +303,7 @@ namespace WinPrint.Console {
             Log.Information("out-winprint v{version} - {copyright} - {link}", ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
             Log.Debug("PowerShell Invoked: command: {appname}, module: {modulename}", MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
 
-            Dictionary<string, string> dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");
+            var dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");
             Log.Debug("Bound Parameters: {params}", JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = false }));
             ServiceLocator.Current.TelemetryService.TrackEvent($"{MyInvocation.MyCommand.Name} BeginProcessing", properties: dict);
 
@@ -419,7 +420,7 @@ namespace WinPrint.Console {
                     WriteProgress(rec);
                     _print.SetPrinter(PrinterName);
                 }
-                catch (InvalidPrinterException e) {
+                catch (InvalidPrinterException) {
                     Log.Information("Installed printers:");
                     foreach (string printer in PrinterSettings.InstalledPrinters) {
                         Log.Information("   {printer}", printer);
@@ -432,16 +433,18 @@ namespace WinPrint.Console {
             }
 
             if (string.IsNullOrEmpty(Title)) {
-                if (string.IsNullOrEmpty(FileName))
+                if (string.IsNullOrEmpty(FileName)) {
                     Title = this.MyInvocation.MyCommand.Name;
-                else
+                }
+                else {
                     Title = FileName;
+                }
             }
 
             SheetSettings sheet = null;
             string sheetID = null;
             try {
-                MyInvocation.BoundParameters.TryGetValue("SheetDefintion", out object sheetDefintion);
+                MyInvocation.BoundParameters.TryGetValue("SheetDefintion", out var sheetDefintion);
                 sheet = _print.SheetViewModel.FindSheet((string)sheetDefintion, out sheetID);
 
                 rec.PercentComplete = 20;
@@ -467,14 +470,14 @@ namespace WinPrint.Console {
             }
 
             // If Langauge is provided, use it instead of CTE. 
-            if (!MyInvocation.BoundParameters.TryGetValue("Language", out object contentTypeEngine)) {
+            if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentTypeEngine)) {
                 if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentTypeEngine)) {
                     // If neither were specified, smartly pick CTE
-                    contentTypeEngine = (object)ContentTypeEngineBase.GetContentType(FileName);
+                    contentTypeEngine = ContentTypeEngineBase.GetContentType(FileName);
                 }
             }
 
-            if (MyInvocation.BoundParameters.TryGetValue("PaperSize", out object paperSize)) {
+            if (MyInvocation.BoundParameters.TryGetValue("PaperSize", out var paperSize)) {
                 _print.SetPaperSize((string)paperSize);
             }
 
@@ -495,10 +498,13 @@ namespace WinPrint.Console {
             _print.SheetViewModel.File = Title;
 
             _print.PrintingSheet += (s, sheetNum) => {
-                if (sheetNum > 60)
+                if (sheetNum > 60) {
                     rec.PercentComplete = 95;
-                else
+                }
+                else {
                     rec.PercentComplete = 40 + sheetNum;
+                }
+
                 rec.StatusDescription = $"Printing sheet {sheetNum}";
                 WriteProgress(rec);
                 Log.Information("Printing sheet {sheetNum}", sheetNum);
@@ -521,7 +527,7 @@ namespace WinPrint.Console {
 
             var sheetsCounted = 0;
             try {
-                bool sheetRangeSet = false;
+                var sheetRangeSet = false;
                 if (FromSheet != 0) {
                     _print.PrintDocument.PrinterSettings.FromPage = FromSheet;
                     sheetRangeSet = true;
@@ -538,8 +544,9 @@ namespace WinPrint.Console {
                     _print.PrintDocument.PrinterSettings.ToPage = 0;
                 }
 
-                if (sheetRangeSet)
+                if (sheetRangeSet) {
                     Log.Information("Printing from sheet {from} to sheet {to}.", _print.PrintDocument.PrinterSettings.FromPage, _print.PrintDocument.PrinterSettings.ToPage);
+                }
 
                 if (WhatIf) {
                     sheetsCounted = await _print.CountSheets().ConfigureAwait(true);
@@ -649,7 +656,7 @@ namespace WinPrint.Console {
         /// Callback for the implementation to get the current pipeline object.
         /// </summary>
         /// <returns>Current object from the pipeline.</returns>
-        protected virtual Object InputObjectCall() {
+        protected virtual object InputObjectCall() {
             // just bind to the input object parameter
             return this.InputObject;
         }
@@ -717,7 +724,7 @@ namespace WinPrint.Console {
             var runtimeDict = new RuntimeDefinedParameterDictionary();
 
             // -PrinterName
-            List<string> printerNames = new List<String>();
+            var printerNames = new List<string>();
             using var pd = new PrintDocument();
 
             if (!string.IsNullOrEmpty(PrinterName)) {
@@ -729,7 +736,7 @@ namespace WinPrint.Console {
                 }
             }
 
-            runtimeDict.Add("PaperSize", new RuntimeDefinedParameter("PaperSize", typeof(String), new Collection<Attribute>() {
+            runtimeDict.Add("PaperSize", new RuntimeDefinedParameter("PaperSize", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
                         HelpMessage = "The paper size name.",
                         ParameterSetName = "Print"
@@ -740,7 +747,7 @@ namespace WinPrint.Console {
             // -SheetDefintion
             //  [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
             //    ParameterSetName = "Print")]
-            runtimeDict.Add("SheetDefintion", new RuntimeDefinedParameter("SheetDefintion", typeof(String), new Collection<Attribute>() {
+            runtimeDict.Add("SheetDefintion", new RuntimeDefinedParameter("SheetDefintion", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
                         HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\").",
                         ParameterSetName = "Print"
@@ -749,7 +756,7 @@ namespace WinPrint.Console {
             }));
 
             // -ContentTypeEngine
-            runtimeDict.Add("ContentTypeEngine", new RuntimeDefinedParameter("ContentTypeEngine", typeof(String), new Collection<Attribute>() {
+            runtimeDict.Add("ContentTypeEngine", new RuntimeDefinedParameter("ContentTypeEngine", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
                         HelpMessage = "Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"text/plain\" or \"csharp\". Specifying a langauge will choose the \"text/code\" CTE.",
                         ParameterSetName = "Print"

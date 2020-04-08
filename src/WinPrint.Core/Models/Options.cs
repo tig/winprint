@@ -18,7 +18,7 @@ namespace WinPrint.Core.Models {
         [JsonIgnore]
         [SafeForTelemetry]
         // TODO: This won't work once we support wildcards
-        public int NumFiles { get => Files.Count(); }
+        public int NumFiles => Files.Count();
 
         // Print options
         [SafeForTelemetry]
@@ -71,9 +71,7 @@ namespace WinPrint.Core.Models {
         public bool Gui { get; set; }
 
         [Usage(ApplicationAlias = "winprint")]
-        public static IEnumerable<Example> Examples {
-            get {
-                return new List<Example>() {
+        public static IEnumerable<Example> Examples => new List<Example>() {
                     new Example("Print Program.cs in landscape mode", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         Landscape = true
@@ -97,8 +95,6 @@ namespace WinPrint.Core.Models {
                         ContentType= "clike"
                     })
               };
-            }
-        }
 
     }
 }

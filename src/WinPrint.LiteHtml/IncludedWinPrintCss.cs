@@ -7,9 +7,9 @@ namespace LiteHtmlSharp {
     public static class IncludedWinPrintCss {
         public static string CssString => _includedCss.Value;
 
-        static Lazy<string> _includedCss = new Lazy<string>(GetMasterCssResource);
+        private static Lazy<string> _includedCss = new Lazy<string>(GetMasterCssResource);
 
-        static string GetMasterCssResource() {
+        private static string GetMasterCssResource() {
             var assembly = typeof(IncludedWinPrintCss).GetTypeInfo().Assembly;
             var masterCssResourceName = assembly.GetName().Name + ".winprint.css";
             using (var reader = new StreamReader(assembly.GetManifestResourceStream(masterCssResourceName), Encoding.UTF8)) {

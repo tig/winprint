@@ -21,8 +21,9 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// </summary>
     public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
         public new event PropertyChangedEventHandler PropertyChanged;
-        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         protected new bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null) {
             if (EqualityComparer<T>.Default.Equals(field, value)) {
@@ -37,7 +38,9 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         // if bool is true, reflow. Otherwise just paint
         public event EventHandler<bool> SettingsChanged;
-        protected void OnSettingsChanged(bool reflow) => SettingsChanged?.Invoke(this, reflow);
+        protected void OnSettingsChanged(bool reflow) {
+            SettingsChanged?.Invoke(this, reflow);
+        }
 
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
@@ -63,18 +66,17 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// The contents of the file to be printed.
         /// </summary>
         public string Document {
-            get => document; set {
+            get => document; set =>
                 //LogService.TraceMessage($"Document is {document.Length} chars.");
                 SetField(ref document, value);
-            }
         }
 
         /// <summary>
         /// https://stackoverflow.com/questions/5411694/get-all-inherited-classes-of-an-abstract-class
         /// </summary>
         public static ICollection<ContentTypeEngineBase> GetDerivedClassesCollection() {
-            List<ContentTypeEngineBase> objects = new List<ContentTypeEngineBase>();
-            foreach (Type type in typeof(ContentTypeEngineBase).Assembly.GetTypes()
+            var objects = new List<ContentTypeEngineBase>();
+            foreach (var type in typeof(ContentTypeEngineBase).Assembly.GetTypes()
                 .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(ContentTypeEngineBase)))) {
                 objects.Add((ContentTypeEngineBase)Activator.CreateInstance(type));
             }

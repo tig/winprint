@@ -4,8 +4,8 @@ using LiteHtmlSharp;
 
 namespace WinPrint.LiteHtml {
     public static class LiteHtmlExtensions {
-        static Dictionary<string, Brush> _brushes = new Dictionary<string, Brush>();
-        static Dictionary<string, Pen> _pens = new Dictionary<string, Pen>();
+        private static Dictionary<string, Brush> _brushes = new Dictionary<string, Brush>();
+        private static Dictionary<string, Pen> _pens = new Dictionary<string, Pen>();
 
         public static Brush GetBrush(this web_color color) {
             var key = color.red.ToString() + color.green.ToString() + color.blue.ToString() + color.alpha.ToString();
