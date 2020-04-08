@@ -18,8 +18,8 @@ namespace WinPrint.Console {
         readonly object _syncRoot = new object();
 
         // TODO: This is not thread-safe
-        private Dictionary<int, AsyncCmdlet> _cmdlets = new Dictionary<int, AsyncCmdlet>(); 
-        
+        private Dictionary<int, AsyncCmdlet> _cmdlets = new Dictionary<int, AsyncCmdlet>();
+
         public ITextFormatter TextFormatter { get; set; }
 
         public PowerShellSink() {
@@ -49,7 +49,7 @@ namespace WinPrint.Console {
                 //    Debug.WriteLine("PowerShellSink is disabled because a cmdlet is not processing.");
                 //    return;
                 //}
-                foreach(var cmdlet in _cmdlets.Values)
+                foreach (var cmdlet in _cmdlets.Values)
                     EmitToCmdLet(cmdlet, logEvent);
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -7,7 +8,7 @@ using Serilog;
 using WinPrint.Core;
 using WinPrint.Core.Services;
 
-namespace WinPrint.Winforms {
+namespace WinPrint.WinForms {
     /// <summary>
     /// WinPrint Print Preview WinForms control. 
     /// This is the View in the Model-View-View Model pattern. 
@@ -20,9 +21,21 @@ namespace WinPrint.Winforms {
                 svm = value;
             }
         }
+
+        [
+            Category("Data"),
+            Description("Specifies the page number of the current sheet.")
+        ]
+        [Bindable(true)]
         public int CurrentSheet { get; set; }
+
+        [
+            Category("Data"),
+            Description("Specifies zoom level.")
+        ]
+        [Bindable(true)]
+        [DefaultValue(100)]
         public int Zoom { get; set; }
-        public object Task { get; internal set; }
 
         public PrintPreview() {
             InitializeComponent();
@@ -30,7 +43,6 @@ namespace WinPrint.Winforms {
             Zoom = 100;
             this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this._MouseWheel);
             BackColor = SystemColors.AppWorkspace;
-
         }
 
         private void _MouseWheel(object sender, MouseEventArgs e) {
@@ -214,10 +226,11 @@ namespace WinPrint.Winforms {
             Log.Information("Status: {status}", Text);
             if (!string.IsNullOrEmpty(Text)) {
                 using var font = new Font(Font.FontFamily, 18F, FontStyle.Regular, GraphicsUnit.Point);
-                using var sf = new StringFormat();
-                sf.LineAlignment = StringAlignment.Center;
-                sf.Alignment = StringAlignment.Center;
-                sf.Trimming = StringTrimming.EllipsisWord;
+                using var sf = new StringFormat {
+                    LineAlignment = StringAlignment.Center,
+                    Alignment = StringAlignment.Center,
+                    Trimming = StringTrimming.EllipsisWord
+                };
                 e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, ClientRectangle, sf);
                 //var s = e.Graphics.MeasureString(Text, font);
                 //e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, 

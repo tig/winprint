@@ -123,8 +123,9 @@ namespace WinPrintInstaller {
         /// </summary>
         private void Run() {
             this.app = new Application();
-            this.setupWizard = new SetupWizard(this.installStartEvent);
-            this.setupWizard.Session = session;
+            this.setupWizard = new SetupWizard(this.installStartEvent) {
+                Session = session
+            };
             this.setupWizard.InitializeComponent();
 
             this.setupWizard.Title = $"wiprint {session["ProductVersion"]} installer";

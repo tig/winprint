@@ -1,1 +1,2 @@
 Unicode Power Symbols: ⏻ ⏼ ⏽ ⭘ ⏾
+Unicode Powerline Symbols:  ≣ 

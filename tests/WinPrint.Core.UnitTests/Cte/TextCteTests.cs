@@ -1,5 +1,9 @@
 ﻿using Serilog.Sinks.XUnit;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Windows.Media;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -27,9 +31,10 @@ namespace WinPrint.Core.UnitTests.Cte
         [Fact]
         public async void CreateContentTypeEngineTest()
         {
-            SheetViewModel svm = new SheetViewModel();
-
-            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
+            SheetViewModel svm = new SheetViewModel
+            {
+                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true)
+            };
             Assert.Equal("text/plain", svm.ContentEngine.GetContentTypeName());
 
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/html").ConfigureAwait(true);
@@ -95,8 +100,10 @@ namespace WinPrint.Core.UnitTests.Cte
             Settings settings = Settings.CreateDefaultSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
+            SheetViewModel svm = new SheetViewModel
+            {
+                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true)
+            };
             svm.ContentEngine.ContentSettings = new ContentSettings();
 
             // Setup page so only 1 line will fit
@@ -159,8 +166,10 @@ namespace WinPrint.Core.UnitTests.Cte
             Settings settings = Settings.CreateDefaultSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
+            SheetViewModel svm = new SheetViewModel
+            {
+                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true)
+            };
             svm.ContentEngine.ContentSettings = new ContentSettings();
 
             // Setup page so only 1 line will fit

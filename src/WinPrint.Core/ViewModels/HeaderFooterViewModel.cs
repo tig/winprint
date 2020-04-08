@@ -18,7 +18,7 @@ namespace WinPrint.Core {
         private bool bottomBorder;
         private bool enabled;
         // TODO: Make settable
-        internal float verticalPadding = 0; // Vertical padding below/above header/footer in 100ths of inch
+        private int verticalPadding = 10; // Vertical padding below/above header/footer in 100ths of inch
 
         public string Text { get => text; set => SetField(ref text, value); }
 
@@ -48,6 +48,8 @@ namespace WinPrint.Core {
         /// Enable or disable header/footer
         /// </summary>
         public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
+
+        public int VerticalPadding { get => verticalPadding; set => SetField(ref verticalPadding, value); }
 
         /// <summary>
         /// Header/Footer bounds (page minus margins)
@@ -113,8 +115,9 @@ namespace WinPrint.Core {
             }
 
             Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
-            var macros = new Macros(svm);
-            macros.Page = sheetNum;
+            var macros = new Macros(svm) {
+                Page = sheetNum
+            };
             var parts = macros.ReplaceMacros(Text).Split('\t', '|');
 
             // Left\tCenter\tRight
@@ -217,6 +220,7 @@ namespace WinPrint.Core {
             }
 
             Enabled = hf.Enabled;
+            VerticalPadding = hf.VerticalPadding;
 
             // Wire up changes from Header / Footer models
             hf.PropertyChanged += (s, e) => {
@@ -229,6 +233,7 @@ namespace WinPrint.Core {
                     case "BottomBorder": BottomBorder = hf.BottomBorder; break;
                     case "Font": Font = hf.Font; reflow = true; break;
                     case "Enabled": Enabled = hf.Enabled; reflow = true; break;
+                    case "VerticalPadding": VerticalPadding = hf.VerticalPadding; reflow = true; break;
                 }
                 OnSettingsChanged(reflow);
             };
@@ -239,7 +244,7 @@ namespace WinPrint.Core {
         public HeaderViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) { }
 
         internal override RectangleF CalcBounds() {
-            var h = SheetViewModel.GetFontHeight(Font) + verticalPadding;
+            var h = SheetViewModel.GetFontHeight(Font) + VerticalPadding;
             if (Enabled) {
                 return new RectangleF(svm.Bounds.Left + svm.Margins.Left,
                             svm.Bounds.Top + svm.Margins.Top,
@@ -259,7 +264,7 @@ namespace WinPrint.Core {
         public FooterViewModel(SheetViewModel svm, HeaderFooter hf) : base(svm, hf) { }
 
         internal override RectangleF CalcBounds() {
-            var h = SheetViewModel.GetFontHeight(Font) + verticalPadding;
+            var h = SheetViewModel.GetFontHeight(Font) + VerticalPadding;
             if (Enabled) {
                 return new RectangleF(svm.Bounds.Left + svm.Margins.Left,
                                 svm.Bounds.Bottom - svm.Margins.Bottom - h,

@@ -201,7 +201,7 @@ namespace WinPrint.Core.Models {
             var sansSerifFamily = "sansserif";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 monoSpaceFamily = "Consolas";
-                sansSerifFamily = "Microsoft Sans Serif";
+                sansSerifFamily = "Calibri";
             }
 
             var defaultContentFontFamily = monoSpaceFamily;
@@ -212,53 +212,54 @@ namespace WinPrint.Core.Models {
             var defaultHFFontSize = 10F;
             var defaultHFFontStyle = FontStyle.Bold;
 
-            var defaultHeaderText = "{DateRevised:D}|{Title}|Type: {FileType}";
+            var defaultHeaderText = "{DateRevised:D}|{FileName}|Type: {FileType}";
             var defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
-            var settings = new Settings();
+            var settings = new Settings {
 
-            //settings.size = new WindowSize(1024, 800);
-            //settings.location = new WindowLocation(100, 100);
+                //settings.size = new WindowSize(1024, 800);
+                //settings.location = new WindowLocation(100, 100);
 
-            settings.TextContentTypeEngineSettings = new TextCte() {
-                // This font will be overriddent by Sheet defined fonts (if any)
-                //ContentSettings = new ContentSettings() {
-                //    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
-                //},
-                //LineNumbers = true,
-                LineNumberSeparator = false,
-                NewPageOnFormFeed = false,
-                TabSpaces = 4
+                TextContentTypeEngineSettings = new TextCte() {
+                    // This font will be overriddent by Sheet defined fonts (if any)
+                    //ContentSettings = new ContentSettings() {
+                    //    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    //    Darkness = 100,
+                    //    Grayscale = false,
+                    //    PrintBackground = true
+                    //},
+                    //LineNumbers = true,
+                    LineNumberSeparator = false,
+                    NewPageOnFormFeed = false,
+                    TabSpaces = 4
+                },
+
+                // Html fonts are determined by:
+                // 1) Sheet (all HTML & CSS ignored)
+                // 2) winprint.css (Body -> Font, Pre -> Monospace Font)
+                // 3) HtmlileContent settings
+                HtmlContentTypeEngineSettings = new HtmlCte() {
+                    //ContentSettings = new ContentSettings() {
+                    //    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    //    Darkness = 100,
+                    //    Grayscale = false,
+                    //    PrintBackground = true
+                    //},
+                },
+
+                PrismContentTypeEngineSettings = new PrismCte() {
+                    //ContentSettings = new ContentSettings() {
+                    //    Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
+                    //    Darkness = 100,
+                    //    Grayscale = false,
+                    //    PrintBackground = true
+                    //},
+                    LineNumbers = true,
+                },
+
+                DefaultSheet = Uuid.DefaultSheet,
+                Sheets = new Dictionary<string, SheetSettings>()
             };
-
-            // Html fonts are determined by:
-            // 1) Sheet (all HTML & CSS ignored)
-            // 2) winprint.css (Body -> Font, Pre -> Monospace Font)
-            // 3) HtmlileContent settings
-            settings.HtmlContentTypeEngineSettings = new HtmlCte() {
-                //ContentSettings = new ContentSettings() {
-                //    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
-                //},
-            };
-
-            settings.PrismContentTypeEngineSettings = new PrismCte() {
-                //ContentSettings = new ContentSettings() {
-                //    Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
-                //},
-                LineNumbers = true,
-            };
-
-            settings.DefaultSheet = Uuid.DefaultSheet;
-            settings.Sheets = new Dictionary<string, SheetSettings>();
 
             // Create default 2 Up sheet
             var sheet = new SheetSettings() {
@@ -279,11 +280,13 @@ namespace WinPrint.Core.Models {
             sheet.Header.Text = defaultHeaderText;
             sheet.Header.BottomBorder = true;
             sheet.Header.Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle };
+            sheet.Header.VerticalPadding = 1;
 
             sheet.Footer.Enabled = true;
             sheet.Footer.TopBorder = true;
             sheet.Footer.Text = defualtFooterText;
             sheet.Footer.Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle };
+            sheet.Footer.VerticalPadding = 1;
 
             sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
             settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
@@ -308,11 +311,13 @@ namespace WinPrint.Core.Models {
             sheet.Header.Text = defaultHeaderText;
             sheet.Header.BottomBorder = true;
             sheet.Header.Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle };
+            sheet.Header.VerticalPadding = 1;
 
             sheet.Footer.Enabled = true;
             sheet.Footer.Text = defualtFooterText;
             sheet.Footer.TopBorder = true;
             sheet.Footer.Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle };
+            sheet.Footer.VerticalPadding = 1;
 
             sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
             settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);

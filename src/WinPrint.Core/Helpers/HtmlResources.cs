@@ -42,8 +42,9 @@ namespace WinPrint.LiteHtml {
                     data = reader.ReadToEnd();
                 }
                 else {
-                    var url = GetUrlForRequest(resource);
-                    data = _httpClient.GetStringAsync(url).Result;
+                    // TODO: Implement loading external html resources
+                    //var url = GetUrlForRequest(resource);
+                    //data = _httpClient.GetStringAsync(url).Result;
                 }
                 return data;
             }
@@ -60,17 +61,19 @@ namespace WinPrint.LiteHtml {
                 UriBuilder urlBuilder;
 
                 if (resource.StartsWith("file:")) {
-                    urlBuilder = new UriBuilder();
-                    urlBuilder.Scheme = "file";
-                    urlBuilder.Host = "";
-                    urlBuilder.Path = resource;
+                    urlBuilder = new UriBuilder {
+                        Scheme = "file",
+                        Host = "",
+                        Path = resource
+                    };
                 }
                 else if (resource.StartsWith("//") || resource.StartsWith("http:") || resource.StartsWith("https:")) {
                     urlBuilder = new UriBuilder(resource.TrimStart(new char[] { '/' }));
                 }
                 else {
-                    urlBuilder = new UriBuilder(_lastUrl);
-                    urlBuilder.Path = resource;
+                    urlBuilder = new UriBuilder(_lastUrl) {
+                        Path = resource
+                    };
                 }
                 var requestUrl = urlBuilder.ToString();
                 return requestUrl;

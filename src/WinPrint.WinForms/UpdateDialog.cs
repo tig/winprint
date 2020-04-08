@@ -24,9 +24,10 @@ namespace WinPrint.WinForms {
 
             Process proc = null;
             try {
-                var psi = new ProcessStartInfo();
-                psi.UseShellExecute = true;   // This is important
-                psi.FileName = (string)linkReleasePage.Links[0].LinkData;
+                var psi = new ProcessStartInfo {
+                    UseShellExecute = true,   // This is important
+                    FileName = (string)linkReleasePage.Links[0].LinkData
+                };
                 proc = Process.Start(psi);
             }
             catch (Exception e) {

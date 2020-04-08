@@ -18,9 +18,11 @@ namespace WinPrint.Core.UnitTests.Models
         {
             string file = Path.GetTempFileName();
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.File = file;
-            svm.ContentEngine = new TextCte();
+            SheetViewModel svm = new SheetViewModel
+            {
+                File = file,
+                ContentEngine = new TextCte()
+            };
             Macros macros = new Macros(svm);
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
@@ -41,9 +43,11 @@ namespace WinPrint.Core.UnitTests.Models
             string file = Path.GetTempFileName();
             File.Delete(file);
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.File = file;
-            svm.ContentEngine = new TextCte();
+            SheetViewModel svm = new SheetViewModel
+            {
+                File = file,
+                ContentEngine = new TextCte()
+            };
             Macros macros = new Macros(svm);
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
@@ -66,9 +70,11 @@ namespace WinPrint.Core.UnitTests.Models
             // Relpace the T in Temp with an invalid char
             file = file.Replace('T', Path.GetInvalidPathChars()[0]);
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.File = file;
-            svm.ContentEngine = new TextCte();
+            SheetViewModel svm = new SheetViewModel
+            {
+                File = file,
+                ContentEngine = new TextCte()
+            };
             Macros macros = new Macros(svm);
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
@@ -92,9 +98,11 @@ namespace WinPrint.Core.UnitTests.Models
             // Make filename invalid 
             file = file.Replace(@"\tmp", @$"\{Path.GetInvalidFileNameChars()[0]}mp");
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.File = file;
-            svm.ContentEngine = new TextCte();
+            SheetViewModel svm = new SheetViewModel
+            {
+                File = file,
+                ContentEngine = new TextCte()
+            };
             Macros macros = new Macros(svm);
 
             // return original file
@@ -114,9 +122,11 @@ namespace WinPrint.Core.UnitTests.Models
         {
             string title = $"Invalid File Char:{Path.GetInvalidFileNameChars()[1]}. Invalid Path Char: {Path.GetInvalidPathChars()[1]}.";
 
-            SheetViewModel svm = new SheetViewModel();
-            svm.File = title;
-            svm.ContentEngine = new TextCte();
+            SheetViewModel svm = new SheetViewModel
+            {
+                File = title,
+                ContentEngine = new TextCte()
+            };
             Macros macros = new Macros(svm);
 
             // return original file
@@ -133,8 +143,10 @@ namespace WinPrint.Core.UnitTests.Models
 
         private SheetViewModel SetupSVM()
         {
-            SheetViewModel svm = new SheetViewModel();
-            svm.ContentEngine = new TextCte();
+            SheetViewModel svm = new SheetViewModel
+            {
+                ContentEngine = new TextCte()
+            };
             return svm;
         }
 

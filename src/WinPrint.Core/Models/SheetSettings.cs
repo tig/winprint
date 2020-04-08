@@ -1,5 +1,4 @@
 ﻿using System.Drawing.Printing;
-using WinPrint.Core.Services;
 
 namespace WinPrint.Core.Models {
     /// <summary>

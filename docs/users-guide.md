@@ -16,7 +16,7 @@ title: User's Guide
 * Comprehensive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
 
-## Command Line Interfaces
+## Command Line Interface
 
 Use **winprint** from the command line as a PowerShell CmdLet (`out-winprint`). 
 
@@ -109,18 +109,30 @@ get-help out-winprint -full | out-winprint -p 'Microsoft Print to PDF' -s 'Defau
 ```
 
 ```powershell
+
 NAME
     Out-WinPrint
     
 SYNTAX
     Out-WinPrint [<CommonParameters>]
     
-    Out-WinPrint [[-Language] <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-FileName <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefintion {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/code | text/html | text/code | text/plain}] [<CommonParameters>]
+    Out-WinPrint [[-FileName] <string>] [-PrinterName <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-Language <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefintion {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/html | text/code | text/plain}] [<CommonParameters>]
     
     Out-WinPrint [-InstallUpdate] [-Force] [<CommonParameters>]
     
+    Out-WinPrint [-Config] [<CommonParameters>]
     
 PARAMETERS
+    -Config
+        Outputs the path the the winprint config file.
+        
+        Required?                    false
+        Position?                    Named
+        Accept pipeline input?       false
+        Parameter set name           Config
+        Aliases                      None
+        Dynamic?                     false
+        
     -ContentTypeEngine <string>
         Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. "text/plain" or "csharp". Specifying a langauge will choose the "text/code" CTE.
         
@@ -132,10 +144,10 @@ PARAMETERS
         Dynamic?                     true
         
     -FileName <string>
-        FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. If ContentType is not specified, the Filename will be used to try to determine the content type engine to use.
+        FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. If $input is not available, FileName will be used as the path to the file to print.
         
         Required?                    false
-        Position?                    Named
+        Position?                    0
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      File
@@ -162,7 +174,7 @@ PARAMETERS
         Dynamic?                     false
         
     -Gui
-        Show **winprint** GUI (to preview or change sheet settings).
+        Show *winprint* GUI (to preview or change sheet settings).
         
         Required?                    false
         Position?                    Named
@@ -194,7 +206,7 @@ PARAMETERS
         Optional language to use for syntax highlighting. Specifying a langauge will choose the "text/code" CTE.
         
         Required?                    false
-        Position?                    0
+        Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      Lang
@@ -234,7 +246,7 @@ PARAMETERS
         The name of the printer to print to. If not specified the default printer will be used.
         
         Required?                    false
-        Position?                    0
+        Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      Name
@@ -271,7 +283,7 @@ PARAMETERS
         Dynamic?                     false
         
     -WhatIf
-        Output is the number of sheets that would be printed. Use -Verbose to print the count of pages.
+        Output is the number of sheets that would be printed. Use -Verbose to print the count of .
         
         Required?                    false
         Position?                    Named
@@ -293,8 +305,8 @@ OUTPUTS
     System.Object
     
 ALIASES
+    winprint
     wp
-    
 
 REMARKS
     None

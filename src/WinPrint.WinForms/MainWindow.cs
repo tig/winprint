@@ -25,30 +25,32 @@ namespace WinPrint.Winforms {
         // The Windows printer document
         private PrintDocument printDoc = new PrintDocument();
 
-        // Winprint Print Preview control
-        private PrintPreview printPreview;
-
         // The active file
         private string activeFile;
 
         OpenFileDialog openFileDialog = new OpenFileDialog();
+
+        private WinPrint.WinForms.PrintPreview printPreview;
 
         public MainWindow() {
             InitializeComponent();
 
             Icon = Resources.printer_and_fax_w;
 
-            printPreview = new PrintPreview();
-            printPreview.Dock = this.dummyButton.Dock;
-            printPreview.Anchor = this.dummyButton.Anchor;
-            printPreview.BackColor = this.dummyButton.BackColor;
-            printPreview.Location = this.dummyButton.Location;
-            printPreview.Margin = this.dummyButton.Margin;
-            printPreview.Name = "printPreview";
-            printPreview.Size = this.dummyButton.Size;
-            printPreview.MinimumSize = new Size(0, 0);
-            printPreview.TabIndex = 1;
-            printPreview.TabStop = true;
+            printPreview = new PrintPreview {
+                Dock = this.dummyButton.Dock,
+                Anchor = this.dummyButton.Anchor,
+                BackColor = this.dummyButton.BackColor,
+                Location = this.dummyButton.Location,
+                Margin = this.dummyButton.Margin,
+                Name = "printPreview",
+                Size = this.dummyButton.Size,
+                MinimumSize = new Size(0, 0),
+                TabIndex = 1,
+                TabStop = true
+            };
+            printPreview.Click += new System.EventHandler(this.printPreview_Click);
+
 
             Color();
 
@@ -73,7 +75,7 @@ namespace WinPrint.Winforms {
         private void Color() {
             var back = System.Drawing.Color.FromName("white");
             var text = System.Drawing.SystemColors.ControlText;
-            dummyButton.BackColor = back;
+            //printPreview.BackColor = back;
             printersCB.BackColor = back;
 
             settingsButton.BackColor = back;
@@ -115,7 +117,7 @@ namespace WinPrint.Winforms {
             fromLabel.BackColor = back;
             pagesLabel.BackColor = back;
 
-            dummyButton.ForeColor = text;
+            printPreview.ForeColor = text;
             printersCB.ForeColor = text;
             paperSizesCB.ForeColor = text;
             landscapeCheckbox.ForeColor = text;
@@ -236,7 +238,12 @@ namespace WinPrint.Winforms {
                     return;
                 }
 
-                printPreview.Text = "";
+                if (string.IsNullOrEmpty(activeFile)) {
+                    printPreview.Text = Resources.HelloMsg;
+                }
+                else {
+                    printPreview.Text = "";
+                }
                 printPreview.Invalidate();
             }
         }
@@ -256,6 +263,7 @@ namespace WinPrint.Winforms {
                     case "Header":
                         headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
                         enableHeader.Checked = printPreview.SheetViewModel.Header.Enabled;
+                        headerFooterFontLink.Text = printPreview.SheetViewModel.Header.Font.ToString();
                         break;
 
                     case "Footer":
@@ -298,6 +306,11 @@ namespace WinPrint.Winforms {
                     case "ContentEngine":
                         printPreview.CurrentSheet = 1;
                         break;
+
+                    case "ContentSettings":
+                        contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
+                        break;
+
                 }
             }
         }
@@ -358,8 +371,6 @@ namespace WinPrint.Winforms {
                     Task.Run(() => Start());
                 }
             };
-
-            printPreview.Text = Resources.HelloMsg;
 
             //this.Cursor = Cursors.WaitCursor;
             var sheets = ModelLocator.Current.Settings.Sheets;
@@ -522,8 +533,8 @@ namespace WinPrint.Winforms {
 
             if (string.IsNullOrEmpty(activeFile)) {
                 // If a file's not been set, juice the print preview and show the file open dialog box
-                //SheetSettingsChanged();
-                ShowFilesDialog();
+                LoadFile();
+                //ShowFilesDialog();
             }
             else {
                 LoadFile();
@@ -563,6 +574,7 @@ namespace WinPrint.Winforms {
                         }));
                         printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
                         printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings);
+
 
                         stage = "Rendering";
                         BeginInvoke((Action)(() => {
@@ -781,12 +793,13 @@ namespace WinPrint.Winforms {
             var showPrintDialog = true;
             if (showPrintDialog) {
                 BeginInvoke((Action)(async () => {
-                    using var printDialog = new PrintDialog();
-                    printDialog.AllowSomePages = true;
-                    printDialog.ShowHelp = true;
-                    // printDialog.AllowSelection = true;
+                    using var printDialog = new PrintDialog {
+                        AllowSomePages = true,
+                        ShowHelp = true,
+                        // printDialog.AllowSelection = true;
 
-                    printDialog.Document = print.PrintDocument;
+                        Document = print.PrintDocument
+                    };
                     if (from > 0 && to > 0) {
                         printDialog.PrinterSettings.PrintRange = PrintRange.SomePages;
                         printDialog.PrinterSettings.FromPage = from;
@@ -906,9 +919,10 @@ namespace WinPrint.Winforms {
 
             Process proc = null;
             try {
-                var psi = new ProcessStartInfo();
-                psi.UseShellExecute = true;   // This is important
-                psi.FileName = ServiceLocator.Current.SettingsService.SettingsFileName;
+                var psi = new ProcessStartInfo {
+                    UseShellExecute = true,   // This is important
+                    FileName = ServiceLocator.Current.SettingsService.SettingsFileName
+                };
                 proc = Process.Start(psi);
             }
             catch (Exception e) {
@@ -932,9 +946,10 @@ namespace WinPrint.Winforms {
 
             Process proc = null;
             try {
-                var psi = new ProcessStartInfo();
-                psi.UseShellExecute = true;   // This is important
-                psi.FileName = url;
+                var psi = new ProcessStartInfo {
+                    UseShellExecute = true,   // This is important
+                    FileName = url
+                };
                 proc = Process.Start(psi);
             }
             catch (Exception e) {
@@ -946,6 +961,46 @@ namespace WinPrint.Winforms {
             finally {
                 proc?.Dispose();
             }
+        }
+
+        private void contentFontLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            var contentSettings = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings;
+            fontDialog.ShowEffects = false;
+            fontDialog.ShowColor = true;
+            fontDialog.AllowScriptChange = false;
+            fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
+            // fontDialog.AllowVectorFonts = false;
+            // fontDialog.AllowVerticalFonts = false;
+            fontDialog.ShowHelp = false;
+
+            fontDialog.Font = new System.Drawing.Font(contentSettings.Font.Family, contentSettings.Font.Size / 72F * 96, contentSettings.Font.Style, GraphicsUnit.Pixel);
+            if (DialogResult.OK == fontDialog.ShowDialog(this)) {
+                contentSettings.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = fontDialog.Font.SizeInPoints, Style = fontDialog.Font.Style };
+                contentFontLink.Text = contentSettings.Font.ToString();
+            }
+        }
+
+        private void headerFooterFontLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            var header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header;
+            var footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer;
+            fontDialog.ShowEffects = false;
+            fontDialog.ShowColor = true;
+            fontDialog.AllowScriptChange = false;
+            fontDialog.AllowSimulations = false;
+            // fontDialog.AllowVectorFonts = false;
+            // fontDialog.AllowVerticalFonts = false;
+            fontDialog.ShowHelp = false;
+
+            fontDialog.Font = new System.Drawing.Font(header.Font.Family, header.Font.Size / 72F * 96, header.Font.Style, GraphicsUnit.Pixel);
+            if (DialogResult.OK == fontDialog.ShowDialog(this)) {
+                header.Font = footer.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = fontDialog.Font.SizeInPoints, Style = fontDialog.Font.Style };
+                headerFooterFontLink.Text = header.Font.ToString();
+            }
+        }
+
+        private void printPreview_Click(object sender, EventArgs e) {
+            if (string.IsNullOrEmpty(activeFile))
+                ShowFilesDialog();
         }
     }
 }

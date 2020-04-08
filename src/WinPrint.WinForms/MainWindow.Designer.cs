@@ -32,6 +32,10 @@ namespace WinPrint.Winforms {
             this.panelLeft = new System.Windows.Forms.Panel();
             this.fileButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.headerFooterFontLink = new System.Windows.Forms.LinkLabel();
+            this.contentFontLink = new System.Windows.Forms.LinkLabel();
+            this.headerFooterFontLabel = new System.Windows.Forms.Label();
+            this.contentFontLabel = new System.Windows.Forms.Label();
             this.groupPages = new System.Windows.Forms.GroupBox();
             this.pageSeparator = new System.Windows.Forms.CheckBox();
             this.labelPadding = new System.Windows.Forms.Label();
@@ -64,6 +68,7 @@ namespace WinPrint.Winforms {
             this.panelRight = new System.Windows.Forms.Panel();
             this.footerPanel = new System.Windows.Forms.Panel();
             this.headerPanel = new System.Windows.Forms.Panel();
+            this.fontDialog = new System.Windows.Forms.FontDialog();
             this.panelLeft.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupPages.SuspendLayout();
@@ -89,10 +94,10 @@ namespace WinPrint.Winforms {
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dummyButton.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.dummyButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.dummyButton.Location = new System.Drawing.Point(10, 50);
+            this.dummyButton.Location = new System.Drawing.Point(10, 43);
             this.dummyButton.Margin = new System.Windows.Forms.Padding(0);
             this.dummyButton.Name = "dummyButton";
-            this.dummyButton.Size = new System.Drawing.Size(645, 485);
+            this.dummyButton.Size = new System.Drawing.Size(645, 584);
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
             this.dummyButton.UseVisualStyleBackColor = false;
@@ -174,7 +179,7 @@ namespace WinPrint.Winforms {
             this.headerTextBox.BackColor = System.Drawing.SystemColors.Control;
             this.headerTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.headerTextBox.Location = new System.Drawing.Point(27, 7);
-            this.headerTextBox.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.headerTextBox.Margin = new System.Windows.Forms.Padding(10);
             this.headerTextBox.Name = "headerTextBox";
             this.headerTextBox.Size = new System.Drawing.Size(628, 23);
             this.headerTextBox.TabIndex = 7;
@@ -201,7 +206,7 @@ namespace WinPrint.Winforms {
             this.footerTextBox.BackColor = System.Drawing.SystemColors.Control;
             this.footerTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.footerTextBox.Location = new System.Drawing.Point(27, 5);
-            this.footerTextBox.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.footerTextBox.Margin = new System.Windows.Forms.Padding(10);
             this.footerTextBox.Name = "footerTextBox";
             this.footerTextBox.Size = new System.Drawing.Size(628, 23);
             this.footerTextBox.TabIndex = 8;
@@ -234,7 +239,7 @@ namespace WinPrint.Winforms {
             this.panelLeft.ForeColor = System.Drawing.Color.Black;
             this.panelLeft.Location = new System.Drawing.Point(0, 0);
             this.panelLeft.Name = "panelLeft";
-            this.panelLeft.Size = new System.Drawing.Size(249, 586);
+            this.panelLeft.Size = new System.Drawing.Size(249, 667);
             this.panelLeft.TabIndex = 0;
             // 
             // fileButton
@@ -253,6 +258,10 @@ namespace WinPrint.Winforms {
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.headerFooterFontLink);
+            this.groupBox1.Controls.Add(this.contentFontLink);
+            this.groupBox1.Controls.Add(this.headerFooterFontLabel);
+            this.groupBox1.Controls.Add(this.contentFontLabel);
             this.groupBox1.Controls.Add(this.landscapeCheckbox);
             this.groupBox1.Controls.Add(this.groupPages);
             this.groupBox1.Controls.Add(this.groupMargins);
@@ -262,10 +271,50 @@ namespace WinPrint.Winforms {
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBox1.Size = new System.Drawing.Size(232, 345);
+            this.groupBox1.Size = new System.Drawing.Size(232, 418);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Sheet Definition";
+            // 
+            // headerFooterFontLink
+            // 
+            this.headerFooterFontLink.AutoSize = true;
+            this.headerFooterFontLink.Location = new System.Drawing.Point(30, 395);
+            this.headerFooterFontLink.Name = "headerFooterFontLink";
+            this.headerFooterFontLink.Size = new System.Drawing.Size(164, 15);
+            this.headerFooterFontLink.TabIndex = 17;
+            this.headerFooterFontLink.TabStop = true;
+            this.headerFooterFontLink.Text = "Source Code Pro, Regular, 8pt";
+            this.headerFooterFontLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.headerFooterFontLink_LinkClicked);
+            // 
+            // contentFontLink
+            // 
+            this.contentFontLink.AutoSize = true;
+            this.contentFontLink.Location = new System.Drawing.Point(30, 358);
+            this.contentFontLink.Name = "contentFontLink";
+            this.contentFontLink.Size = new System.Drawing.Size(164, 15);
+            this.contentFontLink.TabIndex = 17;
+            this.contentFontLink.TabStop = true;
+            this.contentFontLink.Text = "Source Code Pro, Regular, 8pt";
+            this.contentFontLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.contentFontLink_LinkClicked);
+            // 
+            // headerFooterFontLabel
+            // 
+            this.headerFooterFontLabel.AutoSize = true;
+            this.headerFooterFontLabel.Location = new System.Drawing.Point(13, 380);
+            this.headerFooterFontLabel.Name = "headerFooterFontLabel";
+            this.headerFooterFontLabel.Size = new System.Drawing.Size(112, 15);
+            this.headerFooterFontLabel.TabIndex = 16;
+            this.headerFooterFontLabel.Text = "Header/Footer font:";
+            // 
+            // contentFontLabel
+            // 
+            this.contentFontLabel.AutoSize = true;
+            this.contentFontLabel.Location = new System.Drawing.Point(13, 343);
+            this.contentFontLabel.Name = "contentFontLabel";
+            this.contentFontLabel.Size = new System.Drawing.Size(78, 15);
+            this.contentFontLabel.TabIndex = 16;
+            this.contentFontLabel.Text = "Content font:";
             // 
             // groupPages
             // 
@@ -525,8 +574,8 @@ namespace WinPrint.Winforms {
             this.panelAbout.Controls.Add(this.versionLabel);
             this.panelAbout.Controls.Add(this.wikiLink);
             this.panelAbout.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelAbout.Location = new System.Drawing.Point(0, 555);
-            this.panelAbout.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panelAbout.Location = new System.Drawing.Point(0, 636);
+            this.panelAbout.Margin = new System.Windows.Forms.Padding(2);
             this.panelAbout.Name = "panelAbout";
             this.panelAbout.Size = new System.Drawing.Size(249, 31);
             this.panelAbout.TabIndex = 28;
@@ -581,11 +630,11 @@ namespace WinPrint.Winforms {
             this.printerGroup.Controls.Add(this.fromText);
             this.printerGroup.Controls.Add(this.fromLabel);
             this.printerGroup.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.printerGroup.Location = new System.Drawing.Point(8, 395);
+            this.printerGroup.Location = new System.Drawing.Point(8, 465);
             this.printerGroup.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.printerGroup.Name = "printerGroup";
             this.printerGroup.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.printerGroup.Size = new System.Drawing.Size(232, 154);
+            this.printerGroup.Size = new System.Drawing.Size(232, 162);
             this.printerGroup.TabIndex = 26;
             this.printerGroup.TabStop = false;
             this.printerGroup.Text = "Printer";
@@ -623,7 +672,7 @@ namespace WinPrint.Winforms {
             // toText
             // 
             this.toText.Location = new System.Drawing.Point(143, 126);
-            this.toText.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.toText.Margin = new System.Windows.Forms.Padding(1);
             this.toText.Name = "toText";
             this.toText.Size = new System.Drawing.Size(47, 23);
             this.toText.TabIndex = 24;
@@ -631,7 +680,7 @@ namespace WinPrint.Winforms {
             // fromText
             // 
             this.fromText.Location = new System.Drawing.Point(60, 126);
-            this.fromText.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.fromText.Margin = new System.Windows.Forms.Padding(1);
             this.fromText.Name = "fromText";
             this.fromText.Size = new System.Drawing.Size(40, 23);
             this.fromText.TabIndex = 24;
@@ -650,14 +699,14 @@ namespace WinPrint.Winforms {
             // panelRight
             // 
             this.panelRight.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.panelRight.Controls.Add(this.dummyButton);
             this.panelRight.Controls.Add(this.footerPanel);
+            this.panelRight.Controls.Add(this.dummyButton);
             this.panelRight.Controls.Add(this.headerPanel);
             this.panelRight.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelRight.Location = new System.Drawing.Point(249, 0);
             this.panelRight.Margin = new System.Windows.Forms.Padding(0);
             this.panelRight.Name = "panelRight";
-            this.panelRight.Size = new System.Drawing.Size(665, 586);
+            this.panelRight.Size = new System.Drawing.Size(665, 667);
             this.panelRight.TabIndex = 4;
             this.panelRight.TabStop = true;
             // 
@@ -667,7 +716,7 @@ namespace WinPrint.Winforms {
             this.footerPanel.Controls.Add(this.enableFooter);
             this.footerPanel.Controls.Add(this.footerTextBox);
             this.footerPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.footerPanel.Location = new System.Drawing.Point(0, 555);
+            this.footerPanel.Location = new System.Drawing.Point(0, 636);
             this.footerPanel.Name = "footerPanel";
             this.footerPanel.Size = new System.Drawing.Size(665, 31);
             this.footerPanel.TabIndex = 3;
@@ -688,7 +737,7 @@ namespace WinPrint.Winforms {
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(914, 586);
+            this.ClientSize = new System.Drawing.Size(914, 667);
             this.Controls.Add(this.panelRight);
             this.Controls.Add(this.panelLeft);
             this.HelpButton = true;
@@ -727,6 +776,7 @@ namespace WinPrint.Winforms {
 
         #endregion
 
+        // Winprint Print Preview control
         private Button dummyButton;
         private ComboBox printersCB;
         private ComboBox paperSizesCB;
@@ -773,6 +823,11 @@ namespace WinPrint.Winforms {
         private Panel panelAbout;
         private Label versionLabel;
         private LinkLabel wikiLink;
+        private LinkLabel contentFontLink;
+        private Label contentFontLabel;
+        private FontDialog fontDialog;
+        private LinkLabel headerFooterFontLink;
+        private Label headerFooterFontLabel;
     }
 }
 

@@ -100,11 +100,13 @@ namespace WinPrint.Core.ContentTypeEngines {
                 css = IncludedWinPrintCss.CssString;
             }
 
-            var resources = new HtmlResources(filePath);
-            litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes);
-            litehtml.Diagnostics = ContentSettings.Diagnostics;
-            litehtml.Size = new LiteHtmlSize(width, 0);
-            litehtml.PageHeight = height;
+            // BUGBUG: wihtout knowing the relative root path fo the html document we can't load any resources
+            var resources = new HtmlResources("");
+            litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes) {
+                Diagnostics = ContentSettings.Diagnostics,
+                Size = new LiteHtmlSize(width, 0),
+                PageHeight = height
+            };
 
             htmlBitmap = new Bitmap(width, height);
             //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);

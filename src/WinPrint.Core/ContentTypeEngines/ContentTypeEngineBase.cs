@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -56,14 +59,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         public ContentSettings ContentSettings { get => contentSettings; set => SetField(ref contentSettings, value); }
         private ContentSettings contentSettings;// = new ContentSettings();
 
-        //internal int numPages = 0;
-        //public int NumPages {
-        //    get => numPages;
-        //    set => SetField(ref numPages, value);
-        //}
-
-        internal string filePath = null;
-
         /// <summary>
         /// The contents of the file to be printed.
         /// </summary>
@@ -96,20 +91,6 @@ namespace WinPrint.Core.ContentTypeEngines {
             Trimming = StringTrimming.None
         };
         public static readonly TextRenderingHint TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-
-
-        ///// <summary>
-        ///// Loads the file specified into Document property.
-        ///// </summary>
-        ///// <param name="filePath"></param>
-        ///// <returns>True if file was read. False if the file was empty or failed to read.</returns>
-        //public async virtual Task<bool> LoadAsync(string filePath) {
-        //    LogService.TraceMessage();
-        //    this.filePath = filePath;
-        //    using StreamReader streamToPrint = new StreamReader(filePath);
-        //    Document = await streamToPrint.ReadToEndAsync();
-        //    return !String.IsNullOrEmpty(Document);
-        //}
 
         /// <summary>
         /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).

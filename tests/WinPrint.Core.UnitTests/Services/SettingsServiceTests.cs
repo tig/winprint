@@ -2,7 +2,6 @@
 using System.Text.Json;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
-using WinPrint.Core.UnitTests.Models;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,9 +17,11 @@ namespace WinPrint.Core.UnitTests.Services
         [Fact]
         public void TestGetTelemetryDictionary()
         {
-            Settings settings = new Settings();
-            settings.Sheets = new Dictionary<string, SheetSettings>() {
+            Settings settings = new Settings
+            {
+                Sheets = new Dictionary<string, SheetSettings>() {
                 { "test", new SheetSettings() }
+            }
             };
             IDictionary<string, string> dict = settings.GetTelemetryDictionary();
             Assert.NotNull(dict);
@@ -29,12 +30,16 @@ namespace WinPrint.Core.UnitTests.Services
         [Fact]
         public void TestSave()
         {
-            Settings settings = new Settings();
-            settings.Sheets = new Dictionary<string, SheetSettings>() {
+            Settings settings = new Settings
+            {
+                Sheets = new Dictionary<string, SheetSettings>() {
                 { "test", new SheetSettings() }
+            }
             };
-            SettingsService settingsService = new SettingsService();
-            settingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+            SettingsService settingsService = new SettingsService
+            {
+                SettingsFileName = $"WinPrint.{GetType().Name}.json"
+            };
 
             settingsService.SaveSettings(settings);
 

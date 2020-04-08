@@ -267,22 +267,30 @@ namespace WinPrint.Core {
         /// <returns>True if content type engine was initialized. False otherwise.</returns>
         public async Task<bool> LoadFileAsync(string filePath, string contentType = null) {
             LogService.TraceMessage($"{filePath} - {contentType}");
-            File = filePath;
+            File = filePath ?? "";
 
             //filePath = Path.GetFullPath(filePath);
             //Log.Debug("full path = {path}", filePath);
 
             if (string.IsNullOrEmpty(contentType)) {
                 // Use file extension to determine contentType
-                contentType = ContentTypeEngineBase.GetContentType(filePath);
+                contentType = ContentTypeEngineBase.GetContentType(File);
             }
 
-            // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
-            var detected = CharsetDetector.DetectFromFile(filePath).Detected;
-            Log.Debug("File encoding: {encoding}", detected);
-            Encoding = detected.Encoding;
-            using var streamToPrint = new StreamReader(filePath, Encoding);
-            return await LoadStringAsync(await streamToPrint.ReadToEndAsync(), contentType);
+
+            // If there's no file, this sets things up with an empty file which is good for 
+            // print preview during startup.
+            string document = "";
+            Encoding = Encoding.UTF8;
+            if (!string.IsNullOrEmpty(File)) {
+                var detected = CharsetDetector.DetectFromFile(File).Detected;
+                Log.Debug("File encoding: {encoding}", detected);
+                Encoding = detected.Encoding;
+                // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
+                using var streamToPrint = new StreamReader(File, Encoding);
+                document = await streamToPrint.ReadToEndAsync();
+            }
+            return await LoadStringAsync(document, contentType);
         }
 
         /// <summary>
@@ -804,9 +812,10 @@ namespace WinPrint.Core {
 
             // If margins are too big, warn by printing a red border
             if (g.PageUnit != GraphicsUnit.Display) {
-                using var errorPen = new Pen(Color.Gray);
-                errorPen.DashStyle = DashStyle.Dash;
-                errorPen.Width = 4;
+                using var errorPen = new Pen(Color.Gray) {
+                    DashStyle = DashStyle.Dash,
+                    Width = 4
+                };
 
                 var leftMax = (int)Math.Round(_printableArea.X);
                 var topMax = (int)Math.Round(_printableArea.Top);
