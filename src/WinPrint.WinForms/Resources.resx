@@ -125,7 +125,7 @@
     <value>code files (*.c*)|*.c*|txt files (*.txt)|*.txt|All files (*.*)|*.*</value>
   </data>
   <data name="HelloMsg" xml:space="preserve">
-    <value>Hello. Click here to open a file to preview before printing.</value>
+    <value>Hello. Click here to open a file...</value>
   </data>
   <data name="LoadingMsg" xml:space="preserve">
     <value>Loading...</value>
