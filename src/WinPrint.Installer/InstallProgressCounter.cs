@@ -24,7 +24,7 @@ namespace WinPrintInstaller {
         private bool moveForward;
         private bool enableActionData;
         private int progressPhase;
-        private double scriptPhaseWeight;
+        private readonly double scriptPhaseWeight;
 
         public InstallProgressCounter() : this(0.3) {
         }

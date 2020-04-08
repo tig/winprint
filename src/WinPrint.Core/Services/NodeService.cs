@@ -68,8 +68,8 @@ namespace WinPrint.Core.Services {
             return Path.GetDirectoryName(path);
         }
 
-        private StringBuilder stdIn = new StringBuilder();
-        private StringBuilder stdOut = new StringBuilder();
+        private readonly StringBuilder stdIn = new StringBuilder();
+        private readonly StringBuilder stdOut = new StringBuilder();
         public StringBuilder stdErr = new StringBuilder();
         private Process nodeProc = null;
         private string nodeDir = null;

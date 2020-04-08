@@ -17,7 +17,7 @@ namespace WinPrint.Console {
         private readonly object _syncRoot = new object();
 
         // TODO: This is not thread-safe
-        private Dictionary<int, AsyncCmdlet> _cmdlets = new Dictionary<int, AsyncCmdlet>();
+        private readonly Dictionary<int, AsyncCmdlet> _cmdlets = new Dictionary<int, AsyncCmdlet>();
 
         public ITextFormatter TextFormatter { get; set; }
 

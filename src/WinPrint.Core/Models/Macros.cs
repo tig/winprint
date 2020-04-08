@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace WinPrint.Core {
-    sealed public class Macros {
+    public sealed class Macros {
         /// <summary>
         /// The SheetModel the Macros will pull data from.
         /// </summary>

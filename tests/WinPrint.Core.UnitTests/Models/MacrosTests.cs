@@ -167,7 +167,7 @@ namespace WinPrint.Core.UnitTests.Models
         private string InvalidDirectoryName => Path.GetTempFileName().Replace(@"\Temp", $@"\{Path.GetInvalidPathChars()[0]}emp");
 
         private string NullName => null;
-        private string EmptyName = "";
+        private readonly string EmptyName = "";
 
 
 

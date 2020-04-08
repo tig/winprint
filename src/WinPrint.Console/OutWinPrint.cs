@@ -31,8 +31,8 @@ namespace WinPrint.Console {
     [Alias("winprint", "wp")]
     public partial class OutWinPrint : AsyncCmdlet, IDynamicParameters {
         // Private fields
-        private List<PSObject> _psObjects = new List<PSObject>();
-        private Print _print = new WinPrint.Core.Print();
+        private readonly List<PSObject> _psObjects = new List<PSObject>();
+        private readonly Print _print = new WinPrint.Core.Print();
 
         #region Command Line Switches
         /// <summary>

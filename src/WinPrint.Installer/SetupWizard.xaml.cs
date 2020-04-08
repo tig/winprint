@@ -22,8 +22,8 @@ namespace WinPrintInstaller {
     /// Interaction logic for SetupWizard.xaml
     /// </summary>
     public partial class SetupWizard : Window {
-        private ManualResetEvent installStartEvent;
-        private InstallProgressCounter progressCounter;
+        private readonly ManualResetEvent installStartEvent;
+        private readonly InstallProgressCounter progressCounter;
         private bool canceled;
         public Session Session;
         private string productVersion;

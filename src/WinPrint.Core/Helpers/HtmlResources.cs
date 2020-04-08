@@ -5,9 +5,9 @@ using WinPrint.Core.Services;
 
 namespace WinPrint.LiteHtml {
     public class HtmlResources {
-        private HttpClient _httpClient = null;
-        private string _lastUrl = null;
-        private string filePath;
+        private readonly HttpClient _httpClient = null;
+        private readonly string _lastUrl = null;
+        private readonly string filePath;
 
         public HtmlResources(string filePath) {
             this.filePath = filePath;
