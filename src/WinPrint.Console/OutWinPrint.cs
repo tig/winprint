@@ -491,9 +491,10 @@ namespace WinPrint.Console {
             _print.SheetViewModel.File = Title;
 
             _print.PrintingSheet += (s, sheetNum) => {
-                rec.PercentComplete = 40 + (sheetNum);
-                if (rec.PercentComplete > 100)
-                    rec.PercentComplete = 100;
+                if (sheetNum > 60)
+                    rec.PercentComplete = 95;
+                else
+                    rec.PercentComplete = 40 + sheetNum;
                 rec.StatusDescription = $"Printing sheet {sheetNum}";
                 WriteProgress(rec);
                 Log.Information("Printing sheet {sheetNum}", sheetNum);
