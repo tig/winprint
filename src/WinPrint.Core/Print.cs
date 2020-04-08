@@ -27,10 +27,10 @@ namespace WinPrint.Core {
         private int sheetsPrinted = 0;
 
         public Print() {
-            printDoc.BeginPrint += new PrintEventHandler(this.BeginPrint);
-            printDoc.EndPrint += new PrintEventHandler(this.EndPrint);
-            printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(this.QueryPageSettings);
-            printDoc.PrintPage += new PrintPageEventHandler(this.PrintSheet);
+            printDoc.BeginPrint += new PrintEventHandler(BeginPrint);
+            printDoc.EndPrint += new PrintEventHandler(EndPrint);
+            printDoc.QueryPageSettings += new QueryPageSettingsEventHandler(QueryPageSettings);
+            printDoc.PrintPage += new PrintPageEventHandler(PrintSheet);
         }
 
         /// <summary>

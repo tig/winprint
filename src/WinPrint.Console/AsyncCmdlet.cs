@@ -161,7 +161,7 @@ namespace WinPrint.Console {
             ThreadAffinitiveSynchronizationContext.RunSynchronized(
                 () => EndProcessingAsync()
             );
-            PowerShellSink.Instance.UnRegister(this.GetHashCode());
+            PowerShellSink.Instance.UnRegister(GetHashCode());
         }
 
 
@@ -171,7 +171,7 @@ namespace WinPrint.Console {
         protected sealed override void StopProcessing() {
             _cancellationSource.Cancel();
             base.StopProcessing();
-            PowerShellSink.Instance.UnRegister(this.GetHashCode());
+            PowerShellSink.Instance.UnRegister(GetHashCode());
         }
 
 

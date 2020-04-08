@@ -232,7 +232,7 @@ namespace WinPrint.Console {
                 p.Start();
             }
             catch (Win32Exception we) {
-                Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
+                Log.Information($"{GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
                 return false;
             }
 
@@ -345,7 +345,7 @@ namespace WinPrint.Console {
                     ErrorCategory.InvalidType,
                     null);
 
-                this.ThrowTerminatingError(error);
+                ThrowTerminatingError(error);
             }
             _psObjects.Add(input);
         }
@@ -434,7 +434,7 @@ namespace WinPrint.Console {
 
             if (string.IsNullOrEmpty(Title)) {
                 if (string.IsNullOrEmpty(FileName)) {
-                    Title = this.MyInvocation.MyCommand.Name;
+                    Title = MyInvocation.MyCommand.Name;
                 }
                 else {
                     Title = FileName;
@@ -516,7 +516,7 @@ namespace WinPrint.Console {
             else {
                 // Get $input into a string we can use
                 // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
-                var textToPrint = this.SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
+                var textToPrint = SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
 
                 await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
             }
@@ -581,7 +581,7 @@ namespace WinPrint.Console {
 
             // Very last thing we do is write to the output if WhatIf was specified
             if (WhatIf) {
-                this.WriteObject(sheetsCounted, false);
+                WriteObject(sheetsCounted, false);
             }
         }
 
@@ -658,7 +658,7 @@ namespace WinPrint.Console {
         /// <returns>Current object from the pipeline.</returns>
         protected virtual object InputObjectCall() {
             // just bind to the input object parameter
-            return this.InputObject;
+            return InputObject;
         }
 
         /// <summary>
@@ -667,7 +667,7 @@ namespace WinPrint.Console {
         /// <param name="value">Object to be written.</param>
         protected virtual void WriteObjectCall(object value) {
             // just call Monad API
-            this.WriteObject(value);
+            WriteObject(value);
         }
         #endregion
 

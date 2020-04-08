@@ -47,26 +47,26 @@ namespace WinPrintInstaller {
 
             switch (messageType) {
                 case InstallMessage.ActionStart:
-                    if (this.enableActionData) {
-                        this.enableActionData = false;
+                    if (enableActionData) {
+                        enableActionData = false;
                     }
                     break;
 
                 case InstallMessage.ActionData:
-                    if (this.enableActionData) {
-                        if (this.moveForward) {
-                            this.completed += this.step;
+                    if (enableActionData) {
+                        if (moveForward) {
+                            completed += step;
                         }
                         else {
-                            this.completed -= this.step;
+                            completed -= step;
                         }
 
-                        this.UpdateProgress();
+                        UpdateProgress();
                     }
                     break;
 
                 case InstallMessage.Progress:
-                    this.ProcessProgressMessage(messageRecord);
+                    ProcessProgressMessage(messageRecord);
                     break;
             }
         }
@@ -87,22 +87,22 @@ namespace WinPrintInstaller {
                         return;
                     }
 
-                    this.progressPhase++;
+                    progressPhase++;
 
-                    this.total = progressRecord.GetInteger(2);
-                    if (this.progressPhase == 1) {
+                    total = progressRecord.GetInteger(2);
+                    if (progressPhase == 1) {
                         // HACK!!! this is a hack courtesy of the Windows Installer team. It seems the script planning phase
                         // is always off by "about 50".  So we'll toss an extra 50 ticks on so that the standard progress
                         // doesn't go over 100%.  If there are any custom actions, they may blow the total so we'll call this
                         // "close" and deal with the rest.
-                        this.total += 50;
+                        total += 50;
                     }
 
-                    this.moveForward = (progressRecord.GetInteger(3) == 0);
-                    this.completed = (this.moveForward ? 0 : this.total); // if forward start at 0, if backwards start at max
-                    this.enableActionData = false;
+                    moveForward = (progressRecord.GetInteger(3) == 0);
+                    completed = (moveForward ? 0 : total); // if forward start at 0, if backwards start at max
+                    enableActionData = false;
 
-                    this.UpdateProgress();
+                    UpdateProgress();
                     break;
 
                 case 1: // Action info
@@ -111,48 +111,48 @@ namespace WinPrintInstaller {
                     }
 
                     if (progressRecord.GetInteger(3) == 0) {
-                        this.enableActionData = false;
+                        enableActionData = false;
                     }
                     else {
-                        this.enableActionData = true;
-                        this.step = progressRecord.GetInteger(2);
+                        enableActionData = true;
+                        step = progressRecord.GetInteger(2);
                     }
                     break;
 
                 case 2: // Progress report
-                    if (fieldCount < 2 || this.total == 0 || this.progressPhase == 0) {
+                    if (fieldCount < 2 || total == 0 || progressPhase == 0) {
                         return;
                     }
 
-                    if (this.moveForward) {
-                        this.completed += progressRecord.GetInteger(2);
+                    if (moveForward) {
+                        completed += progressRecord.GetInteger(2);
                     }
                     else {
-                        this.completed -= progressRecord.GetInteger(2);
+                        completed -= progressRecord.GetInteger(2);
                     }
 
-                    this.UpdateProgress();
+                    UpdateProgress();
                     break;
 
                 case 3: // Progress total addition
-                    this.total += progressRecord.GetInteger(2);
+                    total += progressRecord.GetInteger(2);
                     break;
             }
         }
 
         private void UpdateProgress() {
-            if (this.progressPhase < 1 || this.total == 0) {
-                this.Progress = 0;
+            if (progressPhase < 1 || total == 0) {
+                Progress = 0;
             }
-            else if (this.progressPhase == 1) {
-                this.Progress = this.scriptPhaseWeight * Math.Min(this.completed, this.total) / this.total;
+            else if (progressPhase == 1) {
+                Progress = scriptPhaseWeight * Math.Min(completed, total) / total;
             }
-            else if (this.progressPhase == 2) {
-                this.Progress = this.scriptPhaseWeight +
-                    (1 - this.scriptPhaseWeight) * Math.Min(this.completed, this.total) / this.total;
+            else if (progressPhase == 2) {
+                Progress = scriptPhaseWeight +
+                    (1 - scriptPhaseWeight) * Math.Min(completed, total) / total;
             }
             else {
-                this.Progress = 1;
+                Progress = 1;
             }
         }
     }

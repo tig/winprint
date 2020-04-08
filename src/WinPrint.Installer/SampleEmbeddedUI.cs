@@ -61,14 +61,14 @@ namespace WinPrintInstaller {
             this.session = session;
 
             // Start the setup wizard on a separate thread.
-            this.installStartEvent = new ManualResetEvent(false);
-            this.installExitEvent = new ManualResetEvent(false);
-            this.appThread = new Thread(this.Run);
-            this.appThread.SetApartmentState(ApartmentState.STA);
-            this.appThread.Start();
+            installStartEvent = new ManualResetEvent(false);
+            installExitEvent = new ManualResetEvent(false);
+            appThread = new Thread(Run);
+            appThread.SetApartmentState(ApartmentState.STA);
+            appThread.Start();
 
             // Wait for the setup wizard to either kickoff the install or prematurely exit.
-            var waitResult = WaitHandle.WaitAny(new WaitHandle[] { this.installStartEvent, this.installExitEvent });
+            var waitResult = WaitHandle.WaitAny(new WaitHandle[] { installStartEvent, installExitEvent });
             if (waitResult == 1) {
                 // The setup wizard set the exit event instead of the start event. Cancel the installation.
                 throw new InstallCanceledException();
@@ -95,9 +95,9 @@ namespace WinPrintInstaller {
         public MessageResult ProcessMessage(InstallMessage messageType, Record messageRecord,
             MessageButtons buttons, MessageIcon icon, MessageDefaultButton defaultButton) {
             // Synchronously send the message to the setup wizard window on its thread.
-            var result = this.setupWizard.Dispatcher.Invoke(DispatcherPriority.Send,
+            var result = setupWizard.Dispatcher.Invoke(DispatcherPriority.Send,
                 new Func<MessageResult>(delegate () {
-                    return this.setupWizard.ProcessMessage(messageType, messageRecord, buttons, icon, defaultButton);
+                    return setupWizard.ProcessMessage(messageType, messageRecord, buttons, icon, defaultButton);
                 }));
             return (MessageResult)result;
         }
@@ -111,27 +111,27 @@ namespace WinPrintInstaller {
         /// </remarks>
         public void Shutdown() {
             // Wait for the user to exit the setup wizard.
-            this.setupWizard.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
+            setupWizard.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
                 new Action(delegate () {
-                    this.setupWizard.EnableExit();
+                    setupWizard.EnableExit();
                 }));
-            this.appThread.Join();
+            appThread.Join();
         }
 
         /// <summary>
         /// Creates the setup wizard and runs the application thread.
         /// </summary>
         private void Run() {
-            this.app = new Application();
-            this.setupWizard = new SetupWizard(this.installStartEvent) {
+            app = new Application();
+            setupWizard = new SetupWizard(installStartEvent) {
                 Session = session
             };
-            this.setupWizard.InitializeComponent();
+            setupWizard.InitializeComponent();
 
-            this.setupWizard.Title = $"wiprint {session["ProductVersion"]} installer";
+            setupWizard.Title = $"wiprint {session["ProductVersion"]} installer";
 
-            this.app.Run(this.setupWizard);
-            this.installExitEvent.Set();
+            app.Run(setupWizard);
+            installExitEvent.Set();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace WinPrint.Core.Models {
         }
 
         public override bool Equals(object obj) {
-            return this.Id.Equals(((Langauge)obj).Id);
+            return Id.Equals(((Langauge)obj).Id);
         }
     }
     /// <summary>

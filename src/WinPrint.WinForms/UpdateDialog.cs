@@ -9,8 +9,8 @@ namespace WinPrint.WinForms {
         public UpdateDialog() {
             InitializeComponent();
             StartPosition = FormStartPosition.CenterParent;
-            this.labelNewVersion.Text = $"A newer version ({ServiceLocator.Current.UpdateService.LatestVersion}) is available.";
-            this.linkReleasePage.Links[0].LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri;
+            labelNewVersion.Text = $"A newer version ({ServiceLocator.Current.UpdateService.LatestVersion}) is available.";
+            linkReleasePage.Links[0].LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri;
         }
 
         private void downloadButton_Click(object sender, EventArgs args) {

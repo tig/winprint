@@ -281,13 +281,13 @@ namespace menelabs.core {
 
         private void Initialize() {
             _events = ArrayList.Synchronized(new ArrayList(32));
-            _fileSystemWatcher.Changed += new FileSystemEventHandler(this.FileSystemEventHandler);
-            _fileSystemWatcher.Created += new FileSystemEventHandler(this.FileSystemEventHandler);
-            _fileSystemWatcher.Deleted += new FileSystemEventHandler(this.FileSystemEventHandler);
-            _fileSystemWatcher.Error += new ErrorEventHandler(this.ErrorEventHandler);
-            _fileSystemWatcher.Renamed += new RenamedEventHandler(this.RenamedEventHandler);
+            _fileSystemWatcher.Changed += new FileSystemEventHandler(FileSystemEventHandler);
+            _fileSystemWatcher.Created += new FileSystemEventHandler(FileSystemEventHandler);
+            _fileSystemWatcher.Deleted += new FileSystemEventHandler(FileSystemEventHandler);
+            _fileSystemWatcher.Error += new ErrorEventHandler(ErrorEventHandler);
+            _fileSystemWatcher.Renamed += new RenamedEventHandler(RenamedEventHandler);
             _serverTimer = new Timer(_consolidationInterval);
-            _serverTimer.Elapsed += new ElapsedEventHandler(this.ElapsedEventHandler);
+            _serverTimer.Elapsed += new ElapsedEventHandler(ElapsedEventHandler);
             _serverTimer.AutoReset = true;
             _serverTimer.Enabled = _fileSystemWatcher.EnableRaisingEvents;
         }

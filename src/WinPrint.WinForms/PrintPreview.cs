@@ -40,7 +40,7 @@ namespace WinPrint.WinForms {
             InitializeComponent();
             CurrentSheet = 1;
             Zoom = 100;
-            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this._MouseWheel);
+            MouseWheel += new System.Windows.Forms.MouseEventHandler(_MouseWheel);
             BackColor = SystemColors.AppWorkspace;
         }
 
@@ -93,7 +93,7 @@ namespace WinPrint.WinForms {
         }
 
         protected override void OnResize(EventArgs e) {
-            this.Invalidate();
+            Invalidate();
             base.OnResize(e);
         }
 

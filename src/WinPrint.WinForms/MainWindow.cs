@@ -37,18 +37,18 @@ namespace WinPrint.Winforms {
             Icon = Resources.printer_and_fax_w;
 
             printPreview = new PrintPreview {
-                Dock = this.dummyButton.Dock,
-                Anchor = this.dummyButton.Anchor,
-                BackColor = this.dummyButton.BackColor,
-                Location = this.dummyButton.Location,
-                Margin = this.dummyButton.Margin,
+                Dock = dummyButton.Dock,
+                Anchor = dummyButton.Anchor,
+                BackColor = dummyButton.BackColor,
+                Location = dummyButton.Location,
+                Margin = dummyButton.Margin,
                 Name = "printPreview",
-                Size = this.dummyButton.Size,
+                Size = dummyButton.Size,
                 MinimumSize = new Size(0, 0),
                 TabIndex = 1,
                 TabStop = true
             };
-            printPreview.Click += new System.EventHandler(this.printPreview_Click);
+            printPreview.Click += new System.EventHandler(printPreview_Click);
 
 
             Color();
@@ -57,8 +57,8 @@ namespace WinPrint.Winforms {
             versionLabel.Text = $"v{FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion}";
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
-                this.panelRight.Controls.Remove(this.dummyButton);
-                this.panelRight.Controls.Add(this.printPreview);
+                panelRight.Controls.Remove(dummyButton);
+                panelRight.Controls.Add(printPreview);
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
@@ -297,7 +297,7 @@ namespace WinPrint.Winforms {
                         break;
 
                     case "File":
-                        this.Text = $"winprint - {printPreview.SheetViewModel.File}";
+                        Text = $"winprint - {printPreview.SheetViewModel.File}";
                         printPreview.CurrentSheet = 1;
                         break;
 
@@ -350,14 +350,14 @@ namespace WinPrint.Winforms {
                 return;
             }
             if (ModelLocator.Current.Settings.Size != null) {
-                this.Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+                Size = new Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
             }
 
             if (ModelLocator.Current.Settings.Location != null) {
-                this.Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+                Location = new Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
             }
 
-            this.WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+            WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
             printPreview.KeyUp += (s, e) => {
                 if (e.KeyCode == Keys.F5) {
@@ -494,7 +494,7 @@ namespace WinPrint.Winforms {
                 p.Start();
             }
             catch (Win32Exception we) {
-                Log.Information($"{this.GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
+                Log.Information($"{GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
             }
 
             BeginInvoke((Action)(() => Close()));
@@ -666,15 +666,15 @@ namespace WinPrint.Winforms {
             ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete; ;
 
             // Save Window state
-            if (this.WindowState == System.Windows.Forms.FormWindowState.Normal) {
-                ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(this.Size.Width, this.Size.Height);
-                ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation(this.Location.X, this.Location.Y);
+            if (WindowState == System.Windows.Forms.FormWindowState.Normal) {
+                ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(Size.Width, Size.Height);
+                ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation(Location.X, Location.Y);
             }
             else {
-                ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(this.RestoreBounds.Width, this.RestoreBounds.Height);
-                ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation(this.RestoreBounds.X, this.RestoreBounds.Y);
+                ModelLocator.Current.Settings.Size = new Core.Models.WindowSize(RestoreBounds.Width, RestoreBounds.Height);
+                ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation(RestoreBounds.X, RestoreBounds.Y);
             }
-            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)this.WindowState;
+            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
 
             ServiceLocator.Current.TelemetryService.TrackEvent("Form Closing",
                  properties: new Dictionary<string, string> {

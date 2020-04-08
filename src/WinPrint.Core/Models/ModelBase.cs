@@ -28,7 +28,7 @@ namespace WinPrint.Core.Models {
         }
 
         public override string ToString() {
-            return JsonSerializer.Serialize(this, this.GetType());
+            return JsonSerializer.Serialize(this, GetType());
             //return base.ToString();
         }
 
@@ -72,7 +72,7 @@ namespace WinPrint.Core.Models {
             }
 
             var sourceProps = source.GetType().GetProperties().Where(x => x.CanRead).ToList();
-            var destProps = this.GetType().GetProperties().Where(x => x.CanWrite).ToList();
+            var destProps = GetType().GetProperties().Where(x => x.CanWrite).ToList();
             foreach (var (sourceProp, destProp) in
             // check if the property can be set or no.
             from sourceProp in sourceProps

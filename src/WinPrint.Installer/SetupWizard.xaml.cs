@@ -30,7 +30,7 @@ namespace WinPrintInstaller {
 
         public SetupWizard(ManualResetEvent installStartEvent) {
             this.installStartEvent = installStartEvent;
-            this.progressCounter = new InstallProgressCounter(0.5);
+            progressCounter = new InstallProgressCounter(0.5);
         }
 
         public MessageResult ProcessMessage(InstallMessage messageType, Record messageRecord,
@@ -38,21 +38,21 @@ namespace WinPrintInstaller {
             try {
                 WixSharp.CommonTasks.UACRevealer.Exit();
 
-                this.progressCounter.ProcessMessage(messageType, messageRecord);
-                this.progressBar.Value = this.progressBar.Minimum +
-                    this.progressCounter.Progress * (this.progressBar.Maximum - this.progressBar.Minimum);
+                progressCounter.ProcessMessage(messageType, messageRecord);
+                progressBar.Value = progressBar.Minimum +
+                    progressCounter.Progress * (progressBar.Maximum - progressBar.Minimum);
                 //this.progressLabel.Content = "" + (int)Math.Round(100 * this.progressCounter.Progress) + "%";
 
                 var message = string.Format("{0}: {1}", messageType, messageRecord);
                 switch (messageType) {
                     case InstallMessage.Error:
                     case InstallMessage.Warning:
-                        this.LogMessage(message);
+                        LogMessage(message);
                         break;
 
                     case InstallMessage.Info:
 #if DEBUG
-                        this.LogMessage(message);
+                        LogMessage(message);
 #else
                         if (messageRecord.ToString().Contains("INSTALL. Return value 1."))
                             this.messagesTextBox.Text = $"winprint {productVersion} successfully installed.";
@@ -60,53 +60,53 @@ namespace WinPrintInstaller {
                         break;
                 }
 
-                if (this.canceled) {
-                    this.canceled = false;
+                if (canceled) {
+                    canceled = false;
                     return MessageResult.Cancel;
                 }
             }
             catch (Exception ex) {
-                this.LogMessage(ex.ToString());
-                this.LogMessage(ex.StackTrace);
+                LogMessage(ex.ToString());
+                LogMessage(ex.StackTrace);
             }
 
             return MessageResult.OK;
         }
 
         private void LogMessage(string message) {
-            this.messagesTextBox.Text += Environment.NewLine + message;
-            this.messagesTextBox.ScrollToEnd();
+            messagesTextBox.Text += Environment.NewLine + message;
+            messagesTextBox.ScrollToEnd();
         }
 
         internal void EnableExit() {
-            this.progressBar.Visibility = Visibility.Hidden;
+            progressBar.Visibility = Visibility.Hidden;
             //this.progressLabel.Visibility = Visibility.Hidden;
-            this.cancelButton.Visibility = Visibility.Hidden;
-            this.telemetryCheck.Visibility = Visibility.Hidden;
-            this.exitButton.Visibility = Visibility.Visible;
+            cancelButton.Visibility = Visibility.Hidden;
+            telemetryCheck.Visibility = Visibility.Hidden;
+            exitButton.Visibility = Visibility.Visible;
         }
 
         private void installButton_Click(object sender, RoutedEventArgs e) {
-            this.Session["TELEMETRY"] = (bool)this.telemetryCheck.IsChecked ? "1" : "0";
+            Session["TELEMETRY"] = (bool)telemetryCheck.IsChecked ? "1" : "0";
             WixSharp.CommonTasks.UACRevealer.Enter();
-            this.telemetryCheck.Visibility = Visibility.Hidden;
-            this.installButton.Visibility = Visibility.Hidden;
-            this.progressBar.Visibility = Visibility.Visible;
+            telemetryCheck.Visibility = Visibility.Hidden;
+            installButton.Visibility = Visibility.Hidden;
+            progressBar.Visibility = Visibility.Visible;
             //this.progressLabel.Visibility = Visibility.Visible;
-            this.installStartEvent.Set();
+            installStartEvent.Set();
         }
 
         private void exitButton_Click(object sender, RoutedEventArgs e) {
-            this.Close();
+            Close();
         }
 
         private void cancelButton_Click(object sender, RoutedEventArgs e) {
-            if (this.installButton.Visibility == Visibility.Visible) {
-                this.Close();
+            if (installButton.Visibility == Visibility.Visible) {
+                Close();
             }
             else {
-                this.canceled = true;
-                this.cancelButton.IsEnabled = false;
+                canceled = true;
+                cancelButton.IsEnabled = false;
             }
         }
 
@@ -120,7 +120,7 @@ namespace WinPrintInstaller {
         }
 
         private void Window_Initialized(object sender, EventArgs e) {
-            productVersion = this.Session["ProductVersion"];
+            productVersion = Session["ProductVersion"];
             //this.Title = "version goes here";
         }
     }
