@@ -13,11 +13,11 @@ namespace WinPrint.LiteHtml {
     }
 
     public class GDIPlusContainer : ViewportContainer {
-        private readonly IResourceLoader _loader;
+        private IResourceLoader _loader;
 
         private class ResourceLoader : IResourceLoader {
-            private readonly Func<string, string> _getStringResource;
-            private readonly Func<string, byte[]> _getBytesResource;
+            private Func<string, string> _getStringResource;
+            private Func<string, byte[]> _getBytesResource;
 
             public ResourceLoader(Func<string, string> getStringResource, Func<string, byte[]> getBytesResource) {
                 _getStringResource = getStringResource;
@@ -60,8 +60,8 @@ namespace WinPrint.LiteHtml {
 
         public bool Diagnostics { get; set; }
 
-        private static readonly Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
-        private static readonly Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
+        private static Dictionary<UIntPtr, FontInfo> _fonts = new Dictionary<UIntPtr, FontInfo>();
+        private static Dictionary<string, Bitmap> _images = new Dictionary<string, Bitmap>();
 
 
         public GDIPlusContainer(string masterCssData, ILibInterop libInterop) : base(masterCssData, libInterop) {

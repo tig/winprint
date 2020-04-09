@@ -13,7 +13,7 @@ namespace LiteHtmlSharp {
         // here we just use "Foo" and at runtime we load "Foo.dll" dynamically
         // from any path on disk depending on the logic you want to implement
         [DllImport("litehtml_", EntryPoint = "Init")]
-        private static extern void Init();
+        private extern static void Init();
 
         [DllImport("kernel32")]
         private static extern IntPtr LoadLibrary(string dllname);
@@ -32,7 +32,7 @@ namespace LiteHtmlSharp {
                 }
             }
 
-            private readonly IntPtr handle;
+            private IntPtr handle;
 
         } // LibraryUnloader
 

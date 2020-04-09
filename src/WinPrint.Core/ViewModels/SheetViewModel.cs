@@ -187,7 +187,7 @@ namespace WinPrint.Core {
         }
 
         // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
-        private readonly List<Image> _cachedSheets = new List<Image>();
+        private List<Image> _cachedSheets = new List<Image>();
 
         public SheetViewModel() {
         }

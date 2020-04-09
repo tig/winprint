@@ -23,13 +23,13 @@ namespace WinPrint.Winforms {
     public partial class MainWindow : Form {
 
         // The Windows printer document
-        private readonly PrintDocument printDoc = new PrintDocument();
+        private PrintDocument printDoc = new PrintDocument();
 
         // The active file
         private string activeFile;
-        private readonly OpenFileDialog openFileDialog = new OpenFileDialog();
+        private OpenFileDialog openFileDialog = new OpenFileDialog();
 
-        private readonly WinPrint.WinForms.PrintPreview printPreview;
+        private WinPrint.WinForms.PrintPreview printPreview;
 
         public MainWindow() {
             InitializeComponent();
@@ -329,7 +329,7 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         private void MainWindow_Load(object sender, EventArgs e) {
             // Check for updates

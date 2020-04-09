@@ -13,7 +13,7 @@ using WinPrint.Core.Models;
 namespace WinPrint.Core.Services {
     // TODO: Implement settings validation with appropriate alerting
     public class SettingsService {
-        private readonly JsonSerializerOptions jsonOptions;
+        private JsonSerializerOptions jsonOptions;
         private string settingsFileName = "WinPrint.config.json";
         public string SettingsFileName { get => settingsFileName; set => settingsFileName = value; }
 
@@ -173,7 +173,7 @@ namespace WinPrint.Core.Services {
         }
 
         // Factory - creates 
-        public static Settings Create() {
+        static public Settings Create() {
             LogService.TraceMessage();
             var settingsService = ServiceLocator.Current.SettingsService.ReadSettings();
             return settingsService;

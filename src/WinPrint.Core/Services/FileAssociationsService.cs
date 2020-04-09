@@ -6,7 +6,7 @@ using WinPrint.Core.Models;
 namespace WinPrint.Core.Services {
     public class FileAssociationsService {
         // Factory - creates 
-        public static FileAssociations Create() {
+        static public FileAssociations Create() {
             // 
             LogService.TraceMessage("FileAssociationsService.Create()");
             return ServiceLocator.Current.FileAssociationsService.LoadAssociations();
