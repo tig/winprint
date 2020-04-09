@@ -201,7 +201,7 @@ namespace WinPrint.Winforms {
             printPreview.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
             printPreview.SheetViewModel.PageSettingsSet += PageSettingsSetEventHandler;
             printPreview.SheetViewModel.Loaded += FileLoadedEventHandler;
-            printPreview.SheetViewModel.ReflowComplete += ReflowCompleteEventHandler;
+            printPreview.SheetViewModel.ReadyChanged += ReadyChangedEventHandler;
         }
 
         private void FileLoadedEventHandler(object sender, bool loading) {
@@ -213,8 +213,6 @@ namespace WinPrint.Winforms {
                 if (loading) {
                     return;
                 }
-                // This kicks off Relfow
-                //SheetSettingsChanged();
             }
         }
 
@@ -227,13 +225,15 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private void ReflowCompleteEventHandler(object sender, bool reflowing) {
+        private void ReadyChangedEventHandler(object sender, bool ready) {
             if (InvokeRequired) {
-                BeginInvoke((Action)(() => ReflowCompleteEventHandler(sender, reflowing)));
+                BeginInvoke((Action)(() => ReadyChangedEventHandler(sender, ready)));
             }
             else {
-                LogService.TraceMessage($"{reflowing}");
-                if (reflowing) {
+                LogService.TraceMessage($"{ready}");
+                printButton.Enabled = ready;
+
+                if (!ready) {
                     return;
                 }
 
@@ -241,6 +241,8 @@ namespace WinPrint.Winforms {
                     printPreview.Text = Resources.HelloMsg;
                 }
                 else {
+                    // Document is loaded and flowed. We're ready to preview and/or pring.
+                    printPreview.CurrentSheet = 1;
                     printPreview.Text = "";
                 }
                 printPreview.Invalidate();
@@ -303,13 +305,13 @@ namespace WinPrint.Winforms {
 
                     // When ContentEngine changes we know the document has been loaded.
                     case "ContentEngine":
-                        printPreview.CurrentSheet = 1;
+                        //printPreview.CurrentSheet = 1;
+                        //printButton.Enabled = printPreview.SheetViewModel.NumSheets > 0;
                         break;
 
                     case "ContentSettings":
                         contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
                         break;
-
                 }
             }
         }
@@ -590,7 +592,7 @@ namespace WinPrint.Winforms {
                     catch (InvalidOperationException ioe) {
                         ServiceLocator.Current.TelemetryService.TrackException(ioe, false);
                         Log.Error(ioe, "Error Operation {file}", activeFile);
-                        ShowError($"{stage}: {ioe.Message}{Environment.NewLine}({activeFile})");
+                        ShowError($"{stage}: {ioe.Message}");
                         //                fileButton_Click(null, null);
                     }
 #pragma warning disable CA1031 // Do not catch general exception types
@@ -602,8 +604,8 @@ namespace WinPrint.Winforms {
                     }
                     finally {
                         // Set Loading to false in case of an error
-                        printPreview.SheetViewModel.Loading = false;
-                        printPreview.SheetViewModel.Reflowing = false;
+                        //printPreview.SheetViewModel.Loading = false;
+                        //printPreview.SheetViewModel.Ready = false;
                     }
                 });
             }
@@ -766,17 +768,41 @@ namespace WinPrint.Winforms {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-        private async void printButton_Click(object sender, EventArgs e) {
+        private async void printButton_Click(object sender, EventArgs args) {
             using var print = new Core.Print();
             // TODO: It's hokey that Landscape is the only printer setting that's treated specially
             // 
             print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
             print.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
 
-            await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+            try {
+                await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
-            print.SetPrinter(printDoc.PrinterSettings.PrinterName);
-            print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
+                print.SetPrinter(printDoc.PrinterSettings.PrinterName);
+                print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
+
+            }
+            catch (FileNotFoundException fnfe) {
+                Log.Error(fnfe, "File Not Found");
+                ShowError($"{fnfe.Message}");
+                return;
+            }
+            catch (InvalidOperationException ioe) {
+                ServiceLocator.Current.TelemetryService.TrackException(ioe, false);
+                Log.Error(ioe, "Error Operation {file}", activeFile);
+                ShowError($"{ioe.Message}");
+                return;
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch (Exception e) {
+#pragma warning restore CA1031 // Do not catch general exception types
+                ServiceLocator.Current.TelemetryService.TrackException(e, false);
+                Log.Error(e, "Exception {file}", activeFile);
+                ShowError($"Exception: {e.Message}{Environment.NewLine}({activeFile})");
+                return;
+            }
+            finally {
+            }
 
             if (!int.TryParse(fromText.Text, out var from)) {
                 from = 0;

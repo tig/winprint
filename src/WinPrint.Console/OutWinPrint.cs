@@ -510,15 +510,28 @@ namespace WinPrint.Console {
                 Log.Information("Printing sheet {sheetNum}", sheetNum);
             };
 
-            if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
-                await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
-            }
-            else {
-                // Get $input into a string we can use
-                // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
-                var textToPrint = SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
+            try {
+                if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
+                    await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
+                }
+                else {
+                    // Get $input into a string we can use
+                    // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
+                    var textToPrint = SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
 
-                await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
+                    await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
+                }
+            }
+            catch (System.IO.FileNotFoundException fnfe) {
+                Log.Error(fnfe, "Print failed.");
+                CleanUpUpdateHandler();
+                return;
+            }
+            catch (InvalidOperationException ioe) {
+                // TODO: Use our own execptions
+                Log.Error(ioe, "Print failed.");
+                CleanUpUpdateHandler();
+                return;
             }
 
             rec.PercentComplete = 40;

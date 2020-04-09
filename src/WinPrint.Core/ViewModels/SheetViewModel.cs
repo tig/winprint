@@ -72,6 +72,9 @@ namespace WinPrint.Core {
 
         private int _numPages;
 
+        /// <summary>
+        /// The number of sheets (NOT Pages) that will be printed.
+        /// </summary>
         public int NumSheets {
             get {
                 if (ContentEngine == null || Rows == 0 || Columns == 0) {
@@ -141,27 +144,27 @@ namespace WinPrint.Core {
         private bool _loading;
 
         /// <summary>
-        /// Subscribe to know when file has been Reflowed by the SheetViewModel. 
+        /// Subscribe to know when the SheetViewModel is ready for preview/printing. 
         /// </summary>
-        public event EventHandler<bool> ReflowComplete;
-        protected void OnReflowed(bool r) {
-            ReflowComplete?.Invoke(this, r);
+        public event EventHandler<bool> ReadyChanged;
+        protected void OnReadyChanged(bool r) {
+            ReadyChanged?.Invoke(this, r);
         }
 
         /// <summary>
         /// True if we're in the middle of reflowing. False otherwise.
         /// </summary>
-        public bool Reflowing {
-            get => _reflowing;
+        public bool Ready {
+            get => _ready;
             set {
-                if (value != _reflowing) {
-                    OnReflowed(value);
+                if (value != _ready) {
+                    OnReadyChanged(value);
                 }
 
-                SetField(ref _reflowing, value);
+                SetField(ref _ready, value);
             }
         }
-        private bool _reflowing;
+        private bool _ready;
 
         /// <summary>
         /// Subscribe to be notified when the Printer PageSettings have been set.
@@ -201,6 +204,7 @@ namespace WinPrint.Core {
         /// Call this to reset the SVM before loading a new file (enables painting print preview status cleanly)
         /// </summary>
         public void Reset() {
+            Ready = false;
             if (ContentEngine != null) {
                 ContentEngine.PropertyChanged -= OnContentPropertyChanged();
                 ContentEngine = null;
@@ -223,6 +227,8 @@ namespace WinPrint.Core {
             if (newSheet is null) {
                 throw new ArgumentNullException(nameof(newSheet));
             }
+
+            Reset();
 
             if (_sheet != null) {
                 _sheet.PropertyChanged -= OnSheetPropertyChanged();
@@ -288,6 +294,9 @@ namespace WinPrint.Core {
             Encoding = Encoding.UTF8;
             if (!string.IsNullOrEmpty(File)) {
                 var detected = CharsetDetector.DetectFromFile(File).Detected;
+                if (detected == null) {
+                    throw new InvalidOperationException($"Could not determine the file encoding of '{Path.GetFullPath(File)}'.");
+                }
                 Log.Debug("File encoding: {encoding}", detected);
                 Encoding = detected.Encoding;
                 // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
@@ -304,32 +313,41 @@ namespace WinPrint.Core {
         /// <param name="contentType">The content type engine to use.</param>
         /// <returns>True if content type engine was initialized. False otherwise.</returns>
         public async Task<bool> LoadStringAsync(string document, string contentType) {
+            bool retval = false;
             LogService.TraceMessage();
             if (document == null) {
-                throw new ArgumentNullException("document can't be null");
+                // TODO: Determine what could cause this and what user-friendly message would be
+                throw new ArgumentNullException("Document can't be null.");
             }
 
-            Loading = true;
             Reset();
+            Loading = true;
 
-            ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            try {
+                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType);
 
-            // Content settings in Sheet take precidence over Engine
-            if (ContentEngine.ContentSettings is null) {
-                ContentEngine.ContentSettings = new ContentSettings();
-                // TODO: set some defaults
+                // Content settings in Sheet take precidence over Engine
+                if (ContentEngine.ContentSettings is null) {
+                    ContentEngine.ContentSettings = new ContentSettings();
+                    // TODO: set some defaults
+                }
+
+                if (ContentSettings != null) {
+                    ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+                }
+
+                retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
             }
-
-            if (ContentSettings != null) {
-                ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
+            catch (Exception e){
+                Loading = false;
+                throw e;
             }
+            finally {
+                // Set this last to notify loading is done with File valid
+                Loading = false;
 
-            var success = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
-
-            // Set this last to notify loading is done with File valid
-            Loading = false;
-
-            return success;
+            }
+            return retval;
         }
 
         /// <summary>
@@ -457,12 +475,12 @@ namespace WinPrint.Core {
         /// <param name="pageSettings"></param>
         public async Task ReflowAsync() {
             LogService.TraceMessage();
-            if (Reflowing) {
-                Log.Debug($"SheetViewModel.ReflowAsync - already reflowing, returning");
+            if (Loading) {
+                Log.Debug($"SheetViewModel.ReflowAsync - Still loading; can't reflow, returning");
                 return;
             }
 
-            Reflowing = true;
+            Ready = false;
 
             if (CacheEnabled) {
                 ClearCache();
@@ -470,18 +488,14 @@ namespace WinPrint.Core {
 
             if (ContentEngine is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - ContentEngine is null");
-                // Causes OnReflowed
-                Reflowing = false;
                 return;
             }
 
             _numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
 
             CheckPrintOutsideHardMargins();
-            Log.Debug("Rreflow complete. {n} pages {w}x{h}\"", _numPages, Bounds.Width / 100F, Bounds.Height / 100F);
-
-            // Causes OnReflowed
-            Reflowing = false;
+            Log.Debug("SheetView Model is ready. {n} pages {w}x{h}\"", _numPages, Bounds.Width / 100F, Bounds.Height / 100F);
+            Ready = true;
         }
 
         public bool CheckPrintOutsideHardMargins() {
@@ -777,8 +791,8 @@ namespace WinPrint.Core {
                 return;
             }
 
-            if (Reflowing) {
-                Log.Debug($"SheetViewModel.PaintSheet - Reflowing; can't paint");
+            if (!Ready) {
+                Log.Debug($"SheetViewModel.PaintSheet - Not Ready; can't paint");
                 return;
             }
 

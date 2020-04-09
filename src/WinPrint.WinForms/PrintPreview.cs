@@ -221,27 +221,28 @@ namespace WinPrint.WinForms {
                 e.Graphics.Restore(state);
             }
 
+            // If we're zoomed, paint zoom factor
+            if (Zoom != 100) {
+                using var font = new Font(Font.FontFamily, 36F, FontStyle.Regular, GraphicsUnit.Point);
+                var zText = $"{Zoom}%";
+                var s = e.Graphics.MeasureString(zText, font);
+                e.Graphics.DrawString(zText, font, SystemBrushes.ControlLight, (ClientSize.Width / 2) - (s.Width / 2), (ClientSize.Height / 2) - (s.Height / 2));
+            }
+
             // While in error or loading & reflowing show Text 
             Log.Information("Status: {status}", Text);
             if (!string.IsNullOrEmpty(Text)) {
-                using var font = new Font(Font.FontFamily, 18F, FontStyle.Regular, GraphicsUnit.Point);
+                using var font = new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point);
                 using var sf = new StringFormat {
                     LineAlignment = StringAlignment.Center,
                     Alignment = StringAlignment.Center,
                     Trimming = StringTrimming.EllipsisWord
                 };
-                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, ClientRectangle, sf);
+                var errorRect = Rectangle.Inflate(ClientRectangle, -20 , 0);
+                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, errorRect, sf);
                 //var s = e.Graphics.MeasureString(Text, font);
                 //e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, 
                 //    (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
-            }
-
-            // If we're zoomed, paint zoom factor
-            if (Zoom != 100) {
-                using var font = new Font(Font.FontFamily, 48F, FontStyle.Regular, GraphicsUnit.Point);
-                var zText = $"{Zoom}%";
-                var s = e.Graphics.MeasureString(zText, font);
-                e.Graphics.DrawString(zText, font, SystemBrushes.GrayText, (ClientSize.Width / 2) - (s.Width / 2), (ClientSize.Height / 2) - (s.Height / 2));
             }
         }
     }
