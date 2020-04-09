@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LiteHtmlSharp;
 using Serilog;
 using WinPrint.Core;
 using WinPrint.Core.Models;
@@ -998,9 +999,9 @@ namespace WinPrint.Winforms {
             // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
 
-            fontDialog.Font = new System.Drawing.Font(contentSettings.Font.Family, contentSettings.Font.Size / 72F * 96, contentSettings.Font.Style, GraphicsUnit.Pixel);
+            fontDialog.Font = new System.Drawing.Font(contentSettings.Font.Family, contentSettings.Font.Size, contentSettings.Font.Style, GraphicsUnit.Point);
             if (DialogResult.OK == fontDialog.ShowDialog(this)) {
-                contentSettings.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = fontDialog.Font.SizeInPoints, Style = fontDialog.Font.Style };
+                contentSettings.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
                 contentFontLink.Text = contentSettings.Font.ToString();
             }
         }
@@ -1008,17 +1009,18 @@ namespace WinPrint.Winforms {
         private void headerFooterFontLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             var header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header;
             var footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer;
-            fontDialog.ShowEffects = false;
-            fontDialog.ShowColor = true;
-            fontDialog.AllowScriptChange = false;
-            fontDialog.AllowSimulations = false;
-            // fontDialog.AllowVectorFonts = false;
-            // fontDialog.AllowVerticalFonts = false;
+            //fontDialog.ShowEffects = false;
+            //fontDialog.ShowColor = true;
+            //fontDialog.AllowScriptChange = false;
+            //fontDialog.AllowSimulations = false;
+            //fontDialog.FontMustExist = true;
+            //// fontDialog.AllowVectorFonts = false;
+            //// fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
 
-            fontDialog.Font = new System.Drawing.Font(header.Font.Family, header.Font.Size / 72F * 96, header.Font.Style, GraphicsUnit.Pixel);
+            fontDialog.Font = new System.Drawing.Font(header.Font.Family, header.Font.Size, GraphicsUnit.Point);
             if (DialogResult.OK == fontDialog.ShowDialog(this)) {
-                header.Font = footer.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = fontDialog.Font.SizeInPoints, Style = fontDialog.Font.Style };
+                header.Font = footer.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
                 headerFooterFontLink.Text = header.Font.ToString();
             }
         }

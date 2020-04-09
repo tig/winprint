@@ -131,7 +131,7 @@ namespace WinPrint.Core {
                 Trimming = StringTrimming.None,
                 // BUGBUG: This is a work around for https://stackoverflow.com/questions/59159919/stringformat-trimming-changes-vertical-placement-of-text
                 //         (turning on NoWrap). 
-                FormatFlags = StringFormatFlags.FitBlackBox | StringFormatFlags.LineLimit | StringFormatFlags.NoWrap
+                FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.NoWrap | StringFormatFlags.NoClip
             };
 
             fmt.LineAlignment = IsAlignTop() ? StringAlignment.Near : StringAlignment.Far;
@@ -143,7 +143,7 @@ namespace WinPrint.Core {
             if (parts.Length > 1) {
                 fmt.Alignment = StringAlignment.Center;
                 sizeCenter = g.MeasureString(parts[1], tempFont, (int)boundsHF.Width, fmt);
-                //g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
+                g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
                 g.DrawString(parts[1], tempFont, Brushes.Black, boundsHF, fmt);
             }
 
@@ -156,7 +156,7 @@ namespace WinPrint.Core {
 
             fmt.Alignment = StringAlignment.Near;
             fmt.Trimming = StringTrimming.None;
-            //g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
+            g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
             g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
 
             //Right
@@ -164,7 +164,7 @@ namespace WinPrint.Core {
             if (parts.Length > 2) {
                 fmt.Alignment = StringAlignment.Far;
                 fmt.Trimming = StringTrimming.None;
-                //g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
+                g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
                 g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
             }
         }

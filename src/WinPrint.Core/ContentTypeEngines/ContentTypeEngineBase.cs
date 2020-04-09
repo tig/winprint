@@ -85,8 +85,11 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         internal string document = null;
 
+        /// <summary>
+        /// These are the global StringFormat settings; set here to ensure all rendering and measuring uses same settings
+        /// </summary>
         public static readonly StringFormat StringFormat = new StringFormat(StringFormat.GenericTypographic) {
-            FormatFlags = StringFormatFlags.NoClip | StringFormatFlags.LineLimit | StringFormatFlags.FitBlackBox |
+            FormatFlags = StringFormatFlags.NoClip | StringFormatFlags.LineLimit | //StringFormatFlags.FitBlackBox |
                             StringFormatFlags.DisplayFormatControl | StringFormatFlags.MeasureTrailingSpaces,
             Alignment = StringAlignment.Near,
             LineAlignment = StringAlignment.Near,
