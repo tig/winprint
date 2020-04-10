@@ -70,6 +70,15 @@ namespace WinPrint.Winforms {
             openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}";
 #endif
 
+            // Set common fontDialog props
+            fontDialog.ShowEffects = false;
+            fontDialog.ShowColor = true;
+            fontDialog.AllowScriptChange = false;
+            fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
+            fontDialog.AllowVectorFonts = false;
+            // fontDialog.AllowVerticalFonts = false;
+            fontDialog.ShowHelp = false;
+
         }
 
         private void Color() {
@@ -991,13 +1000,6 @@ namespace WinPrint.Winforms {
 
         private void contentFontLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             var contentSettings = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings;
-            fontDialog.ShowEffects = false;
-            fontDialog.ShowColor = true;
-            fontDialog.AllowScriptChange = false;
-            fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
-            fontDialog.AllowVectorFonts = false;
-            // fontDialog.AllowVerticalFonts = false;
-            fontDialog.ShowHelp = false;
 
             fontDialog.Font = new System.Drawing.Font(contentSettings.Font.Family, contentSettings.Font.Size, contentSettings.Font.Style, GraphicsUnit.Point);
             if (DialogResult.OK == fontDialog.ShowDialog(this)) {
@@ -1009,15 +1011,9 @@ namespace WinPrint.Winforms {
         private void headerFooterFontLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             var header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header;
             var footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer;
-            fontDialog.ShowEffects = false;
-            fontDialog.ShowColor = true;
-            fontDialog.AllowScriptChange = false;
-            fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
-            fontDialog.AllowVectorFonts = false;
-            // fontDialog.AllowVerticalFonts = false;
-            fontDialog.ShowHelp = false;
 
             fontDialog.Font = new System.Drawing.Font(header.Font.Family, header.Font.Size, GraphicsUnit.Point);
+
             if (DialogResult.OK == fontDialog.ShowDialog(this)) {
                 // Note we set BOTH the header & footer to the same thing. But for GUI we use the Header as source of truth.
                 header.Font = footer.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
