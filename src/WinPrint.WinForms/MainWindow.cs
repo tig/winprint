@@ -995,7 +995,7 @@ namespace WinPrint.Winforms {
             fontDialog.ShowColor = true;
             fontDialog.AllowScriptChange = false;
             fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
-            // fontDialog.AllowVectorFonts = false;
+            fontDialog.AllowVectorFonts = false;
             // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
 
@@ -1009,17 +1009,17 @@ namespace WinPrint.Winforms {
         private void headerFooterFontLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
             var header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header;
             var footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer;
-            //fontDialog.ShowEffects = false;
-            //fontDialog.ShowColor = true;
-            //fontDialog.AllowScriptChange = false;
-            //fontDialog.AllowSimulations = false;
-            //fontDialog.FontMustExist = true;
-            //// fontDialog.AllowVectorFonts = false;
-            //// fontDialog.AllowVerticalFonts = false;
+            fontDialog.ShowEffects = false;
+            fontDialog.ShowColor = true;
+            fontDialog.AllowScriptChange = false;
+            fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
+            fontDialog.AllowVectorFonts = false;
+            // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
 
             fontDialog.Font = new System.Drawing.Font(header.Font.Family, header.Font.Size, GraphicsUnit.Point);
             if (DialogResult.OK == fontDialog.ShowDialog(this)) {
+                // Note we set BOTH the header & footer to the same thing. But for GUI we use the Header as source of truth.
                 header.Font = footer.Font = new Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
                 headerFooterFontLink.Text = header.Font.ToString();
             }
