@@ -645,6 +645,9 @@ namespace WinPrint.Console {
                 case "Reflowing":
                     //WriteProgress(new ProgressRecord(0, "Formatting", "formatting..."));
                     break;
+
+                default:
+                    throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
             }
         }
 

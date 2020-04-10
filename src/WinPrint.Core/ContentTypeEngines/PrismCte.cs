@@ -31,59 +31,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             return content;
         }
 
-        private float lineHeight;
-        private int linesPerPage;
-        private double remainingPartialLineHeight;
-        private float lineNumberWidth;
+        private float _lineHeight;
+        private int _linesPerPage;
+        private double _remainingPartialLineHeight;
+        private float _lineNumberWidth;
         //private float minCharWidth;
         private System.Drawing.Font cachedFont;
+        private bool _convertedToHtml = false;
 
         // Publics
-        public bool LineNumbers { get => lineNumbers; set => SetField(ref lineNumbers, value); }
-        private bool lineNumbers = true;
-
-        public bool LineNumberSeparator { get => lineNumberSeparator; set => SetField(ref lineNumberSeparator, value); }
-        private bool lineNumberSeparator = true;
-
-        private bool convertedToHtml = false;
-
-        //        public async override Task<bool> LoadAsync(string filePath) {
-        //            LogService.TraceMessage();
-
-        //            if (!await ServiceLocator.Current.NodeService.IsPrismInstalled()) {
-        //                Log.Warning("Prism.js is not installed. Installing...");
-
-        //                var result = await ServiceLocator.Current.NodeService.RunNpmCommand("-g install prismjs");
-        //                if (string.IsNullOrEmpty(result)) {
-        //                    Log.Debug("Could not install PrismJS");
-        //                    throw new InvalidOperationException("Could not install PrismJS.");
-        //                }
-        //            }
-
-        //            if (!await base.LoadAsync(filePath)) return false;
-
-        //            if (!convertedToHtml)
-        //                document = await CodeToHtml(filePath, Language);
-        //            convertedToHtml = true;
-
-        //            //Helpers.Logging.TraceMessage(document);
-
-        //#if DEBUG
-        //            var w = new StreamWriter(filePath + "_.html");
-        //            w.Write(document);
-        //            w.Close();
-        //#endif
-
-        //#if USE_COLORCODE
-        //            var formatter = new HtmlFormatter();
-        //            var language = ColorCode.Languages.FindById(Type);
-        //            document = formatter.GetHtmlString(document, language);
-        //            StreamWriter w = new StreamWriter(title + "_.html");
-        //            w.Write(document);
-        //            w.Close();
-        //#endif
-        //            return !string.IsNullOrEmpty(document);
-        //        }
 
         public override async Task<bool> SetDocumentAsync(string doc) {
             LogService.TraceMessage();
@@ -99,11 +55,11 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
 
             Document = doc;
-            if (!convertedToHtml) {
+            if (!_convertedToHtml) {
                 Document = await CodeToHtml("", Language);
             }
 
-            convertedToHtml = true;
+            _convertedToHtml = true;
 
 #if DEBUG
             var w = new StreamWriter("PrismCte.html");
@@ -114,7 +70,6 @@ namespace WinPrint.Core.ContentTypeEngines {
             return true;
         }
 
-
         public override async Task<int> RenderAsync(PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
 
@@ -122,20 +77,20 @@ namespace WinPrint.Core.ContentTypeEngines {
             var numPages = await base.RenderAsync(printerResolution, reflowProgress);
             var fi = litehtml.GetCodeFontInfo();
             cachedFont = fi.Font;
-            lineHeight = fi.LineHeight;
-            linesPerPage = (int)Math.Floor(PageSize.Height / lineHeight);
+            _lineHeight = fi.LineHeight;
+            _linesPerPage = (int)Math.Floor(PageSize.Height / _lineHeight);
 
             // If a line would split a page break, get the amount of space it uses
-            remainingPartialLineHeight = PageSize.Height % lineHeight;
-            linesInDocument = (int)Math.Floor(litehtml.Document.Height() / lineHeight);
+            _remainingPartialLineHeight = PageSize.Height % _lineHeight;
+            linesInDocument = (int)Math.Floor(litehtml.Document.Height() / _lineHeight);
 
 
             // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
             // TODO: Make line number width dynamic
             // Note, Measure string is actually dependent on lineNumberWidth!
-            lineNumberWidth = LineNumbers ? MeasureString(null, new string('0', 4)).Width : 0;
+            _lineNumberWidth = ContentSettings.LineNumbers ? MeasureString(null, new string('0', 4)).Width : 0;
 
-            return linesInDocument / linesPerPage + 1;
+            return linesInDocument / _linesPerPage + 1;
         }
 
         private SizeF MeasureString(Graphics g, string text) {
@@ -160,9 +115,9 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
 
             // determine width     
-            var fontHeight = lineHeight;
+            var fontHeight = _lineHeight;
             // Use page settings including lineNumberWidth
-            var proposedSize = new SizeF(PageSize.Width - lineNumberWidth, lineHeight * linesPerPage);
+            var proposedSize = new SizeF(PageSize.Width - _lineNumberWidth, _lineHeight * _linesPerPage);
             var size = g.MeasureString(text, cachedFont, proposedSize, StringFormat.GenericTypographic, out charsFitted, out linesFilled);
             return size;
         }
@@ -314,7 +269,12 @@ namespace WinPrint.Core.ContentTypeEngines {
                 // sbHtml.AppendLine(await node.StandardOutput.ReadToEndAsync());
                 linesInDocument = 0;
                 while (!node.StandardOutput.EndOfStream) {
-                    sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
+                    if (ContentSettings.LineNumbers) {
+                        sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
+                    }
+                    else {
+                        sbHtml.AppendLine($"<tr><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
+                    }
                     //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
                 }
                 Log.Debug("Read {n} lines from stdout", linesInDocument);
@@ -369,12 +329,12 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
             //Helpers.Logging.TraceMessage($"PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
-            var extraLines = (pageNum - 1) * remainingPartialLineHeight;
+            var extraLines = (pageNum - 1) * _remainingPartialLineHeight;
             var yPos = (int)Math.Round((pageNum - 1) * PageSize.Height) - (int)Math.Round(extraLines);
 
             // Set the clip such that any extraLines are clipped off bottom
             if (!ContentSettings.Diagnostics) {
-                g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height - remainingPartialLineHeight)));
+                g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height - _remainingPartialLineHeight)));
             }
 
             litehtml.Graphics = g;
@@ -398,41 +358,38 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Diagnostics
             if (ContentSettings.Diagnostics) {
                 g.ResetClip();
-                var startLine = linesPerPage * (pageNum - 1);
-                var endLine = startLine + linesPerPage;
+                var startLine = _linesPerPage * (pageNum - 1);
+                var endLine = startLine + _linesPerPage;
                 int lineOnPage;
                 //int linesInDocument = (int)Math.Round(litehtml.Document.Height() / lineHeight);
-                for (lineOnPage = 0; lineOnPage < linesPerPage; lineOnPage++) {
-                    var lineInDocument = lineOnPage + (linesPerPage * (pageNum - 1));
+                for (lineOnPage = 0; lineOnPage < _linesPerPage; lineOnPage++) {
+                    var lineInDocument = lineOnPage + (_linesPerPage * (pageNum - 1));
                     if (lineInDocument < linesInDocument && lineInDocument >= startLine) {// && lineInDocument <= endLine) {
                                                                                           //if (lines[lineInDocument].lineNumber > 0)
-                        PaintLineNumber(g, pageNum, lineInDocument);
+                        PaintDiagnosticLineNumber(g, pageNum, lineInDocument);
                         var x = (int)leftMargin;
-                        var y = lineOnPage * (int)lineHeight;
+                        var y = lineOnPage * (int)_lineHeight;
                         //RenderCode(g, lineInDocument, cachedFont, xPos, yPos);
-                        g.DrawRectangle(Pens.Red, 0, y, (int)Math.Round(PageSize.Width), (int)lineHeight);
+                        g.DrawRectangle(Pens.Red, 0, y, (int)Math.Round(PageSize.Width), (int)_lineHeight);
                     }
                 }
             }
             g.Restore(state);
         }
 
-        // TODO: Support setting color of line #s and separator
-        // TODO: Only paint Line Number Separator if there's an actual line
-        private void PaintLineNumberSeparator(Graphics g) {
-            if (LineNumbers && LineNumberSeparator && lineNumberWidth != 0) {
-                g.DrawLine(Pens.Gray, lineNumberWidth - 2, 0, lineNumberWidth - 2, PageSize.Height);
+        private void PaintDiagnosticLineNumberSeparator(Graphics g) {
+            if (ContentSettings.LineNumbers && ContentSettings.LineNumberSeparator && _lineNumberWidth != 0) {
+                g.DrawLine(Pens.Gray, _lineNumberWidth - 2, 0, _lineNumberWidth - 2, PageSize.Height);
             }
         }
 
-        // TODO: Allow a different (non-monospace) font for line numbers
-        internal void PaintLineNumber(Graphics g, int pageNum, int lineNumber) {
-            if (LineNumbers == true && lineNumberWidth != 0) {
-                var lineOnPage = lineNumber % linesPerPage;
+        internal void PaintDiagnosticLineNumber(Graphics g, int pageNum, int lineNumber) {
+            if (ContentSettings.LineNumbers == true && _lineNumberWidth != 0) {
+                var lineOnPage = lineNumber % _linesPerPage;
                 // TOOD: Figure out how to make the spacig around separator more dynamic
                 lineNumber++;
-                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{lineNumber}").Width) : 0;
-                g.DrawString($"{lineNumber}", cachedFont, Brushes.Orange, x - lineNumberWidth, lineOnPage * lineHeight, StringFormat.GenericDefault);
+                var x = (int)(_lineNumberWidth - 6 - MeasureString(g, $"{lineNumber}").Width);
+                g.DrawString($"{lineNumber}", cachedFont, Brushes.Orange, x - _lineNumberWidth, lineOnPage * _lineHeight, StringFormat.GenericDefault);
             }
         }
     }

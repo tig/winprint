@@ -36,6 +36,7 @@ namespace WinPrint.Winforms {
             this.contentFontLink = new System.Windows.Forms.LinkLabel();
             this.headerFooterFontLabel = new System.Windows.Forms.Label();
             this.contentFontLabel = new System.Windows.Forms.Label();
+            this.lineNumbers = new System.Windows.Forms.CheckBox();
             this.groupPages = new System.Windows.Forms.GroupBox();
             this.pageSeparator = new System.Windows.Forms.CheckBox();
             this.labelPadding = new System.Windows.Forms.Label();
@@ -97,7 +98,7 @@ namespace WinPrint.Winforms {
             this.dummyButton.Location = new System.Drawing.Point(10, 43);
             this.dummyButton.Margin = new System.Windows.Forms.Padding(0);
             this.dummyButton.Name = "dummyButton";
-            this.dummyButton.Size = new System.Drawing.Size(645, 584);
+            this.dummyButton.Size = new System.Drawing.Size(645, 626);
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
             this.dummyButton.UseVisualStyleBackColor = false;
@@ -178,7 +179,7 @@ namespace WinPrint.Winforms {
             | System.Windows.Forms.AnchorStyles.Right)));
             this.headerTextBox.BackColor = System.Drawing.SystemColors.Control;
             this.headerTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.headerTextBox.Location = new System.Drawing.Point(27, 7);
+            this.headerTextBox.Location = new System.Drawing.Point(27, 5);
             this.headerTextBox.Margin = new System.Windows.Forms.Padding(10);
             this.headerTextBox.Name = "headerTextBox";
             this.headerTextBox.Size = new System.Drawing.Size(628, 23);
@@ -205,7 +206,7 @@ namespace WinPrint.Winforms {
             | System.Windows.Forms.AnchorStyles.Right)));
             this.footerTextBox.BackColor = System.Drawing.SystemColors.Control;
             this.footerTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.footerTextBox.Location = new System.Drawing.Point(27, 5);
+            this.footerTextBox.Location = new System.Drawing.Point(27, 4);
             this.footerTextBox.Margin = new System.Windows.Forms.Padding(10);
             this.footerTextBox.Name = "footerTextBox";
             this.footerTextBox.Size = new System.Drawing.Size(628, 23);
@@ -239,7 +240,7 @@ namespace WinPrint.Winforms {
             this.panelLeft.ForeColor = System.Drawing.Color.Black;
             this.panelLeft.Location = new System.Drawing.Point(0, 0);
             this.panelLeft.Name = "panelLeft";
-            this.panelLeft.Size = new System.Drawing.Size(249, 667);
+            this.panelLeft.Size = new System.Drawing.Size(249, 709);
             this.panelLeft.TabIndex = 0;
             // 
             // fileButton
@@ -262,6 +263,7 @@ namespace WinPrint.Winforms {
             this.groupBox1.Controls.Add(this.contentFontLink);
             this.groupBox1.Controls.Add(this.headerFooterFontLabel);
             this.groupBox1.Controls.Add(this.contentFontLabel);
+            this.groupBox1.Controls.Add(this.lineNumbers);
             this.groupBox1.Controls.Add(this.landscapeCheckbox);
             this.groupBox1.Controls.Add(this.groupPages);
             this.groupBox1.Controls.Add(this.groupMargins);
@@ -271,7 +273,7 @@ namespace WinPrint.Winforms {
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBox1.Size = new System.Drawing.Size(232, 418);
+            this.groupBox1.Size = new System.Drawing.Size(232, 449);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Sheet Definition";
@@ -315,6 +317,19 @@ namespace WinPrint.Winforms {
             this.contentFontLabel.Size = new System.Drawing.Size(78, 15);
             this.contentFontLabel.TabIndex = 16;
             this.contentFontLabel.Text = "Content font:";
+            // 
+            // lineNumbers
+            // 
+            this.lineNumbers.AutoSize = true;
+            this.lineNumbers.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lineNumbers.Location = new System.Drawing.Point(17, 422);
+            this.lineNumbers.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.lineNumbers.Name = "lineNumbers";
+            this.lineNumbers.Size = new System.Drawing.Size(97, 19);
+            this.lineNumbers.TabIndex = 2;
+            this.lineNumbers.Text = "L&ine Numbers";
+            this.lineNumbers.UseVisualStyleBackColor = true;
+            this.lineNumbers.CheckedChanged += new System.EventHandler(this.lineNumbers_CheckedChanged);
             // 
             // groupPages
             // 
@@ -574,7 +589,7 @@ namespace WinPrint.Winforms {
             this.panelAbout.Controls.Add(this.versionLabel);
             this.panelAbout.Controls.Add(this.wikiLink);
             this.panelAbout.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelAbout.Location = new System.Drawing.Point(0, 636);
+            this.panelAbout.Location = new System.Drawing.Point(0, 678);
             this.panelAbout.Margin = new System.Windows.Forms.Padding(2);
             this.panelAbout.Name = "panelAbout";
             this.panelAbout.Size = new System.Drawing.Size(249, 31);
@@ -630,7 +645,7 @@ namespace WinPrint.Winforms {
             this.printerGroup.Controls.Add(this.fromText);
             this.printerGroup.Controls.Add(this.fromLabel);
             this.printerGroup.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.printerGroup.Location = new System.Drawing.Point(8, 465);
+            this.printerGroup.Location = new System.Drawing.Point(8, 508);
             this.printerGroup.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.printerGroup.Name = "printerGroup";
             this.printerGroup.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -706,7 +721,7 @@ namespace WinPrint.Winforms {
             this.panelRight.Location = new System.Drawing.Point(249, 0);
             this.panelRight.Margin = new System.Windows.Forms.Padding(0);
             this.panelRight.Name = "panelRight";
-            this.panelRight.Size = new System.Drawing.Size(665, 667);
+            this.panelRight.Size = new System.Drawing.Size(665, 709);
             this.panelRight.TabIndex = 4;
             this.panelRight.TabStop = true;
             // 
@@ -716,7 +731,7 @@ namespace WinPrint.Winforms {
             this.footerPanel.Controls.Add(this.enableFooter);
             this.footerPanel.Controls.Add(this.footerTextBox);
             this.footerPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.footerPanel.Location = new System.Drawing.Point(0, 636);
+            this.footerPanel.Location = new System.Drawing.Point(0, 678);
             this.footerPanel.Name = "footerPanel";
             this.footerPanel.Size = new System.Drawing.Size(665, 31);
             this.footerPanel.TabIndex = 3;
@@ -737,7 +752,7 @@ namespace WinPrint.Winforms {
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(914, 667);
+            this.ClientSize = new System.Drawing.Size(914, 709);
             this.Controls.Add(this.panelRight);
             this.Controls.Add(this.panelLeft);
             this.HelpButton = true;
@@ -828,6 +843,7 @@ namespace WinPrint.Winforms {
         private FontDialog fontDialog;
         private LinkLabel headerFooterFontLink;
         private Label headerFooterFontLabel;
+        private CheckBox lineNumbers;
     }
 }
 

@@ -206,7 +206,7 @@ namespace WinPrint.Core {
         public void Reset() {
             Ready = false;
             if (ContentEngine != null) {
-                ContentEngine.PropertyChanged -= OnContentPropertyChanged();
+                ContentEngine.PropertyChanged -= OnContentEnginePropertyChanged();
                 ContentEngine = null;
             }
 
@@ -591,12 +591,7 @@ namespace WinPrint.Core {
                         break;
 
                     default:
-                        // Print/Preview Rule Settings.
-                        //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
-                        //    // Repaint view (no reflow needed)
-                        //    Helpers.Logging.TraceMessage($"Rules Changed");
-                        //}
-                        break;
+                        throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
                 OnSettingsChanged(reflow);
             };
@@ -627,45 +622,57 @@ namespace WinPrint.Core {
                         reflow = false;
                         break;
 
-                    default:
-                        // Print/Preview Rule Settings.
-                        //if (e.PropertyName.StartsWith("Print") || e.PropertyName.StartsWith("Preview")) {
-                        //    // Repaint view (no reflow needed)
-                        //    Helpers.Logging.TraceMessage($"Rules Changed");
-                        //}
+                    case "LineNumbers":
+                        ContentSettings.LineNumbers = _sheet.ContentSettings.LineNumbers;
+                        reflow = true;
                         break;
+
+                    case "LineNumberSeparator":
+                        ContentSettings.LineNumberSeparator = _sheet.ContentSettings.LineNumberSeparator;
+                        reflow = true;
+                        break;
+
+                    case "TabSpaces":
+                        ContentSettings.TabSpaces = _sheet.ContentSettings.TabSpaces;
+                        reflow = true;
+                        break;
+
+                    case "NewPageOnFormFeed":
+                        ContentSettings.NewPageOnFormFeed = _sheet.ContentSettings.NewPageOnFormFeed;
+                        reflow = true;
+                        break;
+
+                    case "Diagnostics":
+                        ContentSettings.Diagnostics = _sheet.ContentSettings.Diagnostics;
+                        reflow = true;
+                        break;
+
+                    default:
+                        throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
                 OnSettingsChanged(reflow);
             };
         }
 
-        private System.ComponentModel.PropertyChangedEventHandler OnContentPropertyChanged() {
+        private System.ComponentModel.PropertyChangedEventHandler OnContentEnginePropertyChanged() {
             return (s, e) => {
                 var reflow = false;
-                LogService.TraceMessage($"Content.PropertyChanged: {e.PropertyName}");
+                LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
-                    case "Font":
-                        reflow = true;
-                        break;
-
-                    case "LineNumbers":
-                        reflow = true;
-                        break;
-
-                    case "LineNumberSeparator":
-                        reflow = true;
-                        break;
-
                     case "TabSpaces":
                         reflow = true;
                         break;
 
-                    case "PageSize":
+                    case "NewPageOnFormFeed":
+                        reflow = true;
+                        break;
+
+                    case "ContentSettings":
                         reflow = true;
                         break;
 
                     default:
-                        break;
+                        throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
                 if (e.PropertyName == "NumPages") {
                     return;

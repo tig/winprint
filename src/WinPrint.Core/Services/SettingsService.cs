@@ -84,6 +84,8 @@ namespace WinPrint.Core.Services {
             watcher = new FileWatcher(Path.GetFullPath(SettingsFileName));
             watcher.ChangedEvent += Watcher_ChangedEvent;
 
+            // TODO: Setup subscribing to all properties and automatically saving settings when they change
+
             return settings;
         }
 

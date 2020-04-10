@@ -236,6 +236,8 @@ namespace WinPrint.Core {
                     case "Font": Font = hf.Font; reflow = true; break;
                     case "Enabled": Enabled = hf.Enabled; reflow = true; break;
                     case "VerticalPadding": VerticalPadding = hf.VerticalPadding; reflow = true; break;
+                    default:
+                        throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
                 OnSettingsChanged(reflow);
             };

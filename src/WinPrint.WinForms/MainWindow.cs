@@ -321,7 +321,25 @@ namespace WinPrint.Winforms {
 
                     case "ContentSettings":
                         contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
+                        lineNumbers.Checked = printPreview.SheetViewModel.ContentSettings.LineNumbers;
+                        //lineNumberSeparator.Checked = printPreview.SheetViewModel.ContentSettings.lineNumberSeparator;
                         break;
+
+                    case "DiagnosticRulesFont":
+                    break;
+
+                    case "Encoding":
+                        break;
+
+                    case "Loading":
+                        break;
+
+                    case "Ready":
+                        break;
+
+
+                    default:
+                        throw new InvalidOperationException($"Property Change Not Handled: {e.PropertyName}");
                 }
             }
         }
@@ -943,6 +961,12 @@ namespace WinPrint.Winforms {
 
         private void fileButton_Click(object sender, EventArgs e) {
             ShowFilesDialog();
+        }
+
+        private void lineNumbers_CheckedChanged(object sender, EventArgs e) {
+            LogService.TraceMessage($"lineNumbers_CheckedChanged: {lineNumbers.Checked}");
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings.LineNumbers =
+                    lineNumbers.Checked;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",

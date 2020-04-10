@@ -229,9 +229,9 @@ namespace WinPrint.Core.Models {
                     //    PrintBackground = true
                     //},
                     //LineNumbers = true,
-                    LineNumberSeparator = false,
-                    NewPageOnFormFeed = false,
-                    TabSpaces = 4
+                    //LineNumberSeparator = false,
+                    //NewPageOnFormFeed = false,
+                    //TabSpaces = 4
                 },
 
                 // Html fonts are determined by:
@@ -254,7 +254,7 @@ namespace WinPrint.Core.Models {
                     //    Grayscale = false,
                     //    PrintBackground = true
                     //},
-                    LineNumbers = true,
+                    //LineNumbers = true,
                 },
 
                 DefaultSheet = Uuid.DefaultSheet,
@@ -303,7 +303,10 @@ namespace WinPrint.Core.Models {
                     Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
                     Darkness = 100,
                     Grayscale = false,
-                    PrintBackground = true
+                    PrintBackground = true,
+                    LineNumberSeparator = true,
+                    LineNumbers = true,
+
                 }
             };
 

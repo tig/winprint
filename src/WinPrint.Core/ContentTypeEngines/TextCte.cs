@@ -55,16 +55,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         private int _minLineLen;
         private System.Drawing.Font _cachedFont;
 
-        // Publics
-        public bool LineNumberSeparator { get => _lineNumberSeparator; set => SetField(ref _lineNumberSeparator, value); }
-        private bool _lineNumberSeparator = true;
-
-        public int TabSpaces { get => _tabSpaces; set => SetField(ref _tabSpaces, value); }
-        private int _tabSpaces;
-
-        public bool NewPageOnFormFeed { get => _newPageOnFormFeed; set => SetField(ref _newPageOnFormFeed, value); }
-        private bool _newPageOnFormFeed = false;
-
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -187,12 +177,12 @@ namespace WinPrint.Core.ContentTypeEngines {
             var reader = new StreamReader(stream);
             while ((line = reader.ReadLine()) != null) {
                 // Expand tabs
-                if (_tabSpaces > 0) {
-                    line = line.Replace("\t", new string(' ', _tabSpaces));
+                if (ContentSettings.TabSpaces > 0) {
+                    line = line.Replace("\t", new string(' ', ContentSettings.TabSpaces));
                 }
 
                 ++lineCount;
-                if (_newPageOnFormFeed && line.Contains("\f")) {
+                if (ContentSettings.NewPageOnFormFeed && line.Contains("\f")) {
                     lineCount = ExpandFormFeeds(g, wrapped, line, lineCount);
                 }
                 else {
@@ -363,19 +353,19 @@ namespace WinPrint.Core.ContentTypeEngines {
             int i;
             for (i = firstLineInWrappedLines; i < firstLineInWrappedLines + _linesPerPage && i < _wrappedLines.Count; i++) {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
+                var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i].nonWrappedLineNumber}").Width) : 0;
                 // Line #s
                 if (_wrappedLines[i].nonWrappedLineNumber > 0) {
-                    if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
+                    if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
                         // TOOD: Figure out how to make the spacig around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
-                        var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i].nonWrappedLineNumber}").Width) : 0;
                         g.DrawString($"{_wrappedLines[i].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
                     }
                 }
 
                 // Line # separator (draw even if there's no line number, but stop at end of doc)
                 // TODO: Support setting color of line #s and separator
-                if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
+                if (ContentSettings.LineNumbers && ContentSettings.LineNumberSeparator && lineNumberWidth != 0) {
                     g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
                 }
 
@@ -385,39 +375,6 @@ namespace WinPrint.Core.ContentTypeEngines {
                     g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
                 }
             }
-
-
-            //// startline is the index of the first line of this page in _wrappedLines, endLine is the index of the last
-            //var startLine = _linesPerPage * (pageNum - 1); 
-            //var endLine = startLine + _linesPerPage;
-            //int i;
-            //for (i = 0; i < _linesPerPage; i++) {
-            //    var lineInWrappedLines = i + (_linesPerPage * (pageNum - 1));
-            //    if (lineInWrappedLines < _wrappedLines.Count && lineInWrappedLines >= startLine && lineInWrappedLines <= endLine) {
-            //        var yPos = i * _lineHeight;
-
-            //        // Line #s
-            //        if (_wrappedLines[lineInWrappedLines].nonWrappedLineNumber > 0) {
-            //            if (ContentSettings.LineNumbers == true && lineNumberWidth != 0) {
-            //                // TOOD: Figure out how to make the spacig around separator more dynamic
-            //                // TODO: Allow a different (non-monospace) font for line numbers
-            //                var x = LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}").Width) : 0;
-            //                g.DrawString($"{_wrappedLines[lineInWrappedLines].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
-            //            }
-            //        }
-
-            //        // Line # separator (draw even if there's no line number, but stop at end of doc)
-            //        // TODO: Support setting color of line #s and separator
-            //        if (ContentSettings.LineNumbers == true && lineNumberWidth != 0)
-            //            g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
-
-            //        // Text
-            //        g.DrawString(_wrappedLines[lineInWrappedLines].text, _cachedFont, Brushes.Black, lineNumberWidth, yPos, ContentTypeEngineBase.StringFormat);
-            //        if (ContentSettings.Diagnostics) {
-            //            g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
-            //        }
-            //    }
-            //}
             Log.Debug("Painted {lineOnPage} lines.", i - 1);
         }
     }

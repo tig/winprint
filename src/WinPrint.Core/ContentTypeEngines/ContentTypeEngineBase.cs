@@ -10,6 +10,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Serilog;
 using WinPrint.Core.Models;
@@ -65,6 +66,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// The contents of the file to be printed.
         /// </summary>
+        [JsonIgnore]
         public string Document {
             get => document; set =>
                 //LogService.TraceMessage($"Document is {document.Length} chars.");
