@@ -93,12 +93,13 @@ namespace WinPrint.Winforms {
             this.dummyButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.dummyButton.AutoSize = true;
             this.dummyButton.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.dummyButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.dummyButton.Location = new System.Drawing.Point(10, 43);
+            this.dummyButton.Location = new System.Drawing.Point(0, 33);
             this.dummyButton.Margin = new System.Windows.Forms.Padding(0);
             this.dummyButton.Name = "dummyButton";
-            this.dummyButton.Size = new System.Drawing.Size(815, 628);
+            this.dummyButton.Size = new System.Drawing.Size(835, 647);
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
             this.dummyButton.UseVisualStyleBackColor = false;
@@ -782,6 +783,7 @@ namespace WinPrint.Winforms {
             this.printerGroup.ResumeLayout(false);
             this.printerGroup.PerformLayout();
             this.panelRight.ResumeLayout(false);
+            this.panelRight.PerformLayout();
             this.footerPanel.ResumeLayout(false);
             this.footerPanel.PerformLayout();
             this.headerPanel.ResumeLayout(false);

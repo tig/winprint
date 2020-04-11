@@ -10,53 +10,53 @@ namespace WinPrint.Core {
     // TODO: Add a Padding property to provide padding below bottom of header/above top of footer
     public abstract class HeaderFooterViewModel : ViewModels.ViewModelBase, IDisposable {
 
-        private string text;
-        private Core.Models.Font font;
-        private bool leftBorder;
-        private bool topBorder;
-        private bool rightBorder;
-        private bool bottomBorder;
-        private bool enabled;
+        private string _text;
+        private Core.Models.Font _font;
+        private bool _leftBorder;
+        private bool _topBorder;
+        private bool _rightBorder;
+        private bool _bottomBorder;
+        private bool _enabled;
         // TODO: Make settable
-        private int verticalPadding = 10; // Vertical padding below/above header/footer in 100ths of inch
+        private int _verticalPadding = 10; // Vertical padding below/above header/footer in 100ths of inch
 
-        public string Text { get => text; set => SetField(ref text, value); }
+        public string Text { get => _text; set => SetField(ref _text, value); }
 
         /// <summary>
         /// Font used for header or footer text
         /// </summary>
-        public Core.Models.Font Font { get => font; set => SetField(ref font, value); }
+        public Core.Models.Font Font { get => _font; set => SetField(ref _font, value); }
 
         /// <summary>
         /// Enables or disables printing of left border of heder/footer
         /// </summary>
-        public bool LeftBorder { get => leftBorder; set => SetField(ref leftBorder, value); }
+        public bool LeftBorder { get => _leftBorder; set => SetField(ref _leftBorder, value); }
         /// <summary>
         /// Enables or disables printing of Top border of heder/footer
         /// </summary>
-        public bool TopBorder { get => topBorder; set => SetField(ref topBorder, value); }
+        public bool TopBorder { get => _topBorder; set => SetField(ref _topBorder, value); }
         /// <summary>
         /// Enables or disables printing of Right border of heder/footer
         /// </summary>
-        public bool RightBorder { get => rightBorder; set => SetField(ref rightBorder, value); }
+        public bool RightBorder { get => _rightBorder; set => SetField(ref _rightBorder, value); }
         /// <summary>
         /// Enables or disables printing of Bottom border of heder/footer
         /// </summary>
-        public bool BottomBorder { get => bottomBorder; set => SetField(ref bottomBorder, value); }
+        public bool BottomBorder { get => _bottomBorder; set => SetField(ref _bottomBorder, value); }
 
         /// <summary>
         /// Enable or disable header/footer
         /// </summary>
-        public bool Enabled { get => enabled; set => SetField(ref enabled, value); }
+        public bool Enabled { get => _enabled; set => SetField(ref _enabled, value); }
 
-        public int VerticalPadding { get => verticalPadding; set => SetField(ref verticalPadding, value); }
+        public int VerticalPadding { get => _verticalPadding; set => SetField(ref _verticalPadding, value); }
 
         /// <summary>
         /// Header/Footer bounds (page minus margins)
         /// </summary>
         public RectangleF Bounds => CalcBounds();
 
-        internal SheetViewModel svm;
+        internal SheetViewModel _svm;
 
         public void Dispose() {
             Dispose(true);
@@ -65,16 +65,16 @@ namespace WinPrint.Core {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        private bool disposed = false;
+        private bool _disposed = false;
         protected virtual void Dispose(bool disposing) {
-            if (disposed) {
+            if (_disposed) {
                 return;
             }
 
             if (disposing) {
                 //if (Font != null) Font.Dispose();
             }
-            disposed = true;
+            _disposed = true;
         }
 
         /// <summary>
@@ -95,8 +95,8 @@ namespace WinPrint.Core {
             }
 
             var boundsHF = CalcBounds();
-            boundsHF.Y += IsAlignTop() ? 0 : verticalPadding;
-            boundsHF.Height -= verticalPadding;
+            boundsHF.Y += IsAlignTop() ? 0 : _verticalPadding;
+            boundsHF.Height -= _verticalPadding;
 
             if (LeftBorder) {
                 g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
@@ -115,7 +115,7 @@ namespace WinPrint.Core {
             }
 
             Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
-            var macros = new Macros(svm) {
+            var macros = new Macros(_svm) {
                 Page = sheetNum
             };
             var parts = macros.ReplaceMacros(Text).Split('\t', '|');
@@ -143,7 +143,7 @@ namespace WinPrint.Core {
             if (parts.Length > 1) {
                 fmt.Alignment = StringAlignment.Center;
                 sizeCenter = g.MeasureString(parts[1], tempFont, (int)boundsHF.Width, fmt);
-                g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
+                // g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
                 g.DrawString(parts[1], tempFont, Brushes.Black, boundsHF, fmt);
             }
 
@@ -156,7 +156,7 @@ namespace WinPrint.Core {
 
             fmt.Alignment = StringAlignment.Near;
             fmt.Trimming = StringTrimming.None;
-            g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
+            //g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
             g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
 
             //Right
@@ -164,7 +164,7 @@ namespace WinPrint.Core {
             if (parts.Length > 2) {
                 fmt.Alignment = StringAlignment.Far;
                 fmt.Trimming = StringTrimming.None;
-                g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
+                //g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
                 g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
             }
         }
@@ -208,7 +208,7 @@ namespace WinPrint.Core {
                 throw new ArgumentNullException(nameof(hf));
             }
 
-            this.svm = svm;
+            this._svm = svm;
 
             Text = hf.Text;
             LeftBorder = hf.LeftBorder;
@@ -250,9 +250,9 @@ namespace WinPrint.Core {
         internal override RectangleF CalcBounds() {
             var h = SheetViewModel.GetFontHeight(Font) + VerticalPadding;
             if (Enabled) {
-                return new RectangleF(svm.Bounds.Left + svm.Margins.Left,
-                            svm.Bounds.Top + svm.Margins.Top,
-                            svm.Bounds.Width - svm.Margins.Left - svm.Margins.Right,
+                return new RectangleF(_svm.Bounds.Left + _svm.Margins.Left,
+                            _svm.Bounds.Top + _svm.Margins.Top,
+                            _svm.Bounds.Width - _svm.Margins.Left - _svm.Margins.Right,
                             h);
             }
             else {
@@ -270,9 +270,9 @@ namespace WinPrint.Core {
         internal override RectangleF CalcBounds() {
             var h = SheetViewModel.GetFontHeight(Font) + VerticalPadding;
             if (Enabled) {
-                return new RectangleF(svm.Bounds.Left + svm.Margins.Left,
-                                svm.Bounds.Bottom - svm.Margins.Bottom - h,
-                                svm.Bounds.Width - svm.Margins.Left - svm.Margins.Right,
+                return new RectangleF(_svm.Bounds.Left + _svm.Margins.Left,
+                                _svm.Bounds.Bottom - _svm.Margins.Bottom - h,
+                                _svm.Bounds.Width - _svm.Margins.Left - _svm.Margins.Right,
                                 h);
             }
             else {

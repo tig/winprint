@@ -788,8 +788,8 @@ namespace WinPrint.Core {
         private void PaintSheet(Graphics g, int sheetNum) {
             LogService.TraceMessage($"{sheetNum}");
             // background needs to be filled image scaling to work right
-            g.FillRectangle(Brushes.White, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
-            //PaintRules(g);
+            //g.FillRectangle(Brushes.White, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
+
             _headerVM.Paint(g, sheetNum);
             _footerVM.Paint(g, sheetNum);
 

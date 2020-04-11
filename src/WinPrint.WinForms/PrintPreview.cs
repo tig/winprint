@@ -14,11 +14,11 @@ namespace WinPrint.WinForms {
     /// This is the View in the Model-View-View Model pattern. 
     /// </summary>
     public partial class PrintPreview : Control {
-        private SheetViewModel svm;
+        private SheetViewModel _svm;
         public SheetViewModel SheetViewModel {
-            get => svm; set =>
+            get => _svm; set =>
                 // Wire up notificatins?
-                svm = value;
+                _svm = value;
         }
 
         [
@@ -150,7 +150,7 @@ namespace WinPrint.WinForms {
 
         private void PageDown() {
             LogService.TraceMessage($"Preview:PageDown");
-            if (CurrentSheet < svm.NumSheets) {
+            if (CurrentSheet < _svm.NumSheets) {
                 CurrentSheet++;
                 Invalidate();
             }
@@ -158,9 +158,15 @@ namespace WinPrint.WinForms {
         }
 
         protected override void OnTextChanged(EventArgs e) {
-            base.OnTextChanged(e);
-            Invalidate();
+            // Invalidate previous
+            Invalidate(_messageRect);
+
+            // Invalidate new
+            Invalidate(GetTextRect(Graphics.FromHwnd(Handle)));
         }
+
+        // Minimum padding around print preview control (paper)
+        private const int _pagePadding = 20;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
@@ -168,20 +174,22 @@ namespace WinPrint.WinForms {
                 throw new ArgumentNullException(nameof(e));
             }
 
-            LogService.TraceMessage($"Text: {Text}");
+            LogService.TraceMessage($"PrintPreview.Text: {Text} - clip: {e.ClipRectangle}");
             //base.OnPaint(e);
 
-            if (svm != null) {
-                // Paint background
-                //using var backBrush = new SolidBrush(BackColor);
-                //e.Graphics.FillRectangle(backBrush, ClientRectangle);
+            // Paint background
+            using var backBrush = new SolidBrush(BackColor);
+            e.Graphics.FillRectangle(backBrush, ClientRectangle);
+
+            if (_svm != null && _svm.Ready) {
                 var state = e.Graphics.Save();
 
                 // Calculate scale and location
-                double w = svm.Bounds.Width;
-                double h = svm.Bounds.Height;
-                var scalingX = ClientSize.Width / w;
-                var scalingY = ClientSize.Height / h;
+                var paperSize = new Size(ClientSize.Width - _pagePadding, ClientSize.Height - _pagePadding);
+                double w = _svm.Bounds.Width;
+                double h = _svm.Bounds.Height;
+                var scalingX = paperSize.Width / w;
+                var scalingY = paperSize.Height / h;
 
                 // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
                 var scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
@@ -201,24 +209,30 @@ namespace WinPrint.WinForms {
                     // Scale for client size & zoom
                     e.Graphics.ScaleTransform((float)scale, (float)scale);
 
+                    // Paint the background white
+                    e.Graphics.FillRectangle(Brushes.White, _svm.Bounds);
+
                     //if (!svm.Loading && !svm.Reflowing) {
-                    if (svm.CacheEnabled) {
+                    if (_svm.CacheEnabled) {
                         e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                        var img = svm.GetCachedSheet(e.Graphics, CurrentSheet);
+                        var img = _svm.GetCachedSheet(e.Graphics, CurrentSheet);
                         //e.Graphics.DrawImage(img,
                         //    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
                         //    0F, 0F, img.Width, img.Height,
                         //    GraphicsUnit.Pixel);
                         e.Graphics.DrawImageUnscaledAndClipped(img,
-                            new Rectangle(svm.Bounds.Left, svm.Bounds.Top, svm.Bounds.Width, svm.Bounds.Height));
+                            new Rectangle(_svm.Bounds.Left, _svm.Bounds.Top, _svm.Bounds.Width, _svm.Bounds.Height));
                         e.Graphics.Restore(state);
                     }
                     else {
-                        svm.PrintSheet(e.Graphics, CurrentSheet);
+                        _svm.PrintSheet(e.Graphics, CurrentSheet);
                     }
                     //}
                 }
                 e.Graphics.Restore(state);
+            }
+            else {
+                //e.Graphics.FillRectangle(Brushes.White, Rectangle.Inflate(ClientRectangle, -_pagePadding, -_pagePadding));
             }
 
             // If we're zoomed, paint zoom factor
@@ -229,21 +243,30 @@ namespace WinPrint.WinForms {
                 e.Graphics.DrawString(zText, font, SystemBrushes.ControlLight, (ClientSize.Width / 2) - (s.Width / 2), (ClientSize.Height / 2) - (s.Height / 2));
             }
 
+            PaintMessage(e);
+        }
+
+        private Rectangle _messageRect;
+        private const int _messageHorizMargin = 20;
+        private readonly StringFormat _messageStringFormat = new StringFormat {
+            LineAlignment = StringAlignment.Center,
+            Alignment = StringAlignment.Center,
+            //Trimming = StringTrimming.EllipsisCharacter
+        };
+        private void PaintMessage(PaintEventArgs e) {
             // While in error or loading & reflowing show Text 
             Log.Information("Status: {status}", Text);
-            if (!string.IsNullOrEmpty(Text)) {
-                using var font = new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point);
-                using var sf = new StringFormat {
-                    LineAlignment = StringAlignment.Center,
-                    Alignment = StringAlignment.Center,
-                    Trimming = StringTrimming.EllipsisWord
-                };
-                var errorRect = Rectangle.Inflate(ClientRectangle, -20 , 0);
-                e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, errorRect, sf);
-                //var s = e.Graphics.MeasureString(Text, font);
-                //e.Graphics.DrawString(Text, font, SystemBrushes.ControlText, 
-                //    (svm.PrintableArea.Width / 2) - (s.Width / 2), (svm.PrintableArea.Height / 2) - (s.Height / 2));
-            }
+            var rect = GetTextRect(e.Graphics);
+            //e.Graphics.FillRectangle(SystemBrushes.Control, _messageRect);
+            e.Graphics.DrawString(Text, new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point), SystemBrushes.ControlText, rect, _messageStringFormat);
+            //e.Graphics.DrawRectangle(Pens.Red, rect);
+            _messageRect = rect;
+        }
+
+        private Rectangle GetTextRect(Graphics g) {
+            //var g = Graphics.FromHwnd(Handle);
+            var size = g.MeasureString(Text, new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point), ClientRectangle.Width - (_messageHorizMargin * 2), _messageStringFormat);
+            return new Rectangle((int)Math.Ceiling((ClientRectangle.Width / 2) - (size.Width / 2)), (int)Math.Ceiling((ClientRectangle.Height / 2) - (size.Height / 2)), (int)Math.Ceiling(size.Width), (int)Math.Ceiling(size.Height));
         }
     }
 }

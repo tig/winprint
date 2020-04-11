@@ -135,57 +135,65 @@ namespace WinPrint.Core.Models {
         /// Font used for diagnostic rules
         /// </summary>
         [SafeForTelemetry]
-        public Font DiagnosticRulesFont { get => diagnosticRulesFont; set => SetField(ref diagnosticRulesFont, value); }
+        public Font DiagnosticRulesFont { get => _diagnosticRulesFont; set => SetField(ref _diagnosticRulesFont, value); }
 
-        private Font diagnosticRulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
-        private bool previewPrintableArea = false;
-        private bool printPrintableArea = false;
-        private bool previewPageSize = false;
-        private bool printPageSize = false;
-        private bool previewMargins = false;
-        private bool printMargins = false;
-        private bool previewHardMargins = false;
-        private bool printHardMargins = false;
-        private bool printBounds = false;
-        private bool previewBounds = false;
-        private bool printContentBounds = false;
-        private bool previewContentBounds = false;
-        private bool printHeaderFooterBounds = false;
-        private bool previewHeaderFooterBounds = false;
-        private bool printPageBounds = false;
-        private bool previewPageBounds = false;
+        private Font _diagnosticRulesFont = new Font() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
+        private bool _previewPrintableArea = false;
+        private bool _printPrintableArea = false;
+        private bool _previewPageSize = false;
+        private bool _printPageSize = false;
+        private bool _previewMargins = false;
+        private bool _printMargins = false;
+        private bool _previewHardMargins = false;
+        private bool _printHardMargins = false;
+        private bool _printBounds = false;
+        private bool _previewBounds = false;
+        private bool _printContentBounds = false;
+        private bool _previewContentBounds = false;
+        private bool _printHeaderFooterBounds = false;
+        private bool _previewHeaderFooterBounds = false;
+        private bool _printPageBounds = false;
+        private bool _previewPageBounds = false;
+        private bool _printDialog;
+
         [SafeForTelemetry]
-        public bool PreviewPrintableArea { get => previewPrintableArea; set => SetField(ref previewPrintableArea, value); }
+        public bool PreviewPrintableArea { get => _previewPrintableArea; set => SetField(ref _previewPrintableArea, value); }
         [SafeForTelemetry]
-        public bool PrintPrintableArea { get => printPrintableArea; set => SetField(ref printPrintableArea, value); }
+        public bool PrintPrintableArea { get => _printPrintableArea; set => SetField(ref _printPrintableArea, value); }
         [SafeForTelemetry]
-        public bool PreviewPaperSize { get => previewPageSize; set => SetField(ref previewPageSize, value); }
+        public bool PreviewPaperSize { get => _previewPageSize; set => SetField(ref _previewPageSize, value); }
         [SafeForTelemetry]
-        public bool PrintPaperSize { get => printPageSize; set => SetField(ref printPageSize, value); }
+        public bool PrintPaperSize { get => _printPageSize; set => SetField(ref _printPageSize, value); }
         [SafeForTelemetry]
-        public bool PreviewMargins { get => previewMargins; set => SetField(ref previewMargins, value); }
+        public bool PreviewMargins { get => _previewMargins; set => SetField(ref _previewMargins, value); }
         [SafeForTelemetry]
-        public bool PrintMargins { get => printMargins; set => SetField(ref printMargins, value); }
+        public bool PrintMargins { get => _printMargins; set => SetField(ref _printMargins, value); }
         [SafeForTelemetry]
-        public bool PreviewHardMargins { get => previewHardMargins; set => SetField(ref previewHardMargins, value); }
+        public bool PreviewHardMargins { get => _previewHardMargins; set => SetField(ref _previewHardMargins, value); }
         [SafeForTelemetry]
-        public bool PrintHardMargins { get => printHardMargins; set => SetField(ref printHardMargins, value); }
+        public bool PrintHardMargins { get => _printHardMargins; set => SetField(ref _printHardMargins, value); }
         [SafeForTelemetry]
-        public bool PrintBounds { get => printBounds; set => SetField(ref printBounds, value); }
+        public bool PrintBounds { get => _printBounds; set => SetField(ref _printBounds, value); }
         [SafeForTelemetry]
-        public bool PreviewBounds { get => previewBounds; set => SetField(ref previewBounds, value); }
+        public bool PreviewBounds { get => _previewBounds; set => SetField(ref _previewBounds, value); }
         [SafeForTelemetry]
-        public bool PrintContentBounds { get => printContentBounds; set => SetField(ref printContentBounds, value); }
+        public bool PrintContentBounds { get => _printContentBounds; set => SetField(ref _printContentBounds, value); }
         [SafeForTelemetry]
-        public bool PreviewContentBounds { get => previewContentBounds; set => SetField(ref previewContentBounds, value); }
+        public bool PreviewContentBounds { get => _previewContentBounds; set => SetField(ref _previewContentBounds, value); }
         [SafeForTelemetry]
-        public bool PrintHeaderFooterBounds { get => printHeaderFooterBounds; set => SetField(ref printHeaderFooterBounds, value); }
+        public bool PrintHeaderFooterBounds { get => _printHeaderFooterBounds; set => SetField(ref _printHeaderFooterBounds, value); }
         [SafeForTelemetry]
-        public bool PreviewHeaderFooterBounds { get => previewHeaderFooterBounds; set => SetField(ref previewHeaderFooterBounds, value); }
+        public bool PreviewHeaderFooterBounds { get => _previewHeaderFooterBounds; set => SetField(ref _previewHeaderFooterBounds, value); }
         [SafeForTelemetry]
-        public bool PreviewPageBounds { get => previewPageBounds; set => SetField(ref previewPageBounds, value); }
+        public bool PreviewPageBounds { get => _previewPageBounds; set => SetField(ref _previewPageBounds, value); }
         [SafeForTelemetry]
-        public bool PrintPageBounds { get => printPageBounds; set => SetField(ref printPageBounds, value); }
+        public bool PrintPageBounds { get => _printPageBounds; set => SetField(ref _printPageBounds, value); }
+
+        /// <summary>
+        /// If true, print dialog is shown when printing
+        /// </summary>
+        [SafeForTelemetry]
+        public bool ShowPrintDialog { get => _printDialog; set => SetField(ref _printDialog, value); }
 
         public Settings() {
 
