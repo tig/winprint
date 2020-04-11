@@ -98,7 +98,7 @@ namespace WinPrint.Winforms {
             this.dummyButton.Location = new System.Drawing.Point(10, 43);
             this.dummyButton.Margin = new System.Windows.Forms.Padding(0);
             this.dummyButton.Name = "dummyButton";
-            this.dummyButton.Size = new System.Drawing.Size(645, 626);
+            this.dummyButton.Size = new System.Drawing.Size(815, 628);
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
             this.dummyButton.UseVisualStyleBackColor = false;
@@ -182,7 +182,7 @@ namespace WinPrint.Winforms {
             this.headerTextBox.Location = new System.Drawing.Point(27, 5);
             this.headerTextBox.Margin = new System.Windows.Forms.Padding(10);
             this.headerTextBox.Name = "headerTextBox";
-            this.headerTextBox.Size = new System.Drawing.Size(628, 23);
+            this.headerTextBox.Size = new System.Drawing.Size(798, 23);
             this.headerTextBox.TabIndex = 7;
             this.headerTextBox.Text = "Header Text";
             this.headerTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -209,7 +209,7 @@ namespace WinPrint.Winforms {
             this.footerTextBox.Location = new System.Drawing.Point(27, 4);
             this.footerTextBox.Margin = new System.Windows.Forms.Padding(10);
             this.footerTextBox.Name = "footerTextBox";
-            this.footerTextBox.Size = new System.Drawing.Size(628, 23);
+            this.footerTextBox.Size = new System.Drawing.Size(798, 23);
             this.footerTextBox.TabIndex = 8;
             this.footerTextBox.Text = "Footer Text";
             this.footerTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -240,7 +240,7 @@ namespace WinPrint.Winforms {
             this.panelLeft.ForeColor = System.Drawing.Color.Black;
             this.panelLeft.Location = new System.Drawing.Point(0, 0);
             this.panelLeft.Name = "panelLeft";
-            this.panelLeft.Size = new System.Drawing.Size(249, 709);
+            this.panelLeft.Size = new System.Drawing.Size(249, 711);
             this.panelLeft.TabIndex = 0;
             // 
             // fileButton
@@ -589,7 +589,7 @@ namespace WinPrint.Winforms {
             this.panelAbout.Controls.Add(this.versionLabel);
             this.panelAbout.Controls.Add(this.wikiLink);
             this.panelAbout.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelAbout.Location = new System.Drawing.Point(0, 678);
+            this.panelAbout.Location = new System.Drawing.Point(0, 680);
             this.panelAbout.Margin = new System.Windows.Forms.Padding(2);
             this.panelAbout.Name = "panelAbout";
             this.panelAbout.Size = new System.Drawing.Size(249, 31);
@@ -721,7 +721,7 @@ namespace WinPrint.Winforms {
             this.panelRight.Location = new System.Drawing.Point(249, 0);
             this.panelRight.Margin = new System.Windows.Forms.Padding(0);
             this.panelRight.Name = "panelRight";
-            this.panelRight.Size = new System.Drawing.Size(665, 709);
+            this.panelRight.Size = new System.Drawing.Size(835, 711);
             this.panelRight.TabIndex = 4;
             this.panelRight.TabStop = true;
             // 
@@ -731,9 +731,9 @@ namespace WinPrint.Winforms {
             this.footerPanel.Controls.Add(this.enableFooter);
             this.footerPanel.Controls.Add(this.footerTextBox);
             this.footerPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.footerPanel.Location = new System.Drawing.Point(0, 678);
+            this.footerPanel.Location = new System.Drawing.Point(0, 680);
             this.footerPanel.Name = "footerPanel";
-            this.footerPanel.Size = new System.Drawing.Size(665, 31);
+            this.footerPanel.Size = new System.Drawing.Size(835, 31);
             this.footerPanel.TabIndex = 3;
             // 
             // headerPanel
@@ -744,7 +744,7 @@ namespace WinPrint.Winforms {
             this.headerPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.headerPanel.Location = new System.Drawing.Point(0, 0);
             this.headerPanel.Name = "headerPanel";
-            this.headerPanel.Size = new System.Drawing.Size(665, 32);
+            this.headerPanel.Size = new System.Drawing.Size(835, 32);
             this.headerPanel.TabIndex = 1;
             // 
             // MainWindow
@@ -752,12 +752,13 @@ namespace WinPrint.Winforms {
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(914, 709);
+            this.ClientSize = new System.Drawing.Size(1084, 711);
             this.Controls.Add(this.panelRight);
             this.Controls.Add(this.panelLeft);
             this.HelpButton = true;
             this.Margin = new System.Windows.Forms.Padding(27, 22, 27, 22);
             this.Name = "MainWindow";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "winprint";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.Load += new System.EventHandler(this.MainWindow_Load);
