@@ -74,16 +74,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             LogService.TraceMessage();
 
             // Calculate the number of lines per page etc..
-            var numPages = await base.RenderAsync(printerResolution, reflowProgress);
-            var fi = litehtml.GetCodeFontInfo();
+            var numPages = await base.RenderAsync(printerResolution, reflowProgress).ConfigureAwait(false);
+            var fi = _litehtml.GetCodeFontInfo();
             cachedFont = fi.Font;
             _lineHeight = fi.LineHeight;
             _linesPerPage = (int)Math.Floor(PageSize.Height / _lineHeight);
 
             // If a line would split a page break, get the amount of space it uses
             _remainingPartialLineHeight = PageSize.Height % _lineHeight;
-            linesInDocument = (int)Math.Floor(litehtml.Document.Height() / _lineHeight);
-
+            linesInDocument = (int)Math.Floor(_litehtml.Document.Height() / _lineHeight);
 
             // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
             // TODO: Make line number width dynamic
@@ -197,7 +196,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             var themePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssUserProvidePrismThemeFile;
             if (File.Exists(themePath)) {
                 //string themePath = $"{prismThemes}/{cssUserProvidePrismThemeFile}";
-                Log.Debug("Using user provided Prism theme: {prism}", themePath);
+                //Log.Debug("Using user provided Prism theme: {prism}", themePath);
                 // TODO: Test this. 
                 // BUGBUG: Font specified in user provided CSS will not be detected due to lack of
                 // "winprint" in style specifier (see GDIPlusContainer.cs)
@@ -228,7 +227,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Strip "file:/" off of appDir for local
             var overridePath = appDir.Substring(6, appDir.Length - 6) + "\\" + cssWinPrintOverrides;
             if (File.Exists(overridePath)) {
-                Log.Debug("Using user provided css overrides: {prism}", overridePath);
+                //Log.Debug("Using user provided css overrides: {prism}", overridePath);
 
                 sbHtml.AppendLine(File.ReadAllText(overridePath));
             }
@@ -251,11 +250,11 @@ namespace WinPrint.Core.ContentTypeEngines {
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
 
-                Log.Debug("Starting Process: '{f} {a}'", psi.FileName, psi.Arguments);
+                //Log.Debug("Starting Process: '{f} {a}'", psi.FileName, psi.Arguments);
                 node = Process.Start(psi);
                 var sw = node.StandardInput;
-                Log.Debug("Writing {n} chars to stdin", document.Length);
-                await sw.WriteLineAsync(sbNodeJS.ToString());
+                //Log.Debug("Writing {n} chars to stdin", document.Length);
+                await sw.WriteLineAsync(sbNodeJS.ToString()).ConfigureAwait(false);
                 sw.Close();
 
                 // TODO: Detect script failure and do right thing
@@ -270,21 +269,20 @@ namespace WinPrint.Core.ContentTypeEngines {
                 linesInDocument = 0;
                 while (!node.StandardOutput.EndOfStream) {
                     if (ContentSettings.LineNumbers) {
-                        sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
+                        sbHtml.AppendLine($"<tr><td class=\"line-number\">{++linesInDocument}</td><td>{await node.StandardOutput.ReadLineAsync().ConfigureAwait(false)}</td></tr>");
                     }
                     else {
-                        sbHtml.AppendLine($"<tr><td>{await node.StandardOutput.ReadLineAsync()}</td></tr>");
+                        sbHtml.AppendLine($"<tr><td>{await node.StandardOutput.ReadLineAsync().ConfigureAwait(false)}</td></tr>");
                     }
-                    //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync()}");
+                    //sbHtml.AppendLine($"<div class=\"ln\">{lineNumber++}</div>{await node.StandardOutput.ReadLineAsync().ConfigureAwait(false)}");
                 }
                 Log.Debug("Read {n} lines from stdout", linesInDocument);
 
                 if (linesInDocument == 0) {
-
-                    Log.Debug($"Reading stdErr...");
+                    //Log.Debug($"Reading stdErr...");
                     var stdErr = new StringBuilder();
                     while (!node.StandardError.EndOfStream) {
-                        var outputLine = await node.StandardError.ReadLineAsync();
+                        var outputLine = await node.StandardError.ReadLineAsync().ConfigureAwait(false);
                         Log.Debug("stdErr: {stdErr}", outputLine);
                     }
                 }
@@ -310,7 +308,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         internal string Language { get; set; }
 
         public override void PaintPage(Graphics g, int pageNum) {
-            if (litehtml == null || ready == false) {
+            if (_litehtml == null || _ready == false) {
                 Log.Debug($"PrismFileContent.PaintPage({pageNum}) when litehtml is not ready.");
                 return;
             }
@@ -337,19 +335,19 @@ namespace WinPrint.Core.ContentTypeEngines {
                 g.SetClip(new Rectangle(0, 0, (int)Math.Round(PageSize.Width), (int)Math.Round(PageSize.Height - _remainingPartialLineHeight)));
             }
 
-            litehtml.Graphics = g;
-
             var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Ceiling(PageSize.Height));
 
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint((int)-0, (int)-yPos), new LiteHtmlSize((int)size.Width, (int)size.Height));
 
-            litehtml.Document.Draw(-0, -yPos, new position {
+            _litehtml.Graphics = g;
+            _litehtml.Document.Draw(-0, -yPos, new position {
                 x = 0,
                 y = 0,
                 width = (int)size.Width,
                 height = (int)size.Height
             });
+            _litehtml.Graphics = null;
 
             float leftMargin = 0;// containingSheet.GetPageX(pageNum);
 

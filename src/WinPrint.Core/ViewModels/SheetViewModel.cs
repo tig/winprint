@@ -301,9 +301,9 @@ namespace WinPrint.Core {
                 Encoding = detected.Encoding;
                 // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
                 using var streamToPrint = new StreamReader(File, Encoding);
-                document = await streamToPrint.ReadToEndAsync();
+                document = await streamToPrint.ReadToEndAsync().ConfigureAwait(false);
             }
-            return await LoadStringAsync(document, contentType);
+            return await LoadStringAsync(document, contentType).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace WinPrint.Core {
             Loading = true;
 
             try {
-                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType).ConfigureAwait(false);
 
                 // Content settings in Sheet take precidence over Engine
                 if (ContentEngine.ContentSettings is null) {
@@ -491,7 +491,7 @@ namespace WinPrint.Core {
                 return;
             }
 
-            _numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress);
+            _numPages = await ContentEngine.RenderAsync(PrinterResolution, ReflowProgress).ConfigureAwait(false);
 
             CheckPrintOutsideHardMargins();
             Log.Debug("SheetView Model is ready. {n} pages {w}x{h}\"", _numPages, Bounds.Width / 100F, Bounds.Height / 100F);
@@ -746,11 +746,11 @@ namespace WinPrint.Core {
                 // In print mode, 0,0 is top, left - hard margins
                 graphics.TranslateTransform(-_printableArea.Left, -_printableArea.Top);
                 PaintSheet(graphics, sheetNum);
-                graphics.Restore(state);
             }
             else {
                 PaintSheet(graphics, sheetNum);
             }
+            graphics.Restore(state);
         }
 
 

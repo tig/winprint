@@ -28,8 +28,8 @@ namespace WinPrint.Core.ContentTypeEngines {
             return content;
         }
 
-        internal GDIPlusContainer litehtml;
-        internal bool ready = false; // Loaded Rendered 
+        internal GDIPlusContainer _litehtml;
+        internal bool _ready = false; // Loaded Rendered 
 
         //public HtmlFileContent() {
         //    type = "text/html";
@@ -41,10 +41,10 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         // Protected implementation of Dispose pattern.
         // Flag: Has Dispose already been called?
-        private bool disposed = false;
+        private bool _disposed = false;
 
         private void Dispose(bool disposing) {
-            if (disposed) {
+            if (_disposed) {
                 return;
             }
 
@@ -52,10 +52,10 @@ namespace WinPrint.Core.ContentTypeEngines {
                 //if (litehtml != null)
                 //    litehtml.Dispose();
             }
-            disposed = true;
+            _disposed = true;
         }
 
-        private Bitmap htmlBitmap;
+        private Bitmap _htmlBitmap;
 
         //public async override Task<bool> LoadAsync(string filePath) {
         //    ready = false;
@@ -65,9 +65,9 @@ namespace WinPrint.Core.ContentTypeEngines {
         //}
 
         public override async Task<bool> SetDocumentAsync(string doc) {
-            ready = false;
-            litehtml = null;
-            htmlBitmap = null;
+            _ready = false;
+            _litehtml = null;
+            _htmlBitmap = null;
             Document = doc;
             return await Task.FromResult(true);
         }
@@ -80,10 +80,10 @@ namespace WinPrint.Core.ContentTypeEngines {
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
 
-            ready = false;
+            _ready = false;
 
             reflowProgress?.Invoke(this, "HtmlFileContent.RenderAsync");
-            await base.RenderAsync(printerResolution, reflowProgress);
+            await base.RenderAsync(printerResolution, reflowProgress).ConfigureAwait(false) ;
 
             var width = (int)PageSize.Width;// (printerResolution.X * PageSize.Width / 100);
             var height = (int)PageSize.Height;// (printerResolution.Y * PageSize.Height / 100);
@@ -103,47 +103,47 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             // BUGBUG: wihtout knowing the relative root path fo the html document we can't load any resources
             var resources = new HtmlResources("");
-            litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes) {
+            _litehtml = new GDIPlusContainer(css, resources.GetResourceString, resources.GetResourceBytes) {
                 Diagnostics = ContentSettings.Diagnostics,
                 Size = new LiteHtmlSize(width, 0),
                 PageHeight = height
             };
-
-            htmlBitmap = new Bitmap(width, height);
+            
+            _htmlBitmap = new Bitmap(width, height);
             //htmlBitmap.SetResolution(printerResolution.X, printerResolution.Y);
-            var g = Graphics.FromImage(htmlBitmap);
+            var g = Graphics.FromImage(_htmlBitmap);
             g.PageUnit = GraphicsUnit.Display;
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             //g.FillRectangle(Brushes.LightYellow, new Rectangle(0, 0, width, height));
 
-            LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {htmlBitmap.Width} x {htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
-            litehtml.Graphics = g;
-            litehtml.StringFormat = ContentTypeEngineBase.StringFormat;
-            litehtml.Grayscale = ContentSettings.Grayscale;
-            litehtml.Darkness = ContentSettings.Darkness;
-            litehtml.PrintBackground = ContentSettings.PrintBackground;
+            LogService.TraceMessage($"HtmlFileContent.RenderAsync() Graphic is {_htmlBitmap.Width} x {_htmlBitmap.Height} @ {g.DpiX} x {g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()}");
+            _litehtml.Graphics = g;
+            _litehtml.StringFormat = ContentTypeEngineBase.StringFormat;
+            _litehtml.Grayscale = ContentSettings.Grayscale;
+            _litehtml.Darkness = ContentSettings.Darkness;
+            _litehtml.PrintBackground = ContentSettings.PrintBackground;
 
-            Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
+            //Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");
-            litehtml.Document.CreateFromString(document);
-            Logging.TraceMessage("back from litehtml.Document.CreateFromString(document)");
+            _litehtml.Document.CreateFromString(document);
+            //Logging.TraceMessage("back from litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "back from litehtml.Document.CreateFromString(document)");
 
-            litehtml.Document.OnMediaChanged();
+            _litehtml.Document.OnMediaChanged();
 
             // TODO: Use return of Render() to get "best width"
-            var bestWidth = litehtml.Document.Render(width);
+            var bestWidth = _litehtml.Document.Render(width);
             reflowProgress?.Invoke(this, "Done with Render");
             // Note, setting viewport does nothing
             //litehtml.SetViewport(new LiteHtmlPoint(0, 0), new LiteHtmlSize(width, height));
-            litehtml.Graphics = null;
+            _litehtml.Graphics = null;
 
-            Logging.TraceMessage($"Litehtml_DocumentSizeKnown {litehtml.Document.Width()}x{litehtml.Document.Height()} bestWidth = {bestWidth}");
+            //Logging.TraceMessage($"Litehtml_DocumentSizeKnown {_litehtml.Document.Width()}x{_litehtml.Document.Height()} bestWidth = {bestWidth}");
 
-            var n = litehtml.Document.Height() / height + 1;
+            var n = _litehtml.Document.Height() / height + 1;
             Logging.TraceMessage($"HtmlFileContent.RenderAsync - {n} pages.");
-            ready = true;
+            _ready = true;
             return n;
         }
 
@@ -182,8 +182,8 @@ namespace WinPrint.Core.ContentTypeEngines {
             //    Logging.TraceMessage($"HtmlFileContent.PaintPage({pageNum}) when NumPages is {NumPages}");
             //    return;
             //}
-            if (litehtml == null || ready == false) {
-                Log.Debug($"HtmlFileContent.PaintPage({pageNum}) when litehtml is not ready.");
+            if (_litehtml == null || _ready == false) {
+                //Log.Debug($"HtmlFileContent.PaintPage({pageNum}) when litehtml is not ready.");
                 return;
             }
             SizeF pagesizeInPixels;
@@ -210,7 +210,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             LogService.TraceMessage($"HtmlFileContent.PaintPage({pageNum} - {g.DpiX}x{g.DpiY} dpi. PageUnit = {g.PageUnit.ToString()})");
 
-            litehtml.Graphics = g;
+            _litehtml.Graphics = g;
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             var yPos = (pageNum - 1) * (int)Math.Round(PageSize.Height);
@@ -220,12 +220,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
 
             var size = new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height));
-            litehtml.Document.Draw(-0, -yPos, new position {
+            _litehtml.Document.Draw(-0, -yPos, new position {
                 x = 0,
                 y = 0,
                 width = (int)size.Width,
                 height = (int)size.Height
             });
+            _litehtml.Graphics = null;
+
             //litehtml.SetViewport(new LiteHtmlPoint(0, yPos), new LiteHtmlSize(Math.Round(PageSize.Width), Math.Round(PageSize.Height)));
             //litehtml.ScrollOffset = new LiteHtmlPoint(0, yP
             // os);

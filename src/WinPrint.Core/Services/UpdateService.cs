@@ -135,7 +135,7 @@ namespace WinPrint.Core.Services {
             var client = new WebClient();
             client.DownloadDataCompleted += Client_DownloadDataCompleted;
             client.DownloadProgressChanged += Client_DownloadProgressChanged;
-            File.WriteAllBytes(_tempFilename, await client.DownloadDataTaskAsync(InstallerUri));
+            File.WriteAllBytes(_tempFilename, await client.DownloadDataTaskAsync(InstallerUri).ConfigureAwait(false));
             return _tempFilename;
         }
 

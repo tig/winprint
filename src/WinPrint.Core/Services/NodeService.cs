@@ -17,7 +17,7 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> GetNodeDirectory() {
-            LogService.TraceMessage();
+            //LogService.TraceMessage();
             if (!string.IsNullOrEmpty(nodeDir)) {
                 return nodeDir;
             }
@@ -41,7 +41,7 @@ namespace WinPrint.Core.Services {
                 //StreamWriter sw = node.StandardInput;
                 //sw.WriteLine("");
                 //sw.Close();
-                path = await proc.StandardOutput.ReadLineAsync();
+                path = await proc.StandardOutput.ReadLineAsync().ConfigureAwait(false);
                 Log.Debug(LogService.GetTraceMsg(), path);
             }
             catch (Exception e) {
@@ -61,10 +61,10 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> GetModulesDirectory() {
-            LogService.TraceMessage();
+            //LogService.TraceMessage();
 
             var path = "";
-            path = (await RunNpmCommand("-g root")).TrimEnd() + "\\";
+            path = (await RunNpmCommand("-g root").ConfigureAwait(false)).TrimEnd() + "\\";
             return Path.GetDirectoryName(path);
         }
 
@@ -79,7 +79,7 @@ namespace WinPrint.Core.Services {
         public string Version { get => version; set => version = value; }
 
         private async Task<string> RunNodeCommmand(string nodeCmd) {
-            LogService.TraceMessage();
+            //LogService.TraceMessage();
 
             string result = null;
 
@@ -100,20 +100,20 @@ namespace WinPrint.Core.Services {
                 Log.Debug("Starting Process: {f}, {a}", psi.FileName, psi.Arguments);
                 proc = Process.Start(psi);
                 var sw = proc.StandardInput;
-                Log.Debug("Sending: {cmd}", stdIn.ToString());
-                await sw.WriteLineAsync(stdIn.ToString());
+                //Log.Debug("Sending: {cmd}", stdIn.ToString());
+                await sw.WriteLineAsync(stdIn.ToString()).ConfigureAwait(false);
                 // This terminates the session
                 sw.Close();
 
-                Log.Debug("Reading stdOut...");
+                //Log.Debug("Reading stdOut...");
                 while (!proc.StandardOutput.EndOfStream) {
-                    var outputLine = await proc.StandardOutput.ReadLineAsync();
+                    var outputLine = await proc.StandardOutput.ReadLineAsync().ConfigureAwait(false);
                     stdOut.AppendLine(outputLine);
                 }
 
-                Log.Debug($"Reading stdErr...");
+                //Log.Debug($"Reading stdErr...");
                 while (!proc.StandardError.EndOfStream) {
-                    var outputLine = await proc.StandardError.ReadLineAsync();
+                    var outputLine = await proc.StandardError.ReadLineAsync().ConfigureAwait(false);
                     stdErr.AppendLine(outputLine);
                 }
 
@@ -132,11 +132,11 @@ namespace WinPrint.Core.Services {
             }
             finally {
                 proc?.Dispose();
-                Log.Debug("stdOutput: {s}", stdOut);
-                Log.Debug("stdError: {s}", stdErr);
+                //Log.Debug("stdOutput: {s}", stdOut);
+                //Log.Debug("stdError: {s}", stdErr);
             }
 
-            Log.Debug("RunNodeCommand({cmd}) result: {result}", nodeCmd, result);
+            //Log.Debug("RunNodeCommand({cmd}) result: {result}", nodeCmd, result);
 
             return result;
         }
@@ -146,9 +146,9 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<string> RunNpmCommand(string npmCmd) {
-            LogService.TraceMessage();
+            //LogService.TraceMessage();
 
-            var result = await RunNodeCommmand($"\"{await GetNodeDirectory()}\\node_modules\\npm\\bin\\npm-cli.js\" {npmCmd}");
+            var result = await RunNodeCommmand($"\"{await GetNodeDirectory().ConfigureAwait(false)}\\node_modules\\npm\\bin\\npm-cli.js\" {npmCmd}");
             return result;
         }
         /// <summary>
@@ -160,7 +160,7 @@ namespace WinPrint.Core.Services {
             LogService.TraceMessage();
             var installed = false;
 
-            var result = await RunNpmCommand("version");
+            var result = await RunNpmCommand("version").ConfigureAwait(false);
             if (!string.IsNullOrEmpty(result)) {
                 // node returns data in Javascript format (no quotes around property names)
                 // System.Text.Json does not support this. So a little regex to just find the 
@@ -173,7 +173,7 @@ namespace WinPrint.Core.Services {
         }
 
         public async Task<bool> IsPrismInstalled() {
-            var s = await RunNpmCommand("-g ls prismjs");
+            var s = await RunNpmCommand("-g ls prismjs").ConfigureAwait(false);
             return !s.Contains("-- (empty)");
         }
 
@@ -184,7 +184,7 @@ namespace WinPrint.Core.Services {
         private async Task<bool> InstallPrismJS() {
             var installed = false;
             Process proc = null;
-            var nodeDir = await GetNodeDirectory(); ;
+            var nodeDir = await GetNodeDirectory().ConfigureAwait(false);
             try {
                 var psi = new ProcessStartInfo {
                     UseShellExecute = false,   // This is important
@@ -199,24 +199,24 @@ namespace WinPrint.Core.Services {
                 LogService.TraceMessage($"Starting Process: {psi.FileName} {psi.Arguments}");
                 nodeProc = Process.Start(psi);
                 var sw = nodeProc.StandardInput;
-                LogService.TraceMessage($"Process started: {proc.ProcessName}");
-                LogService.TraceMessage($"Sending: {stdIn.ToString()}");
-                await sw.WriteLineAsync(stdIn.ToString());
+                //LogService.TraceMessage($"Process started: {proc.ProcessName}");
+                // LogService.TraceMessage($"Sending: {stdIn.ToString()}");
+                await sw.WriteLineAsync(stdIn.ToString()).ConfigureAwait(false);
                 sw.Close();
 
-                LogService.TraceMessage($"Reading stdOut:");
+                //LogService.TraceMessage($"Reading stdOut:");
                 while (!nodeProc.StandardOutput.EndOfStream) {
-                    var outputLine = await proc.StandardOutput.ReadLineAsync();
+                    var outputLine = await proc.StandardOutput.ReadLineAsync().ConfigureAwait(false);
                     stdOut.AppendLine(outputLine);
                 }
 
-                LogService.TraceMessage($"Reading stdErr:");
+                //LogService.TraceMessage($"Reading stdErr:");
                 while (!nodeProc.StandardError.EndOfStream) {
-                    var outputLine = await proc.StandardError.ReadLineAsync();
+                    var outputLine = await proc.StandardError.ReadLineAsync().ConfigureAwait(false);
                     stdErr.AppendLine(outputLine);
                 }
 
-                LogService.TraceMessage($"EOF");
+                //LogService.TraceMessage($"EOF");
             }
             catch (Exception e) {
                 LogService.TraceMessage(e.Message);
@@ -228,8 +228,8 @@ namespace WinPrint.Core.Services {
                 nodeProc = null;
             }
             finally {
-                LogService.TraceMessage($"stdOutput: {stdOut.ToString()}");
-                LogService.TraceMessage($"stdError: {stdErr.ToString()}");
+               // LogService.TraceMessage($"stdOutput: {stdOut.ToString()}");
+               // LogService.TraceMessage($"stdError: {stdErr.ToString()}");
             }
             return installed;
         }
