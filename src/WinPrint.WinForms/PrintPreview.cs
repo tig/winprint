@@ -167,8 +167,6 @@ namespace WinPrint.WinForms {
 
         // Minimum padding around print preview control (paper)
         private const int _pagePadding = 20;
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) {
                 throw new ArgumentNullException(nameof(e));

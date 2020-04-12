@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LiteHtmlSharp;
+using Serilog;
 
 #if AUTO_UTF8
 using Utf8Str = System.String;
@@ -7,7 +9,7 @@ using Utf8Str = System.String;
 using Utf8Str = System.IntPtr;
 #endif
 
-namespace LiteHtmlSharp {
+namespace WinPrint.LiteHtml {
 
     public static class NativeMethods {
         // here we just use "Foo" and at runtime we load "Foo.dll" dynamically
@@ -74,13 +76,15 @@ namespace LiteHtmlSharp {
         private static readonly Lazy<LibInterop> _instance = new Lazy<LibInterop>(() => new LibInterop());
         public static LibInterop Instance => _instance.Value;
 
-        private LibInterop() {
+        public LibInterop() {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
                 LoadLibrary(Environment.Is64BitProcess ? LiteHtmlLibFile_x64 : LiteHtmlLibFile_x86);
             }
         }
 
         public void InitDocument(ref DocumentCalls document, InitCallbacksFunc initFunc) {
+            Log.Debug("InitDocument: document = {document:X}, initFunc = {initFunc:X}", document.GetHashCode(), initFunc.GetHashCode());
+
             Init(ref document, initFunc);
         }
 

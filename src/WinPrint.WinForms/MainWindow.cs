@@ -265,7 +265,7 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => PropertyChangedEventHandler(sender, e)));
             }
             else {
-                LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
+                //LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "Landscape":
                         LogService.TraceMessage($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
@@ -610,7 +610,7 @@ namespace WinPrint.Winforms {
                         BeginInvoke((Action)(() => {
                             printPreview.Text = $"{stage}...";
                         }));
-                        await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(true);
+                        await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
                     }
                     catch (FileNotFoundException fnfe) {
@@ -640,12 +640,12 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private void ShowMessage(string str) {
+        private void ShowMessage(string message) {
             if (InvokeRequired) {
-                BeginInvoke((Action)(() => ShowMessage(str)));
+                BeginInvoke((Action)(() => ShowMessage(message)));
             }
             else {
-                printPreview.Text = new string(str);
+                printPreview.Text = message;
             }
         }
 
@@ -806,7 +806,7 @@ namespace WinPrint.Winforms {
 
             try {
                 ShowMessage("Preparing to print..");
-                await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(true);
+                await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                 print.SetPrinter(printDoc.PrinterSettings.PrinterName);
                 print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
@@ -870,25 +870,27 @@ namespace WinPrint.Winforms {
                             print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
                         }
                         ShowMessage($"Printing to {printDoc.PrinterSettings.PrinterName}");
-                        print.PrintingSheet += Print_PrintingSheet;
-                        await print.DoPrint().ConfigureAwait(true);
-                        print.PrintingSheet -= Print_PrintingSheet;
+                        // BUGBUG: having the printpreview invalidate while we're printing causes an exception
+                        // in litehtml. Do not un comment this until figured out
+                        //print.PrintingSheet += Print_PrintingSheet;
+                        await print.DoPrint().ConfigureAwait(false);
                         ShowMessage($"");
                     }
                 }));
             }
             else {
                 ShowMessage($"Printing to {printDoc.PrinterSettings.PrinterName}");
-                print.PrintingSheet += Print_PrintingSheet;
-                await print.DoPrint().ConfigureAwait(true);
-                print.PrintingSheet -= Print_PrintingSheet;
-                ShowMessage($"");
+
+                // BUGBUG: having the printpreview invalidate while we're printing causes an exception
+                // in litehtml. Do not un comment this until figured out
+                //print.PrintingSheet += Print_PrintingSheet;
+                await print.DoPrint().ConfigureAwait(false);
+                ShowMessage("");
             }
         }
 
         private void Print_PrintingSheet(object sender, int sheetNum) {
             ShowMessage($"Printing sheet {sheetNum}");
-            Log.Information("Printing sheet {sheetNum}", sheetNum);
         }
 
         private void panelRight_Resize(object sender, EventArgs e) {

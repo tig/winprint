@@ -6,7 +6,7 @@
     <AssemblyTitle>winprint LiteHtml</AssemblyTitle>
     <AssemblyName>WinPrint.LiteHtml</AssemblyName>
 
-    <Version>2.0.0.5000</Version>
+    <Version>2.0.0.6000</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -45,7 +45,6 @@
   </ItemGroup>
 
     <ItemGroup>
-    <PackageReference Include="LiteHtmlSharp" Version="1.1.15" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="MSBump" Version="2.3.2">
       <PrivateAssets>all</PrivateAssets>

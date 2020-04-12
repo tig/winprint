@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using LiteHtmlSharp;
+using Serilog;
 
 namespace WinPrint.LiteHtml {
 
@@ -37,7 +38,13 @@ namespace WinPrint.LiteHtml {
         public string DefaultMonospaceFontName { get; set; } = "Consolas";
 
         public int DefaultFontSize { get; set; } = 10;
-        public Graphics Graphics { get => _graphics; set => _graphics = value; }
+        public Graphics Graphics {
+            get => _graphics;
+            set {
+                _graphics = value;
+                //                Log.Debug("GDIPlusContainer ({gdi}) Graphics = {hash}", this.GetHashCode(), _graphics?.GetHashCode());
+            }
+        }
 
         private Graphics _graphics;
 
@@ -154,52 +161,51 @@ namespace WinPrint.LiteHtml {
 
         protected override void DrawBackground(UIntPtr hdc, string image, background_repeat repeat, ref web_color bgcolor, ref position pos, ref border_radiuses borderRadiuses, ref position borderBox, bool isRoot) {
             //Logging.TraceMessage();
+                var color = bgcolor;
+                if (Grayscale) {
+                    color.red = 0xff;
+                    color.blue = 0xff;
+                    color.green = 0xff;
+                    color.alpha = 0x00;
+                }
 
-            var color = bgcolor;
-            if (Grayscale) {
-                color.red = 0xff;
-                color.blue = 0xff;
-                color.green = 0xff;
-                color.alpha = 0x00;
-            }
+                if (pos.width > 0 && pos.height > 0) {
+                    if (!string.IsNullOrEmpty(image)) {
+                        var bitmap = LoadImage(image);
+                        if (bitmap != null) {
+                            _graphics.DrawImage(bitmap, new Rectangle(pos.x, pos.y, pos.width, pos.height));
+                        }
+                    }
+                    else {
+                        // TODO: Make this more precise; not for ALL backgrounds, just page background?
+                        if (PrintBackground) {
+                            var rect = new Rectangle(pos.x, pos.y, pos.width, pos.height);
+                            _graphics.FillRectangle(color.GetBrush(), rect);
+                        }
 
-            if (pos.width > 0 && pos.height > 0) {
-                if (!string.IsNullOrEmpty(image)) {
-                    var bitmap = LoadImage(image);
-                    if (bitmap != null) {
-                        _graphics.DrawImage(bitmap, new Rectangle(pos.x, pos.y, pos.width, pos.height));
+                        if (Diagnostics) {
+                            DrawRect(pos.x, pos.y, pos.width, pos.height, Pens.Blue);
+                        }
+                        //var geometry = new PathGeometry();
+                        //PathSegmentCollection path = new PathSegmentCollection();
+
+                        //path.Add(new LineSegment(new Point(rect.Right - br.top_right_x, rect.Top), false));
+                        //path.Add(new QuadraticBezierSegment(new Point(rect.Right, rect.Top), new Point(rect.Right, rect.Top + br.top_right_y), false));
+
+                        //path.Add(new LineSegment(new Point(rect.Right, rect.Bottom - br.bottom_right_y), false));
+                        //path.Add(new QuadraticBezierSegment(new Point(rect.Right, rect.Bottom), new Point(rect.Right - br.bottom_right_x, rect.Bottom), false));
+
+                        //path.Add(new LineSegment(new Point(rect.Left + br.bottom_left_x, rect.Bottom), false));
+                        //path.Add(new QuadraticBezierSegment(new Point(rect.Left, rect.Bottom), new Point(rect.Left, rect.Bottom - br.bottom_left_y), false));
+
+                        //path.Add(new LineSegment(new Point(rect.Left, rect.Top + br.top_left_y), false));
+                        //path.Add(new QuadraticBezierSegment(new Point(rect.Left, rect.Top), new Point(rect.Left + br.top_left_x, rect.Top), false));
+
+                        //geometry.Figures.Add(new PathFigure(new Point(rect.Left + br.top_left_x, rect.Top), path, true));
+
+                        //DrawingContext.DrawGeometry(color.GetBrush(), null, geometry);
                     }
                 }
-                else {
-                    // TODO: Make this more precise; not for ALL backgrounds, just page background?
-                    if (PrintBackground) {
-                        var rect = new Rectangle(pos.x, pos.y, pos.width, pos.height);
-                        _graphics.FillRectangle(color.GetBrush(), rect);
-                    }
-
-                    if (Diagnostics) {
-                        DrawRect(pos.x, pos.y, pos.width, pos.height, Pens.Blue);
-                    }
-                    //var geometry = new PathGeometry();
-                    //PathSegmentCollection path = new PathSegmentCollection();
-
-                    //path.Add(new LineSegment(new Point(rect.Right - br.top_right_x, rect.Top), false));
-                    //path.Add(new QuadraticBezierSegment(new Point(rect.Right, rect.Top), new Point(rect.Right, rect.Top + br.top_right_y), false));
-
-                    //path.Add(new LineSegment(new Point(rect.Right, rect.Bottom - br.bottom_right_y), false));
-                    //path.Add(new QuadraticBezierSegment(new Point(rect.Right, rect.Bottom), new Point(rect.Right - br.bottom_right_x, rect.Bottom), false));
-
-                    //path.Add(new LineSegment(new Point(rect.Left + br.bottom_left_x, rect.Bottom), false));
-                    //path.Add(new QuadraticBezierSegment(new Point(rect.Left, rect.Bottom), new Point(rect.Left, rect.Bottom - br.bottom_left_y), false));
-
-                    //path.Add(new LineSegment(new Point(rect.Left, rect.Top + br.top_left_y), false));
-                    //path.Add(new QuadraticBezierSegment(new Point(rect.Left, rect.Top), new Point(rect.Left + br.top_left_x, rect.Top), false));
-
-                    //geometry.Figures.Add(new PathFigure(new Point(rect.Left + br.top_left_x, rect.Top), path, true));
-
-                    //DrawingContext.DrawGeometry(color.GetBrush(), null, geometry);
-                }
-            }
         }
 
 
@@ -247,7 +253,6 @@ namespace WinPrint.LiteHtml {
 
         protected override void DrawBorders(UIntPtr hdc, ref borders borders_ref, ref position draw_pos, bool root) {
             //Logging.TraceMessage();
-
             var borders = borders_ref;
             if (Grayscale) {
                 borders.top.color = ToGrayScaleColor(borders.top.color);
@@ -346,6 +351,7 @@ namespace WinPrint.LiteHtml {
             }
 
             Debug.Assert(StringFormat != null);
+
             _graphics.DrawString(text, fontInfo.Font, color.GetBrush(), new Point(pos.x, pos.y), StringFormat);
             if (Diagnostics) {
                 _graphics.DrawLine(Pens.Green, new Point(pos.x, pos.y), new Point(pos.x, pos.y + (fontInfo.LineHeight / 4)));
@@ -386,9 +392,8 @@ namespace WinPrint.LiteHtml {
             //text = text.Replace(' ', '_');
             text = text.Replace(' ', (char)160);
 
-            var size = _graphics.MeasureString(text, fontInfo.Font, (int)Size.Width, StringFormat);
-            return (int)Math.Round(size.Width);
-            //return (int)Math.Round(formattedText.WidthIncludingTrailingWhitespace + 0.25f);
+                var size = _graphics.MeasureString(text, fontInfo.Font, (int)Size.Width, StringFormat);
+                return (int)Math.Round(size.Width);
         }
 
         protected override int PTtoPX(int pt) {
