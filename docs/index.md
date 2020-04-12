@@ -30,7 +30,11 @@ See [User's Guide](users-guide.md) for more details.
 
 See [About](about.md) for the history prior to *winprint 2.0*.
 
-* 07-Apr-2020 - 2.0.0.5000 (Beta1) - * No more winprint.exe, just use `out-winprint foo.txt`, `winprint foo.txt`, or `wp foo.txt` from w/in Powershell. Also fixed powershell -verbose and -debug bugs.
+* 12-Apr-2020 - 2.0.0.6100 (Beta1) - Updated PowerShell cmdlet to run as a standalone app (e.g. wp foo.cs or out-winprint foo.cs.
+  * Added ability to choose fonts from GUI
+  * fixed print preview status bugs
+  * Code refactoring; because why leave good enough alone?
+* 07-Apr-2020 - 2.0.0.5000 (Beta1) - No more winprint.exe, just use `out-winprint foo.txt`, `winprint foo.txt`, or `wp foo.txt` from w/in Powershell. Also fixed powershell -verbose and -debug bugs.
 * 04-Apr-2020 - 2.0.0.4000 (Beta1) - Finished PowerShell implementation. Auto-Update.
 * 16-Mar-2020 - 2.0.0.3800 (Alpha) - PowerShell support.
 * 09-Mar-2020 - 2.0.0.3002 (Alpha) - Updated installer, Telemetry, Minor bug fixes

@@ -77,7 +77,7 @@ The following all do the same thing:
 out-winprint -FileName program.cs
 wp program.cs
 winprint program.cs
-cat program.cs | wp
+cat program.cs | wp -Title "program.cs"
 ```
 
 Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
@@ -124,7 +124,7 @@ SYNTAX
     
 PARAMETERS
     -Config
-        Outputs the path the the winprint config file.
+        Starts the config file in your favorite editor.
         
         Required?                    false
         Position?                    Named
