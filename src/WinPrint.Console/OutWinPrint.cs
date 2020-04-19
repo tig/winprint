@@ -208,6 +208,7 @@ namespace WinPrint.Console {
         private async Task<bool> DoUpdateAsync() {
             var version = await ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true);
             var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(true);
+            Log.Debug("Latest version found: {ver}", version);
 #if DEBUG
             var log = "-lv winprint.msiexec.log";
 #else

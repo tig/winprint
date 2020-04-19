@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Octokit;
+using Serilog;
 
 namespace WinPrint.Core.Services {
     /// <summary>
@@ -103,8 +104,8 @@ namespace WinPrint.Core.Services {
 #endif
                 //Log.Debug("Releases {releases}", JsonSerializer.Serialize(releases, options: new JsonSerializerOptions() { WriteIndented = true }));
                 if (releases.Length > 0) {
-                    //Log.Debug("The latest release is tagged at {TagName} and is named {Name}. Download Url: {BrowserDownloadUrl}",
-                    //    releases[0].TagName, releases[0].Name, releases[0].Assets[0].BrowserDownloadUrl);
+                    Log.Debug("The latest release is tagged at {TagName} and is named {Name}. Download Url: {BrowserDownloadUrl}",
+                        releases[0].TagName, releases[0].Name, releases[0].Assets[0].BrowserDownloadUrl);
 
                     LatestVersion = new Version(releases[0].TagName.Replace('v', ' '));
                     ReleasePageUri = new Uri(releases[0].HtmlUrl);
