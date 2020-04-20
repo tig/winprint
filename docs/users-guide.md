@@ -1,6 +1,5 @@
----
-title: User's Guide
----
+# User's Guide
+
 ## Features
 
 * Print source code with syntax highlighting and line numbering for over 200 programming languages and file formats.
@@ -9,7 +8,7 @@ title: User's Guide
 * Control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* PowerShell-based command line interface. 
+* PowerShell-based command line interface.
   * Complete control of printing features with dozens of paramters, including *Intellicode* parameter completion (using `tab` key).
   * Allows **winprint** to be used from other applications or solutions. `out-winprint` is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
@@ -18,7 +17,7 @@ title: User's Guide
 
 ## Command Line Interface
 
-Use **winprint** from the command line as a PowerShell CmdLet (`out-winprint`). 
+Use **winprint** from the command line as a PowerShell CmdLet (`out-winprint`).
 
 **`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet PowerShell already provides.
 
@@ -32,7 +31,7 @@ The **winprint** installer does not currently add this line.
 
 Invoke the CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
 
-Specify the `-Verbose` parameter switch to have **winprint** show progress. Otherwise, **winprint** is pretty darn quiet, respecting the norms of PowerShell. 
+Specify the `-Verbose` parameter switch to have **winprint** show progress. Otherwise, **winprint** is pretty darn quiet, respecting the norms of PowerShell.
 
 #### Examples
 
@@ -41,7 +40,7 @@ See what version is installed:
 ```powershell
 PS > out-winprint -verbose
 VERBOSE: Out-WinPrint 2.0.0.3912 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-PS > 
+PS >
 ```
 
 Print `Program.cs` using the default sheet definition and default printer:
@@ -94,7 +93,7 @@ Some **`out-winprint`** parameters support *Intellisense*, meaning that you can 
 
 * **`-SheetDefintion`** - *Intellisense* values are the names of all current Sheet Definitions defined in the `WinPrint.config.json` file. E.g. `"Default 2-Up"`.
 
-* **`-ContentTypeEngine`** - *Intellisense* values are the names of all current Content Type Engines **winprint** supports (`text/plain`, `text/html`, and `text/code`). 
+* **`-ContentTypeEngine`** - *Intellisense* values are the names of all current Content Type Engines **winprint** supports (`text/plain`, `text/html`, and `text/code`).
 
 * **`-Language`** - *Intellisense* values are the names of all (roughly 200) languages supported for syntax highlighting with the **`text/code`** Content Type Engine.
 
@@ -112,198 +111,198 @@ get-help out-winprint -full | out-winprint -p 'Microsoft Print to PDF' -s 'Defau
 
 NAME
     Out-WinPrint
-    
+
 SYNTAX
     Out-WinPrint [<CommonParameters>]
-    
+
     Out-WinPrint [[-FileName] <string>] [-PrinterName <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-Language <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefintion {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/html | text/code | text/plain}] [<CommonParameters>]
-    
+
     Out-WinPrint [-InstallUpdate] [-Force] [<CommonParameters>]
-    
+
     Out-WinPrint [-Config] [<CommonParameters>]
-    
+
 PARAMETERS
     -Config
         Starts the config file in your favorite editor.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Config
         Aliases                      None
         Dynamic?                     false
-        
+
     -ContentTypeEngine <string>
         Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. "text/plain" or "csharp". Specifying a langauge will choose the "text/code" CTE.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     true
-        
+
     -FileName <string>
         FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. If $input is not available, FileName will be used as the path to the file to print.
-        
+
         Required?                    false
         Position?                    0
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      File
         Dynamic?                     false
-        
+
     -Force
         Allows winprint to kill the host Powershell process when updating.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Updates
         Aliases                      None
         Dynamic?                     false
-        
+
     -FromSheet <int>
         Number of first sheet to print (may be used with `-ToSheet`).
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -Gui
         Show *winprint* GUI (to preview or change sheet settings).
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -InputObject <psobject>
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       true (ByValue)
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -InstallUpdate
         If an updated version of winprint is available online, download and install it.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Updates
         Aliases                      None
         Dynamic?                     false
-        
+
     -Language <string>
         Optional language to use for syntax highlighting. Specifying a langauge will choose the "text/code" CTE.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      Lang
         Dynamic?                     false
-        
+
     -LineNumbers <OutWinPrint+YesNo>
          If specfied, overrides the line numbers setting in the sheet defintion (Yes, No).
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -Orientation <OutWinPrint+PortraitLandscape>
         If specified (Yes or No) overrides the landscape setting in the sheet defintion.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -PaperSize <string>
         The paper size name.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     true
-        
+
     -PrinterName <string>
         The name of the printer to print to. If not specified the default printer will be used.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      Name
         Dynamic?                     false
-        
+
     -SheetDefintion <string>
         Name of the WinPrint sheet definition to use (e.g. "Default 2-Up").
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     true
-        
+
     -Title <string>
         Title to be displayed in header/footer with the {Title} or {FileName} macros.
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -ToSheet <int>
         Number of last sheet to print(may be used with `--Fromsheet`).
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     -WhatIf
         Output is the number of sheets that would be printed. Use -Verbose to print the count of .
-        
+
         Required?                    false
         Position?                    Named
         Accept pipeline input?       false
         Parameter set name           Print
         Aliases                      None
         Dynamic?                     false
-        
+
     <CommonParameters>
         This cmdlet supports the common parameters: Verbose, Debug,
         ErrorAction, ErrorVariable, WarningAction, WarningVariable,
         OutBuffer, PipelineVariable, and OutVariable. For more information, see
-        about_CommonParameters (https://go.microsoft.com/fwlink/?LinkID=113216). 
-    
+        about_CommonParameters (https://go.microsoft.com/fwlink/?LinkID=113216).
+
 INPUTS
     System.Management.Automation.PSObject
-    
+
 OUTPUTS
     System.Object
-    
+
 ALIASES
     winprint
     wp
@@ -342,7 +341,7 @@ where `<left part>`,`<center part>`, and `<right part>` can be composed of text 
 
     {DateRevised:D}|{Title}|Type: {FileType}
 
-This is the default footer specifier: 
+This is the default footer specifier:
 
     Printed with love by WinPrint||Page {Page} of {NumPages}
 
@@ -364,7 +363,7 @@ The following macros are supported:
 
 * **`{FullPath}`** - The full path to the file, including the filename and extension.
 
-* **`{FileType}`** - The file type (for `text/plain` and `text/html`) or language (for `sourcecode`) of the file. 
+* **`{FileType}`** - The file type (for `text/plain` and `text/html`) or language (for `sourcecode`) of the file.
 
 * **`{DatePrinted}`** - The current date & time (see formatting below).
 
@@ -382,13 +381,13 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 ### Creating new Sheet Definitions
 
-**winprint** includes two pre-defined Sheet Definitions: `Default 1-Up` and `Default 2-Up`. Additional Sheet Definitions can be created by editing `WinPrint.config.json`, copying one of the existing Sheet Definitions and giving it a new unique `name` and unique `ID` (in the form of a UUID). 
+**winprint** includes two pre-defined Sheet Definitions: `Default 1-Up` and `Default 2-Up`. Additional Sheet Definitions can be created by editing `WinPrint.config.json`, copying one of the existing Sheet Definitions and giving it a new unique `name` and unique `ID` (in the form of a UUID).
 
 ## Content Types
 
 **winprint** supports three types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
 
-1. **`text/plain`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a differnt font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file. 
+1. **`text/plain`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a differnt font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file.
 
 2. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
 

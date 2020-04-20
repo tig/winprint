@@ -1,6 +1,5 @@
----
-title: About
----
+# About & History
+
 Ever since I started programming on an Apple ][+ in 1981, I've had a thing for printing. My earliest apps focused on printing and my first money-making endeavor was "Tapes", which printed casette tape '[J-cards](https://en.wikipedia.org/wiki/J-card)' for all the mix-tapes of great '80s music we made for the girls. Whenever I learned a new programming language or OS, the first app I'd write was **[Spit](https://github.com/tig/Tigger/blob/a2013af12fef6d9946adea7fe510f8c649766160/College/C_SRC/SPIT153.C)**, an app for printing my source code all pretty (it "spits" source code out of a printer). Over the years, I wrote Spit for AppleDOS (Apple BASIC), UCSD-Pascal, CP/M (Turbo Pascal), DOS (8086 assembly and C), VAX/VMS (Pascal and FORTRAN-77), and Mac (Pascal).
 
 In 1988, as a college junior at the University of Arizona (Go Cats!), I decided Windows was going to win over OS/2 and I was going to work for Microsoft. I bought Charles Petzold's [Programming Windows](https://www.amazon.com/Programming-Windows-Writing-Developer-Reference/dp/0735671761?tag=ceklog-20) and conned my dad into buying me a copy of the Windows 2.0 SDK (which was like $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first useful) app I wrote was **WinSpit**. In a rare moment of adulting, I renamed the app [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For over ten years I received $25 checks the mail from folks all over the world. Even better, WinPrint demonstrated to Microsoft I could actually, really write code. So they hired me.
@@ -13,7 +12,7 @@ Last year (2019) I got a wild-hair to write some code as a way of blowing off st
 
 This all led to me re-discovering my old WinPrint 2.0 source code. Reminiscing on how much time I wasted back then, and how effective it was as a procrastination tool, I just had to try again. So I did. And, just to be clear, here's what I did:
 
-1) I wrote a *printing* app in 2019-2020. Nobody prints these days. *I* don't even print anymore. 
+1) I wrote a *printing* app in 2019-2020. Nobody prints these days. *I* don't even print anymore.
 2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. A full command-line interface. It can syntax-highlight over 200 different programming languages. It's cross-platfom. It's written in C# using the very latest .NET Core. It uses NodeJS and C++ under the covers. And more.
 3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
 

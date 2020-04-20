@@ -1,6 +1,5 @@
----
-title: Install
----
+# Installation Instructions
+
 ***winprint*** 2.0 is in beta. It works well (on my machine), and I've had a dozen or so users verify it works well for them; see [Issues](https://github.com/tig/winprint/issues).*
 
 *Please report any problems or feature requests [here](https://github.com/tig/winprint/issues).*
@@ -9,7 +8,7 @@ title: Install
 
 ### On Windows
 
-Go to [Releases](https://github.com/tig/winprint/releases). Copy the install script from the release page an paste into a PowerShell console. 
+Go to [Releases](https://github.com/tig/winprint/releases). Copy the install script from the release page an paste into a PowerShell console.
 
 Once installed, *winprint* can be started from the Start menu or as PowerShell CmdLet (`out-winprint`). The installer adds *winprint* to the `PATH`, but does _not_ automatically add an `import-module` command to the Powershell profile.
 
