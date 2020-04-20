@@ -8,9 +8,8 @@ Advanced source code and text file printing for PowerShell. The perfect tool for
 
 
 ```powershell
-PS > winprint -verbose
+winprint -verbose
 VERBOSE: Out-WinPrint 2.0.3.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-PS >
 ```
 
 ```powershell
@@ -18,7 +17,7 @@ get-content Program.cs | wp
 ```
 
 ```powershell
-ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winprint -p "HP LaserJet" -title $_.FullName -verbose}
+ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winprint -p "LaserJet" -title $_.FullName -verbose}
 ```
 
 ## Features

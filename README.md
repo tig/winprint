@@ -16,7 +16,6 @@ See what version is installed:
 ```powershell
 PS > out-winprint -verbose
 VERBOSE: Out-WinPrint 2.0.3.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-PS >
 ```
 
 Print `Program.cs` using the default sheet definition and default printer:
