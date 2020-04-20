@@ -24,9 +24,9 @@ namespace WinPrint.Core {
         /// </summary>
         public string FileName => GetFileNameOrTitle();
         /// <summary>
-        /// The Title of the print request. If Title was not provided, the FileName will be used.
+        /// The Title of the print request. 
         /// </summary>
-        public string Title => FullPath;
+        public string Title => svm.Title;
         /// <summary>
         /// The file name of the file without the extension and period ".".
         /// </summary>

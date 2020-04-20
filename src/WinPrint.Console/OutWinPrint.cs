@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
+using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Management.Automation;
@@ -442,6 +443,12 @@ namespace WinPrint.Console {
                 }
             }
 
+            // Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.
+            // Note, Title stays as was provided via -FileName or -Title
+            if (!string.IsNullOrEmpty(FileName) && !Path.IsPathFullyQualified(FileName)) {
+                FileName = Path.GetFullPath(FileName, SessionState.Path.CurrentFileSystemLocation.Path);
+            }
+
             SheetSettings sheet = null;
             string sheetID = null;
             try {
@@ -487,7 +494,7 @@ namespace WinPrint.Console {
             WriteProgress(rec);
 
             if (_verbose) {
-                Log.Information("FileName/Title:      {FileName}", FileName);
+                Log.Information("FileName:            {FileName}", FileName);
                 Log.Information("Title:               {title}", Title);
                 Log.Information("Content Type Engine: {cte}", contentTypeEngine);
                 Log.Information("Printer:             {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
@@ -496,7 +503,8 @@ namespace WinPrint.Console {
                 Log.Information("Sheet Definition:    {name} ({id})", sheet.Name, sheetID);
             }
 
-            _print.SheetViewModel.File = Title;
+            _print.SheetViewModel.File = FileName;
+            _print.SheetViewModel.Title = Title;
 
             _print.PrintingSheet += (s, sheetNum) => {
                 if (sheetNum > 60) {
@@ -513,6 +521,10 @@ namespace WinPrint.Console {
 
             try {
                 if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
+                    if (!Path.IsPathFullyQualified(FileName)) {
+                        FileName = Path.GetFullPath(FileName, SessionState.Path.CurrentFileSystemLocation.Path);
+                    }
+
                     await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
                 }
                 else {
@@ -522,6 +534,11 @@ namespace WinPrint.Console {
 
                     await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
                 }
+            }
+            catch (System.IO.DirectoryNotFoundException dnfe) {
+                Log.Error(dnfe, "Print failed.");
+                CleanUpUpdateHandler();
+                return;
             }
             catch (System.IO.FileNotFoundException fnfe) {
                 Log.Error(fnfe, "Print failed.");
