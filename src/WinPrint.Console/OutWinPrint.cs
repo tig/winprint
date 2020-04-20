@@ -54,16 +54,16 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the WinPrint sheet definition to use.
         /// </summary>
-        /// SheetDefintion - Implemented via IDynamicParameters.GetDynamicParameters
+        /// Sheetdefinition - Implemented via IDynamicParameters.GetDynamicParameters
 
         public enum PortraitLandscape {
             Portrait = 0,
             Landscape = 1
         }
         /// <summary>
-        /// If specfied, overrides the landscape setting in the sheet defintion.
+        /// If specfied, overrides the landscape setting in the sheet definition.
         /// </summary>
-        [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet defintion.",
+        [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet definition.",
             ParameterSetName = "Print")]
         public PortraitLandscape? Orientation { get; set; }
 
@@ -72,9 +72,9 @@ namespace WinPrint.Console {
             Yes = 1
         }
         /// <summary>
-        /// If specfied, overrides the line numbers setting in the sheet defintion.
+        /// If specfied, overrides the line numbers setting in the sheet definition.
         /// </summary>
-        [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet defintion (Yes, No).",
+        [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet definition (Yes, No).",
             ParameterSetName = "Print")]
         public YesNo? LineNumbers { get; set; }
 
@@ -452,8 +452,8 @@ namespace WinPrint.Console {
             SheetSettings sheet = null;
             string sheetID = null;
             try {
-                MyInvocation.BoundParameters.TryGetValue("SheetDefintion", out var sheetDefintion);
-                sheet = _print.SheetViewModel.FindSheet((string)sheetDefintion, out sheetID);
+                MyInvocation.BoundParameters.TryGetValue("Sheetdefinition", out var sheetdefinition);
+                sheet = _print.SheetViewModel.FindSheet((string)sheetdefinition, out sheetID);
 
                 rec.PercentComplete = 20;
                 rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
@@ -778,10 +778,10 @@ namespace WinPrint.Console {
                     printerNames.Count > 0 ? new ValidateSetAttribute(printerNames.ToArray()) : null
             }));
 
-            // -SheetDefintion
+            // -Sheetdefinition
             //  [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
             //    ParameterSetName = "Print")]
-            runtimeDict.Add("SheetDefintion", new RuntimeDefinedParameter("SheetDefintion", typeof(string), new Collection<Attribute>() {
+            runtimeDict.Add("Sheetdefinition", new RuntimeDefinedParameter("Sheetdefinition", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
                         HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\").",
                         ParameterSetName = "Print"

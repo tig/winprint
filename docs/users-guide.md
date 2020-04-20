@@ -262,7 +262,7 @@ PARAMETERS
         Dynamic?                     true
 
     -Title <string>
-        Title to be displayed in header/footer with the {Title} or {FileName} macros.
+        Title to be displayed in header/footer with the {Title} macro.
 
         Required?                    false
         Position?                    Named
