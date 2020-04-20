@@ -13,14 +13,14 @@
   }
 
   body{
-    background-color: #111625;
+    background-color: ##232323;
     font-size: 11pt;
     color: white;
     font-family: "Tahoma", arial, sans-serif;
 }
 
 a {
-    color: #717990;
+    color: #76787d;
 }
 
 h1, h2, h3 {
@@ -57,10 +57,10 @@ code {
     font-family: "Cascadia Code", "Lucida Console", Terminal, monospace;
     font-size: 10pt;
     color: white;
-    background: #393b40;
-    border: 1px solid #182854;
+    background: ##03050c;
+    border: 1px solid #39393c;
     border-radius: 2px;
-    padding: 0px 2px;
+    padding: 2px 2px;
 }
 
 pre code {
@@ -71,23 +71,21 @@ pre code {
     background: #ffe8d1;
 }
 
-a{
-    color: #717990;
-}
-
 a.document {
     background: url(../images/document.png) no-repeat 1px;
 }
 
 header {
-    background-color: #212e56;
-    border: 1px solid #8282b1;
+    background-color: ##55555;
+    border: 0px solid #000000;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 
 header li {
     border: unset;
-    background: linear-gradient(to top, #212e56 0%, #232323 100%);
-    box-shadow: inset 0px 1px 1px 0 #212e56;
+    background: linear-gradient(to top, #17191f 0%, #232323 100%);
+    box-shadow: inset 0px 1px 1px 0 #2d3a63;
 }
 
 header img{
