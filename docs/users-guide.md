@@ -2,15 +2,15 @@
 
 ## Features
 
-* Print source code with syntax highlighting and line numbering for over 200 programming languages and file formats.
+* Print source code with syntax highlighting and line numbering for over 200 programming langauges and file formats.
 * Print HTML files.
 * Print "multiple-pages-up" on one piece of paper (saves trees!)
-* Control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
+* Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* PowerShell-based command line interface.
-  * Complete control of printing features with dozens of paramters, including *Intellicode* parameter completion (using `tab` key).
-  * Allows **winprint** to be used from other applications or solutions. `out-winprint` is a drop-in replacement for `out-printer`.
+* The most capaple PowerShell printing tool enabling printing from the command line.
+  * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
+  * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `out-winprint` CmdLet is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
@@ -19,7 +19,7 @@
 
 Use **winprint** from the command line as a PowerShell CmdLet (`out-winprint`).
 
-**`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet PowerShell already provides.
+**`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet built into PowerShell.
 
 The **winprint** CmdLet must be imported into PowerShell for `out-winprint` to work. This is done by adding an `import-module` statement in the Powershell profile:
 
