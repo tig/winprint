@@ -90,6 +90,111 @@ header img{
 }
 
 
+/* Section - for main page content */
+
+section {
+    width:690px;
+    float:right;
+    padding-bottom:50px;
+  }
+
+
+  /* Footer */
+
+  footer {
+    width:170px;
+    float:left;
+    position:fixed;
+    bottom:10px;
+      padding-left: 50px;
+  }
+
+  @media print, screen and (max-width: 960px) {
+
+    div.wrapper {
+      width:auto;
+      margin:0;
+    }
+
+    header, section, footer {
+      float:none;
+      position:static;
+      width:auto;
+    }
+
+      footer {
+          border-top: 1px solid #ccc;
+          margin:0 84px 0 50px;
+          padding:0;
+      }
+
+    header {
+      padding-right:320px;
+    }
+
+    section {
+      padding:20px 84px 20px 50px;
+      margin:0 0 20px;
+    }
+
+    header a small {
+      display:inline;
+    }
+
+    header ul {
+      position:absolute;
+      right:130px;
+      top:84px;
+    }
+  }
+
+  @media print, screen and (max-width: 720px) {
+    body {
+      word-wrap:break-word;
+    }
+
+    header {
+      padding:10px 20px 0;
+          margin-right: 0;
+    }
+
+      section {
+      padding:10px 0 10px 20px;
+      margin:0 0 30px;
+    }
+
+      footer {
+          margin: 0 0 0 30px;
+      }
+
+    header ul, header p.view {
+      position:static;
+    }
+  }
+
+  @media print, screen and (max-width: 480px) {
+
+    header ul li.download {
+      display:none;
+    }
+
+      footer {
+          margin: 0 0 0 20px;
+      }
+
+      footer a{
+          display:block;
+      }
+
+  }
+
+  @media print {
+    body {
+      padding:0.4in;
+      font-size:12pt;
+      color:#444;
+    }
+  }
 
 
 
