@@ -39,7 +39,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the printer to print to.
         /// The alias allows "lp -P printer".
-        /// Name alias: becuase that's what out-printer uses.
+        /// Name alias: because that's what out-printer uses.
         /// </summary>
         [Parameter(HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",
             ParameterSetName = "Print"), ArgumentCompleter(typeof(PrinterNameCompleter))]
@@ -54,14 +54,14 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the WinPrint sheet definition to use.
         /// </summary>
-        /// Sheetdefinition - Implemented via IDynamicParameters.GetDynamicParameters
+        /// SheetDefinition - Implemented via IDynamicParameters.GetDynamicParameters
 
         public enum PortraitLandscape {
             Portrait = 0,
             Landscape = 1
         }
         /// <summary>
-        /// If specfied, overrides the landscape setting in the sheet definition.
+        /// If specified, overrides the landscape setting in the sheet definition.
         /// </summary>
         [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet definition.",
             ParameterSetName = "Print")]
@@ -72,7 +72,7 @@ namespace WinPrint.Console {
             Yes = 1
         }
         /// <summary>
-        /// If specfied, overrides the line numbers setting in the sheet definition.
+        /// If specified, overrides the line numbers setting in the sheet definition.
         /// </summary>
         [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet definition (Yes, No).",
             ParameterSetName = "Print")]
@@ -280,7 +280,7 @@ namespace WinPrint.Console {
 
         #region PowerShell AsyncCmdlet Overrides
         /// <summary>
-        /// Read command line parameters. 
+        /// Read command line parameters.
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
         protected override async Task BeginProcessingAsync() {
@@ -291,11 +291,11 @@ namespace WinPrint.Console {
                 ServiceLocator.Current.TelemetryService.Start("out-winprint");
 
                 // AsyncCmdlet base adds each cmdlet instance to PowerShellSink.Instance; this call configures
-                // the Debug and File LogEventLevel's only 
+                // the Debug and File LogEventLevel's only
                 ServiceLocator.Current.LogService.Start("out-winprint", PowerShellSink.Instance, debug: _debug, verbose: _verbose);
             }
             else {
-                // Change Console logging as specififed by paramters (e.g. -verbose and/or -debug)
+                // Change Console logging as specified by paramters (e.g. -verbose and/or -debug)
                 // ConsoleLevelSwitch is for the PowerShellSink logger only
                 ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_verbose ? LogEventLevel.Information : LogEventLevel.Warning);
                 ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_debug ? LogEventLevel.Debug : ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel);
@@ -452,8 +452,8 @@ namespace WinPrint.Console {
             SheetSettings sheet = null;
             string sheetID = null;
             try {
-                MyInvocation.BoundParameters.TryGetValue("Sheetdefinition", out var sheetdefinition);
-                sheet = _print.SheetViewModel.FindSheet((string)sheetdefinition, out sheetID);
+                MyInvocation.BoundParameters.TryGetValue("SheetDefinition", out var sheetDefinition);
+                sheet = _print.SheetViewModel.FindSheet((string)sheetDefinition, out sheetID);
 
                 rec.PercentComplete = 20;
                 rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
@@ -467,7 +467,7 @@ namespace WinPrint.Console {
                     sheet.ContentSettings.LineNumbers = LineNumbers == YesNo.Yes;
                 }
 
-                // Must set landsacpe after printer/paper selection
+                // Must set landscape after printer/paper selection
                 _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
                 _print.SheetViewModel.SetSheet(sheet);
             }
@@ -477,7 +477,7 @@ namespace WinPrint.Console {
                 return;
             }
 
-            // If Langauge is provided, use it instead of CTE. 
+            // If Langauge is provided, use it instead of CTE.
             if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentTypeEngine)) {
                 if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentTypeEngine)) {
                     // If neither were specified, smartly pick CTE
@@ -778,10 +778,10 @@ namespace WinPrint.Console {
                     printerNames.Count > 0 ? new ValidateSetAttribute(printerNames.ToArray()) : null
             }));
 
-            // -Sheetdefinition
+            // -SheetDefinition
             //  [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
             //    ParameterSetName = "Print")]
-            runtimeDict.Add("Sheetdefinition", new RuntimeDefinedParameter("Sheetdefinition", typeof(string), new Collection<Attribute>() {
+            runtimeDict.Add("SheetDefinition", new RuntimeDefinedParameter("SheetDefinition", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
                         HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\").",
                         ParameterSetName = "Print"

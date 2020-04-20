@@ -91,7 +91,7 @@ Some **`out-winprint`** parameters support *Intellisense*, meaning that you can 
 
 * **`-PaperSize`** - *Intellisense* values are the names of all papers sizes supported by whatever printer has been specified by `-PrinterName`.
 
-* **`-SheetDefintion`** - *Intellisense* values are the names of all current Sheet Definitions defined in the `WinPrint.config.json` file. E.g. `"Default 2-Up"`.
+* **`-SheetDefinition`** - *Intellisense* values are the names of all current Sheet Definitions defined in the `WinPrint.config.json` file. E.g. `"Default 2-Up"`.
 
 * **`-ContentTypeEngine`** - *Intellisense* values are the names of all current Content Type Engines **winprint** supports (`text/plain`, `text/html`, and `text/code`).
 
@@ -115,7 +115,7 @@ NAME
 SYNTAX
     Out-WinPrint [<CommonParameters>]
 
-    Out-WinPrint [[-FileName] <string>] [-PrinterName <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-Language <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefintion {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/html | text/code | text/plain}] [<CommonParameters>]
+    Out-WinPrint [[-FileName] <string>] [-PrinterName <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-Language <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefinition {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/html | text/code | text/plain}] [<CommonParameters>]
 
     Out-WinPrint [-InstallUpdate] [-Force] [<CommonParameters>]
 
@@ -212,7 +212,7 @@ PARAMETERS
         Dynamic?                     false
 
     -LineNumbers <OutWinPrint+YesNo>
-         If specfied, overrides the line numbers setting in the sheet defintion (Yes, No).
+         If specfied, overrides the line numbers setting in the sheet definition (Yes, No).
 
         Required?                    false
         Position?                    Named
@@ -222,7 +222,7 @@ PARAMETERS
         Dynamic?                     false
 
     -Orientation <OutWinPrint+PortraitLandscape>
-        If specified (Yes or No) overrides the landscape setting in the sheet defintion.
+        If specified (Yes or No) overrides the landscape setting in the sheet definition.
 
         Required?                    false
         Position?                    Named
@@ -251,7 +251,7 @@ PARAMETERS
         Aliases                      Name
         Dynamic?                     false
 
-    -SheetDefintion <string>
+    -SheetDefinition <string>
         Name of the WinPrint sheet definition to use (e.g. "Default 2-Up").
 
         Required?                    false
@@ -391,7 +391,7 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 2. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
 
-3. **`text/code`** - The text/code CTE supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` in the `%appdata%\Kindel Systems\winprint` folder. The styles defined in this format shold match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with **winprint**. For example, to use the Coy theme copy `prism-coy.css` into the `%appdata%\Kindel Systems\winprint` and rename it `prism-winprint.css`.
+3. **`text/code`** - The text/code CTE supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` in the `%appdata%\Kindel Systems\winprint` folder. The styles defined in this format should match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with **winprint**. For example, to use the Coy theme copy `prism-coy.css` into the `%appdata%\Kindel Systems\winprint` and rename it `prism-winprint.css`.
 
 The extension of the file being printed (e.g. `.cs`) determines which Content Type rendering engine will be used. **winprint** has a built-in library of hundreds of file extension to content type/language mappings.
 
@@ -403,9 +403,9 @@ To associate a file extension with a particular Content Type Engine modify the `
     }
 ```
 
-For associating file extentions with a particular programming language using the `text/code` Content Type Engine see below.
+For associating file extensions with a particular programming language using the `text/code` Content Type Engine see below.
 
-The `out-winprint` paramter `-ContentTypeEngine` overrides content type and language detection.
+The `out-winprint` parameter `-ContentTypeEngine` overrides content type and language detection.
 
 ## Language Associations
 
@@ -413,7 +413,7 @@ The `out-winprint` paramter `-ContentTypeEngine` overrides content type and lang
 
 ### Adding or Changing `text/code` Language Associations
 
-To associate a file extension with a language spported by `text/code` modify the `files.associations` and `languages` sections of `WinPrint.config.json` appropriately. For example to associate files with a `.config` extension with the JSON langauge  add a line as shown below (the `WinPrint.config.json` generated when **winprint** runs the first time already provides this example, as an example):
+To associate a file extension with a language supported by `text/code` modify the `files.associations` and `languages` sections of `WinPrint.config.json` appropriately. For example to associate files with a `.config` extension with the JSON langauge  add a line as shown below (the `WinPrint.config.json` generated when **winprint** runs the first time already provides this example, as an example):
 
 ```json
     "files.associations": {
@@ -446,7 +446,7 @@ For example to enable the [Icon Programming Language](https://en.wikipedia.org/w
 
 ## Logging & Diagnostics
 
-**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using the command line (`out-winprint`) specifiying the `-Debug` parameter switch will cause all diagnostic log entries to go to the console as well as the log file.
+**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using the command line (`out-winprint`) specifying the `-Debug` parameter switch will cause all diagnostic log entries to go to the console as well as the log file.
 
 Additional printing diagnostics can be turned on via settings in the configuration file.
 
@@ -471,7 +471,7 @@ To help diagnose printer-related rendering issues, or issues with Sheet Definiti
   "printPageBounds": false
 ```
 
-To help daignose why content may be rendering incorrectly, set `diagnostics` to `true` in any `contentSettings` section. This will cause the Content Type Engine to print/display diagnostic rules.
+To help diagnose why content may be rendering incorrectly, set `diagnostics` to `true` in any `contentSettings` section. This will cause the Content Type Engine to print/display diagnostic rules.
 
 ```json
       "contentSettings": {
