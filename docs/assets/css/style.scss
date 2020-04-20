@@ -20,12 +20,14 @@
 }
 
 .wrapper {
-    width: 1000px;
-}
+    width:940px;
+  }
 
-section{
-    width: 700px;
-}
+section {
+    width:700px;
+    float:right;
+    padding-bottom:50px;
+  }
 
 a {
     color: #76787d;
@@ -86,7 +88,7 @@ header {
     border: 0px solid #000000;
     border-top-right-radius: 16px;
     border-bottom-right-radius: 16px;
-    padding: 34px 25px 22px 40px;
+    padding: 34px 25px 22px 25px;
     margin: 10px 5px 0 0;
 }
 
