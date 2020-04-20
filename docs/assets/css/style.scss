@@ -19,6 +19,14 @@
     font-family: "Tahoma", arial, sans-serif;
 }
 
+.wrapper {
+    width: 1000px;
+}
+
+section{
+    width: 700px;
+}
+
 a {
     color: #76787d;
 }
@@ -77,6 +85,7 @@ header {
     border: 0px solid #000000;
     border-top-right-radius: 16px;
     border-bottom-right-radius: 16px;
+    padding: 34px 25px 22px 40px;
 }
 
 header li {
