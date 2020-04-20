@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.0.6124</Version>
+    <Version>2.0.0.6125</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>

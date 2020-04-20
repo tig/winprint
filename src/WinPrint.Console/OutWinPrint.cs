@@ -94,10 +94,10 @@ namespace WinPrint.Console {
         public string Language { get; set; }
 
         /// <summary>
-        /// Optional FileName - will be displayed in header/footer and as title of print job.
+        /// Optional FileName - will be displayed in header/footer and as title of print job (if -Title is not provided).
         /// If $input is not available, FileName will be used as the path to the file to print.
         /// </summary>
-        [Parameter(Position = 0, HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +
+        [Parameter(Position = 0, HelpMessage = "FileName to be displayed in header/footer with the {FileName} (and {Title} if -Title is not provided) macros. " +
             "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. " +
             "If $input is not available, FileName will be used as the path to the file to print.",
             ParameterSetName = "Print")]
@@ -107,7 +107,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional FileName - will be displayed in header/footer and as title of print job.
         /// </summary>
-        [Parameter(HelpMessage = "Title to be displayed in header/footer with the {Title} or {FileName} macros.",
+        [Parameter(HelpMessage = "Title to be displayed in header/footer with the {Title} macro.",
             ParameterSetName = "Print")]
         public string Title { get; set; }
 
