@@ -44,6 +44,7 @@ h1.header {
 }
 
 pre {
+    font-size: 10pt;
     color: #ccd0dc;
     padding: 4px 12px;
     border-radius: 4px;
@@ -57,18 +58,14 @@ code {
     font-family: "Cascadia Code", "Lucida Console", Terminal, monospace;
     font-size: 10pt;
     color: white;
-    background: #03050c;
-    border: 1px solid #39393c;
+    background: #000000;
+    border: 1px solid #381515;
     border-radius: 2px;
     padding: 2px 2px;
 }
 
 pre code {
     border: unset;
-}
-
-.highlight {
-    background: #ffe8d1;
 }
 
 a.document {
