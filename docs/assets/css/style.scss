@@ -12,13 +12,39 @@
     vertical-align: middle;
   }
 
-body{
-    background-color: #fff7ed;
+  body{
+    background-color: #111625;
     font-size: 11pt;
+    color: white;
+    font-family: "Tahoma", arial, sans-serif;
+}
+
+a {
+    color: #717990;
+}
+
+h1, h2, h3 {
+    font-family: "Tahoma", arial, sans-serif;
+    line-height: 1.3;
+    font-weight: normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #ccd0dc;
+    margin: 36px 0 10px;
+}
+
+h1.header {
+    font-family: "Tahoma", arial, sans-serif;
+    font-size: 30px;
+    font-weight: 300;
+    line-height: 1.3em;
+    border-bottom: none;
+    margin-top: 0;
 }
 
 pre {
-    border: 1px solid #ffd1b4;
+    color: #ccd0dc;
     padding: 4px 12px;
     border-radius: 4px;
     overflow: auto;
@@ -30,9 +56,9 @@ pre {
 code {
     font-family: "Cascadia Code", "Lucida Console", Terminal, monospace;
     font-size: 10pt;
-    color: #000;
-    background: #ffe8d1;
-    border: 1px solid #ffd1b4;
+    color: white;
+    background: #393b40;
+    border: 1px solid #182854;
     border-radius: 2px;
     padding: 0px 2px;
 }
@@ -46,7 +72,7 @@ pre code {
 }
 
 a{
-    color: #da4e00;
+    color: #717990;
 }
 
 a.document {
@@ -54,14 +80,14 @@ a.document {
 }
 
 header {
-    background-color: #c05a24;
-    border: 1px solid #943a08;
+    background-color: #212e56;
+    border: 1px solid #8282b1;
 }
 
 header li {
     border: unset;
-    background: linear-gradient(to top, #444 0%, #232323 100%);
-    box-shadow: inset 0px 1px 1px 0 #444;
+    background: linear-gradient(to top, #212e56 0%, #232323 100%);
+    box-shadow: inset 0px 1px 1px 0 #212e56;
 }
 
 header img{
