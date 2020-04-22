@@ -39,7 +39,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         // All of the lines of the text file, after reflow/line-wrap
-        private AnsiWinPrintDocument _ansiDocument;
+        private DynamicScreen _screen;
 
         private float _lineHeight;
         private int _linesPerPage;
@@ -69,7 +69,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     _cachedFont.Dispose();
                 }
 
-                _ansiDocument = null;
+                _screen = null;
             }
             _disposed = true;
         }
@@ -140,27 +140,59 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             IAnsiDecoder _vt100 = new AnsiDecoder();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            _ansiDocument = new AnsiWinPrintDocument(_minLineLen); 
+            _screen = new DynamicScreen(_minLineLen);
             _vt100.Encoding = CodePagesEncodingProvider.Instance.GetEncoding("ibm437");
-            _vt100.Subscribe(_ansiDocument);
+            _vt100.Subscribe(_screen);
 
             var bytes = _vt100.Encoding.GetBytes(document);
             if (bytes != null && bytes.Length > 0) {
-                try {
-                    _vt100.Input(bytes);
-                } catch (Exception e) {
-
-                }
+                _vt100.Input(bytes);
             }
 
-            var n = (int)Math.Ceiling(_ansiDocument.Lines.Count / (double)_linesPerPage);
+#if DEBUG
+            _screen[_screen.Lines.Count][0] = new Character('0') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
 
-            Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, _linesPerPage, _ansiDocument.Lines.Count);
+            for (var x = 0; x < _screen.Width; x++) {
+                var c = _screen[x, x];
+                if (c == null) c = new Character('*');
+                _screen[x,x] = new Character(c.Char) { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
+            }
 
+            for (var x = 0; x < 20; x++) {
+                _screen[11][x] = new Character((char)((int)'0' + x)) { Attributes = new GraphicAttributes() { 
+                    Bold = true, 
+                    ForegroundColor = Color.Red } };
+            }
+
+            for (var x = 0; x < _screen.Width; x++) {
+                var c = _screen[x,20];
+                if (c == null) c = new Character(' ');
+                _screen[20][x] = new Character(c.Char) {
+                    Attributes = new GraphicAttributes() {
+                        Bold = true,
+                        ForegroundColor = Color.Green
+                    }
+                };
+            }
+
+            _screen[8][0] = new Character('_') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
+            _screen[23][31] = new Character('>') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
+            _screen[57][0] = new Character('{') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
+
+            _screen.CursorPosition = new Point(0, 0);
+
+            var w = new StreamWriter("PygmentsCte.txt");
+            w.Write(_screen);
+            w.Close();
+#endif
+
+
+            var n = (int)Math.Ceiling(_screen.Lines.Count / (double)_linesPerPage);
+
+            Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, _linesPerPage, _screen.Lines.Count);
             return await Task.FromResult(n);
         }
 
-        
         private SizeF MeasureString(Graphics g, System.Drawing.Font font, string text) {
             return MeasureString(g, text, font, out var charsFitted, out var linesFilled);
         }
@@ -203,7 +235,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             LogService.TraceMessage($"{pageNum}");
-            if (_ansiDocument == null) {
+            if (_screen == null) {
                 Log.Debug("_ansiDocument must not be null");
                 return;
             }
@@ -213,15 +245,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             // Paint each line of the file 
             var firstLineOnPage = _linesPerPage * (pageNum - 1);
             int i;
-            for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _ansiDocument.Lines.Count; i++) {
+            for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _screen.Lines.Count; i++) {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
-                var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_ansiDocument.Lines[i].LineNumber}").Width) : 0;
+                var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width) : 0;
                 // Line #s
-                if (_ansiDocument.Lines[i].LineNumber > 0) {
+                if (_screen.Lines[i].LineNumber > 0) {
                     if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
                         // TOOD: Figure out how to make the spacig around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
-                        g.DrawString($"{_ansiDocument.Lines[i].LineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
+                        g.DrawString($"{_screen.Lines[i].LineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
                     }
                 }
 
@@ -233,7 +265,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
                 // Text
                 float xPos = lineNumberWidth;
-                foreach (var run in _ansiDocument.Lines[i].Runs) {
+                foreach (var run in _screen.Lines[i].Runs) {
                     System.Drawing.Font font = _cachedFont;
                     if (run.Attributes.Bold) {
                         if (run.Attributes.Italic) {
@@ -250,7 +282,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     if (run.Attributes.ForegroundColor != Color.White)
                         fg = run.Attributes.ForegroundColor;
 
-                    var text = _ansiDocument.Lines[i].Text[run.Start..(run.Start + run.Length)];
+                    var text = _screen.Lines[i].Text[run.Start..(run.Start + run.Length)];
                     var width = MeasureString(g, font, text).Width;
                     RectangleF rect = new RectangleF(xPos, yPos, width, _lineHeight);
                     g.DrawString(text, font, new SolidBrush(fg), rect, StringFormat);
@@ -261,22 +293,35 @@ namespace WinPrint.Core.ContentTypeEngines {
                     g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
                 }
             }
+
+            if (_screen.CursorPosition.Y >= firstLineOnPage && _screen.CursorPosition.Y < firstLineOnPage + _linesPerPage) {
+                var text = $"{(char)219}";
+                var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth) : 0;
+
+                var width = MeasureString(g, _cachedFont, text).Width;
+                RectangleF rect = new RectangleF(x + _screen.CursorPosition.X * width, _screen.CursorPosition.Y * _lineHeight, width, _lineHeight);
+                g.DrawString(text, _cachedFont, new SolidBrush(Color.Blue), rect, StringFormat);
+            }
+
             Log.Debug("Painted {lineOnPage} lines.", i - 1);
         }
-
     }
 
-    public class AnsiWinPrintDocument : IAnsiDecoderClient, IEnumerable<Character> {
+    /// <summary>
+    /// This is a version of libVT100.Screen that supports:
+    /// - Dynamic height - grows as lines are added
+    /// - Runs of CharacterAttributes enabling optimized painting
+    /// - Tracks line #s of \n terminated lines (original, not wrapped lines)
+    /// </summary>
+    public class DynamicScreen : IAnsiDecoderClient, IEnumerable<Character> {
 
         /// <summary>
         /// A run of text encoded with a set of Ansi SGR parameters
-        /// </summary>
+        /// </summary>  
         public class Run {
-            public int Start{ get; set; }
+            public int Start { get; set; }
             public int Length { get; set; }
-
-            public GraphicAttributes Attributes { get; set;  }
-
+            public GraphicAttributes Attributes { get; set; }
         }
 
         /// <summary>
@@ -285,50 +330,118 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// and which are the result of wrapping.
         /// </summary>
         public class Line {
+            public string Text { get; set; } = string.Empty;
             /// <summary>
             /// The line number that will be printed next to the line.
             /// If 0 the line exists because of line wrapping and no number will be printed.
             /// </summary>
             public int LineNumber { get; set; }
-            public List<Run> Runs { get; set; } 
-
-            public string Text { get; set; } = string.Empty;
+            public List<Run> Runs { get; set; }
 
             public Line() {
                 Runs = new List<Run>(); // contents of this part of the line
             }
 
             /// <summary>
-            /// 
+            /// Gets the attributed character found at the specified column in this line.
             /// </summary>
             public Character this[int col] {
                 get {
-                    // TODO: Scan through all Runs finding char #col
-                    var run = RunFromColumn(col);
-                    return new Character(Text[col]) { Attributes = run.Attributes };
+                    return CharacterFromColumn(col);
                 }
                 set {
-                    //CheckColumnRow(_column, _row);
-                    var run = RunFromColumn(col);
-                    throw new NotImplementedException();
+                    // See if this makes the line longer
+                    if (col >= Text.Length) {
+                        // TODO: Modify Character to support IsEqual and extend run
 
-                    //Lines[_row] = value;
+                        // Pad with spaces
+                        Runs.Add(new Run() { Start = Runs.Sum(r => r.Length), Length = col - Text.Length });
+                        Text += new string(' ', col - Text.Length);
+
+                        // Start a new run
+                        Runs.Add(new Run() { Attributes = value.Attributes, Length = 1, Start = col });
+                        Text += value.Char;
+                    }
+                    else {
+                        // Setting an existing value
+                        CheckColumn(col);
+                        var run = 0;
+                        for (; run < Runs.Count && (col - Runs.ToArray()[0..(run + 1)].Sum(r => r.Length)) >= 0; run++) {
+                        }
+
+                        if (run > Runs.Count) {
+                            throw new ArgumentOutOfRangeException($"The run ({run}) is larger than the number of runs ({Runs.Count})");
+                        }
+
+                        if (Runs[run].Length == 1) {
+                            // Just overwrite it
+                            Runs[run].Attributes = value.Attributes;
+                            var sb = new StringBuilder(Text);
+                            sb[col] = value.Char;
+                            Text = sb.ToString();
+                        }
+                        else {
+                            var newRun = new Run() { Attributes = value.Attributes, Length = 1, Start = col };
+                            if (col == 0) {
+                                Runs[run].Length -= 1;
+                                Runs[run].Start++;
+                                Runs.Insert(0, newRun);
+                            }
+                            else {
+                                // Need to split this run into two and insert a new one between
+                                var splitStart = Runs.ToArray()[0..(run + 1)].Sum(r => r.Length) - col;
+                                var splitRun = new Run() { Attributes = Runs[run].Attributes, Length = splitStart-1, Start = col + 1 };
+                                Runs[run].Length -= splitStart;
+                                Runs.Insert(run + 1, newRun);
+                                Runs.Insert(run + 2, splitRun);
+                            }
+                            // Overwrite the char
+                            var sb = new StringBuilder(Text);
+                            sb[col] = value.Char;
+                            Text = sb.ToString();
+
+                        }
+                    }
                 }
             }
 
+            /// <summary>
+            /// Returns the Run that holds the chracter at column col
+            /// </summary>
+            /// <param name="col"></param>
+            /// <returns></returns>
             public Run RunFromColumn(int col) {
+                CheckColumn(col);
                 var run = 0;
-                for (; run < Runs.Count && (col - Runs[run].Length) >= 0; run++) {
+                for (; run < Runs.Count && (col - Runs.ToArray()[0..(run+1)].Sum(r => r.Length)) >= 0; run++) {
                 }
 
-                if (run > Runs.Count) {
+                if (run >= Runs.Count) {
                     throw new ArgumentOutOfRangeException($"The run ({run}) is larger than the number of runs ({Runs.Count})");
                 }
 
                 return Runs[run];
             }
 
-            internal string originalText;
+            public Character CharacterFromColumn(int col) {
+                if (col < Text.Length) {
+                    var run = 0;
+                    for (; run < Runs.Count && (col - Runs.ToArray()[0..(run+1)].Sum(r => r.Length)) > 0;) {
+                        run++;
+                    }
+
+                    if (run < Runs.Count)
+                        return new Character(Text[col]) { Attributes = Runs[run].Attributes };
+                }
+
+                return null; // new Character(' ');  
+            }
+
+            protected void CheckColumn(int column) {
+                if (column >= Text.Length) {
+                    throw new ArgumentOutOfRangeException($"The column number ({column}) is larger than the width ({Text.Length})");
+                }
+            }
         }
 
         /// <summary>
@@ -346,16 +459,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         protected bool _showCursor;
         //protected Character[,] m_screen;
         protected GraphicAttributes _currentAttributes;
-        protected int _width;
-
-        public int Width {
-            get {
-                return _width;
-            }
-            set {
-                _width = value;
-            }
-        }
+ 
+        public int Width { get; set; }
 
         public Point CursorPosition {
             get {
@@ -363,8 +468,10 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
             set {
                 if (_cursorPosition != value) {
-                    CheckColumnRow(value.X, value.Y);
-
+                    // add a new line if needed.
+                    if (_cursorPosition.Y >= Lines.Count) {
+                        Lines.Add(new Line() { LineNumber = 0 }); // Note no increment
+                    }
                     _cursorPosition = value;
                 }
             }
@@ -372,28 +479,23 @@ namespace WinPrint.Core.ContentTypeEngines {
 
         public Line this[int row] {
             get {
-                CheckRow(row);
+                if (row >= Lines.Count)
+                    Lines.Add(new Line() { LineNumber = ++NumLines });
                 return Lines[row];
-            }
-            set {
-                CheckRow(row);
-                Lines[row] = value;
             }
         }
 
         public Character this[int column, int row] {
             get {
-                CheckColumnRow(column, row);
                 return this[row][column];
 
             }
             set {
-                CheckColumnRow(column, row);
                 this[row][column] = value;
             }
         }
 
-        public AnsiWinPrintDocument(int width) {
+        public DynamicScreen(int width) {
             Width = width;
             _savedCursorPosition = Point.Empty;
             _currentAttributes.Reset();
@@ -411,7 +513,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         protected void CheckRow(int row) {
-            if (row > Lines.Count) {
+            if (row >= Lines.Count) {
                 throw new ArgumentOutOfRangeException($"The row number ({row}) is larger than the number of lines ({Lines.Count})");
             }
         }
@@ -419,12 +521,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         public void CursorForward() {
             if (_cursorPosition.X + 1 >= Width) {
                 CursorPosition = new Point(0, _cursorPosition.Y + 1);
-                // add a new line if needed.
-                if (Lines.Count <= CursorPosition.Y) {
-                    Lines.Add(new Line() { LineNumber = NumLines }); // Note no increment
-                }
-                int start = Lines[CursorPosition.Y].Runs.Sum(r => r.Length);
-                Lines[CursorPosition.Y].Runs.Add(new Run() { Attributes = _currentAttributes, Start = start });
             }
             else {
                 CursorPosition = new Point(_cursorPosition.X + 1, _cursorPosition.Y);
@@ -441,9 +537,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         public void CursorDown() {
-            if (_cursorPosition.Y + 1 >= Lines.Count) {
-                throw new Exception("Can not move further down!");
-            }
             CursorPosition = new Point(_cursorPosition.X, _cursorPosition.Y + 1);
         }
 
@@ -455,22 +548,23 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         public override String ToString() {
-            throw new NotImplementedException();
-            return base.ToString();
-
-            //StringBuilder builder = new StringBuilder();
-            //for (int y = 0; y < _lines.Length; ++y) {
-            //    for (int x = 0; x < Width; ++x) {
-            //        if (this[x, y].Char > 127) {
-            //            builder.Append('!');
-            //        }
-            //        else {
-            //            builder.Append(this[x, y].Char);
-            //        }
-            //    }
-            //    builder.Append(Environment.NewLine);
-            //}
-            //return builder.ToString();
+            StringBuilder builder = new StringBuilder();
+            for (int y = 0; y < Lines.Count; ++y) {
+                for (int x = 0; x < Width; ++x) {
+                    var c = this[x, y];
+                    if (c != null) {
+                        if (c.Char > 127) {
+                            builder.Append('!');
+                        }
+                        else {
+                            builder.Append(c.Char);
+                        }
+                    }
+                }
+                if (y < Lines.Count-1)
+                    builder.Append(Environment.NewLine);
+            }
+            return builder.ToString();
         }
 
         IEnumerator<Character> IEnumerable<Character>.GetEnumerator() {
@@ -488,11 +582,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         void IAnsiDecoderClient.Characters(IAnsiDecoder _sender, char[] _chars) {
             foreach (char ch in _chars) {
                 if (ch == '\n') {
-
                     // Add a new line, incrementing NumLines because this is a new "real" line
                     Lines.Add(new Line() { LineNumber = ++NumLines });
-                    Lines[^1].Runs.Add(new Run() { Attributes = _currentAttributes, Start = 0 });
-
                     (this as IAnsiDecoderClient).MoveCursorToBeginningOfLineBelow(_sender, 1);
                 }
                 else if (ch == '\r') {
@@ -503,9 +594,11 @@ namespace WinPrint.Core.ContentTypeEngines {
                     if (Lines.Count <= CursorPosition.Y) {
                         // Increment NumLines because this can only happen (?) when this is the first line of the doc
                         Lines.Add(new Line() { LineNumber = ++NumLines });
-                        Lines[^1].Runs.Add(new Run() { Attributes = _currentAttributes, Start = 0 });
                     }
 
+                    if (this[CursorPosition.Y].Runs.Count == 0) {
+                        Lines[CursorPosition.Y].Runs.Add(new Run() { Attributes = _currentAttributes, Start = 0 });
+                    }
                     this[CursorPosition.Y].Text += ch;
                     this[CursorPosition.Y].Runs[^1].Length++;
                     CursorForward();
@@ -522,7 +615,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         Size IAnsiDecoderClient.GetSize(IAnsiDecoder _sender) {
-            return new Size(Lines.Count, Width) ;
+            return new Size(Lines.Count, Width);
         }
 
         void IAnsiDecoderClient.MoveCursor(IAnsiDecoder _sender, Direction _direction, int _amount) {
@@ -580,7 +673,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         void IAnsiDecoderClient.MoveCursorTo(IAnsiDecoder _sender, Point _position) {
-           CheckColumnRow(_position.X, _position.Y);
+            CheckColumnRow(_position.X, _position.Y);
 
             CursorPosition = _position;
         }
@@ -818,16 +911,17 @@ namespace WinPrint.Core.ContentTypeEngines {
                         throw new Exception("Unknown rendition command");
                 }
 
-                // This is a new Run. If there's no Line, allocate one
-                if (Lines.Count <= CursorPosition.Y) {
-                    // Increment NumLines because this can only happen (?) when this is the first line of the doc
-                    Lines.Add(new Line() { LineNumber = ++NumLines });
-                }
-                
-                // Add a new Run to the current line
-                int start  = Lines[CursorPosition.Y].Runs.Sum(r => r.Length);
-                Lines[CursorPosition.Y].Runs.Add(new Run() { Attributes = _currentAttributes, Start = start });
             }
+
+            // This is a new Run. If there's no Line, allocate one
+            if (Lines.Count <= CursorPosition.Y) {
+                // Increment NumLines because this can only happen (?) when this is the first line of the doc
+                Lines.Add(new Line() { LineNumber = ++NumLines });
+            }
+
+            // Add a new Run to the current line
+            int start = Lines[CursorPosition.Y].Runs.Sum(r => r.Length);
+            Lines[CursorPosition.Y].Runs.Add(new Run() { Attributes = _currentAttributes, Start = start });
         }
 
         void IDisposable.Dispose() {
