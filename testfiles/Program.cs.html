@@ -1,352 +1,59 @@
+<div class="highlight"><pre><span></span><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Collections.Generic</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Linq</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Windows.Forms</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">CommandLine</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">CommandLine.Text</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">WinPrint.Core.Models</span><span class="p">;</span>
 
-<!-- saved from url=(0023)http://localhost:49203/ -->
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>c:\Users\ckindel\source\winprint\tests\Program.cs</title>
-    <style>
-    
-    body
-    {
-      margin:0;
-      padding:0;
-      tab-size:4
-      }
-/*
+<span class="k">namespace</span> <span class="nn">WinPrint</span> <span class="p">{</span>
+    <span class="k">static</span> <span class="k">class</span> <span class="nc">Program</span> <span class="p">{</span>
+        <span class="c1">/// &lt;summary&gt;</span>
+        <span class="c1">///  The main entry point for the application.</span>
+        <span class="c1">/// &lt;/summary&gt;</span>
+<span class="na">        [STAThread]</span>
+        <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//var settings = new CefSettings();</span>
+            <span class="c1">//settings.BrowserSubprocessPath = @&quot;x86\CefSharp.BrowserSubprocess.exe&quot;;</span>
+            <span class="c1">//Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);</span>
 
-Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
+            <span class="k">if</span> <span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">Length</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">var</span> <span class="n">parser</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Parser</span><span class="p">(</span><span class="n">with</span> <span class="p">=&gt;</span> <span class="n">with</span><span class="p">.</span><span class="n">EnableDashDash</span> <span class="p">=</span> <span class="k">true</span><span class="p">);</span>
+                <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="n">parser</span><span class="p">.</span><span class="n">ParseArguments</span><span class="p">&lt;</span><span class="n">Options</span><span class="p">&gt;(</span><span class="n">args</span><span class="p">);</span>
+                <span class="n">result</span>
+                    <span class="p">.</span><span class="n">WithParsed</span><span class="p">&lt;</span><span class="n">Options</span><span class="p">&gt;(</span><span class="n">o</span> <span class="p">=&gt;</span> <span class="p">{</span>
+                        <span class="c1">// copy Files</span>
+                        <span class="n">ModelLocator</span><span class="p">.</span><span class="n">Current</span><span class="p">.</span><span class="n">Options</span><span class="p">.</span><span class="n">Files</span> <span class="p">=</span> <span class="n">o</span><span class="p">.</span><span class="n">Files</span><span class="p">.</span><span class="n">ToList</span><span class="p">();</span>
+                        <span class="n">ModelLocator</span><span class="p">.</span><span class="n">Current</span><span class="p">.</span><span class="n">Options</span><span class="p">.</span><span class="n">Landscape</span> <span class="p">=</span> <span class="n">o</span><span class="p">.</span><span class="n">Landscape</span><span class="p">;</span>
+                        <span class="n">ModelLocator</span><span class="p">.</span><span class="n">Current</span><span class="p">.</span><span class="n">Options</span><span class="p">.</span><span class="n">Printer</span> <span class="p">=</span> <span class="n">o</span><span class="p">.</span><span class="n">Printer</span><span class="p">;</span>
+                        <span class="n">ModelLocator</span><span class="p">.</span><span class="n">Current</span><span class="p">.</span><span class="n">Options</span><span class="p">.</span><span class="n">PaperSize</span> <span class="p">=</span> <span class="n">o</span><span class="p">.</span><span class="n">PaperSize</span><span class="p">;</span>
+                        <span class="n">ModelLocator</span><span class="p">.</span><span class="n">Current</span><span class="p">.</span><span class="n">Options</span><span class="p">.</span><span class="n">Gui</span> <span class="p">=</span> <span class="n">o</span><span class="p">.</span><span class="n">Gui</span><span class="p">;</span>
+                        <span class="c1">// TODO: Add other command line options supported by command line version</span>
+                    <span class="p">})</span>
+                    <span class="p">.</span><span class="n">WithNotParsed</span><span class="p">((</span><span class="n">errs</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="n">DisplayHelp</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">errs</span><span class="p">));</span>
+                <span class="n">parser</span><span class="p">.</span><span class="n">Dispose</span><span class="p">();</span>
+            <span class="p">}</span>
 
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 0.5em;
-  background: #F0F0F0;
-}
-
-
-/* Base color: saturation 0; */
-
-.hljs,
-.hljs-subst {
-  color: #444;
-}
-
-.hljs-comment {
-  color: #888888;
-}
-
-.hljs-keyword,
-.hljs-attribute,
-.hljs-selector-tag,
-.hljs-meta-keyword,
-.hljs-doctag,
-.hljs-name {
-  font-weight: normal;
-}
-
-.hljs-keyword{
-  font-style: italic;
-}
+            <span class="n">Application</span><span class="p">.</span><span class="n">SetHighDpiMode</span><span class="p">(</span><span class="n">HighDpiMode</span><span class="p">.</span><span class="n">SystemAware</span><span class="p">);</span>
+            <span class="n">Application</span><span class="p">.</span><span class="n">EnableVisualStyles</span><span class="p">();</span>
+            <span class="n">Application</span><span class="p">.</span><span class="n">SetCompatibleTextRenderingDefault</span><span class="p">(</span><span class="k">false</span><span class="p">);</span>
 
 
-/* User color: hue: 0 */
+<span class="cp">#pragma warning disable CA2000 // Dispose objects before losing scope</span>
+            <span class="n">Application</span><span class="p">.</span><span class="n">Run</span><span class="p">(</span><span class="k">new</span> <span class="n">MainWindow</span><span class="p">());</span>
+<span class="cp">#pragma warning restore CA2000 // Dispose objects before losing scope</span>
+        <span class="p">}</span>
 
-.hljs-type,
-.hljs-string,
-.hljs-number,
-.hljs-selector-id,
-.hljs-selector-class,
-.hljs-quote,
-.hljs-template-tag,
-.hljs-deletion {
-  color: #880000;
-}
-
-.hljs-title,
-.hljs-section {
-  color: #880000;
-  font-weight: bold;
-}
-
-.hljs-regexp,
-.hljs-symbol,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-link,
-.hljs-selector-attr,
-.hljs-selector-pseudo {
-  color: #BC6060;
-}
-
-
-/* Language color: hue: 90; */
-
-.hljs-literal {
-  color: #78A960;
-}
-
-.hljs-built_in,
-.hljs-bullet,
-.hljs-code,
-.hljs-addition {
-  color: #397300;
-  font-style: italic;
-}
-
-
-/* Meta color: hue: 200 */
-
-.hljs-meta {
-  color: #1f7199;
-}
-
-.hljs-meta-string {
-  color: #4d99bf;
-}
-
-
-/* Misc effects */
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-/*
-
-Orginal Style from ethanschoonover.com/solarized (c) Jeremy Hull <sourdrums@gmail.com>
-
-*/
-
-.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 0.5em;
-  background: #fcf7f7;
-  color: #657b83;
-}
-
-.hljs-comment,
-.hljs-quote {
-  color: #93a1a1;
-}
-
-/* Solarized Green */
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-addition {
-  color: #859900;
-}
-
-/* Solarized Cyan */
-.hljs-number,
-.hljs-string,
-.hljs-meta .hljs-meta-string,
-.hljs-literal,
-.hljs-doctag,
-.hljs-regexp {
-  color: #2aa198;
-}
-
-/* Solarized Blue */
-.hljs-title,
-.hljs-section,
-.hljs-name,
-.hljs-selector-id,
-.hljs-selector-class {
-  color: #268bd2;
-}
-
-/* Solarized Yellow */
-.hljs-attribute,
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-class .hljs-title,
-.hljs-type {
-  color: #3600b5;
-  text-decoration: underline;
-
-}
-
-/* Solarized Orange */
-.hljs-symbol,
-.hljs-bullet,
-.hljs-subst,
-.hljs-meta,
-.hljs-meta .hljs-keyword,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-link {
-  color: #cb4b16;
-}
-
-/* Solarized Red */
-.hljs-built_in,
-.hljs-deletion {
-  color: #dc322f;
-}
-
-.hljs-formula {
-  background: #f30814;
-  text-decoration: underline;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
-
-
-/* Line numbers */
-
-table {
-  border:#880000;
-  border-width: 0px;
-  border-style: dotted;
-  border-collapse: collapse;
-}
-/* 
-td{
-  border:#859900;
-  border-width: 0px;
-} */
-.line-number {
-  border-right: 1px solid silver;
-  padding-right: 0.3em;
-  text-align: right;
-  vertical-align: top;
-}
-.line-text {
-  margin-left: 0.7em;
-  padding-bottom: 0em;
-  white-space: pre-wrap;
-  overflow-wrap:break-word;
-}
-
-.hljs { max-width:100%; width:100%; font-family: "Lucida Console, monospace"; font-size: 10pt; }
-</style></head><body onload="" onafterprint=""><table class="hljs"><tbody><tr><td class="line-number">1</td><td class="line-text"><span class="hljs-keyword">using</span> System;
-</td></tr>
-<tr><td class="line-number">2</td><td class="line-text"><span class="hljs-keyword">using</span> System.Collections.Generic;
-</td></tr>
-<tr><td class="line-number">3</td><td class="line-text"><span class="hljs-keyword">using</span> System.Linq;
-</td></tr>
-<tr><td class="line-number">4</td><td class="line-text"><span class="hljs-keyword">using</span> System.Windows.Forms;
-</td></tr>
-<tr><td class="line-number">5</td><td class="line-text"><span class="hljs-keyword">using</span> CommandLine;
-</td></tr>
-<tr><td class="line-number">6</td><td class="line-text"><span class="hljs-keyword">using</span> CommandLine.Text;
-</td></tr>
-<tr><td class="line-number">7</td><td class="line-text"><span class="hljs-keyword">using</span> WinPrint.Core.Models;
-</td></tr>
-<tr><td class="line-number">8</td><td class="line-text">
-</td></tr>
-<tr><td class="line-number">9</td><td class="line-text"><span class="hljs-keyword">namespace</span> <span class="hljs-title">WinPrint</span> {
-</td></tr>
-<tr><td class="line-number">10</td><td class="line-text">    <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Program</span> {
-</td></tr>
-<tr><td class="line-number">11</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;summary&gt;</span></span>
-</td></tr>
-<tr><td class="line-number">12</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span>  The main entry point for the application.</span>
-</td></tr>
-<tr><td class="line-number">13</td><td class="line-text">        <span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;/summary&gt;</span></span>
-</td></tr>
-<tr><td class="line-number">14</td><td class="line-text">        [<span class="hljs-meta">STAThread</span>]
-</td></tr>
-<tr><td class="line-number">15</td><td class="line-text">        <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-keyword">string</span>[] args</span>)</span> {
-</td></tr>
-<tr><td class="line-number">16</td><td class="line-text">            <span class="hljs-comment">//var settings = new CefSettings();</span>
-</td></tr>
-<tr><td class="line-number">17</td><td class="line-text">            <span class="hljs-comment">//settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";</span>
-</td></tr>
-<tr><td class="line-number">18</td><td class="line-text">            <span class="hljs-comment">//Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);</span>
-</td></tr>
-<tr><td class="line-number">19</td><td class="line-text">
-</td></tr>
-<tr><td class="line-number">20</td><td class="line-text">            <span class="hljs-keyword">if</span> (args.Length &gt; <span class="hljs-number">0</span>) {
-</td></tr>
-<tr><td class="line-number">21</td><td class="line-text">                <span class="hljs-keyword">var</span> parser = <span class="hljs-keyword">new</span> Parser(with =&gt; with.EnableDashDash = <span class="hljs-literal">true</span>);
-</td></tr>
-<tr><td class="line-number">22</td><td class="line-text">                <span class="hljs-keyword">var</span> result = parser.ParseArguments&lt;Options&gt;(args);
-</td></tr>
-<tr><td class="line-number">23</td><td class="line-text">                result
-</td></tr>
-<tr><td class="line-number">24</td><td class="line-text">                    .WithParsed&lt;Options&gt;(o =&gt; {
-</td></tr>
-<tr><td class="line-number">25</td><td class="line-text">                        <span class="hljs-comment">// copy Files</span>
-</td></tr>
-<tr><td class="line-number">26</td><td class="line-text">                        ModelLocator.Current.Options.Files = o.Files.ToList();
-</td></tr>
-<tr><td class="line-number">27</td><td class="line-text">                        ModelLocator.Current.Options.Landscape = o.Landscape;
-</td></tr>
-<tr><td class="line-number">28</td><td class="line-text">                        ModelLocator.Current.Options.Printer = o.Printer;
-</td></tr>
-<tr><td class="line-number">29</td><td class="line-text">                        ModelLocator.Current.Options.PaperSize = o.PaperSize;
-</td></tr>
-<tr><td class="line-number">30</td><td class="line-text">                        ModelLocator.Current.Options.Gui = o.Gui;
-</td></tr>
-<tr><td class="line-number">31</td><td class="line-text">                        <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Add other command line options supported by command line version</span>
-</td></tr>
-<tr><td class="line-number">32</td><td class="line-text">                    })
-</td></tr>
-<tr><td class="line-number">33</td><td class="line-text">                    .WithNotParsed((errs) =&gt; DisplayHelp(result, errs));
-</td></tr>
-<tr><td class="line-number">34</td><td class="line-text">                parser.Dispose();
-</td></tr>
-<tr><td class="line-number">35</td><td class="line-text">            }
-</td></tr>
-<tr><td class="line-number">36</td><td class="line-text">
-</td></tr>
-<tr><td class="line-number">37</td><td class="line-text">            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-</td></tr>
-<tr><td class="line-number">38</td><td class="line-text">            Application.EnableVisualStyles();
-</td></tr>
-<tr><td class="line-number">39</td><td class="line-text">            Application.SetCompatibleTextRenderingDefault(<span class="hljs-literal">false</span>);
-</td></tr>
-<tr><td class="line-number">40</td><td class="line-text">
-</td></tr>
-<tr><td class="line-number">41</td><td class="line-text">
-</td></tr>
-<tr><td class="line-number">42</td><td class="line-text"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> <span class="hljs-meta-keyword">warning</span> disable CA2000 // Dispose objects before losing scope</span>
-</td></tr>
-<tr><td class="line-number">43</td><td class="line-text">            Application.Run(<span class="hljs-keyword">new</span> MainWindow());
-</td></tr>
-<tr><td class="line-number">44</td><td class="line-text"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> <span class="hljs-meta-keyword">warning</span> restore CA2000 // Dispose objects before losing scope</span>
-</td></tr>
-<tr><td class="line-number">45</td><td class="line-text">        }
-</td></tr>
-<tr><td class="line-number">46</td><td class="line-text">
-</td></tr>
-<tr><td class="line-number">47</td><td class="line-text">        <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> DisplayHelp&lt;T&gt;(ParserResult&lt;T&gt; result, IEnumerable&lt;Error&gt; errs) {
-</td></tr>
-<tr><td class="line-number">48</td><td class="line-text">            <span class="hljs-keyword">var</span> helpText = HelpText.AutoBuild(result, h =&gt; {
-</td></tr>
-<tr><td class="line-number">49</td><td class="line-text">                h.AutoHelp = <span class="hljs-literal">true</span>;
-</td></tr>
-<tr><td class="line-number">50</td><td class="line-text">                h.AutoVersion = <span class="hljs-literal">true</span>;
-</td></tr>
-<tr><td class="line-number">51</td><td class="line-text">                <span class="hljs-comment">//h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");</span>
-</td></tr>
-<tr><td class="line-number">52</td><td class="line-text">                <span class="hljs-keyword">return</span> HelpText.DefaultParsingErrorsHandler(result, h);
-</td></tr>
-<tr><td class="line-number">53</td><td class="line-text">            }, e =&gt; e);
-</td></tr>
-<tr><td class="line-number">54</td><td class="line-text">            MessageBox.Show(helpText);
-</td></tr>
-<tr><td class="line-number">55</td><td class="line-text">            System.Environment.Exit(<span class="hljs-number">0</span>);
-</td></tr>
-<tr><td class="line-number">56</td><td class="line-text">        }
-</td></tr>
-<tr><td class="line-number">57</td><td class="line-text">    }
-</td></tr>
-<tr><td class="line-number">58</td><td class="line-text">}
-</td></tr>
-<tr><td class="line-number">59</td><td class="line-text"></td></tr></tbody></table></body></html>
+        <span class="k">static</span> <span class="k">void</span> <span class="n">DisplayHelp</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;(</span><span class="n">ParserResult</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span> <span class="n">result</span><span class="p">,</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Error</span><span class="p">&gt;</span> <span class="n">errs</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kt">var</span> <span class="n">helpText</span> <span class="p">=</span> <span class="n">HelpText</span><span class="p">.</span><span class="n">AutoBuild</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">h</span> <span class="p">=&gt;</span> <span class="p">{</span>
+                <span class="n">h</span><span class="p">.</span><span class="n">AutoHelp</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
+                <span class="n">h</span><span class="p">.</span><span class="n">AutoVersion</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
+                <span class="c1">//h.AddPostOptionsLine(&quot;Files\tOne or more filenames of files to be printed.&quot;);</span>
+                <span class="k">return</span> <span class="n">HelpText</span><span class="p">.</span><span class="n">DefaultParsingErrorsHandler</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">h</span><span class="p">);</span>
+            <span class="p">},</span> <span class="n">e</span> <span class="p">=&gt;</span> <span class="n">e</span><span class="p">);</span>
+            <span class="n">MessageBox</span><span class="p">.</span><span class="n">Show</span><span class="p">(</span><span class="n">helpText</span><span class="p">);</span>
+            <span class="n">System</span><span class="p">.</span><span class="n">Environment</span><span class="p">.</span><span class="n">Exit</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>

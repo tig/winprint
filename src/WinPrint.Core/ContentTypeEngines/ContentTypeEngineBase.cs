@@ -138,6 +138,10 @@ namespace WinPrint.Core.ContentTypeEngines {
                     cte = TextCte.Create();
                     break;
 
+                case "text/ansi":
+                    cte = PygmentsCte.Create();
+                    break;
+
                 // TODO: Figure out if we really want to use the sourcecode CTE.
                 //case "text/sourcecode":
                 //    cte = CodeCte.Create();
@@ -183,6 +187,11 @@ namespace WinPrint.Core.ContentTypeEngines {
             if (ext != string.Empty) {
                 if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out var ct)) {
                     contentType = ct;
+                }
+                else {
+                    // No direct file extension, look in Languages
+                    var lang = ModelLocator.Current.Associations.Languages.Where(lang => lang.Extensions.Contains(ext)).FirstOrDefault().Id;
+                    contentType = lang;
                 }
             }
             else {

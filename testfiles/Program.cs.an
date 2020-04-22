@@ -1,0 +1,58 @@
+[01musing[00m [38;2;85;85;85mSystem[39m;
+[01musing[00m [38;2;85;85;85mSystem.Collections.Generic[39m;
+[01musing[00m [38;2;85;85;85mSystem.Linq[39m;
+[01musing[00m [38;2;85;85;85mSystem.Windows.Forms[39m;
+[01musing[00m [38;2;85;85;85mCommandLine[39m;
+[01musing[00m [38;2;85;85;85mCommandLine.Text[39m;
+[01musing[00m [38;2;85;85;85mWinPrint.Core.Models[39m;
+
+[01mnamespace[00m [38;2;85;85;85mWinPrint[39m {
+    [01mstatic[00m [01mclass[00m [38;2;68;85;136;01mProgram[39;00m {
+        [38;2;153;153;136m/// <summary>[39m
+        [38;2;153;153;136m///  The main entry point for the application.[39m
+        [38;2;153;153;136m/// </summary>[39m
+[38;2;0;128;128m        [STAThread][39m
+        [01mstatic[00m [01mvoid[00m [38;2;153;0;0;01mMain[39;00m([38;2;68;85;136;01mstring[39;00m[] args) {
+            [38;2;153;153;136m//var settings = new CefSettings();[39m
+            [38;2;153;153;136m//settings.BrowserSubprocessPath = @"x86\CefSharp.BrowserSubprocess.exe";[39m
+            [38;2;153;153;136m//Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);[39m
+
+            [01mif[00m (args.Length > [38;2;0;153;153m0[39m) {
+                [38;2;68;85;136;01mvar[39;00m parser = [01mnew[00m Parser(with => with.EnableDashDash = [01mtrue[00m);
+                [38;2;68;85;136;01mvar[39;00m result = parser.ParseArguments<Options>(args);
+                result
+                    .WithParsed<Options>(o => {
+                        [38;2;153;153;136m// copy Files[39m
+                        ModelLocator.Current.Options.Files = o.Files.ToList();
+                        ModelLocator.Current.Options.Landscape = o.Landscape;
+                        ModelLocator.Current.Options.Printer = o.Printer;
+                        ModelLocator.Current.Options.PaperSize = o.PaperSize;
+                        ModelLocator.Current.Options.Gui = o.Gui;
+                        [38;2;153;153;136m// TODO: Add other command line options supported by command line version[39m
+                    })
+                    .WithNotParsed((errs) => DisplayHelp(result, errs));
+                parser.Dispose();
+            }
+
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault([01mfalse[00m);
+
+
+[38;2;153;153;153;01m#pragma warning disable CA2000 // Dispose objects before losing scope[39;00m
+            Application.Run([01mnew[00m MainWindow());
+[38;2;153;153;153;01m#pragma warning restore CA2000 // Dispose objects before losing scope[39;00m
+        }
+
+        [01mstatic[00m [01mvoid[00m DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs) {
+            [38;2;68;85;136;01mvar[39;00m helpText = HelpText.AutoBuild(result, h => {
+                h.AutoHelp = [01mtrue[00m;
+                h.AutoVersion = [01mtrue[00m;
+                [38;2;153;153;136m//h.AddPostOptionsLine("Files\tOne or more filenames of files to be printed.");[39m
+                [01mreturn[00m HelpText.DefaultParsingErrorsHandler(result, h);
+            }, e => e);
+            MessageBox.Show(helpText);
+            System.Environment.Exit([38;2;0;153;153m0[39m);
+        }
+    }
+}

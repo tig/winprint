@@ -1,5 +1,6 @@
 {
   "files.associations": {
+    "*.ans" :  "ansi",
     "*.markup": "markup",
     "*.html": "markup",
     "*.htm": "markup",
@@ -245,7 +246,7 @@
     "*.gedcom": "gedcom",
     "*.gherkin": "gherkin",
     "*.git": "git",
-    "*.gitconfig":  "ini",
+    "*.gitconfig": "ini",
     "*.glsl": "glsl",
     "*.fp": "glsl",
     "*.frg": "glsl",
@@ -576,6 +577,16 @@
     "*.yaml": "yaml"
   },
   "languages": [
+    {
+      "id": "text/ansi",
+      "aliases": [],
+      "title": "ANSI Encoded",
+      "extensions": [
+        ".an",
+        ".ansi",
+        ".ans"
+      ]
+    },
     {
       "id": "markup",
       "aliases": [

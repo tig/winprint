@@ -294,11 +294,16 @@ namespace WinPrint.Core {
             Encoding = Encoding.UTF8;
             if (!string.IsNullOrEmpty(File)) {
                 var detected = CharsetDetector.DetectFromFile(File).Detected;
-                if (detected == null) {
-                    throw new InvalidOperationException($"Could not determine the file encoding of '{Path.GetFullPath(File)}'.");
+                if (detected != null) {
+                    Log.Debug("File encoding detected: {encoding}", detected);
+                    Encoding = detected.Encoding;
                 }
-                Log.Debug("File encoding: {encoding}", detected);
-                Encoding = detected.Encoding;
+                else
+                {
+                    Log.Debug("File encoding NOT detected, defaulting to: {encoding}", Encoding);
+                    //throw new InvalidOperationException($"Could not determine the file encoding of '{Path.GetFullPath(File)}'.");
+                }
+
                 // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
                 using var streamToPrint = new StreamReader(File, Encoding);
                 document = await streamToPrint.ReadToEndAsync().ConfigureAwait(false);

@@ -1,0 +1,795 @@
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Collections[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Collections.Generic[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Collections.ObjectModel[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.ComponentModel[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Diagnostics[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Drawing.Printing[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Linq[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Linq.Dynamic.Core[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Management.Automation[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Management.Automation.Internal[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Management.Automation.Runspaces[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Reflection[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Text.Json[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Threading[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSystem.Threading.Tasks[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSerilog[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mSerilog.Events[39;00m;
+[38;2;136;136;136m//using TTRider.PowerShellAsync;[39m
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mWinPrint.Core[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mWinPrint.Core.ContentTypeEngines[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mWinPrint.Core.Models[39;00m;
+[38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mWinPrint.Core.Services[39;00m;
+
+[38;2;0;136;0;01mnamespace[39;00m [38;2;187;0;102;01mWinPrint.Console[39;00m {
+
+[38;2;51;102;153m    [Cmdlet(VerbsData.Out,[39m
+[38;2;51;102;153m        nounName: "WinPrint",[39m
+[38;2;51;102;153m        HelpUri = "https://tig.github.io./winprint",[39m
+[38;2;51;102;153m        DefaultParameterSetName = "print")][39m
+[38;2;51;102;153m    [Alias("winprint", "wp")][39m
+    [38;2;0;136;0;01mpublic[39;00m [38;2;0;136;0;01mpartial[39;00m [38;2;0;136;0;01mclass[39;00m [38;2;187;0;102;01mOutWinPrint[39;00m : AsyncCmdlet, IDynamicParameters {
+        [38;2;136;136;136m// Private fields[39m
+        [38;2;0;136;0;01mprivate[39;00m List<PSObject> _psObjects = [38;2;0;136;0;01mnew[39;00m List<PSObject>();
+        [38;2;0;136;0;01mprivate[39;00m Print _print = [38;2;0;136;0;01mnew[39;00m WinPrint.Core.Print();
+
+        [38;2;204;0;0;01m#region Command Line Switches[39;00m
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional name of the printer to print to.[39m
+        [38;2;136;136;136m/// The alias allows "lp -P printer".[39m
+        [38;2;136;136;136m/// Name alias: becuase that's what out-printer uses.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",[39m
+[38;2;51;102;153m            ParameterSetName = "Print"), ArgumentCompleter(typeof(PrinterNameCompleter))][39m
+[38;2;51;102;153m        [Alias("Name")][39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mstring[39;00m PrinterName { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional The paper size name.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// PaperSize - Implemented via IDynamicParameters.GetDynamicParameters[39m
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional name of the WinPrint sheet definition to use.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// SheetDefintion - Implemented via IDynamicParameters.GetDynamicParameters[39m
+
+        [38;2;0;136;0;01mpublic[39;00m [38;2;0;136;0;01menum[39;00m PortraitLandscape {
+            Portrait = [38;2;0;0;221;01m0[39;00m,
+            Landscape = [38;2;0;0;221;01m1[39;00m
+        }
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// If specfied, overrides the landscape setting in the sheet defintion.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet defintion.",[39m
+[38;2;51;102;153m            ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m PortraitLandscape? Orientation { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;0;136;0;01mpublic[39;00m [38;2;0;136;0;01menum[39;00m YesNo {
+            No = [38;2;0;0;221;01m0[39;00m,
+            Yes = [38;2;0;0;221;01m1[39;00m
+        }
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// If specfied, overrides the line numbers setting in the sheet defintion.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet defintion (Yes, No).",[39m
+[38;2;51;102;153m            ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m YesNo? LineNumbers { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional name of the WinPrint Content Type Engine to use.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m// ContentTypeEngine - Implemented via IDynamicParameters.GetDynamicParameters[39m
+
+        [38;2;136;136;136m//// -Language[39m
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",[39m
+[38;2;51;102;153m            ParameterSetName = "Print"), ArgumentCompleter(typeof(LanguageCompleter))][39m
+[38;2;51;102;153m        [Alias("Lang")][39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mstring[39;00m Language { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional FileName - will be displayed in header/footer and as title of print job.[39m
+        [38;2;136;136;136m/// If $input is not available, FileName will be used as the path to the file to print.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(Position = 0, HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +[39m
+[38;2;51;102;153m            "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. " +[39m
+[38;2;51;102;153m            "If $input is not available, FileName will be used as the path to the file to print.",[39m
+[38;2;51;102;153m            ParameterSetName = "Print")][39m
+[38;2;51;102;153m        [Alias("File")][39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mstring[39;00m FileName { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Optional FileName - will be displayed in header/footer and as title of print job.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Title to be displayed in header/footer with the {Title} or {FileName} macros.",[39m
+[38;2;51;102;153m            ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mstring[39;00m Title { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m///  Number of first sheet to print(may be used with `-ToSheet`)[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Number of first sheet to print (may be used with `-ToSheet`).",[39m
+[38;2;51;102;153m        ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mint[39;00m FromSheet { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; } = [38;2;0;0;221;01m0[39;00m;
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m///  Number of last sheet to print(may be used with `-Fromsheet`)[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Number of last sheet to print(may be used with `--Fromsheet`).",[39m
+[38;2;51;102;153m        ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mint[39;00m ToSheet { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; } = [38;2;0;0;221;01m0[39;00m;
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Show *winprint* GUI (to preview or change sheet settings).[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Show *winprint* GUI (to preview or change sheet settings).", ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m SwitchParameter Gui { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// For the -Verbose switch[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;0;136;0;01mprivate[39;00m [38;2;136;136;136;01mbool[39;00m _verbose => MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"Verbose"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m o);
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// For the -Debug switch[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;0;136;0;01mprivate[39;00m [38;2;136;136;136;01mbool[39;00m _debug => MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"Debug"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m o);
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Input stream.[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(ValueFromPipeline = true,[39m
+[38;2;51;102;153m            ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m PSObject InputObject { [38;2;0;136;0;01mset[39;00m; [38;2;0;136;0;01mget[39;00m; } = AutomationNull.Value;
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// -WhatIf switch[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Output is the number of sheets that would be printed. Use -Verbose to print the count of .",[39m
+[38;2;51;102;153m            ParameterSetName = "Print")][39m
+        [38;2;0;136;0;01mpublic[39;00m SwitchParameter WhatIf { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+        [38;2;136;136;136m//private bool _whatIf { get => MyInvocation.BoundParameters.TryGetValue("WhatIf", out var o); }[39m
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// -InstallUpdate switch[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "If an updated version of winprint is available online, download and install it.",[39m
+[38;2;51;102;153m            ParameterSetName = "Updates")][39m
+        [38;2;0;136;0;01mpublic[39;00m SwitchParameter InstallUpdate { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+        [38;2;0;136;0;01mprivate[39;00m [38;2;136;136;136;01mbool[39;00m _installUpdate => MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"InstallUpdate"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m o);
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// -Force switch[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Allows winprint to kill the host Powershell process when updating.",[39m
+[38;2;51;102;153m            ParameterSetName = "Updates")][39m
+        [38;2;0;136;0;01mpublic[39;00m SwitchParameter Force { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+        [38;2;0;136;0;01mprivate[39;00m [38;2;136;136;136;01mbool[39;00m _force => MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"Force"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m o);
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// -InstallUpdate switch[39m
+        [38;2;136;136;136m/// </summary>[39m
+[38;2;51;102;153m        [Parameter(HelpMessage = "Edit the winprint config file in the editor configured for .json files.",[39m
+[38;2;51;102;153m            ParameterSetName = "Config")][39m
+        [38;2;0;136;0;01mpublic[39;00m SwitchParameter Config { [38;2;0;136;0;01mget[39;00m; [38;2;0;136;0;01mset[39;00m; }
+
+        [38;2;204;0;0;01m#endregion[39;00m
+
+        [38;2;204;0;0;01m#region Update Service Related Code[39;00m
+
+        [38;2;0;136;0;01mprivate[39;00m CancellationTokenSource _getVersionCancellationToken;
+
+        [38;2;136;136;136m// Update stuff[39m
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mSetupUpdateHandler[39;00m() {
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"Update Handler Setup"[39;49m);
+            _getVersionCancellationToken = [38;2;0;136;0;01mnew[39;00m CancellationTokenSource();
+            ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadProgressChanged += UpdateService_DownloadProgressChanged;
+        }
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mCleanUpUpdateHandler[39;00m() {
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"Update Handler Cleanup"[39;49m);
+            ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadProgressChanged -= UpdateService_DownloadProgressChanged;
+            _getVersionCancellationToken?.Cancel();
+        }
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mUpdateService_DownloadProgressChanged[39;00m([38;2;136;136;136;01mobject[39;00m sender, System.Net.DownloadProgressChangedEventArgs e) {
+            [38;2;136;136;136m//Debug.WriteLine("UpdateService_DownloadProgressChanged");[39m
+            [38;2;136;136;136;01mvar[39;00m rec = [38;2;0;136;0;01mnew[39;00m ProgressRecord([38;2;0;0;221;01m0[39;00m, [38;2;221;34;0;48;2;255;240;240m"Downloading"[39;49m, [38;2;221;34;0;48;2;255;240;240m"Downloading"[39;49m) {
+                CurrentOperation = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Downloading"[39;49m,
+                PercentComplete = e.ProgressPercentage
+            };
+            WriteProgress(rec);
+        }
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01masync[39;00m Task<[38;2;136;136;136;01mbool[39;00m> DoUpdateAsync() {
+            [38;2;136;136;136;01mvar[39;00m version = [38;2;0;136;0;01mawait[39;00m ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+            [38;2;136;136;136;01mvar[39;00m path = [38;2;0;136;0;01mawait[39;00m ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+[38;2;204;0;0;01m#if DEBUG[39;00m
+            [38;2;136;136;136;01mvar[39;00m log = [38;2;221;34;0;48;2;255;240;240m"-lv winprint.msiexec.log"[39;49m;
+[38;2;204;0;0;01m#else[39;00m
+            [38;2;136;136;136;01mstring[39;00m log = [38;2;221;34;0;48;2;255;240;240m""[39;49m;
+[38;2;204;0;0;01m#endif[39;00m
+            [38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mvar[39;00m p = [38;2;0;136;0;01mnew[39;00m Process {
+                StartInfo = {
+                        FileName = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"msiexec.exe"[39;49m,
+                        Arguments = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{log} -i {path}"[39;49m,
+                        UseShellExecute = [38;2;0;136;0;01mtrue[39;00m
+                    },
+            };
+
+            Log.Information([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Download Complete. Running installer ({p.StartInfo.FileName} {p.StartInfo.Arguments})..."[39;49m);
+            [38;2;136;136;136;01mvar[39;00m rec = [38;2;0;136;0;01mnew[39;00m ProgressRecord([38;2;0;0;221;01m0[39;00m, [38;2;221;34;0;48;2;255;240;240m"Installing"[39;49m, [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Download Complete"[39;49m) {
+                CurrentOperation = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Installing"[39;49m,
+                PercentComplete = -[38;2;0;0;221;01m1[39;00m
+            };
+            WriteProgress(rec);
+
+            [38;2;0;136;0;01mtry[39;00m {
+                p.Start();
+            }
+            [38;2;0;136;0;01mcatch[39;00m (Win32Exception we) {
+                Log.Information([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}"[39;49m);
+                [38;2;0;136;0;01mreturn[39;00m [38;2;0;136;0;01mfalse[39;00m;
+            }
+
+            [38;2;0;136;0;01mif[39;00m (_force ||
+                [38;2;136;136;136m//await Task.Run(() => ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",[39m
+                [38;2;136;136;136m//"Exit this Powershell instance?"))) {[39m
+                ShouldContinue([38;2;221;34;0;48;2;255;240;240m"The winprint installer requires any Powershell instances that have used out-winprint be closed."[39;49m,
+                [38;2;221;34;0;48;2;255;240;240m"Exit this Powershell instance?"[39;49m)) {
+                [38;2;136;136;136m// Kill process?[39m
+                System.Environment.Exit([38;2;0;0;221;01m0[39;00m);
+            }
+            [38;2;0;136;0;01mreturn[39;00m [38;2;0;136;0;01mtrue[39;00m;
+        }
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;136;136;136;01mstring[39;00m _updateMsg;
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mUpdateService_GotLatestVersion[39;00m([38;2;136;136;136;01mobject[39;00m sender, Version version) {
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"UpdateService_GotLatestVersion"[39;49m);
+            [38;2;0;136;0;01mif[39;00m (_getVersionCancellationToken.IsCancellationRequested) {
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;0;136;0;01mif[39;00m (version == [38;2;0;136;0;01mnull[39;00m && ![38;2;136;136;136;01mstring[39;00m.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+                _updateMsg = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Could not access github.com/tig/winprint to see if a newer version is available"[39;49m +
+                    [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m" {ServiceLocator.Current.UpdateService.ErrorMessage}"[39;49m;
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;0;136;0;01mif[39;00m (ServiceLocator.Current.UpdateService.CompareVersions() < [38;2;0;0;221;01m0[39;00m) {
+                _updateMsg = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"An update to winprint is available at {ServiceLocator.Current.UpdateService.ReleasePageUri}. "[39;49m +
+                    [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Run '{MyInvocation.InvocationName} -InstallUpdate' to upgrade"[39;49m;
+            }
+            [38;2;0;136;0;01melse[39;00m [38;2;0;102;187;01mif[39;00m (ServiceLocator.Current.UpdateService.CompareVersions() > [38;2;0;0;221;01m0[39;00m) {
+                _updateMsg = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"This is a MORE recent version than can be found at github.com/tig/winprint ({version})"[39;49m;
+            }
+            [38;2;0;136;0;01melse[39;00m {
+                _updateMsg = [38;2;221;34;0;48;2;255;240;240m"This is lastest version of winprint"[39;49m;
+            }
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"UpdateService_GotLatestVersion"[39;49m + _updateMsg);
+
+        }
+        [38;2;204;0;0;01m#endregion[39;00m
+
+        [38;2;204;0;0;01m#region PowerShell AsyncCmdlet Overrides[39;00m
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Read command line parameters. [39m
+        [38;2;136;136;136m/// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01moverride[39;00m [38;2;0;136;0;01masync[39;00m Task [38;2;0;102;187;01mBeginProcessingAsync[39;00m() {
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"BeginProcessingAsync"[39;49m);
+
+            [38;2;136;136;136m// If this is the first invoke since loading start telemetry and logging[39m
+            [38;2;0;136;0;01mif[39;00m (ServiceLocator.Current.TelemetryService.GetTelemetryClient() == [38;2;0;136;0;01mnull[39;00m) {
+                ServiceLocator.Current.TelemetryService.Start([38;2;221;34;0;48;2;255;240;240m"out-winprint"[39;49m);
+
+                [38;2;136;136;136m// AsyncCmdlet base adds each cmdlet instance to PowerShellSink.Instance; this call configures[39m
+                [38;2;136;136;136m// the Debug and File LogEventLevel's only [39m
+                ServiceLocator.Current.LogService.Start([38;2;221;34;0;48;2;255;240;240m"out-winprint"[39;49m, PowerShellSink.Instance, debug: _debug, verbose: _verbose);
+            }
+            [38;2;0;136;0;01melse[39;00m {
+                [38;2;136;136;136m// Change Console logging as specififed by paramters (e.g. -verbose and/or -debug)[39m
+                [38;2;136;136;136m// ConsoleLevelSwitch is for the PowerShellSink logger only[39m
+                ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_verbose ? LogEventLevel.Information : LogEventLevel.Warning);
+                ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_debug ? LogEventLevel.Debug : ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel);
+            }
+
+            [38;2;136;136;136;01mvar[39;00m ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly([38;2;0;136;0;01mtypeof[39;00m(UpdateService)).Location);
+            Log.Information([38;2;221;34;0;48;2;255;240;240m"out-winprint v{version} - {copyright} - {link}"[39;49m, ver.ProductVersion, ver.LegalCopyright, [38;2;221;34;0;48;2;255;240;240m@"https://tig.github.io/winprint"[39;49m);
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"PowerShell Invoked: command: {appname}, module: {modulename}"[39;49m, MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
+
+            [38;2;136;136;136;01mvar[39;00m dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{item.Value}"[39;49m);
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"Bound Parameters: {params}"[39;49m, JsonSerializer.Serialize(dict, [38;2;0;136;0;01mnew[39;00m JsonSerializerOptions { WriteIndented = [38;2;0;136;0;01mfalse[39;00m }));
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{MyInvocation.MyCommand.Name} BeginProcessing"[39;49m, properties: dict);
+
+            [38;2;0;136;0;01mawait[39;00m [38;2;0;136;0;01mbase[39;00m.BeginProcessingAsync().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+        }
+
+        [38;2;136;136;136m// This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01moverride[39;00m [38;2;0;136;0;01masync[39;00m Task [38;2;0;102;187;01mProcessRecordAsync[39;00m() {
+            [38;2;136;136;136m//Log.Debug("ProcessRecordAsync");[39m
+            [38;2;0;136;0;01mawait[39;00m [38;2;0;136;0;01mbase[39;00m.ProcessRecordAsync().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+
+            [38;2;0;136;0;01mif[39;00m (InputObject == [38;2;0;136;0;01mnull[39;00m || InputObject == AutomationNull.Value) {
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;136;136;136;01mvar[39;00m dictionary = InputObject.BaseObject [38;2;0;136;0;01mas[39;00m IDictionary;
+            [38;2;0;136;0;01mif[39;00m (dictionary != [38;2;0;136;0;01mnull[39;00m) {
+                [38;2;136;136;136m// Dictionaries should be enumerated through because the pipeline does not enumerate through them.[39m
+                [38;2;0;136;0;01mforeach[39;00m (DictionaryEntry entry [38;2;0;136;0;01min[39;00m dictionary) {
+                    ProcessObject(PSObject.AsPSObject(entry));
+                }
+            }
+            [38;2;0;136;0;01melse[39;00m {
+                ProcessObject(InputObject);
+            }
+        }
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mProcessObject[39;00m(PSObject input) {
+            [38;2;136;136;136;01mvar[39;00m baseObject = input.BaseObject;
+
+            [38;2;136;136;136m// Throw a terminating error for types that are not supported.[39m
+            [38;2;0;136;0;01mif[39;00m (baseObject [38;2;0;136;0;01mis[39;00m ScriptBlock ||
+                baseObject [38;2;0;136;0;01mis[39;00m SwitchParameter ||
+                baseObject [38;2;0;136;0;01mis[39;00m PSReference ||
+                baseObject [38;2;0;136;0;01mis[39;00m PSObject) {
+                [38;2;136;136;136;01mvar[39;00m error = [38;2;0;136;0;01mnew[39;00m ErrorRecord(
+                    [38;2;0;136;0;01mnew[39;00m [38;2;0;102;187;01mFormatException[39;00m([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Invalid data type for {MyInvocation.InvocationName}"[39;49m),
+                    [38;2;221;34;0;48;2;255;240;240m"DataNotQualifiedForWinprint"[39;49m,
+                    ErrorCategory.InvalidType,
+                    [38;2;0;136;0;01mnull[39;00m);
+
+                ThrowTerminatingError(error);
+            }
+            _psObjects.Add(input);
+        }
+
+        [38;2;136;136;136m// This method will be called once at the end of pipeline execution; if no input is received, this method is not called[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01moverride[39;00m [38;2;0;136;0;01masync[39;00m Task [38;2;0;102;187;01mEndProcessingAsync[39;00m() {
+            [38;2;0;136;0;01mawait[39;00m [38;2;0;136;0;01mbase[39;00m.EndProcessingAsync().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"EndProcessingAsync"[39;49m);
+
+            [38;2;0;136;0;01mif[39;00m (Config) {
+                Process proc = [38;2;0;136;0;01mnull[39;00m;
+                [38;2;0;136;0;01mtry[39;00m {
+                    [38;2;136;136;136;01mvar[39;00m psi = [38;2;0;136;0;01mnew[39;00m ProcessStartInfo {
+                        UseShellExecute = [38;2;0;136;0;01mtrue[39;00m,   [38;2;136;136;136m// This is important[39m
+                        FileName = ServiceLocator.Current.SettingsService.SettingsFileName
+                    };
+                    proc = Process.Start(psi);
+                }
+                [38;2;0;136;0;01mcatch[39;00m (Win32Exception e) {
+                    [38;2;136;136;136m// TODO: Better error message (output of stderr?)[39m
+                    ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;136;0;01mfalse[39;00m);
+
+                    Log.Error(e, [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}."[39;49m);
+                }
+                [38;2;0;136;0;01mfinally[39;00m {
+                    proc?.Dispose();
+                }
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;0;136;0;01mif[39;00m (WinPrint.Core.Models.ModelLocator.Current.Settings == [38;2;0;136;0;01mnull[39;00m) {
+                Log.Fatal([38;2;0;136;0;01mnew[39;00m Exception([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Settings are invalid. See {ServiceLocator.Current.LogService.LogPath} for more information."[39;49m), [38;2;221;34;0;48;2;255;240;240m""[39;49m);
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            SetupUpdateHandler();
+
+            [38;2;136;136;136m// Check for new version[39m
+            [38;2;0;136;0;01mif[39;00m (_installUpdate) {
+                [38;2;0;136;0;01mawait[39;00m [38;2;0;102;187;01mDoUpdateAsync[39;00m().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+                CleanUpUpdateHandler();
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;0;136;0;01mif[39;00m (_psObjects.Count == [38;2;0;0;221;01m0[39;00m) {
+                Log.Debug([38;2;221;34;0;48;2;255;240;240m"No objects..."[39;49m);
+
+                [38;2;0;136;0;01mif[39;00m ([38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(FileName)) {
+                    [38;2;136;136;136m//Return if no objects or file specified[39m
+                    CleanUpUpdateHandler();
+                    [38;2;0;136;0;01mreturn[39;00m;
+                }
+            }
+
+            [38;2;136;136;136m// Whenever we run, check for an update. We use the cancellation token to kill the thread that's doing this[39m
+            [38;2;136;136;136m// if we exit before getting a version info result back. Checking for updates should never shlow cmd line down.[39m
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"Kicking off update check thread..."[39;49m);
+            [38;2;0;136;0;01mawait[39;00m Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait([38;2;0;136;0;01mtrue[39;00m),
+                _getVersionCancellationToken.Token).ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+
+            [38;2;136;136;136;01mvar[39;00m rec = [38;2;0;136;0;01mnew[39;00m ProgressRecord([38;2;0;0;221;01m1[39;00m, [38;2;221;34;0;48;2;255;240;240m"Printing"[39;49m, [38;2;221;34;0;48;2;255;240;240m"Printing..."[39;49m) {
+                PercentComplete = [38;2;0;0;221;01m0[39;00m,
+                StatusDescription = [38;2;221;34;0;48;2;255;240;240m"Initializing winprint"[39;49m
+            };
+            WriteProgress(rec);
+
+            Debug.Assert(_print != [38;2;0;136;0;01mnull[39;00m);
+            [38;2;0;136;0;01mif[39;00m (![38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(PrinterName)) {
+                [38;2;0;136;0;01mtry[39;00m {
+                    rec.PercentComplete = [38;2;0;0;221;01m1[39;00m[38;2;0;0;221;01m0[39;00m;
+                    rec.StatusDescription = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Setting printer name to {PrinterName}"[39;49m;
+                    WriteProgress(rec);
+                    _print.SetPrinter(PrinterName);
+                }
+                [38;2;0;136;0;01mcatch[39;00m (InvalidPrinterException) {
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"Installed printers:"[39;49m);
+                    [38;2;0;136;0;01mforeach[39;00m ([38;2;136;136;136;01mstring[39;00m printer [38;2;0;136;0;01min[39;00m PrinterSettings.InstalledPrinters) {
+                        Log.Information([38;2;221;34;0;48;2;255;240;240m"   {printer}"[39;49m, printer);
+                    }
+                    Log.Fatal([38;2;0;136;0;01mnew[39;00m Exception([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{PrinterName} is not a valid printer name. Valid printer names include "[39;49m +
+                        [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{string.Join("[39;49m, [38;2;221;34;0;48;2;255;240;240m", PrinterSettings.InstalledPrinters.ToDynamicList().ToArray())}."[39;49m), [38;2;221;34;0;48;2;255;240;240m""[39;49m);
+                    CleanUpUpdateHandler();
+                    [38;2;0;136;0;01mreturn[39;00m;
+                }
+            }
+
+            [38;2;0;136;0;01mif[39;00m ([38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(Title)) {
+                [38;2;0;136;0;01mif[39;00m ([38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(FileName)) {
+                    Title = MyInvocation.MyCommand.Name;
+                }
+                [38;2;0;136;0;01melse[39;00m {
+                    Title = FileName;
+                }
+            }
+
+            SheetSettings sheet = [38;2;0;136;0;01mnull[39;00m;
+            [38;2;136;136;136;01mstring[39;00m sheetID = [38;2;0;136;0;01mnull[39;00m;
+            [38;2;0;136;0;01mtry[39;00m {
+                MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"SheetDefintion"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m sheetDefintion);
+                sheet = _print.SheetViewModel.FindSheet(([38;2;136;136;136;01mstring[39;00m)sheetDefintion, [38;2;0;136;0;01mout[39;00m sheetID);
+
+                rec.PercentComplete = [38;2;0;0;221;01m2[39;00m[38;2;0;0;221;01m0[39;00m;
+                rec.StatusDescription = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Setting Sheet Settings for {sheet.Name}"[39;49m;
+                WriteProgress(rec);
+
+                [38;2;0;136;0;01mif[39;00m (Orientation.HasValue) {
+                    sheet.Landscape = Orientation == PortraitLandscape.Landscape;
+                }
+
+                [38;2;0;136;0;01mif[39;00m (LineNumbers.HasValue) {
+                    sheet.ContentSettings.LineNumbers = LineNumbers == YesNo.Yes;
+                }
+
+                [38;2;136;136;136m// Must set landsacpe after printer/paper selection[39m
+                _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
+                _print.SheetViewModel.SetSheet(sheet);
+            }
+            [38;2;0;136;0;01mcatch[39;00m (InvalidOperationException e) {
+                Log.Fatal([38;2;0;136;0;01mnew[39;00m Exception([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Could not find sheet settings. {e.Message}. See {ServiceLocator.Current.LogService.LogPath} for more information."[39;49m), [38;2;221;34;0;48;2;255;240;240m""[39;49m);
+                CleanUpUpdateHandler();
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;136;136;136m// If Langauge is provided, use it instead of CTE. [39m
+            [38;2;0;136;0;01mif[39;00m (!MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"Language"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m contentTypeEngine)) {
+                [38;2;0;136;0;01mif[39;00m (!MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"ContentTypeEngine"[39;49m, [38;2;0;136;0;01mout[39;00m contentTypeEngine)) {
+                    [38;2;136;136;136m// If neither were specified, smartly pick CTE[39m
+                    contentTypeEngine = ContentTypeEngineBase.GetContentType(FileName);
+                }
+            }
+
+            [38;2;0;136;0;01mif[39;00m (MyInvocation.BoundParameters.TryGetValue([38;2;221;34;0;48;2;255;240;240m"PaperSize"[39;49m, [38;2;0;136;0;01mout[39;00m [38;2;136;136;136;01mvar[39;00m paperSize)) {
+                _print.SetPaperSize(([38;2;136;136;136;01mstring[39;00m)paperSize);
+            }
+
+            rec.PercentComplete = [38;2;0;0;221;01m3[39;00m[38;2;0;0;221;01m0[39;00m;
+            rec.StatusDescription = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Loading content"[39;49m;
+            WriteProgress(rec);
+
+            [38;2;0;136;0;01mif[39;00m (_verbose) {
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"FileName/Title:      {FileName}"[39;49m, FileName);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Title:               {title}"[39;49m, Title);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Content Type Engine: {cte}"[39;49m, contentTypeEngine);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Printer:             {printer}"[39;49m, _print.PrintDocument.PrinterSettings.PrinterName);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Paper Size:          {size}"[39;49m, _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Orientation:         {s}"[39;49m, _print.PrintDocument.DefaultPageSettings.Landscape ? [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Landscape"[39;49m : [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Portrait"[39;49m);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Sheet Definition:    {name} ({id})"[39;49m, sheet.Name, sheetID);
+            }
+
+            _print.SheetViewModel.File = Title;
+
+            _print.PrintingSheet += (s, sheetNum) => {
+                [38;2;0;136;0;01mif[39;00m (sheetNum > [38;2;0;0;221;01m6[39;00m[38;2;0;0;221;01m0[39;00m) {
+                    rec.PercentComplete = [38;2;0;0;221;01m9[39;00m[38;2;0;0;221;01m5[39;00m;
+                }
+                [38;2;0;136;0;01melse[39;00m {
+                    rec.PercentComplete = [38;2;0;0;221;01m4[39;00m[38;2;0;0;221;01m0[39;00m + sheetNum;
+                }
+
+                rec.StatusDescription = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Printing sheet {sheetNum}"[39;49m;
+                WriteProgress(rec);
+                Log.Information([38;2;221;34;0;48;2;255;240;240m"Printing sheet {sheetNum}"[39;49m, sheetNum);
+            };
+
+            [38;2;0;136;0;01mtry[39;00m {
+                [38;2;0;136;0;01mif[39;00m (_psObjects.Count == [38;2;0;0;221;01m0[39;00m && ![38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(FileName)) {
+                    [38;2;0;136;0;01mawait[39;00m _print.SheetViewModel.LoadFileAsync(FileName, ([38;2;136;136;136;01mstring[39;00m)contentTypeEngine).ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+                }
+                [38;2;0;136;0;01melse[39;00m {
+                    [38;2;136;136;136m// Get $input into a string we can use[39m
+                    [38;2;136;136;136m// See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output[39m
+                    [38;2;136;136;136;01mvar[39;00m textToPrint = SessionState.InvokeCommand.InvokeScript([38;2;221;34;0;48;2;255;240;240m@"$input | Out-String"[39;49m, [38;2;0;136;0;01mtrue[39;00m, PipelineResultTypes.None, _psObjects, [38;2;0;136;0;01mnull[39;00m)[[38;2;0;0;221;01m0[39;00m].ToString();
+
+                    [38;2;0;136;0;01mawait[39;00m _print.SheetViewModel.LoadStringAsync(textToPrint, ([38;2;136;136;136;01mstring[39;00m)contentTypeEngine).ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+                }
+            }
+            [38;2;0;136;0;01mcatch[39;00m (System.IO.FileNotFoundException fnfe) {
+                Log.Error(fnfe, [38;2;221;34;0;48;2;255;240;240m"Print failed."[39;49m);
+                CleanUpUpdateHandler();
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+            [38;2;0;136;0;01mcatch[39;00m (InvalidOperationException ioe) {
+                [38;2;136;136;136m// TODO: Use our own execptions[39m
+                Log.Error(ioe, [38;2;221;34;0;48;2;255;240;240m"Print failed."[39;49m);
+                CleanUpUpdateHandler();
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            rec.PercentComplete = [38;2;0;0;221;01m4[39;00m[38;2;0;0;221;01m0[39;00m;
+            rec.StatusDescription = WhatIf ? [38;2;221;34;0;48;2;255;240;240m"Counting"[39;49m : [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Printing"[39;49m;
+            WriteProgress(rec);
+
+            [38;2;136;136;136;01mvar[39;00m sheetsCounted = [38;2;0;0;221;01m0[39;00m;
+            [38;2;0;136;0;01mtry[39;00m {
+                [38;2;136;136;136;01mvar[39;00m sheetRangeSet = [38;2;0;136;0;01mfalse[39;00m;
+                [38;2;0;136;0;01mif[39;00m (FromSheet != [38;2;0;0;221;01m0[39;00m) {
+                    _print.PrintDocument.PrinterSettings.FromPage = FromSheet;
+                    sheetRangeSet = [38;2;0;136;0;01mtrue[39;00m;
+                }
+                [38;2;0;136;0;01melse[39;00m {
+                    _print.PrintDocument.PrinterSettings.FromPage = [38;2;0;0;221;01m0[39;00m;
+                }
+
+                [38;2;0;136;0;01mif[39;00m (ToSheet != [38;2;0;0;221;01m0[39;00m) {
+                    _print.PrintDocument.PrinterSettings.ToPage = ToSheet;
+                    sheetRangeSet = [38;2;0;136;0;01mtrue[39;00m;
+                }
+                [38;2;0;136;0;01melse[39;00m {
+                    _print.PrintDocument.PrinterSettings.ToPage = [38;2;0;0;221;01m0[39;00m;
+                }
+
+                [38;2;0;136;0;01mif[39;00m (sheetRangeSet) {
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"Printing from sheet {from} to sheet {to}."[39;49m, _print.PrintDocument.PrinterSettings.FromPage, _print.PrintDocument.PrinterSettings.ToPage);
+                }
+
+                [38;2;0;136;0;01mif[39;00m (WhatIf) {
+                    sheetsCounted = [38;2;0;136;0;01mawait[39;00m _print.CountSheets().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+                }
+                [38;2;0;136;0;01melse[39;00m {
+                    sheetsCounted = [38;2;0;136;0;01mawait[39;00m _print.DoPrint().ConfigureAwait([38;2;0;136;0;01mtrue[39;00m);
+                }
+            }
+            [38;2;0;136;0;01mcatch[39;00m (System.ComponentModel.Win32Exception w32e) {
+                [38;2;136;136;136m// This can happen when PDF driver can't access PDF file.[39m
+                Log.Error(w32e, [38;2;221;34;0;48;2;255;240;240m"Print failed."[39;49m);
+                CleanUpUpdateHandler();
+                [38;2;0;136;0;01mreturn[39;00m;
+            }
+
+            [38;2;136;136;136m// Finalize Progress[39m
+            rec.PercentComplete = -[38;2;0;0;221;01m1[39;00m;
+            rec.StatusDescription = [38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Complete"[39;49m;
+            WriteProgress(rec);
+
+            [38;2;136;136;136m// Output via verbose how much printing got done[39m
+            [38;2;0;136;0;01mif[39;00m (_verbose) {
+                Log.Information([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"{(WhatIf ? "[39;49mWould have printed[38;2;221;34;0;48;2;255;240;240m" : "[39;49mPrinted[38;2;221;34;0;48;2;255;240;240m")} {{sheetsCounted}} sheets."[39;49m, sheetsCounted);
+            }
+
+            [38;2;136;136;136m// End by sharing update info, if any[39m
+            [38;2;0;136;0;01mif[39;00m (![38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(_updateMsg)) {
+                Log.Information(_updateMsg);
+            }
+
+            CleanUpUpdateHandler();
+
+            [38;2;136;136;136m// Very last thing we do is write to the output if WhatIf was specified[39m
+            [38;2;0;136;0;01mif[39;00m (WhatIf) {
+                WriteObject(sheetsCounted, [38;2;0;136;0;01mfalse[39;00m);
+            }
+        }
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mPropertyChangedEventHandler[39;00m([38;2;136;136;136;01mobject[39;00m o, PropertyChangedEventArgs e) {
+            Log.Debug([38;2;221;34;0;48;2;255;240;240m"SheetViewModel.PropertyChanged: {s}"[39;49m, e.PropertyName);
+            [38;2;0;136;0;01mswitch[39;00m (e.PropertyName) {
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Landscape"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Paper Orientation: {s}"[39;49m, _print.SheetViewModel.Landscape ? [38;2;221;34;0;48;2;255;240;240m"Landscape"[39;49m : [38;2;221;34;0;48;2;255;240;240m"Portrait"[39;49m);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Header"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Header Text:      {s}"[39;49m, _print.SheetViewModel.Header.Text);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Footer"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Footer Text:      {s}"[39;49m, _print.SheetViewModel.Footer.Text);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Margins"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Margins:          {v}"[39;49m, _print.SheetViewModel.Margins);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"PageSeparator"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    PageSeparator     {s}"[39;49m, _print.SheetViewModel.PageSeparator);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Rows"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Rows:             {s}"[39;49m, _print.SheetViewModel.Rows);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Columns"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Columns:          {s}"[39;49m, _print.SheetViewModel.Columns);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;136;136;136m// TODO: Add INF logging of other sheet properties[39m
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Padding"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    Padding:          {s}"[39;49m, _print.SheetViewModel.Padding / [38;2;0;0;221;01m1[39;00m[38;2;0;0;221;01m0[39;00m[38;2;0;0;221;01m0[39;00mM);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"ContentSettings"[39;49m:
+                    Log.Information([38;2;221;34;0;48;2;255;240;240m"    ContentSettings:  {s}"[39;49m, _print.SheetViewModel.ContentSettings);
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Loading"[39;49m:
+                    [38;2;136;136;136m//WriteProgress(new ProgressRecord(0, "Reading", "reading..."));[39m
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mcase[39;00m [38;2;221;34;0;48;2;255;240;240m"Reflowing"[39;49m:
+                    [38;2;136;136;136m//WriteProgress(new ProgressRecord(0, "Formatting", "formatting..."));[39m
+                    [38;2;0;136;0;01mbreak[39;00m;
+
+                [38;2;0;136;0;01mdefault[39;00m:
+                    [38;2;0;136;0;01mthrow[39;00m [38;2;0;136;0;01mnew[39;00m [38;2;0;102;187;01mInvalidOperationException[39;00m([38;2;166;23;23;48;2;227;210;210m$[39;49m[38;2;221;34;0;48;2;255;240;240m"Property change not handled: {e.PropertyName}"[39;49m);
+            }
+        }
+
+
+        [38;2;0;136;0;01mpublic[39;00m [38;2;0;136;0;01moverride[39;00m [38;2;136;136;136;01mstring[39;00m [38;2;0;102;187;01mGetResourceString[39;00m([38;2;136;136;136;01mstring[39;00m baseName, [38;2;136;136;136;01mstring[39;00m resourceId) {
+            [38;2;0;136;0;01mreturn[39;00m [38;2;0;136;0;01mbase[39;00m.GetResourceString(baseName, resourceId);
+        }
+
+        [38;2;136;136;136m//protected override async Task StopProcessingAsync() {[39m
+        [38;2;136;136;136m//    await base.StopProcessingAsync();[39m
+        [38;2;136;136;136m//}[39m
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Callback for the implementation to obtain a reference to the Cmdlet object.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// <returns>Cmdlet reference.</returns>[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01mvirtual[39;00m Cmdlet [38;2;0;102;187;01mOuterCmdletCall[39;00m() {
+            [38;2;0;136;0;01mreturn[39;00m [38;2;0;136;0;01mthis[39;00m;
+        }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Callback for the implementation to get the current pipeline object.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// <returns>Current object from the pipeline.</returns>[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01mvirtual[39;00m [38;2;136;136;136;01mobject[39;00m [38;2;0;102;187;01mInputObjectCall[39;00m() {
+            [38;2;136;136;136m// just bind to the input object parameter[39m
+            [38;2;0;136;0;01mreturn[39;00m InputObject;
+        }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Callback for the implementation to write objects.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// <param name="value">Object to be written.</param>[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01mvirtual[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mWriteObjectCall[39;00m([38;2;136;136;136;01mobject[39;00m [38;2;0;136;0;01mvalue[39;00m) {
+            [38;2;136;136;136m// just call Monad API[39m
+            WriteObject([38;2;0;136;0;01mvalue[39;00m);
+        }
+        [38;2;204;0;0;01m#endregion[39;00m
+
+        [38;2;204;0;0;01m#region IDisposable Implementation[39;00m
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Default implementation just delegates to internal helper.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// <remarks>This method calls GC.SuppressFinalize</remarks>[39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;0;136;0;01mnew[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mDispose[39;00m() {
+            Dispose([38;2;0;136;0;01mtrue[39;00m);
+
+            [38;2;136;136;136m//GC.SuppressFinalize(this);[39m
+        }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// Dispose pattern implementation.[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// <param name="disposing"></param>[39m
+        [38;2;0;136;0;01mprotected[39;00m [38;2;0;136;0;01mnew[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mDispose[39;00m([38;2;136;136;136;01mbool[39;00m disposing) {
+            [38;2;136;136;136m//base.Dispose(disposing);[39m
+            [38;2;0;136;0;01mif[39;00m (disposing) {
+                AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
+                TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+
+                _print?.Dispose();
+                _getVersionCancellationToken?.Dispose();
+            }
+        }
+
+        [38;2;204;0;0;01m#endregion[39;00m
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mstatic[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mTaskScheduler_UnobservedTaskException[39;00m([38;2;136;136;136;01mobject[39;00m sender, UnobservedTaskExceptionEventArgs e) {
+            ServiceLocator.Current.TelemetryService.TrackException(e.Exception);
+        }
+
+        [38;2;0;136;0;01mprivate[39;00m [38;2;0;136;0;01mstatic[39;00m [38;2;0;136;0;01mvoid[39;00m [38;2;0;102;187;01mCurrentDomain_UnhandledException[39;00m([38;2;136;136;136;01mobject[39;00m sender, UnhandledExceptionEventArgs e) {
+            [38;2;136;136;136;01mvar[39;00m ex = e.ExceptionObject [38;2;0;136;0;01mas[39;00m Exception;
+            ServiceLocator.Current.TelemetryService.TrackException(ex);
+        }
+
+        [38;2;136;136;136m/// <summary>[39m
+        [38;2;136;136;136m/// See https://stackoverflow.com/questions/25823910/pscmdlet-dynamic-auto-complete-a-parameter-like-get-process[39m
+        [38;2;136;136;136m/// </summary>[39m
+        [38;2;136;136;136m/// <returns></returns>[39m
+        [38;2;0;136;0;01mpublic[39;00m [38;2;136;136;136;01mobject[39;00m [38;2;0;102;187;01mGetDynamicParameters[39;00m() {
+
+            [38;2;136;136;136m// We can't report errors here[39m
+            [38;2;0;136;0;01mif[39;00m (WinPrint.Core.Models.ModelLocator.Current.Settings == [38;2;0;136;0;01mnull[39;00m) {
+                [38;2;136;136;136m//System.Console.WriteLine($"Settings are not valid. Check {ServiceLocator.Current.SettingsService.SettingsFileName}.");[39m
+                [38;2;0;136;0;01mreturn[39;00m [38;2;0;136;0;01mnull[39;00m;
+            }
+
+            [38;2;136;136;136;01mvar[39;00m runtimeDict = [38;2;0;136;0;01mnew[39;00m RuntimeDefinedParameterDictionary();
+
+            [38;2;136;136;136m// -PrinterName[39m
+            [38;2;136;136;136;01mvar[39;00m printerNames = [38;2;0;136;0;01mnew[39;00m List<[38;2;136;136;136;01mstring[39;00m>();
+            [38;2;0;136;0;01musing[39;00m [38;2;187;0;102;01mvar[39;00m pd = [38;2;0;136;0;01mnew[39;00m PrintDocument();
+
+            [38;2;0;136;0;01mif[39;00m (![38;2;136;136;136;01mstring[39;00m.IsNullOrEmpty(PrinterName)) {
+                PrinterName = PrinterName.Trim([38;2;221;34;0;48;2;255;240;240m'\"'[39;49m).Trim([38;2;221;34;0;48;2;255;240;240m'\''[39;49m);
+                pd.PrinterSettings.PrinterName = PrinterName;
+
+                [38;2;0;136;0;01mforeach[39;00m (PaperSize size [38;2;0;136;0;01min[39;00m pd.PrinterSettings.PaperSizes) {
+                    printerNames.Add(size.PaperName);
+                }
+            }
+
+            runtimeDict.Add([38;2;221;34;0;48;2;255;240;240m"PaperSize"[39;49m, [38;2;0;136;0;01mnew[39;00m RuntimeDefinedParameter([38;2;221;34;0;48;2;255;240;240m"PaperSize"[39;49m, [38;2;0;136;0;01mtypeof[39;00m([38;2;136;136;136;01mstring[39;00m), [38;2;0;136;0;01mnew[39;00m Collection<Attribute>() {
+                    [38;2;0;136;0;01mnew[39;00m [38;2;0;102;187;01mParameterAttribute[39;00m() {
+                        HelpMessage = [38;2;221;34;0;48;2;255;240;240m"The paper size name."[39;49m,
+                        ParameterSetName = [38;2;221;34;0;48;2;255;240;240m"Print"[39;49m
+                    },
+                    printerNames.Count > [38;2;0;0;221;01m0[39;00m ? [38;2;0;136;0;01mnew[39;00m ValidateSetAttribute(printerNames.ToArray()) : [38;2;0;136;0;01mnull[39;00m
+            }));
+
+            [38;2;136;136;136m// -SheetDefintion[39m
+            [38;2;136;136;136m//  [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",[39m
+            [38;2;136;136;136m//    ParameterSetName = "Print")][39m
+            runtimeDict.Add([38;2;221;34;0;48;2;255;240;240m"SheetDefintion"[39;49m, [38;2;0;136;0;01mnew[39;00m RuntimeDefinedParameter([38;2;221;34;0;48;2;255;240;240m"SheetDefintion"[39;49m, [38;2;0;136;0;01mtypeof[39;00m([38;2;136;136;136;01mstring[39;00m), [38;2;0;136;0;01mnew[39;00m Collection<Attribute>() {
+                    [38;2;0;136;0;01mnew[39;00m [38;2;0;102;187;01mParameterAttribute[39;00m() {
+                        HelpMessage = [38;2;221;34;0;48;2;255;240;240m"Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")."[39;49m,
+                        ParameterSetName = [38;2;221;34;0;48;2;255;240;240m"Print"[39;49m
+                    },
+                    ModelLocator.Current.Settings.Sheets.Count > [38;2;0;0;221;01m0[39;00m ? [38;2;0;136;0;01mnew[39;00m ValidateSetAttribute(ModelLocator.Current.Settings.Sheets.Values.Select(s => s.Name).ToArray()) : [38;2;0;136;0;01mnull[39;00m
+            }));
+
+            [38;2;136;136;136m// -ContentTypeEngine[39m
+            runtimeDict.Add([38;2;221;34;0;48;2;255;240;240m"ContentTypeEngine"[39;49m, [38;2;0;136;0;01mnew[39;00m RuntimeDefinedParameter([38;2;221;34;0;48;2;255;240;240m"ContentTypeEngine"[39;49m, [38;2;0;136;0;01mtypeof[39;00m([38;2;136;136;136;01mstring[39;00m), [38;2;0;136;0;01mnew[39;00m Collection<Attribute>() {
+                    [38;2;0;136;0;01mnew[39;00m [38;2;0;102;187;01mParameterAttribute[39;00m() {
+                        HelpMessage = [38;2;221;34;0;48;2;255;240;240m"Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"text/plain\" or \"csharp\". Specifying a langauge will choose the \"text/code\" CTE."[39;49m,
+                        ParameterSetName = [38;2;221;34;0;48;2;255;240;240m"Print"[39;49m
+                    },
+                    [38;2;0;136;0;01mnew[39;00m [38;2;0;102;187;01mValidateSetAttribute[39;00m(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.GetContentTypeName()).ToArray())
+            }));
+
+            [38;2;136;136;136m//// -Language[39m
+            [38;2;136;136;136m//runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {[39m
+            [38;2;136;136;136m//        new ParameterAttribute() {[39m
+            [38;2;136;136;136m//            HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",[39m
+            [38;2;136;136;136m//            ParameterSetName = "Print"[39m
+            [38;2;136;136;136m//        },[39m
+            [38;2;136;136;136m//        new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())[39m
+            [38;2;136;136;136m//}));[39m
+
+            [38;2;0;136;0;01mreturn[39;00m runtimeDict;
+        }
+    }
+}
