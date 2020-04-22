@@ -21,6 +21,9 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Base class for Content/File Type Engines (CTEs)
     /// </summary>
     public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
+        private static string _defaultCteName = "text/plain";
+        private static string _defaultSyntaxHighlighterCteName = "text/prism";
+
         public new event PropertyChangedEventHandler PropertyChanged;
         protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -46,10 +49,14 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public virtual string GetContentTypeName() {
-            return _contentTypeName;
+        public virtual string ContentTypeEngineName => _contentTypeEngineName;
+        private static readonly string _contentTypeEngineName = "base";
+
+        public string Language {
+            get => _fileType;
+            set => SetField(ref _fileType, value);
         }
-        private static readonly string _contentTypeName = "base";
+        private string _fileType;
 
         /// <summary>
         /// Calculated page size. Set by Sheet view model.
@@ -125,41 +132,58 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <param name="contentType"></param>
         /// <returns></returns>
         public static async Task<ContentTypeEngineBase> CreateContentTypeEngine(string contentType) {
-            ContentTypeEngineBase cte = null;
-
             Debug.Assert(!string.IsNullOrEmpty(contentType));
 
-            switch (contentType) {
-                case "text/html":
-                    cte = HtmlCte.Create();
-                    break;
+            // If contentType matches one of our CTE ContentTypeNames, this will succeed.
+            ContentTypeEngineBase cte = GetDerivedClassesCollection().FirstOrDefault(c => c.ContentTypeEngineName == contentType);
+            string language = string.Empty;
 
-                case "text/plain":
-                    cte = TextCte.Create();
-                    break;
-
-                case "text/ansi":
-                    cte = PygmentsCte.Create();
-                    break;
-
-                // TODO: Figure out if we really want to use the sourcecode CTE.
-                //case "text/sourcecode":
-                //    cte = CodeCte.Create();
-                //    ((CodeCte)cte).Language = contentType;
-                //    break;
-
-                default:
-                    // It must be a language. Verify node.js and Prism are installed
-                    if (await ServiceLocator.Current.NodeService.IsInstalled()) {
-                        // contentType == Language
-                        cte = PrismCte.Create();
-                        ((PrismCte)cte).Language = contentType;
+            if (cte == null) {
+                //  {
+                //  "id": "text/ansi",
+                //  "aliases": [
+                //    "ansi",
+                //    "term"
+                //              ],
+                //  "title": "ANSI Encoded",
+                //  "extensions": [
+                //    ".an",
+                //    ".ansi",
+                //    ".ans"
+                // },
+                // Is it a file extension?
+                var extLanguage = ModelLocator.Current.Associations.Languages.Where(lang => lang.Extensions.Contains(contentType)).FirstOrDefault();
+                if (extLanguage != null && !string.IsNullOrEmpty(extLanguage.Id)) {
+                    // Is Id a Cte Name?
+                    cte = GetDerivedClassesCollection().FirstOrDefault(c => c.ContentTypeEngineName == extLanguage.Id);
+                    if (cte != null) {
+                        return cte;
                     }
-                    else {
-                        Log.Information("Node.js must be installed for Prism-based ({lang}) syntax highlighting. Using {def} instead.", contentType, "text/plain");
-                        cte = TextCte.Create();
+                    // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
+                    language = extLanguage.Id;
+                }
+                else {
+                    // Is it found in a langauge alias?
+                    var alias = ModelLocator.Current.Associations.Languages.Where(lang => lang.Aliases.Contains(contentType)).FirstOrDefault();
+                    if (alias != null) {
+                        // Is Id a Cte Name?
+                        cte = GetDerivedClassesCollection().Where(c => c.ContentTypeEngineName == alias.Id).FirstOrDefault();
+                        if (cte != null) {
+                            return cte;
+                        }
+                        // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
+                        language = contentType;
                     }
-                    break;
+                }
+
+                if (string.IsNullOrEmpty(language)) {
+                    cte = GetDerivedClassesCollection().Where(c => c.ContentTypeEngineName == _defaultCteName).FirstOrDefault();
+                }
+                else {
+                    // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
+                    cte = GetDerivedClassesCollection().Where(c => c.ContentTypeEngineName == _defaultSyntaxHighlighterCteName).FirstOrDefault();
+                    cte.Language = language;
+                }
             }
 
             Debug.Assert(cte != null);
@@ -190,8 +214,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 }
                 else {
                     // No direct file extension, look in Languages
-                    var lang = ModelLocator.Current.Associations.Languages.Where(lang => lang.Extensions.Contains(ext)).FirstOrDefault().Id;
-                    contentType = lang;
+                    contentType = ModelLocator.Current.Associations.Languages.Where(lang => lang.Extensions.Contains(ext)).DefaultIfEmpty(new Langauge() { Id = "text/plain" }).First().Id;
                 }
             }
             else {

@@ -12,16 +12,18 @@ using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypeEngines {
     public class PrismCte : HtmlCte {
-        private static readonly string _contentType = "text/code";
+        private static readonly string _contentType = "text/prism";
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public override string GetContentTypeName() {
-            if (string.IsNullOrEmpty(Language)) {
-                return _contentType;
-            }
-            else {
-                return Language;
+        public override string ContentTypeEngineName {
+            get {
+                if (string.IsNullOrEmpty(Language)) {
+                    return _contentType;
+                }
+                else {
+                    return Language;
+                }
             }
         }
 

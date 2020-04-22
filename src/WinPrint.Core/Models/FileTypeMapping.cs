@@ -2,31 +2,11 @@
 using System.Text.Json.Serialization;
 
 namespace WinPrint.Core.Models {
-
-    public class Langauge {
-        [JsonPropertyName("id")]
-        [SafeForTelemetry]
-        public string Id { get; set; }
-        [JsonPropertyName("extensions")]
-        [SafeForTelemetry]
-        public IList<string> Extensions { get; set; }
-        [JsonPropertyName("aliases")]
-        [SafeForTelemetry]
-        public IList<string> Aliases { get; set; }
-
-        public override int GetHashCode() {
-            return (Id).GetHashCode();
-        }
-
-        public override bool Equals(object obj) {
-            return Id.Equals(((Langauge)obj).Id);
-        }
-    }
     /// <summary>
     /// https://stackoverflow.com/questions/59516258/database-of-file-extensions-to-file-type-language-mappings
     /// </summary>
     /// 
-    public class FileAssociations : ModelBase {
+    public class FileTypeMapping : ModelBase {
         //"files.associations": {
         //    "*.myphp": "php"
         //}
@@ -42,6 +22,30 @@ namespace WinPrint.Core.Models {
 
         [JsonPropertyName("languages")]
         public IList<Langauge> Languages { get; set; }
+    }
 
+    public class Langauge {
+        [JsonPropertyName("id")]
+        [SafeForTelemetry]
+        public string Id { get; set; }
+        [JsonPropertyName("extensions")]
+        [SafeForTelemetry]
+        public IList<string> Extensions { get; set; }
+        [JsonPropertyName("aliases")]
+        [SafeForTelemetry]
+        public IList<string> Aliases { get; set; }
+
+        [JsonPropertyName("title")]
+        [SafeForTelemetry]
+        public string Title { get; set; }
+
+
+        public override int GetHashCode() {
+            return (Id).GetHashCode();
+        }
+
+        public override bool Equals(object obj) {
+            return Id.Equals(((Langauge)obj).Id);
+        }
     }
 }

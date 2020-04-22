@@ -1,6 +1,7 @@
 {
   "files.associations": {
-    "*.ans" :  "ansi",
+    "*.txt": "text/plain",
+    "*.ans": "text/ansi",
     "*.markup": "markup",
     "*.html": "markup",
     "*.htm": "markup",
@@ -578,13 +579,47 @@
   },
   "languages": [
     {
+      "id": "text/plain",
+      "aliases": [
+        "text",
+        "txt",
+        "plaintext"
+      ],
+      "title": "Plain Text",
+      "extensions": [
+        ".txt",
+        ".text"
+      ]
+    },
+    {
       "id": "text/ansi",
-      "aliases": [],
+      "aliases": [
+        "ansi",
+        "term"
+      ],
       "title": "ANSI Encoded",
       "extensions": [
         ".an",
         ".ansi",
         ".ans"
+      ]
+    },
+    {
+      "id": "text/html",
+      "aliases": [
+      ],
+      "title": "Markup as Html",
+      "extensions": [
+        ".html_"
+      ]
+    },
+    {
+      "id": "text/prism",
+      "aliases": [
+      ],
+      "title": "Prism.js Syntax Highlighted",
+      "extensions": [
+        ".html_"
       ]
     },
     {

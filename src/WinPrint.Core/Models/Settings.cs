@@ -101,17 +101,21 @@ namespace WinPrint.Core.Models {
         public HtmlCte HtmlContentTypeEngineSettings { get; set; }
         public PrismCte PrismContentTypeEngineSettings { get; set; }
 
-        public FileAssociations LanguageAssociations { get; set; }
+        /// <summary>
+        /// File Type Mappings - note legacy property name. Don't change.
+        /// </summary>
+        [JsonPropertyName("languageAssociations")]
+        public FileTypeMapping FileTypeMapping { get; set; }
 
         [JsonIgnore]
         [SafeForTelemetry]
         public int NumFilesAssociations {
             get {
-                if (LanguageAssociations == null || LanguageAssociations.FilesAssociations == null) {
+                if (FileTypeMapping == null || FileTypeMapping.FilesAssociations == null) {
                     return 0;
                 }
 
-                return LanguageAssociations.FilesAssociations.Count;
+                return FileTypeMapping.FilesAssociations.Count;
             }
         }
 
@@ -119,11 +123,11 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public int NumLanguages {
             get {
-                if (LanguageAssociations == null || LanguageAssociations.Languages == null) {
+                if (FileTypeMapping == null || FileTypeMapping.Languages == null) {
                     return 0;
                 }
 
-                return LanguageAssociations.Languages.Count;
+                return FileTypeMapping.Languages.Count;
             }
         }
 
@@ -333,7 +337,7 @@ namespace WinPrint.Core.Models {
             sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
             settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
 
-            settings.LanguageAssociations = new FileAssociations() {
+            settings.FileTypeMapping = new FileTypeMapping() {
                 FilesAssociations = new Dictionary<string, string>() {
                     { "*.config", "json" },
                     { "*.htm", "text/html" },

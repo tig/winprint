@@ -795,7 +795,7 @@ namespace WinPrint.Console {
                         HelpMessage = "Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"text/plain\" or \"csharp\". Specifying a langauge will choose the \"text/code\" CTE.",
                         ParameterSetName = "Print"
                     },
-                    new ValidateSetAttribute(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.GetContentTypeName()).ToArray())
+                    new ValidateSetAttribute(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.ContentTypeEngineName).ToArray())
             }));
 
             //// -Language

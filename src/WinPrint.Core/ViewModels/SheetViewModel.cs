@@ -189,6 +189,7 @@ namespace WinPrint.Core {
         }
 
         public bool CacheEnabled { get => _cacheEnabled; set => SetField(ref _cacheEnabled, value); }
+
         private bool _cacheEnabled = false;
 
         // if bool is true, reflow. Otherwise just paint
@@ -302,22 +303,44 @@ namespace WinPrint.Core {
             var document = "";
             Encoding = Encoding.UTF8;
             if (!string.IsNullOrEmpty(File)) {
-                var detected = CharsetDetector.DetectFromFile(File).Detected;
+                // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
+
+                using var fileStream = System.IO.File.OpenRead(File);
+                var detected = CharsetDetector.DetectFromStream(fileStream).Detected;
                 if (detected != null) {
                     Log.Debug("File encoding detected: {encoding}", detected);
                     Encoding = detected.Encoding;
                 }
                 else
                 {
-                    Log.Debug("File encoding NOT detected, defaulting to: {encoding}", Encoding);
-                    //throw new InvalidOperationException($"Could not determine the file encoding of '{Path.GetFullPath(File)}'.");
+                    // Not detected. We know CharsetDetector gets confused on ANSI encoded files (rightfully so).
+                    // Does this file have ESC[ sequences?
+                    if (!StreamHasAnsiEsc(fileStream)) {
+                        throw new InvalidOperationException($"This file is not supported by winprint; could not determine the file encoding of '{Path.GetFullPath(File)}'.");
+                    }
+                    Log.Debug("File encoding NOT detected, looks ANSI; using default: {encoding}", Encoding);
                 }
 
-                // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
-                using var streamToPrint = new StreamReader(File, Encoding);
-                document = await streamToPrint.ReadToEndAsync().ConfigureAwait(false);
+                fileStream.Position = 0;
+                using var streamReader = new StreamReader(fileStream, Encoding);
+                document = await streamReader.ReadToEndAsync().ConfigureAwait(false);
             }
             return await LoadStringAsync(document, contentType).ConfigureAwait(false);
+        }
+
+        private bool StreamHasAnsiEsc(Stream stream) {
+            bool containsStr = false;
+            byte[] streamBytes = new byte[stream.Length];
+            stream.Position = 0;
+            stream.Read(streamBytes, 0, (int)stream.Length);
+            string stringOfStream = Encoding.UTF8.GetString(streamBytes);
+            // Look for the Default foreground color esc sequence
+            // Note, just looking for the ESC[ sequence is not enough as PDF files
+            // include.
+            if (stringOfStream.Contains("\u001B[39;00m")) {
+                containsStr = true;
+            }
+            return containsStr;
         }
 
         /// <summary>

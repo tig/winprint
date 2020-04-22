@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Serilog;
 using WinPrint.Core;
+using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Services;
 
 namespace WinPrint.WinForms {
@@ -116,14 +117,16 @@ namespace WinPrint.WinForms {
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Key Up", new Dictionary<string, string> { ["KeyCode"] = e.KeyCode.ToString() });
 
             base.OnKeyUp(e);
+
+#if TERMINAL
+            var pygCte = SheetViewModel.ContentEngine as PygmentsCte;
+#endif 
             switch (e.KeyCode) {
                 case Keys.PageDown:
-                case Keys.Down:
                     PageDown();
                     break;
 
                 case Keys.PageUp:
-                case Keys.Up:
                     PageUp();
                     break;
 
@@ -134,6 +137,35 @@ namespace WinPrint.WinForms {
                 case Keys.OemMinus:
                     ZoomOut();
                     break;
+
+                case Keys.Down:
+#if TERMINAL
+                    pygCte.DecoderClient.MoveCursor(null, libvt100.Direction.Down, 1);
+                    Invalidate();
+#else
+                    PageUp();
+#endif
+                    break;
+                case Keys.Up:
+#if TERMINAL
+                    pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Up, 1);
+                    Invalidate();
+#else
+                    PageDown();
+#endif
+                    break;
+
+#if TERMINAL
+                case Keys.Right:
+                    pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Forward, 1);
+                    Invalidate();
+                    break;
+
+                case Keys.Left:
+                    pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Backward, 1);
+                    Invalidate();
+                    break;
+#endif
 
                 default:
                     break;

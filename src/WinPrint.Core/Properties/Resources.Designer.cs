@@ -63,6 +63,8 @@ namespace WinPrint.Core.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;files.associations&quot;: {
+        ///    &quot;*.txt&quot;: &quot;text/plain&quot;,
+        ///    &quot;*.ans&quot;: &quot;text/ansi&quot;,
         ///    &quot;*.markup&quot;: &quot;markup&quot;,
         ///    &quot;*.html&quot;: &quot;markup&quot;,
         ///    &quot;*.htm&quot;: &quot;markup&quot;,
@@ -80,9 +82,7 @@ namespace WinPrint.Core.Properties {
         ///    &quot;*.ct&quot;: &quot;markup&quot;,
         ///    &quot;*.dita&quot;: &quot;markup&quot;,
         ///    &quot;*.ditamap&quot;: &quot;markup&quot;,
-        ///    &quot;*.ditaval&quot;: &quot;markup&quot;,
-        ///    &quot;*.dll.config&quot;: &quot;markup&quot;,
-        ///    &quot;*.fi [rest of string was truncated]&quot;;.
+        ///    &quot;*.ditava [rest of string was truncated]&quot;;.
         /// </summary>
         public static string languages {
             get {
@@ -91,25 +91,30 @@ namespace WinPrint.Core.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to /**
-        /// * prism.js WinPrint theme 
-        /// * Based on prism-coy.css
-        /// * @author Charlie Kindel
-        /// */
-        ///
-        ///code[class*=&quot;language-&quot;],
-        ///pre[class*=&quot;language-&quot;] {
-        ///    color: black;
-        ///    /* *font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace; */
-        ///    /* HACK: note &apos;winprint&apos; font at end. */
-        ///    font-family: &apos;Cascadia Code&apos;, Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace, winprint;
-        ///    font-size: 7pt;
+        ///   Looks up a localized string similar to pre[class*=&quot;language-&quot;],
+        ///code[class*=&quot;language-&quot;] {
+        ///	color: #3b3b3b;
+        ///	font-size: 13px;
+        ///	text-shadow: none;
+        ///	font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
+        ///	direction: ltr;
+        ///	text-align: left;
+        ///	white-space: pre;
+        ///	word-spacing: normal;
+        ///	word-break: normal;
+        ///	line-height: 1.5;
+        ///	-moz-tab-size: 4;
+        ///	-o-tab-size: 4;
+        ///	tab-size: 4;
+        ///	-webkit-hyphens: none;
+        ///	-moz-hyphens: none;
+        ///	-ms-hyphens: none;
+        ///	hyphens: none;
         ///}
         ///
-        ///code[class*=&quot;language&quot;] {
-        ///    max-height: inherit;
-        ///    height: inherit;
-        ///    displ [rest of string was truncated]&quot;;.
+        ///pre[class*=&quot;language-&quot;]::selection,
+        ///code[class*=&quot;language-&quot;]::selection {
+        ///	text- [rest of string was truncated]&quot;;.
         /// </summary>
         public static string prism_winprint {
             get {

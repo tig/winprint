@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.3.117</Version>
+    <Version>2.0.3.236</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -21,11 +21,11 @@
 
   <ItemGroup>
     <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
-    <None Remove="Properties\languages.json" />
+    <None Remove="Properties\FileTypeMapping.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\languages.json" />
+    <EmbeddedResource Include="Resources\FileTypeMapping.json" />
     <EmbeddedResource Include="Resources\prism-winprint-overrides.css">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -52,13 +52,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\libvt100\src\libvt100.csproj" />
     <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="libvt100">
-      <HintPath>..\..\..\libvt100\src\bin\Debug\netcoreapp3.1\libvt100.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

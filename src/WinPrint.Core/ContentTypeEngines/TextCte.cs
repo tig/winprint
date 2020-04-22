@@ -34,9 +34,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public override string GetContentTypeName() {
-            return _contentType;
-        }
+        public override string ContentTypeEngineName => _contentType;
 
         public static TextCte Create() {
             var engine = new TextCte();

@@ -52,9 +52,13 @@ namespace WinPrint.Core {
         /// </summary>
         public DateTime DateCreated => IsValidFilename(svm.File) ? File.GetCreationTime(svm.File) : DateTime.MinValue;
         /// <summary>
-        /// The file type (e.g. "text/plain" or "csharp").
+        /// The language (e.g. "csharp" or "text/plain" if no language is specified)
         /// </summary>
-        public string FileType => svm.ContentEngine == null ? "" : svm.ContentEngine.GetContentTypeName();
+        public string Language => svm.ContentEngine == null ? "" : (string.IsNullOrEmpty(svm.ContentEngine.Language) ? CteName : svm.ContentEngine.Language);
+        /// <summary>
+        /// The file content type engine name (e.g. "text/plain").
+        /// </summary>
+        public string CteName => svm.ContentEngine == null ? "" : svm.ContentEngine.ContentTypeEngineName;
 
         /// <summary>
         /// The current sheet number.

@@ -21,7 +21,7 @@ namespace WinPrint.Core.UnitTests.Cte
         public void GetContentTypeNameTest()
         {
             TextCte cte = new TextCte();
-            Assert.Equal("text/plain", cte.GetContentTypeName());
+            Assert.Equal("text/plain", cte.ContentTypeEngineName);
         }
 
         [Fact]
@@ -31,10 +31,10 @@ namespace WinPrint.Core.UnitTests.Cte
             {
                 ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true)
             };
-            Assert.Equal("text/plain", svm.ContentEngine.GetContentTypeName());
+            Assert.Equal("text/plain", svm.ContentEngine.ContentTypeEngineName);
 
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/html").ConfigureAwait(true);
-            Assert.NotEqual("text/plain", svm.ContentEngine.GetContentTypeName());
+            Assert.NotEqual("text/plain", svm.ContentEngine.ContentTypeEngineName);
         }
 
         [Fact]

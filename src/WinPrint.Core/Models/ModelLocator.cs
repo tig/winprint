@@ -14,14 +14,14 @@ namespace WinPrint.Core.Models {
         private ModelLocator() {
             // Register the models via the Servcies Factory
             SimpleIoc.Default.Register<Settings>(SettingsService.Create);
-            SimpleIoc.Default.Register<FileAssociations>(FileAssociationsService.Create);
+            SimpleIoc.Default.Register<FileTypeMapping>(FileTypeMappingService.Create);
             SimpleIoc.Default.Register<Options>();
         }
 
         public Models.Settings Settings => SimpleIoc.Default.GetInstance<Models.Settings>();
 
         public Models.Options Options => SimpleIoc.Default.GetInstance<Models.Options>();
-        public Models.FileAssociations Associations => SimpleIoc.Default.GetInstance<Models.FileAssociations>();
+        public Models.FileTypeMapping Associations => SimpleIoc.Default.GetInstance<Models.FileTypeMapping>();
 
         public void Register<VM, V>()
             where VM : class {
@@ -31,7 +31,7 @@ namespace WinPrint.Core.Models {
         public static void Reset() {
             _current = null;
             SimpleIoc.Default.Unregister<Settings>();
-            SimpleIoc.Default.Unregister<FileAssociations>();
+            SimpleIoc.Default.Unregister<FileTypeMapping>();
             SimpleIoc.Default.Unregister<Options>();
         }
     }

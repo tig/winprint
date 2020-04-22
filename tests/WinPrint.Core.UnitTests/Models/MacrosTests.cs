@@ -432,38 +432,45 @@ namespace WinPrint.Core.UnitTests.Models
         }
 
         [Fact]
-        public async void FileType()
+        public async void CteName()
         {
             // https://stackoverflow.com/questions/22598323/movenext-instead-of-actual-method-task-name
-            string macroName = "FileType";
+            string macroName = "CteName";
 
             SheetViewModel svm = new SheetViewModel();
             Macros macros = new Macros(svm);
 
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/plain").ConfigureAwait(true);
-            Assert.Equal("text/plain", svm.ContentEngine.GetContentTypeName());
-            Assert.Equal(svm.ContentEngine.GetContentTypeName(), macros.ReplaceMacros($"{{{macroName}}}"));
-
-            //svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(ContentTypeEngineBase.GetContentType("foo.txt")).ConfigureAwait(true);
-            //Assert.Equal("text/plain", svm.ContentEngine.GetContentType());
-            //Assert.Equal(svm.ContentEngine.GetContentType(), macros.ReplaceMacro($"{{{macroName}}}"));
+            Assert.Equal("text/plain", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
 
             svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/html").ConfigureAwait(true);
-            Assert.Equal("text/html", svm.ContentEngine.GetContentTypeName());
-            Assert.Equal(svm.ContentEngine.GetContentTypeName(), macros.ReplaceMacros($"{{{macroName}}}"));
+            Assert.Equal("text/html", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
 
-            //svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(ContentTypeEngineBase.GetContentType("foo.html")).ConfigureAwait(true);
-            //Assert.Equal("text/html", svm.ContentEngine.GetContentType());
-            //Assert.Equal(svm.ContentEngine.GetContentType(), macros.ReplaceMacro($"{{{macroName}}}"));
+            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/prism").ConfigureAwait(true);
+            Assert.Equal("text/prism", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
 
-            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/code").ConfigureAwait(true);
-            Assert.Equal("text/code", ((PrismCte)svm.ContentEngine).GetContentTypeName());
-            Assert.Equal(((PrismCte)svm.ContentEngine).GetContentTypeName(), macros.ReplaceMacros($"{{{macroName}}}"));
+            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text/ansi").ConfigureAwait(true);
+            Assert.Equal("text/ansi", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
 
-            //svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(ContentTypeEngineBase.GetContentType("foo.cs")).ConfigureAwait(true);
-            //Assert.Equal("csharp", ((PrismCte)svm.ContentEngine).GetContentType());
-            //Assert.Equal(((PrismCte)svm.ContentEngine).GetContentType(), macros.ReplaceMacro($"{{{macroName}}}"));
+            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine("text").ConfigureAwait(true);
+            Assert.Equal("text/plain", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
 
+            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(".txt").ConfigureAwait(true);
+            Assert.Equal("text/plain", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(".ans").ConfigureAwait(true);
+            Assert.Equal("text/ansi", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            svm.ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(".cs").ConfigureAwait(true);
+            Assert.Equal("text/prism", svm.ContentEngine.ContentTypeEngineName);
+            Assert.Equal(svm.ContentEngine.ContentTypeEngineName, macros.ReplaceMacros($"{{{macroName}}}"));
         }
 
         [Fact]
