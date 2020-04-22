@@ -56,13 +56,22 @@ namespace WinPrint.Core {
         private ContentSettings _contentSettings;
 
         /// <summary>
-        /// The path of the file being printed. Used for header/footer display purposes only.
+        /// The fully qualified path of the file being printed. Used for header/footer display purposes only.
         /// </summary>
         public string File {
             get => _file;
             set => SetField(ref _file, value);
         }
         private string _file;
+
+        /// <summary>
+        /// The fully qualified path of the file being printed. Used for header/footer display purposes only.
+        /// </summary>
+        public string Title {
+            get => _title;
+            set => SetField(ref _title, value);
+        }
+        private string _title;
 
         /// <summary>
         /// The charcter encoding of the document
@@ -272,7 +281,7 @@ namespace WinPrint.Core {
         /// <summary>
         /// Loads the specified file via the appropriate Content Type Engine.
         /// </summary>
-        /// <param name="filePath">File to load.</param>
+        /// <param name="filePath">Fully qualified path to File to load.</param>
         /// <param name="contentType">If null or empty, the file extension will be used to determine content type engine.</param>
         /// <returns>True if content type engine was initialized. False otherwise.</returns>
         public async Task<bool> LoadFileAsync(string filePath, string contentType = null) {

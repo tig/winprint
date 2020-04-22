@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Printing;
+using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Management.Automation;
@@ -38,7 +39,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the printer to print to.
         /// The alias allows "lp -P printer".
-        /// Name alias: becuase that's what out-printer uses.
+        /// Name alias: because that's what out-printer uses.
         /// </summary>
         [Parameter(HelpMessage = "The name of the printer to print to. If not specified the default printer will be used.",
             ParameterSetName = "Print"), ArgumentCompleter(typeof(PrinterNameCompleter))]
@@ -53,16 +54,16 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional name of the WinPrint sheet definition to use.
         /// </summary>
-        /// SheetDefintion - Implemented via IDynamicParameters.GetDynamicParameters
+        /// SheetDefinition - Implemented via IDynamicParameters.GetDynamicParameters
 
         public enum PortraitLandscape {
             Portrait = 0,
             Landscape = 1
         }
         /// <summary>
-        /// If specfied, overrides the landscape setting in the sheet defintion.
+        /// If specified, overrides the landscape setting in the sheet definition.
         /// </summary>
-        [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet defintion.",
+        [Parameter(HelpMessage = "If specified (Yes or No) overrides the landscape setting in the sheet definition.",
             ParameterSetName = "Print")]
         public PortraitLandscape? Orientation { get; set; }
 
@@ -71,9 +72,9 @@ namespace WinPrint.Console {
             Yes = 1
         }
         /// <summary>
-        /// If specfied, overrides the line numbers setting in the sheet defintion.
+        /// If specified, overrides the line numbers setting in the sheet definition.
         /// </summary>
-        [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet defintion (Yes, No).",
+        [Parameter(HelpMessage = " If specfied, overrides the line numbers setting in the sheet definition (Yes, No).",
             ParameterSetName = "Print")]
         public YesNo? LineNumbers { get; set; }
 
@@ -93,10 +94,10 @@ namespace WinPrint.Console {
         public string Language { get; set; }
 
         /// <summary>
-        /// Optional FileName - will be displayed in header/footer and as title of print job.
+        /// Optional FileName - will be displayed in header/footer and as title of print job (if -Title is not provided).
         /// If $input is not available, FileName will be used as the path to the file to print.
         /// </summary>
-        [Parameter(Position = 0, HelpMessage = "FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. " +
+        [Parameter(Position = 0, HelpMessage = "FileName to be displayed in header/footer with the {FileName} (and {Title} if -Title is not provided) macros. " +
             "If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. " +
             "If $input is not available, FileName will be used as the path to the file to print.",
             ParameterSetName = "Print")]
@@ -106,7 +107,7 @@ namespace WinPrint.Console {
         /// <summary>
         /// Optional FileName - will be displayed in header/footer and as title of print job.
         /// </summary>
-        [Parameter(HelpMessage = "Title to be displayed in header/footer with the {Title} or {FileName} macros.",
+        [Parameter(HelpMessage = "Title to be displayed in header/footer with the {Title} macro.",
             ParameterSetName = "Print")]
         public string Title { get; set; }
 
@@ -208,6 +209,7 @@ namespace WinPrint.Console {
         private async Task<bool> DoUpdateAsync() {
             var version = await ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true);
             var path = await ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(true);
+            Log.Debug("Latest version found: {ver}", version);
 #if DEBUG
             var log = "-lv winprint.msiexec.log";
 #else
@@ -278,7 +280,7 @@ namespace WinPrint.Console {
 
         #region PowerShell AsyncCmdlet Overrides
         /// <summary>
-        /// Read command line parameters. 
+        /// Read command line parameters.
         /// This method gets called once for each cmdlet in the pipeline when the pipeline starts executing
         /// </summary>
         protected override async Task BeginProcessingAsync() {
@@ -289,11 +291,11 @@ namespace WinPrint.Console {
                 ServiceLocator.Current.TelemetryService.Start("out-winprint");
 
                 // AsyncCmdlet base adds each cmdlet instance to PowerShellSink.Instance; this call configures
-                // the Debug and File LogEventLevel's only 
+                // the Debug and File LogEventLevel's only
                 ServiceLocator.Current.LogService.Start("out-winprint", PowerShellSink.Instance, debug: _debug, verbose: _verbose);
             }
             else {
-                // Change Console logging as specififed by paramters (e.g. -verbose and/or -debug)
+                // Change Console logging as specified by paramters (e.g. -verbose and/or -debug)
                 // ConsoleLevelSwitch is for the PowerShellSink logger only
                 ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_verbose ? LogEventLevel.Information : LogEventLevel.Warning);
                 ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = (_debug ? LogEventLevel.Debug : ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel);
@@ -441,11 +443,17 @@ namespace WinPrint.Console {
                 }
             }
 
+            // Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.
+            // Note, Title stays as was provided via -FileName or -Title
+            if (!string.IsNullOrEmpty(FileName) && !Path.IsPathFullyQualified(FileName)) {
+                FileName = Path.GetFullPath(FileName, SessionState.Path.CurrentFileSystemLocation.Path);
+            }
+
             SheetSettings sheet = null;
             string sheetID = null;
             try {
-                MyInvocation.BoundParameters.TryGetValue("SheetDefintion", out var sheetDefintion);
-                sheet = _print.SheetViewModel.FindSheet((string)sheetDefintion, out sheetID);
+                MyInvocation.BoundParameters.TryGetValue("SheetDefinition", out var sheetDefinition);
+                sheet = _print.SheetViewModel.FindSheet((string)sheetDefinition, out sheetID);
 
                 rec.PercentComplete = 20;
                 rec.StatusDescription = $"Setting Sheet Settings for {sheet.Name}";
@@ -459,7 +467,7 @@ namespace WinPrint.Console {
                     sheet.ContentSettings.LineNumbers = LineNumbers == YesNo.Yes;
                 }
 
-                // Must set landsacpe after printer/paper selection
+                // Must set landscape after printer/paper selection
                 _print.PrintDocument.DefaultPageSettings.Landscape = sheet.Landscape;
                 _print.SheetViewModel.SetSheet(sheet);
             }
@@ -469,7 +477,7 @@ namespace WinPrint.Console {
                 return;
             }
 
-            // If Langauge is provided, use it instead of CTE. 
+            // If Langauge is provided, use it instead of CTE.
             if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentTypeEngine)) {
                 if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentTypeEngine)) {
                     // If neither were specified, smartly pick CTE
@@ -486,7 +494,7 @@ namespace WinPrint.Console {
             WriteProgress(rec);
 
             if (_verbose) {
-                Log.Information("FileName/Title:      {FileName}", FileName);
+                Log.Information("FileName:            {FileName}", FileName);
                 Log.Information("Title:               {title}", Title);
                 Log.Information("Content Type Engine: {cte}", contentTypeEngine);
                 Log.Information("Printer:             {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
@@ -495,7 +503,8 @@ namespace WinPrint.Console {
                 Log.Information("Sheet Definition:    {name} ({id})", sheet.Name, sheetID);
             }
 
-            _print.SheetViewModel.File = Title;
+            _print.SheetViewModel.File = FileName;
+            _print.SheetViewModel.Title = Title;
 
             _print.PrintingSheet += (s, sheetNum) => {
                 if (sheetNum > 60) {
@@ -512,6 +521,10 @@ namespace WinPrint.Console {
 
             try {
                 if (_psObjects.Count == 0 && !string.IsNullOrEmpty(FileName)) {
+                    if (!Path.IsPathFullyQualified(FileName)) {
+                        FileName = Path.GetFullPath(FileName, SessionState.Path.CurrentFileSystemLocation.Path);
+                    }
+
                     await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
                 }
                 else {
@@ -521,6 +534,11 @@ namespace WinPrint.Console {
 
                     await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
                 }
+            }
+            catch (System.IO.DirectoryNotFoundException dnfe) {
+                Log.Error(dnfe, "Print failed.");
+                CleanUpUpdateHandler();
+                return;
             }
             catch (System.IO.FileNotFoundException fnfe) {
                 Log.Error(fnfe, "Print failed.");
@@ -760,10 +778,10 @@ namespace WinPrint.Console {
                     printerNames.Count > 0 ? new ValidateSetAttribute(printerNames.ToArray()) : null
             }));
 
-            // -SheetDefintion
+            // -SheetDefinition
             //  [Parameter(HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\")",
             //    ParameterSetName = "Print")]
-            runtimeDict.Add("SheetDefintion", new RuntimeDefinedParameter("SheetDefintion", typeof(string), new Collection<Attribute>() {
+            runtimeDict.Add("SheetDefinition", new RuntimeDefinedParameter("SheetDefinition", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
                         HelpMessage = "Name of the WinPrint sheet definition to use (e.g. \"Default 2-Up\").",
                         ParameterSetName = "Print"

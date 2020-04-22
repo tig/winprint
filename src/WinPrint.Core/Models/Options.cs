@@ -22,7 +22,7 @@ namespace WinPrint.Core.Models {
 
         // Print options
         [SafeForTelemetry]
-        [Option('s', "sheet", Required = false, HelpText = "Sheet defintion to use for formatting. Use sheet ID or friendly name.")]
+        [Option('s', "sheet", Required = false, HelpText = "Sheet definition to use for formatting. Use sheet ID or friendly name.")]
         public string Sheet { get; set; }
 
         [SafeForTelemetry]
@@ -86,7 +86,7 @@ namespace WinPrint.Core.Models {
                         FromPage = 1,
                         ToPage = 2
                     }),
-                    new Example("Print Program.cs using the 2 Up sheet defintion", new Options {
+                    new Example("Print Program.cs using the 2 Up sheet definition", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         Sheet = "2 Up"
                     }),

@@ -12,7 +12,7 @@ namespace WinPrint.Core.Models {
         public IEnumerable<string> Files { get; set; }
 
         // Print options
-        [Option('s', "sheet", Required = false, Default = "default", HelpText = "Sheet defintion to use for formatting. Use sheet ID or friendly name.")]
+        [Option('s', "sheet", Required = false, Default = "default", HelpText = "Sheet definition to use for formatting. Use sheet ID or friendly name.")]
         public string Sheet { get; set; }
 
         [Option('l', "landscape", Required = false, Default = false, HelpText = "Force landscape orientation.")]
@@ -55,13 +55,13 @@ namespace WinPrint.Core.Models {
                         Files = new List<string>() { { "*.cs" } },
                         Printer = "Fabricam 535",
                         PaperSize = "A4"
-                    }),                    
+                    }),
                     new Example("Print the first two pages of Program.cs", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         FromPage = 1,
                         ToPage = 2
                     }),
-                    new Example("Print Program.cs using the 2 Up sheet defintion", new Options {
+                    new Example("Print Program.cs using the 2 Up sheet definition", new Options {
                         Files = new List<string>() { { "Program.cs" } },
                         Sheet = "2 Up"
                     })

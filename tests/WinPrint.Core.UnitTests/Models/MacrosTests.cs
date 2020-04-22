@@ -27,7 +27,6 @@ namespace WinPrint.Core.UnitTests.Models
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacros(@"{FileName}"));
-            Assert.Equal(file, macros.ReplaceMacros(@"{Title}"));
             Assert.Equal(Path.GetFileNameWithoutExtension(file), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
             Assert.Equal(Path.GetDirectoryName(file), macros.ReplaceMacros(@"{FileDirectoryName}"));
             Assert.Equal(Path.GetFullPath(file), macros.ReplaceMacros(@"{FullPath}"));
@@ -52,7 +51,6 @@ namespace WinPrint.Core.UnitTests.Models
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacros(@"{FileName}"));
-            Assert.Equal(file, macros.ReplaceMacros(@"{Title}"));
             Assert.Equal(Path.GetFileNameWithoutExtension(file), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
             Assert.Equal(Path.GetDirectoryName(file), macros.ReplaceMacros(@"{FileDirectoryName}"));
             Assert.Equal(Path.GetFullPath(file), macros.ReplaceMacros(@"{FullPath}"));
@@ -79,7 +77,6 @@ namespace WinPrint.Core.UnitTests.Models
 
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacros(@"{FileName}"));
-            Assert.Equal(file, macros.ReplaceMacros(@"{Title}"));
             Assert.Equal(Path.GetFileNameWithoutExtension(file), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
             // return original path
             Assert.Equal(Path.GetDirectoryName(file), macros.ReplaceMacros(@"{FileDirectoryName}"));
@@ -108,34 +105,9 @@ namespace WinPrint.Core.UnitTests.Models
             // return original file
             Assert.Equal(Path.GetExtension(file), macros.ReplaceMacros(@"{FileExtension}"));
             Assert.Equal(Path.GetFileName(file), macros.ReplaceMacros(@"{FileName}"));
-            Assert.Equal(file, macros.ReplaceMacros(@"{Title}"));
             Assert.Equal(Path.GetFileNameWithoutExtension(file), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
             Assert.Equal(Path.GetDirectoryName(file), macros.ReplaceMacros(@"{FileDirectoryName}"));
             Assert.Equal(Path.GetFullPath(file), macros.ReplaceMacros(@"{FullPath}"));
-            // it's not a real file so, dates should be minvalue
-            Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateRevised}"));
-            Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateCreated}"));
-        }
-
-        [Fact]
-        public void TitleAsFileName_Test()
-        {
-            string title = $"Invalid File Char:{Path.GetInvalidFileNameChars()[1]}. Invalid Path Char: {Path.GetInvalidPathChars()[1]}.";
-
-            SheetViewModel svm = new SheetViewModel
-            {
-                File = title,
-                ContentEngine = new TextCte()
-            };
-            Macros macros = new Macros(svm);
-
-            // return original file
-            Assert.Equal("", macros.ReplaceMacros(@"{FileExtension}"));
-            Assert.Equal(Path.GetFileName(title), macros.ReplaceMacros(@"{FileName}"));
-            Assert.Equal(Path.GetFileName(title), macros.ReplaceMacros(@"{Title}"));
-            Assert.Equal(Path.GetFileNameWithoutExtension(title), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
-            Assert.Equal("", macros.ReplaceMacros(@"{FileDirectoryName}"));
-            Assert.Equal(title, macros.ReplaceMacros(@"{FullPath}"));
             // it's not a real file so, dates should be minvalue
             Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateRevised}"));
             Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateCreated}"));
@@ -243,31 +215,8 @@ namespace WinPrint.Core.UnitTests.Models
             SheetViewModel svm = SetupSVM();
             Macros macros = new Macros(svm);
 
-            svm.File = ExistingFile;
-            Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = ExistingFileNoExtension;
-            Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = NonExistingFile;
-            File.Delete(svm.File);
-            Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = NonExistingFileNoExtension;
-            File.Delete(svm.File);
-            Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = InvalidFileName;
-            Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = InvalidDirectoryName;
-            Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = NullName;
-            Assert.Equal("", macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
-
-            svm.File = EmptyName;
-            Assert.Equal("", macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
+            svm.Title = ExistingFile;
+            Assert.Equal(svm.Title, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod().Name}}}"));
         }
 
         [Fact]

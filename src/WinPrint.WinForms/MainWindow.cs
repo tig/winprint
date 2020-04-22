@@ -314,6 +314,9 @@ namespace WinPrint.Winforms {
                         printPreview.CurrentSheet = 1;
                         break;
 
+                    case "Title":
+                        break;
+
                     // When ContentEngine changes we know the document has been loaded.
                     case "ContentEngine":
                         //printPreview.CurrentSheet = 1;
@@ -587,13 +590,19 @@ namespace WinPrint.Winforms {
                 //    - reflow
                 Task.Run(async () => {
                     var stage = "Loading";
+                    var fileToPrint = activeFile;
                     try {
                         BeginInvoke((Action)(() => {
                             printPreview.Text = $"{stage}...";
                         }));
                         // This is an IO bound operation. 
                         // TODO: This does not need to run on another thread if we are using async/await correctly
-                        await printPreview.SheetViewModel.LoadFileAsync(activeFile, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+                        // Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.
+                        // Note, Title stays as was provided via -FileName or -Title
+                        if (!string.IsNullOrEmpty(fileToPrint) && !Path.IsPathFullyQualified(fileToPrint)) {
+                            fileToPrint = Path.GetFullPath(fileToPrint, Directory.GetCurrentDirectory());
+                        }
+                        await printPreview.SheetViewModel.LoadFileAsync(fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                         // Set landscape. This causes other DefaultPageSettings to change
                         // These are CPU bound operations. 
@@ -613,6 +622,11 @@ namespace WinPrint.Winforms {
                         await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
                     }
+                    catch (DirectoryNotFoundException dnfe) {
+                        Log.Error(dnfe, "File Not Found");
+                        ShowMessage($"{stage}: {dnfe.Message}");
+                        return;
+                    }
                     catch (FileNotFoundException fnfe) {
                         Log.Error(fnfe, "File Not Found");
                         ShowMessage($"{stage}: {fnfe.Message}");
@@ -620,7 +634,7 @@ namespace WinPrint.Winforms {
                     }
                     catch (InvalidOperationException ioe) {
                         ServiceLocator.Current.TelemetryService.TrackException(ioe, false);
-                        Log.Error(ioe, "Error Operation {file}", activeFile);
+                        Log.Error(ioe, "Error Operation {file}", fileToPrint);
                         ShowMessage($"{stage}: {ioe.Message}");
                         //                fileButton_Click(null, null);
                     }
@@ -628,8 +642,8 @@ namespace WinPrint.Winforms {
                     catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
                         ServiceLocator.Current.TelemetryService.TrackException(e, false);
-                        Log.Error(e, "Exception {file}", activeFile);
-                        ShowMessage($"{stage}: Exception: {e.Message}{Environment.NewLine}({activeFile})");
+                        Log.Error(e, "Exception {file}", fileToPrint);
+                        ShowMessage($"{stage}: Exception: {e.Message}{Environment.NewLine}({fileToPrint})");
                     }
                     finally {
                         // Set Loading to false in case of an error

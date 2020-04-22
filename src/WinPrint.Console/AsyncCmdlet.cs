@@ -174,6 +174,14 @@ namespace WinPrint.Console {
             PowerShellSink.Instance.UnRegister(GetHashCode());
         }
 
+        // BUGBUG: Trying to figure out how to make the message pump work to get these
+        // calls onto the main thread.
+        //public new void WriteDebug(string text) {
+            
+        //    ThreadAffinitiveSynchronizationContext.Current.Post(new SendOrPostCallback((o) => {
+        //        base.WriteDebug(text);
+        //    }), null);
+        //}
 
         /// <summary>
         ///		Write a progress record to the output stream, and as a verbose message.

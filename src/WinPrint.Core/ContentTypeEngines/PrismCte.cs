@@ -281,9 +281,13 @@ namespace WinPrint.Core.ContentTypeEngines {
                 if (linesInDocument == 0) {
                     //Log.Debug($"Reading stdErr...");
                     var stdErr = new StringBuilder();
+                    if (!node.StandardError.EndOfStream) {
+                        sbHtml.AppendLine($"<tr><td>There was an error syntax highlighting the file. Error details:</ td ></ tr > ");
+                    }
                     while (!node.StandardError.EndOfStream) {
                         var outputLine = await node.StandardError.ReadLineAsync().ConfigureAwait(false);
                         Log.Debug("stdErr: {stdErr}", outputLine);
+                        sbHtml.AppendLine($"<tr><td>{outputLine}</td></tr>");
                     }
                 }
 
