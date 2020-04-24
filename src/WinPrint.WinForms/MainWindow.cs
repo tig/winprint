@@ -323,6 +323,9 @@ namespace WinPrint.Winforms {
                         //printButton.Enabled = printPreview.SheetViewModel.NumSheets > 0;
                         break;
 
+                    case "Language":
+                        break;
+
                     case "ContentSettings":
                         contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
                         lineNumbers.Checked = printPreview.SheetViewModel.ContentSettings.LineNumbers;

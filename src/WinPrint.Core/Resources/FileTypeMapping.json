@@ -1,7 +1,7 @@
 {
   "files.associations": {
-    "*.txt": "text/plain",
-    "*.ans": "text/ansi",
+    "*.txt": "text",
+    "*.ans": "ansi",
     "*.markup": "markup",
     "*.html": "markup",
     "*.htm": "markup",
@@ -608,18 +608,18 @@
       "id": "text/html",
       "aliases": [
       ],
-      "title": "Markup as Html",
+      "title": "HTML as HTML",
       "extensions": [
-        ".html_"
+        "._html"
       ]
     },
     {
       "id": "text/prism",
       "aliases": [
+        "prism"
       ],
       "title": "Prism.js Syntax Highlighted",
       "extensions": [
-        ".html_"
       ]
     },
     {

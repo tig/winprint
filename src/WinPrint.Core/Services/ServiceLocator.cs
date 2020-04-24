@@ -19,6 +19,7 @@ namespace WinPrint.Core.Services {
             SimpleIoc.Default.Register<LogService>(true);
             SimpleIoc.Default.Register<TelemetryService>(true);
             SimpleIoc.Default.Register<UpdateService>();
+            SimpleIoc.Default.Register<PygmentsConverterService>();
         }
 
         public LogService LogService => SimpleIoc.Default.GetInstance<Services.LogService>();
@@ -27,6 +28,7 @@ namespace WinPrint.Core.Services {
         public FileTypeMappingService FileTypeMappingService => SimpleIoc.Default.GetInstance<Services.FileTypeMappingService>();
         public NodeService NodeService => SimpleIoc.Default.GetInstance<Services.NodeService>();
         public UpdateService UpdateService => SimpleIoc.Default.GetInstance<UpdateService>();
+        public PygmentsConverterService PygmentsConverterService => SimpleIoc.Default.GetInstance<PygmentsConverterService>();
 
         public void Register<VM, V>()
             where VM : class {
@@ -41,6 +43,7 @@ namespace WinPrint.Core.Services {
             SimpleIoc.Default.Unregister<LogService>();
             SimpleIoc.Default.Unregister<TelemetryService>();
             SimpleIoc.Default.Unregister<UpdateService>();
+            SimpleIoc.Default.Unregister<PygmentsConverterService>();
         }
     }
 }

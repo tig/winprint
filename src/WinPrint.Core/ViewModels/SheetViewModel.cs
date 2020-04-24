@@ -73,6 +73,12 @@ namespace WinPrint.Core {
         }
         private string _title;
 
+        public string Language {
+            get => _language;
+            set => SetField(ref _language, value);
+        }
+        private string _language;
+
         /// <summary>
         /// The charcter encoding of the document
         /// </summary>
@@ -294,7 +300,7 @@ namespace WinPrint.Core {
 
             if (string.IsNullOrEmpty(contentType)) {
                 // Use file extension to determine contentType
-                contentType = ContentTypeEngineBase.GetContentType(File);
+                contentType = ContentTypeEngineBase.GetContentTypeOrLanguage(File);
             }
 
 
@@ -315,7 +321,7 @@ namespace WinPrint.Core {
                 {
                     // Not detected. We know CharsetDetector gets confused on ANSI encoded files (rightfully so).
                     // Does this file have ESC[ sequences?
-                    if (!StreamHasAnsiEsc(fileStream)) {
+                    if (fileStream.Length != 0 && !StreamHasAnsiEsc(fileStream)) {
                         throw new InvalidOperationException($"This file is not supported by winprint; could not determine the file encoding of '{Path.GetFullPath(File)}'.");
                     }
                     Log.Debug("File encoding NOT detected, looks ANSI; using default: {encoding}", Encoding);
@@ -361,7 +367,7 @@ namespace WinPrint.Core {
             Loading = true;
 
             try {
-                ContentEngine = await ContentTypeEngineBase.CreateContentTypeEngine(contentType).ConfigureAwait(false);
+                (ContentEngine, Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
 
                 // Content settings in Sheet take precidence over Engine
                 if (ContentEngine.ContentSettings is null) {
@@ -373,6 +379,7 @@ namespace WinPrint.Core {
                     ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
                 }
 
+                ContentEngine.Encoding = Encoding;
                 retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
             }
             catch (Exception e){

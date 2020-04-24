@@ -12,20 +12,9 @@ using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ContentTypeEngines {
     public class PrismCte : HtmlCte {
-        private static readonly string _contentType = "text/prism";
-        /// <summary>
-        /// ContentType identifier (shorthand for class name). 
-        /// </summary>
-        public override string ContentTypeEngineName {
-            get {
-                if (string.IsNullOrEmpty(Language)) {
-                    return _contentType;
-                }
-                else {
-                    return Language;
-                }
-            }
-        }
+        private static readonly string[] _supportedContentTypes = { "text/prism" };
+        public override string[] SupportedContentTypes => _supportedContentTypes;
+
 
         public static new PrismCte Create() {
             var content = new PrismCte();
@@ -42,7 +31,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         private bool _convertedToHtml = false;
 
         // Publics
-
         public override async Task<bool> SetDocumentAsync(string doc) {
             LogService.TraceMessage();
 
@@ -65,7 +53,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
 #if DEBUG
             var w = new StreamWriter("PrismCte.html");
-            w.Write(document);
+            w.Write(Document);
             w.Close();
 #endif
 
@@ -164,7 +152,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             sbNodeJS.AppendLine($"const loadLanguages = require('{nodeDir.Replace('\\', '/')}/prismjs/components/');");
             sbNodeJS.AppendLine($"loadLanguages(['{language}']);");
             // TODO: for very large files should we use TEMP file?
-            sbNodeJS.AppendLine($"const code = `{document}`;");
+            sbNodeJS.AppendLine($"const code = `{Document}`;");
             sbNodeJS.AppendLine($"const html = Prism.highlight(code, Prism.languages.{language}, '{language}');");
             sbNodeJS.AppendLine($"console.log(html);");
             var nodeJS = sbNodeJS.ToString();

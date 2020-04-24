@@ -19,11 +19,11 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Implements text/plain file type support. 
     /// </summary>
     public class AnsiCte : ContentTypeEngineBase, IDisposable {
-        private static readonly string _contentType = "text/ansi";
+        private static readonly string[] _supportedContentTypes = { "text/plain", "text/ansi" };
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public override string ContentTypeEngineName => _contentType;
+        public override string[] SupportedContentTypes => _supportedContentTypes;
 
         public static AnsiCte Create() {
             var engine = new AnsiCte();
@@ -84,7 +84,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
 
-            if (document == null) {
+            if (Document == null) {
                 throw new ArgumentNullException("document can't be null for Render");
             }
 
@@ -134,15 +134,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             _minLineLen = (int)((PageSize.Width - lineNumberWidth) / MeasureString(g, _cachedFont, "W").Width);
 
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
-            IAnsiDecoder _vt100 = new AnsiDecoder();
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             _screen = new DynamicScreen(_minLineLen);
-            _vt100.Encoding = CodePagesEncodingProvider.Instance.GetEncoding("ibm437");
-            _vt100.Subscribe(_screen);
+            IAnsiDecoder vt100 = new AnsiDecoder();
+            vt100.Encoding = Encoding;
+            vt100.Subscribe(_screen);
 
-            var bytes = _vt100.Encoding.GetBytes(document);
+            var bytes = vt100.Encoding.GetBytes(Document);
             if (bytes != null && bytes.Length > 0) {
-                _vt100.Input(bytes);
+                vt100.Input(bytes);
             }
 
 #if TESTVT100
@@ -279,11 +278,12 @@ namespace WinPrint.Core.ContentTypeEngines {
                         fg = run.Attributes.ForegroundColor;
 
                     var text = _screen.Lines[i].Text[run.Start..(run.Start + run.Length)];
-                    var width = MeasureString(g, font, text).Width;
-                    RectangleF rect = new RectangleF(xPos, yPos, width, _lineHeight);
-                    g.DrawString(text, font, new SolidBrush(fg), rect, StringFormat);
 
-                    xPos += width;
+                    var proposedSize = new SizeF(PageSize.Width, _lineHeight);
+                    var size = g.MeasureString(text, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
+                    g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
+
+                    xPos += size.Width;
                 }
                 if (ContentSettings.Diagnostics) {
                     g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);

@@ -30,11 +30,11 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Implements text/plain file type support. 
     /// </summary>
     public class TextCte : ContentTypeEngineBase, IDisposable {
-        private static readonly string _contentType = "text/plain";
+        private static readonly string[] _supportedContentTypes = { "text/plain" };
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public override string ContentTypeEngineName => _contentType;
+        public override string[] SupportedContentTypes => _supportedContentTypes;
 
         public static TextCte Create() {
             var engine = new TextCte();
@@ -93,7 +93,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         public override async Task<int> RenderAsync(System.Drawing.Printing.PrinterResolution printerResolution, EventHandler<string> reflowProgress) {
             LogService.TraceMessage();
 
-            if (document == null) {
+            if (Document == null) {
                 throw new ArgumentNullException("document can't be null for Render");
             }
 
@@ -143,7 +143,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             _minLineLen = (int)((PageSize.Width - lineNumberWidth) / MeasureString(g, "W").Width);
 
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
-            _wrappedLines = LineWrapDocument(g, document); // new List<string>();
+            _wrappedLines = LineWrapDocument(g, Document); // new List<string>();
 
             var n = (int)Math.Ceiling(_wrappedLines.Count / (double)_linesPerPage);
 

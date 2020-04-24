@@ -44,21 +44,21 @@ namespace WinPrint.Core {
         /// </summary>
         public DateTime DatePrinted => DateTime.Now;
         /// <summary>
-        /// The time and date teh file was last revised.
+        /// The time and date the file was last revised.
         /// </summary>
         public DateTime DateRevised => IsValidFilename(svm.File) ? File.GetLastWriteTime(svm.File) : DateTime.MinValue;
         /// <summary>
-        /// The file type (e.g. "text/plain" or "csharp").
+        /// The time and date the file was created.
         /// </summary>
         public DateTime DateCreated => IsValidFilename(svm.File) ? File.GetCreationTime(svm.File) : DateTime.MinValue;
         /// <summary>
-        /// The language (e.g. "csharp" or "text/plain" if no language is specified)
+        /// The language (e.g. "csharp" or "" if no language is specified)
         /// </summary>
-        public string Language => svm.ContentEngine == null ? "" : (string.IsNullOrEmpty(svm.ContentEngine.Language) ? CteName : svm.ContentEngine.Language);
+        public string Language => string.IsNullOrEmpty(svm.Language) ? string.Empty : svm.Language;
         /// <summary>
-        /// The file content type engine name (e.g. "text/plain").
+        /// The file content type engine name (e.g. "TextCte", "AnsiCte").
         /// </summary>
-        public string CteName => svm.ContentEngine == null ? "" : svm.ContentEngine.ContentTypeEngineName;
+        public string CteName => svm.ContentEngine == null ? "" : svm.ContentEngine.GetType().Name;
 
         /// <summary>
         /// The current sheet number.

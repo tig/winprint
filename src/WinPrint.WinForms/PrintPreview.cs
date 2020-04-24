@@ -143,7 +143,7 @@ namespace WinPrint.WinForms {
                     pygCte.DecoderClient.MoveCursor(null, libvt100.Direction.Down, 1);
                     Invalidate();
 #else
-                    PageUp();
+                    PageDown();
 #endif
                     break;
                 case Keys.Up:
@@ -151,7 +151,7 @@ namespace WinPrint.WinForms {
                     pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Up, 1);
                     Invalidate();
 #else
-                    PageDown();
+                    PageUp();
 #endif
                     break;
 

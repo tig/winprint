@@ -10,6 +10,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Serilog;
@@ -21,8 +22,9 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Base class for Content/File Type Engines (CTEs)
     /// </summary>
     public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
-        private static string _defaultCteName = "text/plain";
-        private static string _defaultSyntaxHighlighterCteName = "text/prism";
+        public static string DefaultContentType = "text/plain";
+        public static string DefaultCteClassName = "AnsiCte";
+        public static string DefaultSyntaxHighlighterCteNameClassName = "PrismCte";
 
         public new event PropertyChangedEventHandler PropertyChanged;
         protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) {
@@ -49,14 +51,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <summary>
         /// ContentType identifier (shorthand for class name). 
         /// </summary>
-        public virtual string ContentTypeEngineName => _contentTypeEngineName;
-        private static readonly string _contentTypeEngineName = "base";
-
-        public string Language {
-            get => _fileType;
-            set => SetField(ref _fileType, value);
-        }
-        private string _fileType;
+        public virtual string[] SupportedContentTypes => _supportedContentTypes;
+        private static readonly string[] _supportedContentTypes = null;
 
         /// <summary>
         /// Calculated page size. Set by Sheet view model.
@@ -75,10 +71,18 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// </summary>
         [JsonIgnore]
         public string Document {
-            get => document; set =>
+            get => _document; set =>
                 //LogService.TraceMessage($"Document is {document.Length} chars.");
-                SetField(ref document, value);
+                SetField(ref _document, value);
         }
+        internal string _document = null;
+
+        /// <summary>
+        /// The contents encdding of the file to be printed.
+        /// </summary>
+        [JsonIgnore]
+        public Encoding Encoding { get => _encoding; set => SetField(ref _encoding, value); }
+        private Encoding _encoding = Encoding.Default;
 
         /// <summary>
         /// https://stackoverflow.com/questions/5411694/get-all-inherited-classes-of-an-abstract-class
@@ -91,8 +95,6 @@ namespace WinPrint.Core.ContentTypeEngines {
             }
             return objects;
         }
-
-        internal string document = null;
 
         /// <summary>
         /// These are the global StringFormat settings; set here to ensure all rendering and measuring uses same settings
@@ -130,12 +132,14 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// Creates the appropriate Content Type Engine instance given a content type string.
         /// </summary>
         /// <param name="contentType"></param>
-        /// <returns></returns>
-        public static async Task<ContentTypeEngineBase> CreateContentTypeEngine(string contentType) {
+        /// <returns>ContentEngine, Language</returns>
+        public static (ContentTypeEngineBase cte, string language) CreateContentTypeEngine(string contentType) {
             Debug.Assert(!string.IsNullOrEmpty(contentType));
+            Debug.Assert(ModelLocator.Current.Associations != null);
+            Debug.Assert(ModelLocator.Current.Associations.Languages != null);
 
-            // If contentType matches one of our CTE ContentTypeNames, this will succeed.
-            ContentTypeEngineBase cte = GetDerivedClassesCollection().FirstOrDefault(c => c.ContentTypeEngineName == contentType);
+            // If contentType matches one of our CTE Names, this will succeed.
+            ContentTypeEngineBase cte = GetDerivedClassesCollection().FirstOrDefault(c => contentType == c.GetType().Name);
             string language = string.Empty;
 
             if (cte == null) {
@@ -152,24 +156,39 @@ namespace WinPrint.Core.ContentTypeEngines {
                 //    ".ans"
                 // },
                 // Is it a file extension?
-                var extLanguage = ModelLocator.Current.Associations.Languages.Where(lang => lang.Extensions.Contains(contentType)).FirstOrDefault();
+                var extLanguage = ModelLocator.Current.Associations.Languages
+                    .Where(lang => lang.Extensions.Contains(contentType))
+                    .FirstOrDefault();
                 if (extLanguage != null && !string.IsNullOrEmpty(extLanguage.Id)) {
                     // Is Id a Cte Name?
-                    cte = GetDerivedClassesCollection().FirstOrDefault(c => c.ContentTypeEngineName == extLanguage.Id);
+                    cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(extLanguage.Id));
+
                     if (cte != null) {
-                        return cte;
+                        return (cte, string.Empty);
                     }
                     // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
                     language = extLanguage.Id;
                 }
                 else {
                     // Is it found in a langauge alias?
-                    var alias = ModelLocator.Current.Associations.Languages.Where(lang => lang.Aliases.Contains(contentType)).FirstOrDefault();
+                    var alias = ModelLocator.Current.Associations.Languages
+                        .Where(lang => lang.Id == contentType || lang.Aliases.Contains(contentType))
+                        .FirstOrDefault();
                     if (alias != null) {
-                        // Is Id a Cte Name?
-                        cte = GetDerivedClassesCollection().Where(c => c.ContentTypeEngineName == alias.Id).FirstOrDefault();
+                        // Is the Id supported directly? 
+                        // If by muplitple, pick the default.
+                        var collection = GetDerivedClassesCollection()
+                            .Where(c => c.SupportedContentTypes.Contains(alias.Id));
+                        if (collection != null) {
+                            if (collection.Count() > 1) {
+                                cte = collection.Where(c => c.GetType().Name == DefaultCteClassName).First();
+                            }
+                            else {
+                                cte = collection.FirstOrDefault();
+                            }
+                        }
                         if (cte != null) {
-                            return cte;
+                            return (cte, string.Empty);
                         }
                         // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
                         language = contentType;
@@ -177,17 +196,20 @@ namespace WinPrint.Core.ContentTypeEngines {
                 }
 
                 if (string.IsNullOrEmpty(language)) {
-                    cte = GetDerivedClassesCollection().Where(c => c.ContentTypeEngineName == _defaultCteName).FirstOrDefault();
+                    cte = GetDerivedClassesCollection()
+                        .Where(c => c.SupportedContentTypes.Contains(DefaultCteClassName))
+                        .FirstOrDefault();
                 }
                 else {
                     // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
-                    cte = GetDerivedClassesCollection().Where(c => c.ContentTypeEngineName == _defaultSyntaxHighlighterCteName).FirstOrDefault();
-                    cte.Language = language;
+                    cte = GetDerivedClassesCollection()
+                        .Where(c => c.GetType().Name == DefaultSyntaxHighlighterCteNameClassName)
+                        .First();
                 }
             }
 
             Debug.Assert(cte != null);
-            return cte;
+            return (cte, language);
         }
 
         /// <summary>
@@ -196,8 +218,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>The content type</returns>
-        public static string GetContentType(string filePath) {
-            var contentType = "text/plain";
+        public static string GetContentTypeOrLanguage(string filePath) {
+            var contentType = DefaultCteClassName;
 
             if (string.IsNullOrEmpty(filePath)) {
                 return contentType;
@@ -210,11 +232,18 @@ namespace WinPrint.Core.ContentTypeEngines {
             var ext = Path.GetExtension(filePath).ToLower();
             if (ext != string.Empty) {
                 if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out var ct)) {
-                    contentType = ct;
+                    // Now find Id in Languages
+                    contentType = ModelLocator.Current.Associations.Languages
+                        .Where(lang => lang.Id == ct)
+                        .DefaultIfEmpty(new Langauge() { Id = DefaultContentType })
+                        .First().Id;
                 }
                 else {
                     // No direct file extension, look in Languages
-                    contentType = ModelLocator.Current.Associations.Languages.Where(lang => lang.Extensions.Contains(ext)).DefaultIfEmpty(new Langauge() { Id = "text/plain" }).First().Id;
+                    contentType = ModelLocator.Current.Associations.Languages
+                        .Where(lang => lang.Extensions.Contains(ext))
+                        .DefaultIfEmpty(new Langauge() { Id = DefaultContentType })
+                        .First().Id;
                 }
             }
             else {

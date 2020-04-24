@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using WinPrint.Core.Models;
@@ -44,6 +45,9 @@ namespace WinPrint.Core.Services {
             // https://github.com/jonschlinkert/lang-map
 
             // Merge in any assocations set in settings file
+            Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping != null);
+            Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping.Languages != null);
+
             foreach (var fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations) {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }
@@ -58,64 +62,5 @@ namespace WinPrint.Core.Services {
 
             return associations;
         }
-
-        //    internal static string GetDocType() {
-
-        //        string ext = Path.GetExtension(File);
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Command, ext), "Command");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
-        //        //Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
-
-        //        //return Native.FileExtentionInfo(Native.AssocStr.FriendlyDocName, ext);
-
-        //        string mimeType = "application/unknown";
-
-        //        RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(Path.GetExtension(file).ToLower());
-
-        //        if (regKey != null) {
-        //            object contentType = regKey.GetValue("Content Type");
-
-        //            if (contentType != null)
-        //                mimeType = contentType.ToString();
-        //        }
-
-        //        if (ext == ".cs")
-        //            mimeType = "csharp";
-
-        //        return mimeType;
-        //    }
-
-
-        //    ///// <summary>
-        //    ///// The main entry point for the application.
-        //    ///// </summary>
-        //    //[STAThread]
-        //    //static void Main() {
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Command, ext), "Command");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEApplication, ext), "DDEApplication");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDEIfExec, ext), "DDEIfExec");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.DDETopic, ext), "DDETopic");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.Executable, ext), "Executable");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyAppName, ext), "FriendlyAppName");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.FriendlyDocName, ext), "FriendlyDocName");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.NoOpen, ext), "NoOpen");
-        //    //    Helpers.Logging.TraceMessage(FileExtentionInfo(AssocStr.ShellNewValue, ext), "ShellNewValue");
-
-        //    //    //  DDEApplication: WinWord
-        //    //    //DDEIfExec: Ñﻴ߾
-        //    //    //  DDETopic: System
-        //    //    //  Executable: C:\Program Files (x86)\Microsoft Office\Office12\WINWORD.EXE
-        //    //    //  FriendlyAppName: Microsoft Office Word
-        //    //    //  FriendlyDocName: Microsoft Office Word 97 - 2003 Document
-
-
-        //    //}
-        //}
     }
 }

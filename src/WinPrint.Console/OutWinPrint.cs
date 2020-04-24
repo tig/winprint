@@ -481,7 +481,7 @@ namespace WinPrint.Console {
             if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentTypeEngine)) {
                 if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentTypeEngine)) {
                     // If neither were specified, smartly pick CTE
-                    contentTypeEngine = ContentTypeEngineBase.GetContentType(FileName);
+                    contentTypeEngine = ContentTypeEngineBase.GetContentTypeOrLanguage(FileName);
                 }
             }
 
@@ -792,20 +792,20 @@ namespace WinPrint.Console {
             // -ContentTypeEngine
             runtimeDict.Add("ContentTypeEngine", new RuntimeDefinedParameter("ContentTypeEngine", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
-                        HelpMessage = "Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"text/plain\" or \"csharp\". Specifying a langauge will choose the \"text/code\" CTE.",
+                        HelpMessage = "Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"TextCte\".",
                         ParameterSetName = "Print"
                     },
-                    new ValidateSetAttribute(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.ContentTypeEngineName).ToArray())
+                    new ValidateSetAttribute(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.GetType().Name).ToArray())
             }));
 
-            //// -Language
-            //runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {
-            //        new ParameterAttribute() {
-            //            HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",
-            //            ParameterSetName = "Print"
-            //        },
-            //        new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())
-            //}));
+            // -Language
+            runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {
+                    new ParameterAttribute() {
+                        HelpMessage = "Optional language to use for syntax highlighting.",
+                        ParameterSetName = "Print"
+                    },
+                    new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())
+            }));
 
             return runtimeDict;
         }

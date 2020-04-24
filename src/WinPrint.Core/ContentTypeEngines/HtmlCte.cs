@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using LiteHtmlSharp;
 using Serilog;
@@ -14,11 +15,8 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Implements generic HTML file type support. 
     /// </summary>
     public class HtmlCte : ContentTypeEngineBase, IDisposable {
-        private static readonly string _contentType = "text/html";
-        /// <summary>
-        /// ContentType identifier (shorthand for class name). 
-        /// </summary>
-        public override string ContentTypeEngineName => _contentType;
+        private static readonly string[] _supportedContentTypes = { "text/html" };
+        public override string[] SupportedContentTypes => _supportedContentTypes;
 
         public static HtmlCte Create() {
             var content = new HtmlCte();
@@ -54,13 +52,6 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         private Bitmap _htmlBitmap;
-
-        //public async override Task<bool> LoadAsync(string filePath) {
-        //    ready = false;
-        //    litehtml = null;
-        //    htmlBitmap = null;
-        //    return await base.LoadAsync(filePath);
-        //}
 
         public override async Task<bool> SetDocumentAsync(string doc) {
             _ready = false;
@@ -124,7 +115,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             //Logging.TraceMessage("litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "litehtml.Document.CreateFromString(document)");
-            _litehtml.Document.CreateFromString(document);
+            _litehtml.Document.CreateFromString(Document);
             //Logging.TraceMessage("back from litehtml.Document.CreateFromString(document)");
             reflowProgress?.Invoke(this, "back from litehtml.Document.CreateFromString(document)");
 
