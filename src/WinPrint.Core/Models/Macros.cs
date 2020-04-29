@@ -61,6 +61,12 @@ namespace WinPrint.Core {
         public string CteName => svm.ContentEngine == null ? "" : svm.ContentEngine.GetType().Name;
 
         /// <summary>
+        /// The style used for formatting (e.g. "default" or "colorful"; from Pygments.org).
+        /// </summary>
+        public string Style => svm.ContentEngine == null || svm.ContentEngine.ContentSettings == null ? "" : svm.ContentEngine.ContentSettings.Style;
+
+
+        /// <summary>
         /// The current sheet number.
         /// </summary>
         public int Page { get; set; }

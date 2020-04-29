@@ -265,7 +265,7 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => PropertyChangedEventHandler(sender, e)));
             }
             else {
-                LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
+                //LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");
                 switch (e.PropertyName) {
                     case "Landscape":
                         LogService.TraceMessage($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
@@ -314,10 +314,16 @@ namespace WinPrint.Winforms {
                         printPreview.CurrentSheet = 1;
                         break;
 
+                    case "Title":
+                        break;
+
                     // When ContentEngine changes we know the document has been loaded.
                     case "ContentEngine":
                         //printPreview.CurrentSheet = 1;
                         //printButton.Enabled = printPreview.SheetViewModel.NumSheets > 0;
+                        break;
+
+                    case "Language":
                         break;
 
                     case "ContentSettings":
@@ -587,13 +593,19 @@ namespace WinPrint.Winforms {
                 //    - reflow
                 Task.Run(async () => {
                     var stage = "Loading";
+                    var fileToPrint = activeFile;
                     try {
                         BeginInvoke((Action)(() => {
                             printPreview.Text = $"{stage}...";
                         }));
                         // This is an IO bound operation. 
                         // TODO: This does not need to run on another thread if we are using async/await correctly
-                        await printPreview.SheetViewModel.LoadFileAsync(activeFile, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+                        // Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.
+                        // Note, Title stays as was provided via -FileName or -Title
+                        if (!string.IsNullOrEmpty(fileToPrint) && !Path.IsPathFullyQualified(fileToPrint)) {
+                            fileToPrint = Path.GetFullPath(fileToPrint, Directory.GetCurrentDirectory());
+                        }
+                        await printPreview.SheetViewModel.LoadFileAsync(fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                         // Set landscape. This causes other DefaultPageSettings to change
                         // These are CPU bound operations. 
@@ -610,8 +622,13 @@ namespace WinPrint.Winforms {
                         BeginInvoke((Action)(() => {
                             printPreview.Text = $"{stage}...";
                         }));
-                        await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(true);
+                        await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
+                    }
+                    catch (DirectoryNotFoundException dnfe) {
+                        Log.Error(dnfe, "File Not Found");
+                        ShowMessage($"{stage}: {dnfe.Message}");
+                        return;
                     }
                     catch (FileNotFoundException fnfe) {
                         Log.Error(fnfe, "File Not Found");
@@ -620,7 +637,7 @@ namespace WinPrint.Winforms {
                     }
                     catch (InvalidOperationException ioe) {
                         ServiceLocator.Current.TelemetryService.TrackException(ioe, false);
-                        Log.Error(ioe, "Error Operation {file}", activeFile);
+                        Log.Error(ioe, "Error Operation {file}", fileToPrint);
                         ShowMessage($"{stage}: {ioe.Message}");
                         //                fileButton_Click(null, null);
                     }
@@ -628,8 +645,8 @@ namespace WinPrint.Winforms {
                     catch (Exception e) {
 #pragma warning restore CA1031 // Do not catch general exception types
                         ServiceLocator.Current.TelemetryService.TrackException(e, false);
-                        Log.Error(e, "Exception {file}", activeFile);
-                        ShowMessage($"{stage}: Exception: {e.Message}{Environment.NewLine}({activeFile})");
+                        Log.Error(e, "Exception {file}", fileToPrint);
+                        ShowMessage($"{stage}: Exception: {e.Message}{Environment.NewLine}({fileToPrint})");
                     }
                     finally {
                         // Set Loading to false in case of an error
@@ -640,12 +657,12 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private void ShowMessage(string str) {
+        private void ShowMessage(string message) {
             if (InvokeRequired) {
-                BeginInvoke((Action)(() => ShowMessage(str)));
+                BeginInvoke((Action)(() => ShowMessage(message)));
             }
             else {
-                printPreview.Text = new string(str);
+                printPreview.Text = message;
             }
         }
 
@@ -806,7 +823,7 @@ namespace WinPrint.Winforms {
 
             try {
                 ShowMessage("Preparing to print..");
-                await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(true);
+                await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                 print.SetPrinter(printDoc.PrinterSettings.PrinterName);
                 print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
@@ -870,25 +887,27 @@ namespace WinPrint.Winforms {
                             print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
                         }
                         ShowMessage($"Printing to {printDoc.PrinterSettings.PrinterName}");
-                        print.PrintingSheet += Print_PrintingSheet;
-                        await print.DoPrint().ConfigureAwait(true);
-                        print.PrintingSheet -= Print_PrintingSheet;
+                        // BUGBUG: having the printpreview invalidate while we're printing causes an exception
+                        // in litehtml. Do not un comment this until figured out
+                        //print.PrintingSheet += Print_PrintingSheet;
+                        await print.DoPrint().ConfigureAwait(false);
                         ShowMessage($"");
                     }
                 }));
             }
             else {
                 ShowMessage($"Printing to {printDoc.PrinterSettings.PrinterName}");
-                print.PrintingSheet += Print_PrintingSheet;
-                await print.DoPrint().ConfigureAwait(true);
-                print.PrintingSheet -= Print_PrintingSheet;
-                ShowMessage($"");
+
+                // BUGBUG: having the printpreview invalidate while we're printing causes an exception
+                // in litehtml. Do not un comment this until figured out
+                //print.PrintingSheet += Print_PrintingSheet;
+                await print.DoPrint().ConfigureAwait(false);
+                ShowMessage("");
             }
         }
 
         private void Print_PrintingSheet(object sender, int sheetNum) {
             ShowMessage($"Printing sheet {sheetNum}");
-            Log.Information("Printing sheet {sheetNum}", sheetNum);
         }
 
         private void panelRight_Resize(object sender, EventArgs e) {

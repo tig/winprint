@@ -379,6 +379,12 @@ namespace WinPrint.Core {
                     ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
                 }
 
+                if (!string.IsNullOrEmpty(Language) && ContentEngine.SupportedContentTypes.Contains("text/ansi")) {
+                    // Syntax highlight
+                    // TODO: Spin up a thread
+                    document = await ServiceLocator.Current.PygmentsConverterService.ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
+                }
+
                 ContentEngine.Encoding = Encoding;
                 retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
             }
@@ -688,6 +694,11 @@ namespace WinPrint.Core {
 
                     case "Diagnostics":
                         ContentSettings.Diagnostics = _sheet.ContentSettings.Diagnostics;
+                        reflow = true;
+                        break;
+
+                    case "Style":
+                        ContentSettings.Style = _sheet.ContentSettings.Style;
                         reflow = true;
                         break;
 

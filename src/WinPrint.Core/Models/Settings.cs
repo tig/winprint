@@ -97,6 +97,7 @@ namespace WinPrint.Core.Models {
         /// Content type handlers
         /// </summary>
 //        public Dictionary<string, ContentBase> ContentTypes { get; set; }
+        public AnsiCte AnsiContentTypeEngineSettings { get; set; }
         public TextCte TextContentTypeEngineSettings { get; set; }
         public HtmlCte HtmlContentTypeEngineSettings { get; set; }
         public PrismCte PrismContentTypeEngineSettings { get; set; }
@@ -232,6 +233,12 @@ namespace WinPrint.Core.Models {
                 //settings.size = new WindowSize(1024, 800);
                 //settings.location = new WindowLocation(100, 100);
 
+                AnsiContentTypeEngineSettings = new AnsiCte() {
+                    ContentSettings = new ContentSettings() {
+                        Style = "pastie",
+                    }
+                },
+
                 TextContentTypeEngineSettings = new TextCte() {
                     // This font will be overriddent by Sheet defined fonts (if any)
                     //ContentSettings = new ContentSettings() {
@@ -283,6 +290,7 @@ namespace WinPrint.Core.Models {
                 PageSeparator = false,
                 ContentSettings = new ContentSettings() {
                     Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    Style = "pastie",
                     Darkness = 100,
                     Grayscale = false,
                     PrintBackground = true
@@ -313,6 +321,7 @@ namespace WinPrint.Core.Models {
                 PageSeparator = false,
                 ContentSettings = new ContentSettings() {
                     Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
+                    Style = "pastie",
                     Darkness = 100,
                     Grayscale = false,
                     PrintBackground = true,

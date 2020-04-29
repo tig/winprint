@@ -1,9 +1,14 @@
 ﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
+/// <summary>
+/// Define this to use the DyanmicScreen class. Otherwise, use Screen
+/// </summary>
+
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,13 +33,12 @@ namespace WinPrint.Core.ContentTypeEngines {
         public static AnsiCte Create() {
             var engine = new AnsiCte();
             // Populate it with the common settings
-            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
+            engine.CopyPropertiesFrom(ModelLocator.Current.Settings.AnsiContentTypeEngineSettings);
             return engine;
         }
 
         // All of the lines of the text file, after reflow/line-wrap
         private DynamicScreen _screen;
-
         public IAnsiDecoderClient DecoderClient { get => (IAnsiDecoderClient)_screen; }
 
         private float _lineHeight;
@@ -144,46 +148,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 vt100.Input(bytes);
             }
 
-#if TESTVT100
-            _screen[_screen.Lines.Count][0] = new Character('0') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
-
-            for (var x = 0; x < _screen.Width; x++) {
-                var c = _screen[x, x];
-                if (c == null) c = new Character('*');
-                _screen[x,x] = new Character(c.Char) { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
-            }
-
-            for (var x = 0; x < 20; x++) {
-                _screen[11][x] = new Character((char)((int)'0' + x)) { Attributes = new GraphicAttributes() { 
-                    Bold = true, 
-                    ForegroundColor = Color.Red } };
-            }
-
-            for (var x = 0; x < _screen.Width; x++) {
-                var c = _screen[x,20];
-                if (c == null) c = new Character(' ');
-                _screen[20][x] = new Character(c.Char) {
-                    Attributes = new GraphicAttributes() {
-                        Bold = true,
-                        ForegroundColor = Color.Green
-                    }
-                };
-            }
-
-            _screen[8][0] = new Character('_') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
-            _screen[23][31] = new Character('>') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
-            _screen[57][0] = new Character('{') { Attributes = new GraphicAttributes() { ForegroundColor = Color.Red } };
-
-            _screen.CursorPosition = new Point(0, 0);
-
-            var w = new StreamWriter("PygmentsCte.txt");
-            w.Write(_screen);
-            w.Close();
-#endif
-
-
             var n = (int)Math.Ceiling(_screen.Lines.Count / (double)_linesPerPage);
-
             Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n, _linesPerPage, _screen.Lines.Count);
             return await Task.FromResult(n);
         }
@@ -289,6 +254,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
                 }
             }
+
 #if CURSOR
             if (_screen.CursorPosition.Y >= firstLineOnPage && _screen.CursorPosition.Y < firstLineOnPage + _linesPerPage) {
                 var text = $"{(char)219}";
@@ -299,7 +265,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 //g.DrawString(text, _cachedFont, new SolidBrush(Color.Blue), rect, StringFormat);
                 g.DrawRectangle(Pens.Black, x + _screen.CursorPosition.X * width, _screen.CursorPosition.Y * _lineHeight, width, _lineHeight);
             }
-#endif 
+#endif
             Log.Debug("Painted {lineOnPage} lines.", i - 1);
         }
     }

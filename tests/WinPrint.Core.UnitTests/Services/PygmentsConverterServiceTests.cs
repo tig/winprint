@@ -16,17 +16,16 @@ namespace WinPrint.Core.UnitTests.Cte
             ServiceLocator.Current.LogService.Start(GetType().Name, new TestOutputSink(output, new Serilog.Formatting.Display.MessageTemplateTextFormatter("{Message:lj}")), true, true);
         }
 
-        // ContentTypeEngineBase tests
-        // Using TextCte since CTE is abstract
         [Fact]
-        public void SupportedContentTypesTest()
+        public async void ConvertAsyncTest()
         {
-            var p = ServiceLocator.Current.PygmentsConverterService;
-            Assert.NotNull(p);
-
+            var ps = new PygmentsConverterService();
             var input = $@"using system;";
-            var output = PygmentsConverterService.Convert("using system;");
-            Assert.Equal(input, output);
+            // "using system;" | out-file using.cs
+            // pygmentize -O 16m,style=friendly .\using.cs | out-file using.ans
+            var expectedOutput = "\u001b[38;2;0;112;32;01musing\u001b[39;00m \u001b[38;2;14;132;181;01msystem\u001b[39;00m;\n";
+            var output = await ps.ConvertAsync(input, "friendly", "c#");
+            Assert.Equal(expectedOutput, output);
         }
     }
 }

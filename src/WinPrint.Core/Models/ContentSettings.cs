@@ -35,6 +35,13 @@
         private int _darkness = 0;
 
         /// <summary>
+        /// Style to use for formatting. Dependent on Content Engine. For AnsiCte, represents a Pygments.org style name.
+        /// </summary>
+        [SafeForTelemetry]
+        public string Style { get => _style; set => SetField(ref _style, value); }
+        private string _style = string.Empty;
+
+        /// <summary>
         /// If true, content will be drawn with line numbers (if supported) 
         /// </summary>
         [SafeForTelemetry]

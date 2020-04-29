@@ -1,0 +1,2168 @@
+[38;2;0;153;255m// Copyright Kindel Systems, LLC - http://www.kindel.com[39m
+[38;2;0;153;255m// Published under the MIT License at https://github.com/tig/winprint[39m
+
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Collections.Generic[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.ComponentModel[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Diagnostics[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Drawing[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Drawing.Printing[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.IO[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Linq[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Reflection[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Threading[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Threading.Tasks[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Windows.Forms[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mLiteHtmlSharp[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSerilog[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.Core[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.Core.Models[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.Core.Services[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.WinForms[39;00m;
+
+[38;2;0;102;153;01mnamespace[39;00m [38;2;0;204;255;01mWinPrint.Winforms[39;00m {
+    [38;2;0;102;153;01mpublic[39;00m [38;2;0;102;153;01mpartial[39;00m [38;2;0;102;153;01mclass[39;00m [38;2;0;170;136;01mMainWindow[39;00m : Form {
+
+        [38;2;0;153;255m// The Windows printer document[39m
+        [38;2;0;102;153;01mprivate[39;00m PrintDocument printDoc = [38;2;0;102;153;01mnew[39;00m PrintDocument();
+
+        [38;2;0;153;255m// The active file[39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;119;136;01mstring[39;00m activeFile;
+        [38;2;0;102;153;01mprivate[39;00m OpenFileDialog openFileDialog = [38;2;0;102;153;01mnew[39;00m OpenFileDialog();
+
+        [38;2;0;102;153;01mprivate[39;00m WinPrint.WinForms.PrintPreview printPreview;
+
+        [38;2;0;102;153;01mpublic[39;00m [38;2;204;0;255mMainWindow[39m() {
+            InitializeComponent();
+
+            Icon = Resources.printer_and_fax_w;
+
+            printPreview = [38;2;0;102;153;01mnew[39;00m PrintPreview {
+                Dock = dummyButton.Dock,
+                Anchor = dummyButton.Anchor,
+                BackColor = dummyButton.BackColor,
+                Location = dummyButton.Location,
+                Margin = dummyButton.Margin,
+                Name = [38;2;204;51;0m"printPreview"[39m,
+                Size = dummyButton.Size,
+                MinimumSize = [38;2;0;102;153;01mnew[39;00m Size([38;2;255;102;0m0[39m, [38;2;255;102;0m0[39m),
+                TabIndex = [38;2;255;102;0m1[39m,
+                TabStop = [38;2;0;102;153;01mtrue[39;00m
+            };
+            printPreview.Click += [38;2;0;102;153;01mnew[39;00m System.EventHandler(printPreview_Click);
+
+
+            Color();
+
+            [38;2;0;153;255m// This gets the version # from winprint.core.dll[39m
+            versionLabel.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"v{FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion}"[39m;
+
+            [38;2;0;102;153;01mif[39;00m (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
+                panelRight.Controls.Remove(dummyButton);
+                panelRight.Controls.Add(printPreview);
+                printersCB.Enabled = [38;2;0;102;153;01mfalse[39;00m;
+                paperSizesCB.Enabled = [38;2;0;102;153;01mfalse[39;00m;
+            }
+
+[38;2;0;153;153m#if DEBUG[39m
+            openFileDialog.InitialDirectory = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m@"..\..\..\..\..\testfiles\"[39m;
+[38;2;0;153;153m#else[39m
+            openFileDialog.InitialDirectory = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}"[39m;
+[38;2;0;153;153m#endif[39m
+
+            [38;2;0;153;255m// Set common fontDialog props[39m
+            fontDialog.ShowEffects = [38;2;0;102;153;01mfalse[39;00m;
+            fontDialog.ShowColor = [38;2;0;102;153;01mtrue[39;00m;
+            fontDialog.AllowScriptChange = [38;2;0;102;153;01mfalse[39;00m;
+            fontDialog.AllowSimulations = [38;2;0;102;153;01mfalse[39;00m;  [38;2;0;153;255m// GDI+ does not support OFT fonts[39m
+            fontDialog.AllowVectorFonts = [38;2;0;102;153;01mfalse[39;00m;
+            [38;2;0;153;255m// fontDialog.AllowVerticalFonts = false;[39m
+            fontDialog.ShowHelp = [38;2;0;102;153;01mfalse[39;00m;
+
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mColor[39m() {
+            [38;2;0;119;136;01mvar[39;00m back = System.Drawing.Color.FromName([38;2;204;51;0m"white"[39m);
+            [38;2;0;119;136;01mvar[39;00m text = System.Drawing.SystemColors.ControlText;
+            [38;2;0;153;255m//printPreview.BackColor = back;[39m
+            printersCB.BackColor = back;
+
+            settingsButton.BackColor = back;
+            paperSizesCB.BackColor = back;
+            landscapeCheckbox.BackColor = back;
+            printButton.BackColor = back;
+            pageUp.BackColor = back;
+            pageDown.BackColor = back;
+            headerTextBox.BackColor = back;
+            footerTextBox.BackColor = back;
+            panelLeft.BackColor = back;
+            enableHeader.BackColor = back;
+            enableFooter.BackColor = back;
+            comboBoxSheet.BackColor = back;
+            labelPaper.BackColor = back;
+            labelTop.BackColor = back;
+            topMargin.BackColor = back;
+            labelLeft.BackColor = back;
+            leftMargin.BackColor = back;
+            labelRight.BackColor = back;
+            rightMargin.BackColor = back;
+            labelBottom.BackColor = back;
+            bottomMargin.BackColor = back;
+            labelRows.BackColor = back;
+            rows.BackColor = back;
+            labelColumns.BackColor = back;
+            columns.BackColor = back;
+            groupMargins.BackColor = back;
+            groupPages.BackColor = back;
+            pageSeparator.BackColor = back;
+            labelPadding.BackColor = back;
+            padding.BackColor = back;
+            headerPanel.BackColor = back;
+            footerPanel.BackColor = back;
+            fileButton.BackColor = back;
+            toText.BackColor = back;
+            label1.BackColor = back;
+            fromText.BackColor = back;
+            fromLabel.BackColor = back;
+            pagesLabel.BackColor = back;
+
+            printPreview.ForeColor = text;
+            printersCB.ForeColor = text;
+            paperSizesCB.ForeColor = text;
+            landscapeCheckbox.ForeColor = text;
+            printButton.ForeColor = text;
+            pageUp.ForeColor = text;
+            pageDown.ForeColor = text;
+            headerTextBox.ForeColor = text;
+            footerTextBox.ForeColor = text;
+            panelLeft.ForeColor = text;
+            enableHeader.ForeColor = text;
+            enableFooter.ForeColor = text;
+            comboBoxSheet.ForeColor = text;
+            labelPaper.ForeColor = text;
+            labelTop.ForeColor = text;
+            topMargin.ForeColor = text;
+            labelLeft.ForeColor = text;
+            leftMargin.ForeColor = text;
+            labelRight.ForeColor = text;
+            rightMargin.ForeColor = text;
+            labelBottom.ForeColor = text;
+            bottomMargin.ForeColor = text;
+            labelRows.ForeColor = text;
+            rows.ForeColor = text;
+            labelColumns.ForeColor = text;
+            columns.ForeColor = text;
+            groupMargins.ForeColor = text;
+            groupPages.ForeColor = text;
+            pageSeparator.ForeColor = text;
+            labelPadding.ForeColor = text;
+            padding.ForeColor = text;
+            headerPanel.ForeColor = text;
+            footerPanel.ForeColor = text;
+            fileButton.ForeColor = text;
+            toText.ForeColor = text;
+            label1.ForeColor = text;
+            fromText.ForeColor = text;
+            fromLabel.ForeColor = text;
+            pagesLabel.ForeColor = text;
+        }
+
+        [38;2;0;153;255m// Flag: Has Dispose already been called?[39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;119;136;01mbool[39;00m disposed = [38;2;0;102;153;01mfalse[39;00m;
+        [38;2;0;153;255m// Protected implementation of Dispose pattern.[39m
+        [38;2;0;153;255m/// <summary>[39m
+        [38;2;0;153;255m///  Clean up any resources being used.[39m
+        [38;2;0;153;255m/// </summary>[39m
+        [38;2;0;153;255m/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>[39m
+        [38;2;0;102;153;01mprotected[39;00m [38;2;0;102;153;01moverride[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mDispose[39m([38;2;0;119;136;01mbool[39;00m disposing) {
+            [38;2;0;102;153;01mif[39;00m (disposed) {
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (disposing && (components != [38;2;0;102;153;01mnull[39;00m)) {
+                components.Dispose();
+                [38;2;0;153;255m//if (streamToPrint != null) streamToPrint.Dispose();[39m
+                [38;2;0;102;153;01mif[39;00m (printDoc != [38;2;0;102;153;01mnull[39;00m) {
+                    printDoc.Dispose();
+                }
+
+                [38;2;0;102;153;01mif[39;00m (printPreview != [38;2;0;102;153;01mnull[39;00m) {
+                    printPreview.Dispose();
+                }
+            }
+            disposed = [38;2;0;102;153;01mtrue[39;00m;
+            [38;2;0;102;153;01mbase[39;00m.Dispose(disposing);
+        }
+
+        [38;2;0;153;255m/// <summary>[39m
+        [38;2;0;153;255m/// Wire up property change notifications from the View Model.[39m
+        [38;2;0;153;255m/// This should only be called once[39m
+        [38;2;0;153;255m/// </summary>[39m
+        [38;2;0;153;255m// TODO: Refactor PropertyChanged lambdas to be functions so they can be -=[39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mSetupSheetViewModelNotifications[39m() {
+            [38;2;0;153;255m//LogService.TraceMessage();[39m
+            [38;2;0;102;153;01mif[39;00m (printPreview.SheetViewModel != [38;2;0;102;153;01mnull[39;00m) {
+                LogService.TraceMessage([38;2;204;51;0m"SetupSheetViewModelNotifications was already called"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            printPreview.SheetViewModel = [38;2;0;102;153;01mnew[39;00m SheetViewModel();
+            printPreview.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
+            printPreview.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
+            printPreview.SheetViewModel.PageSettingsSet += PageSettingsSetEventHandler;
+            printPreview.SheetViewModel.Loaded += FileLoadedEventHandler;
+            printPreview.SheetViewModel.ReadyChanged += ReadyChangedEventHandler;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mFileLoadedEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mbool[39;00m loading) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => FileLoadedEventHandler(sender, loading)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{loading}"[39m);
+                [38;2;0;102;153;01mif[39;00m (loading) {
+                    [38;2;0;102;153;01mreturn[39;00m;
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mPageSettingsSetEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => PageSettingsSetEventHandler(sender, e)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mReadyChangedEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mbool[39;00m ready) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => ReadyChangedEventHandler(sender, ready)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ready}"[39m);
+                printButton.Enabled = ready;
+
+                [38;2;0;102;153;01mif[39;00m (!ready) {
+                    [38;2;0;102;153;01mreturn[39;00m;
+                }
+
+                [38;2;0;102;153;01mif[39;00m ([38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(activeFile)) {
+                    printPreview.Invalidate();
+                    printPreview.Text = Resources.HelloMsg;
+                }
+                [38;2;0;102;153;01melse[39;00m {
+                    [38;2;0;153;255m// Document is loaded and flowed. We're ready to preview and/or pring.[39m
+                    printPreview.CurrentSheet = [38;2;255;102;0m1[39m;
+                    printPreview.Invalidate();
+                    printPreview.Text = [38;2;204;51;0m""[39m;
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mPropertyChangedEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, PropertyChangedEventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => PropertyChangedEventHandler(sender, e)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                [38;2;0;153;255m//LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");[39m
+                [38;2;0;102;153;01mswitch[39;00m (e.PropertyName) {
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Landscape"[39m:
+                        LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}"[39m);
+                        landscapeCheckbox.Checked = printPreview.SheetViewModel.Landscape;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Header"[39m:
+                        headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
+                        enableHeader.Checked = printPreview.SheetViewModel.Header.Enabled;
+                        headerFooterFontLink.Text = printPreview.SheetViewModel.Header.Font.ToString();
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Footer"[39m:
+                        footerTextBox.Text = printPreview.SheetViewModel.Footer.Text;
+                        enableFooter.Checked = printPreview.SheetViewModel.Footer.Enabled;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Margins"[39m:
+                        topMargin.Value = printPreview.SheetViewModel.Margins.Top / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        leftMargin.Value = printPreview.SheetViewModel.Margins.Left / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        rightMargin.Value = printPreview.SheetViewModel.Margins.Right / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        bottomMargin.Value = printPreview.SheetViewModel.Margins.Bottom / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+
+                        [38;2;0;153;255m// Keep PrintDocument updated for WinForms.PrintPreview[39m
+                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)printPreview.SheetViewModel.Margins.Clone();
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"PageSeparator"[39m:
+                        pageSeparator.Checked = printPreview.SheetViewModel.PageSeparator;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Rows"[39m:
+                        rows.Value = printPreview.SheetViewModel.Rows;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Columns"[39m:
+                        columns.Value = printPreview.SheetViewModel.Columns;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Padding"[39m:
+                        padding.Value = printPreview.SheetViewModel.Padding / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"File"[39m:
+                        Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"winprint - {printPreview.SheetViewModel.File}"[39m;
+                        printPreview.CurrentSheet = [38;2;255;102;0m1[39m;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Title"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;153;255m// When ContentEngine changes we know the document has been loaded.[39m
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"ContentEngine"[39m:
+                        [38;2;0;153;255m//printPreview.CurrentSheet = 1;[39m
+                        [38;2;0;153;255m//printButton.Enabled = printPreview.SheetViewModel.NumSheets > 0;[39m
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Language"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"ContentSettings"[39m:
+                        contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
+                        lineNumbers.Checked = printPreview.SheetViewModel.ContentSettings.LineNumbers;
+                        [38;2;0;153;255m//lineNumberSeparator.Checked = printPreview.SheetViewModel.ContentSettings.lineNumberSeparator;[39m
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"DiagnosticRulesFont"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Encoding"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Loading"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Ready"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+
+                    [38;2;0;102;153;01mdefault[39;00m:
+                        [38;2;0;102;153;01mthrow[39;00m [38;2;0;102;153;01mnew[39;00m [38;2;204;0;255mInvalidOperationException[39m([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Property Change Not Handled: {e.PropertyName}"[39m);
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mSettingsChangedEventHandler[39m([38;2;0;119;136;01mobject[39;00m o, [38;2;0;119;136;01mbool[39;00m reflow) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{reflow}"[39m);
+                [38;2;0;102;153;01mif[39;00m (reflow) {
+                    LoadFile();
+                }
+                [38;2;0;102;153;01melse[39;00m {
+                    [38;2;0;153;255m//printPreview.Invalidate();[39m
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m CancellationTokenSource _cancellationToken = [38;2;0;102;153;01mnew[39;00m CancellationTokenSource();
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mMainWindow_Load[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;153;255m// Check for updates[39m
+            LogService.TraceMessage([38;2;204;51;0m"First reference to UpdateService"[39m);
+            [38;2;0;102;153;01mif[39;00m (ServiceLocator.Current.UpdateService == [38;2;0;102;153;01mnull[39;00m) {
+                _ = MessageBox.Show(Resources.UpdateServiceFailure);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadComplete += UpdateService_DownloadComplete;
+            ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_cancellationToken.Token).ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+            [38;2;0;153;255m// Load settings by referencing ModelLocator.Current[39m
+            LogService.TraceMessage([38;2;204;51;0m"First reference to ModelLocator.Current.Settings"[39m);
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings == [38;2;0;102;153;01mnull[39;00m) {
+                MessageBox.Show(Resources.SettingsLoadMsg);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings.Size != [38;2;0;102;153;01mnull[39;00m) {
+                Size = [38;2;0;102;153;01mnew[39;00m Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings.Location != [38;2;0;102;153;01mnull[39;00m) {
+                Location = [38;2;0;102;153;01mnew[39;00m Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+            }
+
+            WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+
+            printPreview.KeyUp += (s, e) => {
+                [38;2;0;102;153;01mif[39;00m (e.KeyCode == Keys.F5) {
+                    [38;2;0;153;255m//printPreview.Invalidate(true);[39m
+                    Log.Debug([38;2;204;51;0m"-------- F5 ---------"[39m);
+
+                    ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Refresh"[39m);
+
+                    [38;2;0;153;255m// TODO: Refactor threading[39m
+                    Task.Run(() => Start());
+                }
+            };
+
+            [38;2;0;153;255m//this.Cursor = Cursors.WaitCursor;[39m
+            [38;2;0;119;136;01mvar[39;00m sheets = ModelLocator.Current.Settings.Sheets;
+
+            [38;2;0;153;255m// Load file assocations[39m
+            [38;2;0;119;136;01mvar[39;00m languages = ModelLocator.Current.Associations;
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations"[39m);
+
+            ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Settings.PropertyChanged: {e.PropertyName}"[39m);
+                [38;2;0;102;153;01mswitch[39;00m (e.PropertyName) {
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"DefaultSheet"[39m:
+                        SheetChanged();
+                        [38;2;0;102;153;01mbreak[39;00m;
+                }
+            }));
+
+            comboBoxSheet.DisplayMember = [38;2;204;51;0m"Value"[39m;
+            comboBoxSheet.ValueMember = [38;2;204;51;0m"Key"[39m;
+            [38;2;0;102;153;01mforeach[39;00m ([38;2;0;119;136;01mvar[39;00m s [38;2;0;102;153;01min[39;00m sheets) {
+                comboBoxSheet.Items.Add([38;2;0;102;153;01mnew[39;00m KeyValuePair<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m>(s.Key, s.Value.Name));
+            }
+
+            [38;2;0;153;255m// Select default printer and paper size[39m
+            [38;2;0;102;153;01mforeach[39;00m ([38;2;0;119;136;01mstring[39;00m printer [38;2;0;102;153;01min[39;00m System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
+                printersCB.Items.Add(printer);
+                [38;2;0;102;153;01mif[39;00m (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName) {
+                    printersCB.Text = printDoc.PrinterSettings.PrinterName;
+                }
+            }
+
+            [38;2;0;153;255m// --p[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.Printer)) {
+                printDoc.PrinterSettings.PrinterName = printersCB.Text = ModelLocator.Current.Options.Printer;
+            }
+
+            [38;2;0;102;153;01mforeach[39;00m (PaperSize ps [38;2;0;102;153;01min[39;00m printDoc.PrinterSettings.PaperSizes) {
+                paperSizesCB.Items.Add(ps.PaperName);
+            }
+
+            [38;2;0;153;255m// --z[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize)) {
+                paperSizesCB.Text = ModelLocator.Current.Options.PaperSize;
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
+            }
+
+            [38;2;0;153;255m// We kept these disabled during load[39m
+            printersCB.Enabled = [38;2;0;102;153;01mtrue[39;00m;
+            paperSizesCB.Enabled = [38;2;0;102;153;01mtrue[39;00m;
+
+            [38;2;0;153;255m// Create sheet view model & wire up notifications[39m
+            SetupSheetViewModelNotifications();
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.FromPage != [38;2;255;102;0m0[39m) {
+                [38;2;0;153;255m//printDoc.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;[39m
+                fromText.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Options.FromPage}"[39m;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.ToPage != [38;2;255;102;0m0[39m) {
+                [38;2;0;153;255m//printDoc.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;[39m
+                toText.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Options.ToPage}"[39m;
+            }
+
+            [38;2;0;153;255m// --s[39m
+            [38;2;0;153;255m// Select default Sheet [39m
+            [38;2;0;119;136;01mvar[39;00m newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.Sheet)) {
+                newSheet = printPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, [38;2;0;102;153;01mout[39;00m [38;2;0;119;136;01mvar[39;00m sheetID);
+            }
+            comboBoxSheet.Text = newSheet.Name;
+            [38;2;0;153;255m// This will cause a flurry of property change notifications, setting all UI elements[39m
+            printPreview.SheetViewModel.SetSheet(newSheet);
+
+            [38;2;0;153;255m// Must set landscape after printer/paper selection[39m
+            [38;2;0;153;255m// --l and --o[39m
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.Landscape) {
+                printPreview.SheetViewModel.Landscape = [38;2;0;102;153;01mtrue[39;00m;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.Portrait) {
+                printPreview.SheetViewModel.Landscape = [38;2;0;102;153;01mfalse[39;00m;
+            }
+
+            [38;2;0;153;255m// Override content-type[39m
+            [38;2;0;153;255m// --t[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.ContentType)) {
+                [38;2;0;153;255m// TODO: (nothing?)[39m
+            }
+
+            printPreview.Select();
+            printPreview.Focus();
+            [38;2;0;153;255m//this.Cursor = Cursors.Default;[39m
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.Files != [38;2;0;102;153;01mnull[39;00m && ModelLocator.Current.Options.Files.ToList().Count > [38;2;255;102;0m0[39m) {
+                activeFile = ModelLocator.Current.Options.Files.ToList()[[38;2;255;102;0m0[39m];
+            }
+
+            [38;2;0;153;255m// By running this on a different thread, we enable the main window to show[39m
+            [38;2;0;153;255m// as quickly as possible; making startup seem faster.[39m
+            [38;2;0;153;255m//Task.Run(() => Start());[39m
+            Start();
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mUpdateService_DownloadComplete[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mstring[39;00m path) {
+            [38;2;0;153;255m//Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);[39m
+[38;2;0;153;153m#if DEBUG[39m
+            [38;2;0;119;136;01mvar[39;00m log = [38;2;204;51;0m"-lv winprint.msiexec.log"[39m;
+[38;2;0;153;153m#else[39m
+            [38;2;0;119;136;01mstring[39;00m log = [38;2;204;51;0m""[39m;
+[38;2;0;153;153m#endif[39m
+            [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m p = [38;2;0;102;153;01mnew[39;00m Process {
+                StartInfo = {
+                        FileName = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"msiexec.exe"[39m,
+                        Arguments = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{log} -i {path}"[39m,
+                        UseShellExecute = [38;2;0;102;153;01mtrue[39;00m
+                    },
+            };
+
+            [38;2;0;102;153;01mtry[39;00m {
+                p.Start();
+            }
+            [38;2;0;102;153;01mcatch[39;00m (Win32Exception we) {
+                Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}"[39m);
+            }
+
+            BeginInvoke((Action)(() => Close()));
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mUpdateService_GotLatestVersion[39m([38;2;0;119;136;01mobject[39;00m sender, Version version) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => UpdateService_GotLatestVersion(sender, version)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+
+                [38;2;0;102;153;01mif[39;00m (version == [38;2;0;102;153;01mnull[39;00m && ![38;2;0;119;136;01mstring[39;00m.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Could not access tig.github.io/winprint to see if a newer version is available. {ServiceLocator.Current.UpdateService.ErrorMessage}"[39m);
+                }
+                [38;2;0;102;153;01melse[39;00m [38;2;204;0;255mif[39m (ServiceLocator.Current.UpdateService.CompareVersions() < [38;2;255;102;0m0[39m) {
+                    Log.Information([38;2;204;51;0m"------------------------------------------------"[39m);
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"A newer version of winprint ({version}) is available at"[39m);
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"   {ServiceLocator.Current.UpdateService.ReleasePageUri}"[39m);
+                    Log.Information([38;2;204;51;0m"------------------------------------------------"[39m);
+
+                    [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m dlg = [38;2;0;102;153;01mnew[39;00m UpdateDialog();
+                    dlg.ShowDialog([38;2;0;102;153;01mthis[39;00m);
+                }
+                [38;2;0;102;153;01melse[39;00m [38;2;204;0;255mif[39m (ServiceLocator.Current.UpdateService.CompareVersions() > [38;2;255;102;0m0[39m) {
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})"[39m);
+                }
+                [38;2;0;102;153;01melse[39;00m {
+                    Log.Information([38;2;204;51;0m"You are running the most recent version of winprint"[39m);
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mStart[39m() {
+            LogService.TraceMessage();
+
+            [38;2;0;102;153;01mif[39;00m ([38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(activeFile)) {
+                [38;2;0;153;255m// If a file's not been set, juice the print preview and show the file open dialog box[39m
+                LoadFile();
+                [38;2;0;153;255m//ShowFilesDialog();[39m
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LoadFile();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mLoadFile[39m() {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => LoadFile()));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                [38;2;0;153;255m// Reset View Model[39m
+                printPreview.SheetViewModel.Reset();
+                printPreview.Invalidate();
+                printPreview.Text = Resources.LoadingMsg;
+
+                [38;2;0;153;255m// On another thread [39m
+                [38;2;0;153;255m//    - load file[39m
+                [38;2;0;153;255m//    - set printer page settings[39m
+                [38;2;0;153;255m//    - reflow[39m
+                Task.Run([38;2;0;102;153;01masync[39;00m () => {
+                    [38;2;0;119;136;01mvar[39;00m stage = [38;2;204;51;0m"Loading"[39m;
+                    [38;2;0;119;136;01mvar[39;00m fileToPrint = activeFile;
+                    [38;2;0;102;153;01mtry[39;00m {
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}..."[39m;
+                        }));
+                        [38;2;0;153;255m// This is an IO bound operation. [39m
+                        [38;2;0;153;255m// TODO: This does not need to run on another thread if we are using async/await correctly[39m
+                        [38;2;0;153;255m// Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.[39m
+                        [38;2;0;153;255m// Note, Title stays as was provided via -FileName or -Title[39m
+                        [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(fileToPrint) && !Path.IsPathFullyQualified(fileToPrint)) {
+                            fileToPrint = Path.GetFullPath(fileToPrint, Directory.GetCurrentDirectory());
+                        }
+                        [38;2;0;102;153;01mawait[39;00m printPreview.SheetViewModel.LoadFileAsync(fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+                        [38;2;0;153;255m// Set landscape. This causes other DefaultPageSettings to change[39m
+                        [38;2;0;153;255m// These are CPU bound operations. [39m
+                        [38;2;0;153;255m// TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth[39m
+                        stage = [38;2;204;51;0m"Getting Printer Page Settings"[39m;
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}..."[39m;
+                        }));
+                        printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
+                        printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings);
+
+
+                        stage = [38;2;204;51;0m"Rendering"[39m;
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}..."[39m;
+                        }));
+                        [38;2;0;102;153;01mawait[39;00m printPreview.SheetViewModel.ReflowAsync().ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+                    }
+                    [38;2;0;102;153;01mcatch[39;00m (DirectoryNotFoundException dnfe) {
+                        Log.Error(dnfe, [38;2;204;51;0m"File Not Found"[39m);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: {dnfe.Message}"[39m);
+                        [38;2;0;102;153;01mreturn[39;00m;
+                    }
+                    [38;2;0;102;153;01mcatch[39;00m (FileNotFoundException fnfe) {
+                        Log.Error(fnfe, [38;2;204;51;0m"File Not Found"[39m);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: {fnfe.Message}"[39m);
+                        [38;2;0;153;255m//fileButton_Click(null, null);[39m
+                    }
+                    [38;2;0;102;153;01mcatch[39;00m (InvalidOperationException ioe) {
+                        ServiceLocator.Current.TelemetryService.TrackException(ioe, [38;2;0;102;153;01mfalse[39;00m);
+                        Log.Error(ioe, [38;2;204;51;0m"Error Operation {file}"[39m, fileToPrint);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: {ioe.Message}"[39m);
+                        [38;2;0;153;255m//                fileButton_Click(null, null);[39m
+                    }
+[38;2;0;153;153m#pragma warning disable CA1031 // Do not catch general exception types[39m
+                    [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+[38;2;0;153;153m#pragma warning restore CA1031 // Do not catch general exception types[39m
+                        ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+                        Log.Error(e, [38;2;204;51;0m"Exception {file}"[39m, fileToPrint);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: Exception: {e.Message}{Environment.NewLine}({fileToPrint})"[39m);
+                    }
+                    [38;2;0;102;153;01mfinally[39;00m {
+                        [38;2;0;153;255m// Set Loading to false in case of an error[39m
+                        [38;2;0;153;255m//printPreview.SheetViewModel.Loading = false;[39m
+                        [38;2;0;153;255m//printPreview.SheetViewModel.Ready = false;[39m
+                    }
+                });
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mShowMessage[39m([38;2;0;119;136;01mstring[39;00m message) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => ShowMessage(message)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                printPreview.Text = message;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mShowFilesDialog[39m() {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => ShowFilesDialog()));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage();
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Show Files Dialog"[39m);
+                openFileDialog.Filter = Resources.FileOpenTemplate;
+                openFileDialog.FilterIndex = [38;2;255;102;0m3[39m;
+                [38;2;0;153;255m//openFileDialog.RestoreDirectory = true;[39m
+                [38;2;0;102;153;01mif[39;00m (openFileDialog.ShowDialog([38;2;0;102;153;01mthis[39;00m) == DialogResult.OK) {
+                    activeFile = openFileDialog.FileNames.ToList()[[38;2;255;102;0m0[39m];
+                    LoadFile();
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mSheetChanged[39m() {
+            LogService.TraceMessage();
+            [38;2;0;119;136;01mvar[39;00m newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            comboBoxSheet.Text = newSheet.Name;
+            printPreview.SheetViewModel.SetSheet(newSheet);
+            [38;2;0;153;255m//SheetSettingsChanged();[39m
+            LoadFile();
+        }
+
+        [38;2;0;153;255m/// <summary>[39m
+        [38;2;0;153;255m/// If Sheet settings change (either a new sheet or something that causes a reflow)[39m
+        [38;2;0;153;255m/// Update printer settings and Reflow.[39m
+        [38;2;0;153;255m/// Because getting printer settings can take 4-5 seconds we do that and reflow on another thread[39m
+        [38;2;0;153;255m///// </summary>[39m
+        [38;2;0;153;255m//internal void SheetSettingsChanged() {[39m
+        [38;2;0;153;255m//    LogService.TraceMessage();[39m
+
+        [38;2;0;153;255m//    Task.Run(async () => {[39m
+
+        [38;2;0;153;255m//    });[39m
+        [38;2;0;153;255m//}[39m
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mMainWindow_FormClosing[39m([38;2;0;119;136;01mobject[39;00m sender, FormClosingEventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings [38;2;0;102;153;01mis[39;00m [38;2;0;102;153;01mnull[39;00m) {
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete; ;
+
+            [38;2;0;153;255m// Save Window state[39m
+            [38;2;0;102;153;01mif[39;00m (WindowState == System.Windows.Forms.FormWindowState.Normal) {
+                ModelLocator.Current.Settings.Size = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowSize(Size.Width, Size.Height);
+                ModelLocator.Current.Settings.Location = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowLocation(Location.X, Location.Y);
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                ModelLocator.Current.Settings.Size = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowSize(RestoreBounds.Width, RestoreBounds.Height);
+                ModelLocator.Current.Settings.Location = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowLocation(RestoreBounds.X, RestoreBounds.Y);
+            }
+            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Form Closing"[39m,
+                 properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                    {[38;2;204;51;0m"windowState"[39m, ModelLocator.Current.Settings.WindowState.ToString() },
+                    {[38;2;204;51;0m"size"[39m, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}"[39m },
+                    {[38;2;204;51;0m"location"[39m, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Settings.Location.X}x{ModelLocator.Current.Settings.Location.Y}"[39m},
+                 });
+
+            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mMainWindow_Layout[39m([38;2;0;119;136;01mobject[39;00m sender, LayoutEventArgs e) {
+            [38;2;0;153;255m// This event is raised once at startup with the AffectedControl[39m
+            [38;2;0;153;255m// and AffectedProperty properties on the LayoutEventArgs as null. [39m
+            [38;2;0;153;255m// The event provides size preferences for that case.[39m
+            [38;2;0;102;153;01mif[39;00m ((e.AffectedControl != [38;2;0;102;153;01mnull[39;00m) && (e.AffectedProperty != [38;2;0;102;153;01mnull[39;00m)) {
+                [38;2;0;153;255m// Ensure that the affected property is the Bounds property[39m
+                [38;2;0;153;255m// of the form.[39m
+                [38;2;0;153;255m//if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {[39m
+                [38;2;0;153;255m//Core.Helpers.Logging.TraceMessage("MainWindow_Layout bounds changed");[39m
+                [38;2;0;153;255m//}[39m
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mlandscapeCheckbox_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{landscapeCheckbox.Checked}"[39m);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+            ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =
+                printDoc.DefaultPageSettings.Landscape =
+                landscapeCheckbox.Checked;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"landscapeCheckbox_CheckedChanged"[39m,
+                 properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                                        {[38;2;204;51;0m"landscape"[39m, landscapeCheckbox.Checked.ToString() }
+                 });
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mheaderTextBox_TextChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+                ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"headerTextBox_TextChanged"[39m);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mfooterTextBox_TextChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+                ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Text = footerTextBox.Text;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"footerTextBox_TextChanged"[39m);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mprintersCB_SelectedIndexChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                LogService.TraceMessage([38;2;204;51;0m"printersCB_SelectedIndexChanged"[39m);
+                printDoc.PrinterSettings.PrinterName = ([38;2;0;119;136;01mstring[39;00m)printersCB.SelectedItem;
+
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"printersCB_SelectedIndexChanged"[39m,
+                     properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                            {[38;2;204;51;0m"printerName"[39m, printDoc.PrinterSettings.PrinterName }
+                     });
+
+                paperSizesCB.Items.Clear();
+                [38;2;0;102;153;01mforeach[39;00m (PaperSize ps [38;2;0;102;153;01min[39;00m printDoc.PrinterSettings.PaperSizes) {
+                    paperSizesCB.Items.Add(ps.PaperName);
+                }
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"printersCB_SelectedIndexChanged"[39m,
+                     properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                            {[38;2;204;51;0m"printerName"[39m, printDoc.PrinterSettings.PrinterName }
+                     });
+
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpaperSizesCB_SelectedIndexChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                LogService.TraceMessage([38;2;204;51;0m"paperSizesCB_SelectedIndexChanged"[39m);
+                [38;2;0;153;255m// Set the paper size based upon the selection in the combo box.[39m
+                [38;2;0;102;153;01mif[39;00m (paperSizesCB.SelectedIndex != -[38;2;255;102;0m1[39m) {
+                    printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
+                    ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"paperSizesCB_SelectedIndexChanged"[39m,
+                         properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                            {[38;2;204;51;0m"paperName"[39m, printDoc.DefaultPageSettings.PaperSize.PaperName }
+                         });
+
+                }
+                LoadFile();
+            }
+        }
+
+[38;2;51;0;153m        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")][39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01masync[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mprintButton_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs args) {
+            [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m print = [38;2;0;102;153;01mnew[39;00m Core.Print();
+            [38;2;0;153;255m// TODO: It's hokey that Landscape is the only printer setting that's treated specially[39m
+            [38;2;0;153;255m// [39m
+            print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            print.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+
+            [38;2;0;102;153;01mtry[39;00m {
+                ShowMessage([38;2;204;51;0m"Preparing to print.."[39m);
+                [38;2;0;102;153;01mawait[39;00m print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+                print.SetPrinter(printDoc.PrinterSettings.PrinterName);
+                print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
+
+            }
+            [38;2;0;102;153;01mcatch[39;00m (FileNotFoundException fnfe) {
+                Log.Error(fnfe, [38;2;204;51;0m"File Not Found"[39m);
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{fnfe.Message}"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+            [38;2;0;102;153;01mcatch[39;00m (InvalidOperationException ioe) {
+                ServiceLocator.Current.TelemetryService.TrackException(ioe, [38;2;0;102;153;01mfalse[39;00m);
+                Log.Error(ioe, [38;2;204;51;0m"Error Operation {file}"[39m, activeFile);
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ioe.Message}"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+[38;2;0;153;153m#pragma warning disable CA1031 // Do not catch general exception types[39m
+            [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+[38;2;0;153;153m#pragma warning restore CA1031 // Do not catch general exception types[39m
+                ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+                Log.Error(e, [38;2;204;51;0m"Exception {file}"[39m, activeFile);
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Exception: {e.Message}{Environment.NewLine}({activeFile})"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+            [38;2;0;102;153;01mfinally[39;00m {
+            }
+
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mint[39;00m.TryParse(fromText.Text, [38;2;0;102;153;01mout[39;00m [38;2;0;119;136;01mvar[39;00m [38;2;0;102;153;01mfrom[39;00m)) {
+                [38;2;0;102;153;01mfrom[39;00m = [38;2;255;102;0m0[39m;
+            }
+            [38;2;0;153;255m// Ideally we'd get NumSheets from print.SheetSVM but that would cause a[39m
+            [38;2;0;153;255m// un-needed Reflow. So use the printPreview VM.[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mint[39;00m.TryParse(toText.Text, [38;2;0;102;153;01mout[39;00m [38;2;0;119;136;01mvar[39;00m to)) {
+                to = [38;2;255;102;0m0[39m;[38;2;0;153;255m// printPreview.SheetViewModel.NumSheets;[39m
+            }
+
+            [38;2;0;102;153;01mif[39;00m ([38;2;0;102;153;01mfrom[39;00m > [38;2;255;102;0m0[39m && to > [38;2;255;102;0m0[39m) {
+                print.PrintDocument.PrinterSettings.PrintRange = PrintRange.SomePages;
+                print.PrintDocument.PrinterSettings.FromPage = [38;2;0;102;153;01mfrom[39;00m;
+                print.PrintDocument.PrinterSettings.ToPage = to;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings.ShowPrintDialog) {
+                BeginInvoke((Action)([38;2;0;102;153;01masync[39;00m () => {
+                    [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m printDialog = [38;2;0;102;153;01mnew[39;00m PrintDialog {
+                        AllowSomePages = [38;2;0;102;153;01mtrue[39;00m,
+                        ShowHelp = [38;2;0;102;153;01mtrue[39;00m,
+                        [38;2;0;153;255m// printDialog.AllowSelection = true;[39m
+
+                        Document = print.PrintDocument
+                    };
+                    printDialog.PrinterSettings.PrintRange = print.PrintDocument.PrinterSettings.PrintRange;
+                    printDialog.PrinterSettings.FromPage = print.PrintDocument.PrinterSettings.FromPage;
+                    printDialog.PrinterSettings.ToPage = print.PrintDocument.PrinterSettings.ToPage;
+
+                    [38;2;0;153;255m//If the result is OK then print the document.[39m
+                    [38;2;0;102;153;01mif[39;00m (printDialog.ShowDialog() == DialogResult.OK) {
+                        [38;2;0;102;153;01mif[39;00m (printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
+                            print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
+                            print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
+                            print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
+                        }
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Printing to {printDoc.PrinterSettings.PrinterName}"[39m);
+                        [38;2;0;153;255m// BUGBUG: having the printpreview invalidate while we're printing causes an exception[39m
+                        [38;2;0;153;255m// in litehtml. Do not un comment this until figured out[39m
+                        [38;2;0;153;255m//print.PrintingSheet += Print_PrintingSheet;[39m
+                        [38;2;0;102;153;01mawait[39;00m print.DoPrint().ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m""[39m);
+                    }
+                }));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Printing to {printDoc.PrinterSettings.PrinterName}"[39m);
+
+                [38;2;0;153;255m// BUGBUG: having the printpreview invalidate while we're printing causes an exception[39m
+                [38;2;0;153;255m// in litehtml. Do not un comment this until figured out[39m
+                [38;2;0;153;255m//print.PrintingSheet += Print_PrintingSheet;[39m
+                [38;2;0;102;153;01mawait[39;00m print.DoPrint().ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+                ShowMessage([38;2;204;51;0m""[39m);
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mPrint_PrintingSheet[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mint[39;00m sheetNum) {
+            ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Printing sheet {sheetNum}"[39m);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpanelRight_Resize[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;153;255m//SizePreview();[39m
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255menableHeader_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"enableHeader_CheckedChanged: {enableHeader.Checked}"[39m);
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                [38;2;0;153;255m// TODO: This should find the Preview SheetViewModel instance and set the property on this, not[39m
+                [38;2;0;153;255m// the model[39m
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Enabled =
+                    enableHeader.Checked;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255menableFooter_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"enableFooter_CheckedChanged: {enableFooter.Checked}"[39m);
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                [38;2;0;153;255m// TODO: This should find the Preview SheetViewModel instance and set the property on this, not[39m
+                [38;2;0;153;255m// the model[39m
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Enabled =
+                    enableFooter.Checked;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mcomboBoxSheet_SelectedIndexChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m si = (KeyValuePair<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m>)comboBoxSheet.SelectedItem;
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}"[39m);
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Change Selected Sheet Settings"[39m,
+                    properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                                    {[38;2;204;51;0m"sheetSettingsName"[39m, si.Value },
+                                    {[38;2;204;51;0m"sheetSettingsId"[39m, si.Key },
+                    });
+                [38;2;0;153;255m//ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);[39m
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mtopMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Top = ([38;2;0;119;136;01mint[39;00m)(topMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mleftMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Left = ([38;2;0;119;136;01mint[39;00m)(leftMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mrightMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Right = ([38;2;0;119;136;01mint[39;00m)(rightMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mbottomMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Bottom = ([38;2;0;119;136;01mint[39;00m)(bottomMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpageSeparator_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).PageSeparator = pageSeparator.Checked;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mrows_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Rows = ([38;2;0;119;136;01mint[39;00m)rows.Value;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mcolumns_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Columns = ([38;2;0;119;136;01mint[39;00m)columns.Value;
+
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpadding_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = ([38;2;0;119;136;01mint[39;00m)(padding.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mfileButton_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ShowFilesDialog();
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mlineNumbers_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"lineNumbers_CheckedChanged: {lineNumbers.Checked}"[39m);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings.LineNumbers =
+                    lineNumbers.Checked;
+        }
+
+[38;2;51;0;153m        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",[39m
+[38;2;51;0;153m            "CA1031:Do not catch general exception types", Justification = "<Pending>")][39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255msettingsButton_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs args) {
+            Log.Debug([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}"[39m);
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Settings Button Click"[39m);
+
+            Process proc = [38;2;0;102;153;01mnull[39;00m;
+            [38;2;0;102;153;01mtry[39;00m {
+                [38;2;0;119;136;01mvar[39;00m psi = [38;2;0;102;153;01mnew[39;00m ProcessStartInfo {
+                    UseShellExecute = [38;2;0;102;153;01mtrue[39;00m,   [38;2;0;153;255m// This is important[39m
+                    FileName = ServiceLocator.Current.SettingsService.SettingsFileName
+                };
+                proc = Process.Start(psi);
+            }
+            [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+                [38;2;0;153;255m// TODO: Better error message (output of stderr?)[39m
+                ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+
+                Log.Error(e, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}."[39m);
+            }
+            [38;2;0;102;153;01mfinally[39;00m {
+                proc?.Dispose();
+            }
+        }
+
+[38;2;51;0;153m        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",[39m
+[38;2;51;0;153m            "CA1031:Do not catch general exception types", Justification = "<Pending>")][39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mhelpaboutLink_LinkClicked[39m([38;2;0;119;136;01mobject[39;00m sender, LinkLabelLinkClickedEventArgs args) {
+            [38;2;0;119;136;01mvar[39;00m url = [38;2;204;51;0m"https://tig.github.io/winprint"[39m;
+            Log.Debug([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Browsing to home page: {url}"[39m);
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Help/About Link Click"[39m);
+
+            Process proc = [38;2;0;102;153;01mnull[39;00m;
+            [38;2;0;102;153;01mtry[39;00m {
+                [38;2;0;119;136;01mvar[39;00m psi = [38;2;0;102;153;01mnew[39;00m ProcessStartInfo {
+                    UseShellExecute = [38;2;0;102;153;01mtrue[39;00m,   [38;2;0;153;255m// This is important[39m
+                    FileName = url
+                };
+                proc = Process.Start(psi);
+            }
+            [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+                [38;2;0;153;255m// TODO: Better error message (output of stderr?)[39m
+                ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+
+                Log.Error(e, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Couldn't browse to {url}."[39m);
+            }
+            [38;2;0;102;153;01mfinally[39;00m {
+                proc?.Dispose();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mcontentFontLink_LinkClicked[39m([38;2;0;119;136;01mobject[39;00m sender, LinkLabelLinkClickedEventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m contentSettings = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings;
+
+            fontDialog.Font = [38;2;0;102;153;01mnew[39;00m System.Drawing.Font(contentSettings.Font.Family, contentSettings.Font.Size, contentSettings.Font.Style, GraphicsUnit.Point);
+            [38;2;0;102;153;01mif[39;00m (DialogResult.OK == fontDialog.ShowDialog([38;2;0;102;153;01mthis[39;00m)) {
+                contentSettings.Font = [38;2;0;102;153;01mnew[39;00m Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = ([38;2;0;119;136;01mfloat[39;00m)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
+                contentFontLink.Text = contentSettings.Font.ToString();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mheaderFooterFontLink_LinkClicked[39m([38;2;0;119;136;01mobject[39;00m sender, LinkLabelLinkClickedEventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header;
+            [38;2;0;119;136;01mvar[39;00m footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer;
+
+            fontDialog.Font = [38;2;0;102;153;01mnew[39;00m System.Drawing.Font(header.Font.Family, header.Font.Size, GraphicsUnit.Point);
+
+            [38;2;0;102;153;01mif[39;00m (DialogResult.OK == fontDialog.ShowDialog([38;2;0;102;153;01mthis[39;00m)) {
+                [38;2;0;153;255m// Note we set BOTH the header & footer to the same thing. But for GUI we use the Header as source of truth.[39m
+                header.Font = footer.Font = [38;2;0;102;153;01mnew[39;00m Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = ([38;2;0;119;136;01mfloat[39;00m)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
+                headerFooterFontLink.Text = header.Font.ToString();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mprintPreview_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m ([38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(activeFile)) {
+                ShowFilesDialog();
+            }
+        }
+    }
+}
+[38;2;0;153;255m// Copyright Kindel Systems, LLC - http://www.kindel.com[39m
+[38;2;0;153;255m// Published under the MIT License at https://github.com/tig/winprint[39m
+
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Collections.Generic[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.ComponentModel[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Diagnostics[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Drawing[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Drawing.Printing[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.IO[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Linq[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Reflection[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Threading[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Threading.Tasks[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSystem.Windows.Forms[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mLiteHtmlSharp[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mSerilog[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.Core[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.Core.Models[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.Core.Services[39;00m;
+[38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mWinPrint.WinForms[39;00m;
+
+[38;2;0;102;153;01mnamespace[39;00m [38;2;0;204;255;01mWinPrint.Winforms[39;00m {
+    [38;2;0;102;153;01mpublic[39;00m [38;2;0;102;153;01mpartial[39;00m [38;2;0;102;153;01mclass[39;00m [38;2;0;170;136;01mMainWindow[39;00m : Form {
+
+        [38;2;0;153;255m// The Windows printer document[39m
+        [38;2;0;102;153;01mprivate[39;00m PrintDocument printDoc = [38;2;0;102;153;01mnew[39;00m PrintDocument();
+
+        [38;2;0;153;255m// The active file[39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;119;136;01mstring[39;00m activeFile;
+        [38;2;0;102;153;01mprivate[39;00m OpenFileDialog openFileDialog = [38;2;0;102;153;01mnew[39;00m OpenFileDialog();
+
+        [38;2;0;102;153;01mprivate[39;00m WinPrint.WinForms.PrintPreview printPreview;
+
+        [38;2;0;102;153;01mpublic[39;00m [38;2;204;0;255mMainWindow[39m() {
+            InitializeComponent();
+
+            Icon = Resources.printer_and_fax_w;
+
+            printPreview = [38;2;0;102;153;01mnew[39;00m PrintPreview {
+                Dock = dummyButton.Dock,
+                Anchor = dummyButton.Anchor,
+                BackColor = dummyButton.BackColor,
+                Location = dummyButton.Location,
+                Margin = dummyButton.Margin,
+                Name = [38;2;204;51;0m"printPreview"[39m,
+                Size = dummyButton.Size,
+                MinimumSize = [38;2;0;102;153;01mnew[39;00m Size([38;2;255;102;0m0[39m, [38;2;255;102;0m0[39m),
+                TabIndex = [38;2;255;102;0m1[39m,
+                TabStop = [38;2;0;102;153;01mtrue[39;00m
+            };
+            printPreview.Click += [38;2;0;102;153;01mnew[39;00m System.EventHandler(printPreview_Click);
+
+
+            Color();
+
+            [38;2;0;153;255m// This gets the version # from winprint.core.dll[39m
+            versionLabel.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"v{FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService)).Location).FileVersion}"[39m;
+
+            [38;2;0;102;153;01mif[39;00m (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
+                panelRight.Controls.Remove(dummyButton);
+                panelRight.Controls.Add(printPreview);
+                printersCB.Enabled = [38;2;0;102;153;01mfalse[39;00m;
+                paperSizesCB.Enabled = [38;2;0;102;153;01mfalse[39;00m;
+            }
+
+[38;2;0;153;153m#if DEBUG[39m
+            openFileDialog.InitialDirectory = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m@"..\..\..\..\..\testfiles\"[39m;
+[38;2;0;153;153m#else[39m
+            openFileDialog.InitialDirectory = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}"[39m;
+[38;2;0;153;153m#endif[39m
+
+            [38;2;0;153;255m// Set common fontDialog props[39m
+            fontDialog.ShowEffects = [38;2;0;102;153;01mfalse[39;00m;
+            fontDialog.ShowColor = [38;2;0;102;153;01mtrue[39;00m;
+            fontDialog.AllowScriptChange = [38;2;0;102;153;01mfalse[39;00m;
+            fontDialog.AllowSimulations = [38;2;0;102;153;01mfalse[39;00m;  [38;2;0;153;255m// GDI+ does not support OFT fonts[39m
+            fontDialog.AllowVectorFonts = [38;2;0;102;153;01mfalse[39;00m;
+            [38;2;0;153;255m// fontDialog.AllowVerticalFonts = false;[39m
+            fontDialog.ShowHelp = [38;2;0;102;153;01mfalse[39;00m;
+
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mColor[39m() {
+            [38;2;0;119;136;01mvar[39;00m back = System.Drawing.Color.FromName([38;2;204;51;0m"white"[39m);
+            [38;2;0;119;136;01mvar[39;00m text = System.Drawing.SystemColors.ControlText;
+            [38;2;0;153;255m//printPreview.BackColor = back;[39m
+            printersCB.BackColor = back;
+
+            settingsButton.BackColor = back;
+            paperSizesCB.BackColor = back;
+            landscapeCheckbox.BackColor = back;
+            printButton.BackColor = back;
+            pageUp.BackColor = back;
+            pageDown.BackColor = back;
+            headerTextBox.BackColor = back;
+            footerTextBox.BackColor = back;
+            panelLeft.BackColor = back;
+            enableHeader.BackColor = back;
+            enableFooter.BackColor = back;
+            comboBoxSheet.BackColor = back;
+            labelPaper.BackColor = back;
+            labelTop.BackColor = back;
+            topMargin.BackColor = back;
+            labelLeft.BackColor = back;
+            leftMargin.BackColor = back;
+            labelRight.BackColor = back;
+            rightMargin.BackColor = back;
+            labelBottom.BackColor = back;
+            bottomMargin.BackColor = back;
+            labelRows.BackColor = back;
+            rows.BackColor = back;
+            labelColumns.BackColor = back;
+            columns.BackColor = back;
+            groupMargins.BackColor = back;
+            groupPages.BackColor = back;
+            pageSeparator.BackColor = back;
+            labelPadding.BackColor = back;
+            padding.BackColor = back;
+            headerPanel.BackColor = back;
+            footerPanel.BackColor = back;
+            fileButton.BackColor = back;
+            toText.BackColor = back;
+            label1.BackColor = back;
+            fromText.BackColor = back;
+            fromLabel.BackColor = back;
+            pagesLabel.BackColor = back;
+
+            printPreview.ForeColor = text;
+            printersCB.ForeColor = text;
+            paperSizesCB.ForeColor = text;
+            landscapeCheckbox.ForeColor = text;
+            printButton.ForeColor = text;
+            pageUp.ForeColor = text;
+            pageDown.ForeColor = text;
+            headerTextBox.ForeColor = text;
+            footerTextBox.ForeColor = text;
+            panelLeft.ForeColor = text;
+            enableHeader.ForeColor = text;
+            enableFooter.ForeColor = text;
+            comboBoxSheet.ForeColor = text;
+            labelPaper.ForeColor = text;
+            labelTop.ForeColor = text;
+            topMargin.ForeColor = text;
+            labelLeft.ForeColor = text;
+            leftMargin.ForeColor = text;
+            labelRight.ForeColor = text;
+            rightMargin.ForeColor = text;
+            labelBottom.ForeColor = text;
+            bottomMargin.ForeColor = text;
+            labelRows.ForeColor = text;
+            rows.ForeColor = text;
+            labelColumns.ForeColor = text;
+            columns.ForeColor = text;
+            groupMargins.ForeColor = text;
+            groupPages.ForeColor = text;
+            pageSeparator.ForeColor = text;
+            labelPadding.ForeColor = text;
+            padding.ForeColor = text;
+            headerPanel.ForeColor = text;
+            footerPanel.ForeColor = text;
+            fileButton.ForeColor = text;
+            toText.ForeColor = text;
+            label1.ForeColor = text;
+            fromText.ForeColor = text;
+            fromLabel.ForeColor = text;
+            pagesLabel.ForeColor = text;
+        }
+
+        [38;2;0;153;255m// Flag: Has Dispose already been called?[39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;119;136;01mbool[39;00m disposed = [38;2;0;102;153;01mfalse[39;00m;
+        [38;2;0;153;255m// Protected implementation of Dispose pattern.[39m
+        [38;2;0;153;255m/// <summary>[39m
+        [38;2;0;153;255m///  Clean up any resources being used.[39m
+        [38;2;0;153;255m/// </summary>[39m
+        [38;2;0;153;255m/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>[39m
+        [38;2;0;102;153;01mprotected[39;00m [38;2;0;102;153;01moverride[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mDispose[39m([38;2;0;119;136;01mbool[39;00m disposing) {
+            [38;2;0;102;153;01mif[39;00m (disposed) {
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (disposing && (components != [38;2;0;102;153;01mnull[39;00m)) {
+                components.Dispose();
+                [38;2;0;153;255m//if (streamToPrint != null) streamToPrint.Dispose();[39m
+                [38;2;0;102;153;01mif[39;00m (printDoc != [38;2;0;102;153;01mnull[39;00m) {
+                    printDoc.Dispose();
+                }
+
+                [38;2;0;102;153;01mif[39;00m (printPreview != [38;2;0;102;153;01mnull[39;00m) {
+                    printPreview.Dispose();
+                }
+            }
+            disposed = [38;2;0;102;153;01mtrue[39;00m;
+            [38;2;0;102;153;01mbase[39;00m.Dispose(disposing);
+        }
+
+        [38;2;0;153;255m/// <summary>[39m
+        [38;2;0;153;255m/// Wire up property change notifications from the View Model.[39m
+        [38;2;0;153;255m/// This should only be called once[39m
+        [38;2;0;153;255m/// </summary>[39m
+        [38;2;0;153;255m// TODO: Refactor PropertyChanged lambdas to be functions so they can be -=[39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mSetupSheetViewModelNotifications[39m() {
+            [38;2;0;153;255m//LogService.TraceMessage();[39m
+            [38;2;0;102;153;01mif[39;00m (printPreview.SheetViewModel != [38;2;0;102;153;01mnull[39;00m) {
+                LogService.TraceMessage([38;2;204;51;0m"SetupSheetViewModelNotifications was already called"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            printPreview.SheetViewModel = [38;2;0;102;153;01mnew[39;00m SheetViewModel();
+            printPreview.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
+            printPreview.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
+            printPreview.SheetViewModel.PageSettingsSet += PageSettingsSetEventHandler;
+            printPreview.SheetViewModel.Loaded += FileLoadedEventHandler;
+            printPreview.SheetViewModel.ReadyChanged += ReadyChangedEventHandler;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mFileLoadedEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mbool[39;00m loading) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => FileLoadedEventHandler(sender, loading)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{loading}"[39m);
+                [38;2;0;102;153;01mif[39;00m (loading) {
+                    [38;2;0;102;153;01mreturn[39;00m;
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mPageSettingsSetEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => PageSettingsSetEventHandler(sender, e)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mReadyChangedEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mbool[39;00m ready) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => ReadyChangedEventHandler(sender, ready)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ready}"[39m);
+                printButton.Enabled = ready;
+
+                [38;2;0;102;153;01mif[39;00m (!ready) {
+                    [38;2;0;102;153;01mreturn[39;00m;
+                }
+
+                [38;2;0;102;153;01mif[39;00m ([38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(activeFile)) {
+                    printPreview.Invalidate();
+                    printPreview.Text = Resources.HelloMsg;
+                }
+                [38;2;0;102;153;01melse[39;00m {
+                    [38;2;0;153;255m// Document is loaded and flowed. We're ready to preview and/or pring.[39m
+                    printPreview.CurrentSheet = [38;2;255;102;0m1[39m;
+                    printPreview.Invalidate();
+                    printPreview.Text = [38;2;204;51;0m""[39m;
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mPropertyChangedEventHandler[39m([38;2;0;119;136;01mobject[39;00m sender, PropertyChangedEventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => PropertyChangedEventHandler(sender, e)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                [38;2;0;153;255m//LogService.TraceMessage($"SheetViewModel.PropertyChanged: {e.PropertyName}");[39m
+                [38;2;0;102;153;01mswitch[39;00m (e.PropertyName) {
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Landscape"[39m:
+                        LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}"[39m);
+                        landscapeCheckbox.Checked = printPreview.SheetViewModel.Landscape;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Header"[39m:
+                        headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
+                        enableHeader.Checked = printPreview.SheetViewModel.Header.Enabled;
+                        headerFooterFontLink.Text = printPreview.SheetViewModel.Header.Font.ToString();
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Footer"[39m:
+                        footerTextBox.Text = printPreview.SheetViewModel.Footer.Text;
+                        enableFooter.Checked = printPreview.SheetViewModel.Footer.Enabled;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Margins"[39m:
+                        topMargin.Value = printPreview.SheetViewModel.Margins.Top / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        leftMargin.Value = printPreview.SheetViewModel.Margins.Left / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        rightMargin.Value = printPreview.SheetViewModel.Margins.Right / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        bottomMargin.Value = printPreview.SheetViewModel.Margins.Bottom / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+
+                        [38;2;0;153;255m// Keep PrintDocument updated for WinForms.PrintPreview[39m
+                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)printPreview.SheetViewModel.Margins.Clone();
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"PageSeparator"[39m:
+                        pageSeparator.Checked = printPreview.SheetViewModel.PageSeparator;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Rows"[39m:
+                        rows.Value = printPreview.SheetViewModel.Rows;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Columns"[39m:
+                        columns.Value = printPreview.SheetViewModel.Columns;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Padding"[39m:
+                        padding.Value = printPreview.SheetViewModel.Padding / [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"File"[39m:
+                        Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"winprint - {printPreview.SheetViewModel.File}"[39m;
+                        printPreview.CurrentSheet = [38;2;255;102;0m1[39m;
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Title"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;153;255m// When ContentEngine changes we know the document has been loaded.[39m
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"ContentEngine"[39m:
+                        [38;2;0;153;255m//printPreview.CurrentSheet = 1;[39m
+                        [38;2;0;153;255m//printButton.Enabled = printPreview.SheetViewModel.NumSheets > 0;[39m
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Language"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"ContentSettings"[39m:
+                        contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
+                        lineNumbers.Checked = printPreview.SheetViewModel.ContentSettings.LineNumbers;
+                        [38;2;0;153;255m//lineNumberSeparator.Checked = printPreview.SheetViewModel.ContentSettings.lineNumberSeparator;[39m
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"DiagnosticRulesFont"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Encoding"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Loading"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"Ready"[39m:
+                        [38;2;0;102;153;01mbreak[39;00m;
+
+
+                    [38;2;0;102;153;01mdefault[39;00m:
+                        [38;2;0;102;153;01mthrow[39;00m [38;2;0;102;153;01mnew[39;00m [38;2;204;0;255mInvalidOperationException[39m([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Property Change Not Handled: {e.PropertyName}"[39m);
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mSettingsChangedEventHandler[39m([38;2;0;119;136;01mobject[39;00m o, [38;2;0;119;136;01mbool[39;00m reflow) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{reflow}"[39m);
+                [38;2;0;102;153;01mif[39;00m (reflow) {
+                    LoadFile();
+                }
+                [38;2;0;102;153;01melse[39;00m {
+                    [38;2;0;153;255m//printPreview.Invalidate();[39m
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m CancellationTokenSource _cancellationToken = [38;2;0;102;153;01mnew[39;00m CancellationTokenSource();
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mMainWindow_Load[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;153;255m// Check for updates[39m
+            LogService.TraceMessage([38;2;204;51;0m"First reference to UpdateService"[39m);
+            [38;2;0;102;153;01mif[39;00m (ServiceLocator.Current.UpdateService == [38;2;0;102;153;01mnull[39;00m) {
+                _ = MessageBox.Show(Resources.UpdateServiceFailure);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion += UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadComplete += UpdateService_DownloadComplete;
+            ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_cancellationToken.Token).ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+            [38;2;0;153;255m// Load settings by referencing ModelLocator.Current[39m
+            LogService.TraceMessage([38;2;204;51;0m"First reference to ModelLocator.Current.Settings"[39m);
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings == [38;2;0;102;153;01mnull[39;00m) {
+                MessageBox.Show(Resources.SettingsLoadMsg);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings.Size != [38;2;0;102;153;01mnull[39;00m) {
+                Size = [38;2;0;102;153;01mnew[39;00m Size(ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings.Location != [38;2;0;102;153;01mnull[39;00m) {
+                Location = [38;2;0;102;153;01mnew[39;00m Point(ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
+            }
+
+            WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+
+            printPreview.KeyUp += (s, e) => {
+                [38;2;0;102;153;01mif[39;00m (e.KeyCode == Keys.F5) {
+                    [38;2;0;153;255m//printPreview.Invalidate(true);[39m
+                    Log.Debug([38;2;204;51;0m"-------- F5 ---------"[39m);
+
+                    ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Refresh"[39m);
+
+                    [38;2;0;153;255m// TODO: Refactor threading[39m
+                    Task.Run(() => Start());
+                }
+            };
+
+            [38;2;0;153;255m//this.Cursor = Cursors.WaitCursor;[39m
+            [38;2;0;119;136;01mvar[39;00m sheets = ModelLocator.Current.Settings.Sheets;
+
+            [38;2;0;153;255m// Load file assocations[39m
+            [38;2;0;119;136;01mvar[39;00m languages = ModelLocator.Current.Associations;
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations"[39m);
+
+            ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
+                LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Settings.PropertyChanged: {e.PropertyName}"[39m);
+                [38;2;0;102;153;01mswitch[39;00m (e.PropertyName) {
+                    [38;2;0;102;153;01mcase[39;00m [38;2;204;51;0m"DefaultSheet"[39m:
+                        SheetChanged();
+                        [38;2;0;102;153;01mbreak[39;00m;
+                }
+            }));
+
+            comboBoxSheet.DisplayMember = [38;2;204;51;0m"Value"[39m;
+            comboBoxSheet.ValueMember = [38;2;204;51;0m"Key"[39m;
+            [38;2;0;102;153;01mforeach[39;00m ([38;2;0;119;136;01mvar[39;00m s [38;2;0;102;153;01min[39;00m sheets) {
+                comboBoxSheet.Items.Add([38;2;0;102;153;01mnew[39;00m KeyValuePair<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m>(s.Key, s.Value.Name));
+            }
+
+            [38;2;0;153;255m// Select default printer and paper size[39m
+            [38;2;0;102;153;01mforeach[39;00m ([38;2;0;119;136;01mstring[39;00m printer [38;2;0;102;153;01min[39;00m System.Drawing.Printing.PrinterSettings.InstalledPrinters) {
+                printersCB.Items.Add(printer);
+                [38;2;0;102;153;01mif[39;00m (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName) {
+                    printersCB.Text = printDoc.PrinterSettings.PrinterName;
+                }
+            }
+
+            [38;2;0;153;255m// --p[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.Printer)) {
+                printDoc.PrinterSettings.PrinterName = printersCB.Text = ModelLocator.Current.Options.Printer;
+            }
+
+            [38;2;0;102;153;01mforeach[39;00m (PaperSize ps [38;2;0;102;153;01min[39;00m printDoc.PrinterSettings.PaperSizes) {
+                paperSizesCB.Items.Add(ps.PaperName);
+            }
+
+            [38;2;0;153;255m// --z[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize)) {
+                paperSizesCB.Text = ModelLocator.Current.Options.PaperSize;
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
+            }
+
+            [38;2;0;153;255m// We kept these disabled during load[39m
+            printersCB.Enabled = [38;2;0;102;153;01mtrue[39;00m;
+            paperSizesCB.Enabled = [38;2;0;102;153;01mtrue[39;00m;
+
+            [38;2;0;153;255m// Create sheet view model & wire up notifications[39m
+            SetupSheetViewModelNotifications();
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.FromPage != [38;2;255;102;0m0[39m) {
+                [38;2;0;153;255m//printDoc.PrinterSettings.FromPage = ModelLocator.Current.Options.FromPage;[39m
+                fromText.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Options.FromPage}"[39m;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.ToPage != [38;2;255;102;0m0[39m) {
+                [38;2;0;153;255m//printDoc.PrinterSettings.ToPage = ModelLocator.Current.Options.ToPage;[39m
+                toText.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Options.ToPage}"[39m;
+            }
+
+            [38;2;0;153;255m// --s[39m
+            [38;2;0;153;255m// Select default Sheet [39m
+            [38;2;0;119;136;01mvar[39;00m newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.Sheet)) {
+                newSheet = printPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, [38;2;0;102;153;01mout[39;00m [38;2;0;119;136;01mvar[39;00m sheetID);
+            }
+            comboBoxSheet.Text = newSheet.Name;
+            [38;2;0;153;255m// This will cause a flurry of property change notifications, setting all UI elements[39m
+            printPreview.SheetViewModel.SetSheet(newSheet);
+
+            [38;2;0;153;255m// Must set landscape after printer/paper selection[39m
+            [38;2;0;153;255m// --l and --o[39m
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.Landscape) {
+                printPreview.SheetViewModel.Landscape = [38;2;0;102;153;01mtrue[39;00m;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.Portrait) {
+                printPreview.SheetViewModel.Landscape = [38;2;0;102;153;01mfalse[39;00m;
+            }
+
+            [38;2;0;153;255m// Override content-type[39m
+            [38;2;0;153;255m// --t[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(ModelLocator.Current.Options.ContentType)) {
+                [38;2;0;153;255m// TODO: (nothing?)[39m
+            }
+
+            printPreview.Select();
+            printPreview.Focus();
+            [38;2;0;153;255m//this.Cursor = Cursors.Default;[39m
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Options.Files != [38;2;0;102;153;01mnull[39;00m && ModelLocator.Current.Options.Files.ToList().Count > [38;2;255;102;0m0[39m) {
+                activeFile = ModelLocator.Current.Options.Files.ToList()[[38;2;255;102;0m0[39m];
+            }
+
+            [38;2;0;153;255m// By running this on a different thread, we enable the main window to show[39m
+            [38;2;0;153;255m// as quickly as possible; making startup seem faster.[39m
+            [38;2;0;153;255m//Task.Run(() => Start());[39m
+            Start();
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mUpdateService_DownloadComplete[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mstring[39;00m path) {
+            [38;2;0;153;255m//Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);[39m
+[38;2;0;153;153m#if DEBUG[39m
+            [38;2;0;119;136;01mvar[39;00m log = [38;2;204;51;0m"-lv winprint.msiexec.log"[39m;
+[38;2;0;153;153m#else[39m
+            [38;2;0;119;136;01mstring[39;00m log = [38;2;204;51;0m""[39m;
+[38;2;0;153;153m#endif[39m
+            [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m p = [38;2;0;102;153;01mnew[39;00m Process {
+                StartInfo = {
+                        FileName = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"msiexec.exe"[39m,
+                        Arguments = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{log} -i {path}"[39m,
+                        UseShellExecute = [38;2;0;102;153;01mtrue[39;00m
+                    },
+            };
+
+            [38;2;0;102;153;01mtry[39;00m {
+                p.Start();
+            }
+            [38;2;0;102;153;01mcatch[39;00m (Win32Exception we) {
+                Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{GetType().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}"[39m);
+            }
+
+            BeginInvoke((Action)(() => Close()));
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mUpdateService_GotLatestVersion[39m([38;2;0;119;136;01mobject[39;00m sender, Version version) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => UpdateService_GotLatestVersion(sender, version)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+
+                [38;2;0;102;153;01mif[39;00m (version == [38;2;0;102;153;01mnull[39;00m && ![38;2;0;119;136;01mstring[39;00m.IsNullOrWhiteSpace(ServiceLocator.Current.UpdateService.ErrorMessage)) {
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Could not access tig.github.io/winprint to see if a newer version is available. {ServiceLocator.Current.UpdateService.ErrorMessage}"[39m);
+                }
+                [38;2;0;102;153;01melse[39;00m [38;2;204;0;255mif[39m (ServiceLocator.Current.UpdateService.CompareVersions() < [38;2;255;102;0m0[39m) {
+                    Log.Information([38;2;204;51;0m"------------------------------------------------"[39m);
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"A newer version of winprint ({version}) is available at"[39m);
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"   {ServiceLocator.Current.UpdateService.ReleasePageUri}"[39m);
+                    Log.Information([38;2;204;51;0m"------------------------------------------------"[39m);
+
+                    [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m dlg = [38;2;0;102;153;01mnew[39;00m UpdateDialog();
+                    dlg.ShowDialog([38;2;0;102;153;01mthis[39;00m);
+                }
+                [38;2;0;102;153;01melse[39;00m [38;2;204;0;255mif[39m (ServiceLocator.Current.UpdateService.CompareVersions() > [38;2;255;102;0m0[39m) {
+                    Log.Information([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})"[39m);
+                }
+                [38;2;0;102;153;01melse[39;00m {
+                    Log.Information([38;2;204;51;0m"You are running the most recent version of winprint"[39m);
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mStart[39m() {
+            LogService.TraceMessage();
+
+            [38;2;0;102;153;01mif[39;00m ([38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(activeFile)) {
+                [38;2;0;153;255m// If a file's not been set, juice the print preview and show the file open dialog box[39m
+                LoadFile();
+                [38;2;0;153;255m//ShowFilesDialog();[39m
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LoadFile();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mLoadFile[39m() {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => LoadFile()));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                [38;2;0;153;255m// Reset View Model[39m
+                printPreview.SheetViewModel.Reset();
+                printPreview.Invalidate();
+                printPreview.Text = Resources.LoadingMsg;
+
+                [38;2;0;153;255m// On another thread [39m
+                [38;2;0;153;255m//    - load file[39m
+                [38;2;0;153;255m//    - set printer page settings[39m
+                [38;2;0;153;255m//    - reflow[39m
+                Task.Run([38;2;0;102;153;01masync[39;00m () => {
+                    [38;2;0;119;136;01mvar[39;00m stage = [38;2;204;51;0m"Loading"[39m;
+                    [38;2;0;119;136;01mvar[39;00m fileToPrint = activeFile;
+                    [38;2;0;102;153;01mtry[39;00m {
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}..."[39m;
+                        }));
+                        [38;2;0;153;255m// This is an IO bound operation. [39m
+                        [38;2;0;153;255m// TODO: This does not need to run on another thread if we are using async/await correctly[39m
+                        [38;2;0;153;255m// Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.[39m
+                        [38;2;0;153;255m// Note, Title stays as was provided via -FileName or -Title[39m
+                        [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(fileToPrint) && !Path.IsPathFullyQualified(fileToPrint)) {
+                            fileToPrint = Path.GetFullPath(fileToPrint, Directory.GetCurrentDirectory());
+                        }
+                        [38;2;0;102;153;01mawait[39;00m printPreview.SheetViewModel.LoadFileAsync(fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+                        [38;2;0;153;255m// Set landscape. This causes other DefaultPageSettings to change[39m
+                        [38;2;0;153;255m// These are CPU bound operations. [39m
+                        [38;2;0;153;255m// TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth[39m
+                        stage = [38;2;204;51;0m"Getting Printer Page Settings"[39m;
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}..."[39m;
+                        }));
+                        printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
+                        printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings);
+
+
+                        stage = [38;2;204;51;0m"Rendering"[39m;
+                        BeginInvoke((Action)(() => {
+                            printPreview.Text = [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}..."[39m;
+                        }));
+                        [38;2;0;102;153;01mawait[39;00m printPreview.SheetViewModel.ReflowAsync().ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+                    }
+                    [38;2;0;102;153;01mcatch[39;00m (DirectoryNotFoundException dnfe) {
+                        Log.Error(dnfe, [38;2;204;51;0m"File Not Found"[39m);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: {dnfe.Message}"[39m);
+                        [38;2;0;102;153;01mreturn[39;00m;
+                    }
+                    [38;2;0;102;153;01mcatch[39;00m (FileNotFoundException fnfe) {
+                        Log.Error(fnfe, [38;2;204;51;0m"File Not Found"[39m);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: {fnfe.Message}"[39m);
+                        [38;2;0;153;255m//fileButton_Click(null, null);[39m
+                    }
+                    [38;2;0;102;153;01mcatch[39;00m (InvalidOperationException ioe) {
+                        ServiceLocator.Current.TelemetryService.TrackException(ioe, [38;2;0;102;153;01mfalse[39;00m);
+                        Log.Error(ioe, [38;2;204;51;0m"Error Operation {file}"[39m, fileToPrint);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: {ioe.Message}"[39m);
+                        [38;2;0;153;255m//                fileButton_Click(null, null);[39m
+                    }
+[38;2;0;153;153m#pragma warning disable CA1031 // Do not catch general exception types[39m
+                    [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+[38;2;0;153;153m#pragma warning restore CA1031 // Do not catch general exception types[39m
+                        ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+                        Log.Error(e, [38;2;204;51;0m"Exception {file}"[39m, fileToPrint);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{stage}: Exception: {e.Message}{Environment.NewLine}({fileToPrint})"[39m);
+                    }
+                    [38;2;0;102;153;01mfinally[39;00m {
+                        [38;2;0;153;255m// Set Loading to false in case of an error[39m
+                        [38;2;0;153;255m//printPreview.SheetViewModel.Loading = false;[39m
+                        [38;2;0;153;255m//printPreview.SheetViewModel.Ready = false;[39m
+                    }
+                });
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mShowMessage[39m([38;2;0;119;136;01mstring[39;00m message) {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => ShowMessage(message)));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                printPreview.Text = message;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mShowFilesDialog[39m() {
+            [38;2;0;102;153;01mif[39;00m (InvokeRequired) {
+                BeginInvoke((Action)(() => ShowFilesDialog()));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                LogService.TraceMessage();
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Show Files Dialog"[39m);
+                openFileDialog.Filter = Resources.FileOpenTemplate;
+                openFileDialog.FilterIndex = [38;2;255;102;0m3[39m;
+                [38;2;0;153;255m//openFileDialog.RestoreDirectory = true;[39m
+                [38;2;0;102;153;01mif[39;00m (openFileDialog.ShowDialog([38;2;0;102;153;01mthis[39;00m) == DialogResult.OK) {
+                    activeFile = openFileDialog.FileNames.ToList()[[38;2;255;102;0m0[39m];
+                    LoadFile();
+                }
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mSheetChanged[39m() {
+            LogService.TraceMessage();
+            [38;2;0;119;136;01mvar[39;00m newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
+            comboBoxSheet.Text = newSheet.Name;
+            printPreview.SheetViewModel.SetSheet(newSheet);
+            [38;2;0;153;255m//SheetSettingsChanged();[39m
+            LoadFile();
+        }
+
+        [38;2;0;153;255m/// <summary>[39m
+        [38;2;0;153;255m/// If Sheet settings change (either a new sheet or something that causes a reflow)[39m
+        [38;2;0;153;255m/// Update printer settings and Reflow.[39m
+        [38;2;0;153;255m/// Because getting printer settings can take 4-5 seconds we do that and reflow on another thread[39m
+        [38;2;0;153;255m///// </summary>[39m
+        [38;2;0;153;255m//internal void SheetSettingsChanged() {[39m
+        [38;2;0;153;255m//    LogService.TraceMessage();[39m
+
+        [38;2;0;153;255m//    Task.Run(async () => {[39m
+
+        [38;2;0;153;255m//    });[39m
+        [38;2;0;153;255m//}[39m
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mMainWindow_FormClosing[39m([38;2;0;119;136;01mobject[39;00m sender, FormClosingEventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings [38;2;0;102;153;01mis[39;00m [38;2;0;102;153;01mnull[39;00m) {
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+
+            ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
+            ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete; ;
+
+            [38;2;0;153;255m// Save Window state[39m
+            [38;2;0;102;153;01mif[39;00m (WindowState == System.Windows.Forms.FormWindowState.Normal) {
+                ModelLocator.Current.Settings.Size = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowSize(Size.Width, Size.Height);
+                ModelLocator.Current.Settings.Location = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowLocation(Location.X, Location.Y);
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                ModelLocator.Current.Settings.Size = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowSize(RestoreBounds.Width, RestoreBounds.Height);
+                ModelLocator.Current.Settings.Location = [38;2;0;102;153;01mnew[39;00m Core.Models.WindowLocation(RestoreBounds.X, RestoreBounds.Y);
+            }
+            ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Form Closing"[39m,
+                 properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                    {[38;2;204;51;0m"windowState"[39m, ModelLocator.Current.Settings.WindowState.ToString() },
+                    {[38;2;204;51;0m"size"[39m, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}"[39m },
+                    {[38;2;204;51;0m"location"[39m, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ModelLocator.Current.Settings.Location.X}x{ModelLocator.Current.Settings.Location.Y}"[39m},
+                 });
+
+            ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mMainWindow_Layout[39m([38;2;0;119;136;01mobject[39;00m sender, LayoutEventArgs e) {
+            [38;2;0;153;255m// This event is raised once at startup with the AffectedControl[39m
+            [38;2;0;153;255m// and AffectedProperty properties on the LayoutEventArgs as null. [39m
+            [38;2;0;153;255m// The event provides size preferences for that case.[39m
+            [38;2;0;102;153;01mif[39;00m ((e.AffectedControl != [38;2;0;102;153;01mnull[39;00m) && (e.AffectedProperty != [38;2;0;102;153;01mnull[39;00m)) {
+                [38;2;0;153;255m// Ensure that the affected property is the Bounds property[39m
+                [38;2;0;153;255m// of the form.[39m
+                [38;2;0;153;255m//if (e.AffectedProperty.ToString().Equals("Bounds", StringComparison.InvariantCultureIgnoreCase)) {[39m
+                [38;2;0;153;255m//Core.Helpers.Logging.TraceMessage("MainWindow_Layout bounds changed");[39m
+                [38;2;0;153;255m//}[39m
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mlandscapeCheckbox_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{landscapeCheckbox.Checked}"[39m);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+            ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape =
+                printDoc.DefaultPageSettings.Landscape =
+                landscapeCheckbox.Checked;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"landscapeCheckbox_CheckedChanged"[39m,
+                 properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                                        {[38;2;204;51;0m"landscape"[39m, landscapeCheckbox.Checked.ToString() }
+                 });
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mheaderTextBox_TextChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+                ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Text = headerTextBox.Text;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"headerTextBox_TextChanged"[39m);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mfooterTextBox_TextChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(
+                ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Text = footerTextBox.Text;
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"footerTextBox_TextChanged"[39m);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mprintersCB_SelectedIndexChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                LogService.TraceMessage([38;2;204;51;0m"printersCB_SelectedIndexChanged"[39m);
+                printDoc.PrinterSettings.PrinterName = ([38;2;0;119;136;01mstring[39;00m)printersCB.SelectedItem;
+
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"printersCB_SelectedIndexChanged"[39m,
+                     properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                            {[38;2;204;51;0m"printerName"[39m, printDoc.PrinterSettings.PrinterName }
+                     });
+
+                paperSizesCB.Items.Clear();
+                [38;2;0;102;153;01mforeach[39;00m (PaperSize ps [38;2;0;102;153;01min[39;00m printDoc.PrinterSettings.PaperSizes) {
+                    paperSizesCB.Items.Add(ps.PaperName);
+                }
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"printersCB_SelectedIndexChanged"[39m,
+                     properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                            {[38;2;204;51;0m"printerName"[39m, printDoc.PrinterSettings.PrinterName }
+                     });
+
+                paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpaperSizesCB_SelectedIndexChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                LogService.TraceMessage([38;2;204;51;0m"paperSizesCB_SelectedIndexChanged"[39m);
+                [38;2;0;153;255m// Set the paper size based upon the selection in the combo box.[39m
+                [38;2;0;102;153;01mif[39;00m (paperSizesCB.SelectedIndex != -[38;2;255;102;0m1[39m) {
+                    printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
+                    ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"paperSizesCB_SelectedIndexChanged"[39m,
+                         properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                            {[38;2;204;51;0m"paperName"[39m, printDoc.DefaultPageSettings.PaperSize.PaperName }
+                         });
+
+                }
+                LoadFile();
+            }
+        }
+
+[38;2;51;0;153m        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")][39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01masync[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mprintButton_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs args) {
+            [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m print = [38;2;0;102;153;01mnew[39;00m Core.Print();
+            [38;2;0;153;255m// TODO: It's hokey that Landscape is the only printer setting that's treated specially[39m
+            [38;2;0;153;255m// [39m
+            print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
+            print.SheetViewModel.SetSheet(ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()));
+
+            [38;2;0;102;153;01mtry[39;00m {
+                ShowMessage([38;2;204;51;0m"Preparing to print.."[39m);
+                [38;2;0;102;153;01mawait[39;00m print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+
+                print.SetPrinter(printDoc.PrinterSettings.PrinterName);
+                print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);
+
+            }
+            [38;2;0;102;153;01mcatch[39;00m (FileNotFoundException fnfe) {
+                Log.Error(fnfe, [38;2;204;51;0m"File Not Found"[39m);
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{fnfe.Message}"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+            [38;2;0;102;153;01mcatch[39;00m (InvalidOperationException ioe) {
+                ServiceLocator.Current.TelemetryService.TrackException(ioe, [38;2;0;102;153;01mfalse[39;00m);
+                Log.Error(ioe, [38;2;204;51;0m"Error Operation {file}"[39m, activeFile);
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"{ioe.Message}"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+[38;2;0;153;153m#pragma warning disable CA1031 // Do not catch general exception types[39m
+            [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+[38;2;0;153;153m#pragma warning restore CA1031 // Do not catch general exception types[39m
+                ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+                Log.Error(e, [38;2;204;51;0m"Exception {file}"[39m, activeFile);
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Exception: {e.Message}{Environment.NewLine}({activeFile})"[39m);
+                [38;2;0;102;153;01mreturn[39;00m;
+            }
+            [38;2;0;102;153;01mfinally[39;00m {
+            }
+
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mint[39;00m.TryParse(fromText.Text, [38;2;0;102;153;01mout[39;00m [38;2;0;119;136;01mvar[39;00m [38;2;0;102;153;01mfrom[39;00m)) {
+                [38;2;0;102;153;01mfrom[39;00m = [38;2;255;102;0m0[39m;
+            }
+            [38;2;0;153;255m// Ideally we'd get NumSheets from print.SheetSVM but that would cause a[39m
+            [38;2;0;153;255m// un-needed Reflow. So use the printPreview VM.[39m
+            [38;2;0;102;153;01mif[39;00m (![38;2;0;119;136;01mint[39;00m.TryParse(toText.Text, [38;2;0;102;153;01mout[39;00m [38;2;0;119;136;01mvar[39;00m to)) {
+                to = [38;2;255;102;0m0[39m;[38;2;0;153;255m// printPreview.SheetViewModel.NumSheets;[39m
+            }
+
+            [38;2;0;102;153;01mif[39;00m ([38;2;0;102;153;01mfrom[39;00m > [38;2;255;102;0m0[39m && to > [38;2;255;102;0m0[39m) {
+                print.PrintDocument.PrinterSettings.PrintRange = PrintRange.SomePages;
+                print.PrintDocument.PrinterSettings.FromPage = [38;2;0;102;153;01mfrom[39;00m;
+                print.PrintDocument.PrinterSettings.ToPage = to;
+            }
+
+            [38;2;0;102;153;01mif[39;00m (ModelLocator.Current.Settings.ShowPrintDialog) {
+                BeginInvoke((Action)([38;2;0;102;153;01masync[39;00m () => {
+                    [38;2;0;102;153;01musing[39;00m [38;2;0;204;255;01mvar[39;00m printDialog = [38;2;0;102;153;01mnew[39;00m PrintDialog {
+                        AllowSomePages = [38;2;0;102;153;01mtrue[39;00m,
+                        ShowHelp = [38;2;0;102;153;01mtrue[39;00m,
+                        [38;2;0;153;255m// printDialog.AllowSelection = true;[39m
+
+                        Document = print.PrintDocument
+                    };
+                    printDialog.PrinterSettings.PrintRange = print.PrintDocument.PrinterSettings.PrintRange;
+                    printDialog.PrinterSettings.FromPage = print.PrintDocument.PrinterSettings.FromPage;
+                    printDialog.PrinterSettings.ToPage = print.PrintDocument.PrinterSettings.ToPage;
+
+                    [38;2;0;153;255m//If the result is OK then print the document.[39m
+                    [38;2;0;102;153;01mif[39;00m (printDialog.ShowDialog() == DialogResult.OK) {
+                        [38;2;0;102;153;01mif[39;00m (printDialog.PrinterSettings.PrintRange == PrintRange.SomePages) {
+                            print.PrintDocument.PrinterSettings.PrintRange = printDialog.PrinterSettings.PrintRange;
+                            print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
+                            print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
+                        }
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Printing to {printDoc.PrinterSettings.PrinterName}"[39m);
+                        [38;2;0;153;255m// BUGBUG: having the printpreview invalidate while we're printing causes an exception[39m
+                        [38;2;0;153;255m// in litehtml. Do not un comment this until figured out[39m
+                        [38;2;0;153;255m//print.PrintingSheet += Print_PrintingSheet;[39m
+                        [38;2;0;102;153;01mawait[39;00m print.DoPrint().ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+                        ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m""[39m);
+                    }
+                }));
+            }
+            [38;2;0;102;153;01melse[39;00m {
+                ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Printing to {printDoc.PrinterSettings.PrinterName}"[39m);
+
+                [38;2;0;153;255m// BUGBUG: having the printpreview invalidate while we're printing causes an exception[39m
+                [38;2;0;153;255m// in litehtml. Do not un comment this until figured out[39m
+                [38;2;0;153;255m//print.PrintingSheet += Print_PrintingSheet;[39m
+                [38;2;0;102;153;01mawait[39;00m print.DoPrint().ConfigureAwait([38;2;0;102;153;01mfalse[39;00m);
+                ShowMessage([38;2;204;51;0m""[39m);
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mPrint_PrintingSheet[39m([38;2;0;119;136;01mobject[39;00m sender, [38;2;0;119;136;01mint[39;00m sheetNum) {
+            ShowMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Printing sheet {sheetNum}"[39m);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpanelRight_Resize[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;153;255m//SizePreview();[39m
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255menableHeader_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"enableHeader_CheckedChanged: {enableHeader.Checked}"[39m);
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                [38;2;0;153;255m// TODO: This should find the Preview SheetViewModel instance and set the property on this, not[39m
+                [38;2;0;153;255m// the model[39m
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header.Enabled =
+                    enableHeader.Checked;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255menableFooter_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"enableFooter_CheckedChanged: {enableFooter.Checked}"[39m);
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                [38;2;0;153;255m// TODO: This should find the Preview SheetViewModel instance and set the property on this, not[39m
+                [38;2;0;153;255m// the model[39m
+                ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer.Enabled =
+                    enableFooter.Checked;
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mcomboBoxSheet_SelectedIndexChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m si = (KeyValuePair<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m>)comboBoxSheet.SelectedItem;
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}"[39m);
+            [38;2;0;102;153;01mif[39;00m (printersCB.Enabled) {
+                ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
+                ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Change Selected Sheet Settings"[39m,
+                    properties: [38;2;0;102;153;01mnew[39;00m Dictionary<[38;2;0;119;136;01mstring[39;00m, [38;2;0;119;136;01mstring[39;00m> {
+                                    {[38;2;204;51;0m"sheetSettingsName"[39m, si.Value },
+                                    {[38;2;204;51;0m"sheetSettingsId"[39m, si.Key },
+                    });
+                [38;2;0;153;255m//ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);[39m
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mtopMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Top = ([38;2;0;119;136;01mint[39;00m)(topMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mleftMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Left = ([38;2;0;119;136;01mint[39;00m)(leftMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mrightMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Right = ([38;2;0;119;136;01mint[39;00m)(rightMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mbottomMargin_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins.Clone();
+            margins.Bottom = ([38;2;0;119;136;01mint[39;00m)(bottomMargin.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Margins = margins;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpageSeparator_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).PageSeparator = pageSeparator.Checked;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mrows_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Rows = ([38;2;0;119;136;01mint[39;00m)rows.Value;
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mcolumns_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Columns = ([38;2;0;119;136;01mint[39;00m)columns.Value;
+
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mpadding_ValueChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Padding = ([38;2;0;119;136;01mint[39;00m)(padding.Value * [38;2;255;102;0m1[39m[38;2;255;102;0m0[39m[38;2;255;102;0m0[39mM);
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mfileButton_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            ShowFilesDialog();
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mlineNumbers_CheckedChanged[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            LogService.TraceMessage([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"lineNumbers_CheckedChanged: {lineNumbers.Checked}"[39m);
+            ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings.LineNumbers =
+                    lineNumbers.Checked;
+        }
+
+[38;2;51;0;153m        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",[39m
+[38;2;51;0;153m            "CA1031:Do not catch general exception types", Justification = "<Pending>")][39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255msettingsButton_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs args) {
+            Log.Debug([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}"[39m);
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Settings Button Click"[39m);
+
+            Process proc = [38;2;0;102;153;01mnull[39;00m;
+            [38;2;0;102;153;01mtry[39;00m {
+                [38;2;0;119;136;01mvar[39;00m psi = [38;2;0;102;153;01mnew[39;00m ProcessStartInfo {
+                    UseShellExecute = [38;2;0;102;153;01mtrue[39;00m,   [38;2;0;153;255m// This is important[39m
+                    FileName = ServiceLocator.Current.SettingsService.SettingsFileName
+                };
+                proc = Process.Start(psi);
+            }
+            [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+                [38;2;0;153;255m// TODO: Better error message (output of stderr?)[39m
+                ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+
+                Log.Error(e, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}."[39m);
+            }
+            [38;2;0;102;153;01mfinally[39;00m {
+                proc?.Dispose();
+            }
+        }
+
+[38;2;51;0;153m        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",[39m
+[38;2;51;0;153m            "CA1031:Do not catch general exception types", Justification = "<Pending>")][39m
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mhelpaboutLink_LinkClicked[39m([38;2;0;119;136;01mobject[39;00m sender, LinkLabelLinkClickedEventArgs args) {
+            [38;2;0;119;136;01mvar[39;00m url = [38;2;204;51;0m"https://tig.github.io/winprint"[39m;
+            Log.Debug([38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Browsing to home page: {url}"[39m);
+
+            ServiceLocator.Current.TelemetryService.TrackEvent([38;2;204;51;0m"Help/About Link Click"[39m);
+
+            Process proc = [38;2;0;102;153;01mnull[39;00m;
+            [38;2;0;102;153;01mtry[39;00m {
+                [38;2;0;119;136;01mvar[39;00m psi = [38;2;0;102;153;01mnew[39;00m ProcessStartInfo {
+                    UseShellExecute = [38;2;0;102;153;01mtrue[39;00m,   [38;2;0;153;255m// This is important[39m
+                    FileName = url
+                };
+                proc = Process.Start(psi);
+            }
+            [38;2;0;102;153;01mcatch[39;00m (Exception e) {
+                [38;2;0;153;255m// TODO: Better error message (output of stderr?)[39m
+                ServiceLocator.Current.TelemetryService.TrackException(e, [38;2;0;102;153;01mfalse[39;00m);
+
+                Log.Error(e, [38;2;170;0;0;48;2;255;170;170m$[39;49m[38;2;204;51;0m"Couldn't browse to {url}."[39m);
+            }
+            [38;2;0;102;153;01mfinally[39;00m {
+                proc?.Dispose();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mcontentFontLink_LinkClicked[39m([38;2;0;119;136;01mobject[39;00m sender, LinkLabelLinkClickedEventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m contentSettings = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).ContentSettings;
+
+            fontDialog.Font = [38;2;0;102;153;01mnew[39;00m System.Drawing.Font(contentSettings.Font.Family, contentSettings.Font.Size, contentSettings.Font.Style, GraphicsUnit.Point);
+            [38;2;0;102;153;01mif[39;00m (DialogResult.OK == fontDialog.ShowDialog([38;2;0;102;153;01mthis[39;00m)) {
+                contentSettings.Font = [38;2;0;102;153;01mnew[39;00m Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = ([38;2;0;119;136;01mfloat[39;00m)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
+                contentFontLink.Text = contentSettings.Font.ToString();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mheaderFooterFontLink_LinkClicked[39m([38;2;0;119;136;01mobject[39;00m sender, LinkLabelLinkClickedEventArgs e) {
+            [38;2;0;119;136;01mvar[39;00m header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Header;
+            [38;2;0;119;136;01mvar[39;00m footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Footer;
+
+            fontDialog.Font = [38;2;0;102;153;01mnew[39;00m System.Drawing.Font(header.Font.Family, header.Font.Size, GraphicsUnit.Point);
+
+            [38;2;0;102;153;01mif[39;00m (DialogResult.OK == fontDialog.ShowDialog([38;2;0;102;153;01mthis[39;00m)) {
+                [38;2;0;153;255m// Note we set BOTH the header & footer to the same thing. But for GUI we use the Header as source of truth.[39m
+                header.Font = footer.Font = [38;2;0;102;153;01mnew[39;00m Core.Models.Font() { Family = fontDialog.Font.FontFamily.Name, Size = ([38;2;0;119;136;01mfloat[39;00m)Math.Round(fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
+                headerFooterFontLink.Text = header.Font.ToString();
+            }
+        }
+
+        [38;2;0;102;153;01mprivate[39;00m [38;2;0;102;153;01mvoid[39;00m [38;2;204;0;255mprintPreview_Click[39m([38;2;0;119;136;01mobject[39;00m sender, EventArgs e) {
+            [38;2;0;102;153;01mif[39;00m ([38;2;0;119;136;01mstring[39;00m.IsNullOrEmpty(activeFile)) {
+                ShowFilesDialog();
+            }
+        }
+    }
+}

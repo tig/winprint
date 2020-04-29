@@ -127,7 +127,7 @@ namespace WinPrint.Core.UnitTests.Cte
             contentType = "html";
             (cte, language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
             Assert.NotNull(cte);
-            Assert.Equal(typeof(PrismCte).Name, cte.GetType().Name);
+            Assert.Equal(typeof(AnsiCte).Name, cte.GetType().Name);
             Assert.Equal(contentType, language);
 
             contentType = "HtmlCte";
