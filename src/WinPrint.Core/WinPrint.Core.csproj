@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.3.550</Version>
+    <Version>2.0.3.562</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -20,15 +20,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ContentTypeEngines\PrismCte.cs" />
+    <Compile Remove="Services\NodeService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
     <None Remove="Properties\FileTypeMapping.json" />
+    <None Remove="Resources\prism-winprint-overrides.css" />
+    <None Remove="Resources\prism-winprint.css" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\FileTypeMapping.json" />
-    <EmbeddedResource Include="Resources\prism-winprint-overrides.css">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

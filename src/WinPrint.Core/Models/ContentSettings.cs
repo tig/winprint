@@ -42,6 +42,13 @@
         private string _style = string.Empty;
 
         /// <summary>
+        /// Disables font styles (bold, italic, underline).
+        /// </summary>
+        [SafeForTelemetry]
+        public bool DisableFontStyles { get => _disableFontStyles; set => SetField(ref _disableFontStyles, value); }
+        private bool _disableFontStyles = false;
+
+        /// <summary>
         /// If true, content will be drawn with line numbers (if supported) 
         /// </summary>
         [SafeForTelemetry]

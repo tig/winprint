@@ -136,18 +136,6 @@ namespace WinPrint.Core.UnitTests.Cte
             Assert.Equal(typeof(HtmlCte).Name, cte.GetType().Name);
             Assert.Equal(string.Empty, language);
 
-            contentType = "prism";
-            (cte, language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.NotNull(cte);
-            Assert.Equal(typeof(PrismCte).Name, cte.GetType().Name);
-            Assert.Equal(string.Empty, language);
-
-            contentType = "PrismCte";
-            (cte, language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.NotNull(cte);
-            Assert.Equal(typeof(PrismCte).Name, cte.GetType().Name);
-            Assert.Equal(string.Empty, language);
-
             // text/plain should always use default
             contentType = "text/plain";
             (cte, language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
@@ -165,12 +153,6 @@ namespace WinPrint.Core.UnitTests.Cte
             (cte, language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
             Assert.NotNull(cte);
             Assert.Equal(typeof(HtmlCte).Name, cte.GetType().Name);
-            Assert.Equal(string.Empty, language);
-
-            contentType = "text/prism";
-            (cte, language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.NotNull(cte);
-            Assert.Equal(typeof(PrismCte).Name, cte.GetType().Name);
             Assert.Equal(string.Empty, language);
         }
 

@@ -227,7 +227,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 float xPos = lineNumberWidth;
                 foreach (var run in _screen.Lines[i].Runs) {
                     System.Drawing.Font font = _cachedFont;
-                    if (run.Attributes.Bold) {
+                    if (!ContentSettings.DisableFontStyles && run.Attributes.Bold) {
                         if (run.Attributes.Italic) {
                             font = new System.Drawing.Font(_cachedFont.FontFamily, _cachedFont.SizeInPoints, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point);
                         }
@@ -235,7 +235,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                             font = new System.Drawing.Font(_cachedFont.FontFamily, _cachedFont.SizeInPoints, FontStyle.Bold, GraphicsUnit.Point);
                         }
                     }
-                    else if (run.Attributes.Italic) {
+                    else if (!ContentSettings.DisableFontStyles && run.Attributes.Italic) {
                         font = new System.Drawing.Font(_cachedFont.FontFamily, _cachedFont.SizeInPoints, FontStyle.Italic, GraphicsUnit.Point);
                     }
                     var fg = Color.Black;

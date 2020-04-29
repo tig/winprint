@@ -96,11 +96,9 @@ namespace WinPrint.Core.Models {
         /// <summary>
         /// Content type handlers
         /// </summary>
-//        public Dictionary<string, ContentBase> ContentTypes { get; set; }
         public AnsiCte AnsiContentTypeEngineSettings { get; set; }
         public TextCte TextContentTypeEngineSettings { get; set; }
         public HtmlCte HtmlContentTypeEngineSettings { get; set; }
-        public PrismCte PrismContentTypeEngineSettings { get; set; }
 
         /// <summary>
         /// File Type Mappings - note legacy property name. Don't change.
@@ -264,16 +262,6 @@ namespace WinPrint.Core.Models {
                     //    Grayscale = false,
                     //    PrintBackground = true
                     //},
-                },
-
-                PrismContentTypeEngineSettings = new PrismCte() {
-                    //ContentSettings = new ContentSettings() {
-                    //    Font = new Font() { Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle },
-                    //    Darkness = 100,
-                    //    Grayscale = false,
-                    //    PrintBackground = true
-                    //},
-                    //LineNumbers = true,
                 },
 
                 DefaultSheet = Uuid.DefaultSheet,

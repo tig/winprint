@@ -63,8 +63,8 @@ namespace WinPrint.Core.Properties {
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;files.associations&quot;: {
-        ///    &quot;*.txt&quot;: &quot;text/plain&quot;,
-        ///    &quot;*.ans&quot;: &quot;text/ansi&quot;,
+        ///    &quot;*.txt&quot;: &quot;text&quot;,
+        ///    &quot;*.ans&quot;: &quot;ansi&quot;,
         ///    &quot;*.markup&quot;: &quot;markup&quot;,
         ///    &quot;*.html&quot;: &quot;markup&quot;,
         ///    &quot;*.htm&quot;: &quot;markup&quot;,
@@ -82,63 +82,11 @@ namespace WinPrint.Core.Properties {
         ///    &quot;*.ct&quot;: &quot;markup&quot;,
         ///    &quot;*.dita&quot;: &quot;markup&quot;,
         ///    &quot;*.ditamap&quot;: &quot;markup&quot;,
-        ///    &quot;*.ditava [rest of string was truncated]&quot;;.
+        ///    &quot;*.ditaval&quot;: &quot;markup [rest of string was truncated]&quot;;.
         /// </summary>
         public static string languages {
             get {
                 return ResourceManager.GetString("languages", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to pre[class*=&quot;language-&quot;],
-        ///code[class*=&quot;language-&quot;] {
-        ///	color: #3b3b3b;
-        ///	font-size: 13px;
-        ///	text-shadow: none;
-        ///	font-family: Consolas, Monaco, &apos;Andale Mono&apos;, &apos;Ubuntu Mono&apos;, monospace;
-        ///	direction: ltr;
-        ///	text-align: left;
-        ///	white-space: pre;
-        ///	word-spacing: normal;
-        ///	word-break: normal;
-        ///	line-height: 1.5;
-        ///	-moz-tab-size: 4;
-        ///	-o-tab-size: 4;
-        ///	tab-size: 4;
-        ///	-webkit-hyphens: none;
-        ///	-moz-hyphens: none;
-        ///	-ms-hyphens: none;
-        ///	hyphens: none;
-        ///}
-        ///
-        ///pre[class*=&quot;language-&quot;]::selection,
-        ///code[class*=&quot;language-&quot;]::selection {
-        ///	text- [rest of string was truncated]&quot;;.
-        /// </summary>
-        public static string prism_winprint {
-            get {
-                return ResourceManager.GetString("prism_winprint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to /* These style override Prism built-in (and any provided theme), 
-        ///   optimizing for rendering for print. E.g. Colored backgrounds
-        ///    make no sense when printing. Also turns off some stuff 
-        ///    litehtml does not support correctly.
-        ///*/
-        ///code[class*=&quot;language-&quot;],
-        ///pre[class*=&quot;language-&quot;] {
-        ///    /* no backgrond 
-        ///    background: none;*/
-        ///    /* linehtml only supports white-space: pre-wrap. word-break: break-all are not yet supported.*/
-        ///    /* Relevant docs:
-        ///        white-space - https://developer.mozilla. [rest of string was truncated]&quot;;.
-        /// </summary>
-        public static string prism_winprint_overrides {
-            get {
-                return ResourceManager.GetString("prism_winprint_overrides", resourceCulture);
             }
         }
     }

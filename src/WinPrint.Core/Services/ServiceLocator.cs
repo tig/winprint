@@ -15,7 +15,6 @@ namespace WinPrint.Core.Services {
         private ServiceLocator() {
             SimpleIoc.Default.Register<SettingsService>();
             SimpleIoc.Default.Register<FileTypeMappingService>();
-            SimpleIoc.Default.Register<NodeService>();
             SimpleIoc.Default.Register<LogService>(true);
             SimpleIoc.Default.Register<TelemetryService>(true);
             SimpleIoc.Default.Register<UpdateService>();
@@ -26,7 +25,6 @@ namespace WinPrint.Core.Services {
         public TelemetryService TelemetryService => SimpleIoc.Default.GetInstance<Services.TelemetryService>();
         public SettingsService SettingsService => SimpleIoc.Default.GetInstance<Services.SettingsService>();
         public FileTypeMappingService FileTypeMappingService => SimpleIoc.Default.GetInstance<Services.FileTypeMappingService>();
-        public NodeService NodeService => SimpleIoc.Default.GetInstance<Services.NodeService>();
         public UpdateService UpdateService => SimpleIoc.Default.GetInstance<UpdateService>();
         public PygmentsConverterService PygmentsConverterService => SimpleIoc.Default.GetInstance<PygmentsConverterService>();
 
@@ -39,7 +37,6 @@ namespace WinPrint.Core.Services {
             _current = null;
             SimpleIoc.Default.Unregister<SettingsService>();
             SimpleIoc.Default.Unregister<FileTypeMappingService>();
-            SimpleIoc.Default.Unregister<NodeService>();
             SimpleIoc.Default.Unregister<LogService>();
             SimpleIoc.Default.Unregister<TelemetryService>();
             SimpleIoc.Default.Unregister<UpdateService>();

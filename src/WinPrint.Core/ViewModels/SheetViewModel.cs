@@ -702,6 +702,11 @@ namespace WinPrint.Core {
                         reflow = true;
                         break;
 
+                    case "DisableFontStyles":
+                        ContentSettings.DisableFontStyles = _sheet.ContentSettings.DisableFontStyles;
+                        reflow = true;
+                        break;
+
                     default:
                         throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
