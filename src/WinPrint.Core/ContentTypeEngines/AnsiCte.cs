@@ -41,7 +41,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         private DynamicScreen _screen;
         public IAnsiDecoderClient DecoderClient { get => (IAnsiDecoderClient)_screen; }
 
-        private float _lineHeight;
+        private SizeF _charSize;
         private int _linesPerPage;
 
         private float lineNumberWidth;
@@ -118,24 +118,24 @@ namespace WinPrint.Core.ContentTypeEngines {
                 g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             }
 
-            _lineHeight = _cachedFont.GetHeight(dpiY);
+            _charSize = MeasureString(g, _cachedFont, "W");
 
-            if (PageSize.Height < _lineHeight) {
+            if (PageSize.Height < (int)Math.Floor(_charSize.Height)) {
                 throw new InvalidOperationException("The line height is greater than page height.");
             }
 
             // Round down # of lines per page to ensure lines don't clip on bottom
-            _linesPerPage = (int)Math.Floor(PageSize.Height / _lineHeight);
+            _linesPerPage = (int)Math.Floor(PageSize.Height / (int)Math.Floor(_charSize.Height));
 
             // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
             // TODO: Make line number width dynamic
             // Note, MeasureString is actually dependent on lineNumberWidth!
-            lineNumberWidth = ContentSettings.LineNumbers ? MeasureString(g, _cachedFont, new string('0', 4)).Width : 0;
+            lineNumberWidth = ContentSettings.LineNumbers ? _charSize.Width * 4 : 0;
 
             // This is the shortest line length (in chars) that we think we'll see. 
             // This is used as a performance optimization (probably premature) and
             // could be 0 with no functional change.
-            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / MeasureString(g, _cachedFont, "W").Width);
+            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / (int)Math.Floor(_charSize.Width));
 
             // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             _screen = new DynamicScreen(_minLineLen);
@@ -177,9 +177,9 @@ namespace WinPrint.Core.ContentTypeEngines {
             g.TextRenderingHint = ContentTypeEngineBase.TextRenderingHint;
 
             // determine width     
-            var fontHeight = _lineHeight;
+            var fontHeight = (int)Math.Floor(_charSize.Height);
             // Use page settings including lineNumberWidth
-            var proposedSize = new SizeF(PageSize.Width, _lineHeight + (_lineHeight / 2));
+            var proposedSize = new SizeF(PageSize.Width, (int)Math.Floor(_charSize.Height) + ((int)Math.Floor(_charSize.Height) / 2));
             var size = g.MeasureString(text, font, proposedSize, ContentTypeEngineBase.StringFormat, out charsFitted, out linesFilled);
 
             // TODO: HACK to work around MeasureString not working right on Linux
@@ -206,7 +206,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             var firstLineOnPage = _linesPerPage * (pageNum - 1);
             int i;
             for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _screen.Lines.Count; i++) {
-                var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
+                var yPos = (i - (_linesPerPage * (pageNum - 1))) * (int)Math.Floor(_charSize.Height);
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width) : 0;
                 // Line #s
                 if (_screen.Lines[i].LineNumber > 0) {
@@ -220,7 +220,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 // Line # separator (draw even if there's no line number, but stop at end of doc)
                 // TODO: Support setting color of line #s and separator
                 if (ContentSettings.LineNumbers && ContentSettings.LineNumberSeparator && lineNumberWidth != 0) {
-                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + _lineHeight);
+                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + (int)Math.Floor(_charSize.Height));
                 }
 
                 // Text
@@ -244,14 +244,25 @@ namespace WinPrint.Core.ContentTypeEngines {
 
                     var text = _screen.Lines[i].Text[run.Start..(run.Start + run.Length)];
 
-                    var proposedSize = new SizeF(PageSize.Width, _lineHeight);
-                    var size = g.MeasureString(text, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
-                    g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
+                    for (var c = 0; c < text.Length; c++) {
+                        g.DrawString($"{text[c]}", font, new SolidBrush(fg), xPos + (c * (int)Math.Floor(_charSize.Width)), yPos, ContentTypeEngineBase.StringFormat);
+                    }
 
-                    xPos += size.Width;
+                    if (ContentSettings.Diagnostics && run.HasTab) {
+                        var pen = new Pen(Color.Red, 1);
+                        g.DrawRectangle(pen, xPos, yPos, text.Length * (int)Math.Floor(_charSize.Width), (int)Math.Floor(_charSize.Height));
+                        g.DrawString($"→", font, new SolidBrush(Color.DarkGray), xPos, yPos, ContentTypeEngineBase.StringFormat);
+                    }
+                    xPos += (int)Math.Floor(_charSize.Width) * text.Length;
+
+                    //var proposedSize = new SizeF(PageSize.Width, _lineHeight);
+                    //var size = g.MeasureString(text, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
+                    //g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
+
+                    //xPos += size.Width;
                 }
                 if (ContentSettings.Diagnostics) {
-                    g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, _lineHeight);
+                    g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, (int)Math.Floor(_charSize.Height));
                 }
             }
 

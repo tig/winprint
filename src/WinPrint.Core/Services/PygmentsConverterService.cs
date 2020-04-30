@@ -75,6 +75,10 @@ namespace WinPrint.Core.Services {
                     if (!string.IsNullOrEmpty($"{file}.an") && File.Exists($"{file}.an")) {
                         Log.Debug("Reading {file}", $"{file}.an");
                         document = await File.ReadAllTextAsync($"{file}.an", Encoding.UTF8).ConfigureAwait(true);
+
+                        // HACK: Because of this bug: https://github.com/pygments/pygments/issues/1435
+                        if (document[^1] == '\n')
+                            document = document.Remove(document.Length - 1, 1);
                     }
                 }
 
