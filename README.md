@@ -18,15 +18,15 @@ PS > out-winprint -verbose
 VERBOSE: Out-WinPrint 2.0.3.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
 ```
 
-Print `Program.cs` using the default sheet definition and default printer:
+Print a Powershell profile using the default sheet definition and default printer:
 
 ```powershell
-get-content Program.cs | out-winprint
+Get-Content $profile.CurrentUserAllHosts | winprint -Language powershell
 ```
 
 ```powershell
 PS > cat Program.cs | wp -PrinterName PDF -Orientation Portrait -Verbose -Title Program.cs
-VERBOSE: Out-WinPrint 2.0.3.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
+VERBOSE: Out-WinPrint 2.0.4.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
 VERBOSE:     Printer:          PDF
 VERBOSE:     Paper Size:       Letter
 VERBOSE:     Orientation:      Portrait

@@ -12,6 +12,7 @@ using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -532,6 +533,7 @@ namespace WinPrint.Console {
                     // See: https://stackoverflow.com/questions/60712580/invoking-cmdlet-from-a-c-based-pscmdlet-providing-input-and-capturing-output
                     var textToPrint = SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
 
+                    _print.SheetViewModel.Encoding = Encoding.UTF8;
                     await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
                 }
             }
@@ -799,13 +801,13 @@ namespace WinPrint.Console {
             }));
 
             // -Language
-            runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {
-                    new ParameterAttribute() {
-                        HelpMessage = "Optional language to use for syntax highlighting.",
-                        ParameterSetName = "Print"
-                    },
-                    new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())
-            }));
+            //runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {
+            //        new ParameterAttribute() {
+            //            HelpMessage = "Optional language to use for syntax highlighting.",
+            //            ParameterSetName = "Print"
+            //        },
+            //        new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())
+            //}));
 
             return runtimeDict;
         }

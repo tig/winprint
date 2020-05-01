@@ -13,7 +13,11 @@ VERBOSE: Out-WinPrint 2.0.3.0 - Copyright Kindel Systems, LLC - https://tig.gith
 ```
 
 ```powershell
-get-content Program.cs | wp
+out-winprint Program.cs
+```
+
+```powershell
+cat $profile.CurrentUserAllHosts | wp -Language powershell
 ```
 
 ```powershell
@@ -22,7 +26,7 @@ ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winprint -p "La
 
 ## Features
 
-* Print source code with syntax highlighting and line numbering for over 200 programming langauges and file formats.
+* Print source code with syntax highlighting and line numbering for over 200 programming languages and file formats.
 * Print HTML files.
 * Print "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
@@ -41,7 +45,17 @@ See [User's Guide](users-guide.md) for more details.
 
 See [About](about.md) for the history prior to *winprint 2.0*.
 
-* 12-Apr-2020 - 2.0.0.6100 (Beta1) - Updated PowerShell cmdlet to run as a standalone app (e.g. wp foo.cs or out-winprint foo.cs.
+* 30-Apr-2020 - 2.0.4 (RC1) - Totally new rendering engine
+  * Replaced the nodejs `Prism.js`-based syntax highlighter with the Python `Pigyments`-based system. This:
+    * Long lines now wrap correctly. Issue #12
+    * Significantly increased file load/rendering speed. Issue #13.
+    * Space and tabs now render accurately. Issue #14
+    * Improved syntax highlighting in almost every way. More reliable, better language support, more sophisticated lexers.
+    * Provided a simple way to select styles (e.g. `"style": "pastie"` in `.config` file).
+    * Enabled printing of ANSI Escape sequence encoded files (because `winprint` uses Pygments `terminal` formatter as input).
+    * Removed dependency on nodejs. Issue #17
+  * Dozens of small bug fixes and improvements.
+* 12-Apr-2020 - 2.0.0.6100 (Beta3) - Updated PowerShell cmdlet to run as a standalone app (e.g. wp foo.cs or out-winprint foo.cs.
   * Added ability to choose fonts from GUI
   * fixed print preview status bugs
   * Code refactoring; because why leave good enough alone?

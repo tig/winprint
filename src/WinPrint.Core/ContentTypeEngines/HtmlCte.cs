@@ -80,7 +80,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             string css;
             try {
-                // TODO: Make sure wiprint.css is in the same dir as .config file once setup is impl
+                // TODO: Make sure winprint.css is in the same dir as .config file once setup is impl
                 using var cssStream = new StreamReader("winprint.css");
                 css = await cssStream.ReadToEndAsync();
                 cssStream.Close();

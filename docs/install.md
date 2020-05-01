@@ -1,6 +1,6 @@
 # Installation Instructions
 
-***winprint*** 2.0 is in beta. It works well (on my machine), and I've had a dozen or so users verify it works well for them; see [Issues](https://github.com/tig/winprint/issues).*
+***winprint*** 2.0 is almost not beta. It works well (on my machine), and I've had a dozen or so users verify it works well for them; see [Issues](https://github.com/tig/winprint/issues).*
 
 *Please report any problems or feature requests [here](https://github.com/tig/winprint/issues).*
 

@@ -2,7 +2,7 @@
 
 ## Features
 
-* Print source code with syntax highlighting and line numbering for over 200 programming langauges and file formats.
+* Print source code with syntax highlighting and line numbering for over 200 programming languages and file formats.
 * Print HTML files.
 * Print "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
@@ -39,7 +39,7 @@ See what version is installed:
 
 ```powershell
 PS > out-winprint -verbose
-VERBOSE: Out-WinPrint 2.0.0.3912 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
+VERBOSE: Out-WinPrint 2.0.4.1 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
 PS >
 ```
 
@@ -53,6 +53,10 @@ Or, more tersely:
 
 ```powershell
 cat program.cs | wp
+```
+
+```powershell
+cat $profile.CurrentUserAllHosts | wp -Language powershell
 ```
 
 Or, using more features:
@@ -387,13 +391,15 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 **winprint** supports three types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
 
-1. **`text/plain`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a differnt font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file.
+1. **`AnsiCte`** - This is the default CTE used for most file types. `AnsiCte` can format `text/plain` files as well as files with embedded `ANSI Escape Sequences`.  `AnsiCte` provides **winprint**'s syntax highlighting (pretty printing) with support for over 200 programming languages. Over a dozen styles (colors, bold, italic, etc...) are supported (change the `style` entry in the `WinPrint.config.json` file). All styles supported by [Pygments](https://pygments.org/) are supported.
 
-2. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
+2. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file. `TextCte` is not enabled by default and may be removed from future versions as `AnsiCte` does almost everything `TextCte` does (with the exeption of form-feeds).
 
-3. **`text/code`** - The text/code CTE supports syntax highlighting (pretty printing), with optional line numbering, of over 200 programming languages. The style of the printing can be changed by providing a file named `winprint-prism.css` in the `%appdata%\Kindel Systems\winprint` folder. The styles defined in this format should match those defined for [PrismJS](https://prismjs.com). Any PrismJS style sheet will work with **winprint**. For example, to use the Coy theme copy `prism-coy.css` into the `%appdata%\Kindel Systems\winprint` and rename it `prism-winprint.css`.
+3. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
 
-The extension of the file being printed (e.g. `.cs`) determines which Content Type rendering engine will be used. **winprint** has a built-in library of hundreds of file extension to content type/language mappings.
+When using **winprint** from the command line, the `-ContentTypeEngine` parameter can be used specify a CTE to use.
+
+The extension of the file being printed (e.g. `.cs`) determines which Content Type rendering engine will be used. **winprint** has a built-in library of hundreds of file extension to content type/language mappings. When using **winprint** from the command line, the `-Langauge` parameter can be used to override this behavior.
 
 To associate a file extension with a particular Content Type Engine modify the `files.associations` section of `WinPrint.config.json` appropriately. For example to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below (the `WinPrint.config.json` generated when **winprint** runs the first time already provides this example, as an example):
 
@@ -420,8 +426,6 @@ To associate a file extension with a language supported by `text/code` modify th
       "*.config": "json"
     }
 ```
-
-To determine the name to use (e.g. `json`) see the [PrismJS](https://prismjs.com/#supported-languages) list of languages.
 
 A new language can be defined by aliasing it to an existing language by modifying the `languages` section of `WinPrint.config.json`.
 

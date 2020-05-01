@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Hosting;
@@ -37,7 +38,7 @@ namespace WinPrint.Core.Services {
 
             string file = Path.GetTempFileName();
             _proc = new Process();
-            _proc.StartInfo.FileName = @"pygmentize.exe";
+            _proc.StartInfo.FileName = @$"{Path.GetDirectoryName(Assembly.GetAssembly(typeof(PygmentsConverterService)).Location)}\pygmentize.exe";
             _proc.StartInfo.Arguments = $"-P outencoding=utf-8 -f 16m -O style={(string.IsNullOrEmpty(style) ? "default" : style)} -l {language} -o {file}.an {file}";
             _proc.StartInfo.RedirectStandardInput = true;
             _proc.StartInfo.RedirectStandardOutput = true;
@@ -54,24 +55,21 @@ namespace WinPrint.Core.Services {
                 await File.WriteAllTextAsync(file, document, Encoding.UTF8).ConfigureAwait(true);
                 Log.Debug("Starting {pyg} {args}", _proc.StartInfo.FileName, _proc.StartInfo.Arguments);
                 _proc.Start();
-            }
-            catch (Exception e) {
-                // TODO: Better error message (output of stderr?)
-                Log.Information("Failed to pygmentize: {Message}", e.Message);
-                document = $"{ _proc.StartInfo.FileName} { _proc.StartInfo.Arguments} failed:\n{e.Message}:\n";
-            }
-            finally {
+
                 Log.Debug("Waiting for pygments to exit");
                 await Task.WhenAny(_eventHandled.Task, Task.Delay(10000)).ConfigureAwait(true);
 
                 if (_proc.ExitCode != 0) {
                     var stdErr = _proc.StandardError.ReadToEnd();
-                    Log.Information("Failed to pygmentize: {Message}", stdErr);
+                    if (stdErr.StartsWith("Usage:")) {
+                        stdErr = "Invalid command line.";
+                    }
+                    document = $"Pygments encountered an error: {stdErr}";
+                    Log.Information("{document}", document);
                     // TODO: This should really throw an exception
-                    document = $"Failed to pygmentize: {stdErr}";
+                    throw new InvalidOperationException(document);
                 }
                 else {
-
                     if (!string.IsNullOrEmpty($"{file}.an") && File.Exists($"{file}.an")) {
                         Log.Debug("Reading {file}", $"{file}.an");
                         document = await File.ReadAllTextAsync($"{file}.an", Encoding.UTF8).ConfigureAwait(true);
@@ -80,8 +78,22 @@ namespace WinPrint.Core.Services {
                         if (document[^1] == '\n')
                             document = document.Remove(document.Length - 1, 1);
                     }
+                    else {
+                        // TODO: This should really throw an exception
+                        var stdErr = _proc.StandardError.ReadToEnd();
+                        document = $"Pygments failed to create converter file: {stdErr}";
+                        Log.Information("{document}", document);
+                        throw new InvalidOperationException(document);
+                    }
                 }
-
+            }
+            catch (System.ComponentModel.Win32Exception e) {
+                // TODO: Better error message (output of stderr?)
+                document = $"Could not format document:\n{ _proc.StartInfo.FileName} { _proc.StartInfo.Arguments} failed:\n{e.Message}";
+                Log.Error(e, "{document}", document);
+                throw new InvalidOperationException(document);
+            }
+            finally {
                 // Clean up
                 if (!string.IsNullOrEmpty(file) && File.Exists(file)) {
                     File.Delete(file);

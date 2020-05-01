@@ -12,7 +12,7 @@
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.0.3.0</Version>
+    <Version>2.0.4.100</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -60,7 +60,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="rem copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;rem copy $(OutDir)\$(TargetName).exe $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).dll $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)..\release" />
+    <Exec Command="rem copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;rem copy $(OutDir)\$(TargetName).exe $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).dll $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)..\release&#xD;&#xA;copy $(SolutionDir)..\tools\pygmentize.exe $(TargetDir)" />
   </Target>
 
 </Project>

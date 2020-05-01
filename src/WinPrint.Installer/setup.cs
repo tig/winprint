@@ -28,6 +28,7 @@ namespace WinPrintInstaller {
 
                 Dirs = new[] {
                     new Dir(feature, $"%ProgramFiles%\\{info.CompanyName}\\{info.ProductName}",
+                        new File(@"pygmentize.exe"),
                         new Files(@"*.dll"),
                         new Files(@"*.deps.json"),
                         new Files(@"*.runtimeconfig.json"),

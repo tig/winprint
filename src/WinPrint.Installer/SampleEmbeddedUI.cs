@@ -128,7 +128,7 @@ namespace WinPrintInstaller {
             };
             setupWizard.InitializeComponent();
 
-            setupWizard.Title = $"wiprint {session["ProductVersion"]} installer";
+            setupWizard.Title = $"winprint {session["ProductVersion"]} installer";
 
             app.Run(setupWizard);
             installExitEvent.Set();
