@@ -46,7 +46,7 @@ See [User's Guide](users-guide.md) for more details.
 See [About](about.md) for the history prior to *winprint 2.0*.
 
 * 30-Apr-2020 - 2.0.4 (RC1) - Totally new rendering engine
-  * Replaced the nodejs `Prism.js`-based syntax highlighter with the Python `Pigyments`-based system. This:
+  * Replaced the nodejs `Prism.js`-based syntax highlighter with the Python `Pygments`-based system. This:
     * Long lines now wrap correctly. Issue #12
     * Significantly increased file load/rendering speed. Issue #13.
     * Space and tabs now render accurately. Issue #14
