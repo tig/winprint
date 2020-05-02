@@ -13,7 +13,6 @@ namespace WinPrintInstaller {
             var versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
             Debug.WriteLine($"version path: {versionFile}");
             var info = FileVersionInfo.GetVersionInfo(versionFile);
-
             var feature = new Feature(new Id("winprint"));
 
             var project = new Project(info.ProductName, new EnvironmentVariable("PATH", "[INSTALLDIR]") { Part = EnvVarPart.last }) {
@@ -40,21 +39,6 @@ namespace WinPrintInstaller {
                         new ExeFileShortcut("WinPrint", "[INSTALLDIR]winprintgui.exe", arguments: ""))
                  },
 
-                //Binaries = new[] {
-                //},
-
-                //Actions = new[] {
-                //    new InstalledFileAction("winprintgui_exe", "")
-                //    {
-                //        Step = Step.InstallFinalize,
-                //        When = When.After,
-                //        Return = Return.asyncNoWait,
-                //        Execute = Execute.immediate,
-                //        Impersonate = true,
-                //        //Condition = Feature.BeingInstall(),
-                //    }
-                //},
-
                 Properties = new[]{
                     //setting property to be used in install condition
                     new Property("ALLUSERS", "1"),
@@ -68,15 +52,13 @@ namespace WinPrintInstaller {
             project.SourceBaseDir = sourceBaseDir;
             project.OutDir = outDir;
 
-            project.Version = new Version(info.ProductVersion); //new Version("2.0.1.10040"); 
+            project.Version = new Version(info.ProductVersion);
             project.MajorUpgrade = new MajorUpgrade {
                 Schedule = UpgradeSchedule.afterInstallInitialize,
                 AllowSameVersionUpgrades = true,
                 DowngradeErrorMessage = "A later version of [ProductName] is already installed. Setup will now exit."
             };
             project.Platform = Platform.x64;
-
-            //project.LicenceFile = "license.rtf";
 
             project.ControlPanelInfo.Comments = $"winprint by Charlie Kindel";
             project.ControlPanelInfo.Readme = "https://tig.github.io/winprint";
@@ -86,15 +68,8 @@ namespace WinPrintInstaller {
             project.ControlPanelInfo.Manufacturer = info.CompanyName;
             project.ControlPanelInfo.InstallLocation = "[INSTALLDIR]";
             project.ControlPanelInfo.NoModify = true;
-            //project.ControlPanelInfo.NoRepair = true,
-            //project.ControlPanelInfo.NoRemove = true,
-            //project.ControlPanelInfo.SystemComponent = true, //if set will not be shown in Control Panel
 
             project.PreserveTempFiles = true;
-
-            //project.UI = WUI.WixUI_ProgressOnly;
-
-            //project.RemoveDialogsBetween(NativeDialogs.WelcomeDlg, NativeDialogs.);
 
             //project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
 

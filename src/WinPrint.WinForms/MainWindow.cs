@@ -43,6 +43,7 @@ namespace WinPrint.Winforms {
                 BackColor = dummyButton.BackColor,
                 Location = dummyButton.Location,
                 Margin = dummyButton.Margin,
+                Padding = dummyButton.Padding,
                 Name = "printPreview",
                 Size = dummyButton.Size,
                 MinimumSize = new Size(0, 0),
@@ -351,17 +352,26 @@ namespace WinPrint.Winforms {
             }
         }
 
-        private void SettingsChangedEventHandler(object o, bool reflow) {
+        private void SettingsChangedEventHandler(object o, SheetViewModel.SheetViewModelSettingsChangedEvent e) {
             if (InvokeRequired) {
-                BeginInvoke((Action)(() => SettingsChangedEventHandler(o, reflow)));
+                BeginInvoke((Action)(() => SettingsChangedEventHandler(o, e)));
             }
             else {
-                LogService.TraceMessage($"{reflow}");
-                if (reflow) {
+                LogService.TraceMessage($"{e.Reflow}");
+                if (e.Reflow) {
                     LoadFile();
                 }
                 else {
-                    //printPreview.Invalidate();
+                    //if (e.PropertyName.Equals("Header")) {
+                    //    printPreview.Invalidate(Rectangle.Round(printPreview.SheetViewModel.Header.Bounds));
+                    //}
+                    //else if (e.PropertyName.Equals("Footer")) {
+                    //    printPreview.Invalidate(Rectangle.Round(printPreview.SheetViewModel.Footer.Bounds));
+                    //}
+                    //else {
+                    //    printPreview.Invalidate();
+                    //}
+                    printPreview.Invalidate();
                 }
             }
         }

@@ -99,6 +99,7 @@ namespace WinPrint.Winforms {
             this.dummyButton.Location = new System.Drawing.Point(0, 33);
             this.dummyButton.Margin = new System.Windows.Forms.Padding(0);
             this.dummyButton.Name = "dummyButton";
+            this.dummyButton.Padding = new System.Windows.Forms.Padding(20);
             this.dummyButton.Size = new System.Drawing.Size(835, 647);
             this.dummyButton.TabIndex = 0;
             this.dummyButton.Text = "dummyButton";
@@ -373,11 +374,6 @@ namespace WinPrint.Winforms {
             // padding
             // 
             this.padding.DecimalPlaces = 2;
-            this.padding.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
             this.padding.Location = new System.Drawing.Point(92, 82);
             this.padding.Name = "padding";
             this.padding.Size = new System.Drawing.Size(57, 23);
@@ -405,37 +401,17 @@ namespace WinPrint.Winforms {
             // columns
             // 
             this.columns.Location = new System.Drawing.Point(92, 53);
-            this.columns.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.columns.Name = "columns";
             this.columns.Size = new System.Drawing.Size(57, 23);
             this.columns.TabIndex = 13;
-            this.columns.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.columns.ValueChanged += new System.EventHandler(this.columns_ValueChanged);
             // 
             // rows
             // 
             this.rows.Location = new System.Drawing.Point(92, 23);
-            this.rows.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.rows.Name = "rows";
             this.rows.Size = new System.Drawing.Size(57, 23);
             this.rows.TabIndex = 13;
-            this.rows.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.rows.ValueChanged += new System.EventHandler(this.rows_ValueChanged);
             // 
             // groupMargins
@@ -469,20 +445,10 @@ namespace WinPrint.Winforms {
             // 
             this.leftMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.leftMargin.DecimalPlaces = 2;
-            this.leftMargin.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
             this.leftMargin.Location = new System.Drawing.Point(38, 50);
             this.leftMargin.Name = "leftMargin";
             this.leftMargin.Size = new System.Drawing.Size(57, 23);
             this.leftMargin.TabIndex = 4;
-            this.leftMargin.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
             this.leftMargin.ValueChanged += new System.EventHandler(this.leftMargin_ValueChanged);
             // 
             // labelRight
@@ -498,20 +464,10 @@ namespace WinPrint.Winforms {
             // 
             this.rightMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.rightMargin.DecimalPlaces = 2;
-            this.rightMargin.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
             this.rightMargin.Location = new System.Drawing.Point(144, 50);
             this.rightMargin.Name = "rightMargin";
             this.rightMargin.Size = new System.Drawing.Size(57, 23);
             this.rightMargin.TabIndex = 3;
-            this.rightMargin.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
             this.rightMargin.ValueChanged += new System.EventHandler(this.rightMargin_ValueChanged);
             // 
             // labelBottom
@@ -527,20 +483,10 @@ namespace WinPrint.Winforms {
             // 
             this.bottomMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.bottomMargin.DecimalPlaces = 2;
-            this.bottomMargin.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
             this.bottomMargin.Location = new System.Drawing.Point(92, 80);
             this.bottomMargin.Name = "bottomMargin";
             this.bottomMargin.Size = new System.Drawing.Size(57, 23);
             this.bottomMargin.TabIndex = 4;
-            this.bottomMargin.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
             this.bottomMargin.ValueChanged += new System.EventHandler(this.bottomMargin_ValueChanged);
             // 
             // labelTop
@@ -556,20 +502,10 @@ namespace WinPrint.Winforms {
             // 
             this.topMargin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.topMargin.DecimalPlaces = 2;
-            this.topMargin.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
             this.topMargin.Location = new System.Drawing.Point(92, 19);
             this.topMargin.Name = "topMargin";
             this.topMargin.Size = new System.Drawing.Size(57, 23);
             this.topMargin.TabIndex = 1;
-            this.topMargin.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
             this.topMargin.ValueChanged += new System.EventHandler(this.topMargin_ValueChanged);
             // 
             // comboBoxSheet

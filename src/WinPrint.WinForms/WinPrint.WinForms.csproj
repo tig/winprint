@@ -12,7 +12,7 @@
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.0.4.100</Version>
+    <Version>2.0.4.101</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>

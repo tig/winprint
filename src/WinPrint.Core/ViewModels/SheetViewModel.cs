@@ -194,19 +194,17 @@ namespace WinPrint.Core {
             ReflowProgress?.Invoke(this, msg);
         }
 
-        public bool CacheEnabled { get => _cacheEnabled; set => SetField(ref _cacheEnabled, value); }
-
-        private bool _cacheEnabled = false;
-
-        // if bool is true, reflow. Otherwise just paint
-        public event EventHandler<bool> SettingsChanged;
-        protected void OnSettingsChanged(bool reflow) {
-            LogService.TraceMessage();
-            SettingsChanged?.Invoke(this, reflow);
+        public class SheetViewModelSettingsChangedEvent {
+            public bool Reflow { get; set; }
+            public string PropertyName { get; set; }
         }
+        // if bool is true, reflow. Otherwise just paint
+        public event EventHandler<SheetViewModelSettingsChangedEvent> SettingsChanged;
+        protected void OnSettingsChanged(bool reflow, string propertyName) {
+            LogService.TraceMessage();
 
-        // Caching of pages as bitmaps. Enables faster paint/zoom as well as usage from XAML
-        private List<Image> _cachedSheets = new List<Image>();
+            SettingsChanged?.Invoke(this, new SheetViewModelSettingsChangedEvent() { Reflow = reflow, PropertyName = propertyName }) ;
+        }
 
         public SheetViewModel() {
         }
@@ -225,8 +223,6 @@ namespace WinPrint.Core {
                 ContentEngine.PropertyChanged -= OnContentEnginePropertyChanged();
                 ContentEngine = null;
             }
-
-            ClearCache();
             _numPages = 0;
         }
 
@@ -269,17 +265,17 @@ namespace WinPrint.Core {
             }
 
             if (_headerVM != null) {
-                _headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+                _headerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow, "Header");
             }
 
             Header = new HeaderViewModel(this, newSheet.Header);
-            _headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
+            _headerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow, "Header");
             if (_footerVM != null) {
-                _footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow);
+                _footerVM.SettingsChanged -= (s, reflow) => OnSettingsChanged(reflow, "Footer");
             }
 
             Footer = new FooterViewModel(this, newSheet.Footer);
-            _footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow);
+            _footerVM.SettingsChanged += (s, reflow) => OnSettingsChanged(reflow, "Footer");
 
             // Subscribe to all settings properties
             newSheet.PropertyChanged += OnSheetPropertyChanged();
@@ -532,10 +528,6 @@ namespace WinPrint.Core {
 
             Ready = false;
 
-            if (CacheEnabled) {
-                ClearCache();
-            }
-
             if (ContentEngine is null) {
                 LogService.TraceMessage("SheetViewModel.ReflowAsync - ContentEngine is null");
                 return;
@@ -590,18 +582,6 @@ namespace WinPrint.Core {
             return sheet;
         }
 
-        private void ClearCache() {
-            if (!CacheEnabled) {
-                return;// throw new InvalidOperationException("Cache is not enabled!");
-            }
-
-            LogService.TraceMessage();
-            foreach (var i in _cachedSheets) {
-                i.Dispose();
-            }
-            _cachedSheets.Clear();
-        }
-
         private System.ComponentModel.PropertyChangedEventHandler OnSheetPropertyChanged() {
             return (s, e) => {
                 var reflow = false;
@@ -643,7 +623,7 @@ namespace WinPrint.Core {
                     default:
                         throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
-                OnSettingsChanged(reflow);
+                OnSettingsChanged(reflow, e.PropertyName);
             };
         }
 
@@ -710,7 +690,7 @@ namespace WinPrint.Core {
                     default:
                         throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
                 }
-                OnSettingsChanged(reflow);
+                OnSettingsChanged(reflow, e.PropertyName);
             };
         }
 
@@ -738,7 +718,7 @@ namespace WinPrint.Core {
                     return;
                 }
 
-                OnSettingsChanged(reflow);
+                OnSettingsChanged(reflow, e.PropertyName);
             };
         }
 
@@ -811,38 +791,6 @@ namespace WinPrint.Core {
                 PaintSheet(graphics, sheetNum);
             }
             graphics.Restore(state);
-        }
-
-
-        /// <summary>
-        /// Returns an Image with the specified sheet painted on it. Image will be of the size & resolution of the selected printer.
-        /// </summary>
-        /// <param name="sheetNum">Sheet to print. 1-based.</param>
-        /// <returns></returns>
-        public Image GetCachedSheet(Graphics graphics, int sheetNum) {
-            if (!CacheEnabled) {
-                throw new InvalidOperationException("Cache is not enabled!");
-            }
-
-            const int dpiMultiplier = 1;
-            float xDpi = PrinterResolution.X * dpiMultiplier;
-            float yDpi = PrinterResolution.Y * dpiMultiplier;
-            var xRes = (int)(Bounds.Width / 100 * xDpi);
-            var yRes = (int)(Bounds.Height / 100 * yDpi);
-            if (_cachedSheets.Count < sheetNum) {
-                // Create a new bitmap object with the resolution of a printer page
-                var bmp = new Bitmap(xRes, yRes);
-                //bmp.SetResolution(xDpi, yDpi);
-
-                // Obtain a Graphics object from that bitmap
-                var g = Graphics.FromImage(bmp);
-                g.PageUnit = GraphicsUnit.Pixel;
-                PaintSheet(g, sheetNum);
-                _cachedSheets.Add(bmp);
-            }
-
-            LogService.TraceMessage($"GetCachedSheet({sheetNum}) returning image.");
-            return _cachedSheets[sheetNum - 1];
         }
 
         private void PaintSheet(Graphics g, int sheetNum) {

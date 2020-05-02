@@ -38,6 +38,7 @@ namespace WinPrint.WinForms {
         public int Zoom { get; set; }
 
         public PrintPreview() {
+            //DoubleBuffered = true;
             InitializeComponent();
             CurrentSheet = 1;
             Zoom = 100;
@@ -95,7 +96,7 @@ namespace WinPrint.WinForms {
 
         protected override void OnResize(EventArgs e) {
             Invalidate();
-            base.OnResize(e);
+            //base.OnResize(e);
         }
 
         protected override void OnClick(EventArgs e) {
@@ -197,25 +198,17 @@ namespace WinPrint.WinForms {
             Invalidate(GetTextRect(Graphics.FromHwnd(Handle)));
         }
 
-        // Minimum padding around print preview control (paper)
-        private const int _pagePadding = 20;
         protected override void OnPaint(PaintEventArgs e) {
             if (e is null) {
                 throw new ArgumentNullException(nameof(e));
             }
-
             LogService.TraceMessage($"PrintPreview.Text: {Text} - clip: {e.ClipRectangle}");
-            //base.OnPaint(e);
-
-            // Paint background
-            using var backBrush = new SolidBrush(BackColor);
-            e.Graphics.FillRectangle(backBrush, ClientRectangle);
 
             if (_svm != null && _svm.Ready) {
                 var state = e.Graphics.Save();
 
                 // Calculate scale and location
-                var paperSize = new Size(ClientSize.Width - _pagePadding, ClientSize.Height - _pagePadding);
+                var paperSize = new Size(ClientSize.Width - Padding.Horizontal, ClientSize.Height - Padding.Vertical);
                 double w = _svm.Bounds.Width;
                 double h = _svm.Bounds.Height;
                 var scalingX = paperSize.Width / w;
@@ -228,12 +221,17 @@ namespace WinPrint.WinForms {
                 var previewSize = new Size((int)(w * scale), (int)(h * scale));
                 LogService.TraceMessage($"previewSize {previewSize.Width}, {previewSize.Height}");
 
-                // Don't do anything if the window's been shrunk too far or GDI+ will crash
+                // Don't do anything if the windows been shrunk too far or GDI+ will crash
                 if (previewSize.Width > 10 && previewSize.Height > 10) {
 
-                    // Center
+                    // TODO: Enable panning
                     if (Zoom <= 100) {
+                        // Center
                         e.Graphics.TranslateTransform((ClientSize.Width / 2) - (previewSize.Width / 2), (ClientSize.Height / 2) - (previewSize.Height / 2));
+                    }
+                    else {
+                        // Top centered
+                        e.Graphics.TranslateTransform((ClientSize.Width / 2) - (previewSize.Width / 2), Padding.Top);
                     }
 
                     // Scale for client size & zoom
@@ -242,27 +240,9 @@ namespace WinPrint.WinForms {
                     // Paint the background white
                     e.Graphics.FillRectangle(Brushes.White, _svm.Bounds);
 
-                    //if (!svm.Loading && !svm.Reflowing) {
-                    if (_svm.CacheEnabled) {
-                        e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                        var img = _svm.GetCachedSheet(e.Graphics, CurrentSheet);
-                        //e.Graphics.DrawImage(img,
-                        //    new Rectangle((int)svm.PrintableArea.Left, (int)svm.PrintableArea.Top, (int)(img.Width), (int)(img.Height)),
-                        //    0F, 0F, img.Width, img.Height,
-                        //    GraphicsUnit.Pixel);
-                        e.Graphics.DrawImageUnscaledAndClipped(img,
-                            new Rectangle(_svm.Bounds.Left, _svm.Bounds.Top, _svm.Bounds.Width, _svm.Bounds.Height));
-                        e.Graphics.Restore(state);
-                    }
-                    else {
-                        _svm.PrintSheet(e.Graphics, CurrentSheet);
-                    }
-                    //}
+                    _svm.PrintSheet(e.Graphics, CurrentSheet);
                 }
                 e.Graphics.Restore(state);
-            }
-            else {
-                //e.Graphics.FillRectangle(Brushes.White, Rectangle.Inflate(ClientRectangle, -_pagePadding, -_pagePadding));
             }
 
             // If we're zoomed, paint zoom factor
