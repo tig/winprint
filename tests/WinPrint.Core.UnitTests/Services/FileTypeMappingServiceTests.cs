@@ -45,7 +45,7 @@ namespace WinPrint.Core.UnitTests.Services
         }
 
         [Fact]
-        public void TestDefaultConfigLangauges()
+        public void TestDefaultConfigLanguages()
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
             File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
@@ -82,7 +82,7 @@ namespace WinPrint.Core.UnitTests.Services
         }
 
         [Fact]
-        public void TestLangauges()
+        public void TestLanguages()
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
             File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);

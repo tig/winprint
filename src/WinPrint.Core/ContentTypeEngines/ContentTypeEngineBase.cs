@@ -135,7 +135,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// </summary>
         /// <param name="contentType"></param>
         /// <returns>ContentEngine, ContentType, Language</returns>
-        public static (ContentTypeEngineBase cte, string languageId, string langauge) CreateContentTypeEngine(string contentType) {
+        public static (ContentTypeEngineBase cte, string languageId, string Language) CreateContentTypeEngine(string contentType) {
             Debug.Assert(!string.IsNullOrEmpty(contentType));
             Debug.Assert(ModelLocator.Current.FileTypeMapping != null);
             Debug.Assert(ModelLocator.Current.FileTypeMapping.ContentTypes != null);
@@ -194,7 +194,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     language = lang.Title;
                 }
 
-                // Is it a language name found in a langauge alias? (ansi)
+                // Is it a language name found in a Language alias? (ansi)
                 lang = ModelLocator.Current.FileTypeMapping.ContentTypes
                     .FirstOrDefault(l => l.Aliases
                         .Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, contentType, CompareOptions.IgnoreCase) == 0).Count() > 0);
@@ -295,7 +295,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             // If not text or html, is it a language?
             //if (!contentType.Equals("text/plain") && !contentType.Equals("text/html")) {
             //    // Technically, because we got the assocation from FilesAssocation, this should always work 
-            //    if (!((List<Langauge>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType))
+            //    if (!((List<Language>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType))
             //        contentType = "text/plain";
             //}
             return contentType;

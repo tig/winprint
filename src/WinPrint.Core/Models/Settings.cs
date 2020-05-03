@@ -223,7 +223,7 @@ namespace WinPrint.Core.Models {
             var defaultHFFontSize = 10F;
             var defaultHFFontStyle = FontStyle.Bold;
 
-            var defaultHeaderText = "{DateRevised:D}|{FileName}|Langauge: {Language}";
+            var defaultHeaderText = "{DateRevised:D}|{FileName}|Language: {Language}";
             var defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
             var settings = new Settings {

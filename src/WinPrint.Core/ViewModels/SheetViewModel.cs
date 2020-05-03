@@ -75,7 +75,7 @@ namespace WinPrint.Core {
         private string _title;
 
         /// <summary>
-        /// Content type (e.g. text/x-csharp). Langauge.Id
+        /// Content type (e.g. text/x-csharp). Language.Id
         /// </summary>
         public string ContentType {
             get => _contentType;
@@ -84,7 +84,7 @@ namespace WinPrint.Core {
         private string _contentType;
 
         /// <summary>
-        /// The langauge (Language.Title or Alias)
+        /// The Language (Language.Title or Alias)
         /// </summary>
         public string Language {
             get => _language;

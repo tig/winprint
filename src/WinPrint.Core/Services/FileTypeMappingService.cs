@@ -44,7 +44,7 @@ namespace WinPrint.Core.Services {
             // Merge in any language defintions set in settings file
             var langs = new List<ContentType>(associations.ContentTypes);
             var langsSettings = new List<ContentType>(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes);
-            // TODO: overide Equals and GetHashCode for Langauge
+            // TODO: overide Equals and GetHashCode for Language
             var result = langsSettings.Union(langs).ToList();
 
             associations.ContentTypes = result;

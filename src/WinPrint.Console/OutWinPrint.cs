@@ -478,7 +478,7 @@ namespace WinPrint.Console {
                 return;
             }
 
-            // If Langauge is provided, use it instead of CTE.
+            // If Language is provided, use it instead of CTE.
             if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentType)) {
                 if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentType)) {
                     // If neither were specified, smartly pick CTE
@@ -530,7 +530,7 @@ namespace WinPrint.Console {
                     Log.Information("FileName:            {FileName}", FileName ?? "");
                     Log.Information("Title:               {title}", Title ?? "");
                     Log.Information("Content Type:        {contentType}", _print.SheetViewModel.ContentType);
-                    Log.Information("Langauge:            {langauge}", _print.SheetViewModel.Language);
+                    Log.Information("Language:            {Language}", _print.SheetViewModel.Language);
                     Log.Information("Content Type Engine: {cte}", _print.SheetViewModel.ContentEngine.GetType().Name);
                     Log.Information("Printer:             {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
                     Log.Information("Paper Size:          {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
