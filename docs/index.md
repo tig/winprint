@@ -48,6 +48,7 @@ See [About](about.md) for the history prior to *winprint 2.0*.
 * 03-May-2020 - 2.0.5 (RC2) -
   * Fixed content type / file extension detection.
   * Changed Header/Footer macros to support `{Language}`, `{ContentType}`, and `{CteName}` instead of just `{FileType}`.
+  * Installer detects if .NET Core 3.1 is installed. Makes it easy to install it if not installed.
 * 30-Apr-2020 - 2.0.4 (RC1) - Totally new rendering engine
   * Replaced the nodejs `Prism.js`-based syntax highlighter with the Python `Pygments`-based system. This:
     * Long lines now wrap correctly. Issue #12
