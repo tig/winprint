@@ -30,13 +30,8 @@
   
   <ItemGroup>
 
-    <PackageReference Include="CommandLineParser" Version="2.7.82" />
-    <PackageReference Include="MSBump" Version="2.3.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.24" />
   </ItemGroup>
 
   <ItemGroup>
