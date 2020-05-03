@@ -26,13 +26,13 @@ ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winprint -p "La
 
 ## Features
 
-* Print source code with syntax highlighting and line numbering for over 200 programming languages and file formats.
-* Print HTML files.
-* Print "multiple-pages-up" on one piece of paper (saves trees!)
+* Prints source code with syntax highlighting and line numbering for [over 200 programming languages and file formats](https://pygments.org/languages/).
+* Prints HTML files.
+* Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* The most capaple PowerShell printing tool enabling printing from the command line.
+* The most capable PowerShell printing tool enabling printing from the command line.
   * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
   * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `out-winprint` CmdLet is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
@@ -45,6 +45,9 @@ See [User's Guide](users-guide.md) for more details.
 
 See [About](about.md) for the history prior to *winprint 2.0*.
 
+* 03-May-2020 - 2.0.5 (RC2) -
+  * Fixed content type / file extension detection.
+  * Changed Header/Footer macros to support `{Language}`, `{ContentType}`, and `{CteName}` instead of just `{FileType}`.
 * 30-Apr-2020 - 2.0.4 (RC1) - Totally new rendering engine
   * Replaced the nodejs `Prism.js`-based syntax highlighter with the Python `Pygments`-based system. This:
     * Long lines now wrap correctly. Issue #12

@@ -12,7 +12,8 @@ namespace WinPrint.Core.Models {
         //}
 
         //"languages": [{
-        //    "id": "java",
+        //    "id": "text/x-java",
+        //    "title": "java",
         //    "extensions": [ ".java", ".jav" ],
         //    "aliases": [ "Java", "java" ]
         //}]
@@ -20,11 +21,12 @@ namespace WinPrint.Core.Models {
         [JsonPropertyName("files.associations")]
         public Dictionary<string, string> FilesAssociations { get; set; }
 
+        // DO NOT RENAME THIS - Legacy
         [JsonPropertyName("languages")]
-        public IList<Langauge> Languages { get; set; }
+        public IList<ContentType> ContentTypes { get; set; }
     }
 
-    public class Langauge {
+    public class ContentType {
         [JsonPropertyName("id")]
         [SafeForTelemetry]
         public string Id { get; set; }
@@ -39,13 +41,12 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public string Title { get; set; }
 
-
         public override int GetHashCode() {
             return (Id).GetHashCode();
         }
 
         public override bool Equals(object obj) {
-            return Id.Equals(((Langauge)obj).Id);
+            return Id.Equals(((ContentType)obj).Id);
         }
     }
 }

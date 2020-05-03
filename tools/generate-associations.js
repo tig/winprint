@@ -6,22 +6,22 @@ const fs = require('fs');
 var map = require('lang-map');
 var components = require('prismjs/components.js');
 
-var {PythonShell} = require( 'python-shell');
+// var {PythonShell} = require( 'python-shell');
 
-var options = {
-  mode: 'text',
-  pythonPath: 'C:\Python38',
-  pythonOptions: ['-u'],
-  scriptPath: 'C:\Python38\Lib\site-packages\pygments',
-  args: ['value1', 'value2', 'value3']
-};
+// var options = {
+//   mode: 'text',
+//   pythonPath: 'C:\Python38',
+//   pythonOptions: ['-u'],
+//   scriptPath: 'C:\Python38\Lib\site-packages\pygments',
+//   args: ['value1', 'value2', 'value3']
+// };
 
-PythonShell.run('my_script.py', options, function (err, results) {
-  if (err)
-    throw err;
-  // Results is an array consisting of messages collected during execution
-  console.log('results: %j', results);
-});
+// PythonShell.run('my_script.py', options, function (err, results) {
+//   if (err)
+//     throw err;
+//   // Results is an array consisting of messages collected during execution
+//   console.log('results: %j', results);
+// });
 
 // vscode files.associations is not an array. Use a dictionary instead.
 var assocDict = {};

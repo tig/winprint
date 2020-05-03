@@ -39,7 +39,7 @@ namespace WinPrint.Core.Services {
             string file = Path.GetTempFileName();
             _proc = new Process();
             _proc.StartInfo.FileName = @$"{Path.GetDirectoryName(Assembly.GetAssembly(typeof(PygmentsConverterService)).Location)}\pygmentize.exe";
-            _proc.StartInfo.Arguments = $"-P outencoding=utf-8 -f 16m -O style={(string.IsNullOrEmpty(style) ? "default" : style)} -l {language} -o {file}.an {file}";
+            _proc.StartInfo.Arguments = $"-P outencoding=utf-8 -f 16m -O style=\"{(string.IsNullOrEmpty(style) ? "default" : style)}\" -l \"{language}\" -o \"{file}.an\" \"{file}\"";
             _proc.StartInfo.RedirectStandardInput = true;
             _proc.StartInfo.RedirectStandardOutput = true;
             _proc.StartInfo.RedirectStandardError = true;

@@ -32,17 +32,18 @@ namespace WinPrintInstaller {
                         new Files(@"*.deps.json"),
                         new Files(@"*.runtimeconfig.json"),
                         new File(new Id("winprintgui_exe"), @"winprintgui.exe",
-                            new FileShortcut("winprint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes"} ),
+                            new FileShortcut("winprint", "INSTALLDIR") { AttributesDefinition = "Advertise=yes" }),
                         new ExeFileShortcut("Uninstall winprint", "[System64Folder]msiexec.exe", "/x [ProductCode]")),
                     new Dir(feature, $"%AppData%\\{info.CompanyName}\\{info.ProductName}"),
                     new Dir(feature, $"%ProgramMenu%\\{info.CompanyName}\\{info.ProductName}",
                         new ExeFileShortcut("WinPrint", "[INSTALLDIR]winprintgui.exe", arguments: ""))
-                 },
+                },
 
                 Properties = new[]{
                     //setting property to be used in install condition
                     new Property("ALLUSERS", "1"),
                     new Property("TELEMETRY", "1"),
+                    new Property("RequiredDotNetCoreVersion", "3.1")
                 }
             };
 
@@ -71,13 +72,26 @@ namespace WinPrintInstaller {
 
             project.PreserveTempFiles = true;
 
-            //project.SetNetFxPrerequisite("NETFRAMEWORK20='#1'");
-
             project.EmbeddedUI = new EmbeddedAssembly(System.Reflection.Assembly.GetExecutingAssembly().Location);
             project.PreserveTempFiles = true;
 
             project.CAConfigFile = "CustomAction.config";
+
             project.BuildMsi();
+
+            //var bootstrapper = new Bundle($"{info.ProductName}", new PackageGroupRef("NetFx462Web"), 
+            //    new MsiPackage(project.BuildMsi()) { 
+            //        Id = project.Id,
+            //        DisplayInternalUI = true,
+            //    } );
+            //bootstrapper.Manufacturer = info.CompanyName;
+            //bootstrapper.AboutUrl = project.ControlPanelInfo.Readme;
+            //bootstrapper.IconFile = @"..\..\src\WinPrint.WinForms\winprint.ico";
+            //bootstrapper.Version = project.Version;
+            //bootstrapper.UpgradeCode = new Guid("{0002A502-0000-0000-C000-000000000046}");
+            ////bootstrapper.Application.LogoFile = @"..\..\src\WinPrint.WinForms\winprint.png";
+            ////bootstrapper.Application.LicensePath = "license.rtf";
+            //bootstrapper.Build($@"{outDir}\{info.ProductName} setup.exe");
         }
     }
 }

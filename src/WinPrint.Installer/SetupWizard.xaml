@@ -6,11 +6,12 @@
     Width="501"
     Height="437.67"
     Visibility="Visible" 
-    Initialized="Window_Initialized">
+    Initialized="Window_Initialized" Loaded="Window_Loaded">
     <Grid Margin="0,0,0,6">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="209*"/>
-            <ColumnDefinition Width="284*"/>
+            <ColumnDefinition Width="212*"/>
+            <ColumnDefinition Width="216*"/>
+            <ColumnDefinition Width="73*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Name="textbox" Height="*" MinHeight="225" />
@@ -25,9 +26,7 @@
             VerticalScrollBarVisibility="Visible" 
             Initialized="messagesTextBox_Initialized" 
             Grid.Row="0" 
-            TextWrapping="Wrap"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" Grid.ColumnSpan="2" FontSize="11">
+            TextWrapping="Wrap" Grid.ColumnSpan="3" FontSize="11">
 Copyright (c) Kindel Systems, LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
@@ -41,7 +40,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         <TextBlock Margin="0,4,8,0" 
                    HorizontalAlignment="Right" 
                    VerticalAlignment="Top" 
-                   Grid.Row="1" Grid.Column="1">           
+                   Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">           
             <Hyperlink NavigateUri="https://tig.github.io/winprint" RequestNavigate="hyperlink_RequestNavigate">
                 winprint homepage
             </Hyperlink>
@@ -62,7 +61,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             Height="23"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="installButton_Click" Margin="0,0,96,20" IsDefault="True" Grid.Column="1"  >
+            Click="installButton_Click" Margin="0,0,23,20" IsDefault="True" Grid.Column="1"  >
             Install
         </Button>
         <Button
@@ -74,7 +73,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Visibility="Visible"
-            Click="exitButton_Click" IsDefault="True" Grid.Column="1">
+            Click="exitButton_Click" IsDefault="True" Grid.Column="1" Grid.ColumnSpan="2">
             Exit
         </Button>
         <Button
@@ -85,7 +84,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             Margin="0,0,10,20"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
-            Click="cancelButton_Click" RenderTransformOrigin="0.471,-0.076" IsCancel="True" Grid.Column="1">
+            Click="cancelButton_Click" RenderTransformOrigin="0.471,-0.076" IsCancel="True" Grid.Column="1" Grid.ColumnSpan="2">
             Cancel
         </Button>
         <ProgressBar

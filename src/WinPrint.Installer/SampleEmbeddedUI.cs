@@ -13,8 +13,10 @@
 namespace WinPrintInstaller {
     using System;
     using System.Threading;
+    using System.Windows;
     using System.Windows.Threading;
     using Microsoft.Deployment.WindowsInstaller;
+    using Microsoft.Win32;
     using Application = System.Windows.Application;
 
     public class SampleEmbeddedUI : IEmbeddedUI {
@@ -77,8 +79,6 @@ namespace WinPrintInstaller {
                 // Start the installation with a silenced internal UI.
                 // This "embedded external UI" will handle message types except for source resolution.
                 internalUILevel = InstallUIOptions.NoChange | InstallUIOptions.SourceResolutionOnly;
-
-
                 return true;
             }
         }
@@ -127,9 +127,7 @@ namespace WinPrintInstaller {
                 Session = session
             };
             setupWizard.InitializeComponent();
-
             setupWizard.Title = $"winprint {session["ProductVersion"]} installer";
-
             app.Run(setupWizard);
             installExitEvent.Set();
         }

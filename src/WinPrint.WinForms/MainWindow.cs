@@ -324,6 +324,9 @@ namespace WinPrint.Winforms {
                         //printButton.Enabled = printPreview.SheetViewModel.NumSheets > 0;
                         break;
 
+                    case "ContentType":
+                        break;
+
                     case "Language":
                         break;
 
@@ -421,9 +424,8 @@ namespace WinPrint.Winforms {
             //this.Cursor = Cursors.WaitCursor;
             var sheets = ModelLocator.Current.Settings.Sheets;
 
-            // Load file assocations
-            var languages = ModelLocator.Current.Associations;
-            LogService.TraceMessage($"{languages.Languages.Count} languages, {languages.FilesAssociations.Count} file assocations");
+            // Load Language/ContentType mapping
+            LogService.TraceMessage($"{ModelLocator.Current.FileTypeMapping.ContentTypes.Count} languages, {ModelLocator.Current.FileTypeMapping.FilesAssociations.Count} file assocations");
 
             ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() => {
                 LogService.TraceMessage($"Settings.PropertyChanged: {e.PropertyName}");

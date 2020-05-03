@@ -451,7 +451,7 @@ namespace WinPrint.Core.UnitTests.Models
 
             foreach (var cte in ContentTypeEngineBase.GetDerivedClassesCollection())
             {
-                (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(cte.GetType().Name);
+                (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(cte.GetType().Name);
                 Assert.Equal(svm.ContentEngine.GetType().Name, macros.ReplaceMacros($"{{{macroName}}}"));
 
             }
@@ -472,53 +472,157 @@ namespace WinPrint.Core.UnitTests.Models
 
             var settings = ServiceLocator.Current.SettingsService.ReadSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+            string input;
+            string expectedLang;
+            string contentType;
 
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine("text/plain");
-            Assert.Equal(string.Empty, svm.Language);
-            Assert.Equal(string.Empty, macros.ReplaceMacros($"{{{macroName}}}"));
+            input = "text/plain";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
+            Assert.Equal("Plain Text", macros.ReplaceMacros($"{{{macroName}}}"));
 
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine("text/html");
-            Assert.Equal(string.Empty, svm.Language);
-            Assert.Equal(string.Empty, macros.ReplaceMacros($"{{{macroName}}}"));
+            input = "text/html";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
+            Assert.Equal("HTML", macros.ReplaceMacros($"{{{macroName}}}"));
 
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine("text/prism");
-            Assert.Equal(string.Empty, svm.Language);
-            Assert.Equal(string.Empty, macros.ReplaceMacros($"{{{macroName}}}"));
-
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine("text/ansi");
-            Assert.Equal(string.Empty, svm.Language);
-            Assert.Equal(string.Empty, macros.ReplaceMacros($"{{{macroName}}}"));
-
-            var contentType = "text";
-            var expectedLang = string.Empty;
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.Equal(expectedLang, svm.Language);
+            input = "text/ansi";
+            expectedLang = "ANSI Text";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
             Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
 
-            contentType = ".ans";
-            expectedLang = string.Empty;
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.Equal(expectedLang, svm.Language);
+            contentType = "text";
+            expectedLang = "Plain Text";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
             Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
 
-            contentType = ".cs";
-            expectedLang = "csharp";
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.Equal(expectedLang, svm.Language);
+            contentType = "TEXT";
+            expectedLang = "Plain Text";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "*.ans";
+            expectedLang = "ANSI Text";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "*.cs";
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "*.CS";
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
             Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
 
             contentType = "csharp";
-            expectedLang = "csharp";
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.Equal(expectedLang, svm.Language);
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
             Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
 
-            contentType = "markup";
-            expectedLang = "markup";
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
-            Assert.Equal(expectedLang, svm.Language);
+            contentType = "cSharp";
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
             Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
 
+            contentType = "C#";
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "c#";
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "text/x-csharp";
+            expectedLang = "C#";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "text/x-smalltalk";
+            expectedLang = "Smalltalk";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedLang, macros.ReplaceMacros($"{{{macroName}}}"));
+        }
+
+
+        [Fact]
+        public void ContentType()
+        {
+            // https://stackoverflow.com/questions/22598323/movenext-instead-of-actual-method-task-name
+            string macroName = "ContentType";
+
+            SheetViewModel svm = new SheetViewModel();
+            Macros macros = new Macros(svm);
+
+            // TODO: Mock out
+            ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+            File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+
+            var settings = ServiceLocator.Current.SettingsService.ReadSettings();
+            ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+
+            var input = "text/plain";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
+            Assert.Equal(input, svm.ContentType);
+            Assert.Equal(input, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            input = "text/plain";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
+            Assert.Equal(input, svm.ContentType);
+            Assert.Equal(input, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            input = "text/ansi";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
+            Assert.Equal(input, svm.ContentType);
+            Assert.Equal(input, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            input = "text/html";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
+            Assert.Equal(input, svm.ContentType);
+            Assert.Equal(input, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            var contentType = "text";
+            var expectedCT = "text/plain";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "text/plain";
+            expectedCT = contentType;
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "text/html";
+            expectedCT = contentType;
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "text/ansi";
+            expectedCT = contentType;
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "*.ans";
+            expectedCT = "text/ansi";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "*.cs";
+            expectedCT = "text/x-csharp";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
+
+            contentType = "csharp";
+            expectedCT = "text/x-csharp";
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            Assert.Equal(expectedCT, svm.ContentType);
+            Assert.Equal(expectedCT, macros.ReplaceMacros($"{{{macroName}}}"));
         }
 
         [Fact]

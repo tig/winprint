@@ -2,13 +2,13 @@
 
 ## Features
 
-* Print source code with syntax highlighting and line numbering for over 200 programming languages and file formats.
-* Print HTML files.
-* Print "multiple-pages-up" on one piece of paper (saves trees!)
+* Prints source code with syntax highlighting and line numbering for [over 200 programming languages and file formats](https://pygments.org/languages/).
+* Prints HTML files.
+* Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* The most capaple PowerShell printing tool enabling printing from the command line.
+* The most capable PowerShell printing tool enabling printing from the command line.
   * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
   * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `out-winprint` CmdLet is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
@@ -99,7 +99,7 @@ Some **`out-winprint`** parameters support *Intellisense*, meaning that you can 
 
 * **`-ContentTypeEngine`** - *Intellisense* values are the names of all current Content Type Engines **winprint** supports (`text/plain`, `text/html`, and `text/code`).
 
-* **`-Language`** - *Intellisense* values are the names of all (roughly 200) languages supported for syntax highlighting with the **`text/code`** Content Type Engine.
+* **`-Language`** - *Intellisense* values are the names of all (over 200) languages supported for syntax highlighting with the **`text/code`** Content Type Engine.
 
 #### CmdLet Help
 
@@ -125,194 +125,6 @@ SYNTAX
 
     Out-WinPrint [-Config] [<CommonParameters>]
 
-PARAMETERS
-    -Config
-        Starts the config file in your favorite editor.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Config
-        Aliases                      None
-        Dynamic?                     false
-
-    -ContentTypeEngine <string>
-        Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. "text/plain" or "csharp". Specifying a langauge will choose the "text/code" CTE.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     true
-
-    -FileName <string>
-        FileName to be displayed in header/footer with the {FileName} (or {Title}) macros. If ContentType is not specified, the Filename will be used to try to determine the content type engine to use. If $input is not available, FileName will be used as the path to the file to print.
-
-        Required?                    false
-        Position?                    0
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      File
-        Dynamic?                     false
-
-    -Force
-        Allows winprint to kill the host Powershell process when updating.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Updates
-        Aliases                      None
-        Dynamic?                     false
-
-    -FromSheet <int>
-        Number of first sheet to print (may be used with `-ToSheet`).
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -Gui
-        Show *winprint* GUI (to preview or change sheet settings).
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -InputObject <psobject>
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       true (ByValue)
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -InstallUpdate
-        If an updated version of winprint is available online, download and install it.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Updates
-        Aliases                      None
-        Dynamic?                     false
-
-    -Language <string>
-        Optional language to use for syntax highlighting. Specifying a langauge will choose the "text/code" CTE.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      Lang
-        Dynamic?                     false
-
-    -LineNumbers <OutWinPrint+YesNo>
-         If specfied, overrides the line numbers setting in the sheet definition (Yes, No).
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -Orientation <OutWinPrint+PortraitLandscape>
-        If specified (Yes or No) overrides the landscape setting in the sheet definition.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -PaperSize <string>
-        The paper size name.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     true
-
-    -PrinterName <string>
-        The name of the printer to print to. If not specified the default printer will be used.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      Name
-        Dynamic?                     false
-
-    -SheetDefinition <string>
-        Name of the WinPrint sheet definition to use (e.g. "Default 2-Up").
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     true
-
-    -Title <string>
-        Title to be displayed in header/footer with the {Title} macro.
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -ToSheet <int>
-        Number of last sheet to print(may be used with `--Fromsheet`).
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    -WhatIf
-        Output is the number of sheets that would be printed. Use -Verbose to print the count of .
-
-        Required?                    false
-        Position?                    Named
-        Accept pipeline input?       false
-        Parameter set name           Print
-        Aliases                      None
-        Dynamic?                     false
-
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see
-        about_CommonParameters (https://go.microsoft.com/fwlink/?LinkID=113216).
-
-INPUTS
-    System.Management.Automation.PSObject
-
-OUTPUTS
-    System.Object
-
-ALIASES
-    winprint
-    wp
-
-REMARKS
-    None
 ```
 
 ## Graphical User Interface
@@ -367,7 +179,11 @@ The following macros are supported:
 
 * **`{FullPath}`** - The full path to the file, including the filename and extension.
 
-* **`{FileType}`** - The file type (for `text/plain` and `text/html`) or language (for `sourcecode`) of the file.
+* **`{Language}`** - The friendly name of the language used to syntax highlight the file. E.g. `C#` or `Smalltalk`.
+
+* **`{ContentType}`** - The file's content type (e.g. `text/plain`, `text/x-csharp`, or `text/x-smalltalk`).
+
+* **`{CteName}`** - The name of the **winprint** Content Type Engine used to render the file.
 
 * **`{DatePrinted}`** - The current date & time (see formatting below).
 
@@ -393,7 +209,7 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 1. **`AnsiCte`** - This is the default CTE used for most file types. `AnsiCte` can format `text/plain` files as well as files with embedded `ANSI Escape Sequences`.  `AnsiCte` provides **winprint**'s syntax highlighting (pretty printing) with support for over 200 programming languages. Over a dozen styles (colors, bold, italic, etc...) are supported (change the `style` entry in the `WinPrint.config.json` file). All styles supported by [Pygments](https://pygments.org/) are supported.
 
-2. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file. `TextCte` is not enabled by default and may be removed from future versions as `AnsiCte` does almost everything `TextCte` does (with the exeption of form-feeds).
+2. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file. `TextCte` is not enabled by default and may be removed from future versions as `AnsiCte` does almost everything `TextCte` does (with the exception of form-feeds [#31](https://github.com/tig/winprint/issues/31)).
 
 3. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
 
@@ -415,34 +231,48 @@ The `out-winprint` parameter `-ContentTypeEngine` overrides content type and lan
 
 ## Language Associations
 
-**winprint**'s `text/code` Content Type Engine knows how to syntax highlight (pretty print) over 200 programming languages. It has a built-in file extension to language mapping that should work for most modern scenarios. For example it knows that `.cs` files hold `C#` and `.bf` files hold `brainfuck`.
+**winprint** knows how to syntax highlight (pretty print) over 200 programming languages. It has a built-in file extension to language mapping that should work for most modern scenarios. For example it knows that `.cs` files hold `C#` and `.bf` files hold `brainfuck`.
 
 ### Adding or Changing `text/code` Language Associations
 
-To associate a file extension with a language supported by `text/code` modify the `files.associations` and `languages` sections of `WinPrint.config.json` appropriately. For example to associate files with a `.config` extension with the JSON langauge  add a line as shown below (the `WinPrint.config.json` generated when **winprint** runs the first time already provides this example, as an example):
+To associate a file extension with a language supported by `text/ansi` (which uses [Pygments](https://pygments.org) to do the heavy lifting) modify the `files.associations` and `languages` sections of `WinPrint.config.json`. For example to associate files with a `.INTERCAL` extension with the JSON language (which would make no sense, since INTERCAL is unlike any other language) add a line as shown below:
 
 ```json
     "files.associations": {
-      "*.config": "json"
+      "*.intercal": "JSON"
     }
 ```
 
-A new language can be defined by aliasing it to an existing language by modifying the `languages` section of `WinPrint.config.json`.
-
-For example to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29) which is a very C-like language the `files.associations` and `languages` sections would look like the following:
+A new language can be defined by modifying the `languages` section of `WinPrint.config.json`. For example to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29) which is a very C-like language the `files.associations` and `languages` sections would look like the following:
 
 ```json
-    "files.associations": {
-      "*.icon": "icon"
-    },
     "languages": [
       {
-        "id": "icon",
+        "id": "text/x-INTERCAL",
+        "title": "Compiler Language With No Pronounceable Acronym",
         "extensions": [
-          ".icon"
+          "*.intercal"
         ],
         "aliases": [
-          "clike"
+            "INTERCAL"
+        ]
+      }
+    ]
+```
+
+For this to works, `Pygmentize` needs to support the language defined by `title`. Since `Pygments` does not yet support `INTERCAL` the above won't actually work. Set the `Title` to a known `Pygments` langauge and that will be used:
+
+
+```json
+    "languages": [
+      {
+        "id": "text/x-INTERCAL",
+        "title": "Smalltalk",
+        "extensions": [
+          "*.intercal"
+        ],
+        "aliases": [
+            "INTERCAL"
         ]
       }
     ]
@@ -482,4 +312,3 @@ To help diagnose why content may be rendering incorrectly, set `diagnostics` to 
         "diagnostics": false
       },
 ```
-

@@ -87,9 +87,9 @@ namespace WinPrint.Console {
         //// -Language
 
         /// <summary>
-        /// Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.
+        /// Optional language or content type to use for syntax highlighting. 
         /// </summary>
-        [Parameter(HelpMessage = "Optional language to use for syntax highlighting. Specifying a langauge will choose the \"text/code\" CTE.",
+        [Parameter(HelpMessage = "Optional language or content type to use for syntax highlighting. If specified, automatic detection will be overridden. E.g. \"C#\" or \"text/x-julia\"",
             ParameterSetName = "Print"), ArgumentCompleter(typeof(LanguageCompleter))]
         [Alias("Lang")]
         public string Language { get; set; }
@@ -479,10 +479,10 @@ namespace WinPrint.Console {
             }
 
             // If Langauge is provided, use it instead of CTE.
-            if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentTypeEngine)) {
-                if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentTypeEngine)) {
+            if (!MyInvocation.BoundParameters.TryGetValue("Language", out var contentType)) {
+                if (!MyInvocation.BoundParameters.TryGetValue("ContentTypeEngine", out contentType)) {
                     // If neither were specified, smartly pick CTE
-                    contentTypeEngine = ContentTypeEngineBase.GetContentTypeOrLanguage(FileName);
+                    contentType = ContentTypeEngineBase.GetContentType(FileName);
                 }
             }
 
@@ -493,16 +493,6 @@ namespace WinPrint.Console {
             rec.PercentComplete = 30;
             rec.StatusDescription = $"Loading content";
             WriteProgress(rec);
-
-            if (_verbose) {
-                Log.Information("FileName:            {FileName}", FileName);
-                Log.Information("Title:               {title}", Title);
-                Log.Information("Content Type Engine: {cte}", contentTypeEngine);
-                Log.Information("Printer:             {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
-                Log.Information("Paper Size:          {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
-                Log.Information("Orientation:         {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
-                Log.Information("Sheet Definition:    {name} ({id})", sheet.Name, sheetID);
-            }
 
             _print.SheetViewModel.File = FileName;
             _print.SheetViewModel.Title = Title;
@@ -526,7 +516,7 @@ namespace WinPrint.Console {
                         FileName = Path.GetFullPath(FileName, SessionState.Path.CurrentFileSystemLocation.Path);
                     }
 
-                    await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentTypeEngine).ConfigureAwait(true);
+                    await _print.SheetViewModel.LoadFileAsync(FileName, (string)contentType).ConfigureAwait(true);
                 }
                 else {
                     // Get $input into a string we can use
@@ -534,7 +524,18 @@ namespace WinPrint.Console {
                     var textToPrint = SessionState.InvokeCommand.InvokeScript(@"$input | Out-String", true, PipelineResultTypes.None, _psObjects, null)[0].ToString();
 
                     _print.SheetViewModel.Encoding = Encoding.UTF8;
-                    await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentTypeEngine).ConfigureAwait(true);
+                    await _print.SheetViewModel.LoadStringAsync(textToPrint, (string)contentType).ConfigureAwait(true);
+                }
+                if (_verbose) {
+                    Log.Information("FileName:            {FileName}", FileName ?? "");
+                    Log.Information("Title:               {title}", Title ?? "");
+                    Log.Information("Content Type:        {contentType}", _print.SheetViewModel.ContentType);
+                    Log.Information("Langauge:            {langauge}", _print.SheetViewModel.Language);
+                    Log.Information("Content Type Engine: {cte}", _print.SheetViewModel.ContentEngine.GetType().Name);
+                    Log.Information("Printer:             {printer}", _print.PrintDocument.PrinterSettings.PrinterName);
+                    Log.Information("Paper Size:          {size}", _print.PrintDocument.DefaultPageSettings.PaperSize.PaperName);
+                    Log.Information("Orientation:         {s}", _print.PrintDocument.DefaultPageSettings.Landscape ? $"Landscape" : $"Portrait");
+                    Log.Information("Sheet Definition:    {name} ({id})", sheet.Name, sheetID);
                 }
             }
             catch (System.IO.DirectoryNotFoundException dnfe) {
@@ -774,7 +775,7 @@ namespace WinPrint.Console {
 
             runtimeDict.Add("PaperSize", new RuntimeDefinedParameter("PaperSize", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
-                        HelpMessage = "The paper size name.",
+                        HelpMessage = "The paper size name. E.g. \"Letter\"",
                         ParameterSetName = "Print"
                     },
                     printerNames.Count > 0 ? new ValidateSetAttribute(printerNames.ToArray()) : null
@@ -794,21 +795,11 @@ namespace WinPrint.Console {
             // -ContentTypeEngine
             runtimeDict.Add("ContentTypeEngine", new RuntimeDefinedParameter("ContentTypeEngine", typeof(string), new Collection<Attribute>() {
                     new ParameterAttribute() {
-                        HelpMessage = "Optional name of the WinPrint Content Type Engine (or Language) to use (e.g. \"TextCte\".",
+                        HelpMessage = "Optional name of the WinPrint Content Type Engine to use. If specified, automatic selection will be overridden. E.g. \"TextCte\".",
                         ParameterSetName = "Print"
                     },
                     new ValidateSetAttribute(ContentTypeEngineBase.GetDerivedClassesCollection().Select(cte => cte.GetType().Name).ToArray())
             }));
-
-            // -Language
-            //runtimeDict.Add("Language", new RuntimeDefinedParameter("Language", typeof(String), new Collection<Attribute>() {
-            //        new ParameterAttribute() {
-            //            HelpMessage = "Optional language to use for syntax highlighting.",
-            //            ParameterSetName = "Print"
-            //        },
-            //        new ValidateSetAttribute(ModelLocator.Current.Associations.Languages.Select(l => l.Id).ToArray())
-            //}));
-
             return runtimeDict;
         }
     }

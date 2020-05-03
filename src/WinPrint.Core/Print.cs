@@ -111,6 +111,7 @@ namespace WinPrint.Core {
             ServiceLocator.Current.TelemetryService.TrackEvent("Count Sheets",
                 properties: new Dictionary<string, string> {
                     ["type"] = SheetViewModel.ContentEngine.GetType().Name,
+                    ["contentType"] = SheetViewModel.ContentType,
                     ["language"] = SheetViewModel.Language,
                     ["printer"] = PrintDocument.PrinterSettings.PrinterName,
                     ["fromSheet"] = fromSheet.ToString(),
@@ -138,6 +139,7 @@ namespace WinPrint.Core {
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Complete",
                 properties: new Dictionary<string, string> {
                     ["type"] = SheetViewModel.ContentEngine.GetType().Name,
+                    ["contentType"] = SheetViewModel.ContentType,
                     ["language"] = SheetViewModel.Language,
                     ["printer"] = PrintDocument.PrinterSettings.PrinterName,
                     ["fromSheet"] = PrintDocument.PrinterSettings.FromPage.ToString(),

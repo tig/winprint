@@ -7,12 +7,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Text;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using IronPython.Runtime.Operations;
 using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -132,84 +134,112 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// Creates the appropriate Content Type Engine instance given a content type string.
         /// </summary>
         /// <param name="contentType"></param>
-        /// <returns>ContentEngine, Language</returns>
-        public static (ContentTypeEngineBase cte, string language) CreateContentTypeEngine(string contentType) {
+        /// <returns>ContentEngine, ContentType, Language</returns>
+        public static (ContentTypeEngineBase cte, string languageId, string langauge) CreateContentTypeEngine(string contentType) {
             Debug.Assert(!string.IsNullOrEmpty(contentType));
-            Debug.Assert(ModelLocator.Current.Associations != null);
-            Debug.Assert(ModelLocator.Current.Associations.Languages != null);
+            Debug.Assert(ModelLocator.Current.FileTypeMapping != null);
+            Debug.Assert(ModelLocator.Current.FileTypeMapping.ContentTypes != null);
 
             // If contentType matches one of our CTE Names, this will succeed.
-            ContentTypeEngineBase cte = GetDerivedClassesCollection().FirstOrDefault(c => contentType == c.GetType().Name);
+            ContentTypeEngineBase cte = GetDerivedClassesCollection().FirstOrDefault(c => contentType.Equals(c.GetType().Name, StringComparison.OrdinalIgnoreCase));
             string language = string.Empty;
+            string languageId = string.Empty;
 
-            if (cte == null) {
-                //  {
-                //  "id": "text/ansi",
-                //  "aliases": [
-                //    "ansi",
-                //    "term"
-                //              ],
-                //  "title": "ANSI Encoded",
-                //  "extensions": [
-                //    ".an",
-                //    ".ansi",
-                //    ".ans"
-                // },
-                // Is it a file extension?
-                var extLanguage = ModelLocator.Current.Associations.Languages
-                    .Where(lang => lang.Extensions.Contains(contentType))
-                    .FirstOrDefault();
-                if (extLanguage != null && !string.IsNullOrEmpty(extLanguage.Id)) {
-                    // Is Id a Cte Name?
-                    cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(extLanguage.Id));
+            if (cte != null) {
+                languageId = cte.SupportedContentTypes[0];
+                language = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(lang => lang.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase)).Title;
+                return (cte, languageId, language);
+            }
 
-                    if (cte != null) {
-                        return (cte, string.Empty);
-                    }
-                    // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
-                    language = extLanguage.Id;
+            //  {
+            //  "id": "text/ansi",
+            //  "aliases": [
+            //    "ansi",
+            //    "term"
+            //              ],
+            //  "title": "ANSI Encoded",
+            //  "extensions": [
+            //    "*.an",
+            //    "*.ansi",
+            //    "*.ans"
+            // },
+            // Is it a file extension? (*.an)
+
+            var extension = ModelLocator.Current.FileTypeMapping.ContentTypes
+                .FirstOrDefault(l => l.Extensions
+                    .Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, contentType, CompareOptions.IgnoreCase) == 0).Count() > 0);
+            if (extension != null && !string.IsNullOrEmpty(extension.Id)) {
+                // Is Id directly supported by a Cte?
+                cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(extension.Id));
+                if (cte != null) {
+                    return (cte, extension.Id, extension.Title);
                 }
-                else {
-                    // Is it found in a langauge alias?
-                    var alias = ModelLocator.Current.Associations.Languages
-                        .Where(lang => lang.Id == contentType || lang.Aliases.Contains(contentType))
-                        .FirstOrDefault();
-                    if (alias != null) {
-                        // Is the Id supported directly? 
-                        // If by muplitple, pick the default.
-                        var collection = GetDerivedClassesCollection()
-                            .Where(c => c.SupportedContentTypes.Contains(alias.Id));
-                        if (collection != null) {
-                            if (collection.Count() > 1) {
-                                cte = collection.Where(c => c.GetType().Name == DefaultCteClassName).First();
-                            }
-                            else {
-                                cte = collection.FirstOrDefault();
-                            }
+
+                // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
+                languageId = extension.Id;
+                language = extension.Title;
+            }
+            else {
+                // Is it a content type (Landuage.Id)? (text/ansi)
+                var lang = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l => l.Id.Equals(contentType, StringComparison.OrdinalIgnoreCase));
+                if (lang != null) {
+                    languageId = lang.Id;
+                    language = lang.Title;
+                }
+
+                // Is it a language Title?
+                lang = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l => l.Title.Equals(contentType, StringComparison.OrdinalIgnoreCase));
+                if (lang != null) {
+                    languageId = lang.Id;
+                    language = lang.Title;
+                }
+
+                // Is it a language name found in a langauge alias? (ansi)
+                lang = ModelLocator.Current.FileTypeMapping.ContentTypes
+                    .FirstOrDefault(l => l.Aliases
+                        .Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, contentType, CompareOptions.IgnoreCase) == 0).Count() > 0);
+                if (lang != null) {
+                    languageId = lang.Id;
+                    language = lang.Title;
+                }
+
+                if (!string.IsNullOrEmpty(language) && !string.IsNullOrEmpty(languageId)) {
+                    // Is the Id supported directly (e.g. text/html is supported directly by HtmlCte) 
+                    // If supported by muplitple, pick the default.
+                    var ctes = GetDerivedClassesCollection().Where(c => c.SupportedContentTypes.Contains(languageId.ToLower()));
+                    if (ctes != null) {
+                        if (ctes.Count() > 1) {
+                            cte = ctes.First(c => c.GetType().Name == DefaultCteClassName);
+                        }
+                        else {
+                            cte = ctes.FirstOrDefault();
                         }
                         if (cte != null) {
-                            return (cte, string.Empty);
+                            return (cte, languageId, ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l => l.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase)).Title);
                         }
-                        // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
-                        language = contentType;
                     }
-                }
 
-                if (string.IsNullOrEmpty(language)) {
-                    cte = GetDerivedClassesCollection()
-                        .Where(c => c.SupportedContentTypes.Contains(DefaultCteClassName))
-                        .FirstOrDefault();
-                }
-                else {
                     // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
-                    cte = GetDerivedClassesCollection()
-                        .Where(c => c.GetType().Name == DefaultSyntaxHighlighterCteNameClassName)
-                        .First();
+                    //languageId = lang.Id;
+                    //language = lang.Title;
                 }
             }
 
-            Debug.Assert(cte != null);
-            return (cte, language);
+            if (string.IsNullOrEmpty(languageId)) {
+                // Didn't find a content type so use default CTE
+                cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(DefaultContentType));
+                languageId = cte.SupportedContentTypes[0];
+                language = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l => l.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase)).Title;
+            }
+            else {
+                // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
+                cte = GetDerivedClassesCollection().FirstOrDefault(c => c.GetType().Name.Equals(DefaultSyntaxHighlighterCteNameClassName, StringComparison.OrdinalIgnoreCase));
+                //if (string.IsNullOrWhiteSpace(language)) {
+                //    language = contentType;
+                //}
+            }
+
+            return (cte, languageId, language);
         }
 
         /// <summary>
@@ -218,8 +248,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns>The content type</returns>
-        public static string GetContentTypeOrLanguage(string filePath) {
-            var contentType = DefaultCteClassName;
+        public static string GetContentType(string filePath) {
+            var contentType = DefaultContentType;
 
             if (string.IsNullOrEmpty(filePath)) {
                 return contentType;
@@ -231,25 +261,34 @@ namespace WinPrint.Core.ContentTypeEngines {
             // If there's a file extension get the content type from the file type association mapper
             var ext = Path.GetExtension(filePath).ToLower();
             if (ext != string.Empty) {
-                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + ext, out var ct)) {
+                // BUGBUG: This assumes all extensions in FilesAssociations are lowercase
+                if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue("*" + ext, out var ct)) {
                     // Now find Id in Languages
-                    contentType = ModelLocator.Current.Associations.Languages
-                        .Where(lang => lang.Id == ct)
-                        .DefaultIfEmpty(new Langauge() { Id = DefaultContentType })
+                    contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
+                        .Where(lang => lang.Id.Equals(ct, StringComparison.OrdinalIgnoreCase))
+                        .DefaultIfEmpty(new ContentType() { Id = DefaultContentType })
                         .First().Id;
                 }
                 else {
                     // No direct file extension, look in Languages
-                    contentType = ModelLocator.Current.Associations.Languages
-                        .Where(lang => lang.Extensions.Contains(ext))
-                        .DefaultIfEmpty(new Langauge() { Id = DefaultContentType })
+                    contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
+                        .Where(lang => lang.Extensions.Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, "*" + ext, CompareOptions.IgnoreCase) == 0 ||
+                                CultureInfo.CurrentCulture.CompareInfo.Compare(i, ext, CompareOptions.IgnoreCase) == 0).Count() > 0)
+                        .DefaultIfEmpty(new ContentType() { Id = DefaultContentType })
                         .First().Id;
                 }
             }
             else {
                 // Empty means no extension (e.g. .\.ssh\config) - use filename
-                if (ModelLocator.Current.Associations.FilesAssociations.TryGetValue("*" + Path.GetFileName(filePath), out var ct)) {
+                if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue("*" + Path.GetFileName(filePath), out var ct)) {
                     contentType = ct;
+                }
+                else {
+                    // No direct file extension, look in Languages
+                    contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
+                        .Where(lang => lang.Extensions.Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, Path.GetFileName(filePath), CompareOptions.IgnoreCase) == 0).Count() > 0)
+                        .DefaultIfEmpty(new ContentType() { Id = DefaultContentType })
+                        .First().Id;
                 }
             }
 

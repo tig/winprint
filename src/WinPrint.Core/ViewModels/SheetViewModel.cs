@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Octokit;
 using Serilog;
 using UtfUnknown;
 using WinPrint.Core.ContentTypeEngines;
@@ -73,6 +74,18 @@ namespace WinPrint.Core {
         }
         private string _title;
 
+        /// <summary>
+        /// Content type (e.g. text/x-csharp). Langauge.Id
+        /// </summary>
+        public string ContentType {
+            get => _contentType;
+            set => SetField(ref _contentType, value);
+        }
+        private string _contentType;
+
+        /// <summary>
+        /// The langauge (Language.Title or Alias)
+        /// </summary>
         public string Language {
             get => _language;
             set => SetField(ref _language, value);
@@ -296,7 +309,7 @@ namespace WinPrint.Core {
 
             if (string.IsNullOrEmpty(contentType)) {
                 // Use file extension to determine contentType
-                contentType = ContentTypeEngineBase.GetContentTypeOrLanguage(File);
+                contentType = ContentTypeEngineBase.GetContentType(File);
             }
 
 
@@ -363,7 +376,7 @@ namespace WinPrint.Core {
             Loading = true;
 
             try {
-                (ContentEngine, Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+                (ContentEngine, ContentType, Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
 
                 // Content settings in Sheet take precidence over Engine
                 if (ContentEngine.ContentSettings is null) {
@@ -375,7 +388,7 @@ namespace WinPrint.Core {
                     ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
                 }
 
-                if (!string.IsNullOrEmpty(Language) && ContentEngine.SupportedContentTypes.Contains("text/ansi")) {
+                if (ContentEngine.SupportedContentTypes.Contains("text/ansi") && !ContentEngine.SupportedContentTypes.Contains(ContentType)) {
                     // Syntax highlight
                     // TODO: Spin up a thread
                     document = await ServiceLocator.Current.PygmentsConverterService.ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);

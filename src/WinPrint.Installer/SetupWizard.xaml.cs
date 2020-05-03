@@ -17,6 +17,7 @@ namespace WinPrintInstaller {
     using System.Windows;
     using System.Windows.Navigation;
     using Microsoft.Deployment.WindowsInstaller;
+    using Microsoft.Win32;
 
     /// <summary>
     /// Interaction logic for SetupWizard.xaml
@@ -121,7 +122,37 @@ namespace WinPrintInstaller {
 
         private void Window_Initialized(object sender, EventArgs e) {
             productVersion = Session["ProductVersion"];
-            //this.Title = "version goes here";
+
+
+        }
+        private bool IsDotNetCore31Installed() {
+            try {
+                RegistryKey localMachine64 = RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, RegistryView.Registry64);
+                RegistryKey lKey = localMachine64.OpenSubKey(@"SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedhost\", false);
+                Version installed = new Version((string)lKey.GetValue("Version"));
+                Version required = new Version(Session["RequiredDotNetCoreVersion"]);
+                return installed.CompareTo(required) > 0;
+            }
+            catch {
+                return false;
+            }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e) {
+            if (IsDotNetCore31Installed()) {
+            }
+            else {
+
+                // Configure message box
+                string message = $"winprint requires .NET Core {Session["RequiredDotNetCoreVersion"]} to run.\n\nClick OK to download and install.";
+                string caption = this.Title;
+                MessageBoxButton buttons = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Information;
+                MessageBoxResult defaultResult = MessageBoxResult.OK;
+                // Show message box
+                MessageBoxResult result = MessageBox.Show(this, message, caption, buttons, icon, defaultResult);
+                Process.Start("https://dotnet.microsoft.com/download/dotnet-core/current/runtime");
+            }
         }
     }
 }

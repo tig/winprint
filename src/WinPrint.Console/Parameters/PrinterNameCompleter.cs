@@ -22,7 +22,7 @@ namespace WinPrint.Console {
             return PrinterSettings.InstalledPrinters
                 .Cast<string>()
                 .Select(printerName => printerName.Contains(" ", System.StringComparison.OrdinalIgnoreCase) ? new CompletionResult($"'{printerName}'") : new CompletionResult(printerName))
-                .ToArray<CompletionResult>();
+                .ToArray<CompletionResult>().OrderBy(p => p.ListItemText);
         }
     }
 }

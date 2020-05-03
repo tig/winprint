@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using WinPrint.Core.Models;
 
 namespace WinPrint.Core {
     sealed public class Macros {
@@ -51,10 +53,16 @@ namespace WinPrint.Core {
         /// The time and date the file was created.
         /// </summary>
         public DateTime DateCreated => IsValidFilename(svm.File) ? File.GetCreationTime(svm.File) : DateTime.MinValue;
+
         /// <summary>
-        /// The language (e.g. "csharp" or "" if no language is specified)
+        /// The language (e.g. "C#" or "java"). 
         /// </summary>
         public string Language => string.IsNullOrEmpty(svm.Language) ? string.Empty : svm.Language;
+
+        /// <summary>
+        /// The Contetn Type (e.g. "text/x-csharp")
+        /// </summary>
+        public string ContentType => string.IsNullOrEmpty(svm.ContentType) ? string.Empty : svm.ContentType;
         /// <summary>
         /// The file content type engine name (e.g. "TextCte", "AnsiCte").
         /// </summary>

@@ -15,7 +15,9 @@ namespace WinPrint.Console {
                                                                               string wordToComplete,
                                                                               CommandAst commandAst,
                                                                               IDictionary fakeBoundParameters) {
-            return ModelLocator.Current.Associations.Languages.Select(l => new CompletionResult(l.Id));
+            var ids = ModelLocator.Current.FileTypeMapping.ContentTypes.Select(l => new CompletionResult(l.Id));
+            var aliases = ModelLocator.Current.FileTypeMapping.ContentTypes.SelectMany(l => l.Aliases.Select(a => new CompletionResult(a)));
+            return ids.Concat(aliases).OrderBy(l => l.ListItemText);
         }
     }
 }

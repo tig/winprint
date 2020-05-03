@@ -30,11 +30,13 @@ namespace WinPrint.Core.UnitTests.Cte
         public void NewContentTypeEngineTest()
         {
             SheetViewModel svm = new SheetViewModel();
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
+            string lang;
+            (svm.ContentEngine, svm.ContentType, lang) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
             Assert.NotNull(svm.ContentEngine);
 
             Assert.Equal(CteClassName, svm.ContentEngine.GetType().Name);
-            Assert.Equal(string.Empty, svm.Language);
+            Assert.Equal("text/plain", svm.ContentType);
+            Assert.Equal("Plain Text", lang);
         }
 
         [Fact]
@@ -47,26 +49,26 @@ namespace WinPrint.Core.UnitTests.Cte
 
             // obviouslly text
             string path = "foo.txt";
-            string type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            string type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/plain", type);
 
             // html
             path = "foo.html";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/html", type);
 
             path = "foo.htm";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/html", type);
 
             // Something handled by prismcte
             path = "foo.cs";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
-            Assert.Equal("csharp", type);
+            type = ContentTypeEngineBase.GetContentType(path);
+            Assert.Equal("text/x-csharp", type);
 
             // Defeault
             path = "foo.xxxx";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/plain", type);
         }
 
@@ -97,9 +99,9 @@ namespace WinPrint.Core.UnitTests.Cte
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
             SheetViewModel svm = new SheetViewModel();
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
             Assert.NotNull(svm.ContentEngine);
-            Assert.Equal(string.Empty, svm.Language);
+            Assert.Equal("text/plain", svm.ContentType);
 
             svm.ContentEngine.ContentSettings = new ContentSettings();
 
@@ -164,9 +166,9 @@ namespace WinPrint.Core.UnitTests.Cte
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
             SheetViewModel svm = new SheetViewModel();
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
             Assert.NotNull(svm.ContentEngine);
-            Assert.Equal(string.Empty, svm.Language);
+            Assert.Equal("text/plain", svm.ContentType);
 
             svm.ContentEngine.ContentSettings = new ContentSettings();
 

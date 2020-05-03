@@ -21,7 +21,7 @@ namespace WinPrint.Core.Models {
         public Models.Settings Settings => SimpleIoc.Default.GetInstance<Models.Settings>();
 
         public Models.Options Options => SimpleIoc.Default.GetInstance<Models.Options>();
-        public Models.FileTypeMapping Associations => SimpleIoc.Default.GetInstance<Models.FileTypeMapping>();
+        public Models.FileTypeMapping FileTypeMapping => SimpleIoc.Default.GetInstance<Models.FileTypeMapping>();
 
         public void Register<VM, V>()
             where VM : class {

@@ -1,5 +1,7 @@
 ﻿using Serilog.Sinks.XUnit;
 using System.Drawing;
+using System.IO;
+using System.Linq;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -23,17 +25,18 @@ namespace WinPrint.Core.UnitTests.Cte
             Assert.Equal(2, cte.SupportedContentTypes.Length);
             Assert.Equal("text/plain", cte.SupportedContentTypes[0]);
             Assert.Equal("text/ansi", cte.SupportedContentTypes[1]);
+
         }
 
         [Fact]
         public void NewContentTypeEngineTest()
         {
             SheetViewModel svm = new SheetViewModel();
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
             Assert.NotNull(svm.ContentEngine);
 
             Assert.Equal(CteClassName, svm.ContentEngine.GetType().Name);
-            Assert.Equal(string.Empty, svm.Language);
+            Assert.Equal("text/plain", svm.ContentType);
         }
 
         [Fact]
@@ -46,45 +49,28 @@ namespace WinPrint.Core.UnitTests.Cte
 
             // obviouslly text
             string path = "foo.txt";
-            string type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            string type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/plain", type);
 
             // html
             path = "foo.html";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/html", type);
 
             path = "foo.htm";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/html", type);
 
-            // Something handled by prismcte
+            // Something handled by An
             path = "foo.cs";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
-            Assert.Equal("csharp", type);
+            type = ContentTypeEngineBase.GetContentType(path);
+            Assert.Equal("text/x-csharp", type);
 
-            // Defeault
+            // Default
             path = "foo.xxxx";
-            type = ContentTypeEngineBase.GetContentTypeOrLanguage(path);
+            type = ContentTypeEngineBase.GetContentType(path);
             Assert.Equal("text/plain", type);
         }
-
-        //private SizeF MeasureString(Graphics g, string text)
-        //{
-        //    int charsFitted, linesFilled;
-        //    return MeasureString(g, text, out charsFitted, out linesFilled);
-        //}
-
-
-        /// <summary>
-        /// Measures how much width a string will take, given current page settings (including line numbers)
-        /// </summary>
-        /// <param name="g"></param>
-        /// <param name="text"></param>
-        /// <param name="charsFitted"></param>
-        /// <param name="linesFilled"></param>
-        /// <returns></returns>
-
 
         [Fact]
         public async void RenderAsyncTest_FixedPitch()
@@ -96,9 +82,7 @@ namespace WinPrint.Core.UnitTests.Cte
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
             SheetViewModel svm = new SheetViewModel();
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
-            Assert.NotNull(svm.ContentEngine);
-            Assert.Equal(string.Empty, svm.Language);
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
 
             svm.ContentEngine.ContentSettings = new ContentSettings();
 
@@ -196,9 +180,7 @@ namespace WinPrint.Core.UnitTests.Cte
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
             SheetViewModel svm = new SheetViewModel();
-            (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
-            Assert.NotNull(svm.ContentEngine);
-            Assert.Equal(string.Empty, svm.Language);
+            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);
 
             svm.ContentEngine.ContentSettings = new ContentSettings();
 

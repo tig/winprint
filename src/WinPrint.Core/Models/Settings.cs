@@ -122,11 +122,11 @@ namespace WinPrint.Core.Models {
         [SafeForTelemetry]
         public int NumLanguages {
             get {
-                if (FileTypeMapping == null || FileTypeMapping.Languages == null) {
+                if (FileTypeMapping == null || FileTypeMapping.ContentTypes == null) {
                     return 0;
                 }
 
-                return FileTypeMapping.Languages.Count;
+                return FileTypeMapping.ContentTypes.Count;
             }
         }
 
@@ -223,7 +223,7 @@ namespace WinPrint.Core.Models {
             var defaultHFFontSize = 10F;
             var defaultHFFontStyle = FontStyle.Bold;
 
-            var defaultHeaderText = "{DateRevised:D}|{FileName}|Type: {Language}";
+            var defaultHeaderText = "{DateRevised:D}|{FileName}|Langauge: {Language}";
             var defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
             var settings = new Settings {
@@ -336,20 +336,51 @@ namespace WinPrint.Core.Models {
 
             settings.FileTypeMapping = new FileTypeMapping() {
                 FilesAssociations = new Dictionary<string, string>() {
-                    { "*.config", "json" },
+                    // Enables printing our own config files
+                    { "*.config", "application/json" },
+                    // Enables printing HTML
                     { "*.htm", "text/html" },
-                    { "*.html", "text/html" }
+                    { "*.html", "text/html" },
+                    // Enables Icon which Unicon is based on
+                    { "*.icon", "text/unicon" },
+
                 },
-                Languages = new List<Langauge>() {
-                    new Langauge() {
-                        Id = "icon",
+                // text/plain - because it is not defined by Pygments
+                // text/ansi - because it is not defined by Pygments
+                // icon - Icon is so esoteric it makes a good test
+                ContentTypes = new List<ContentType>() {
+                    new ContentType() {
+                        Id = "text/plain",
+                        Title = "Plain Text",
                         Extensions = new List<string>() {
-                            ".icon"
+                            "*.txt"
                         },
                         Aliases = new List<string>() {
-                            "lisp"
+                            "text",
                         }
-                    }
+                    },
+                    new ContentType() {
+                        Id = "text/ansi",
+                        Title = "ANSI Text",
+                        Extensions = new List<string>() {
+                            "*.an",
+                            "*.ans",
+                            "*.ansi",
+                        },
+                        Aliases = new List<string>() {
+                            "ansi",
+                        }
+                    },
+                    //new ContentType() {
+                    //    Id = "text/x-icon",
+                    //    Title = "Icon Programming Language",
+                    //    Extensions = new List<string>() {
+                    //        "*.icon"
+                    //    },
+                    //    Aliases = new List<string>() {
+                    //        "Unicon"
+                    //    }
+                    //}
                 }
             };
 

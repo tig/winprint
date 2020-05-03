@@ -21,15 +21,6 @@ namespace WinPrint.Core.Services {
         /// <returns></returns>
         public FileTypeMapping Load() {
             FileTypeMapping associations = null;
-
-            // Load assocations from resources
-            //var assembly = Assembly.GetExecutingAssembly();
-            //var resourceName = "MyCompany.MyProduct.MyFile.txt";
-
-            //using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            //using (StreamReader reader = new StreamReader(stream)) {
-            //    string result = reader.ReadToEnd();
-            //}
             var jsonOptions = new JsonSerializerOptions {
                 WriteIndented = true,
                 AllowTrailingCommas = true,
@@ -38,27 +29,25 @@ namespace WinPrint.Core.Services {
                 ReadCommentHandling = JsonCommentHandling.Skip
             };
 
-            //string s = System.Text.Encoding.Default.GetString(Properties.Resources.languages) ;
             associations = JsonSerializer.Deserialize<FileTypeMapping>(Properties.Resources.languages, jsonOptions);
 
-            // TODO: Consider callilng into lang-map to update extensions at runtime?
+            // TODO: Consider callilng into lang-map and/or Pygments to update extensions at runtime?
             // https://github.com/jonschlinkert/lang-map
 
             // Merge in any assocations set in settings file
             Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping != null);
-            Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping.Languages != null);
-
+            Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes != null);
             foreach (var fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations) {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }
 
-            var langs = new List<Langauge>(associations.Languages);
-            var langsSettings = new List<Langauge>(ModelLocator.Current.Settings.FileTypeMapping.Languages);
-
+            // Merge in any language defintions set in settings file
+            var langs = new List<ContentType>(associations.ContentTypes);
+            var langsSettings = new List<ContentType>(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes);
             // TODO: overide Equals and GetHashCode for Langauge
             var result = langsSettings.Union(langs).ToList();
 
-            associations.Languages = result;
+            associations.ContentTypes = result;
 
             return associations;
         }

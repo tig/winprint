@@ -1,0 +1,262 @@
+#
+# ie -- The Icon Evaluator
+#       by William H. Mitchell
+#
+# Todo:
+#   Long running expressions slow everything down
+#   Needs some sort of .use command
+#   Some documentation, especially on setting it up!
+#
+link image
+invocable all
+procedure main(args)
+$ifdef _MS_WINDOWS_NT
+    SystemType := "Windows"
+    ImageLoc := "./image"
+    SplitLoc := "./split"
+$else
+    SystemType := "UNIX"
+    ImageLoc := "/home/icon/ilib/image"
+    ImageLoc := "./image"
+    SplitLoc := "./split"
+$endif
+
+    &trace := 0
+    while a := get(args) do {
+        if a == "-nn" then
+            NoNum := 1
+        else if a == "-w" then
+            WinIcon :=1
+        }
+
+    write("Icon Evaluator, Version 1.0, ? for help")
+    if \NoNum then
+        tag := create |"r"
+    else
+        tag := create "r" || seq()
+
+    header := [
+        "invocable all",
+        "link \"" || ImageLoc || "\", \"" || SplitLoc || "\"",
+        if \WinIcon then "link graphics" else "",
+        "global showtype, showimage, showImage",
+        "procedure main()",
+        ]
+
+    if /WinIcon then {
+        header |||:= ["hwrite := -1; write :=: hwrite",
+         "hwrites := -1; writes :=: hwrites",
+        "hread := -1; read :=: hread"]
+        }
+
+    incfiles := []
+    prog := []
+    extras := ["write := hwrite", "read := hread", "writes := hwrites"]
+    showtype := 1
+    uselines := []
+
+    repeat {
+        line := ""
+        repeat {
+            if *uselines ~= 0 then {
+                inline := get(uselines)
+                }
+            else {
+                writes(if *line = 0 then "][ " else "... ")
+                inline := (read()|stop())
+                }
+
+            inline := trim(inline, ' \t')
+
+            if match(".type", inline) then {
+                (/showtype := 1) | (showtype := &null)
+                write("Will ",(/showtype&"not ")|"","display types")
+                next
+                }
+            else if match(".list", inline) then {
+                every(write(!prog))
+                next
+                }
+            else if inline == ("help"|"?") then {
+                Help()
+                next
+                }
+            else if inline == ".e" then {
+                src := prog[-1][1:-1]
+                #write("src is ", image(src))
+                src := replace(src, "\n#", "\n")
+                src ? {
+                    tab(upto('(')+1) & line := atos(Edit([tab(0)]),"\n") &
+                        break
+                    }
+                }
+            else if match(".fix", inline) then {
+                prog := Edit(prog)
+                next
+                }
+            else if match(".link", inline) then {
+                push(header, inline[2:0] ? tab(upto(';')|0))
+                next
+                }
+            else if match(".inc"|".include", inline) then {
+                inline := replace(inline, ";", "")
+                inline ? (tab(upto(' \t')+1) & files := tab(0))
+                files := split(files, ', \t')
+                #write(Image(files))
+                incfiles |||:= files
+                next
+                }
+            else if match(".use", inline) then {
+                w := split(inline, ' ,\t\'\";')
+                if f := open(w[2]) then {
+                    while put(uselines, read(f))
+                    close(f)
+                    next
+                    }
+                else {
+                    write("Can't open '", w[2], "'")
+                    next
+                    }
+                }
+
+            line ||:= inline || "\n"
+
+            if line[-2:0] == ";\n" then {
+                line[-2:0] := ""
+                break
+                }
+            }
+
+        if \showtype then
+                put(extras, "showtype := 1")
+
+        if match(".every ", line) then {
+                every_exp := (line ? (=".every " & tab(0)))
+                Generate := 1
+                }
+
+        tfile := "._ie_tmp.icn"
+        sfile := open(tfile,"w") |
+                stop("Can't open ie tmp file (", tfile, ") for writing\n",
+                "(Is the current directory writable?)")
+        #sfile := open("icont -s - -x","pw")
+        every write(sfile, !(header|||prog|||extras))
+
+        if \Generate then {
+            write(sfile, "every WR(\"\",", every_exp, ")")
+                curexp := "every (" || every_exp || ")"
+            }
+        else {
+        curexp := (t :=@tag) || " := (" || line || ")"
+            write(sfile, "if (", curexp, ") then WR(\"", t, " := \",", t, ")")
+            write(sfile, "else write(\"Failure\")")
+            }
+
+        if \WinIcon then
+            write(sfile, "WDone()")
+
+        write(sfile, "end")
+        WriteWR(sfile)
+        close(sfile)
+
+        case (SystemType) of {
+            "UNIX": {
+                rc := system("TRACE=0 icont -s ._ie_tmp.icn " ||
+                    atos(incfiles, " ") || " -x")
+                }
+            "Windows": {
+                remove("._ie_tmp.icx")
+                if \WinIcon then icont_cmd := "wicont"
+                            else icont_cmd := "nticont"
+
+                rc := system(icont_cmd || " -s ._ie_tmp.icn " ||
+                    atos(incfiles, " "))
+                if rc = 0 then
+                    rc := system(".\\._ie_tmp.exe")
+                remove("._ie_tmp.exe")
+                }
+            }
+
+        if rc = 0 then
+            put(prog, curexp)
+        else
+            put(prog, "#" || replace(curexp, "\n", "\n#"))
+
+        extras := ["write := hwrite", "read := hread", "writes := hwrites"]
+        Generate := &null
+        }
+
+    remove("._ie_tmp")
+    remove("._ie_tmp.icn")
+end
+procedure WriteWR(f)
+    write(f, "procedure WR(tag, e)")
+    write(f, "writes(\"   \",tag, Image(e,3))")
+    write(f, "\twrite(if \\showtype then \"  (\"||type(e)||\")\" else \"\")")
+    write(f, "end");
+end
+procedure Help()
+    write("Enter any Icon expression to evaluate it")
+    write()
+    write(".type -- toggle display of type")
+    write(".list -- list expressions")
+    write(".every <expression> -- show all results for expresion")
+    write(".link <files>, e.g. link image,format -- link ucode files")
+    write(".inc <files>, e.g. .inc x.icn y.icn -- include procedures from files")
+    write(".use <file>, e.g. .use x -- load expressions from the file x")
+    write(".e -- edit last expression with $EDITOR")
+    write(".fix -- hack the expressions")
+    write(".help or .? or help or ? -- this message")
+end
+
+procedure Edit(p)
+    f := open("._ie_tmp.icn", "w")
+    every write(f, !p)
+    close(f)
+
+    system("$EDITOR ._ie_tmp.icn")
+
+    f := open("._ie_tmp.icn")
+    p := []
+    while put(p, read(f))
+
+    return p
+end
+
+procedure atos(a,delim)
+        local e, s
+        s := ""
+        /delim := ","
+        every e := !a do
+                (/s := e) | (s ||:= delim || e)
+        return s
+end
+
+#
+#  replace string (from the IPL)
+#
+procedure replace(s1,s2,s3)
+   local result, i
+
+   result := ""
+   i := *s2
+
+   s1 ? {
+      while result ||:= tab(find(s2)) do {
+         result ||:= s3
+         move(i)
+         }
+      return result || tab(0)
+      }
+end
+
+procedure split(line,dlms)
+        local w
+        /dlms := ' \t'
+        w := []
+        line ? repeat {
+                tab(upto(~dlms))
+                put(w,tab(many(~dlms))) | break
+                }
+        return w
+end

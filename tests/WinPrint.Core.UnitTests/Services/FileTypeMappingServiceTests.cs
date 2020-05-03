@@ -20,52 +20,32 @@ namespace WinPrint.Core.UnitTests.Services
         [Fact]
         public void TestDefaultConfigFiletypeMappkng()
         {
-            var ftm = new FileTypeMapping();
-
-            Assert.NotNull(ftm);
-
-            SettingsService settingsService = new SettingsService
-            {
-                SettingsFileName = $"WinPrint.{GetType().Name}.json"
-            };
+            ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
             File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
 
+            var settings = ServiceLocator.Current.SettingsService.ReadSettings();
+            ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
             // There are three assocations defined in default .config
-            //settings.LanguageAssociations = new FileAssociations()
-            //{
-            //    FilesAssociations = new Dictionary<string, string>() {
-            //        { "*.config", "json" },
-            //        { "*.htm", "text/html" },
-            //        { "*.html", "text/html" }
-            //    },
-            //    Languages = new List<Langauge>() {
-            //        new Langauge() {
-            //            Id = "icon",
-            //            Extensions = new List<string>() {
-            //                ".icon"
-            //            },
-            //            Aliases = new List<string>() {
-            //                "lisp"
-            //            }
-            //        }
-            //    }
-            ftm = settingsService.ReadSettings().FileTypeMapping;
-            var files = ftm.FilesAssociations;
-            Assert.NotNull(files);
-            Assert.Equal(3, files.Count);
-            Assert.Equal("*.config", files.Keys.First());
-            Assert.Equal("json", files.Values.First());
+            // settings.LanguageAssociations = new FileAssociations() 
+            // ...
 
-            var langs = ftm.Languages;
-            Assert.NotNull(langs);
-            Assert.Equal(1, langs.Count);
-            Assert.Equal("icon", langs.First().Id);
-            Assert.Equal("lisp", langs.First().Aliases.First());
+            var files = ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations;
+            Assert.NotNull(files);
+            Assert.Equal(4, files.Count);
+
+
+            //{ "*.config", "application/json" },
+            //{ "*.htm", "text/html" },
+            //{ "*.html", "text/html" }
+            Assert.Equal("application/json", files.First(l => l.Key == "*.config").Value);
+            Assert.Equal("text/html", files.First(l => l.Key == "*.htm").Value);
+            Assert.Equal("text/html", files.First(l => l.Key == "*.html").Value);
+            Assert.Equal("text/unicon", files.First(l => l.Key == "*.icon").Value);
         }
 
         [Fact]
-        public void TestBuiltInFileExtensionMapping()
+        public void TestDefaultConfigLangauges()
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
             File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
@@ -73,64 +53,80 @@ namespace WinPrint.Core.UnitTests.Services
             var settings = ServiceLocator.Current.SettingsService.ReadSettings();
             ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
 
-            var ftm = ModelLocator.Current.Settings.FileTypeMapping;
-            var files = ftm.FilesAssociations;
-            Assert.NotNull(files);
-            Assert.Equal(3, files.Count);
-
-            ftm = ServiceLocator.Current.FileTypeMappingService.Load();
-            files = ftm.FilesAssociations;
-            Assert.NotNull(ftm);
-
-            // There should be more than just the 3 default
-            //{
-            //"files.associations": {
-            //  "*.txt": "text/plain",
-            //  "*.ans": "text/ansi",
-            //  "*.markup": "markup",
-            Assert.True(files.Count > 3);
-
-            // Find by key/ file extension
-            Assert.Equal("text", files["*.txt"] );
-            Assert.Equal("csharp", files["*.cs"]);
-        }
-
-        [Fact]
-        public void TestBuiltInLanguageMap()
-        {
-            ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-            File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
-
-            var settings = ServiceLocator.Current.SettingsService.ReadSettings();
-            ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
-
+            // We define these file types in default settings:
+            // text/plain - because it is not defined by Pygments
+            // text/ansi- because it is not defined by Pygments
+            // icon - Icon is so esoteric it makes a good test
             var ftm = ModelLocator.Current.Settings.FileTypeMapping;
             Assert.NotNull(ftm);
-            var langs= ftm.Languages;
+            var langs = ftm.ContentTypes;
             Assert.NotNull(langs);
-            Assert.Equal(1, langs.Count);
-
-            ftm = ServiceLocator.Current.FileTypeMappingService.Load();
-            Assert.NotNull(ftm);
-            langs = ftm.Languages;
-            Assert.NotNull(langs);
-            Assert.True(langs.Count > 1);
+            Assert.Equal(2, langs.Count);
 
             // Find Title by Id
             Assert.Equal("Plain Text", langs.FirstOrDefault(l => l.Id == "text/plain").Title);
 
-            // For every cte, find Language
-            //foreach (var cte in ContentTypeEngineBase.GetDerivedClassesCollection())
-            //{
-            //    Assert.Equal(cte.ContentTypeEngineName, langs.Where(l => l.Id == cte.ContentTypeEngineName || l.Aliases.Contains(cte.ContentTypeEngineName)).DefaultIfEmpty(new Langauge() { Id = "Empty" }).First().Id);
-            //}
+            // Find Title by Alias
+            Assert.Equal("Plain Text", langs.FirstOrDefault(l => l.Aliases.Contains("text")).Title);
+            Assert.Equal("ANSI Text", langs.FirstOrDefault(l => l.Aliases.Contains("ansi")).Title);
 
-            // For every file extension (*.xxx) there should be a mapping to a langauge
-            foreach (var fm in ftm.FilesAssociations)
-            {
-                Assert.NotEqual("Empty", langs.Where(l => l.Id == fm.Value || l.Aliases.Contains(fm.Value)).DefaultIfEmpty(new Langauge() { Id = "Empty" }).First().Id);
-            }
+            // Prove not found
+            Assert.DoesNotContain(langs, l => l.Id == "txt");
+
+            // Find Title by ext
+            Assert.Equal("Plain Text", langs.FirstOrDefault(l => l.Extensions.Contains("*.txt")).Title);
+
+            // Find Id by ext
+            Assert.Equal("text/plain", langs.FirstOrDefault(l => l.Extensions.Contains("*.txt")).Id);
+
         }
 
+        [Fact]
+        public void TestLangauges()
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+            File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+
+            var settings = ServiceLocator.Current.SettingsService.ReadSettings();
+            ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+
+            var ftm = ServiceLocator.Current.FileTypeMappingService.Load();
+            Assert.NotNull(ftm);
+            var langs = ftm.ContentTypes;
+            Assert.NotNull(langs);
+            Assert.True(langs.Count > 1);
+
+            // Find Title by Id
+            Assert.Equal("Brainfuck", langs.First(l => l.Id == "application/x-brainfuck").Title);
+
+            // Find Title by Alias
+            Assert.Equal("Brainfuck", langs.First(l => l.Aliases.Contains("brainfuck")).Title);
+            Assert.Equal("Brainfuck", langs.First(l => l.Aliases.Contains("bf")).Title);
+
+            // Find Title by ext
+            Assert.Equal("Brainfuck", langs.First(l => l.Extensions.Contains("*.bf")).Title);
+
+            // Find Id by ext
+            Assert.Equal("application/x-brainfuck", langs.First(l => l.Extensions.Contains("*.bf")).Id);
+
+            // Test a merge of .config and .json
+            // Find Title by Id
+            Assert.Equal("JSON", langs.First(l => l.Id == "application/json").Title);
+
+            // Find Title by Alias
+            Assert.Equal("JSON", langs.First(l => l.Aliases.Contains("json")).Title);
+
+            // This should fail
+            Assert.Throws<System.InvalidOperationException>(() => langs.First(l => l.Aliases.Contains("application/json")));
+
+            // Find Title by ext
+            Assert.Equal("JSON", langs.First(l => l.Extensions.Contains("*.json")).Title);
+
+            // *.config was added via the settings file!
+            //Assert.Equal("JSON", langs.First(l => l.Extensions.Contains("*.config")).Title);
+
+            // Find Id by ext
+            Assert.Equal("application/json", langs.First(l => l.Extensions.Contains("*.json")).Id);
+        }
     }
 }
