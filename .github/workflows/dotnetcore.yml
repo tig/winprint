@@ -28,7 +28,7 @@ jobs:
 
     # Restore packages
     - name: Restore
-      run: dotnet restore src\WinPrint.Core
+      run: dotnet restore src/WinPrint.Core
 
     # Build
     - name: Build
