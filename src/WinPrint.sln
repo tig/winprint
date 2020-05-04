@@ -13,11 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.LiteHtml", "WinPri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.Core.UnitTests", "..\tests\WinPrint.Core.UnitTests\WinPrint.Core.UnitTests.csproj", "{6FCD9AFA-22D9-4E13-BA11-96B5C1949842}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libvt100", "..\libvt100\src\libvt100.csproj", "{84B31CE1-C4EF-4C86-BE34-1EE180C7E651}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libvt100", "libvt100\src\libvt100.csproj", "{84B31CE1-C4EF-4C86-BE34-1EE180C7E651}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiteHtmlLib", "..\LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj", "{2E1F5B1E-430B-4FFF-963C-92229154F261}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiteHtmlLib", "LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj", "{2E1F5B1E-430B-4FFF-963C-92229154F261}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerShellAsync", "..\PowershellAsync\PowerShellAsync\PowerShellAsync.csproj", "{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerShellAsync", "PowershellAsync\PowerShellAsync\PowerShellAsync.csproj", "{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

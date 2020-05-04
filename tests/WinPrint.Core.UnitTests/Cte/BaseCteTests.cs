@@ -48,7 +48,7 @@ namespace WinPrint.Core.UnitTests.Cte
             {
                 foreach (var t in c.SupportedContentTypes)
                 {
-                    Assert.True(langs.Any(l => l.Id == t || l.Aliases.Contains(t)));
+                    Assert.Contains(langs, l => l.Id == t || l.Aliases.Contains(t));
                 }
             }
 

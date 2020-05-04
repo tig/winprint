@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\PowershellAsync\PowerShellAsync\PowerShellAsync.csproj" />
+    <ProjectReference Include="..\PowershellAsync\PowerShellAsync\PowerShellAsync.csproj" />
     <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
   </ItemGroup>
 

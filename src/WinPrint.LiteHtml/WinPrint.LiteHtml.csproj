@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  
+
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyTitle>winprint LiteHtml</AssemblyTitle>
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
+    <None Include="..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

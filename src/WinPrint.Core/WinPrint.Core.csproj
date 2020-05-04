@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\libvt100\src\libvt100.csproj" />
+    <ProjectReference Include="..\libvt100\src\libvt100.csproj" />
     <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
   </ItemGroup>
 

@@ -1,9 +1,9 @@
-[submodule "libvt100"]
-	path = libvt100
+[submodule "src/libvt100"]
+	path = src/libvt100
 	url = https://github.com/tig/libvt100.git
-[submodule "LiteHtmlSharp"]
-	path = LiteHtmlSharp
-	url = https://github.com/tig/LiteHtmlSharp.git
-[submodule "PowershellAsync"]
-	path = PowershellAsync
+[submodule "src/PowershellAsync"]
+	path = src/PowershellAsync
 	url = https://github.com/tig/PowershellAsync.git
+[submodule "src/LiteHtmlSharp"]
+	path = src/LiteHtmlSharp
+	url = https://github.com/tig/LiteHtmlSharp.git
