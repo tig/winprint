@@ -43,4 +43,4 @@ jobs:
 
     # Run Tests
     - name: Test
-      run: dotnet test --no-restore --verbosity normal tests\WinPrint.Core.UnitTests
+      run: dotnet test --no-restore --verbosity normal /p:DefineConstants="CI_BUILD" tests\WinPrint.Core.UnitTests
