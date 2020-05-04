@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -28,7 +28,7 @@ jobs:
 
     # Restore packages
     - name: Restore
-      run: dotnet restore src
+      run: dotnet restore src\WinPrint.Core
 
     # Build
     - name: Build
