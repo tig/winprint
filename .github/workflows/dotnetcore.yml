@@ -27,12 +27,20 @@ jobs:
 
     # Restore packages
     - name: Restore
-      run: dotnet restore src/WinPrint.Core
+      run: |
+        dotnet restore src/WinPrint.Core
+        dotnet restore src/WinPrint.Console
+        dotnet restore src/WinPrint.LiteHtml
+        dotnet restore src/WinPrint.Tests
 
     # Build
     - name: Build
-      run: dotnet build --configuration Release --no-restore src
+      run: |
+        dotnet build --configuration Release --no-restore src/WinPrint.LiteHtml
+        dotnet build --configuration Release --no-restore src/WinPrint.Core
+        dotnet build --configuration Release --no-restore src/WinPrint.Console
+        dotnet build --configuration Release --no-restore src/WinPrint.Tests
 
     # Run Tests
     - name: Test
-      run: dotnet test --no-restore --verbosity normal src
+      run: dotnet test --no-restore --verbosity normal src/WinPrint.Tests
