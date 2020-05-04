@@ -39,9 +39,6 @@
     <None Include="..\..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.pdb" Link="x64\LiteHtmlLib.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
     <ItemGroup>
