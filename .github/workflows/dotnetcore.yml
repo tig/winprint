@@ -19,6 +19,10 @@ jobs:
         # Checkout libvt100 & litehtml
         submodules: 'true'
 
+            # Run Tests
+    - name: PygTest
+      run: D:/a/winprint/winprint/tests/WinPrint.Core.UnitTests/bin/Debug/netcoreapp3.1/pygmentize.exe -h
+
     # Setup .NET
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -31,7 +35,7 @@ jobs:
         dotnet restore src/WinPrint.Core
         dotnet restore src/WinPrint.Console
         dotnet restore src/WinPrint.LiteHtml
-        dotnet restore tests\WinPrint.Core.UnitTests
+        dotnet restore tests/WinPrint.Core.UnitTests
 
     # Build
     - name: Build
@@ -39,8 +43,8 @@ jobs:
         dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.LiteHtml
         dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.Core
         dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.Console
-        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" tests\WinPrint.Core.UnitTests
+        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" tests/WinPrint.Core.UnitTests
 
     # Run Tests
     - name: Test
-      run: dotnet test --no-restore --verbosity normal /p:DefineConstants="CI_BUILD" tests\WinPrint.Core.UnitTests
+      run: dotnet test --no-restore --verbosity normal /p:DefineConstants="CI_BUILD" tests/WinPrint.Core.UnitTests

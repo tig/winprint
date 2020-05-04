@@ -50,7 +50,7 @@ namespace WinPrint.Core.Services {
             _eventHandled = new TaskCompletionSource<bool>();
 
             try {
-                Log.Debug("Writing temp file {file}", _proc.StartInfo.FileName);
+                Log.Debug("Writing temp file {file}", file);
                 await File.WriteAllTextAsync(file, document, Encoding.UTF8).ConfigureAwait(true);
                 Log.Debug("Starting {pyg} {args}", _proc.StartInfo.FileName, _proc.StartInfo.Arguments);
                 _proc.Start();
@@ -63,7 +63,7 @@ namespace WinPrint.Core.Services {
                     if (stdErr.StartsWith("Usage:")) {
                         stdErr = "Invalid command line.";
                     }
-                    document = $"Pygments encountered an error: {stdErr}";
+                    document = $"Pygments encountered an error (exit code: {_proc.ExitCode}): {stdErr}";
                     Log.Information("{document}", document);
                     // TODO: This should really throw an exception
                     throw new InvalidOperationException(document);
