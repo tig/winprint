@@ -36,10 +36,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\LiteHtmlSharp\LiteHtmlLib\Release\x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
+    <None Include="..\..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\..\LiteHtmlSharp\LiteHtmlLib\Release\x64\LiteHtmlLib.pdb" Link="x64\LiteHtmlLib.pdb">
+    <None Include="..\..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.pdb" Link="x64\LiteHtmlLib.pdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
