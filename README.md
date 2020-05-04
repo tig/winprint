@@ -1,3 +1,4 @@
+![.NET Core](https://github.com/tig/winprint/workflows/.NET%20Core/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/tig/winprint/badge?s=93affda0738af869187afe5296914b814511f529)](https://www.codefactor.io/repository/github/tig/winprint)
 
 # winprint 2.0
