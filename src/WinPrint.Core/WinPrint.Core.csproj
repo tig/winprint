@@ -48,7 +48,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00864" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Dynamic" Version="1.0.7" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.1.0" />
     <PackageReference Include="UTF.Unknown" Version="2.3.0" />
   </ItemGroup>
