@@ -36,9 +36,6 @@ jobs:
     # Build
     - name: Build
       run: |
-        md src/WinPrint.LiteHtml/bin/Release/netcoreapp3.1/x64
-        copy LiteHtmlSharp/LiteHtmlLib/bin/Release/win-x64/LiteHtmlLib.dll src/WinPrint.LiteHtml/bin/Release/netcoreapp3.1/x64
-        copy LiteHtmlSharp/LiteHtmlLib/bin/Release/win-x64/LiteHtmlLib.pdb src/WinPrint.LiteHtml/bin/Release/netcoreapp3.1/x64
         dotnet build --configuration Release --no-restore src/WinPrint.LiteHtml
         dotnet build --configuration Release --no-restore src/WinPrint.Core
         dotnet build --configuration Release --no-restore src/WinPrint.Console
