@@ -69,7 +69,7 @@ namespace WinPrint.Core.Services {
             Log.Debug("--------- {app} {v} ---------", appName, productVersion);
             if (ServiceLocator.Current.TelemetryService.TelemetryEnabled) {
 #if CI_BUILD
-                var msg = "Telemetry key is missing so no telemetry will be tracked." : "";
+                var msg = "CI_BUILD so no telemetry will be tracked.";
 #else
                 var msg = string.IsNullOrEmpty(TelemetryService.Key) ? "However, telemetry key is missing so no telemetry will be tracked." : "";
 #endif
