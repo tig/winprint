@@ -31,7 +31,7 @@ jobs:
         dotnet restore src/WinPrint.Core
         dotnet restore src/WinPrint.Console
         dotnet restore src/WinPrint.LiteHtml
-        dotnet restore src/WinPrint.Tests
+        dotnet restore tests
 
     # Build
     - name: Build
@@ -39,8 +39,8 @@ jobs:
         dotnet build --configuration Release --no-restore src/WinPrint.LiteHtml
         dotnet build --configuration Release --no-restore src/WinPrint.Core
         dotnet build --configuration Release --no-restore src/WinPrint.Console
-        dotnet build --configuration Release --no-restore src/WinPrint.Tests
+        dotnet build --configuration Release --no-restore tests
 
     # Run Tests
     - name: Test
-      run: dotnet test --no-restore --verbosity normal src/WinPrint.Tests
+      run: dotnet test --no-restore --verbosity normal tests
