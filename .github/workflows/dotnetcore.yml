@@ -18,7 +18,7 @@ jobs:
     
     # Checkout libvt100
     - name: Checkout submodules
-      uses: tig/libvt100@master
+      uses: textbook/git-checkout-submodule-action@2.1.1
       
     # Setup .NET
     - name: Setup .NET Core
