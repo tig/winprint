@@ -15,11 +15,13 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout source
       uses: actions/checkout@v2
-    
+
     # Checkout libvt100
     - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@2.1.1
-      
+      uses: srt32/git-actions@v0.0.3
+      with:
+        args: git submodule update --init --recursive
+
     # Setup .NET
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -29,11 +31,11 @@ jobs:
     # Restore packages
     - name: Restore
       run: dotnet restore src
- 
+
     # Build
     - name: Build
       run: dotnet build --configuration Release --no-restore src
-  
+
     # Run Tests
     - name: Test
       run: dotnet test --no-restore --verbosity normal src
