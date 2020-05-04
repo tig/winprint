@@ -1,0 +1,6 @@
+[submodule "libvt100"]
+	path = libvt100
+	url = https://github.com/tig/libvt100.git
+[submodule "LiteHtmlSharp"]
+	path = LiteHtmlSharp
+	url = https://github.com/tig/LiteHtmlSharp.git
