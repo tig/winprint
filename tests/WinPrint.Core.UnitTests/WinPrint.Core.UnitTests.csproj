@@ -28,4 +28,8 @@
     <Exec Command="copy ..\..\tools\pygmentize.exe $(TargetDir)" />
   </Target>
 
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
