@@ -54,7 +54,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(SolutionDir)..\tools\pygmentize.exe $(TargetDir)" />
+    <Exec Command="copy ..\..\tools\pygmentize.exe $(TargetDir)" />
   </Target>
 
 </Project>
