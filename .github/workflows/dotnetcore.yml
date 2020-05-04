@@ -18,9 +18,7 @@ jobs:
 
     # Checkout libvt100
     - name: Checkout submodules
-      uses: srt32/git-actions@v0.0.3
-      with:
-        args: git submodule update --init --recursive
+      uses: textbook/git-checkout-submodule-action@master
 
     # Setup .NET
     - name: Setup .NET Core
