@@ -37,7 +37,7 @@ jobs:
     - name: Build
       run: |
         dotnet build --configuration Release --no-restore src/WinPrint.LiteHtml
-        dotnet build --configuration Release --no-restore src/WinPrint.Core
+        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.Core
         dotnet build --configuration Release --no-restore src/WinPrint.Console
         dotnet build --configuration Release --no-restore tests\WinPrint.Core.UnitTests
 

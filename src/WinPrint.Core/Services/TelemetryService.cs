@@ -34,7 +34,11 @@ namespace WinPrint.Core.Services {
             var config = TelemetryConfiguration.CreateDefault();
 
             // Get key from UserSecrets in a way that never puts the key in source
+#if CI_BUILD
+            config.InstrumentationKey = string.Empty;
+#else
             config.InstrumentationKey = TelemetryService.Key;
+#endif
 
             // Turn off Debug spew
             TelemetryDebugWriter.IsTracingDisabled = true;
