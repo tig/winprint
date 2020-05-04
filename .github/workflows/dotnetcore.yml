@@ -13,11 +13,14 @@ jobs:
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - name: Checkout source
+      uses: actions/checkout@v2
     
+    # Checkout libvt100
     - name: Checkout submodules
       uses: tig/libvt100@master
       
+    # Setup .NET
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
