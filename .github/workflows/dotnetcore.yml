@@ -22,7 +22,7 @@ jobs:
 
     # Restore packages
     - name: Restore
-      run: dotnet restore
+      run: dotnet restore src
  
     # Build
     - name: Build
