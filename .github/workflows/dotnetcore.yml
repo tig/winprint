@@ -19,10 +19,6 @@ jobs:
         # Checkout libvt100 & litehtml
         submodules: 'true'
 
-            # Run Tests
-    - name: PygTest
-      run: D:/a/winprint/winprint/tests/WinPrint.Core.UnitTests/bin/Debug/netcoreapp3.1/pygmentize.exe -h
-
     # Setup .NET
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1

@@ -16,6 +16,8 @@ namespace WinPrint.Core.UnitTests.Cte
             ServiceLocator.Current.LogService.Start(GetType().Name, new TestOutputSink(output, new Serilog.Formatting.Display.MessageTemplateTextFormatter("{Message:lj}")), true, true);
         }
 
+#if CI_BUILD
+#else
         [Fact]
         public async void ConvertAsyncTest()
         {
@@ -27,5 +29,6 @@ namespace WinPrint.Core.UnitTests.Cte
             var output = await ps.ConvertAsync(input, "friendly", "c#");
             Assert.Equal(expectedOutput, output);
         }
+#endif
     }
 }
