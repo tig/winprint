@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libvt100", "..\libvt100\src
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiteHtmlLib", "..\LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj", "{2E1F5B1E-430B-4FFF-963C-92229154F261}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerShellAsync", "..\PowershellAsync\PowerShellAsync\PowerShellAsync.csproj", "{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,6 +111,18 @@ Global
 		{2E1F5B1E-430B-4FFF-963C-92229154F261}.Release|x64.Build.0 = Release|x64
 		{2E1F5B1E-430B-4FFF-963C-92229154F261}.Release|x86.ActiveCfg = Release|Win32
 		{2E1F5B1E-430B-4FFF-963C-92229154F261}.Release|x86.Build.0 = Release|Win32
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Debug|x64.Build.0 = Debug|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Debug|x86.Build.0 = Debug|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Release|x64.ActiveCfg = Release|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Release|x64.Build.0 = Release|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Release|x86.ActiveCfg = Release|Any CPU
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

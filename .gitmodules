@@ -4,3 +4,6 @@
 [submodule "LiteHtmlSharp"]
 	path = LiteHtmlSharp
 	url = https://github.com/tig/LiteHtmlSharp.git
+[submodule "PowershellAsync"]
+	path = PowershellAsync
+	url = https://github.com/tig/PowershellAsync.git
