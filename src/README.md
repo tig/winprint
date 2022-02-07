@@ -2,6 +2,7 @@
 
 ## Getting source ready
 
+* `git config --global status.submoduleSummary true`
 * `git clone tig:tig/winprint`
 * `git submodule update --init --recursive`
 
