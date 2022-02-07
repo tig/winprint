@@ -183,7 +183,7 @@ namespace WinPrint.Core.Services {
 
         /// <summary>
         /// Gets the path to the settings file.
-        /// Default is %appdata%\Kindel Systems\winprint. 
+        /// Default is %appdata%\Kindel\winprint. 
         /// However, if the exe was started from somewhere else, work in "portable mode" and
         /// use the dir containing the exe as the path.
         /// </summary>
@@ -204,9 +204,9 @@ namespace WinPrint.Core.Services {
                 else {
                     var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(SettingsService)).Location);
 
-                    // is this in Kindel Systems\winprint?
+                    // is this in Kindel\winprint?
                     if (path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}")) {
-                        // We're running %programfiles%\Kindel Systems\winprint; use %appdata%\Kindel Systems\winprint.
+                        // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
                         path = $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
                     }
                     // TODO: Remove internal knowledge of out-winprint from here

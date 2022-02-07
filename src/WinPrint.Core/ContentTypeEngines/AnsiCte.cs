@@ -1,4 +1,4 @@
-﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
 /// <summary>

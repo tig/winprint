@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <StartupObject>WinPrint.Winforms.Program</StartupObject>
@@ -12,12 +12,12 @@
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.0.5.102</Version>
+    <Version>2.1.0.8</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
     <Description>winprint GUI App</Description>
-    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <Copyright>Copyright Kindel, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -31,6 +31,11 @@
   <ItemGroup>
 
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
+
+    <PackageReference Include="MSBump" Version="2.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
   </ItemGroup>
 

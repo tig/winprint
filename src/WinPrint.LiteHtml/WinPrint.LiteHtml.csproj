@@ -2,16 +2,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <AssemblyTitle>winprint LiteHtml</AssemblyTitle>
     <AssemblyName>WinPrint.LiteHtml</AssemblyName>
 
-    <Version>2.0.5.100</Version>
+    <Version>2.1.0.1</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
     <Description>winprint LiteHtml Adapter</Description>
-    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <Copyright>Copyright Kindel, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
 
@@ -42,9 +42,13 @@
   </ItemGroup>
 
     <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="Serilog" Version="2.9.1-dev-01154" />
-    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="MSBump" Version="2.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
 
     <ItemGroup>
