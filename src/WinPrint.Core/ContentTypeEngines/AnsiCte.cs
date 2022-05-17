@@ -1,10 +1,6 @@
 ﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-/// <summary>
-/// Define this to use the DyanmicScreen class. Otherwise, use Screen
-/// </summary>
-
 using System;
 using System.Drawing;
 using System.IO;
@@ -21,7 +17,14 @@ using static libvt100.Screen;
 namespace WinPrint.Core.ContentTypeEngines {
 
     /// <summary>
-    /// Implements text/plain file type support. 
+    /// Implements text/plain and text/ansi file type support. Uses libvt100 to parse/render ANSI formatted
+    /// text.
+    /// 
+    /// Relies in libvt100 for word/line wrapping (whereas TextCte implements our own wrapping logic for 
+    /// text files).
+    /// 
+    /// NOTE: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+    /// 
     /// </summary>
     public class AnsiCte : ContentTypeEngineBase, IDisposable {
         private static readonly string[] _supportedContentTypes = { "text/plain", "text/ansi" };
@@ -81,7 +84,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
+        /// Renders source file to a libvt100 canvas.
+        /// Returns total count of pages. Sets any local page-size related values (e.g. linesPerPage).
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
@@ -189,14 +193,15 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Paints a single page. 
+        /// Paints a single page by iterating through the relevant part of the libvt100 screen (_screen),
+        /// formatting each as needed.
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             LogService.TraceMessage($"{pageNum}");
             if (_screen == null) {
-                Log.Debug("_ansiDocument must not be null");
+                Log.Debug("_screen must not be null");
                 return;
             }
 

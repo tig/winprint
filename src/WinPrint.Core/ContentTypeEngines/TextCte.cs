@@ -27,7 +27,9 @@ namespace WinPrint.Core.ContentTypeEngines {
     }
 
     /// <summary>
-    /// Implements text/plain file type support. 
+    /// Implements text/plain file type support with word/line wrapping. No formmating other
+    /// than line numbers.
+    /// 
     /// </summary>
     public class TextCte : ContentTypeEngineBase, IDisposable {
         private static readonly string[] _supportedContentTypes = { "text/plain" };
@@ -333,7 +335,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Paints a single page. 
+        /// Paints a single page with line numbers. 
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
