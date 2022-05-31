@@ -217,18 +217,19 @@ namespace WinPrint.Core.ContentTypeEngines {
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width) : 0;
 
                 // Line #s
-                if (_screen.Lines[i].LineNumber > 0 && (ContentSettings.LineNumbers && lineNumberWidth != 0)) {
+                if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
+                    if (_screen.Lines[i].LineNumber > 0) {
                         // TOOD: Figure out how to make the spacig around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
                         g.DrawString($"{_screen.Lines[i].LineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
-                }
+                    }
 
-                // Line # separator (draw even if there's no line number, but stop at end of doc)
-                // TODO: Support setting color of line #s and separator
-                if (ContentSettings.LineNumbers && ContentSettings.LineNumberSeparator && lineNumberWidth != 0) {
-                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + (int)Math.Floor(_charSize.Height));
+                    // Line # separator (draw even if there's no line number, but stop at end of doc)
+                    // TODO: Support setting color of line #s and separator
+                    if (ContentSettings.LineNumberSeparator) {
+                        g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + (int)Math.Floor(_charSize.Height));
+                    }
                 }
-
                 // Text
                 float xPos = lineNumberWidth;
                 foreach (var run in _screen.Lines[i].Runs) {
