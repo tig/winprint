@@ -353,11 +353,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             int i;
             for (i = firstLineInWrappedLines; i < firstLineInWrappedLines + _linesPerPage && i < _wrappedLines.Count; i++) {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
+
+                // Right justify line number
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i].nonWrappedLineNumber}").Width) : 0;
+
                 // Line #s
                 if (_wrappedLines[i].nonWrappedLineNumber > 0) {
                     if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
-                        // TOOD: Figure out how to make the spacig around separator more dynamic
+                        // TOOD: Figure out how to make the spacing around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
                         g.DrawString($"{_wrappedLines[i].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
                     }

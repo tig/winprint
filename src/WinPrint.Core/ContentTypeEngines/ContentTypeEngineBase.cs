@@ -23,7 +23,8 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// Base class for Content/File Type Engines (CTEs)
     /// </summary>
     public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
-        public static string DefaultContentType = "text/plain";
+        // These can be overidden in Settings
+        //public static string DefaultContentType = "text/plain";
         public static string DefaultCteClassName = "AnsiCte";
         public static string DefaultSyntaxHighlighterCteNameClassName = "AnsiCte";
 
@@ -208,7 +209,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     var ctes = GetDerivedClassesCollection().Where(c => c.SupportedContentTypes.Contains(languageId.ToLower()));
                     if (ctes != null) {
                         if (ctes.Count() > 1) {
-                            cte = ctes.First(c => c.GetType().Name == DefaultCteClassName);
+                            cte = ctes.First(c => c.GetType().Name == ModelLocator.Current.Settings.DefaultCteClassName);
                         }
                         else {
                             cte = ctes.FirstOrDefault();
@@ -226,7 +227,7 @@ namespace WinPrint.Core.ContentTypeEngines {
 
             if (string.IsNullOrEmpty(languageId)) {
                 // Didn't find a content type so use default CTE
-                cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(DefaultContentType));
+                cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(ModelLocator.Current.Settings.DefaultContentType));
                 languageId = cte.SupportedContentTypes[0];
                 language = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l => l.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase)).Title;
             }
@@ -248,7 +249,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <param name="filePath"></param>
         /// <returns>The content type</returns>
         public static string GetContentType(string filePath) {
-            var contentType = DefaultContentType;
+            var contentType = ModelLocator.Current.Settings.DefaultContentType;
 
             if (string.IsNullOrEmpty(filePath)) {
                 return contentType;
@@ -265,7 +266,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     // Now find Id in Languages
                     contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
                         .Where(lang => lang.Id.Equals(ct, StringComparison.OrdinalIgnoreCase))
-                        .DefaultIfEmpty(new ContentType() { Id = DefaultContentType })
+                        .DefaultIfEmpty(new ContentType() { Id = ModelLocator.Current.Settings.DefaultContentType })
                         .First().Id;
                 }
                 else {
@@ -273,7 +274,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
                         .Where(lang => lang.Extensions.Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, "*" + ext, CompareOptions.IgnoreCase) == 0 ||
                                 CultureInfo.CurrentCulture.CompareInfo.Compare(i, ext, CompareOptions.IgnoreCase) == 0).Count() > 0)
-                        .DefaultIfEmpty(new ContentType() { Id = DefaultContentType })
+                        .DefaultIfEmpty(new ContentType() { Id = ModelLocator.Current.Settings.DefaultContentType })
                         .First().Id;
                 }
             }
@@ -286,7 +287,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                     // No direct file extension, look in Languages
                     contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
                         .Where(lang => lang.Extensions.Where(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, Path.GetFileName(filePath), CompareOptions.IgnoreCase) == 0).Count() > 0)
-                        .DefaultIfEmpty(new ContentType() { Id = DefaultContentType })
+                        .DefaultIfEmpty(new ContentType() { Id = ModelLocator.Current.Settings.DefaultContentType })
                         .First().Id;
                 }
             }

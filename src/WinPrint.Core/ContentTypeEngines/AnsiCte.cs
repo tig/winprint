@@ -212,14 +212,15 @@ namespace WinPrint.Core.ContentTypeEngines {
             int i;
             for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _screen.Lines.Count; i++) {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * (int)Math.Floor(_charSize.Height);
+
+                // Right align line number
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width) : 0;
+
                 // Line #s
-                if (_screen.Lines[i].LineNumber > 0) {
-                    if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
+                if (_screen.Lines[i].LineNumber > 0 && (ContentSettings.LineNumbers && lineNumberWidth != 0)) {
                         // TOOD: Figure out how to make the spacig around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
                         g.DrawString($"{_screen.Lines[i].LineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
-                    }
                 }
 
                 // Line # separator (draw even if there's no line number, but stop at end of doc)
