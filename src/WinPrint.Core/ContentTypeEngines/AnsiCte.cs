@@ -122,7 +122,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             }
 
-            _charSize = MeasureString(g, _cachedFont, "W");
+            _charSize = MeasureString(g, _cachedFont, "i");
 
             if (PageSize.Height < (int)Math.Floor(_charSize.Height)) {
                 throw new InvalidOperationException("The line height is greater than page height.");
@@ -137,11 +137,8 @@ namespace WinPrint.Core.ContentTypeEngines {
             lineNumberWidth = ContentSettings.LineNumbers ? _charSize.Width * 4 : 0;
 
             // This is the shortest line length (in chars) that we think we'll see. 
-            // This is used as a performance optimization (probably premature) and
-            // could be 0 with no functional change.
-            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / (int)Math.Floor(_charSize.Width));
+            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / (int)_charSize.Width);
 
-            // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             _screen = new DynamicScreen(_minLineLen);
             IAnsiDecoder vt100 = new AnsiDecoder();
             vt100.Encoding = Encoding;
@@ -214,6 +211,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * (int)Math.Floor(_charSize.Height);
 
                 // Right align line number
+                // TODO: Why "6". Make it a setting?
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width) : 0;
 
                 // Line #s
@@ -227,12 +225,17 @@ namespace WinPrint.Core.ContentTypeEngines {
                     // Line # separator (draw even if there's no line number, but stop at end of doc)
                     // TODO: Support setting color of line #s and separator
                     if (ContentSettings.LineNumberSeparator) {
-                        g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + (int)Math.Floor(_charSize.Height));
+                        g.DrawLine(Pens.Gray, lineNumberWidth - 4, yPos, lineNumberWidth - 4, yPos + (int)Math.Floor(_charSize.Height));
                     }
                 }
+
                 // Text
                 float xPos = lineNumberWidth;
                 foreach (var run in _screen.Lines[i].Runs) {
+                    if (ContentSettings.Diagnostics) {
+                        g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, (int)Math.Floor(_charSize.Height));
+                    }
+
                     System.Drawing.Font font = _cachedFont;
                     if (!ContentSettings.DisableFontStyles && run.Attributes.Bold) {
                         if (run.Attributes.Italic) {
@@ -250,9 +253,11 @@ namespace WinPrint.Core.ContentTypeEngines {
                         fg = run.Attributes.ForegroundColor;
 
                     var text = _screen.Lines[i].Text[run.Start..(run.Start + run.Length)];
+                    g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
+                    var size = MeasureString(g, font, text);
 
-                    for (var c = 0; c < text.Length; c++) {
-                        g.DrawString($"{text[c]}", font, new SolidBrush(fg), xPos + (c * (int)Math.Floor(_charSize.Width)), yPos, ContentTypeEngineBase.StringFormat);
+                    if (ContentSettings.Diagnostics) {
+                        g.DrawRectangle(new Pen(Color.Orange, 1), xPos, yPos, size.Width, size.Height);
                     }
 
                     if (ContentSettings.Diagnostics && run.HasTab) {
@@ -260,17 +265,10 @@ namespace WinPrint.Core.ContentTypeEngines {
                         g.DrawRectangle(pen, xPos, yPos, text.Length * (int)Math.Floor(_charSize.Width), (int)Math.Floor(_charSize.Height));
                         g.DrawString($"→", font, new SolidBrush(Color.DarkGray), xPos, yPos, ContentTypeEngineBase.StringFormat);
                     }
-                    xPos += (int)Math.Floor(_charSize.Width) * text.Length;
-
-                    //var proposedSize = new SizeF(PageSize.Width, _lineHeight);
-                    //var size = g.MeasureString(text, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
-                    //g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
-
-                    //xPos += size.Width;
+                    
+                    xPos += size.Width;
                 }
-                if (ContentSettings.Diagnostics) {
-                    g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, (int)Math.Floor(_charSize.Height));
-                }
+
             }
 
 #if CURSOR
