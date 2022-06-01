@@ -388,8 +388,9 @@ namespace WinPrint.Core {
                     ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
                 }
 
-                if (ContentEngine.SupportedContentTypes.Contains("text/ansi") && !ContentEngine.SupportedContentTypes.Contains(ContentType)) {
-                    // Syntax highlight
+                (bool pygmentsInstalled, _) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+                if (pygmentsInstalled && ContentEngine.SupportedContentTypes.Contains("text/ansi") && !ContentEngine.SupportedContentTypes.Contains(ContentType)) {
+                    // Convert the document to ANSI using Pygments
                     // TODO: Spin up a thread
                     document = await ServiceLocator.Current.PygmentsConverterService.ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
                 }

@@ -24,6 +24,85 @@ namespace WinPrint.Core.Services {
 
         }
 
+        private bool _installed = false;
+
+        /// <summary>
+        /// Check that Python 3.x is installed and that pygmentize.exe works
+        /// </summary>
+        /// <returns>true if pygmentize.exe is working, false otherwise + message</returns>
+        public (bool installed, string message) CheckInstall() {
+            if (_installed) return (_installed, String.Empty);
+
+            Process proc = new Process();
+
+            proc.StartInfo.RedirectStandardInput = true;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.CreateNoWindow = true;
+            proc.EnableRaisingEvents = false;
+
+            string message = String.Empty;
+
+            // Test for Python 3.x
+            bool python = false;
+            try {
+                proc.StartInfo.FileName = "python3";
+                proc.StartInfo.Arguments = $"-V";
+                proc.Start();
+
+                if (proc.WaitForExit(5000)) {
+                    string output = proc.StandardOutput.ReadLine();
+                    if (output.StartsWith("Python ")) {
+                        python = true;
+                        Log.Debug("Python is installed: {output}", output);
+                    }
+                    else {
+                        message = $"Python does not appear to be installed.\n{proc.StartInfo.FileName} failed to start: {output}";
+                    }
+                }
+                else {
+                    message = $"Could not launch {proc.StartInfo.FileName}; timeout.";
+                }
+            }
+            catch (System.ComponentModel.Win32Exception e) {
+                message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{e.Message}";
+            }
+
+            if (!python) {
+                Log.Error("{message}", message);
+                return (_installed, $"Python 3.x must be installed (on the PATH) for source code formatting.\n\n{message}");
+            }
+
+            // Test pygmentize.exe - Which is installed in the app's Program File dir
+            try {
+                proc.StartInfo.FileName = @$"{Path.GetDirectoryName(Assembly.GetAssembly(typeof(PygmentsConverterService)).Location)}\pygmentize.exe";
+                proc.StartInfo.Arguments = $"-V";
+                proc.Start();
+
+                if (proc.WaitForExit(5000)) {
+                    string output = proc.StandardOutput.ReadLine();
+                    if (output.StartsWith("Pygments version ")) {
+                        _installed = true;
+                        Log.Debug("Pygments is functional: {output}", output);
+                        return (_installed, output);
+                    }
+                    else {
+                        message = $"{proc.StartInfo.FileName} failed to start: {output}";
+                    }
+                }
+                else {
+                    message = $"Could not launch {proc.StartInfo.FileName}; timeout.";
+                }
+            }
+            catch (System.ComponentModel.Win32Exception e) {
+                message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{e.Message}";
+            }
+
+            Log.Error("{message}", message);
+            return (_installed, $"Pygments error. Source code formatting will not function.\n\n{message}");
+        }
+
         private Process _proc;
         private TaskCompletionSource<bool> _eventHandled;
 
@@ -88,7 +167,7 @@ namespace WinPrint.Core.Services {
             }
             catch (System.ComponentModel.Win32Exception e) {
                 // TODO: Better error message (output of stderr?)
-                document = $"Could not format document:\n{ _proc.StartInfo.FileName} { _proc.StartInfo.Arguments} failed:\n{e.Message}";
+                document = $"Could not format document:\n{_proc.StartInfo.FileName} {_proc.StartInfo.Arguments} failed:\n{e.Message}";
                 Log.Error(e, "{document}", document);
                 throw new InvalidOperationException(document);
             }

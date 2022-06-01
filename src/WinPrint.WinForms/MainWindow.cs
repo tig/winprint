@@ -516,6 +516,12 @@ namespace WinPrint.Winforms {
                 activeFile = ModelLocator.Current.Options.Files.ToList()[0];
             }
 
+            // Verify Pygments is installed
+            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+            if (!installed) {
+                MessageBox.Show(message, "Warning");
+            }
+
             // By running this on a different thread, we enable the main window to show
             // as quickly as possible; making startup seem faster.
             //Task.Run(() => Start());
