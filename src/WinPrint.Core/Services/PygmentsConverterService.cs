@@ -24,14 +24,14 @@ namespace WinPrint.Core.Services {
 
         }
 
-        private bool _installed = false;
 
         /// <summary>
         /// Check that Python 3.x is installed and that pygmentize.exe works
         /// </summary>
         /// <returns>true if pygmentize.exe is working, false otherwise + message</returns>
         public (bool installed, string message) CheckInstall() {
-            if (_installed) return (_installed, String.Empty);
+            bool installed = false;
+            string message = String.Empty;
 
             Process proc = new Process();
 
@@ -41,8 +41,6 @@ namespace WinPrint.Core.Services {
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.CreateNoWindow = true;
             proc.EnableRaisingEvents = false;
-
-            string message = String.Empty;
 
             // Test for Python 3.x
             bool python = false;
@@ -65,13 +63,14 @@ namespace WinPrint.Core.Services {
                     message = $"Could not launch {proc.StartInfo.FileName}; timeout.";
                 }
             }
-            catch (System.ComponentModel.Win32Exception e) {
-                message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{e.Message}";
+            catch (System.Exception ex) { // Console and WinForms are different
+                message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{ex.Message}";
             }
 
             if (!python) {
-                Log.Error("{message}", message);
-                return (_installed, $"Python 3.x must be installed (on the PATH) for source code formatting.\n\n{message}");
+                message = $"Python 3.x must be installed (on the PATH) for source code formatting.\n\n{message}";
+                Log.Debug("{message}", message);
+                return (installed, message);
             }
 
             // Test pygmentize.exe - Which is installed in the app's Program File dir
@@ -83,9 +82,10 @@ namespace WinPrint.Core.Services {
                 if (proc.WaitForExit(5000)) {
                     string output = proc.StandardOutput.ReadLine();
                     if (output.StartsWith("Pygments version ")) {
-                        _installed = true;
-                        Log.Debug("Pygments is functional: {output}", output);
-                        return (_installed, output);
+                        installed = true;
+                        message = $"Pygments is functional: {output}";
+                        Log.Debug("{output}", message);
+                        return (installed, message);
                     }
                     else {
                         message = $"{proc.StartInfo.FileName} failed to start: {output}";
@@ -95,18 +95,22 @@ namespace WinPrint.Core.Services {
                     message = $"Could not launch {proc.StartInfo.FileName}; timeout.";
                 }
             }
-            catch (System.ComponentModel.Win32Exception e) {
-                message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{e.Message}";
+            catch (System.Exception ex) { // Console and WinForms are different
+                message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{ex.Message}";
             }
+ 
 
-            Log.Error("{message}", message);
-            return (_installed, $"Pygments error. Source code formatting will not function.\n\n{message}");
+            message = $"Pygments error. Source code formatting will not function.\n\n{message}";
+            Log.Debug("{message}", message);
+            return (installed, message);
         }
 
         private Process _proc;
         private TaskCompletionSource<bool> _eventHandled;
 
         public async Task<string> ConvertAsync(string document, string style, string language) {
+            LogService.TraceMessage();
+
             if (_proc != null) {
                 throw new InvalidOperationException("ConvertAsync already in progress.");
             }
@@ -143,7 +147,7 @@ namespace WinPrint.Core.Services {
                         stdErr = "Invalid command line.";
                     }
                     document = $"Pygments encountered an error (exit code: {_proc.ExitCode}): {stdErr}";
-                    Log.Information("{document}", document);
+                    Log.Debug("{document}", document);
                     // TODO: This should really throw an exception
                     throw new InvalidOperationException(document);
                 }
@@ -160,7 +164,7 @@ namespace WinPrint.Core.Services {
                         // TODO: This should really throw an exception
                         var stdErr = _proc.StandardError.ReadToEnd();
                         document = $"Pygments failed to create converter file: {stdErr}";
-                        Log.Information("{document}", document);
+                        Log.Debug("{document}", document);
                         throw new InvalidOperationException(document);
                     }
                 }
@@ -168,7 +172,7 @@ namespace WinPrint.Core.Services {
             catch (System.ComponentModel.Win32Exception e) {
                 // TODO: Better error message (output of stderr?)
                 document = $"Could not format document:\n{_proc.StartInfo.FileName} {_proc.StartInfo.Arguments} failed:\n{e.Message}";
-                Log.Error(e, "{document}", document);
+                Log.Debug(e, "{document}", document);
                 throw new InvalidOperationException(document);
             }
             finally {

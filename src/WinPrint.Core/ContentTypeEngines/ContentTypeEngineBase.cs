@@ -139,6 +139,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         /// <param name="contentType"></param>
         /// <returns>ContentEngine, ContentType, Language</returns>
         public static (ContentTypeEngineBase cte, string languageId, string Language) CreateContentTypeEngine(string contentType) {
+            LogService.TraceMessage();
+
             Debug.Assert(!string.IsNullOrEmpty(contentType));
             Debug.Assert(ModelLocator.Current.FileTypeMapping != null);
             Debug.Assert(ModelLocator.Current.FileTypeMapping.ContentTypes != null);

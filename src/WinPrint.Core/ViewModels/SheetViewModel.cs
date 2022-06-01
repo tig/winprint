@@ -216,7 +216,7 @@ namespace WinPrint.Core {
         protected void OnSettingsChanged(bool reflow, string propertyName) {
             LogService.TraceMessage();
 
-            SettingsChanged?.Invoke(this, new SheetViewModelSettingsChangedEvent() { Reflow = reflow, PropertyName = propertyName }) ;
+            SettingsChanged?.Invoke(this, new SheetViewModelSettingsChangedEvent() { Reflow = reflow, PropertyName = propertyName });
         }
 
         public SheetViewModel() {
@@ -326,8 +326,7 @@ namespace WinPrint.Core {
                     Log.Debug("File encoding detected: {encoding}", detected);
                     Encoding = detected.Encoding;
                 }
-                else
-                {
+                else {
                     // Not detected. We know CharsetDetector gets confused on ANSI encoded files (rightfully so).
                     // Does this file have ESC[ sequences?
                     if (fileStream.Length != 0 && !StreamHasAnsiEsc(fileStream)) {
@@ -338,9 +337,9 @@ namespace WinPrint.Core {
 
                 fileStream.Position = 0;
                 using var streamReader = new StreamReader(fileStream, Encoding);
-                document = await streamReader.ReadToEndAsync().ConfigureAwait(false);
+                document = await streamReader.ReadToEndAsync().ConfigureAwait(true);
             }
-            return await LoadStringAsync(document, contentType).ConfigureAwait(false);
+            return await LoadStringAsync(document, contentType).ConfigureAwait(true);
         }
 
         private bool StreamHasAnsiEsc(Stream stream) {
@@ -388,17 +387,24 @@ namespace WinPrint.Core {
                     ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
                 }
 
-                (bool pygmentsInstalled, _) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-                if (pygmentsInstalled && ContentEngine.SupportedContentTypes.Contains("text/ansi") && !ContentEngine.SupportedContentTypes.Contains(ContentType)) {
-                    // Convert the document to ANSI using Pygments
-                    // TODO: Spin up a thread
-                    document = await ServiceLocator.Current.PygmentsConverterService.ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
+                if (ContentEngine.SupportedContentTypes.Contains("text/ansi") && !ContentEngine.SupportedContentTypes.Contains(ContentType)) {
+                    (bool pygmentsInstalled, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+                    if (pygmentsInstalled) {
+
+                        // Convert the document to ANSI using Pygments
+                        // TODO: Spin up a thread
+                        Log.Information($"Applying source code formatting.");
+                        document = await ServiceLocator.Current.PygmentsConverterService.ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
+                    }
+                    else {
+                        Log.Information($"Treating file as plain text.");
+                    }
                 }
 
                 ContentEngine.Encoding = Encoding;
-                retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(false);
+                retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
             }
-            catch (Exception e){
+            catch (Exception e) {
                 Loading = false;
                 throw e;
             }
