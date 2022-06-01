@@ -156,6 +156,14 @@ namespace WinPrint.WinForms {
 #endif
                     break;
 
+                case Keys.Home:
+                    Home();
+                    break;
+
+                case Keys.End:
+                    End();
+                    break;                    
+
 #if TERMINAL
                 case Keys.Right:
                     pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Forward, 1);
@@ -188,6 +196,18 @@ namespace WinPrint.WinForms {
                 Invalidate();
             }
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Page Down", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
+        }
+
+        private void Home() {
+            CurrentSheet = 1;
+            Invalidate();
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Home", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
+        }
+
+        private void End() {
+            CurrentSheet = _svm.NumSheets;
+            Invalidate();
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview End", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
         }
 
         protected override void OnTextChanged(EventArgs e) {

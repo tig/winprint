@@ -137,7 +137,7 @@ namespace WinPrint.Core.ContentTypeEngines {
             lineNumberWidth = ContentSettings.LineNumbers ? _charSize.Width * 4 : 0;
 
             // This is the shortest line length (in chars) that we think we'll see. 
-            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / (int)_charSize.Width);
+            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / _charSize.Width);
 
             _screen = new DynamicScreen(_minLineLen);
             IAnsiDecoder vt100 = new AnsiDecoder();

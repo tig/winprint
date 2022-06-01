@@ -52,7 +52,6 @@ namespace WinPrint.Winforms {
             };
             printPreview.Click += new System.EventHandler(printPreview_Click);
 
-
             Color();
 
             // This gets the version # from winprint.core.dll
@@ -79,7 +78,6 @@ namespace WinPrint.Winforms {
             fontDialog.AllowVectorFonts = false;
             // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
-
         }
 
         private void Color() {
