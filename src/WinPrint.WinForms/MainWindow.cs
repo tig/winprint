@@ -662,6 +662,9 @@ namespace WinPrint.Winforms {
                         // Set Loading to false in case of an error
                         //printPreview.SheetViewModel.Loading = false;
                         //printPreview.SheetViewModel.Ready = false;
+                        printPreview.Select();
+                        printPreview.Focus();
+
                     }
                 });
             }
