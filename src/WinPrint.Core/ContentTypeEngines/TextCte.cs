@@ -1,4 +1,4 @@
-﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System;
@@ -27,7 +27,9 @@ namespace WinPrint.Core.ContentTypeEngines {
     }
 
     /// <summary>
-    /// Implements text/plain file type support. 
+    /// Implements text/plain file type support with word/line wrapping. No formmating other
+    /// than line numbers.
+    /// 
     /// </summary>
     public class TextCte : ContentTypeEngineBase, IDisposable {
         private static readonly string[] _supportedContentTypes = { "text/plain" };
@@ -333,7 +335,7 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Paints a single page. 
+        /// Paints a single page with line numbers. 
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
@@ -351,11 +353,14 @@ namespace WinPrint.Core.ContentTypeEngines {
             int i;
             for (i = firstLineInWrappedLines; i < firstLineInWrappedLines + _linesPerPage && i < _wrappedLines.Count; i++) {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
+
+                // Right justify line number
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i].nonWrappedLineNumber}").Width) : 0;
+
                 // Line #s
                 if (_wrappedLines[i].nonWrappedLineNumber > 0) {
                     if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
-                        // TOOD: Figure out how to make the spacig around separator more dynamic
+                        // TOOD: Figure out how to make the spacing around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
                         g.DrawString($"{_wrappedLines[i].nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
                     }

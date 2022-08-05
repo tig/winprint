@@ -1,4 +1,4 @@
-﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System;
@@ -52,7 +52,6 @@ namespace WinPrint.Winforms {
             };
             printPreview.Click += new System.EventHandler(printPreview_Click);
 
-
             Color();
 
             // This gets the version # from winprint.core.dll
@@ -79,7 +78,6 @@ namespace WinPrint.Winforms {
             fontDialog.AllowVectorFonts = false;
             // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
-
         }
 
         private void Color() {
@@ -518,6 +516,12 @@ namespace WinPrint.Winforms {
                 activeFile = ModelLocator.Current.Options.Files.ToList()[0];
             }
 
+            // Verify Pygments is installed
+            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+            if (!installed) {
+                MessageBox.Show(message, "Warning");
+            }
+
             // By running this on a different thread, we enable the main window to show
             // as quickly as possible; making startup seem faster.
             //Task.Run(() => Start());
@@ -664,6 +668,9 @@ namespace WinPrint.Winforms {
                         // Set Loading to false in case of an error
                         //printPreview.SheetViewModel.Loading = false;
                         //printPreview.SheetViewModel.Ready = false;
+                        printPreview.Select();
+                        printPreview.Focus();
+
                     }
                 });
             }

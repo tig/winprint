@@ -1,9 +1,5 @@
-﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
-
-/// <summary>
-/// Define this to use the DyanmicScreen class. Otherwise, use Screen
-/// </summary>
 
 using System;
 using System.Drawing;
@@ -21,7 +17,14 @@ using static libvt100.Screen;
 namespace WinPrint.Core.ContentTypeEngines {
 
     /// <summary>
-    /// Implements text/plain file type support. 
+    /// Implements text/plain and text/ansi file type support. Uses libvt100 to parse/render ANSI formatted
+    /// text.
+    /// 
+    /// Relies in libvt100 for word/line wrapping (whereas TextCte implements our own wrapping logic for 
+    /// text files).
+    /// 
+    /// NOTE: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+    /// 
     /// </summary>
     public class AnsiCte : ContentTypeEngineBase, IDisposable {
         private static readonly string[] _supportedContentTypes = { "text/plain", "text/ansi" };
@@ -81,7 +84,8 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
+        /// Renders source file to a libvt100 canvas.
+        /// Returns total count of pages. Sets any local page-size related values (e.g. linesPerPage).
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
@@ -118,7 +122,7 @@ namespace WinPrint.Core.ContentTypeEngines {
                 g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
             }
 
-            _charSize = MeasureString(g, _cachedFont, "W");
+            _charSize = MeasureString(g, _cachedFont, "i");
 
             if (PageSize.Height < (int)Math.Floor(_charSize.Height)) {
                 throw new InvalidOperationException("The line height is greater than page height.");
@@ -133,11 +137,8 @@ namespace WinPrint.Core.ContentTypeEngines {
             lineNumberWidth = ContentSettings.LineNumbers ? _charSize.Width * 4 : 0;
 
             // This is the shortest line length (in chars) that we think we'll see. 
-            // This is used as a performance optimization (probably premature) and
-            // could be 0 with no functional change.
-            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / (int)Math.Floor(_charSize.Width));
+            _minLineLen = (int)((PageSize.Width - lineNumberWidth) / _charSize.Width);
 
-            // Note, MeasureLines may increment numPages due to form feeds and line wrapping
             _screen = new DynamicScreen(_minLineLen);
             IAnsiDecoder vt100 = new AnsiDecoder();
             vt100.Encoding = Encoding;
@@ -189,14 +190,15 @@ namespace WinPrint.Core.ContentTypeEngines {
         }
 
         /// <summary>
-        /// Paints a single page. 
+        /// Paints a single page by iterating through the relevant part of the libvt100 screen (_screen),
+        /// formatting each as needed.
         /// </summary>
         /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
         /// <param name="pageNum">Page number to print</param>
         public override void PaintPage(Graphics g, int pageNum) {
             LogService.TraceMessage($"{pageNum}");
             if (_screen == null) {
-                Log.Debug("_ansiDocument must not be null");
+                Log.Debug("_screen must not be null");
                 return;
             }
 
@@ -207,25 +209,33 @@ namespace WinPrint.Core.ContentTypeEngines {
             int i;
             for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _screen.Lines.Count; i++) {
                 var yPos = (i - (_linesPerPage * (pageNum - 1))) * (int)Math.Floor(_charSize.Height);
+
+                // Right align line number
+                // TODO: Why "6". Make it a setting?
                 var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width) : 0;
+
                 // Line #s
-                if (_screen.Lines[i].LineNumber > 0) {
-                    if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
+                if (ContentSettings.LineNumbers && lineNumberWidth != 0) {
+                    if (_screen.Lines[i].LineNumber > 0) {
                         // TOOD: Figure out how to make the spacig around separator more dynamic
                         // TODO: Allow a different (non-monospace) font for line numbers
                         g.DrawString($"{_screen.Lines[i].LineNumber}", _cachedFont, Brushes.Gray, x, yPos, ContentTypeEngineBase.StringFormat);
                     }
-                }
 
-                // Line # separator (draw even if there's no line number, but stop at end of doc)
-                // TODO: Support setting color of line #s and separator
-                if (ContentSettings.LineNumbers && ContentSettings.LineNumberSeparator && lineNumberWidth != 0) {
-                    g.DrawLine(Pens.Gray, lineNumberWidth - 2, yPos, lineNumberWidth - 2, yPos + (int)Math.Floor(_charSize.Height));
+                    // Line # separator (draw even if there's no line number, but stop at end of doc)
+                    // TODO: Support setting color of line #s and separator
+                    if (ContentSettings.LineNumberSeparator) {
+                        g.DrawLine(Pens.Gray, lineNumberWidth - 4, yPos, lineNumberWidth - 4, yPos + (int)Math.Floor(_charSize.Height));
+                    }
                 }
 
                 // Text
                 float xPos = lineNumberWidth;
                 foreach (var run in _screen.Lines[i].Runs) {
+                    if (ContentSettings.Diagnostics) {
+                        g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, (int)Math.Floor(_charSize.Height));
+                    }
+
                     System.Drawing.Font font = _cachedFont;
                     if (!ContentSettings.DisableFontStyles && run.Attributes.Bold) {
                         if (run.Attributes.Italic) {
@@ -243,9 +253,11 @@ namespace WinPrint.Core.ContentTypeEngines {
                         fg = run.Attributes.ForegroundColor;
 
                     var text = _screen.Lines[i].Text[run.Start..(run.Start + run.Length)];
+                    g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
+                    var size = MeasureString(g, font, text);
 
-                    for (var c = 0; c < text.Length; c++) {
-                        g.DrawString($"{text[c]}", font, new SolidBrush(fg), xPos + (c * (int)Math.Floor(_charSize.Width)), yPos, ContentTypeEngineBase.StringFormat);
+                    if (ContentSettings.Diagnostics) {
+                        g.DrawRectangle(new Pen(Color.Orange, 1), xPos, yPos, size.Width, size.Height);
                     }
 
                     if (ContentSettings.Diagnostics && run.HasTab) {
@@ -253,17 +265,10 @@ namespace WinPrint.Core.ContentTypeEngines {
                         g.DrawRectangle(pen, xPos, yPos, text.Length * (int)Math.Floor(_charSize.Width), (int)Math.Floor(_charSize.Height));
                         g.DrawString($"→", font, new SolidBrush(Color.DarkGray), xPos, yPos, ContentTypeEngineBase.StringFormat);
                     }
-                    xPos += (int)Math.Floor(_charSize.Width) * text.Length;
-
-                    //var proposedSize = new SizeF(PageSize.Width, _lineHeight);
-                    //var size = g.MeasureString(text, font, proposedSize, ContentTypeEngineBase.StringFormat, out int charsFitted, out int linesFilled);
-                    //g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, ContentTypeEngineBase.StringFormat);
-
-                    //xPos += size.Width;
+                    
+                    xPos += size.Width;
                 }
-                if (ContentSettings.Diagnostics) {
-                    g.DrawRectangle(Pens.Red, lineNumberWidth, yPos, PageSize.Width - lineNumberWidth, (int)Math.Floor(_charSize.Height));
-                }
+
             }
 
 #if CURSOR

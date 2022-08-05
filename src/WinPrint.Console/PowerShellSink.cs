@@ -79,7 +79,7 @@ namespace WinPrint.Console {
 
                     // The Write-Error cmdlet declares a non-terminating error.
                     case LogEventLevel.Error:
-                        //_cmdlet.WriteDebug("error: " + strWriter.ToString());
+                        //cmdlet.WriteDebug("error: " + strWriter.ToString());
                         var ex = logEvent.Exception;
                         if (logEvent.Exception == null) {
                             ex = new Exception();

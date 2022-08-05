@@ -83,6 +83,7 @@ namespace WinPrint.Core.Services {
         /// </summary>
         /// <returns></returns>
         public async Task<Version> GetLatestVersionAsync(CancellationToken token) {
+            LogService.TraceMessage();
             InstallerUri = new Uri("https://github.com/tig/winprint/releases");
             using var client = new WebClient();
             try {
@@ -100,7 +101,7 @@ namespace WinPrint.Core.Services {
 #if DEBUG
                 var releases = allReleases.Where(r => r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' '))).ToArray();
 #else
-                    var releases = allReleases.Where(r => !r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' '))).ToArray();
+                var releases = allReleases.Where(r => !r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' '))).ToArray();
 #endif
                 //Log.Debug("Releases {releases}", JsonSerializer.Serialize(releases, options: new JsonSerializerOptions() { WriteIndented = true }));
                 if (releases.Length > 0) {
@@ -117,6 +118,7 @@ namespace WinPrint.Core.Services {
             }
             catch (Exception e) {
                 ErrorMessage = $"({ReleasePageUri}) {e.Message}";
+                Log.Warning("Update: {msg}", ErrorMessage);
                 ServiceLocator.Current.TelemetryService.TrackException(e);
             }
 

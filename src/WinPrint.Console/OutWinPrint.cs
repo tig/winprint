@@ -267,14 +267,15 @@ namespace WinPrint.Console {
             if (ServiceLocator.Current.UpdateService.CompareVersions() < 0) {
                 _updateMsg = $"An update to winprint is available at {ServiceLocator.Current.UpdateService.ReleasePageUri}. " +
                     $"Run '{MyInvocation.InvocationName} -InstallUpdate' to upgrade";
+                Log.Warning("Update: {msg}", _updateMsg);
             }
             else if (ServiceLocator.Current.UpdateService.CompareVersions() > 0) {
-                _updateMsg = $"This is a MORE recent version than can be found at github.com/tig/winprint ({version})";
+                _updateMsg = $"This is a more recent version than can be found at github.com/tig/winprint ({version})";
             }
             else {
                 _updateMsg = "This is lastest version of winprint";
             }
-            Log.Debug("UpdateService_GotLatestVersion" + _updateMsg);
+            Log.Debug("Update: {msg}", _updateMsg);
 
         }
         #endregion
@@ -362,7 +363,7 @@ namespace WinPrint.Console {
                 Process proc = null;
                 try {
                     var psi = new ProcessStartInfo {
-                        UseShellExecute = true,   // This is important
+                        UseShellExecute = true,   // This is important - don't wait for exit
                         FileName = ServiceLocator.Current.SettingsService.SettingsFileName
                     };
                     proc = Process.Start(psi);
@@ -379,9 +380,40 @@ namespace WinPrint.Console {
                 return;
             }
 
+            if (Gui) {
+                Process proc = null;
+                try {
+                    var path = Path.GetDirectoryName(Assembly.GetAssembly(typeof(SettingsService)).Location);
+
+                    var psi = new ProcessStartInfo {
+                        UseShellExecute = true,   // This is important - don't wait for exit
+                        Arguments = FileName,
+                        
+                        FileName = path + Path.DirectorySeparatorChar + "winprintgui.exe"
+                    };
+                    proc = Process.Start(psi);
+                }
+                catch (Win32Exception e) {
+                    // TODO: Better error message (output of stderr?)
+                    ServiceLocator.Current.TelemetryService.TrackException(e, false);
+
+                    Log.Error(e, $"Couldn't launch winprint GUI");
+                }
+                finally {
+                    proc?.Dispose();
+                }
+                return;
+            }
+
             if (WinPrint.Core.Models.ModelLocator.Current.Settings == null) {
                 Log.Fatal(new Exception($"Settings are invalid. See {ServiceLocator.Current.LogService.LogPath} for more information."), "");
                 return;
+            }
+
+            // Check to ensure Python/Pygments is working
+            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+            if (!installed) {
+                Log.Warning(message);
             }
 
             SetupUpdateHandler();
@@ -409,11 +441,13 @@ namespace WinPrint.Console {
             await Task.Run(() => ServiceLocator.Current.UpdateService.GetLatestVersionAsync(_getVersionCancellationToken.Token).ConfigureAwait(true),
                 _getVersionCancellationToken.Token).ConfigureAwait(true);
 
+            // Start progress meter
             var rec = new ProgressRecord(1, "Printing", "Printing...") {
                 PercentComplete = 0,
                 StatusDescription = "Initializing winprint"
             };
             WriteProgress(rec);
+
 
             Debug.Assert(_print != null);
             if (!string.IsNullOrEmpty(PrinterName)) {
@@ -608,7 +642,7 @@ namespace WinPrint.Console {
 
             // End by sharing update info, if any
             if (!string.IsNullOrEmpty(_updateMsg)) {
-                Log.Information(_updateMsg);
+                Log.Information("Update: {msg}", _updateMsg);
             }
 
             CleanUpUpdateHandler();

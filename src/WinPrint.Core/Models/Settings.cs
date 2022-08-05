@@ -93,6 +93,15 @@ namespace WinPrint.Core.Models {
             }
         }
 
+        [SafeForTelemetry]
+        public string DefaultContentType { get; set; } // "text/plain";
+
+        [SafeForTelemetry]
+        public string DefaultCteClassName { get; set; } // "AnsiCte";
+
+        [SafeForTelemetry]
+        public string DefaultSyntaxHighlighterCteNameClassName { get; set; } // "AnsiCte";
+
         /// <summary>
         /// Content type handlers
         /// </summary>
@@ -230,6 +239,10 @@ namespace WinPrint.Core.Models {
 
                 //settings.size = new WindowSize(1024, 800);
                 //settings.location = new WindowLocation(100, 100);
+
+                DefaultContentType = "text/plain",
+                DefaultCteClassName = "AnsiCte",
+                DefaultSyntaxHighlighterCteNameClassName = "AnsiCte",
 
                 AnsiContentTypeEngineSettings = new AnsiCte() {
                     ContentSettings = new ContentSettings() {

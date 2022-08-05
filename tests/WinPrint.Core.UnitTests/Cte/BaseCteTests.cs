@@ -151,7 +151,7 @@ namespace WinPrint.Core.UnitTests.Cte
             input = "text";
             (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
             Assert.NotNull(cte);
-            Assert.Equal(ContentTypeEngineBase.DefaultCteClassName, cte.GetType().Name);
+            Assert.Equal(ModelLocator.Current.Settings.DefaultCteClassName, cte.GetType().Name);
             Assert.Equal("text/plain", contentType);
             Assert.Equal("Plain Text", language);
 
@@ -194,7 +194,7 @@ namespace WinPrint.Core.UnitTests.Cte
             input = "text/plain";
             (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
             Assert.NotNull(cte);
-            Assert.Equal(ContentTypeEngineBase.DefaultCteClassName, cte.GetType().Name);
+            Assert.Equal(ModelLocator.Current.Settings.DefaultCteClassName, cte.GetType().Name);
             Assert.Equal(input, contentType);
             Assert.Equal("Plain Text", language);
 

@@ -12,7 +12,7 @@ using WinPrint.LiteHtml;
 namespace WinPrint.Core.ContentTypeEngines {
 
     /// <summary>
-    /// Implements generic HTML file type support. 
+    /// Implements generic HTML file type support. Uses LiteHtml.
     /// </summary>
     public class HtmlCte : ContentTypeEngineBase, IDisposable {
         private static readonly string[] _supportedContentTypes = { "text/html" };
