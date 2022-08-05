@@ -81,14 +81,14 @@ namespace WinPrint.Core.Services {
 
                 if (proc.WaitForExit(5000)) {
                     string output = proc.StandardOutput.ReadLine();
-                    if (output.StartsWith("Pygments version ")) {
+                    if (output != null && output.StartsWith("Pygments version ")) {
                         installed = true;
                         message = $"Pygments is functional: {output}";
                         Log.Debug("{output}", message);
                         return (installed, message);
                     }
                     else {
-                        message = $"{proc.StartInfo.FileName} failed to start: {output}";
+                        message = $"{proc.StartInfo.FileName} failed to start: {(output == null ? "no output" : output)}";
                     }
                 }
                 else {

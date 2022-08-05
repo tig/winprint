@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29503.13
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32728.150
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinPrint.WinForms", "WinPrint.WinForms\WinPrint.WinForms.csproj", "{6DEA2A6F-7ECA-411C-B25A-2B7293AFD336}"
 EndProject
@@ -18,6 +18,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiteHtmlLib", "LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj", "{2E1F5B1E-430B-4FFF-963C-92229154F261}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerShellAsync", "PowershellAsync\PowerShellAsync\PowerShellAsync.csproj", "{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8503AB6C-847F-4764-BB7C-DFFFE5E87A01}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
