@@ -19,7 +19,7 @@ namespace WinPrintInstaller.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,11 +61,11 @@ namespace WinPrintInstaller.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copyright (c) Kindel Systems, LLC
+        ///   Looks up a localized string similar to Copyright (c) Kindel, LLC
         ///
         ///Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
         ///
-        ///The above copyright notice and this pe [rest of string was truncated]&quot;;.
+        ///The above copyright notice and this permission [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string License {
             get {

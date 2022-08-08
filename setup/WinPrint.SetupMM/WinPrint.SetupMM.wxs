@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define ComponentRules="OneToOne"?>
+  <!-- SourceDir instructs IsWiX the location of the directory that contains files for this merge module -->
+  <?define SourceDir="..\Deploy"?>
+  <Module Id="WinPrint.SetupMM" Language="1033" Version="1.0.0.0">
+    <Package Id="e44368f4-1948-4ad5-809b-4e72b1675dd6" Manufacturer="WinPrint.SetupMM" InstallerVersion="200" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="MergeRedirectFolder">
+        <Component Id="owcE73C3D776906E1A4FB0ACF4EC9AA334E" Guid="ccc64beb-acb8-c98a-8f8c-0661a74cb75d">
+          <File Id="owfE73C3D776906E1A4FB0ACF4EC9AA334E" Source="$(var.SourceDir)\CommandLine.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owcC92D17D54ED40B013BB201B6E73A1733" Guid="9296c4d8-3943-b838-dcc3-b14539f6b483">
+          <File Id="owfC92D17D54ED40B013BB201B6E73A1733" Source="$(var.SourceDir)\GalaSoft.MvvmLight.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc5336116E98DE905BC34448BBAD02F5CC" Guid="6490af4c-69d7-f667-e789-43c209319aa9">
+          <File Id="owf5336116E98DE905BC34448BBAD02F5CC" Source="$(var.SourceDir)\libvt100.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc28DBC1F626DF0B1D68E0A14890A4DB6D" Guid="40160830-50f3-45b6-baf7-89014b268d57">
+          <File Id="owf28DBC1F626DF0B1D68E0A14890A4DB6D" Source="$(var.SourceDir)\Microsoft.ApplicationInsights.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc87C4F72DC119E1A19D0B8EB167F78263" Guid="dfbfe594-bc9c-52dd-28f0-c7c8ebb5778d">
+          <File Id="owf87C4F72DC119E1A19D0B8EB167F78263" Source="$(var.SourceDir)\Microsoft.Extensions.DependencyInjection.Abstractions.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc16531D2D98003D2C52258B570BEC98F5" Guid="603ee5e6-a5b2-9304-247c-00556c241892">
+          <File Id="owf16531D2D98003D2C52258B570BEC98F5" Source="$(var.SourceDir)\Microsoft.Extensions.DependencyInjection.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc7AD04EA5783093F8FABD6AA959067340" Guid="2bed6664-23fc-ca54-364c-dc0ad14014c0">
+          <File Id="owf7AD04EA5783093F8FABD6AA959067340" Source="$(var.SourceDir)\Microsoft.Extensions.Logging.Abstractions.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc9A85691F0973C21185785885F5526A6C" Guid="db2b8366-8066-5459-f75f-49d51816e55f">
+          <File Id="owf9A85691F0973C21185785885F5526A6C" Source="$(var.SourceDir)\Microsoft.Extensions.Logging.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc889F050B853E61CA58DC7E8A75F823A9" Guid="0bd7addd-d49d-6aa2-f013-2019936d498d">
+          <File Id="owf889F050B853E61CA58DC7E8A75F823A9" Source="$(var.SourceDir)\Microsoft.Extensions.Options.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc693206EBEBFE742D9132304AA1126C8F" Guid="588a78fb-6fc9-572f-f98b-8e8d023238c4">
+          <File Id="owf693206EBEBFE742D9132304AA1126C8F" Source="$(var.SourceDir)\Microsoft.Extensions.Primitives.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc1187F419CFCCC04A430C8D1771D838A6" Guid="a01e748d-5d30-44fe-938d-9902a2159ed7">
+          <File Id="owf1187F419CFCCC04A430C8D1771D838A6" Source="$(var.SourceDir)\Octokit.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc511B108E44C375F9AAD38340F4BAF2D8" Guid="4feec2cf-4322-22f9-d55b-47135feb16f0">
+          <File Id="owf511B108E44C375F9AAD38340F4BAF2D8" Source="$(var.SourceDir)\Serilog.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owcB31EB0B31676AEC5DA38C5FBF16D53F1" Guid="7e8ff31b-bb1c-097a-dc30-f0f9d2a18f1d">
+          <File Id="owfB31EB0B31676AEC5DA38C5FBF16D53F1" Source="$(var.SourceDir)\Serilog.Sinks.ApplicationInsights.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owcDE11FCF6EEF2A3C2151913BD97D98324" Guid="4c2111e8-8719-89d3-c44f-6acb14830374">
+          <File Id="owfDE11FCF6EEF2A3C2151913BD97D98324" Source="$(var.SourceDir)\Serilog.Sinks.Console.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc3A0C35DCF671C343A54E5C74F17AA95D" Guid="98f33277-e619-6134-1215-c9ed10ab6ccf">
+          <File Id="owf3A0C35DCF671C343A54E5C74F17AA95D" Source="$(var.SourceDir)\Serilog.Sinks.Debug.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc9C4E871325807D386525CB812171F73C" Guid="94b0c741-6a0e-c45f-988d-f36e26c7d305">
+          <File Id="owf9C4E871325807D386525CB812171F73C" Source="$(var.SourceDir)\Serilog.Sinks.File.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc3D61D7836E8DC35DC15D1ABBA0E616E3" Guid="62e74389-eeb6-5f76-4807-46e2c6606ca3">
+          <File Id="owf3D61D7836E8DC35DC15D1ABBA0E616E3" Source="$(var.SourceDir)\System.Linq.Dynamic.Core.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc43F6957124F9F16F6417DE2A524FBA7C" Guid="7704759d-a67a-e704-ab8f-b10e9f26d215">
+          <File Id="owf43F6957124F9F16F6417DE2A524FBA7C" Source="$(var.SourceDir)\UtfUnknown.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc89ACC9784CEB7F0C589FBA267EFFB929" Guid="0b2a683f-6895-dc92-71fb-8ab5e95324ee">
+          <File Id="owf89ACC9784CEB7F0C589FBA267EFFB929" Source="$(var.SourceDir)\WinPrint.Core.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owcDF9347A573A241B3B6B9A4D02EAEBE0C" Guid="f2b9de3f-ff4f-9915-2332-4b5a45267efb">
+          <File Id="owfDF9347A573A241B3B6B9A4D02EAEBE0C" Source="$(var.SourceDir)\WinPrint.LiteHtml.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc278772C7DCDB90D19276AFF801C52E63" Guid="bfe4930d-7035-4179-b54b-43478e47263a">
+          <File Id="owf278772C7DCDB90D19276AFF801C52E63" Source="$(var.SourceDir)\winprintgui.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="owc4D1DD8D35F19B5EC5DF1AA6516EA83B7" Guid="3dbdbaae-3763-9325-5ecb-59854dc6ee1c">
+          <File Id="owf4D1DD8D35F19B5EC5DF1AA6516EA83B7" Source="$(var.SourceDir)\winprintgui.exe" KeyPath="yes">
+            <Shortcut Id="sc2879E8252CD10B40EB2DA5E2FC86AB15" Name="WinPrint" Directory="StartMenuFolder" Description="WinPrint GUI" Show="normal" />
+          </File>
+        </Component>
+      </Directory>
+      <Directory Id="StartMenuFolder" />
+    </Directory>
+    <ComponentGroupRef Id="Custom" />
+  </Module>
+</Wix>

@@ -12,7 +12,7 @@
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.1.0.160</Version>
+    <Version>2.1.0.246</Version>
     <Company>Kindel Systems</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
@@ -21,10 +21,15 @@
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <Platforms>AnyCPU;x64</Platforms>
 
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NoWarn>1701;1702</NoWarn>
   </PropertyGroup>
   
@@ -60,7 +65,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="rem copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;rem copy $(OutDir)\$(TargetName).exe $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).dll $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)..\release&#xD;&#xA;copy $(SolutionDir)..\tools\pygmentize.exe $(TargetDir)" />
+    <Exec Command="mkdir $(SolutionDir)..\setup\release\&#xD;&#xA;&#xD;&#xA;echo copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;&#xD;&#xA;echo copy $(OutDir)$(TargetName).exe $(SolutionDir)..\setup\release\&#xD;&#xA;copy $(OutDir)$(TargetName).exe $(SolutionDir)..\setup\release\&#xD;&#xA;&#xD;&#xA;echo copy $(OutDir)$(TargetName).dll $(SolutionDir)..\setup\release\&#xD;&#xA;copy $(OutDir)$(TargetName).dll $(SolutionDir)..\setup\release\&#xD;&#xA;&#xD;&#xA;echo copy $(OutDir)$(TargetName).runtimeconfig.json $(SolutionDir)..\setup\release&#xD;&#xA;copy $(OutDir)$(TargetName).runtimeconfig.json $(SolutionDir)..\setup\release&#xD;&#xA;&#xD;&#xA;echo copy $(OutDir)*.dll $(SolutionDir)..\setup\release&#xD;&#xA;copy $(OutDir)*.dll $(SolutionDir)..\setup\release&#xD;&#xA;&#xD;&#xA;xcopy /iery &quot;$(TargetDir)*.*&quot; &quot;$(SolutionDir)..\setup\Deploy&quot;" />
   </Target>
 
 </Project>
