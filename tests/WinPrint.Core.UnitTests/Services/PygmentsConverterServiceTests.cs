@@ -25,7 +25,7 @@ namespace WinPrint.Core.UnitTests.Cte
             var input = $@"using system;";
             // "using system;" | out-file using.cs
             // pygmentize -O 16m,style=friendly .\using.cs | out-file using.ans
-            var expectedOutput = "\u001b[38;2;0;112;32;01musing\u001b[39;00m \u001b[38;2;14;132;181;01msystem\u001b[39;00m;";
+            var expectedOutput = "\u001b[38;2;0;112;32;01musing\u001b[39;00m\u001b[38;2;187;187;187m \u001b[39m\u001b[38;2;14;132;181;01msystem\u001b[39;00m;";
             var output = await ps.ConvertAsync(input, "friendly", "c#");
             Assert.Equal(expectedOutput, output);
         }
