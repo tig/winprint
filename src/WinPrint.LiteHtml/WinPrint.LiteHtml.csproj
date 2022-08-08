@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
+    <None Include="..\LiteHtmlSharp\LiteHtmlLib\bin\$(Configuration)\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
