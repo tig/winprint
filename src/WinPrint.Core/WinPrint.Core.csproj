@@ -1,102 +1,101 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.1.0.301</Version>
-    <Company>Kindel</Company>
-    <Product>winprint</Product>
-    <Authors>Charlie Kindel</Authors>
-    <Description>winprint Core Engine</Description>
-    <Copyright>Copyright Kindel, LLC</Copyright>
-    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-    <LangVersion>8.0</LangVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <Version>2.1.0.306</Version>
+        <Company>Kindel</Company>
+        <Product>winprint</Product>
+        <Authors>Charlie Kindel</Authors>
+        <Description>winprint Core Engine</Description>
+        <Copyright>Copyright Kindel, LLC</Copyright>
+        <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+        <LangVersion>8.0</LangVersion>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG</DefineConstants>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DefineConstants>DEBUG</DefineConstants>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="ContentTypeEngines\PrismCte.cs" />
-    <Compile Remove="Services\NodeService.cs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="ContentTypeEngines\PrismCte.cs" />
+        <Compile Remove="Services\NodeService.cs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
-    <None Remove="Properties\FileTypeMapping.json" />
-    <None Remove="Resources\prism-winprint-overrides.css" />
-    <None Remove="Resources\prism-winprint.css" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
+        <None Remove="Properties\FileTypeMapping.json" />
+        <None Remove="Resources\prism-winprint-overrides.css" />
+        <None Remove="Resources\prism-winprint.css" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\FileTypeMapping.json" />
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\FileTypeMapping.json" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
-    <PackageReference Include="MSBump" Version="2.3.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
-    <PackageReference Include="Octokit" Version="0.50.0" />
-    <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.19" />
-    <PackageReference Include="UTF.Unknown" Version="2.5.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\libvt100\src\libvt100.csproj" />
+        <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
 
-  <ItemGroup>
-    <ProjectReference Include="..\libvt100\src\libvt100.csproj" />
-    <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
-  </ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.9.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+        <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+        <PackageReference Include="MSBump" Version="2.3.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
+        <PackageReference Include="Octokit" Version="0.50.0" />
+        <PackageReference Include="Serilog" Version="2.10.0" />
+        <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="3.1.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+        <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.19" />
+        <PackageReference Include="UTF.Unknown" Version="2.5.0" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Services\TelemetryService.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TelemetryService.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Services\TelemetryService.tt.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TelemetryService.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Properties\Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Services\TelemetryService.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>TelemetryService.tt</DependentUpon>
+        </Compile>
+        <Compile Update="Services\TelemetryService.tt.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>TelemetryService.tt</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Services\TelemetryService.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TelemetryService.tt.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="Properties\Resources.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </EmbeddedResource>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Update="Services\TelemetryService.tt">
+            <Generator>TextTemplatingFileGenerator</Generator>
+            <LastGenOutput>TelemetryService.tt.cs</LastGenOutput>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
 
 </Project>
 

@@ -64,4 +64,8 @@
       <Folder Include="x64\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj" />
+    </ItemGroup>
+
 </Project>

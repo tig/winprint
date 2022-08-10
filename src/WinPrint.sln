@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{9563EBB8-F752-4E4B-942E-F1A5C1A601BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{84B31CE1-C4EF-4C86-BE34-1EE180C7E651} = {9563EBB8-F752-4E4B-942E-F1A5C1A601BF}
+		{2E1F5B1E-430B-4FFF-963C-92229154F261} = {9563EBB8-F752-4E4B-942E-F1A5C1A601BF}
+		{F23D33CB-14D5-471E-9A5B-BFD5C14C8A31} = {9563EBB8-F752-4E4B-942E-F1A5C1A601BF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7FA61957-25B2-40E5-B7AF-AC404DAF2B20}
