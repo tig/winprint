@@ -18,6 +18,6 @@
 
 # Versions
 
-* Managed by `msbump` https://github.com/BalassaMarton/MSBump
-* Prime version is stored in `Winprint.Core.dll` via `src\WinPrint.Core\WinPrint.Core.csproj`: `<Version>2.1.0.0</Version>`
-  * Must manually bump `major.minor.rel` in `WinPrint.WinForms.csproj`, `WinPrint.Console.csproj`, and `Winprint.LiteHtml.csproj` before release
+* Ysed to be managed by `msbump` https://github.com/BalassaMarton/MSBump
+    * Prime version is stored in `Winprint.Core.dll` via `src\WinPrint.Core\WinPrint.Core.csproj`: `<Version>2.1.0.0</Version>`
+        * Must manually bump `major.minor.rel` in `WinPrint.WinForms.csproj`, `WinPrint.Console.csproj`, and `Winprint.LiteHtml.csproj` before release

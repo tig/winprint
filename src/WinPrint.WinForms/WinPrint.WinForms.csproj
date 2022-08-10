@@ -37,11 +37,6 @@
       <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
 
       <PackageReference Include="CommandLineParser" Version="2.9.1" />
-
-    <PackageReference Include="MSBump" Version="2.3.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
   </ItemGroup>
 
