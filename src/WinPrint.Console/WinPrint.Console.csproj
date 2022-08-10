@@ -9,8 +9,8 @@
         <AssemblyName>winprint</AssemblyName>
         <StartupObject>WinPrint.Console.Program</StartupObject>
 
-        <Version>2.1.0.175</Version>
-        <Company>Kindel Systems</Company>
+        <Version>2.1.0.176</Version>
+        <Company>Kindel</Company>
         <Product>winprint</Product>
         <Authors>Charlie Kindel</Authors>
         <Description>winprint Console App</Description>

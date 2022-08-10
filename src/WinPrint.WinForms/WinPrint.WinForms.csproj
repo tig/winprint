@@ -12,8 +12,8 @@
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.1.0.271</Version>
-    <Company>Kindel Systems</Company>
+    <Version>2.1.0.272</Version>
+    <Company>Kindel</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
     <Description>winprint GUI App</Description>

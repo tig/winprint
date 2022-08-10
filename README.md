@@ -38,7 +38,7 @@ See what version is installed:
 
 ```powershell
 PS > Out-WinPrint -verbose
-VERBOSE: Out-WinPrint 2.0.5.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
+VERBOSE: Out-WinPrint 2.0.5.0 - Copyright Kindel, LLC - https://tig.github.io/winprint
 ```
 
 Print a Powershell profile using the default sheet definition and default printer:
@@ -49,7 +49,7 @@ Get-Content $profile.CurrentUserAllHosts | winprint -Language powershell
 
 ```powershell
 PS > cat Program.cs | wp -PrinterName PDF -Orientation Portrait -Verbose -Title Program.cs
-VERBOSE: Out-WinPrint 2.0.5.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
+VERBOSE: Out-WinPrint 2.0.5.0 - Copyright Kindel, LLC - https://tig.github.io/winprint
 VERBOSE:     Printer:          PDF
 VERBOSE:     Paper Size:       Letter
 VERBOSE:     Orientation:      Portrait

@@ -4,8 +4,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.1.0.299</Version>
-    <Company>Kindel Systems</Company>
+    <Version>2.1.0.300</Version>
+    <Company>Kindel</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
     <Description>winprint Core Engine</Description>
