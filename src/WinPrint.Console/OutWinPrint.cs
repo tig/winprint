@@ -240,9 +240,9 @@ namespace WinPrint.Console {
             }
 
             if (_force ||
-                //await Task.Run(() => ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
+                //await Task.Run(() => ShouldContinue("The winprint installer requires any Powershell instances that have used Out-WinPrint be closed.",
                 //"Exit this Powershell instance?"))) {
-                ShouldContinue("The winprint installer requires any Powershell instances that have used out-winprint be closed.",
+                ShouldContinue("The winprint installer requires any Powershell instances that have used Out-WinPrint be closed.",
                 "Exit this Powershell instance?")) {
                 // Kill process?
                 System.Environment.Exit(0);
@@ -290,11 +290,11 @@ namespace WinPrint.Console {
 
             // If this is the first invoke since loading start telemetry and logging
             if (ServiceLocator.Current.TelemetryService.GetTelemetryClient() == null) {
-                ServiceLocator.Current.TelemetryService.Start("out-winprint");
+                ServiceLocator.Current.TelemetryService.Start("Out-WinPrint");
 
                 // AsyncCmdlet base adds each cmdlet instance to PowerShellSink.Instance; this call configures
                 // the Debug and File LogEventLevel's only
-                ServiceLocator.Current.LogService.Start("out-winprint", PowerShellSink.Instance, debug: _debug, verbose: _verbose);
+                ServiceLocator.Current.LogService.Start("Out-WinPrint", PowerShellSink.Instance, debug: _debug, verbose: _verbose);
             }
             else {
                 // Change Console logging as specified by paramters (e.g. -verbose and/or -debug)
@@ -304,7 +304,7 @@ namespace WinPrint.Console {
             }
 
             var ver = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService)).Location);
-            Log.Information("out-winprint v{version} - {copyright} - {link}", ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
+            Log.Information("Out-WinPrint v{version} - {copyright} - {link}", ver.ProductVersion, ver.LegalCopyright, @"https://tig.github.io/winprint");
             Log.Debug("PowerShell Invoked: command: {appname}, module: {modulename}", MyInvocation.MyCommand.Name, MyInvocation.MyCommand.ModuleName);
 
             var dict = MyInvocation.BoundParameters.ToDictionary(item => item.Key, item => $"{item.Value}");

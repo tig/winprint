@@ -209,7 +209,7 @@ namespace WinPrint.Core.Services {
                         // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
                         path = $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
                     }
-                    // TODO: Remove internal knowledge of out-winprint from here
+                    // TODO: Remove internal knowledge of Out-WinPrint from here
                     if (path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell")) {
                         path = Path.GetDirectoryName(Assembly.GetAssembly(typeof(SettingsService)).Location);
                     }

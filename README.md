@@ -15,7 +15,7 @@ Advanced source code and text file printing for PowerShell. The perfect tool for
 * Simple and elegant graphical user interface with accurate print preview.
 * The most capable PowerShell printing tool enabling printing from the command line.
   * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
-  * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `out-winprint` CmdLet is a drop-in replacement for `out-printer`.
+  * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `Out-WinPrint` CmdLet is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
@@ -37,7 +37,7 @@ Advanced source code and text file printing for PowerShell. The perfect tool for
 See what version is installed:
 
 ```powershell
-PS > out-winprint -verbose
+PS > Out-WinPrint -verbose
 VERBOSE: Out-WinPrint 2.0.5.0 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
 ```
 
@@ -63,7 +63,7 @@ PS >
 The following all do the same thing:
 
 ```powershell
-out-winprint -FileName program.cs
+Out-WinPrint -FileName program.cs
 wp program.cs
 winprint program.cs
 cat program.cs | wp -Title "program.cs"
@@ -72,7 +72,7 @@ cat program.cs | wp -Title "program.cs"
 Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
 
 ```powershell
-ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winPrint -p "HP LaserJet" -title $_.FullName -verbose}
+ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | Out-WinPrint -p "HP LaserJet" -title $_.FullName -verbose}
 ```
 
 ## Contributing
