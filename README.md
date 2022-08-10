@@ -1,7 +1,7 @@
 ![.NET Core](https://github.com/tig/winprint/workflows/.NET%20Core/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/tig/winprint/badge?s=93affda0738af869187afe5296914b814511f529)](https://www.codefactor.io/repository/github/tig/winprint)
 
-# winprint 2.0
+# winprint 2.x
 
 *winprint - A modern take on the the classic source code printing app from [1988](https://tig.github.io/winprint/about.html).*
 
@@ -30,7 +30,7 @@ Advanced source code and text file printing for PowerShell. The perfect tool for
 
 ## Graphical Interface
 
-![winprint 2.0](https://tig.github.io/winprint/winprint2.png)
+![winprint 2](https://tig.github.io/winprint/winprint2.png)
 
 ## PowerShell Command Line Interface
 
