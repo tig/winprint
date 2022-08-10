@@ -1,61 +1,69 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <RootNamespace>WinPrint.Console</RootNamespace>
-    <AssemblyTitle>winprint Console App</AssemblyTitle>
-    <AssemblyName>winprint</AssemblyName>
-    <StartupObject></StartupObject>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <RootNamespace>WinPrint.Console</RootNamespace>
+        <AssemblyTitle>winprint Console App</AssemblyTitle>
+        <AssemblyName>winprint</AssemblyName>
+        <StartupObject>WinPrint.Console.Program</StartupObject>
 
-    <Version>2.1.0.145</Version>
-    <Company>Kindel Systems</Company>
-    <Product>winprint</Product>
-    <Authors>Charlie Kindel</Authors>
-    <Description>winprint Console App</Description>
-    <Copyright>Copyright Kindel, LLC</Copyright>
-    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-    <NeutralLanguage>en-US</NeutralLanguage>
-    <Platforms>AnyCPU;x64</Platforms>
-  </PropertyGroup>
+        <Version>2.1.0.170</Version>
+        <Company>Kindel Systems</Company>
+        <Product>winprint</Product>
+        <Authors>Charlie Kindel</Authors>
+        <Description>winprint Console App</Description>
+        <Copyright>Copyright Kindel, LLC</Copyright>
+        <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <Platforms>AnyCPU;x64</Platforms>
+        <ApplicationIcon>winprint.ico</ApplicationIcon>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.PowerShell.Commands.Diagnostics" Version="7.2.5" />
-    <PackageReference Include="Microsoft.PowerShell.Commands.Management" Version="7.2.5" />
-    <PackageReference Include="Microsoft.PowerShell.ConsoleHost" Version="7.2.5" />
-    <PackageReference Include="MSBump" Version="2.3.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.19" />
-    <PackageReference Include="System.Management.Automation" Version="7.2.5" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="winprint.ico" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\PowershellAsync\PowerShellAsync\PowerShellAsync.csproj" />
-    <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.PowerShell.Commands.Diagnostics" Version="7.2.5" />
+        <PackageReference Include="Microsoft.PowerShell.Commands.Management" Version="7.2.5" />
+        <PackageReference Include="Microsoft.PowerShell.ConsoleHost" Version="7.2.5" />
+        <PackageReference Include="MSBump" Version="2.3.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.19" />
+        <PackageReference Include="System.Management.Automation" Version="7.2.5" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Properties/Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\PowershellAsync\PowerShellAsync\PowerShellAsync.csproj" />
+        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj">
+            <Private>True</Private>
+            <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+        </ProjectReference>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Properties/Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Properties/Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy ..\..\tools\pygmentize.exe $(TargetDir)" />
-  </Target>
+    <ItemGroup>
+        <EmbeddedResource Update="Properties/Resources.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
 
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="echo copy ..\..\tools\pygmentize.exe $(TargetDir)&#xD;&#xA;copy ..\..\tools\pygmentize.exe $(TargetDir)&#xD;&#xA;&#xD;&#xA;xcopy /iery &quot;$(TargetDir)*.*&quot; &quot;$(SolutionDir)..\setup\Deploy&quot;" />
+    </Target>
 </Project>
