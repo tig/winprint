@@ -69,9 +69,9 @@
             <DependentUpon>TelemetryService.tt</DependentUpon>
         </Compile>
         <Compile Update="Services\TelemetryService.tt.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>TelemetryService.tt</DependentUpon>
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>TelemetryService.tt</DependentUpon>
         </Compile>
     </ItemGroup>
 
