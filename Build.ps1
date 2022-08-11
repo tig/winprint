@@ -5,7 +5,7 @@ echo "Cleaning Deploy folder"
 rm -Recurse -Path setup/Deploy -Include *.* 
 
 echo "Building"
-dotnet build src/WinPrint.sln
+msbuild /p:Configuration=Debug /p:Platform=x64 src/WinPrint.sln 
 
 echo "Testing Out-winprint"
 pwsh.exe -NoLogo -Command "Import-Module '.\setup\Deploy\winprint.dll'; Out-WinPrint .\testfiles\Program.cs -WhatIf -Verbose;"

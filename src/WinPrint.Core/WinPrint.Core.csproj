@@ -37,6 +37,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\libvt100\src\libvt100.csproj" />
+        <ProjectReference Include="..\LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj" />
         <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
 
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
