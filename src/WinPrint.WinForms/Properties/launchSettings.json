@@ -3,7 +3,7 @@
     "WinPrint.WinForms": {
       "commandName": "Project",
       "commandLineArgs": "Program.cs",
-      "workingDirectory": "C:\\Users\\charl\\s\\winprint\\testfiles"
+      "workingDirectory": "..\\..\\testfiles"
     }
   }
 }

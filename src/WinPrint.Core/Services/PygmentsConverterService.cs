@@ -51,7 +51,7 @@ namespace WinPrint.Core.Services {
 
                 if (proc.WaitForExit(5000)) {
                     string output = proc.StandardOutput.ReadLine();
-                    if (output.StartsWith("Python ")) {
+                    if (output !=null && output.StartsWith("Python ")) {
                         python = true;
                         Log.Debug("Python is installed: {output}", output);
                     }
