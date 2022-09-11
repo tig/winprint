@@ -2,6 +2,7 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommandLine;
@@ -10,6 +11,7 @@ using Serilog;
 using Serilog.Events;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+using WinPrint.WinForms;
 
 namespace WinPrint.Winforms {
     internal static class Program {
@@ -18,11 +20,19 @@ namespace WinPrint.Winforms {
         /// </summary>
         [STAThread]
         private static void Main(string[] args) {
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
             ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
-            ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName);
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+            bool debug = false;
+
+            var main = new MainWindow();
+            GuiLogSink.Instance.OutputWindow = main;
 
             if (args.Length > 0) {
                 var parser = new Parser(with => with.EnableDashDash = true);
@@ -30,10 +40,12 @@ namespace WinPrint.Winforms {
                 result
                     .WithParsed<Options>(o => {
                         if (o.Debug) {
+                            ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName, GuiLogSink.Instance, debug: true, verbose: true);
                             ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Debug;
                             ServiceLocator.Current.LogService.MasterLevelSwitch.MinimumLevel = LogEventLevel.Debug;
                         }
                         else {
+                            ServiceLocator.Current.LogService.Start(AppDomain.CurrentDomain.FriendlyName, GuiLogSink.Instance, debug: false, verbose: true);
                             ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
                         }
                         ServiceLocator.Current.TelemetryService.TrackEvent("Command Line Options", properties: o.GetTelemetryDictionary());
@@ -44,11 +56,6 @@ namespace WinPrint.Winforms {
                 parser.Dispose();
             }
 
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
-            var main = new MainWindow();
             Application.Run(main);
             main.Dispose();
 

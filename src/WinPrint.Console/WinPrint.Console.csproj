@@ -60,6 +60,6 @@
 
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="echo copy ..\..\tools\pygmentize.exe $(TargetDir)&#xD;&#xA;copy ..\..\tools\pygmentize.exe $(TargetDir)&#xD;&#xA;&#xD;&#xA;xcopy /iery &quot;$(TargetDir)*.*&quot; &quot;$(SolutionDir)..\setup\Deploy&quot;" />
+        <Exec Command="echo copy ..\..\tools\pygmentize.exe $(TargetDir)&#xD;&#xA;copy ..\..\tools\pygmentize.exe $(TargetDir)&#xD;&#xA;&#xD;&#xA;echo copy ..\..\tools\pygmentize.exe $(SolutionDir)..\setup\release\&#xD;&#xA;copy ..\..\tools\pygmentize.exe $(SolutionDir)..\setup\release\&#xD;&#xA;&#xD;&#xA;echo copy $(OutDir)$(TargetName).dll $(SolutionDir)..\setup\release\&#xD;&#xA;copy $(OutDir)$(TargetName).dll $(SolutionDir)..\setup\release\&#xD;&#xA;&#xD;&#xA;" />
     </Target>
 </Project>

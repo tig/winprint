@@ -285,7 +285,6 @@ namespace WinPrint.WinForms {
         };
         private void PaintMessage(PaintEventArgs e) {
             // While in error or loading & reflowing show Text 
-            Log.Information("Status: {status}", Text);
             var rect = GetTextRect(e.Graphics);
             //e.Graphics.FillRectangle(SystemBrushes.Control, _messageRect);
             e.Graphics.DrawString(Text, new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point), SystemBrushes.ControlText, rect, _messageStringFormat);
