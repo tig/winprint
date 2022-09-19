@@ -53,7 +53,7 @@ namespace WinPrint.Core.Services {
             bool python = false;
             try {
                 Log.Information("Source code formatting: Verifying Python is installed");
-                proc.StartInfo.FileName = "python3";
+                proc.StartInfo.FileName = "python.exe";
                 proc.StartInfo.Arguments = $"-V";
                 Log.Debug("Pygments: Starting process {proc} {args}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
                 proc.Start();
@@ -77,7 +77,7 @@ namespace WinPrint.Core.Services {
             }
 
             if (!python) {
-                message = $"Python 3.x must be installed (on the PATH) for source code formatting.\n\n{message}";
+                message = $"Python 3.x must be installed (and on the PATH) for source code formatting to work.\n\nType `winget install python` at a command prompt to install Python.\n\n{message}";
                 Log.Debug("Pygments: {message}", message);
                 return (_pygmentsInstalled, message);
             }
@@ -87,7 +87,7 @@ namespace WinPrint.Core.Services {
             // from https://stackoverflow.com/questions/62162970/programmatically-determine-pip-user-install-location-scripts-directory/62167797#62167797
             try {
                 Log.Information("Source code formatting: Verifying Python scripts location");
-                proc.StartInfo.FileName = "pythonx";
+                proc.StartInfo.FileName = "python.exe";
                 proc.StartInfo.Arguments = "-c \"import os,sysconfig;print(sysconfig.get_path('scripts',f'{os.name}_user'))\"";
                 Log.Debug("Pygments: Starting process {proc} {args}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
                 proc.Start();
@@ -159,6 +159,64 @@ namespace WinPrint.Core.Services {
             return (_pygmentsInstalled, message);
         }
 
+        ///// <summary>
+        ///// Installs Python via Winget
+        ///// </summary>
+        ///// <returns>true if python.exe is working, false otherwise + message</returns>
+        //private (bool installed, string message) InstallPython() {
+        //    string message = String.Empty;
+
+        //    Process proc = new Process();
+
+        //    proc.StartInfo.RedirectStandardInput = true;
+        //    proc.StartInfo.RedirectStandardOutput = true;
+        //    proc.StartInfo.RedirectStandardError = true;
+        //    proc.StartInfo.UseShellExecute = false;
+        //    proc.StartInfo.CreateNoWindow = true;
+        //    proc.EnableRaisingEvents = false;
+
+        //    // Install Python via winget
+        //    bool python = false;
+        //    try {
+        //        Log.Information("Source code formatting: Installing Python");
+
+        //        proc.StartInfo.FileName = "winget.exe";
+        //        proc.StartInfo.Arguments = $"install Python";
+        //        Log.Debug("Pygments: Attempting to install Python via: {cmd} {args}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
+        //        proc.Start();
+
+        //        // TODO: 30 secs is a long time without status updates 
+        //        if (proc.WaitForExit(30000)) {
+        //            string output = proc.StandardOutput.ReadToEnd();
+        //            if (output != null && 
+        //                (output.Contains("Successfully installed"))) {
+        //                python = true;
+        //                Log.Debug("Pygments: Python is installed: {output}", output);
+        //                message = "Python is installed";
+        //            }
+        //            else {
+        //                output = proc.StandardError.ReadToEnd();
+
+        //                message = $"Error installing Python.\n{proc.StartInfo.FileName} failed to start: {output}";
+        //            }
+        //        }
+        //        else {
+        //            message = $"Could not launch {proc.StartInfo.FileName}; timeout.";
+        //        }
+        //    }
+        //    catch (System.Exception ex) { // Console and WinForms are different
+        //        message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{ex.Message}";
+        //    }
+
+        //    if (!python) {
+        //        message = $"Pygments: Python must be installed for source code formatting to work.\n\n{message}";
+        //        Log.Debug("{message}", message);
+        //        return (python, message);
+        //    }
+
+        //    return (python, message);
+        //}
+
 
         /// <summary>
         /// Installs pygments via pip install
@@ -181,7 +239,7 @@ namespace WinPrint.Core.Services {
             try {
                 Log.Information("Source code formatting: Installing Pygments");
 
-                proc.StartInfo.FileName = "pip";
+                proc.StartInfo.FileName = "pip.exe";
                 proc.StartInfo.Arguments = $"install Pygments --upgrade";
                 Log.Debug("Pygments: Attempting to install Pygments via: {cmd} {args}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
                 proc.Start();
@@ -189,7 +247,7 @@ namespace WinPrint.Core.Services {
                 // TODO: 30 secs is a long time without status updates 
                 if (proc.WaitForExit(30000)) {
                     string output = proc.StandardOutput.ReadToEnd();
-                    if (output != null && 
+                    if (output != null &&
                         (output.Contains("Successfully installed Pygments") ||
                         output.Contains("Requirement already satisfied"))) {
                         pygments = true;
@@ -197,6 +255,8 @@ namespace WinPrint.Core.Services {
                         message = "Pygments is installed";
                     }
                     else {
+                        output = proc.StandardError.ReadToEnd();
+
                         message = $"Error installing Pygments.\n{proc.StartInfo.FileName} failed to start: {output}";
                     }
                 }
