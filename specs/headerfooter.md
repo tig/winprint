@@ -22,7 +22,7 @@ MachineName
 
 E.g. $"{}
 
-## WinPrint 2.0 (original) header/footer format macros
+## WinPrint 2 (original) header/footer format macros
 * &p - Page numberstucture
 * &P - Total number of pages
 * &d - Current date (short format).

@@ -1,7 +1,7 @@
 ![.NET Core](https://github.com/tig/winprint/workflows/.NET%20Core/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/tig/winprint/badge?s=93affda0738af869187afe5296914b814511f529)](https://www.codefactor.io/repository/github/tig/winprint)
 
-# winprint 2.x
+# winprint 2
 
 *winprint - A modern take on the the classic source code printing app from [1988](https://tig.github.io/winprint/about.html).*
 
@@ -13,12 +13,11 @@ Advanced source code and text file printing for PowerShell. The perfect tool for
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* The most capable PowerShell printing tool enabling printing from the command line.
+* The most capable PowerShell printing tool for printing from the command line.
   * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
   * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `Out-WinPrint` CmdLet is a drop-in replacement for `out-printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
 
 ## Documentation
 
@@ -48,9 +47,9 @@ Get-Content $profile.CurrentUserAllHosts | winprint -Language powershell
 ```
 
 ```powershell
-PS > cat Program.cs | wp -PrinterName PDF -Orientation Portrait -Verbose -Title Program.cs
+PS > cat Program.cs | wp -PrinterName "Epson MX-80" -Orientation Portrait -Verbose -Title Program.cs
 VERBOSE: Out-WinPrint 2.0.5.0 - Copyright Kindel, LLC - https://tig.github.io/winprint
-VERBOSE:     Printer:          PDF
+VERBOSE:     Printer:          Epson MX-80
 VERBOSE:     Paper Size:       Letter
 VERBOSE:     Orientation:      Portrait
 VERBOSE:     Sheet Definition: Default 2-Up (0002a500-0000-0000-c000-000000000046)
@@ -72,7 +71,7 @@ cat program.cs | wp -Title "program.cs"
 Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
 
 ```powershell
-ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | Out-WinPrint -p "HP LaserJet" -title $_.FullName -verbose}
+ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | Out-WinPrint -p "Epson MX-80" -title $_.FullName -verbose}
 ```
 
 ## Contributing

@@ -2,7 +2,7 @@
 
 namespace WinPrint.Core {
 
-    // WinPrint 2.0 has been assigned the following GUIDs by Microsoft
+    // WinPrint 2 has been assigned the following GUIDs by Microsoft
     //
     // Available range: 0002A5xx-0000-0000-C000-000000000046
     //
