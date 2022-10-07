@@ -1,4 +1,4 @@
-# WinPrint 2.0
+# WinPrint
 
 *A modern take on the the classic source code printing app from [1988](about.md).*
 
@@ -34,25 +34,25 @@ ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winprint -p "Ep
 * Simple and elegant graphical user interface with accurate print preview.
 * The most capable PowerShell printing tool enabling printing from the command line.
   * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
-  * Allows **winprint** to be used from other applications or solutions. The **winpprint** PowerShell `out-winprint` CmdLet is a drop-in replacement for `out-printer`.
+  * Allows **WinPrint** to be used from other applications or solutions. The **WinPrint** PowerShell `Out-WinPrint` CmdLet is a drop-in replacement for `Out-Printer`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Theoretically Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
+* Theoretically Cross platform. Even though it's named **Win**pPrint, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
 
 See [User's Guide](users-guide.md) for more details.
 
 ## History
 
-See [About](about.md) for the history prior to *WinPrint 2*.
+See [About](about.md) for the history prior to **WinPrint 2,x**.
 
-* 09-Sept-2022 - 2.1.0 - Finally released without caveats.
+* 09-Sept-2022 - 2.1.0 - Significant bug and usability fixes.
   * Fixes #35 - Detects if pre-reqs (Python and Pygments) are installed when run. Installs Pygments if needed.
   * Fixes #37 - Rendering is stupidly slow.
   * Fixes #30 - Switch to launch GUI (-gui) not working
   * Fixes #33 - Pygments not loading
   * Fixes #24 - Line Numbers greater than 999 are too wide
   
-* 03-May-2020 - 2.0.5 (RC2) -
+* 03-May-2020 - 2.0.5 (RC2) - First public release
   * Fixed content type / file extension detection.
   * Changed Header/Footer macros to support `{Language}`, `{ContentType}`, and `{CteName}` instead of just `{FileType}`.
   * Installer detects if .NET Core 3.1 is installed. Makes it easy to install it if not installed.
@@ -80,4 +80,4 @@ See [About](about.md) for the history prior to *WinPrint 2*.
 * 20-Feb-2020 - 2.0.0.1034 (Alpha) - Minor bug fixes. Added version number to GUI.
 * 18-Feb-2020 - 2.0.0.1003 (Alpha) - First public build (alpha).
 
-I'm embarrased by a few bugs and performance issues that I want to fix before I declare beta; see [Issues](https://github.com/tig/winprint/issues).
+See [Issues](https://github.com/tig/winprint/issues).
