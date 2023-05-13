@@ -1,4 +1,4 @@
-﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System;
@@ -30,14 +30,14 @@ namespace WinPrint.Winforms {
         private string activeFile;
         private OpenFileDialog openFileDialog = new OpenFileDialog();
 
-        private WinPrint.WinForms.PrintPreview printPreview;
+        public WinPrint.WinForms.PrintPreview PrintPreview;
 
         public MainWindow() {
             InitializeComponent();
 
             Icon = Resources.printer_and_fax_w;
 
-            printPreview = new PrintPreview {
+            PrintPreview = new PrintPreview {
                 Dock = dummyButton.Dock,
                 Anchor = dummyButton.Anchor,
                 BackColor = dummyButton.BackColor,
@@ -50,8 +50,7 @@ namespace WinPrint.Winforms {
                 TabIndex = 1,
                 TabStop = true
             };
-            printPreview.Click += new System.EventHandler(printPreview_Click);
-
+            PrintPreview.Click += new System.EventHandler(printPreview_Click);
 
             Color();
 
@@ -60,7 +59,7 @@ namespace WinPrint.Winforms {
 
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime) {
                 panelRight.Controls.Remove(dummyButton);
-                panelRight.Controls.Add(printPreview);
+                panelRight.Controls.Add(PrintPreview);
                 printersCB.Enabled = false;
                 paperSizesCB.Enabled = false;
             }
@@ -79,7 +78,6 @@ namespace WinPrint.Winforms {
             fontDialog.AllowVectorFonts = false;
             // fontDialog.AllowVerticalFonts = false;
             fontDialog.ShowHelp = false;
-
         }
 
         private void Color() {
@@ -127,7 +125,7 @@ namespace WinPrint.Winforms {
             fromLabel.BackColor = back;
             pagesLabel.BackColor = back;
 
-            printPreview.ForeColor = text;
+            PrintPreview.ForeColor = text;
             printersCB.ForeColor = text;
             paperSizesCB.ForeColor = text;
             landscapeCheckbox.ForeColor = text;
@@ -187,8 +185,8 @@ namespace WinPrint.Winforms {
                     printDoc.Dispose();
                 }
 
-                if (printPreview != null) {
-                    printPreview.Dispose();
+                if (PrintPreview != null) {
+                    PrintPreview.Dispose();
                 }
             }
             disposed = true;
@@ -202,17 +200,17 @@ namespace WinPrint.Winforms {
         // TODO: Refactor PropertyChanged lambdas to be functions so they can be -=
         private void SetupSheetViewModelNotifications() {
             //LogService.TraceMessage();
-            if (printPreview.SheetViewModel != null) {
+            if (PrintPreview.SheetViewModel != null) {
                 LogService.TraceMessage("SetupSheetViewModelNotifications was already called");
                 return;
             }
 
-            printPreview.SheetViewModel = new SheetViewModel();
-            printPreview.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
-            printPreview.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
-            printPreview.SheetViewModel.PageSettingsSet += PageSettingsSetEventHandler;
-            printPreview.SheetViewModel.Loaded += FileLoadedEventHandler;
-            printPreview.SheetViewModel.ReadyChanged += ReadyChangedEventHandler;
+            PrintPreview.SheetViewModel = new SheetViewModel();
+            PrintPreview.SheetViewModel.PropertyChanged += PropertyChangedEventHandler;
+            PrintPreview.SheetViewModel.SettingsChanged += SettingsChangedEventHandler;
+            PrintPreview.SheetViewModel.PageSettingsSet += PageSettingsSetEventHandler;
+            PrintPreview.SheetViewModel.Loaded += FileLoadedEventHandler;
+            PrintPreview.SheetViewModel.ReadyChanged += ReadyChangedEventHandler;
         }
 
         private void FileLoadedEventHandler(object sender, bool loading) {
@@ -249,14 +247,14 @@ namespace WinPrint.Winforms {
                 }
 
                 if (string.IsNullOrEmpty(activeFile)) {
-                    printPreview.Invalidate();
-                    printPreview.Text = Resources.HelloMsg;
+                    PrintPreview.Invalidate();
+                    PrintPreview.Text = Resources.HelloMsg;
                 }
                 else {
                     // Document is loaded and flowed. We're ready to preview and/or pring.
-                    printPreview.CurrentSheet = 1;
-                    printPreview.Invalidate();
-                    printPreview.Text = "";
+                    PrintPreview.CurrentSheet = 1;
+                    PrintPreview.Invalidate();
+                    PrintPreview.Text = "";
                 }
             }
         }
@@ -270,49 +268,49 @@ namespace WinPrint.Winforms {
                 switch (e.PropertyName) {
                     case "Landscape":
                         LogService.TraceMessage($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString()).Landscape}");
-                        landscapeCheckbox.Checked = printPreview.SheetViewModel.Landscape;
+                        landscapeCheckbox.Checked = PrintPreview.SheetViewModel.Landscape;
                         break;
 
                     case "Header":
-                        headerTextBox.Text = printPreview.SheetViewModel.Header.Text;
-                        enableHeader.Checked = printPreview.SheetViewModel.Header.Enabled;
-                        headerFooterFontLink.Text = printPreview.SheetViewModel.Header.Font.ToString();
+                        headerTextBox.Text = PrintPreview.SheetViewModel.Header.Text;
+                        enableHeader.Checked = PrintPreview.SheetViewModel.Header.Enabled;
+                        headerFooterFontLink.Text = PrintPreview.SheetViewModel.Header.Font.ToString();
                         break;
 
                     case "Footer":
-                        footerTextBox.Text = printPreview.SheetViewModel.Footer.Text;
-                        enableFooter.Checked = printPreview.SheetViewModel.Footer.Enabled;
+                        footerTextBox.Text = PrintPreview.SheetViewModel.Footer.Text;
+                        enableFooter.Checked = PrintPreview.SheetViewModel.Footer.Enabled;
                         break;
 
                     case "Margins":
-                        topMargin.Value = printPreview.SheetViewModel.Margins.Top / 100M;
-                        leftMargin.Value = printPreview.SheetViewModel.Margins.Left / 100M;
-                        rightMargin.Value = printPreview.SheetViewModel.Margins.Right / 100M;
-                        bottomMargin.Value = printPreview.SheetViewModel.Margins.Bottom / 100M;
+                        topMargin.Value = PrintPreview.SheetViewModel.Margins.Top / 100M;
+                        leftMargin.Value = PrintPreview.SheetViewModel.Margins.Left / 100M;
+                        rightMargin.Value = PrintPreview.SheetViewModel.Margins.Right / 100M;
+                        bottomMargin.Value = PrintPreview.SheetViewModel.Margins.Bottom / 100M;
 
                         // Keep PrintDocument updated for WinForms.PrintPreview
-                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)printPreview.SheetViewModel.Margins.Clone();
+                        printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)PrintPreview.SheetViewModel.Margins.Clone();
                         break;
 
                     case "PageSeparator":
-                        pageSeparator.Checked = printPreview.SheetViewModel.PageSeparator;
+                        pageSeparator.Checked = PrintPreview.SheetViewModel.PageSeparator;
                         break;
 
                     case "Rows":
-                        rows.Value = printPreview.SheetViewModel.Rows;
+                        rows.Value = PrintPreview.SheetViewModel.Rows;
                         break;
 
                     case "Columns":
-                        columns.Value = printPreview.SheetViewModel.Columns;
+                        columns.Value = PrintPreview.SheetViewModel.Columns;
                         break;
 
                     case "Padding":
-                        padding.Value = printPreview.SheetViewModel.Padding / 100M;
+                        padding.Value = PrintPreview.SheetViewModel.Padding / 100M;
                         break;
 
                     case "File":
-                        Text = $"winprint - {printPreview.SheetViewModel.File}";
-                        printPreview.CurrentSheet = 1;
+                        Text = $"winprint - {PrintPreview.SheetViewModel.File}";
+                        PrintPreview.CurrentSheet = 1;
                         break;
 
                     case "Title":
@@ -331,8 +329,8 @@ namespace WinPrint.Winforms {
                         break;
 
                     case "ContentSettings":
-                        contentFontLink.Text = printPreview.SheetViewModel.ContentSettings.Font.ToString();
-                        lineNumbers.Checked = printPreview.SheetViewModel.ContentSettings.LineNumbers;
+                        contentFontLink.Text = PrintPreview.SheetViewModel.ContentSettings.Font.ToString();
+                        lineNumbers.Checked = PrintPreview.SheetViewModel.ContentSettings.LineNumbers;
                         //lineNumberSeparator.Checked = printPreview.SheetViewModel.ContentSettings.lineNumberSeparator;
                         break;
 
@@ -374,7 +372,7 @@ namespace WinPrint.Winforms {
                     //else {
                     //    printPreview.Invalidate();
                     //}
-                    printPreview.Invalidate();
+                    PrintPreview.Invalidate();
                 }
             }
         }
@@ -409,7 +407,7 @@ namespace WinPrint.Winforms {
 
             WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
 
-            printPreview.KeyUp += (s, e) => {
+            PrintPreview.KeyUp += (s, e) => {
                 if (e.KeyCode == Keys.F5) {
                     //printPreview.Invalidate(true);
                     Log.Debug("-------- F5 ---------");
@@ -488,20 +486,20 @@ namespace WinPrint.Winforms {
             // Select default Sheet 
             var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
             if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Sheet)) {
-                newSheet = printPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out var sheetID);
+                newSheet = PrintPreview.SheetViewModel.FindSheet(ModelLocator.Current.Options.Sheet, out var sheetID);
             }
             comboBoxSheet.Text = newSheet.Name;
             // This will cause a flurry of property change notifications, setting all UI elements
-            printPreview.SheetViewModel.SetSheet(newSheet);
+            PrintPreview.SheetViewModel.SetSheet(newSheet);
 
             // Must set landscape after printer/paper selection
             // --l and --o
             if (ModelLocator.Current.Options.Landscape) {
-                printPreview.SheetViewModel.Landscape = true;
+                PrintPreview.SheetViewModel.Landscape = true;
             }
 
             if (ModelLocator.Current.Options.Portrait) {
-                printPreview.SheetViewModel.Landscape = false;
+                PrintPreview.SheetViewModel.Landscape = false;
             }
 
             // Override content-type
@@ -510,12 +508,18 @@ namespace WinPrint.Winforms {
                 // TODO: (nothing?)
             }
 
-            printPreview.Select();
-            printPreview.Focus();
+            PrintPreview.Select();
+            PrintPreview.Focus();
             //this.Cursor = Cursors.Default;
 
             if (ModelLocator.Current.Options.Files != null && ModelLocator.Current.Options.Files.ToList().Count > 0) {
                 activeFile = ModelLocator.Current.Options.Files.ToList()[0];
+            }
+
+            // Verify Pygments is installed
+            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+            if (!installed) {
+                MessageBox.Show(message, "Warning");
             }
 
             // By running this on a different thread, we enable the main window to show
@@ -595,9 +599,9 @@ namespace WinPrint.Winforms {
             }
             else {
                 // Reset View Model
-                printPreview.SheetViewModel.Reset();
-                printPreview.Invalidate();
-                printPreview.Text = Resources.LoadingMsg;
+                PrintPreview.SheetViewModel.Reset();
+                PrintPreview.Invalidate();
+                PrintPreview.Text = Resources.LoadingMsg;
 
                 // On another thread 
                 //    - load file
@@ -608,7 +612,7 @@ namespace WinPrint.Winforms {
                     var fileToPrint = activeFile;
                     try {
                         BeginInvoke((Action)(() => {
-                            printPreview.Text = $"{stage}...";
+                            PrintPreview.Text = $"{stage}...";
                         }));
                         // This is an IO bound operation. 
                         // TODO: This does not need to run on another thread if we are using async/await correctly
@@ -617,24 +621,24 @@ namespace WinPrint.Winforms {
                         if (!string.IsNullOrEmpty(fileToPrint) && !Path.IsPathFullyQualified(fileToPrint)) {
                             fileToPrint = Path.GetFullPath(fileToPrint, Directory.GetCurrentDirectory());
                         }
-                        await printPreview.SheetViewModel.LoadFileAsync(fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+                        await PrintPreview.SheetViewModel.LoadFileAsync(fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                         // Set landscape. This causes other DefaultPageSettings to change
                         // These are CPU bound operations. 
                         // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
                         stage = "Getting Printer Page Settings";
                         BeginInvoke((Action)(() => {
-                            printPreview.Text = $"{stage}...";
+                            PrintPreview.Text = $"{stage}...";
                         }));
-                        printDoc.DefaultPageSettings.Landscape = printPreview.SheetViewModel.Landscape;
-                        printPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings);
+                        printDoc.DefaultPageSettings.Landscape = PrintPreview.SheetViewModel.Landscape;
+                        PrintPreview.SheetViewModel.SetPrinterPageSettings(printDoc.DefaultPageSettings);
 
 
                         stage = "Rendering";
                         BeginInvoke((Action)(() => {
-                            printPreview.Text = $"{stage}...";
+                            PrintPreview.Text = $"{stage}...";
                         }));
-                        await printPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
+                        await PrintPreview.SheetViewModel.ReflowAsync().ConfigureAwait(false);
 
                     }
                     catch (DirectoryNotFoundException dnfe) {
@@ -664,6 +668,9 @@ namespace WinPrint.Winforms {
                         // Set Loading to false in case of an error
                         //printPreview.SheetViewModel.Loading = false;
                         //printPreview.SheetViewModel.Ready = false;
+                        PrintPreview.Select();
+                        PrintPreview.Focus();
+
                     }
                 });
             }
@@ -674,7 +681,7 @@ namespace WinPrint.Winforms {
                 BeginInvoke((Action)(() => ShowMessage(message)));
             }
             else {
-                printPreview.Text = message;
+                PrintPreview.Text = message;
             }
         }
 
@@ -699,7 +706,7 @@ namespace WinPrint.Winforms {
             LogService.TraceMessage();
             var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(ModelLocator.Current.Settings.DefaultSheet.ToString());
             comboBoxSheet.Text = newSheet.Name;
-            printPreview.SheetViewModel.SetSheet(newSheet);
+            PrintPreview.SheetViewModel.SetSheet(newSheet);
             //SheetSettingsChanged();
             LoadFile();
         }
@@ -835,7 +842,7 @@ namespace WinPrint.Winforms {
 
             try {
                 ShowMessage("Preparing to print..");
-                await print.SheetViewModel.LoadFileAsync(printPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
+                await print.SheetViewModel.LoadFileAsync(PrintPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait(false);
 
                 print.SetPrinter(printDoc.PrinterSettings.PrinterName);
                 print.SetPaperSize(printDoc.DefaultPageSettings.PaperSize.PaperName);

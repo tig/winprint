@@ -8,9 +8,9 @@ namespace WinPrintInstaller {
         public static readonly Guid ProductCode = new Guid("{0002A501-0000-0000-C000-000000000046}");
 
         private static void Main() {
-            const string sourceBaseDir = @"..\..\release";
-            const string outDir = @"..\..\install";
-            var versionFile = $"{sourceBaseDir}\\WinPrint.Core.dll";
+            const string sourceBaseDir = @"..\..\setup\release";
+            const string outDir = @"installer";
+            var versionFile = $@"{sourceBaseDir}\WinPrint.Core.dll";
             Debug.WriteLine($"version path: {versionFile}");
             var info = FileVersionInfo.GetVersionInfo(versionFile);
             var feature = new Feature(new Id("winprint"));

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?include Variables.wxi ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+	<Product Id="*" Name="$(var.ProductName)" Language="1033" Version="1.0.0.0"
+			 Manufacturer="$(var.Manufacturer)" UpgradeCode="4b547834-58fb-461e-9855-6fdc5ee9d349">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"
+				 Platform="x64"/>
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of WinPrint is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="$(var.ProductName)" Title="$(var.ProductName)" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<!-- See https://stackoverflow.com/questions/36756311/include-all-files-in-bin-folder-in-wix-installer -->
+			<!-- See https://github.com/wixtoolset/issues/issues/2467 -->
+			<!-- And https://stackoverflow.com/questions/63305272/adventures-in-installing-a-c-wpf-application-wix -->
+			<ComponentGroupRef Id="HeatGenerated" />
+		</Feature>
+	</Product>
+
+	<Fragment Id="FragDirectories">
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<!-- Good stuff: https://notes.kargware.com/2020/04/25/Folders-and-Directories-in-WixToolset/-->
+			<!-- WIX TOOLSET FOLDERS: https://docs.microsoft.com/en-us/windows/win32/msi/property-reference?redirectedfrom=MSDN#system-folder-properties -->
+
+			 <!--%AppData%, C:\Users\{USERNAME}\AppData\Roaming--> 
+			<Directory Id="AppDataFolder">
+				<Directory Id="AppDataManufacturerFolder" Name="$(var.Manufacturer)">
+					<Directory Id="AppDataProductDatabaseFolder" Name="$(var.ProductName)" />
+				</Directory>
+			</Directory>
+
+
+			<!-- C:\ProgramData\Microsoft\Windows\Start Menu -->
+			<!-- C:\Users\{USERNAME}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs -->
+			<!--<Directory Id="StartMenuFolder">
+				<Directory Id="StartMenuProductFolder" Name="$(var.ProductName)"/>
+			</Directory>-->
+
+			<!-- C:\Program Files (x86)\MANUFACTURER\PRODUCT -->
+			<Directory Id="ProgramFiles64Folder">
+				<Directory Id="ManufacturerFolder" Name="$(var.Manufacturer)">
+					<Directory Id="APPLICATIONFOLDER" Name="$(var.ProductName)" />
+				</Directory>
+			</Directory>
+
+			<!-- https://robmensching.com/blog/posts/2007/4/27/how-to-create-an-uninstall-shortcut-and-pass-all-the/ -->
+			<Directory Id="ProgramMenuFolder">
+				<Directory Id="ShortcutFolder"
+                           Name="$(var.ProductName)">
+
+					<Component Id="UninstallShortcutComponent"
+									   Guid="4b547834-58fb-461e-9855-6fdc5ee9d349">
+						<RegistryKey Root="HKCU"
+									 Key="Software\$(var.Manufacturer)\$(var.ProductName)\Uninstall">
+							<RegistryValue Value="$(var.ProductName) Was Here."
+										   Type="string"
+										   KeyPath="yes" />
+						</RegistryKey>
+
+						<Shortcut Id="UninstallProduct"
+								  Name="Uninstall $(var.ProductName)"
+								  Target="[System64Folder]msiexec.exe"
+								  Arguments="/x [ProductCode]"
+								  Directory="ShortcutFolder"
+								  Description="Uninstalls $(var.ProductName)" />
+
+						<RemoveFolder Id="RemoveShorcutFolder"
+									  On="uninstall" />
+					</Component>
+				</Directory>
+			</Directory>
+
+			<Component Id="Remove" Feature="$(var.ProductName)" Guid="FF15AE7A-F5C2-4E90-8E71-449BF9762825">
+				<RemoveFolder Id="$(var.Manufacturer)" Directory="AppDataManufacturerFolder" On="uninstall" />
+				<RemoveFolder Id="$(var.ProductName)" Directory="AppDataProductDatabaseFolder" On="uninstall" />
+			</Component>
+			
+		</Directory>
+
+
+	</Fragment>
+	
+	<Fragment>
+		<DirectoryRef Id="TARGETDIR">
+			<Directory Id="CreateAppDataFolder">
+				<Directory Id="CreateAppDataManufacturerFolder" Name="$(var.Manufacturer)">
+					<Directory Id="CreateAppDataProductDatabaseFolder" Name="$(var.ProductName)" >
+						<Component Id="CreateLoggingFolder" Guid="D00BCFAF-D7D3-40E5-9A51-8BCAC5182F69">
+							<CreateFolder>
+								<util:PermissionEx User="Users" GenericAll="yes" />
+							</CreateFolder>
+						</Component>
+					</Directory>
+				</Directory>
+			</Directory>
+		</DirectoryRef>
+	</Fragment>
+	
+	<!--<Fragment>
+		<DirectoryRef Id="AppDataFolder">
+			-->
+	<!--<Component Id="ApplicationShortcut" Guid="*">
+				<Shortcut Id="ApplicationStartMenuShortcut"
+						  Name="$(var.ProductName)"
+						  Description="WinPrint GUI."
+						  Target="[#winprintgui.exe]"
+						  WorkingDirectory="APPLICATIONFOLDER"/>
+			</Component>-->
+	<!--
+			<Component Id="AppDataFolder" Guid="*">
+				-->
+	<!--<RemoveFolder Id="ProgramFiles64Folder"
+							  Directory="ProgramFiles64Folder" On="uninstall"/>-->
+	<!--
+				<RemoveFolder Id="RemoveAppDataProductDatabaseFolder"
+							  Directory="AppDataProductDatabaseFolder" On="uninstall"/>
+				<RegistryValue Root="HKLM" Key="Software\$(var.Manufacturer)\$(var.ProductName)"
+							   Name="Telemetry" Type="integer" Value="1" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+	</Fragment>-->
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="APPLICATIONFOLDER">
+			<!-- .exe and .dlls get populated via HeatGenerated -->
+			<ComponentRef Id="UninstallShortcutComponent" />
+			
+		</ComponentGroup>
+	</Fragment>
+
+</Wix>

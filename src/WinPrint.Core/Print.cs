@@ -1,4 +1,4 @@
-﻿// Copyright Kindel Systems, LLC - http://www.kindel.com
+﻿// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System;
@@ -13,7 +13,7 @@ namespace WinPrint.Core {
 
     /// <summary>
     /// The Print class is the top-level class for initiating print jobs with winprint. It is the 
-    /// primary class apps like winprint.exe, out-winprint, and winprintgui use to configure, start,
+    /// primary class apps like winprint.exe, Out-WinPrint, and winprintgui use to configure, start,
     /// and manage print jobs.
     /// </summary>
     public class Print : IDisposable {

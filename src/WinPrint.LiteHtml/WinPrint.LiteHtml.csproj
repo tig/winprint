@@ -6,14 +6,15 @@
     <AssemblyTitle>winprint LiteHtml</AssemblyTitle>
     <AssemblyName>WinPrint.LiteHtml</AssemblyName>
 
-    <Version>2.0.5.100</Version>
-    <Company>Kindel Systems</Company>
+    <Version>2.1.0.1</Version>
+    <Company>Kindel</Company>
     <Product>winprint</Product>
     <Authors>Charlie Kindel</Authors>
     <Description>winprint LiteHtml Adapter</Description>
-    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <Copyright>Copyright Kindel, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+    <Platforms>AnyCPU;x64</Platforms>
 
   </PropertyGroup>
 
@@ -21,7 +22,15 @@
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
   </PropertyGroup>
 
@@ -36,19 +45,23 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LiteHtmlSharp\LiteHtmlLib\bin\Release\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
+    <None Include="..\LiteHtmlSharp\LiteHtmlLib\bin\$(Configuration)\win-x64\LiteHtmlLib.dll" Link="x64\LiteHtmlLib.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
     <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="Serilog" Version="2.9.1-dev-01154" />
-    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
 
     <ItemGroup>
       <Folder Include="x64\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj" />
     </ItemGroup>
 
 </Project>

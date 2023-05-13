@@ -1,3 +1,6 @@
+# This is needed because Pygments doesn't suppport `-L lexers`. 
+# See https://github.com/pygments/pygments/issues/1437
+#
 import pygments
 import json
 from pygments.lexers import get_all_lexers

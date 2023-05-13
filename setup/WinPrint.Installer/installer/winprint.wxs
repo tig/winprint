@@ -1,0 +1,320 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="0002a501-0000-0000-c000-0000201000f4" Name="winprint" Language="1033" Codepage="Windows-1252" Version="2.1.0.173" UpgradeCode="0002a500-0000-0000-c000-000000000046" Manufacturer="Kindel Systems">
+    <Package InstallerVersion="200" Compressed="yes" Platform="x64" SummaryCodepage="Windows-1252" Languages="1033" />
+    <Media Id="1" Cabinet="winprint.cab" EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder" Name="ProgramFiles64Folder">
+
+        <Component Id="Component.ProgramFiles64Folder" Guid="0002a501-0000-0000-c000-000065630ba9" KeyPath="yes" Win64="yes">
+          <CreateFolder />
+          <RemoveFolder Id="ProgramFiles64Folder" On="uninstall" />
+        </Component>
+
+        <Directory Id="ProgramFiles64Folder.Kindel20Systems" Name="Kindel Systems">
+
+          <Component Id="Component.ProgramFiles64Folder.Kindel20Systems" Guid="0002a501-0000-0000-c000-00007ec5f4a1" KeyPath="yes" Win64="yes">
+            <CreateFolder />
+            <RemoveFolder Id="ProgramFiles64Folder.Kindel20Systems" On="uninstall" />
+          </Component>
+
+          <Directory Id="INSTALLDIR" Name="winprint">
+
+            <Component Id="Component.INSTALLDIR" Guid="0002a501-0000-0000-c000-0000332b7c69" KeyPath="yes" Win64="yes">
+              <CreateFolder />
+              <RemoveFolder Id="INSTALLDIR" On="uninstall" />
+            </Component>
+
+            <Component Id="Component.pygmentize.exe_10477222" Guid="0002a501-0000-0000-c000-000059e38c48" Win64="yes">
+              <File Id="pygmentize.exe_10477222" Source="pygmentize.exe" />
+            </Component>
+
+            <Component Id="Component.winprintgui_exe" Guid="0002a501-0000-0000-c000-0000964d9468" Win64="yes">
+              <File Id="winprintgui_exe" Source="winprintgui.exe" KeyPath="yes">
+                <Shortcut Id="Shortcut.winprintgui_exe.winprint__" WorkingDirectory="INSTALLDIR" Directory="INSTALLDIR" Name="winprint.lnk" Advertise="yes" />
+              </File>
+            </Component>
+
+            <Component Id="Component.CommandLine.dll_3479940392" Guid="0002a501-0000-0000-c000-0000bec1c814" Win64="yes">
+              <File Id="CommandLine.dll_3479940392" Source="CommandLine.dll" />
+            </Component>
+
+            <Component Id="Component.GalaSoft.MvvmLight.dll_980538327" Guid="0002a501-0000-0000-c000-0000b96a4782" Win64="yes">
+              <File Id="GalaSoft.MvvmLight.dll_980538327" Source="GalaSoft.MvvmLight.dll" />
+            </Component>
+
+            <Component Id="Component.libvt100.dll_4050581287" Guid="0002a501-0000-0000-c000-0000de5b24e9" Win64="yes">
+              <File Id="libvt100.dll_4050581287" Source="libvt100.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.ApplicationInsights.dll_1729400163" Guid="0002a501-0000-0000-c000-0000b4fac271" Win64="yes">
+              <File Id="Microsoft.ApplicationInsights.dll_1729400163" Source="Microsoft.ApplicationInsights.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.Extensions.DependencyInjection.Abstractions.dll_2057409331" Guid="0002a501-0000-0000-c000-0000ee4ed491" Win64="yes">
+              <File Id="Microsoft.Extensions.DependencyInjection.Abstractions.dll_2057409331" Source="Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.Extensions.DependencyInjection.dll_2239960524" Guid="0002a501-0000-0000-c000-000021215429" Win64="yes">
+              <File Id="Microsoft.Extensions.DependencyInjection.dll_2239960524" Source="Microsoft.Extensions.DependencyInjection.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.Extensions.Logging.Abstractions.dll_2887616951" Guid="0002a501-0000-0000-c000-0000b576bd5c" Win64="yes">
+              <File Id="Microsoft.Extensions.Logging.Abstractions.dll_2887616951" Source="Microsoft.Extensions.Logging.Abstractions.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.Extensions.Logging.dll_3157041806" Guid="0002a501-0000-0000-c000-00000d26e0dd" Win64="yes">
+              <File Id="Microsoft.Extensions.Logging.dll_3157041806" Source="Microsoft.Extensions.Logging.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.Extensions.Options.dll_782424680" Guid="0002a501-0000-0000-c000-0000b5196c7c" Win64="yes">
+              <File Id="Microsoft.Extensions.Options.dll_782424680" Source="Microsoft.Extensions.Options.dll" />
+            </Component>
+
+            <Component Id="Component.Microsoft.Extensions.Primitives.dll_3148983839" Guid="0002a501-0000-0000-c000-0000ee03065c" Win64="yes">
+              <File Id="Microsoft.Extensions.Primitives.dll_3148983839" Source="Microsoft.Extensions.Primitives.dll" />
+            </Component>
+
+            <Component Id="Component.Octokit.dll_2808017272" Guid="0002a501-0000-0000-c000-00009f5e2bf6" Win64="yes">
+              <File Id="Octokit.dll_2808017272" Source="Octokit.dll" />
+            </Component>
+
+            <Component Id="Component.Serilog.dll_1688772115" Guid="0002a501-0000-0000-c000-0000f0b3dc9c" Win64="yes">
+              <File Id="Serilog.dll_1688772115" Source="Serilog.dll" />
+            </Component>
+
+            <Component Id="Component.Serilog.Sinks.ApplicationInsights.dll_2234854621" Guid="0002a501-0000-0000-c000-000009970416" Win64="yes">
+              <File Id="Serilog.Sinks.ApplicationInsights.dll_2234854621" Source="Serilog.Sinks.ApplicationInsights.dll" />
+            </Component>
+
+            <Component Id="Component.Serilog.Sinks.Console.dll_959152647" Guid="0002a501-0000-0000-c000-00006fe7be1b" Win64="yes">
+              <File Id="Serilog.Sinks.Console.dll_959152647" Source="Serilog.Sinks.Console.dll" />
+            </Component>
+
+            <Component Id="Component.Serilog.Sinks.Debug.dll_925333739" Guid="0002a501-0000-0000-c000-00005844ff2c" Win64="yes">
+              <File Id="Serilog.Sinks.Debug.dll_925333739" Source="Serilog.Sinks.Debug.dll" />
+            </Component>
+
+            <Component Id="Component.Serilog.Sinks.File.dll_2775774865" Guid="0002a501-0000-0000-c000-00004be62447" Win64="yes">
+              <File Id="Serilog.Sinks.File.dll_2775774865" Source="Serilog.Sinks.File.dll" />
+            </Component>
+
+            <Component Id="Component.System.Linq.Dynamic.Core.dll_2253067105" Guid="0002a501-0000-0000-c000-0000cac56948" Win64="yes">
+              <File Id="System.Linq.Dynamic.Core.dll_2253067105" Source="System.Linq.Dynamic.Core.dll" />
+            </Component>
+
+            <Component Id="Component.UtfUnknown.dll_387159308" Guid="0002a501-0000-0000-c000-00008797711b" Win64="yes">
+              <File Id="UtfUnknown.dll_387159308" Source="UtfUnknown.dll" />
+            </Component>
+
+            <Component Id="Component.WinPrint.Core.dll_955593527" Guid="0002a501-0000-0000-c000-0000de427c55" Win64="yes">
+              <File Id="WinPrint.Core.dll_955593527" Source="WinPrint.Core.dll" />
+            </Component>
+
+            <Component Id="Component.WinPrint.LiteHtml.dll_82589221" Guid="0002a501-0000-0000-c000-000034ea7a2f" Win64="yes">
+              <File Id="WinPrint.LiteHtml.dll_82589221" Source="WinPrint.LiteHtml.dll" />
+            </Component>
+
+            <Component Id="Component.winprintgui.dll_883005085" Guid="0002a501-0000-0000-c000-0000bf7a8154" Win64="yes">
+              <File Id="winprintgui.dll_883005085" Source="winprintgui.dll" />
+            </Component>
+
+            <Component Id="Component.winprintgui.runtimeconfig.json_2461305445" Guid="0002a501-0000-0000-c000-00001629b08e" Win64="yes">
+              <File Id="winprintgui.runtimeconfig.json_2461305445" Source="winprintgui.runtimeconfig.json" />
+            </Component>
+
+            <Component Id="Component.Uninstall20winprint" Guid="0002a501-0000-0000-c000-000030eba2f2" Win64="yes">
+              <Shortcut Id="INSTALLDIR.Uninstall20winprint" WorkingDirectory="System64Folder" Target="[System64Folder]msiexec.exe" Arguments="/x [ProductCode]" Name="Uninstall winprint.lnk" />
+
+              <CreateFolder />
+
+              <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+                <RegistryValue Value="0" Type="string" KeyPath="yes" />
+              </RegistryKey>
+            </Component>
+
+          </Directory>
+        </Directory>
+
+        <Component Id="Registry.1" Guid="0002a501-0000-0000-c000-0000fd1dcec5" KeyPath="yes" Win64="yes">
+          <RegistryKey Root="HKLM" Key="Software\Kindel Systems\winprint">
+            <RegistryValue Id="Telemetry" Type="integer" KeyPath="no" Value="[TELEMETRY]" Name="Telemetry" />
+          </RegistryKey>
+
+          <CreateFolder />
+        </Component>
+
+        <Component Id="PATH" Guid="0002a501-0000-0000-c000-000077cc6f1c" KeyPath="yes" Win64="yes">
+          <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Action="set" Part="last" />
+
+          <CreateFolder />
+        </Component>
+
+      </Directory>
+
+      <Directory Id="AppDataFolder" Name="AppDataFolder">
+
+        <Component Id="Component.AppDataFolder" Guid="0002a501-0000-0000-c000-000055c0ad88" Win64="yes">
+          <CreateFolder />
+
+          <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+            <RegistryValue Value="0" Type="string" KeyPath="yes" />
+          </RegistryKey>
+        </Component>
+
+        <Directory Id="Kindel20Systems" Name="Kindel Systems">
+
+          <Component Id="Component.Kindel20Systems" Guid="0002a501-0000-0000-c000-0000884e0670" Win64="yes">
+            <CreateFolder />
+            <RemoveFolder Id="Kindel20Systems" On="uninstall" />
+
+            <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+              <RegistryValue Value="0" Type="string" KeyPath="yes" />
+            </RegistryKey>
+          </Component>
+
+          <Directory Id="Kindel20Systems.winprint" Name="winprint">
+
+            <Component Id="Component.Kindel20Systems.winprint.EmptyDirectory" Guid="0002a501-0000-0000-c000-000064e799c2" Win64="yes">
+              <CreateFolder />
+              <RemoveFolder Id="Kindel20Systems.winprint" On="uninstall" />
+
+              <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+                <RegistryValue Value="0" Type="string" KeyPath="yes" />
+              </RegistryKey>
+            </Component>
+
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder" Name="ProgramMenuFolder">
+
+        <Component Id="Component.ProgramMenuFolder" Guid="0002a501-0000-0000-c000-000027f76832" Win64="yes">
+          <CreateFolder />
+
+          <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+            <RegistryValue Value="0" Type="string" KeyPath="yes" />
+          </RegistryKey>
+        </Component>
+
+        <Directory Id="Kindel20Systems.1" Name="Kindel Systems">
+
+          <Component Id="Component.Kindel20Systems.1" Guid="0002a501-0000-0000-c000-0000267d2005" Win64="yes">
+            <CreateFolder />
+            <RemoveFolder Id="Kindel20Systems.1" On="uninstall" />
+
+            <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+              <RegistryValue Value="0" Type="string" KeyPath="yes" />
+            </RegistryKey>
+          </Component>
+
+          <Directory Id="Kindel20Systems.1.winprint" Name="winprint">
+
+            <Component Id="Component.Kindel20Systems.1.winprint" Guid="0002a501-0000-0000-c000-0000a1174ec2" Win64="yes">
+              <CreateFolder />
+              <RemoveFolder Id="Kindel20Systems.1.winprint" On="uninstall" />
+
+              <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+                <RegistryValue Value="0" Type="string" KeyPath="yes" />
+              </RegistryKey>
+            </Component>
+
+            <Component Id="Component.WinPrint" Guid="0002a501-0000-0000-c000-000011eef5a6" Win64="yes">
+              <Shortcut Id="Kindel20Systems.1.winprint.WinPrint" WorkingDirectory="INSTALLDIR" Target="[INSTALLDIR]winprintgui.exe" Name="WinPrint.lnk" />
+
+              <CreateFolder />
+
+              <RegistryKey Root="HKCU" Key="Software\WixSharp\Used">
+                <RegistryValue Value="0" Type="string" KeyPath="yes" />
+              </RegistryKey>
+            </Component>
+
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <Component Id="TARGETDIR" Guid="0002a501-0000-0000-c000-000073d070b9" KeyPath="yes" Win64="yes">
+        <CreateFolder />
+        <RemoveFolder Id="TARGETDIR" On="uninstall" />
+      </Component>
+
+    </Directory>
+
+    <UI />
+
+    <UI>
+      <EmbeddedUI Id="WinPrint.Installer.exe" SourceFile="..\WinPrint.Installer\installer\WinPrint.Installer.CA.dll" />
+    </UI>
+
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." Schedule="afterInstallInitialize" />
+
+    <CustomAction Id="Set_ARPINSTALLLOCATION" Property="ARPINSTALLLOCATION" Value="[INSTALLDIR]" Return="check" Execute="immediate" />
+    <CustomAction Id="Set_ARPNOMODIFY" Property="ARPNOMODIFY" Value="True" Return="check" Execute="immediate" />
+
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="TELEMETRY" Value="1" />
+    <Property Id="RequiredDotNetCoreVersion" Value="3.1" />
+    <Property Id="ARPCOMMENTS" Value="winprint by Charlie Kindel" />
+    <Property Id="ARPHELPLINK" Value="https://tig.github.io/winprint" />
+    <Property Id="ARPREADME" Value="https://tig.github.io/winprint" />
+    <Property Id="ARPURLINFOABOUT" Value="https://tig.github.io/winprint" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://tig.github.io/winprint" />
+    <Property Id="REINSTALLMODE" Value="omus" />
+
+    <Feature Id="winprint___" Title="winprint" Absent="allow" Level="1">
+      <ComponentRef Id="Component.ProgramFiles64Folder" />
+      <ComponentRef Id="Component.ProgramFiles64Folder.Kindel20Systems" />
+      <ComponentRef Id="Component.INSTALLDIR" />
+      <ComponentRef Id="Component.AppDataFolder" />
+      <ComponentRef Id="Component.Kindel20Systems" />
+      <ComponentRef Id="Component.Kindel20Systems.winprint.EmptyDirectory" />
+      <ComponentRef Id="Component.ProgramMenuFolder" />
+      <ComponentRef Id="Component.Kindel20Systems.1" />
+      <ComponentRef Id="Component.Kindel20Systems.1.winprint" />
+      <ComponentRef Id="Registry.1" />
+      <ComponentRef Id="TARGETDIR" />
+    </Feature>
+
+    <Feature Id="Complete" Title="Complete" Absent="allow" Level="1">
+      <ComponentRef Id="PATH" />
+      <ComponentRef Id="Component.pygmentize.exe_10477222" />
+      <ComponentRef Id="Component.winprintgui_exe" />
+      <ComponentRef Id="Component.CommandLine.dll_3479940392" />
+      <ComponentRef Id="Component.GalaSoft.MvvmLight.dll_980538327" />
+      <ComponentRef Id="Component.libvt100.dll_4050581287" />
+      <ComponentRef Id="Component.Microsoft.ApplicationInsights.dll_1729400163" />
+      <ComponentRef Id="Component.Microsoft.Extensions.DependencyInjection.Abstractions.dll_2057409331" />
+      <ComponentRef Id="Component.Microsoft.Extensions.DependencyInjection.dll_2239960524" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Logging.Abstractions.dll_2887616951" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Logging.dll_3157041806" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Options.dll_782424680" />
+      <ComponentRef Id="Component.Microsoft.Extensions.Primitives.dll_3148983839" />
+      <ComponentRef Id="Component.Octokit.dll_2808017272" />
+      <ComponentRef Id="Component.Serilog.dll_1688772115" />
+      <ComponentRef Id="Component.Serilog.Sinks.ApplicationInsights.dll_2234854621" />
+      <ComponentRef Id="Component.Serilog.Sinks.Console.dll_959152647" />
+      <ComponentRef Id="Component.Serilog.Sinks.Debug.dll_925333739" />
+      <ComponentRef Id="Component.Serilog.Sinks.File.dll_2775774865" />
+      <ComponentRef Id="Component.System.Linq.Dynamic.Core.dll_2253067105" />
+      <ComponentRef Id="Component.UtfUnknown.dll_387159308" />
+      <ComponentRef Id="Component.WinPrint.Core.dll_955593527" />
+      <ComponentRef Id="Component.WinPrint.LiteHtml.dll_82589221" />
+      <ComponentRef Id="Component.winprintgui.dll_883005085" />
+      <ComponentRef Id="Component.winprintgui.runtimeconfig.json_2461305445" />
+      <ComponentRef Id="Component.Uninstall20winprint" />
+      <ComponentRef Id="Component.WinPrint" />
+      <ComponentRef Id="TARGETDIR" />
+    </Feature>
+
+    <InstallExecuteSequence>
+      <Custom Action="Set_ARPINSTALLLOCATION" After="CostFinalize"> (NOT Installed) </Custom>
+      <Custom Action="Set_ARPNOMODIFY" After="CostFinalize"> (NOT Installed) </Custom>
+    </InstallExecuteSequence>
+
+  </Product>
+</Wix>
+

@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Out-WinPrint": {
+      "commandName": "Executable",
+      "executablePath": "pwsh.exe",
+      "commandLineArgs": "-NoLogo -Command \"Import-Module '.\\winprint.dll'; Out-WinPrint -Verbose -WhatIf -FileName ..\\..\\..\\..\\..\\..\\testfiles\\Program.cs;\""
+    }
+  }
+}

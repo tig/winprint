@@ -156,6 +156,14 @@ namespace WinPrint.WinForms {
 #endif
                     break;
 
+                case Keys.Home:
+                    Home();
+                    break;
+
+                case Keys.End:
+                    End();
+                    break;                    
+
 #if TERMINAL
                 case Keys.Right:
                     pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Forward, 1);
@@ -188,6 +196,18 @@ namespace WinPrint.WinForms {
                 Invalidate();
             }
             ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Page Down", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
+        }
+
+        private void Home() {
+            CurrentSheet = 1;
+            Invalidate();
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Home", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
+        }
+
+        private void End() {
+            CurrentSheet = _svm.NumSheets;
+            Invalidate();
+            ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview End", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString() });
         }
 
         protected override void OnTextChanged(EventArgs e) {
@@ -265,7 +285,6 @@ namespace WinPrint.WinForms {
         };
         private void PaintMessage(PaintEventArgs e) {
             // While in error or loading & reflowing show Text 
-            Log.Information("Status: {status}", Text);
             var rect = GetTextRect(e.Graphics);
             //e.Graphics.FillRectangle(SystemBrushes.Control, _messageRect);
             e.Graphics.DrawString(Text, new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point), SystemBrushes.ControlText, rect, _messageStringFormat);

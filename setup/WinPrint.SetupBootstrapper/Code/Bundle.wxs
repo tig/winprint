@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+  <Bundle Name="WinPrint.Setup" Version="1.0.0.0" Manufacturer="WinPrint.Setup" UpgradeCode="621cce09-78c1-4248-bd8c-4c340aea04b0">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <bal:WixStandardBootstrapperApplication LicenseFile="Resources\EULA.rtf" LogoFile="Resources\Icon.png" />
+    </BootstrapperApplicationRef>
+    <Chain>
+      <MsiPackage Id="WinPrint.Setup" SourceFile="$(var.WinPrint.SetupSetup.TargetPath)" />
+    </Chain>
+  </Bundle>
+</Wix>

@@ -27,7 +27,7 @@ namespace WinPrint.Core.Services {
         public void Start(string appName, IDictionary<string, string> startProperties = null) {
             runtime = System.Diagnostics.Stopwatch.StartNew();
 
-            var val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel Systems\winprint", "Telemetry", 0);
+            var val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
             TelemetryEnabled = (val != null && val.ToString() == "1") ? true : false;
 
             // Setup telemetry via Azure Application Insights.

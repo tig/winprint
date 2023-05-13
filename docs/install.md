@@ -1,6 +1,6 @@
 # Installation Instructions
 
-***winprint*** 2.0 is almost not beta. It works well (on my machine), and I've had a dozen or so users verify it works well for them; see [Issues](https://github.com/tig/winprint/issues).*
+***WinPrint*** works well (on my machine), and I've had a dozen or so users verify it works well for them; see [Issues](https://github.com/tig/winprint/issues).*
 
 *Please report any problems or feature requests [here](https://github.com/tig/winprint/issues).*
 
@@ -18,4 +18,4 @@ Good luck. Start by cloning the *winprint* repo, installing .NET Core 3, and bui
 
 ### On Mac
 
-I haven't even tried as my old Macbook Air died and Apple wont fix it. I refuse to buy anything from Apple (except for for my family who are all all-in with Apple...sigh). I'll buy beer for someone who contributes to getting the Mac version working. It should not be hard given I've proven the stupid things works on Linux already.
+I haven't even tried as my old Macbook Air died and Apple wont fix it. I'll buy beer for someone who contributes to getting the Mac version working. It should not be hard given I've proven the stupid things works on Linux already.
