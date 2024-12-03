@@ -12,7 +12,6 @@
         <Copyright>Copyright Kindel, LLC</Copyright>
         <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
         <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-        <LangVersion>8.0</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
