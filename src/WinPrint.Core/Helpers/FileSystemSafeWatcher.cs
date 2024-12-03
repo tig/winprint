@@ -7,33 +7,23 @@ using System.ComponentModel;
 using System.IO;
 using System.Timers;
 
-namespace menelabs.core {
+namespace WinPrint.Core.Helpers {
 
     /// <summary>
     /// This class wraps FileSystemEventArgs and RenamedEventArgs objects and detection of duplicate events.
     /// </summary>
-    public class DelayedEvent {
-        private readonly FileSystemEventArgs _args;
+    public class DelayedEvent(FileSystemEventArgs args) {
+        private readonly FileSystemEventArgs _args = args;
+
+        public FileSystemEventArgs? Args => _args;
 
         /// <summary>
         /// Only delayed events that are unique will be fired.
         /// </summary>
-        private bool _delayed;
-
-        public DelayedEvent(FileSystemEventArgs args) {
-            _delayed = false;
-            _args = args;
-        }
-
-        public FileSystemEventArgs Args => _args;
-
-        public bool Delayed {
-            get => _delayed;
-            set => _delayed = value;
-        }
+        public bool Delayed { get; set; } = false;
 
 #pragma warning disable CA1720 // Identifier contains type name
-        public virtual bool IsDuplicate(object obj) {
+        public virtual bool IsDuplicate(object? obj) {
 #pragma warning restore CA1720 // Identifier contains type name
             var delayedEvent = obj as DelayedEvent;
             if (delayedEvent == null) {
@@ -69,21 +59,21 @@ namespace menelabs.core {
     /// FileSystemSafeWatcher will capture all events from the FileSystemWatcher object.
     /// The captured events will be delayed by at least ConsolidationInterval milliseconds in order
     /// to be able to eliminate duplicate events. When duplicate events are found, the last event
-    /// is droped and the first event is fired (the reverse is not recomended because it could
-    /// cause some events not be fired at all since the last event will become the first event and
-    /// it won't fire a if a new similar event arrives imediately afterwards).
+    /// is dropped and the first event is fired (the reverse is not recommended because it could
+    /// cause some events not be fired at all since the last event will become the first event, and
+    /// it won't fire if a new similar event arrives immediately afterward).
     /// </summary>
     public class FileSystemSafeWatcher {
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
-        private readonly FileSystemWatcher _fileSystemWatcher;
+        private readonly FileSystemWatcher? _fileSystemWatcher;
 
         /// <summary>
         /// Lock order is _enterThread, _events.SyncRoot
         /// </summary>
-        private readonly object _enterThread = new object(); // Only one timer event is processed at any given moment
-        private ArrayList _events;
+        private readonly object? _enterThread = new object(); // Only one timer event is processed at any given moment
+        private ArrayList? _events;
 
-        private Timer _serverTimer;
+        private Timer? _serverTimer;
         private int _consolidationInterval = 1000; // milliseconds
 
         #region Delegate to FileSystemWatcher
@@ -108,15 +98,15 @@ namespace menelabs.core {
         /// </summary>
         /// <value>true if the component is enabled; otherwise, false. The default is false. If you are using the component on a designer in Visual Studio 2005, the default is true.</value>
         public bool EnableRaisingEvents {
-            get => _fileSystemWatcher.EnableRaisingEvents;
+            get => _fileSystemWatcher!.EnableRaisingEvents;
             set {
-                _fileSystemWatcher.EnableRaisingEvents = value;
+                _fileSystemWatcher!.EnableRaisingEvents = value;
                 if (value) {
-                    _serverTimer.Start();
+                    _serverTimer!.Start();
                 }
                 else {
-                    _serverTimer.Stop();
-                    _events.Clear();
+                    _serverTimer!.Stop();
+                    _events!.Clear();
                 }
             }
         }
@@ -125,24 +115,24 @@ namespace menelabs.core {
         /// </summary>
         /// <value>The filter string. The default is "*.*" (Watches all files.)</value>
         public string Filter {
-            get => _fileSystemWatcher.Filter;
-            set => _fileSystemWatcher.Filter = value;
+            get => _fileSystemWatcher!.Filter;
+            set => _fileSystemWatcher!.Filter = value;
         }
         /// <summary>
         /// Gets or sets a value indicating whether subdirectories within the specified path should be monitored.
         /// </summary>
         /// <value>true if you want to monitor subdirectories; otherwise, false. The default is false.</value>
         public bool IncludeSubdirectories {
-            get => _fileSystemWatcher.IncludeSubdirectories;
-            set => _fileSystemWatcher.IncludeSubdirectories = value;
+            get => _fileSystemWatcher!.IncludeSubdirectories;
+            set => _fileSystemWatcher!.IncludeSubdirectories = value;
         }
         /// <summary>
         /// Gets or sets the size of the internal buffer.
         /// </summary>
         /// <value>The internal buffer size. The default is 8192 (8K).</value>
         public int InternalBufferSize {
-            get => _fileSystemWatcher.InternalBufferSize;
-            set => _fileSystemWatcher.InternalBufferSize = value;
+            get => _fileSystemWatcher!.InternalBufferSize;
+            set => _fileSystemWatcher!.InternalBufferSize = value;
         }
         /// <summary>
         /// Gets or sets the type of changes to watch for.
@@ -150,8 +140,8 @@ namespace menelabs.core {
         /// <value>One of the System.IO.NotifyFilters values. The default is the bitwise OR combination of LastWrite, FileName, and DirectoryName.</value>
         /// <exception cref="System.ArgumentException">The value is not a valid bitwise OR combination of the System.IO.NotifyFilters values.</exception>
         public NotifyFilters NotifyFilter {
-            get => _fileSystemWatcher.NotifyFilter;
-            set => _fileSystemWatcher.NotifyFilter = value;
+            get => _fileSystemWatcher!.NotifyFilter;
+            set => _fileSystemWatcher!.NotifyFilter = value;
         }
         /// <summary>
         /// Gets or sets the path of the directory to watch.
@@ -159,43 +149,43 @@ namespace menelabs.core {
         /// <value>The path to monitor. The default is an empty string ("").</value>
         /// <exception cref="System.ArgumentException">The specified path contains wildcard characters.-or- The specified path contains invalid path characters.</exception>
         public string Path {
-            get => _fileSystemWatcher.Path;
-            set => _fileSystemWatcher.Path = value;
+            get => _fileSystemWatcher!.Path;
+            set => _fileSystemWatcher!.Path = value;
         }
         /// <summary>
         /// Gets or sets the object used to marshal the event handler calls issued as a result of a directory change.
         /// </summary>
         /// <value>The System.ComponentModel.ISynchronizeInvoke that represents the object used to marshal the event handler calls issued as a result of a directory change. The default is null.</value>
         public ISynchronizeInvoke SynchronizingObject {
-            get => _fileSystemWatcher.SynchronizingObject;
-            set => _fileSystemWatcher.SynchronizingObject = value;
+            get => _fileSystemWatcher!.SynchronizingObject;
+            set => _fileSystemWatcher!.SynchronizingObject = value;
         }
         /// <summary>
         /// Occurs when a file or directory in the specified System.IO.FileSystemWatcher.Path is changed.
         /// </summary>
-        public event FileSystemEventHandler Changed;
+        public event FileSystemEventHandler? Changed;
         /// <summary>
         /// Occurs when a file or directory in the specified System.IO.FileSystemWatcher.Path is created.
         /// </summary>
-        public event FileSystemEventHandler Created;
+        public event FileSystemEventHandler? Created;
         /// <summary>
         /// Occurs when a file or directory in the specified System.IO.FileSystemWatcher.Path is deleted.
         /// </summary>
-        public event FileSystemEventHandler Deleted;
+        public event FileSystemEventHandler? Deleted;
         /// <summary>
         /// Occurs when the internal buffer overflows.
         /// </summary>
-        public event ErrorEventHandler Error;
+        public event ErrorEventHandler? Error;
         /// <summary>
         /// Occurs when a file or directory in the specified System.IO.FileSystemWatcher.Path is renamed.
         /// </summary>
-        public event RenamedEventHandler Renamed;
+        public event RenamedEventHandler? Renamed;
 
         /// <summary>
         /// Begins the initialization of a System.IO.FileSystemWatcher used on a form or used by another component. The initialization occurs at run time.
         /// </summary>
         public void BeginInit() {
-            _fileSystemWatcher.BeginInit();
+            _fileSystemWatcher!.BeginInit();
         }
         /// <summary>
         /// Releases the unmanaged resources used by the System.IO.FileSystemWatcher and optionally releases the managed resources.
@@ -207,52 +197,42 @@ namespace menelabs.core {
         /// Ends the initialization of a System.IO.FileSystemWatcher used on a form or used by another component. The initialization occurs at run time.
         /// </summary>
         public void EndInit() {
-            _fileSystemWatcher.EndInit();
+            _fileSystemWatcher!.EndInit();
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Changed event.
         /// </summary>
         /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
         protected void OnChanged(FileSystemEventArgs e) {
-            if (Changed != null) {
-                Changed(this, e);
-            }
+            Changed?.Invoke(this, e);
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Created event.
         /// </summary>
         /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
         protected void OnCreated(FileSystemEventArgs e) {
-            if (Created != null) {
-                Created(this, e);
-            }
+            Created?.Invoke(this, e);
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Deleted event.
         /// </summary>
         /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
         protected void OnDeleted(FileSystemEventArgs e) {
-            if (Deleted != null) {
-                Deleted(this, e);
-            }
+            Deleted?.Invoke(this, e);
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Error event.
         /// </summary>
         /// <param name="e">An System.IO.ErrorEventArgs that contains the event data.</param>
         protected void OnError(ErrorEventArgs e) {
-            if (Error != null) {
-                Error(this, e);
-            }
+            Error?.Invoke(this, e);
         }
         /// <summary>
         /// Raises the System.IO.FileSystemWatcher.Renamed event.
         /// </summary>
         /// <param name="e">A System.IO.RenamedEventArgs that contains the event data.</param>
-        protected void OnRenamed(RenamedEventArgs e) {
-            if (Renamed != null) {
-                Renamed(this, e);
-            }
+        protected void OnRenamed(RenamedEventArgs? e) {
+            Renamed?.Invoke(this, e);
         }
         /// <summary>
         /// A synchronous method that returns a structure that contains specific information on the change that occurred, given the type of change you want to monitor.
@@ -281,7 +261,7 @@ namespace menelabs.core {
 
         private void Initialize() {
             _events = ArrayList.Synchronized(new ArrayList(32));
-            _fileSystemWatcher.Changed += new FileSystemEventHandler(FileSystemEventHandler);
+            _fileSystemWatcher!.Changed += new FileSystemEventHandler(FileSystemEventHandler);
             _fileSystemWatcher.Created += new FileSystemEventHandler(FileSystemEventHandler);
             _fileSystemWatcher.Deleted += new FileSystemEventHandler(FileSystemEventHandler);
             _fileSystemWatcher.Error += new ErrorEventHandler(ErrorEventHandler);
@@ -293,17 +273,13 @@ namespace menelabs.core {
         }
 
         private void Uninitialize() {
-            if (_fileSystemWatcher != null) {
-                _fileSystemWatcher.Dispose();
-            }
+            _fileSystemWatcher?.Dispose();
 
-            if (_serverTimer != null) {
-                _serverTimer.Dispose();
-            }
+            _serverTimer?.Dispose();
         }
 
         private void FileSystemEventHandler(object sender, FileSystemEventArgs e) {
-            _events.Add(new DelayedEvent(e));
+            _events!.Add(new DelayedEvent(e));
         }
 
         private void ErrorEventHandler(object sender, ErrorEventArgs e) {
@@ -311,23 +287,22 @@ namespace menelabs.core {
         }
 
         private void RenamedEventHandler(object sender, RenamedEventArgs e) {
-            _events.Add(new DelayedEvent(e));
+            _events!.Add(new DelayedEvent(e));
         }
 
         private void ElapsedEventHandler(object sender, ElapsedEventArgs e) {
             // We don't fire the events inside the lock. We will queue them here until
             // the code exits the locks.
-            Queue eventsToBeFired = null;
-            if (System.Threading.Monitor.TryEnter(_enterThread)) {
+            Queue? eventsToBeFired = null;
+            if (System.Threading.Monitor.TryEnter(_enterThread!)) {
                 // Only one thread at a time is processing the events                
                 try {
                     eventsToBeFired = new Queue(32);
                     // Lock the collection while processing the events
-                    lock (_events.SyncRoot) {
-                        DelayedEvent current;
+                    lock (_events!.SyncRoot) {
                         for (var i = 0; i < _events.Count; i++) {
-                            current = _events[i] as DelayedEvent;
-                            if (current.Delayed) {
+                            var current = _events[i] as DelayedEvent;
+                            if (current!.Delayed) {
                                 // This event has been delayed already so we can fire it
                                 // We just need to remove any duplicates
                                 for (var j = i + 1; j < _events.Count; j++) {
@@ -339,7 +314,7 @@ namespace menelabs.core {
                                 }
 
                                 var raiseEvent = true;
-                                if (current.Args.ChangeType == WatcherChangeTypes.Created || current.Args.ChangeType == WatcherChangeTypes.Changed) {
+                                if (current!.Args.ChangeType == WatcherChangeTypes.Created || current.Args.ChangeType == WatcherChangeTypes.Changed) {
                                     //check if the file has been completely copied (can be opened for read)
                                     FileStream stream = null;
                                     try {
@@ -373,30 +348,29 @@ namespace menelabs.core {
                     }
                 }
                 finally {
-                    System.Threading.Monitor.Exit(_enterThread);
+                    System.Threading.Monitor.Exit(_enterThread!);
                 }
             }
             // else - this timer event was skipped, processing will happen during the next timer event
 
             // Now fire all the events if any events are in eventsToBeFired
-            RaiseEvents(eventsToBeFired);
+            RaiseEvents(eventsToBeFired!);
         }
 
         public int ConsolidationInterval {
             get => _consolidationInterval;
             set {
                 _consolidationInterval = value;
-                _serverTimer.Interval = value;
+                _serverTimer!.Interval = value;
             }
         }
 
 #pragma warning disable CA1030 // Use events where appropriate
-        protected void RaiseEvents(Queue deQueue) {
+        protected void RaiseEvents(Queue? deQueue) {
 #pragma warning restore CA1030 // Use events where appropriate
-            if ((deQueue != null) && (deQueue.Count > 0)) {
-                DelayedEvent de;
+            if (deQueue is { Count: > 0 }) {
                 while (deQueue.Count > 0) {
-                    de = deQueue.Dequeue() as DelayedEvent;
+                    var de = deQueue.Dequeue() as DelayedEvent;
                     switch (de.Args.ChangeType) {
                         case WatcherChangeTypes.Changed:
                             OnChanged(de.Args);

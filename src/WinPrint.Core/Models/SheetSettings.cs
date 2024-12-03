@@ -1,116 +1,106 @@
 ﻿using System.Drawing.Printing;
 
-namespace WinPrint.Core.Models {
+namespace WinPrint.Core.Models;
+
+/// <summary>
+///     Defines the settings for a Sheet (Sheet Definition)
+/// </summary>
+public class SheetSettings : ModelBase {
+    private int _columns = 1;
+
+    private ContentSettings? _contentSettings;
+    private int _darkness;
+    private Footer _footer = new();
+    private bool _grayscale;
+
+    private Header _header = new();
+
+    private bool _landscape;
+    private Margins _margins = new(0, 0, 0, 0);
+
+    //private Guid id;
+    private string _name = "";
+    private int _padding = 3;
+    private bool _pageSeparator;
+    private bool _printBackground = true;
+    private int _rows = 1;
+
     /// <summary>
-    /// Defines the settings for a Sheet (Sheet Definition)
+    ///     Sheet name (e.g. "2up Landscape")
     /// </summary>
-    public class SheetSettings : ModelBase {
+    [SafeForTelemetry]
+    public string Name { get => _name; set => SetField(ref _name, value); }
 
-        //private Guid id;
-        private string name = "";
-        private int rows = 1;
-        private int columns = 1;
-        private int padding = 3;
-        private bool pageSeparator;
-        private Margins margins = new Margins(0, 0, 0, 0);
+    /// <summary>
+    ///     Landscape or Portrait layout
+    /// </summary>
+    [SafeForTelemetry]
+    public bool Landscape { get => _landscape; set => SetField(ref _landscape, value); }
 
-        private bool landscape;
+    /// <summary>
+    ///     Number of rows of pages per sheet
+    /// </summary>
+    [SafeForTelemetry]
+    public int Rows { get => _rows; set => SetField(ref _rows, value); }
 
-        private Header header = new Header();
-        private Footer footer = new Footer();
+    /// <summary>
+    ///     Number of columns of pages per sheet
+    /// </summary>
+    [SafeForTelemetry]
+    public int Columns { get => _columns; set => SetField(ref _columns, value); }
 
-        private ContentSettings contentSettings;
+    /// <summary>
+    ///     Padding between rows and columns of pages on sheet in 100ths of an inch.
+    /// </summary>
+    [SafeForTelemetry]
+    public int Padding { get => _padding; set => SetField(ref _padding, value); }
 
-        /// <summary>
-        /// Unique identifier for this Sheet definition.
-        /// </summary>
-        //public Guid ID { get => id; set => SetField(ref id, value); }
+    [SafeForTelemetry] public bool PageSeparator { get => _pageSeparator; set => SetField(ref _pageSeparator, value); }
 
-        /// <summary>
-        /// Sheet name (e.g. "2up Landscape")
-        /// </summary>
-        [SafeForTelemetry]
-        public string Name { get => name; set => SetField(ref name, value); }
+    /// <summary>
+    ///     Sheet margins in 100ths of an inch. Impacts headers, footers, and content.
+    /// </summary>
+    [SafeForTelemetry]
+    public Margins Margins { get => _margins; set => SetField(ref _margins, value); }
 
-        /// <summary>
-        /// Landscae or Portrait layout
-        /// </summary>
-        [SafeForTelemetry]
-        public bool Landscape { get => landscape; set => SetField(ref landscape, value); }
-
-        /// <summary>
-        /// Number of rows of pages per sheet
-        /// </summary>
-        [SafeForTelemetry]
-        public int Rows { get => rows; set => SetField(ref rows, value); }
-        /// <summary>
-        /// Number of columns of pages per sheet
-        /// </summary>
-        [SafeForTelemetry]
-        public int Columns { get => columns; set => SetField(ref columns, value); }
-
-        /// <summary>
-        /// Padding between rows and columns of pages on sheet in 100ths of an inch.
-        /// </summary>
-        [SafeForTelemetry]
-        public int Padding { get => padding; set => SetField(ref padding, value); }
-
-        [SafeForTelemetry]
-        public bool PageSeparator { get => pageSeparator; set => SetField(ref pageSeparator, value); }
-
-        /// <summary>
-        /// Sheet margins in 100ths of an inch. Impacts headers, footers, and content. 
-        /// </summary>
-        [SafeForTelemetry]
-        public Margins Margins { get => margins; set => SetField(ref margins, value); }
-
-        /// <summary>
-        /// Font used for content. Will override any content font settings specified by a ContentType provider.
-        /// </summary>
-        [SafeForTelemetry]
-        public ContentSettings ContentSettings {
-            get =>
-                //if (contentSettings is null)
-                //    contentSettings = new ContentSettings();
-                contentSettings;
-            set => SetField(ref contentSettings, value);
-        }
-
-        /// <summary>
-        /// Header printed at bottom  of each sheet
-        /// </summary>
-        [SafeForTelemetry]
-        public Header Header { get => header; set => SetField(ref header, value); }
-
-        /// <summary>
-        /// Footer printed at top of each sheet
-        /// </summary>
-        [SafeForTelemetry]
-        public Footer Footer { get => footer; set => SetField(ref footer, value); }
-
-        // The following members are runtime-only and do NOT get persisted, hence "internal"
-        /// <summary>
-        /// if True, print content background, if present. Otherwise, all backgrounds will be paper color.
-        /// </summary>
-        internal bool PrintBackground { get => printBackground; set => SetField(ref printBackground, value); }
-        private bool printBackground = true;
-
-        /// <summary>
-        /// If True, all content will be printed in grayscale. Use Darkness property to change how
-        /// dark the grey is.
-        /// </summary>
-        internal bool Grayscale { get => grayscale; set => SetField(ref grayscale, value); }
-        private bool grayscale = false;
-
-        /// <summary>
-        /// Darkness factor. 0 = RGB. 100 = black.
-        /// </summary>
-        internal int Darkness { get => darkness; set => SetField(ref darkness, value); }
-        private int darkness = 0;
-
-        public SheetSettings() {
-            // Don't specify defaults in constructor; do it through default settings in
-            // SettingsService.CreateDefaultSettingsFile
-        }
+    /// <summary>
+    ///     Font used for content. Will override any content font settings specified by a ContentType provider.
+    /// </summary>
+    [SafeForTelemetry]
+    public ContentSettings? ContentSettings {
+        get =>
+            //if (contentSettings is null)
+            //    contentSettings = new ContentSettings();
+            _contentSettings;
+        set => SetField(ref _contentSettings, value);
     }
+
+    /// <summary>
+    ///     Header printed at bottom  of each sheet
+    /// </summary>
+    [SafeForTelemetry]
+    public Header Header { get => _header; set => SetField(ref _header, value); }
+
+    /// <summary>
+    ///     Footer printed at top of each sheet
+    /// </summary>
+    [SafeForTelemetry]
+    public Footer Footer { get => _footer; set => SetField(ref _footer, value); }
+
+    // The following members are runtime-only and do NOT get persisted, hence "internal"
+    /// <summary>
+    ///     if True, print content background, if present. Otherwise, all backgrounds will be paper color.
+    /// </summary>
+    internal bool PrintBackground { get => _printBackground; set => SetField(ref _printBackground, value); }
+
+    /// <summary>
+    ///     If True, all content will be printed in grayscale. Use Darkness property to change how
+    ///     dark the grey is.
+    /// </summary>
+    internal bool Grayscale { get => _grayscale; set => SetField(ref _grayscale, value); }
+
+    /// <summary>
+    ///     Darkness factor. 0 = RGB. 100 = black.
+    /// </summary>
+    internal int Darkness { get => _darkness; set => SetField(ref _darkness, value); }
 }

@@ -24,7 +24,7 @@ namespace WinPrint.Core.Services {
 
         private Stopwatch runtime;
 
-        public void Start(string appName, IDictionary<string, string> startProperties = null) {
+        public void Start(string appName, IDictionary<string, string?> startProperties = null) {
             runtime = System.Diagnostics.Stopwatch.StartNew();
 
             var val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
@@ -62,7 +62,7 @@ namespace WinPrint.Core.Services {
 
 
             if (startProperties == null) {
-                startProperties = new Dictionary<string, string>();
+                startProperties = new Dictionary<string, string?>();
             }
 
             // Merged passed in properites
@@ -89,7 +89,7 @@ namespace WinPrint.Core.Services {
             telemetry.Context.User.AuthenticatedUserId = user;
         }
 
-        public void TrackEvent(string key, IDictionary<string, string> properties = null, IDictionary<string, double> metrics = null) {
+        public void TrackEvent(string key, IDictionary<string, string?> properties = null, IDictionary<string, double> metrics = null) {
             if (TelemetryEnabled && telemetry != null) {
                 telemetry.TrackEvent(key, properties, metrics);
             }
