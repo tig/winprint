@@ -3,11 +3,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <StartupObject>WinPrint.Winforms.Program</StartupObject>
     <ApplicationIcon>Document.ico</ApplicationIcon>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
@@ -54,7 +55,7 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="rem copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;rem copy $(OutDir)\$(TargetName).exe $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).dll $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)..\release&#xD;&#xA;copy $(SolutionDir)..\tools\pygmentize.exe $(TargetDir)" />
   </Target>
 
