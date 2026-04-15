@@ -24,8 +24,8 @@ namespace WinPrint.Core.ContentTypeEngines {
     /// </summary>
     public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged {
         public static string DefaultContentType = "text/plain";
-        public static string DefaultCteClassName = "AnsiCte";
-        public static string DefaultSyntaxHighlighterCteNameClassName = "AnsiCte";
+        public static string DefaultCteClassName = "TextMateSharpCte";
+        public static string DefaultSyntaxHighlighterCteNameClassName = "TextMateSharpCte";
 
         public new event PropertyChangedEventHandler PropertyChanged;
         protected new void OnPropertyChanged([CallerMemberName] string propertyName = null) {

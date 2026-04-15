@@ -215,7 +215,7 @@ namespace WinPrint.Core.UnitTests.Cte
             input = "text/x-smalltalk";
             (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
             Assert.NotNull(cte);
-            Assert.Equal(typeof(AnsiCte).Name, cte.GetType().Name);
+            Assert.Equal(typeof(TextMateSharpCte).Name, cte.GetType().Name);
             Assert.Equal(input, contentType);
             Assert.Equal("Smalltalk", language);
         }
