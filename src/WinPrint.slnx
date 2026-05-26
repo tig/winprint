@@ -30,4 +30,5 @@
   <Project Path="WinPrint.WinForms/WinPrint.WinForms.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="WinPrint.Maui/WinPrint.Maui.csproj" />
 </Solution>
