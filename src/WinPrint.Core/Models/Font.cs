@@ -1,17 +1,19 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Globalization;
 
 namespace WinPrint.Core.Models;
 
-public class Font : ICloneable {
+public class Font : ICloneable
+{
     private FontStyle _style = FontStyle.Regular;
 
     /// <summary>
     ///     Font name or font family name (e.g. "Courier New" or "monospace"
     /// </summary>
     [SafeForTelemetry]
-    public string Family {
+    public string Family
+    {
         get;
         set;
         //SetField(ref family, value); 
@@ -21,10 +23,13 @@ public class Font : ICloneable {
     ///     Font style (Regular, Bold, Italic, Underline, Strikeout)
     /// </summary>
     [SafeForTelemetry]
-    public FontStyle Style {
+    public FontStyle Style
+    {
         get => _style;
-        set {
-            if (!Enum.IsDefined(typeof(FontStyle), value)) {
+        set
+        {
+            if (!Enum.IsDefined (typeof (FontStyle), value))
+            {
                 value = FontStyle.Bold | FontStyle.Italic;
             }
 
@@ -37,22 +42,27 @@ public class Font : ICloneable {
     ///     Font size in points.
     /// </summary>
     [SafeForTelemetry]
-    public float Size {
+    public float Size
+    {
         get;
         set;
         //SetField(ref size, value);
     } = 8F;
 
-    public object Clone() {
-        return MemberwiseClone();
+    public object Clone ()
+    {
+        return MemberwiseClone ();
     }
 
-    public override int GetHashCode() {
-        return HashCode.Combine(Family, Size, Style);
+    public override int GetHashCode ()
+    {
+        return HashCode.Combine (Family, Size, Style);
     }
 
-    public override bool Equals(object? obj) {
-        if (!(obj is Font font)) {
+    public override bool Equals (object? obj)
+    {
+        if (!(obj is Font font))
+        {
             return false;
         }
 
@@ -61,30 +71,35 @@ public class Font : ICloneable {
                && font.Style == Style;
     }
 
-    public static bool operator ==(Font? m1, Font? m2) {
-        if (m1 is null) {
+    public static bool operator == (Font? m1, Font? m2)
+    {
+        if (m1 is null)
+        {
             return m2 is null;
         }
 
-        if (m2 is null) {
+        if (m2 is null)
+        {
             return false;
         }
 
-        return m1.Equals(m2);
+        return m1.Equals (m2);
     }
 
     /// <summary>
     ///     Tests whether two <see cref='Font' /> objects are different.
     /// </summary>
-    public static bool operator !=(Font? m1, Font? m2) {
+    public static bool operator != (Font? m1, Font? m2)
+    {
         return !(m1 == m2);
     }
 
     /// <summary>
     ///     Provides some interesting information for the Font in String form.
     /// </summary>
-    public override string ToString() {
-        return $"{Family}, {Size.ToString(CultureInfo.InvariantCulture)}pt, {Style.ToString()}";
+    public override string ToString ()
+    {
+        return $"{Family}, {Size.ToString (CultureInfo.InvariantCulture)}pt, {Style.ToString ()}";
     }
 
     //public Font() {

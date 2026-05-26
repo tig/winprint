@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -40,7 +40,8 @@ namespace WinPrint.Core.Models;
 // 2) Elipsis - different based on macro. E.g. FullFilePath is "Start...FileName" where FileName is truncated last.
 // 3) Clipped (never overwritten - ugly)
 // 4) Wrapped (post MLP)
-public abstract class HeaderFooter : ModelBase {
+public abstract class HeaderFooter : ModelBase
+{
     private bool _bottomBorder;
     private bool _enabled;
     private Font? _font;
@@ -53,7 +54,7 @@ public abstract class HeaderFooter : ModelBase {
     /// <summary>
     ///     Header text. May contain macros (e.g. {FileName} or {Page}
     /// </summary>
-    public string? Text { get => _text; set => SetField(ref _text, value); }
+    public string? Text { get => _text; set => SetField (ref _text, value); }
 
     /// <summary>
     ///     Provides a telemetry-safe version of Text (a comma delimited list with only the macros used). See
@@ -61,12 +62,14 @@ public abstract class HeaderFooter : ModelBase {
     /// </summary>
     [JsonIgnore]
     [SafeForTelemetry]
-    public string MacrosUsed {
-        get {
-            var matches = Regex.Matches(Text, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+")
-                .Select(match => match.Value)
-                .ToList();
-            return string.Join(", ", from macro in matches select macro);
+    public string MacrosUsed
+    {
+        get
+        {
+            var matches = Regex.Matches (Text, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+")
+                .Select (match => match.Value)
+                .ToList ();
+            return string.Join (", ", from macro in matches select macro);
         }
     }
 
@@ -74,47 +77,49 @@ public abstract class HeaderFooter : ModelBase {
     ///     Font used for header or footer text
     /// </summary>
     [SafeForTelemetry]
-    public Font? Font { get => _font; set => SetField(ref _font, value); }
+    public Font? Font { get => _font; set => SetField (ref _font, value); }
 
     /// <summary>
     ///     Enables or disables printing of left border of heder/footer
     /// </summary>
     [SafeForTelemetry]
-    public bool LeftBorder { get => _leftBorder; set => SetField(ref _leftBorder, value); }
+    public bool LeftBorder { get => _leftBorder; set => SetField (ref _leftBorder, value); }
 
     /// <summary>
     ///     Enables or disables printing of Top border of heder/footer
     /// </summary>
     [SafeForTelemetry]
-    public bool TopBorder { get => _topBorder; set => SetField(ref _topBorder, value); }
+    public bool TopBorder { get => _topBorder; set => SetField (ref _topBorder, value); }
 
     /// <summary>
     ///     Enables or disables printing of Right border of heder/footer
     /// </summary>
     [SafeForTelemetry]
-    public bool RightBorder { get => _rightBorder; set => SetField(ref _rightBorder, value); }
+    public bool RightBorder { get => _rightBorder; set => SetField (ref _rightBorder, value); }
 
     /// <summary>
     ///     Enables or disables printing of Bottom border of heder/footer
     /// </summary>
     [SafeForTelemetry]
-    public bool BottomBorder { get => _bottomBorder; set => SetField(ref _bottomBorder, value); }
+    public bool BottomBorder { get => _bottomBorder; set => SetField (ref _bottomBorder, value); }
 
     /// <summary>
     ///     Enable or disable header/footer
     /// </summary>
     [SafeForTelemetry]
-    public bool Enabled { get => _enabled; set => SetField(ref _enabled, value); }
+    public bool Enabled { get => _enabled; set => SetField (ref _enabled, value); }
 
     /// <summary>
     ///     Vertical padding below header / above footer in 100ths of an inch
     /// </summary>
     [SafeForTelemetry]
-    public int VerticalPadding { get => _verticalPadding; set => SetField(ref _verticalPadding, value); }
+    public int VerticalPadding { get => _verticalPadding; set => SetField (ref _verticalPadding, value); }
 }
 
-public class Header : HeaderFooter {
+public class Header : HeaderFooter
+{
 }
 
-public class Footer : HeaderFooter {
+public class Footer : HeaderFooter
+{
 }
