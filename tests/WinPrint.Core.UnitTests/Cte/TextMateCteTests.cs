@@ -1,10 +1,12 @@
+using System.Collections;
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using TextMateSharp.Internal.Grammars;
-using TextMateSharp.Themes;
+using TextMateFontStyle = TextMateSharp.Themes.FontStyle;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -82,11 +84,44 @@ public class TextMateCteTests {
     }
 
     [Fact]
+    public async Task RenderAsyncWithFormFeedsAdvancesLogicalLineNumbersTest() {
+        var cte = new TextMateCte();
+        cte.Configure("text/plain", "Plain Text", "notes.txt");
+        cte.ContentSettings = new ContentSettings {
+            Font = new Core.Models.Font { Family = "Courier New", Size = 10 },
+            LineNumbers = true,
+            NewPageOnFormFeed = true
+        };
+
+        using var bitmap = new Bitmap(1, 1);
+        bitmap.SetResolution(96, 96);
+        using var font = new System.Drawing.Font(cte.ContentSettings.Font.Family,
+            cte.ContentSettings.Font.Size / 72F * 96,
+            cte.ContentSettings.Font.Style, GraphicsUnit.Pixel);
+
+        cte.PageSize = new SizeF(1000, font.GetHeight() * 5);
+
+        Assert.True(await cte.SetDocumentAsync("alpha\fbravo\ncharlie"));
+        await cte.RenderAsync(new PrinterResolution { X = 96, Y = 96 }, null);
+
+        var wrappedLinesField = typeof(TextMateCte).GetField("_wrappedLines",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(wrappedLinesField);
+        var wrappedLines = Assert.IsAssignableFrom<IEnumerable>(wrappedLinesField.GetValue(cte));
+        var lineNumbers = wrappedLines.Cast<object>()
+            .Select(line => (int)line.GetType().GetProperty("NonWrappedLineNumber")!.GetValue(line)!)
+            .Where(lineNumber => lineNumber > 0)
+            .ToArray();
+
+        Assert.Equal([1, 2, 3], lineNumbers);
+    }
+
+    [Fact]
     public void GetForegroundColorUsesFirstColorMapEntryTest() {
         var method = typeof(TextMateCte).GetMethod("GetForegroundColor", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
 
-        var metadata = EncodedTokenAttributes.Set(0, 0, 0, null, FontStyle.NotSet, 1, 0);
+        var metadata = EncodedTokenAttributes.Set(0, 0, 0, null, TextMateFontStyle.NotSet, 1, 0);
         var color = Assert.IsType<Color>(method.Invoke(null, [ metadata, new[] { "#123456" } ]));
 
         Assert.Equal(ColorTranslator.FromHtml("#123456").ToArgb(), color.ToArgb());

@@ -143,7 +143,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable {
         }
 
         _linesPerPage = (int)Math.Floor(PageSize.Height / _lineHeight);
-        var logicalLineCount = CountLogicalLines(Document);
+        var logicalLineCount = CountLogicalLines(Document, ContentSettings.NewPageOnFormFeed);
         var lineNumberDigits = Math.Max(3, logicalLineCount.ToString(CultureInfo.InvariantCulture).Length);
         _lineNumberWidth = ContentSettings.LineNumbers ? MeasureString(g, new string('0', lineNumberDigits + 1)).Width : 0;
 
@@ -277,6 +277,9 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable {
                     }
 
                     AddTokenizedLine(wrapped, parts[i], lineNumber, maxLineChars, ref ruleStack);
+                    if (i < parts.Length - 1) {
+                        lineNumber++;
+                    }
                 }
             }
             else {
@@ -413,14 +416,14 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable {
         return Enum.TryParse<ThemeName>(style, ignoreCase: true, out var theme) ? theme : ThemeName.VisualStudioLight;
     }
 
-    private static int CountLogicalLines(string document) {
+    private static int CountLogicalLines(string document, bool countFormFeeds) {
         if (document.Length == 0) {
             return 1;
         }
 
         var lines = 1;
         foreach (var ch in document) {
-            if (ch == '\n') {
+            if (ch == '\n' || (countFormFeeds && ch == '\f')) {
                 lines++;
             }
         }
