@@ -1,3 +1,4 @@
+#nullable disable
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
@@ -31,8 +32,6 @@ internal static class Program
 
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-
-        bool debug = false;
 
         var main = new MainWindow ();
         GuiLogSink.Instance.OutputWindow = main;
@@ -95,3 +94,4 @@ internal static class Program
         ServiceLocator.Current.TelemetryService.TrackException (ex);
     }
 }
+

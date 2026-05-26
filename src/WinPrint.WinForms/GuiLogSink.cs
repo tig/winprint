@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,3 +92,4 @@ public class GuiLogSink : ILogEventSink
         }
     }
 }
+

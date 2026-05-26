@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -50,3 +51,4 @@ public partial class UpdateDialog : Form
         }
     }
 }
+

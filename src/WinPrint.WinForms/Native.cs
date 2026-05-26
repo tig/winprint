@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -53,3 +54,4 @@ internal class NativeMethods
         DDETopic
     }
 }
+

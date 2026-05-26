@@ -1,3 +1,4 @@
+#nullable disable
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
@@ -1263,3 +1264,4 @@ public partial class MainWindow : Form
         }
     }
 }
+

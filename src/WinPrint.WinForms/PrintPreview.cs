@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -340,3 +341,4 @@ public partial class PrintPreview : Control
         return new Rectangle ((int)Math.Ceiling ((ClientRectangle.Width / 2) - (size.Width / 2)), (int)Math.Ceiling ((ClientRectangle.Height / 2) - (size.Height / 2)), (int)Math.Ceiling (size.Width), (int)Math.Ceiling (size.Height));
     }
 }
+
