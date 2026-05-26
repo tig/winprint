@@ -18,7 +18,7 @@ public class ModelLocator
         SimpleIoc.Default.Register<Options> ();
     }
 
-    public static ModelLocator? Current => _current ??= new ModelLocator ();
+    public static ModelLocator Current => _current ??= new ModelLocator ();
 
     public Settings Settings => SimpleIoc.Default.GetInstance<Settings> ();
 

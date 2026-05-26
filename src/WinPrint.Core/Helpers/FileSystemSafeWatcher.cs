@@ -17,7 +17,7 @@ public class DelayedEvent (FileSystemEventArgs args)
 {
     private readonly FileSystemEventArgs _args = args;
 
-    public FileSystemEventArgs? Args => _args;
+    public FileSystemEventArgs Args => _args;
 
     /// <summary>
     /// Only delayed events that are unique will be fired.
@@ -173,7 +173,7 @@ public class FileSystemSafeWatcher
     /// Gets or sets the object used to marshal the event handler calls issued as a result of a directory change.
     /// </summary>
     /// <value>The System.ComponentModel.ISynchronizeInvoke that represents the object used to marshal the event handler calls issued as a result of a directory change. The default is null.</value>
-    public ISynchronizeInvoke SynchronizingObject
+    public ISynchronizeInvoke? SynchronizingObject
     {
         get => _fileSystemWatcher!.SynchronizingObject;
         set => _fileSystemWatcher!.SynchronizingObject = value;
@@ -256,7 +256,7 @@ public class FileSystemSafeWatcher
     /// Raises the System.IO.FileSystemWatcher.Renamed event.
     /// </summary>
     /// <param name="e">A System.IO.RenamedEventArgs that contains the event data.</param>
-    protected void OnRenamed (RenamedEventArgs? e)
+    protected void OnRenamed (RenamedEventArgs e)
     {
         Renamed?.Invoke (this, e);
     }
@@ -308,22 +308,22 @@ public class FileSystemSafeWatcher
         _serverTimer?.Dispose ();
     }
 
-    private void FileSystemEventHandler (object sender, FileSystemEventArgs e)
+    private void FileSystemEventHandler (object? sender, FileSystemEventArgs e)
     {
         _events!.Add (new DelayedEvent (e));
     }
 
-    private void ErrorEventHandler (object sender, ErrorEventArgs e)
+    private void ErrorEventHandler (object? sender, ErrorEventArgs e)
     {
         OnError (e);
     }
 
-    private void RenamedEventHandler (object sender, RenamedEventArgs e)
+    private void RenamedEventHandler (object? sender, RenamedEventArgs e)
     {
         _events!.Add (new DelayedEvent (e));
     }
 
-    private void ElapsedEventHandler (object sender, ElapsedEventArgs e)
+    private void ElapsedEventHandler (object? sender, ElapsedEventArgs e)
     {
         // We don't fire the events inside the lock. We will queue them here until
         // the code exits the locks.
@@ -358,7 +358,7 @@ public class FileSystemSafeWatcher
                             if (current!.Args.ChangeType == WatcherChangeTypes.Created || current.Args.ChangeType == WatcherChangeTypes.Changed)
                             {
                                 //check if the file has been completely copied (can be opened for read)
-                                FileStream stream = null;
+                                FileStream? stream = null;
                                 try
                                 {
                                     stream = File.Open (current.Args.FullPath, FileMode.Open, FileAccess.Read, FileShare.None);
@@ -424,8 +424,8 @@ public class FileSystemSafeWatcher
         {
             while (deQueue.Count > 0)
             {
-                var de = deQueue.Dequeue () as DelayedEvent;
-                switch (de.Args.ChangeType)
+                var de = (DelayedEvent)deQueue.Dequeue ()!;
+                switch (de.Args!.ChangeType)
                 {
                     case WatcherChangeTypes.Changed:
                         OnChanged (de.Args);
@@ -437,7 +437,10 @@ public class FileSystemSafeWatcher
                         OnDeleted (de.Args);
                         break;
                     case WatcherChangeTypes.Renamed:
-                        OnRenamed (de.Args as RenamedEventArgs);
+                        if (de.Args is RenamedEventArgs renamedEventArgs)
+                        {
+                            OnRenamed (renamedEventArgs);
+                        }
                         break;
                 }
             }

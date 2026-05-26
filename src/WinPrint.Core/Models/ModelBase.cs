@@ -103,16 +103,16 @@ public abstract class ModelBase : INotifyPropertyChanged
                 if (sourceProp.PropertyType.IsSubclassOf (typeof (ModelBase)))
                 {
                     // Property is subclass of ModelBase - Recurse through sub-objects
-                    if ((ModelBase)sourceProp.GetValue (source, null)! != null)
+                    if (sourceProp.GetValue (source, null) is ModelBase sourceValue)
                     {
-                        if ((ModelBase)destProp.GetValue (this)! is null)
+                        if (destProp.GetValue (this) is not ModelBase destValue)
                         {
                             // Destination is null. Create it.
-                            destProp.SetValue (this, (ModelBase)Activator.CreateInstance (destProp.PropertyType));
+                            destValue = (ModelBase)Activator.CreateInstance (destProp.PropertyType)!;
+                            destProp.SetValue (this, destValue);
                         }
 
-                        ((ModelBase)destProp.GetValue (this)).CopyPropertiesFrom (
-                            (ModelBase)sourceProp.GetValue (source, null));
+                        destValue.CopyPropertiesFrom (sourceValue);
                     }
                     else
                     {
@@ -126,17 +126,9 @@ public abstract class ModelBase : INotifyPropertyChanged
             }
             else
             {
-                var sourceList = (Dictionary<string, SheetSettings>)sourceProp.GetValue (source);
-                if (sourceList == null)
-                {
-                    sourceList = new Dictionary<string, SheetSettings> ();
-                }
+                var sourceList = sourceProp.GetValue (source) as Dictionary<string, SheetSettings> ?? new Dictionary<string, SheetSettings> ();
 
-                var destList = (Dictionary<string, SheetSettings>)destProp.GetValue (this);
-                if (destList == null)
-                {
-                    destList = new Dictionary<string, SheetSettings> ();
-                }
+                var destList = destProp.GetValue (this) as Dictionary<string, SheetSettings> ?? new Dictionary<string, SheetSettings> ();
 
                 foreach (var src in sourceList)
                 {

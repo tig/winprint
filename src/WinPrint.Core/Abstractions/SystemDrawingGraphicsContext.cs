@@ -194,7 +194,7 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
         return new GraphicsSizeF (size.Width, size.Height);
     }
 
-    public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y, GraphicsStringFormat format = null)
+    public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y, GraphicsStringFormat? format = null)
     {
         var nativeFont = GetFont (font);
         var nativeBrush = GetBrush (brush);
@@ -202,7 +202,7 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
         Graphics.DrawString (text, nativeFont, nativeBrush, x, y, nativeFormat);
     }
 
-    public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect, GraphicsStringFormat format = null)
+    public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect, GraphicsStringFormat? format = null)
     {
         var nativeFont = GetFont (font);
         var nativeBrush = GetBrush (brush);
@@ -272,7 +272,7 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
         return systemPen.Pen;
     }
 
-    private static StringFormat ToSystemStringFormat (GraphicsStringFormat format)
+    private static StringFormat ToSystemStringFormat (GraphicsStringFormat? format)
     {
         if (format == null)
         {

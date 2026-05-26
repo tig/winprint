@@ -30,7 +30,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     //public static string DefaultContentType = "text/plain";
     public static string DefaultCteClassName = "AnsiCte";
     public static string DefaultSyntaxHighlighterCteNameClassName = "TextMateCte";
-    private static readonly string?[]? _supportedContentTypes = null;
+    private static readonly string[] _supportedContentTypes = [];
 
     /// <summary>
     ///     These are the global StringFormat settings; set here to ensure all rendering and measuring uses same settings
@@ -72,7 +72,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
     /// </summary>
-    public virtual string?[]? SupportedContentTypes => _supportedContentTypes;
+    public virtual string[] SupportedContentTypes => _supportedContentTypes;
 
     /// <summary>
     ///     Holds content settings for the CTE. These are used as defaults when a Sheet does not
@@ -100,12 +100,12 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
 
     public new event PropertyChangedEventHandler? PropertyChanged;
 
-    protected new void OnPropertyChanged ([CallerMemberName] string propertyName = null)
+    protected new void OnPropertyChanged ([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke (this, new PropertyChangedEventArgs (propertyName));
     }
 
-    protected new bool SetField<T> (ref T field, T value, [CallerMemberName] string propertyName = null)
+    protected new bool SetField<T> (ref T field, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals (field, value))
         {
@@ -129,9 +129,9 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// <summary>
     ///     https://stackoverflow.com/questions/5411694/get-all-inherited-classes-of-an-abstract-class
     /// </summary>
-    public static ICollection<ContentTypeEngineBase?> GetDerivedClassesCollection ()
+    public static ICollection<ContentTypeEngineBase> GetDerivedClassesCollection ()
     {
-        var objects = new List<ContentTypeEngineBase?> ();
+        var objects = new List<ContentTypeEngineBase> ();
         foreach (var type in typeof (ContentTypeEngineBase).Assembly.GetTypes ()
                      .Where (myType =>
                          myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf (typeof (ContentTypeEngineBase))))
@@ -172,12 +172,12 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// </summary>
     /// <param name="contentType"></param>
     /// <returns>ContentEngine, ContentType, Language</returns>
-    public static (ContentTypeEngineBase? cte, string languageId, string? language) CreateContentTypeEngine (
+    public static (ContentTypeEngineBase? cte, string languageId, string language) CreateContentTypeEngine (
         string? contentType)
     {
         LogService.TraceMessage ();
 
-        Debug.Assert (!string.IsNullOrEmpty (contentType));
+        contentType = string.IsNullOrEmpty (contentType) ? ModelLocator.Current.Settings.DefaultContentType : contentType;
         Debug.Assert (ModelLocator.Current.FileTypeMapping != null);
         Debug.Assert (ModelLocator.Current.FileTypeMapping.ContentTypes != null);
 
@@ -189,7 +189,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
 
         if (cte != null)
         {
-            languageId = cte.SupportedContentTypes![0];
+            languageId = cte.SupportedContentTypes[0];
             language = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault (lang =>
                 lang.Id.Equals (languageId, StringComparison.OrdinalIgnoreCase))?.Title ?? languageId;
             return (cte, languageId, language);
@@ -261,7 +261,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
                 // If supported by multiple, pick the default.
                 var id = languageId;
                 var ctes = GetDerivedClassesCollection ()
-                    .Where (c => c!.SupportedContentTypes!.Contains (id.ToLower ()));
+                    .Where (c => c.SupportedContentTypes.Contains (id.ToLower ()));
                 var contentTypeEngineBases = ctes as ContentTypeEngineBase[] ?? ctes.ToArray ();
                 cte = contentTypeEngineBases.Count () > 1
                     ? contentTypeEngineBases.First (c =>
@@ -285,11 +285,11 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         {
             // Didn't find a content type so use default CTE
             cte = GetDerivedClassesCollection ().FirstOrDefault (c =>
-                c!.SupportedContentTypes!.Contains (ModelLocator.Current.Settings.DefaultContentType));
-            languageId = cte.SupportedContentTypes[0];
+                c.SupportedContentTypes.Contains (ModelLocator.Current.Settings.DefaultContentType));
+            languageId = cte?.SupportedContentTypes[0] ?? ModelLocator.Current.Settings.DefaultContentType;
             language = ModelLocator.Current.FileTypeMapping.ContentTypes
                 .FirstOrDefault (l => l.Id.Equals (languageId, StringComparison.OrdinalIgnoreCase))
-                ?.Title;
+                ?.Title ?? languageId;
         }
         else
         {
@@ -311,7 +311,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// </summary>
     /// <param name="filePath"></param>
     /// <returns>The content type</returns>
-    public static string? GetContentType (string filePath)
+    public static string GetContentType (string filePath)
     {
         var contentType = ModelLocator.Current.Settings.DefaultContentType;
 

@@ -24,7 +24,7 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
     private bool _leftBorder;
     private bool _rightBorder;
 
-    internal SheetViewModel? _svm;
+    internal SheetViewModel _svm;
 
     private string? _text;
 
@@ -200,7 +200,7 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
 
         Log.Debug ($"{GetType ().Name}: Expanding Macros - {Text}");
         var macros = new Macros (_svm) { Page = sheetNum };
-        var parts = macros.ReplaceMacros (Text).Split ('\t', '|');
+        var parts = macros.ReplaceMacros (Text ?? string.Empty).Split ('\t', '|');
 
         // Left\tCenter\tRight
         if (parts.Length == 0)

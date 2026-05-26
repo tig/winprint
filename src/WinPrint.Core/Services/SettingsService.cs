@@ -67,7 +67,7 @@ public class SettingsService
                 var fvi = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (SettingsService))!.Location);
 
                 // is this in Kindel\winprint?
-                if (path.Contains ($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
+                if (path is not null && path.Contains ($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
                 {
                     // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
                     path =
@@ -75,7 +75,7 @@ public class SettingsService
                 }
 
                 // TODO: Remove internal knowledge of Out-WinPrint from here
-                if (path.Contains ($@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
+                if (path is not null && path.Contains ($@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
                 {
                     path = Path.GetDirectoryName (Assembly.GetAssembly (typeof (SettingsService))!.Location);
                 }

@@ -66,7 +66,7 @@ public abstract class HeaderFooter : ModelBase
     {
         get
         {
-            var matches = Regex.Matches (Text, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+")
+            var matches = Regex.Matches (Text ?? string.Empty, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+")
                 .Select (match => match.Value)
                 .ToList ();
             return string.Join (", ", from macro in matches select macro);

@@ -36,7 +36,7 @@ internal struct WrappedLine
 /// </summary>
 public class TextCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string?[]? _supportedContentTypes = { "text/plain" };
+    private static readonly string[] _supportedContentTypes = { "text/plain" };
     private Font? _cachedFont;
 
     // Protected implementation of Dispose pattern.
@@ -55,7 +55,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
     /// </summary>
-    public override string?[]? SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => _supportedContentTypes;
 
     public void Dispose ()
     {

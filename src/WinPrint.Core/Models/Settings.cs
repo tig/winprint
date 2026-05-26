@@ -64,8 +64,8 @@ public class Settings : ModelBase
     private bool _printPageSize;
     private bool _printPrintableArea;
     private Guid defaultSheet;
-    private WindowLocation location;
-    private WindowSize size;
+    private WindowLocation location = new ();
+    private WindowSize size = new ();
     private FormWindowState windowState;
 
     /// <summary>
@@ -92,7 +92,7 @@ public class Settings : ModelBase
     /// <summary>
     ///     Sheet definitons
     /// </summary>
-    public Dictionary<string, SheetSettings> Sheets { get; set; }
+    public Dictionary<string, SheetSettings> Sheets { get; set; } = new ();
 
     [JsonIgnore]
     [SafeForTelemetry]
@@ -109,25 +109,25 @@ public class Settings : ModelBase
         }
     }
 
-    [SafeForTelemetry] public string? DefaultContentType { get; set; } // "text/plain";
+    [SafeForTelemetry] public string DefaultContentType { get; set; } = "text/plain";
 
-    [SafeForTelemetry] public string DefaultCteClassName { get; set; } // "AnsiCte";
+    [SafeForTelemetry] public string DefaultCteClassName { get; set; } = ContentTypeEngineBase.DefaultCteClassName;
 
-    [SafeForTelemetry] public string DefaultSyntaxHighlighterCteNameClassName { get; set; } // "AnsiCte";
+    [SafeForTelemetry] public string DefaultSyntaxHighlighterCteNameClassName { get; set; } = ContentTypeEngineBase.DefaultSyntaxHighlighterCteNameClassName;
 
     /// <summary>
     ///     Content type handlers
     /// </summary>
-    public AnsiCte AnsiContentTypeEngineSettings { get; set; }
+    public AnsiCte AnsiContentTypeEngineSettings { get; set; } = new ();
 
-    public TextMateCte TextMateContentTypeEngineSettings { get; set; }
-    public TextCte TextContentTypeEngineSettings { get; set; }
-    public HtmlCte HtmlContentTypeEngineSettings { get; set; }
+    public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
+    public TextCte TextContentTypeEngineSettings { get; set; } = new ();
+    public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
 
     /// <summary>
     ///     File Type Mappings.
     /// </summary>
-    public FileTypeMapping FileTypeMapping { get; set; }
+    public FileTypeMapping FileTypeMapping { get; set; } = new ();
 
     [JsonIgnore]
     [SafeForTelemetry]

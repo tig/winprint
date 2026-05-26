@@ -141,7 +141,7 @@ public class Print : IDisposable
         ServiceLocator.Current.TelemetryService.TrackEvent ("Count Sheets",
             new Dictionary<string, string?>
             {
-                ["type"] = SheetViewModel.ContentEngine.GetType ().Name,
+                ["type"] = SheetViewModel.ContentEngine?.GetType ().Name,
                 ["contentType"] = SheetViewModel.ContentType,
                 ["language"] = SheetViewModel.Language,
                 ["printer"] = PrintDocument.PrinterSettings.PrinterName,
@@ -175,7 +175,7 @@ public class Print : IDisposable
         ServiceLocator.Current.TelemetryService.TrackEvent ("Print Complete",
             new Dictionary<string, string?>
             {
-                ["type"] = SheetViewModel.ContentEngine.GetType ().Name,
+                ["type"] = SheetViewModel.ContentEngine?.GetType ().Name,
                 ["contentType"] = SheetViewModel.ContentType,
                 ["language"] = SheetViewModel.Language,
                 ["printer"] = PrintDocument.PrinterSettings.PrinterName,
@@ -244,7 +244,10 @@ public class Print : IDisposable
         if (_curSheet <= PrintDocument.PrinterSettings.ToPage)
         {
             // BUGBUG: LINUX - On pages > 1 in landscape mode, landscape mode is lost
-            SheetViewModel.PrintSheet (ev.Graphics, _curSheet);
+            if (ev.Graphics is not null)
+            {
+                SheetViewModel.PrintSheet (ev.Graphics, _curSheet);
+            }
             _sheetsPrinted++;
         }
 

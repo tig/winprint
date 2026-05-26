@@ -86,14 +86,12 @@ public sealed class Macros (SheetViewModel svm)
     /// <summary>
     ///     The file content type engine name (e.g. "TextCte", "AnsiCte").
     /// </summary>
-    public string CteName => SheetViewModel.ContentEngine.GetType ().Name;
+    public string CteName => SheetViewModel.ContentEngine?.GetType ().Name ?? string.Empty;
 
     /// <summary>
     ///     The style used for formatting (e.g. "default" or "colorful"; from Pygments.org).
     /// </summary>
-    public string Style => SheetViewModel.ContentEngine.ContentSettings == null
-        ? ""
-        : SheetViewModel.ContentEngine.ContentSettings.Style;
+    public string Style => SheetViewModel.ContentEngine?.ContentSettings?.Style ?? string.Empty;
 
 
     /// <summary>

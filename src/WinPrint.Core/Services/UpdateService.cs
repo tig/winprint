@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace WinPrint.Core.Services;
 /// </summary>
 public class UpdateService
 {
+    private static readonly HttpClient _httpClient = new ();
     private string? _tempFilename;
 
     /// <summary>
@@ -92,7 +94,6 @@ public class UpdateService
     {
         LogService.TraceMessage ();
         InstallerUri = new Uri ("https://github.com/tig/winprint/releases");
-        using var client = new WebClient ();
         try
         {
             var github = new GitHubClient (new ProductHeaderValue ("tig-winprint"));
@@ -150,14 +151,17 @@ public class UpdateService
         _tempFilename = Path.GetTempFileName () + ".msi";
         //Log.Information($"{this.GetType().Name}: Downloading {InstallerUri.AbsoluteUri} to {_tempFilename}...");
 
-        var client = new WebClient ();
-        client.DownloadDataCompleted += Client_DownloadDataCompleted;
-        client.DownloadProgressChanged += Client_DownloadProgressChanged;
-        await File.WriteAllBytesAsync (_tempFilename, await client.DownloadDataTaskAsync (InstallerUri).ConfigureAwait (false));
+        if (InstallerUri is null)
+        {
+            throw new InvalidOperationException ("Installer URI is not available.");
+        }
+
+        await File.WriteAllBytesAsync (_tempFilename, await _httpClient.GetByteArrayAsync (InstallerUri).ConfigureAwait (false)).ConfigureAwait (false);
+        OnDownloadComplete (_tempFilename);
         return _tempFilename;
     }
 
-    private void Client_DownloadProgressChanged (object sender, DownloadProgressChangedEventArgs e)
+    private void Client_DownloadProgressChanged (object? sender, DownloadProgressChangedEventArgs e)
     {
         //Log.Debug($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
         //if (e.ProgressPercentage % 33 == 0) {
@@ -166,7 +170,7 @@ public class UpdateService
         OnDownloadProgressChanged (e);
     }
 
-    private void Client_DownloadDataCompleted (object sender, DownloadDataCompletedEventArgs e)
+    private void Client_DownloadDataCompleted (object? sender, DownloadDataCompletedEventArgs e)
     {
         //try {
         //    // If the request was not canceled and did not throw

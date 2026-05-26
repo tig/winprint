@@ -29,7 +29,7 @@ public class FileWatcher : IDisposable
         var handler = ChangedEvent;
 
         // Event will be null if there are no subscribers
-        handler?.Invoke (this, null);
+        handler?.Invoke (this, EventArgs.Empty);
     }
 
     private FileSystemSafeWatcher CreateFileWatcher (string path)
@@ -37,7 +37,7 @@ public class FileWatcher : IDisposable
         // Create a new FileSystemSafeWatcher and set its properties.
         var watcher = new FileSystemSafeWatcher
         {
-            Path = Path.GetDirectoryName (path),
+            Path = Path.GetDirectoryName (path) ?? string.Empty,
             /* Watch for changes in LastAccess and LastWrite times, and
                the renaming of files or directories. */
             NotifyFilter = NotifyFilters.LastWrite,
@@ -56,13 +56,13 @@ public class FileWatcher : IDisposable
         return watcher;
     }
 
-    private void OnChanged (object source, FileSystemEventArgs e)
+    private void OnChanged (object? source, FileSystemEventArgs e)
     {
         //Logger.Instance.Log4.Info($"Commands:{e.FullPath} changed.");
         OnChangedEvent ();
     }
 
-    private void OnRenamed (object source, RenamedEventArgs e)
+    private void OnRenamed (object? source, RenamedEventArgs e)
     {
         // Specify what is done when a file is renamed.
         LogService.TraceMessage ($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");

@@ -14,11 +14,11 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class HtmlCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string?[]? _supportedContentTypes = ["text/html"];
+    private static readonly string[] _supportedContentTypes = ["text/html"];
 
     private bool _disposed;
 
-    public override string?[]? SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => _supportedContentTypes;
 
     public void Dispose ()
     {

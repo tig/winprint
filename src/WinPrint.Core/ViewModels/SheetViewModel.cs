@@ -31,21 +31,21 @@ public class SheetViewModel : ViewModelBase
     private int _cols;
     private RectangleF _contentBounds;
     private ContentTypeEngineBase? _contentEngine;
-    private ContentSettings? _contentSettings;
+    private ContentSettings _contentSettings = new ();
     private string? _contentType;
     private Encoding? _encoding;
     private string? _file;
 
-    private FooterViewModel? _footerVM;
+    private FooterViewModel _footerVM = null!;
 
-    private HeaderViewModel? _headerVM;
+    private HeaderViewModel _headerVM = null!;
 
     private bool _landscape;
     private string? _language;
     private bool _loading;
 
     // These properties are all defined by user and sync'd with the Sheet model
-    private Margins? _margins;
+    private Margins _margins = new (0, 0, 0, 0);
 
     private int _numPages;
     private int _padding;
@@ -58,14 +58,14 @@ public class SheetViewModel : ViewModelBase
 
     private Font? _rulesFont;
 
-    private SheetSettings? _sheet;
+    private SheetSettings _sheet = null!;
     private string? _title;
 
-    public Margins? Margins { get => _margins; set => SetField (ref _margins, value); }
+    public Margins Margins { get => _margins; set => SetField (ref _margins, value); }
     public bool Landscape { get => _landscape; set => SetField (ref _landscape, value); }
     public Font? DiagnosticRulesFont { get => _rulesFont; set => SetField (ref _rulesFont, value); }
-    public HeaderViewModel? Header { get => _headerVM; set => SetField (ref _headerVM, value); }
-    public FooterViewModel? Footer { get => _footerVM; set => SetField (ref _footerVM, value); }
+    public HeaderViewModel Header { get => _headerVM; set => SetField (ref _headerVM, value); }
+    public FooterViewModel Footer { get => _footerVM; set => SetField (ref _footerVM, value); }
 
     public int Rows { get => _rows; set => SetField (ref _rows, value); }
 
@@ -75,14 +75,14 @@ public class SheetViewModel : ViewModelBase
 
     public bool PageSeparator { get => _pageSeparator; set => SetField (ref _pageSeparator, value); }
 
-    public ContentSettings? ContentSettings { get => _contentSettings; set => SetField (ref _contentSettings, value); }
+    public ContentSettings ContentSettings { get => _contentSettings; set => SetField (ref _contentSettings, value); }
 
     /// <summary>
     ///     The fully qualified path of the file being printed. Used for header/footer display purposes only.
     /// </summary>
     public string File
     {
-        get => _file;
+        get => _file ?? string.Empty;
         set => SetField (ref _file, value);
     }
 
@@ -91,7 +91,7 @@ public class SheetViewModel : ViewModelBase
     /// </summary>
     public string Title
     {
-        get => _title!;
+        get => _title ?? string.Empty;
         set => SetField (ref _title, value);
     }
 
@@ -109,7 +109,7 @@ public class SheetViewModel : ViewModelBase
     /// </summary>
     public string Language
     {
-        get => _language!;
+        get => _language ?? string.Empty;
         set => SetField (ref _language, value);
     }
 
@@ -226,7 +226,7 @@ public class SheetViewModel : ViewModelBase
 
     protected void OnPageSettingsSet ()
     {
-        PageSettingsSet?.Invoke (this, null);
+        PageSettingsSet?.Invoke (this, EventArgs.Empty);
     }
 
     public event EventHandler<string>? ReflowProgress;
@@ -247,7 +247,7 @@ public class SheetViewModel : ViewModelBase
             new SheetViewModelSettingsChangedEvent { Reflow = reflow, PropertyName = propertyName });
     }
 
-    protected override void OnPropertyChanged ([CallerMemberName] string propertyName = null)
+    protected override void OnPropertyChanged ([CallerMemberName] string? propertyName = null)
     {
         base.OnPropertyChanged (propertyName);
     }
@@ -309,11 +309,8 @@ public class SheetViewModel : ViewModelBase
             _contentSettings.PropertyChanged -= OnContentSettingsPropertyChanged ();
         }
 
-        ContentSettings = newSheet.ContentSettings;
-        if (ContentSettings != null)
-        {
-            ContentSettings.PropertyChanged += OnContentSettingsPropertyChanged ();
-        }
+        ContentSettings = newSheet.ContentSettings ?? new ContentSettings ();
+        ContentSettings.PropertyChanged += OnContentSettingsPropertyChanged ();
 
         if (_headerVM != null)
         {
@@ -411,7 +408,7 @@ public class SheetViewModel : ViewModelBase
         var containsStr = false;
         var streamBytes = new byte[stream.Length];
         stream.Position = 0;
-        stream.Read (streamBytes, 0, (int)stream.Length);
+        stream.ReadExactly (streamBytes);
         var stringOfStream = Encoding.UTF8.GetString (streamBytes);
         // Look for the Default foreground color esc sequence
         // Note, just looking for the ESC[ sequence is not enough as PDF files
@@ -446,6 +443,11 @@ public class SheetViewModel : ViewModelBase
         try
         {
             (ContentEngine, ContentType, Language) = ContentTypeEngineBase.CreateContentTypeEngine (contentType);
+            if (ContentEngine is null)
+            {
+                throw new InvalidOperationException ($"Content type engine not found for '{contentType}'.");
+            }
+
             if (ContentEngine is TextMateCte textMateCte)
             {
                 textMateCte.Configure (ContentType, Language, File);
@@ -458,10 +460,7 @@ public class SheetViewModel : ViewModelBase
                 // TODO: set some defaults
             }
 
-            if (ContentSettings != null)
-            {
-                ContentEngine.ContentSettings.CopyPropertiesFrom (ContentSettings);
-            }
+            ContentEngine.ContentSettings.CopyPropertiesFrom (ContentSettings);
 
             if (ContentEngine.SupportedContentTypes.Contains ("text/ansi") &&
                 !ContentEngine.SupportedContentTypes.Contains (ContentType))
@@ -484,10 +483,10 @@ public class SheetViewModel : ViewModelBase
             ContentEngine.Encoding = Encoding;
             retval = await ContentEngine.SetDocumentAsync (document).ConfigureAwait (true);
         }
-        catch (Exception e)
+        catch
         {
             Loading = false;
-            throw e;
+            throw;
         }
         finally
         {
@@ -598,6 +597,11 @@ public class SheetViewModel : ViewModelBase
         }
 
         // Content bounds represents printable area, minus margins and header/footer.
+        if (_sheet is null)
+        {
+            throw new InvalidOperationException ("Sheet settings must be set before page settings.");
+        }
+
         _contentBounds.Location = new PointF (_sheet.Margins.Left, _sheet.Margins.Top + _headerVM.Bounds.Height);
         _contentBounds.Width = Bounds.Width - _sheet.Margins.Left - _sheet.Margins.Right;
         _contentBounds.Height = Bounds.Height - _sheet.Margins.Top - _sheet.Margins.Bottom - _headerVM.Bounds.Height -
@@ -678,7 +682,7 @@ public class SheetViewModel : ViewModelBase
 
     public SheetSettings FindSheet (string sheetName, out string sheetID)
     {
-        SheetSettings sheet = null;
+        SheetSettings? sheet = null;
         if (ModelLocator.Current.Settings == null)
         {
             throw new InvalidOperationException ("Find Sheet failed. Settings are invalid.");
@@ -709,7 +713,7 @@ public class SheetViewModel : ViewModelBase
             sheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault (sheetID);
         }
 
-        return sheet;
+        return sheet ?? throw new InvalidOperationException ($"Sheet definiton not found ({sheetName}).");
     }
 
     private PropertyChangedEventHandler OnSheetPropertyChanged ()
@@ -770,57 +774,57 @@ public class SheetViewModel : ViewModelBase
             switch (e.PropertyName)
             {
                 case "Font":
-                    ContentSettings.Font = _sheet.ContentSettings.Font;
+                    ContentSettings.Font = ContentSettings.Font;
                     reflow = true;
                     break;
 
                 case "PrintBackground":
-                    ContentSettings.PrintBackground = _sheet.ContentSettings.PrintBackground;
+                    ContentSettings.PrintBackground = ContentSettings.PrintBackground;
                     reflow = false;
                     break;
 
                 case "Grayscale":
-                    ContentSettings.Grayscale = _sheet.ContentSettings.Grayscale;
+                    ContentSettings.Grayscale = ContentSettings.Grayscale;
                     reflow = false;
                     break;
 
                 case "Darkness":
-                    ContentSettings.Darkness = _sheet.ContentSettings.Darkness;
+                    ContentSettings.Darkness = ContentSettings.Darkness;
                     reflow = false;
                     break;
 
                 case "LineNumbers":
-                    ContentSettings.LineNumbers = _sheet.ContentSettings.LineNumbers;
+                    ContentSettings.LineNumbers = ContentSettings.LineNumbers;
                     reflow = true;
                     break;
 
                 case "LineNumberSeparator":
-                    ContentSettings.LineNumberSeparator = _sheet.ContentSettings.LineNumberSeparator;
+                    ContentSettings.LineNumberSeparator = ContentSettings.LineNumberSeparator;
                     reflow = true;
                     break;
 
                 case "TabSpaces":
-                    ContentSettings.TabSpaces = _sheet.ContentSettings.TabSpaces;
+                    ContentSettings.TabSpaces = ContentSettings.TabSpaces;
                     reflow = true;
                     break;
 
                 case "NewPageOnFormFeed":
-                    ContentSettings.NewPageOnFormFeed = _sheet.ContentSettings.NewPageOnFormFeed;
+                    ContentSettings.NewPageOnFormFeed = ContentSettings.NewPageOnFormFeed;
                     reflow = true;
                     break;
 
                 case "Diagnostics":
-                    ContentSettings.Diagnostics = _sheet.ContentSettings.Diagnostics;
+                    ContentSettings.Diagnostics = ContentSettings.Diagnostics;
                     reflow = true;
                     break;
 
                 case "Style":
-                    ContentSettings.Style = _sheet.ContentSettings.Style;
+                    ContentSettings.Style = ContentSettings.Style;
                     reflow = true;
                     break;
 
                 case "DisableFontStyles":
-                    ContentSettings.DisableFontStyles = _sheet.ContentSettings.DisableFontStyles;
+                    ContentSettings.DisableFontStyles = ContentSettings.DisableFontStyles;
                     reflow = true;
                     break;
 
@@ -870,7 +874,7 @@ public class SheetViewModel : ViewModelBase
         //if (font is null) throw new ArgumentNullException(nameof(font));
 
         //Log.Debug(LogService.GetTraceMsg(), $"{font.Family}, {font.Size}, {font.Style}");
-        System.Drawing.Font f = null;
+        System.Drawing.Font? f = null;
         float h = 0;
         try
         {
@@ -889,7 +893,7 @@ public class SheetViewModel : ViewModelBase
         {
             // TODO: We shouldn't keep this exception here
             Log.Error (e, "Failed to create font. {msg} ({font})", e.Message,
-                $"{font.Family}, {font.Size}, {font.Style}");
+                font is null ? string.Empty : $"{font.Family}, {font.Size}, {font.Style}");
         }
         finally
         {
@@ -1295,6 +1299,6 @@ public class SheetViewModel : ViewModelBase
     public class SheetViewModelSettingsChangedEvent
     {
         public bool Reflow { get; set; }
-        public string PropertyName { get; set; }
+        public string PropertyName { get; set; } = string.Empty;
     }
 }

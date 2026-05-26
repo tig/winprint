@@ -6,8 +6,6 @@ namespace WinPrint.LiteHtml;
 
 public class HtmlResources (string filePath)
 {
-    //private HttpClient _httpClient = null;
-    private readonly string? _lastUrl = null;
 
     public byte[] GetResourceBytes (string resource)
     {

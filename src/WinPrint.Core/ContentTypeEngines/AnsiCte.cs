@@ -18,11 +18,11 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class AnsiCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string?[]? _supportedContentTypes = ["text/plain", "text/ansi"];
+    private static readonly string[] _supportedContentTypes = ["text/plain", "text/ansi"];
 
     private bool _disposed;
 
-    public override string?[]? SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => _supportedContentTypes;
 
     public void Dispose ()
     {

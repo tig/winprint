@@ -23,11 +23,11 @@ public partial class TelemetryService
         return telemetry;
     }
 
-    private TelemetryClient telemetry;
+    private TelemetryClient telemetry = null!;
 
-    private Stopwatch runtime;
+    private Stopwatch runtime = null!;
 
-    public void Start (string appName, IDictionary<string, string?> startProperties = null)
+    public void Start (string appName, IDictionary<string, string?>? startProperties = null)
     {
         runtime = System.Diagnostics.Stopwatch.StartNew ();
 
@@ -53,14 +53,14 @@ public partial class TelemetryService
 #endif
 
         telemetry = new TelemetryClient (config);
-        telemetry.Context.Component.Version = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (TelemetryService)).Location).FileVersion;
+        telemetry.Context.Component.Version = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (TelemetryService))!.Location).FileVersion;
         telemetry.Context.Session.Id = Guid.NewGuid ().ToString ();
         telemetry.Context.Device.OperatingSystem = Environment.OSVersion.ToString ();
         // Anonymyize user ID
         using var h = SHA256.Create ();
         h.Initialize ();
-        h.ComputeHash (Encoding.UTF8.GetBytes ($"{Environment.UserName}/{Environment.MachineName}"));
-        telemetry.Context.User.Id = Convert.ToBase64String (h.Hash);
+        var userHash = h.ComputeHash (Encoding.UTF8.GetBytes ($"{Environment.UserName}/{Environment.MachineName}"));
+        telemetry.Context.User.Id = Convert.ToBase64String (userHash);
         // See: https://stackoverflow.com/questions/42861344/how-to-overwrite-or-ignore-cloud-roleinstance-with-application-insights
         telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
 
@@ -71,7 +71,7 @@ public partial class TelemetryService
         }
 
         // Merged passed in properites
-        startProperties.Concat (new Dictionary<string, string>
+        _ = startProperties.Concat (new Dictionary<string, string?>
         {
             ["app"] = appName,
             ["version"] = telemetry.Context.Component.Version,
@@ -97,7 +97,7 @@ public partial class TelemetryService
         telemetry.Context.User.AuthenticatedUserId = user;
     }
 
-    public void TrackEvent (string key, IDictionary<string, string?> properties = null, IDictionary<string, double> metrics = null)
+    public void TrackEvent (string key, IDictionary<string, string?>? properties = null, IDictionary<string, double>? metrics = null)
     {
         if (TelemetryEnabled && telemetry != null)
         {

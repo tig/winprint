@@ -29,9 +29,8 @@ public class FileTypeMappingService
     ///     defined there in.
     /// </summary>
     /// <returns></returns>
-    public FileTypeMapping? Load ()
+    public FileTypeMapping Load ()
     {
-        FileTypeMapping? associations = null;
         var jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -41,12 +40,7 @@ public class FileTypeMappingService
             ReadCommentHandling = JsonCommentHandling.Skip
         };
 
-        associations = JsonSerializer.Deserialize<FileTypeMapping> (Resources.languages, jsonOptions);
-
-        if (associations is null)
-        {
-            return null;
-        }
+        var associations = JsonSerializer.Deserialize<FileTypeMapping> (Resources.languages, jsonOptions) ?? new FileTypeMapping ();
 
         // TODO: Consider calling into lang-map and/or Pygments to update extensions at runtime?
         // https://github.com/jonschlinkert/lang-map
@@ -58,12 +52,12 @@ public class FileTypeMappingService
         {
             foreach (var fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations)
             {
-                associations.FilesAssociations![fa.Key] = fa.Value;
+                associations.FilesAssociations[fa.Key] = fa.Value;
             }
         }
 
         // Merge in any language defintions set in settings file
-        var langs = new List<ContentType> (associations.ContentTypes!);
+        var langs = new List<ContentType> (associations.ContentTypes);
         var langsSettings = new List<ContentType> (ModelLocator.Current.Settings.FileTypeMapping.ContentTypes);
         // TODO: override Equals and GetHashCode for Language
         var result = langsSettings.Union (langs).ToList ();

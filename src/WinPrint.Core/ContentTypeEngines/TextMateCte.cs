@@ -41,7 +41,7 @@ internal sealed class TextMateWrappedLine
 /// </summary>
 public class TextMateCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string?[]? _supportedContentTypes = ["text/plain"];
+    private static readonly string[] _supportedContentTypes = ["text/plain"];
 
     private DrawingFont? _cachedFont;
     private DrawingFont? _boldFont;
@@ -60,7 +60,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     public string? ContentType { get; private set; }
     public string? Language { get; private set; }
 
-    public override string?[]? SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => _supportedContentTypes;
 
     public static TextMateCte Create ()
     {

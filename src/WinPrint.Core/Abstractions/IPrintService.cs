@@ -5,14 +5,14 @@ namespace WinPrint.Core.Abstractions;
 
 public sealed class PrinterInfo
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public bool IsDefault { get; set; }
 }
 
 public sealed class PrintPageSetup
 {
-    public string PrinterName { get; set; }
-    public string PaperSizeName { get; set; }
+    public string PrinterName { get; set; } = string.Empty;
+    public string PaperSizeName { get; set; } = string.Empty;
     public bool Landscape { get; set; }
     public int MarginLeft { get; set; }
     public int MarginTop { get; set; }
@@ -38,7 +38,7 @@ public interface IPrintJob : IDisposable
 public interface IPrintService
 {
     IReadOnlyList<PrinterInfo> GetAvailablePrinters ();
-    PrintPageSetup GetDefaultPageSetup (string printerName = null);
+    PrintPageSetup GetDefaultPageSetup (string? printerName = null);
     PrintPageSetup ShowPrintDialog (PrintDialogOptions options, PrintPageSetup currentSetup);
     IPrintJob CreateJob (PrintPageSetup pageSetup, string documentName);
 }
