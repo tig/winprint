@@ -104,11 +104,12 @@ namespace WinPrint.Core.Abstractions {
         }
 
         public void SetClip(GraphicsRectF rect) {
-            Graphics.SetClip(ToRectangle(rect));
+            Graphics.SetClip(ToRectangleF(rect));
         }
 
         public void ExcludeClip(GraphicsRectF rect) {
-            Graphics.ExcludeClip(ToRectangle(rect));
+            using var clipRegion = new Region(ToRectangleF(rect));
+            Graphics.ExcludeClip(clipRegion);
         }
 
         public void ResetClip() {
@@ -200,10 +201,6 @@ namespace WinPrint.Core.Abstractions {
 
         public static RectangleF ToRectangleF(GraphicsRectF rect) {
             return new RectangleF(rect.X, rect.Y, rect.Width, rect.Height);
-        }
-
-        private static Rectangle ToRectangle(GraphicsRectF rect) {
-            return new Rectangle((int)Math.Round(rect.X), (int)Math.Round(rect.Y), (int)Math.Round(rect.Width), (int)Math.Round(rect.Height));
         }
 
         private static Font GetFont(IGraphicsFont font) {
