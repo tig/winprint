@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Serilog;
 using UtfUnknown;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -844,28 +845,29 @@ public class SheetViewModel : ViewModelBase {
     /// <param name="g">Graphics to print on</param>
     /// <param name="sheetNum">Sheet to print. 1-based.</param>
     public void PrintSheet(Graphics graphics, int sheetNum) {
+        var graphicsContext = new SystemDrawingGraphicsContext(graphics);
         var state = graphics.Save();
         //Log.Debug(LogService.GetTraceMsg("{n} PageUnit: {pu}"), sheetNum, graphics.PageUnit);
         if (graphics.PageUnit == GraphicsUnit.Display) {
             // In print mode, adjust origin to account for hard margins
             // In print mode, 0,0 is top, left - hard margins
             graphics.TranslateTransform(-_printableArea.Left, -_printableArea.Top);
-            PaintSheet(graphics, sheetNum);
+            PaintSheet(graphics, graphicsContext, sheetNum);
         }
         else {
-            PaintSheet(graphics, sheetNum);
+            PaintSheet(graphics, graphicsContext, sheetNum);
         }
 
         graphics.Restore(state);
     }
 
-    private void PaintSheet(Graphics g, int sheetNum) {
+    private void PaintSheet(Graphics g, IGraphicsContext graphicsContext, int sheetNum) {
         LogService.TraceMessage($"{sheetNum}");
         // background needs to be filled image scaling to work right
         //g.FillRectangle(Brushes.White, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
 
-        _headerVM.Paint(g, sheetNum);
-        _footerVM.Paint(g, sheetNum);
+        _headerVM.Paint(graphicsContext, sheetNum);
+        _footerVM.Paint(graphicsContext, sheetNum);
 
         if (Loading) {
             Log.Debug("SheetViewModel.PaintSheet - Loading; can't paint");
@@ -908,7 +910,7 @@ public class SheetViewModel : ViewModelBase {
             }
 
             if (ContentEngine != null) {
-                ContentEngine.PaintPage(g, pageOnSheet);
+                ContentEngine.PaintPage(graphicsContext, pageOnSheet);
             }
 
             // Translate back

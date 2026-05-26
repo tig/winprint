@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -44,7 +45,18 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged 
         Trimming = StringTrimming.None
     };
 
+    public static readonly GraphicsStringFormat GraphicsStringFormat = new() {
+        FormatFlags = GraphicsStringFormatFlags.NoClip |
+                      GraphicsStringFormatFlags.LineLimit |
+                      GraphicsStringFormatFlags.MeasureTrailingSpaces |
+                      GraphicsStringFormatFlags.DisplayFormatControl,
+        Alignment = GraphicsTextAlignment.Near,
+        LineAlignment = GraphicsTextAlignment.Near,
+        Trimming = GraphicsStringTrimming.None
+    };
+
     public static readonly TextRenderingHint TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+    public static readonly GraphicsTextRenderingMode GraphicsTextRenderingMode = GraphicsTextRenderingMode.ClearTypeGridFit;
     private ContentSettings? _contentSettings;
     internal string? _document;
     private Encoding? _encoding = Encoding.Default;
@@ -139,9 +151,9 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged 
     /// <summary>
     ///     Paints a single page
     /// </summary>
-    /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
+    /// <param name="g">Graphics context with 0,0 being the origin of the Page</param>
     /// <param name="pageNum">Page number to print</param>
-    public abstract void PaintPage(Graphics g, int pageNum);
+    public abstract void PaintPage(IGraphicsContext g, int pageNum);
 
     /// <summary>
     ///     Creates the appropriate Content Type Engine instance given a content type string.

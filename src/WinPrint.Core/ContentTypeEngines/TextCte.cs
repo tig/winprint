@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Serilog;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Font = System.Drawing.Font;
@@ -354,18 +355,15 @@ public class TextCte : ContentTypeEngineBase, IDisposable {
     /// </summary>
     /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
     /// <param name="pageNum">Page number to print</param>
-    public override void PaintPage(Graphics? g, int pageNum) {
+    public override void PaintPage(IGraphicsContext g, int pageNum) {
         LogService.TraceMessage($"{pageNum}");
         if (_wrappedLines == null) {
             Log.Debug("wrappedLines must not be null");
             return;
         }
 
-        if (g is null) {
-            return;
-        }
-
-        g.TextRenderingHint = TextRenderingHint;
+        g.SetTextRenderingMode(GraphicsTextRenderingMode);
+        using var paintFont = CreatePaintFont(g);
 
         // Paint each line of the file (each element of _wrappedLines that go on pageNum
         var firstLineInWrappedLines = _linesPerPage * (pageNum - 1);
@@ -377,7 +375,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable {
 
             // Right justify line number
             var x = ContentSettings!.LineNumberSeparator
-                ? (int)(_lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i]._nonWrappedLineNumber}").Width)
+                ? (int)(_lineNumberWidth - 6 - MeasureString(g, $"{_wrappedLines[i]._nonWrappedLineNumber}", paintFont).Width)
                 : 0;
 
             // Line #s
@@ -385,24 +383,42 @@ public class TextCte : ContentTypeEngineBase, IDisposable {
                 if (ContentSettings.LineNumbers && _lineNumberWidth != 0) {
                     // TOOD: Figure out how to make the spacing around separator more dynamic
                     // TODO: Allow a different (non-monospace) font for line numbers
-                    g.DrawString($"{_wrappedLines[i]._nonWrappedLineNumber}", _cachedFont, Brushes.Gray, x, yPos,
-                        StringFormat);
+                    g.DrawString($"{_wrappedLines[i]._nonWrappedLineNumber}", paintFont, g.GrayBrush, x, yPos,
+                        GraphicsStringFormat);
                 }
             }
 
             // Line # separator (draw even if there's no line number, but stop at end of doc)
             // TODO: Support setting color of line #s and separator
             if (ContentSettings.LineNumbers && ContentSettings.LineNumberSeparator && _lineNumberWidth != 0) {
-                g.DrawLine(Pens.Gray, _lineNumberWidth - 2, yPos, _lineNumberWidth - 2, yPos + _lineHeight);
+                g.DrawLine(g.GrayPen, _lineNumberWidth - 2, yPos, _lineNumberWidth - 2, yPos + _lineHeight);
             }
 
             // Text
-            g.DrawString(_wrappedLines[i]._text, _cachedFont, Brushes.Black, _lineNumberWidth, yPos, StringFormat);
+            g.DrawString(_wrappedLines[i]._text, paintFont, g.BlackBrush, _lineNumberWidth, yPos, GraphicsStringFormat);
             if (ContentSettings.Diagnostics) {
-                g.DrawRectangle(Pens.Red, _lineNumberWidth, yPos, PageSize.Width - _lineNumberWidth, _lineHeight);
+                g.DrawRectangle(g.RedPen, _lineNumberWidth, yPos, PageSize.Width - _lineNumberWidth, _lineHeight);
             }
         }
 
         Log.Debug("Painted {lineOnPage} lines.", i - 1);
+    }
+
+    private IGraphicsFont CreatePaintFont(IGraphicsContext g) {
+        var unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
+        var size = g.IsDisplayUnit ? ContentSettings!.Font.Size : ContentSettings!.Font.Size / 72F * 96F;
+        return g.CreateFont(ContentSettings.Font.Family, size,
+            SystemDrawingAdapters.ToGraphicsFontStyle(ContentSettings.Font.Style), unit);
+    }
+
+    private GraphicsSizeF MeasureString(IGraphicsContext g, string text, IGraphicsFont font) {
+        return MeasureString(g, text, font, out _, out _);
+    }
+
+    private GraphicsSizeF MeasureString(IGraphicsContext g, string text, IGraphicsFont font, out int charsFitted,
+        out int linesFilled) {
+        g.SetTextRenderingMode(GraphicsTextRenderingMode);
+        var proposedSize = new GraphicsSizeF(PageSize.Width - _lineNumberWidth, _lineHeight + (_lineHeight / 2));
+        return g.MeasureString(text, font, proposedSize, GraphicsStringFormat, out charsFitted, out linesFilled);
     }
 }

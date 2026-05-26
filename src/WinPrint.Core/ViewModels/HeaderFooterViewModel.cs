@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using Serilog;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.ViewModels;
 using Font = WinPrint.Core.Models.Font;
@@ -156,13 +157,9 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
 
     internal abstract bool IsAlignTop();
 
-    public void Paint(Graphics? g, int sheetNum) {
+    public void Paint(IGraphicsContext g, int sheetNum) {
         if (!Enabled) {
             return;
-        }
-
-        if (g is null) {
-            throw new ArgumentNullException(nameof(g));
         }
 
         var boundsHF = CalcBounds();
@@ -170,19 +167,19 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
         boundsHF.Height -= _verticalPadding;
 
         if (LeftBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
+            g.DrawLine(g.BlackPen, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
         }
 
         if (TopBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Right, boundsHF.Top);
+            g.DrawLine(g.BlackPen, boundsHF.Left, boundsHF.Top, boundsHF.Right, boundsHF.Top);
         }
 
         if (RightBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Right, boundsHF.Top, boundsHF.Right, boundsHF.Bottom);
+            g.DrawLine(g.BlackPen, boundsHF.Right, boundsHF.Top, boundsHF.Right, boundsHF.Bottom);
         }
 
         if (BottomBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
+            g.DrawLine(g.BlackPen, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
         }
 
         Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
@@ -196,24 +193,25 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
 
         using var tempFont = CreateTempFont(g);
 
-        using var fmt = new StringFormat(StringFormat.GenericTypographic) {
-            Trimming = StringTrimming.None,
+        var fmt = new GraphicsStringFormat {
+            Trimming = GraphicsStringTrimming.None,
             // BUGBUG: This is a work around for https://stackoverflow.com/questions/59159919/stringformat-trimming-changes-vertical-placement-of-text
             //         (turning on NoWrap). 
-            FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.NoWrap | StringFormatFlags.NoClip
+            FormatFlags = GraphicsStringFormatFlags.LineLimit | GraphicsStringFormatFlags.NoWrap | GraphicsStringFormatFlags.NoClip
         };
 
-        fmt.LineAlignment = IsAlignTop() ? StringAlignment.Near : StringAlignment.Far;
+        fmt.LineAlignment = IsAlignTop() ? GraphicsTextAlignment.Near : GraphicsTextAlignment.Far;
 
         // Center goes first - it has priority - ensure it gets drawn completely where
         // Left & Right can be trimmed
-        var sizeCenter = new SizeF(0, 0);
+        var sizeCenter = new GraphicsSizeF(0, 0);
+        var boundsRect = new GraphicsRectF(boundsHF.X, boundsHF.Y, boundsHF.Width, boundsHF.Height);
 
         if (parts.Length > 1) {
-            fmt.Alignment = StringAlignment.Center;
+            fmt.Alignment = GraphicsTextAlignment.Center;
             sizeCenter = g.MeasureString(parts[1], tempFont, (int)boundsHF.Width, fmt);
             // g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
-            g.DrawString(parts[1], tempFont, Brushes.Black, boundsHF, fmt);
+            g.DrawString(parts[1], tempFont, g.BlackBrush, boundsRect, fmt);
         }
 
         // Left
@@ -223,19 +221,21 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
         var boundsLeft = new RectangleF(boundsHF.X, boundsHF.Y, textCenterBounds, boundsHF.Height);
         var sizeLeft = g.MeasureString(parts[0], tempFont, (int)textCenterBounds, fmt);
 
-        fmt.Alignment = StringAlignment.Near;
-        fmt.Trimming = StringTrimming.None;
+        fmt.Alignment = GraphicsTextAlignment.Near;
+        fmt.Trimming = GraphicsStringTrimming.None;
         //g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
-        g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
+        g.DrawString(parts[0], tempFont, g.BlackBrush,
+            new GraphicsRectF(boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height), fmt);
 
         //Right
         var boundsRight = new RectangleF(boundsHF.X + (boundsHF.Width - textCenterBounds), boundsHF.Y, textCenterBounds,
             boundsHF.Height);
         if (parts.Length > 2) {
-            fmt.Alignment = StringAlignment.Far;
-            fmt.Trimming = StringTrimming.None;
+            fmt.Alignment = GraphicsTextAlignment.Far;
+            fmt.Trimming = GraphicsStringTrimming.None;
             //g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
-            g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
+            g.DrawString(parts[2], tempFont, g.BlackBrush,
+                new GraphicsRectF(boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height), fmt);
         }
     }
 
@@ -244,14 +244,14 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
     /// </summary>
     /// <param name="g"></param>
     /// <returns></returns>
-    private System.Drawing.Font? CreateTempFont(Graphics? g) {
+    private IGraphicsFont CreateTempFont(IGraphicsContext g) {
         if (Font == null) {
-            return SystemFonts.DefaultFont;
+            return g.CreateFont("sansserif", 8F, GraphicsFontStyle.Regular, GraphicsFontUnit.Point);
         }
 
-        var tempFont = g.PageUnit == GraphicsUnit.Display ? new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point) :
-            // Convert font to pixel units if we're in preview
-            new System.Drawing.Font(Font.Family, Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel);
+        var tempFont = g.IsDisplayUnit
+            ? g.CreateFont(Font.Family, Font.Size, SystemDrawingAdapters.ToGraphicsFontStyle(Font.Style), GraphicsFontUnit.Point)
+            : g.CreateFont(Font.Family, Font.Size / 72F * 96F, SystemDrawingAdapters.ToGraphicsFontStyle(Font.Style), GraphicsFontUnit.Pixel);
 
         return tempFont;
     }

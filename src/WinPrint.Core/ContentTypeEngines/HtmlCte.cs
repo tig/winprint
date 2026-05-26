@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Drawing;
 using System.Drawing.Printing;
 using System.Threading.Tasks;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -45,7 +45,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable {
         return await Task.FromResult(0);
     }
 
-    public override void PaintPage(Graphics? g, int pageNum) {
+    public override void PaintPage(IGraphicsContext g, int pageNum) {
         // Stub: LiteHtmlSharp dependency removed
     }
 }

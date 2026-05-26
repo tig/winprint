@@ -12,6 +12,7 @@ using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using DrawingFont = System.Drawing.Font;
@@ -159,7 +160,12 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable {
         return await Task.FromResult(pages);
     }
 
-    public override void PaintPage(Graphics g, int pageNum) {
+    public override void PaintPage(IGraphicsContext graphicsContext, int pageNum) {
+        if (graphicsContext is not SystemDrawingGraphicsContext context) {
+            throw new NotSupportedException("TextMateCte currently requires a System.Drawing graphics context.");
+        }
+
+        var g = context.Graphics;
         LogService.TraceMessage($"{pageNum}");
         if (_wrappedLines is null || _cachedFont is null) {
             Log.Debug("TextMateCte must be rendered before painting.");
