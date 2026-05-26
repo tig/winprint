@@ -1,4 +1,3 @@
-#nullable disable
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
@@ -30,10 +29,13 @@ public partial class MainWindow : Form
     private PrintDocument printDoc = new PrintDocument ();
 
     // The active file
-    private string activeFile;
+    private string activeFile = string.Empty;
     private OpenFileDialog openFileDialog = new OpenFileDialog ();
 
     public WinPrint.WinForms.PrintPreview PrintPreview;
+
+    private SheetSettings CurrentSheetSettings => ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ())
+        ?? throw new InvalidOperationException ("Default sheet settings not found.");
 
     public MainWindow ()
     {
@@ -60,7 +62,7 @@ public partial class MainWindow : Form
         Color ();
 
         // This gets the version # from winprint.core.dll
-        versionLabel.Text = $"v{FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (LogService)).Location).FileVersion}";
+        versionLabel.Text = $"v{FileVersionInfo.GetVersionInfo (typeof (LogService).Assembly.Location).FileVersion}";
 
         if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
         {
@@ -227,7 +229,7 @@ public partial class MainWindow : Form
         PrintPreview.SheetViewModel.ReadyChanged += ReadyChangedEventHandler;
     }
 
-    private void FileLoadedEventHandler (object sender, bool loading)
+    private void FileLoadedEventHandler (object? sender, bool loading)
     {
         if (InvokeRequired)
         {
@@ -243,7 +245,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void PageSettingsSetEventHandler (object sender, EventArgs e)
+    private void PageSettingsSetEventHandler (object? sender, EventArgs e)
     {
         if (InvokeRequired)
         {
@@ -255,7 +257,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void ReadyChangedEventHandler (object sender, bool ready)
+    private void ReadyChangedEventHandler (object? sender, bool ready)
     {
         if (InvokeRequired)
         {
@@ -286,7 +288,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void PropertyChangedEventHandler (object sender, PropertyChangedEventArgs e)
+    private void PropertyChangedEventHandler (object? sender, PropertyChangedEventArgs e)
     {
         if (InvokeRequired)
         {
@@ -298,14 +300,14 @@ public partial class MainWindow : Form
             switch (e.PropertyName)
             {
                 case "Landscape":
-                    LogService.TraceMessage ($"  Checking checkbox: {ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Landscape}");
+                    LogService.TraceMessage ($"  Checking checkbox: {CurrentSheetSettings.Landscape}");
                     landscapeCheckbox.Checked = PrintPreview.SheetViewModel.Landscape;
                     break;
 
                 case "Header":
                     headerTextBox.Text = PrintPreview.SheetViewModel.Header.Text;
                     enableHeader.Checked = PrintPreview.SheetViewModel.Header.Enabled;
-                    headerFooterFontLink.Text = PrintPreview.SheetViewModel.Header.Font.ToString ();
+                    headerFooterFontLink.Text = PrintPreview.SheetViewModel.Header.Font?.ToString () ?? throw new InvalidOperationException ("Header font settings not found.");
                     break;
 
                 case "Footer":
@@ -360,7 +362,7 @@ public partial class MainWindow : Form
                     break;
 
                 case "ContentSettings":
-                    contentFontLink.Text = PrintPreview.SheetViewModel.ContentSettings.Font.ToString ();
+                    contentFontLink.Text = PrintPreview.SheetViewModel.ContentSettings.Font?.ToString () ?? throw new InvalidOperationException ("Content font settings not found.");
                     lineNumbers.Checked = PrintPreview.SheetViewModel.ContentSettings.LineNumbers;
                     //lineNumberSeparator.Checked = printPreview.SheetViewModel.ContentSettings.lineNumberSeparator;
                     break;
@@ -384,7 +386,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void SettingsChangedEventHandler (object o, SheetViewModel.SheetViewModelSettingsChangedEvent e)
+    private void SettingsChangedEventHandler (object? o, SheetViewModel.SheetViewModelSettingsChangedEvent e)
     {
         if (InvokeRequired)
         {
@@ -415,7 +417,7 @@ public partial class MainWindow : Form
 
     private CancellationTokenSource _cancellationToken = new CancellationTokenSource ();
 
-    private void MainWindow_Load (object sender, EventArgs e)
+    private void MainWindow_Load (object? sender, EventArgs e)
     {
         // Check for updates
         LogService.TraceMessage ("First reference to UpdateService");
@@ -538,7 +540,7 @@ public partial class MainWindow : Form
 
         // --s
         // Select default Sheet 
-        var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ());
+        var newSheet = CurrentSheetSettings;
         if (!string.IsNullOrEmpty (ModelLocator.Current.Options.Sheet))
         {
             newSheet = PrintPreview.SheetViewModel.FindSheet (ModelLocator.Current.Options.Sheet, out var sheetID);
@@ -592,7 +594,7 @@ public partial class MainWindow : Form
         Start ();
     }
 
-    private void UpdateService_DownloadComplete (object sender, string path)
+    private void UpdateService_DownloadComplete (object? sender, string path)
     {
         //Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);
 #if DEBUG
@@ -621,7 +623,7 @@ public partial class MainWindow : Form
         BeginInvoke ((Action)(() => Close ()));
     }
 
-    private void UpdateService_GotLatestVersion (object sender, Version version)
+    private void UpdateService_GotLatestVersion (object? sender, Version version)
     {
         if (InvokeRequired)
         {
@@ -804,7 +806,7 @@ public partial class MainWindow : Form
     private void SheetChanged ()
     {
         LogService.TraceMessage ();
-        var newSheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ());
+        var newSheet = CurrentSheetSettings;
         comboBoxSheet.Text = newSheet.Name;
         PrintPreview.SheetViewModel.SetSheet (newSheet);
         //SheetSettingsChanged();
@@ -824,7 +826,7 @@ public partial class MainWindow : Form
     //    });
     //}
 
-    private void MainWindow_FormClosing (object sender, FormClosingEventArgs e)
+    private void MainWindow_FormClosing (object? sender, FormClosingEventArgs e)
     {
         if (ModelLocator.Current.Settings is null)
         {
@@ -848,7 +850,7 @@ public partial class MainWindow : Form
         ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Form Closing",
-             properties: new Dictionary<string, string> {
+             properties: new Dictionary<string, string?> {
                 {"windowState", ModelLocator.Current.Settings.WindowState.ToString() },
                 {"size", $"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}" },
                 {"location", $"{ModelLocator.Current.Settings.Location.X}x{ModelLocator.Current.Settings.Location.Y}"},
@@ -857,7 +859,7 @@ public partial class MainWindow : Form
         ServiceLocator.Current.SettingsService.SaveSettings (ModelLocator.Current.Settings);
     }
 
-    private void MainWindow_Layout (object sender, LayoutEventArgs e)
+    private void MainWindow_Layout (object? sender, LayoutEventArgs e)
     {
         // This event is raised once at startup with the AffectedControl
         // and AffectedProperty properties on the LayoutEventArgs as null. 
@@ -872,45 +874,47 @@ public partial class MainWindow : Form
         }
     }
 
-    private void landscapeCheckbox_CheckedChanged (object sender, EventArgs e)
+    private void landscapeCheckbox_CheckedChanged (object? sender, EventArgs e)
     {
         LogService.TraceMessage ($"{landscapeCheckbox.Checked}");
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (
-        ModelLocator.Current.Settings.DefaultSheet.ToString ()).Landscape =
+        CurrentSheetSettings.Landscape =
             printDoc.DefaultPageSettings.Landscape =
             landscapeCheckbox.Checked;
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("landscapeCheckbox_CheckedChanged",
-             properties: new Dictionary<string, string> {
+             properties: new Dictionary<string, string?> {
                                     {"landscape", landscapeCheckbox.Checked.ToString() }
              });
     }
 
-    private void headerTextBox_TextChanged (object sender, EventArgs e)
+    private void headerTextBox_TextChanged (object? sender, EventArgs e)
     {
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (
-            ModelLocator.Current.Settings.DefaultSheet.ToString ()).Header.Text = headerTextBox.Text;
+        CurrentSheetSettings.Header.Text = headerTextBox.Text;
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("headerTextBox_TextChanged");
     }
 
-    private void footerTextBox_TextChanged (object sender, EventArgs e)
+    private void footerTextBox_TextChanged (object? sender, EventArgs e)
     {
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (
-            ModelLocator.Current.Settings.DefaultSheet.ToString ()).Footer.Text = footerTextBox.Text;
+        CurrentSheetSettings.Footer.Text = footerTextBox.Text;
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("footerTextBox_TextChanged");
     }
 
-    private void printersCB_SelectedIndexChanged (object sender, EventArgs e)
+    private void printersCB_SelectedIndexChanged (object? sender, EventArgs e)
     {
         if (printersCB.Enabled)
         {
             LogService.TraceMessage ("printersCB_SelectedIndexChanged");
-            printDoc.PrinterSettings.PrinterName = (string)printersCB.SelectedItem;
+            if (printersCB.SelectedItem is not string selectedPrinter)
+            {
+                return;
+            }
+
+            printDoc.PrinterSettings.PrinterName = selectedPrinter;
 
             ServiceLocator.Current.TelemetryService.TrackEvent ("printersCB_SelectedIndexChanged",
-                 properties: new Dictionary<string, string> {
+                 properties: new Dictionary<string, string?> {
                         {"printerName", printDoc.PrinterSettings.PrinterName }
                  });
 
@@ -920,7 +924,7 @@ public partial class MainWindow : Form
                 paperSizesCB.Items.Add (ps.PaperName);
             }
             ServiceLocator.Current.TelemetryService.TrackEvent ("printersCB_SelectedIndexChanged",
-                 properties: new Dictionary<string, string> {
+                 properties: new Dictionary<string, string?> {
                         {"printerName", printDoc.PrinterSettings.PrinterName }
                  });
 
@@ -928,7 +932,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void paperSizesCB_SelectedIndexChanged (object sender, EventArgs e)
+    private void paperSizesCB_SelectedIndexChanged (object? sender, EventArgs e)
     {
         if (printersCB.Enabled)
         {
@@ -938,7 +942,7 @@ public partial class MainWindow : Form
             {
                 printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
                 ServiceLocator.Current.TelemetryService.TrackEvent ("paperSizesCB_SelectedIndexChanged",
-                     properties: new Dictionary<string, string> {
+                     properties: new Dictionary<string, string?> {
                         {"paperName", printDoc.DefaultPageSettings.PaperSize.PaperName }
                      });
 
@@ -948,13 +952,13 @@ public partial class MainWindow : Form
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage ("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-    private async void printButton_Click (object sender, EventArgs args)
+    private async void printButton_Click (object? sender, EventArgs args)
     {
         using var print = new Core.Print ();
         // TODO: It's hokey that Landscape is the only printer setting that's treated specially
         // 
         print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
-        print.SheetViewModel.SetSheet (ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()));
+        print.SheetViewModel.SetSheet (CurrentSheetSettings);
 
         try
         {
@@ -1055,49 +1059,52 @@ public partial class MainWindow : Form
         }
     }
 
-    private void Print_PrintingSheet (object sender, int sheetNum)
+    private void Print_PrintingSheet (object? sender, int sheetNum)
     {
         ShowMessage ($"Printing sheet {sheetNum}");
     }
 
-    private void panelRight_Resize (object sender, EventArgs e)
+    private void panelRight_Resize (object? sender, EventArgs e)
     {
         //SizePreview();
     }
 
-    private void enableHeader_CheckedChanged (object sender, EventArgs e)
+    private void enableHeader_CheckedChanged (object? sender, EventArgs e)
     {
         LogService.TraceMessage ($"enableHeader_CheckedChanged: {enableHeader.Checked}");
         if (printersCB.Enabled)
         {
             // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
             // the model
-            ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Header.Enabled =
+            CurrentSheetSettings.Header.Enabled =
                 enableHeader.Checked;
         }
     }
 
-    private void enableFooter_CheckedChanged (object sender, EventArgs e)
+    private void enableFooter_CheckedChanged (object? sender, EventArgs e)
     {
         LogService.TraceMessage ($"enableFooter_CheckedChanged: {enableFooter.Checked}");
         if (printersCB.Enabled)
         {
             // TODO: This should find the Preview SheetViewModel instance and set the property on this, not
             // the model
-            ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Footer.Enabled =
+            CurrentSheetSettings.Footer.Enabled =
                 enableFooter.Checked;
         }
     }
 
-    private void comboBoxSheet_SelectedIndexChanged (object sender, EventArgs e)
+    private void comboBoxSheet_SelectedIndexChanged (object? sender, EventArgs e)
     {
-        var si = (KeyValuePair<string, string>)comboBoxSheet.SelectedItem;
+        if (comboBoxSheet.SelectedItem is not KeyValuePair<string, string> si)
+        {
+            return;
+        }
         LogService.TraceMessage ($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
         if (printersCB.Enabled)
         {
             ModelLocator.Current.Settings.DefaultSheet = Guid.Parse (si.Key);
             ServiceLocator.Current.TelemetryService.TrackEvent ("Change Selected Sheet Settings",
-                properties: new Dictionary<string, string> {
+                properties: new Dictionary<string, string?> {
                                 {"sheetSettingsName", si.Value },
                                 {"sheetSettingsId", si.Key },
                 });
@@ -1105,76 +1112,76 @@ public partial class MainWindow : Form
         }
     }
 
-    private void topMargin_ValueChanged (object sender, EventArgs e)
+    private void topMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins.Clone ();
+        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
         margins.Top = (int)(topMargin.Value * 100M);
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins = margins;
+        CurrentSheetSettings.Margins = margins;
     }
 
-    private void leftMargin_ValueChanged (object sender, EventArgs e)
+    private void leftMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins.Clone ();
+        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
         margins.Left = (int)(leftMargin.Value * 100M);
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins = margins;
+        CurrentSheetSettings.Margins = margins;
     }
 
-    private void rightMargin_ValueChanged (object sender, EventArgs e)
+    private void rightMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins.Clone ();
+        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
         margins.Right = (int)(rightMargin.Value * 100M);
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins = margins;
+        CurrentSheetSettings.Margins = margins;
     }
 
-    private void bottomMargin_ValueChanged (object sender, EventArgs e)
+    private void bottomMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins.Clone ();
+        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
         margins.Bottom = (int)(bottomMargin.Value * 100M);
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Margins = margins;
+        CurrentSheetSettings.Margins = margins;
     }
 
-    private void pageSeparator_CheckedChanged (object sender, EventArgs e)
+    private void pageSeparator_CheckedChanged (object? sender, EventArgs e)
     {
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).PageSeparator = pageSeparator.Checked;
+        CurrentSheetSettings.PageSeparator = pageSeparator.Checked;
     }
 
-    private void rows_ValueChanged (object sender, EventArgs e)
+    private void rows_ValueChanged (object? sender, EventArgs e)
     {
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Rows = (int)rows.Value;
+        CurrentSheetSettings.Rows = (int)rows.Value;
     }
 
-    private void columns_ValueChanged (object sender, EventArgs e)
+    private void columns_ValueChanged (object? sender, EventArgs e)
     {
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Columns = (int)columns.Value;
+        CurrentSheetSettings.Columns = (int)columns.Value;
 
     }
 
-    private void padding_ValueChanged (object sender, EventArgs e)
+    private void padding_ValueChanged (object? sender, EventArgs e)
     {
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Padding = (int)(padding.Value * 100M);
+        CurrentSheetSettings.Padding = (int)(padding.Value * 100M);
     }
 
-    private void fileButton_Click (object sender, EventArgs e)
+    private void fileButton_Click (object? sender, EventArgs e)
     {
         ShowFilesDialog ();
     }
 
-    private void lineNumbers_CheckedChanged (object sender, EventArgs e)
+    private void lineNumbers_CheckedChanged (object? sender, EventArgs e)
     {
         LogService.TraceMessage ($"lineNumbers_CheckedChanged: {lineNumbers.Checked}");
-        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).ContentSettings.LineNumbers =
-                lineNumbers.Checked;
+        var contentSettings = CurrentSheetSettings.ContentSettings ?? throw new InvalidOperationException ("Content settings not found.");
+        contentSettings.LineNumbers = lineNumbers.Checked;
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage ("Design",
         "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-    private void settingsButton_Click (object sender, EventArgs args)
+    private void settingsButton_Click (object? sender, EventArgs args)
     {
         Log.Debug ($"Opening settings file: {ServiceLocator.Current.SettingsService.SettingsFileName}");
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Settings Button Click");
 
-        Process proc = null;
+        Process? proc = null;
         try
         {
             var psi = new ProcessStartInfo
@@ -1199,14 +1206,14 @@ public partial class MainWindow : Form
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage ("Design",
         "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-    private void helpaboutLink_LinkClicked (object sender, LinkLabelLinkClickedEventArgs args)
+    private void helpaboutLink_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs args)
     {
         var url = "https://tig.github.io/winprint";
         Log.Debug ($"Browsing to home page: {url}");
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Help/About Link Click");
 
-        Process proc = null;
+        Process? proc = null;
         try
         {
             var psi = new ProcessStartInfo
@@ -1229,11 +1236,12 @@ public partial class MainWindow : Form
         }
     }
 
-    private void contentFontLink_LinkClicked (object sender, LinkLabelLinkClickedEventArgs e)
+    private void contentFontLink_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs e)
     {
-        var contentSettings = ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).ContentSettings;
+        var contentSettings = CurrentSheetSettings.ContentSettings ?? throw new InvalidOperationException ("Content settings not found.");
 
-        fontDialog.Font = new System.Drawing.Font (contentSettings.Font.Family, contentSettings.Font.Size, contentSettings.Font.Style, GraphicsUnit.Point);
+        var contentFont = contentSettings.Font ?? throw new InvalidOperationException ("Content font settings not found.");
+        fontDialog.Font = new System.Drawing.Font (contentFont.Family, contentFont.Size, contentFont.Style, GraphicsUnit.Point);
         if (DialogResult.OK == fontDialog.ShowDialog (this))
         {
             contentSettings.Font = new Core.Models.Font () { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round (fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
@@ -1241,12 +1249,13 @@ public partial class MainWindow : Form
         }
     }
 
-    private void headerFooterFontLink_LinkClicked (object sender, LinkLabelLinkClickedEventArgs e)
+    private void headerFooterFontLink_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs e)
     {
-        var header = ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Header;
-        var footer = ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ()).Footer;
+        var header = CurrentSheetSettings.Header;
+        var footer = CurrentSheetSettings.Footer;
 
-        fontDialog.Font = new System.Drawing.Font (header.Font.Family, header.Font.Size, GraphicsUnit.Point);
+        var headerFont = header.Font ?? throw new InvalidOperationException ("Header font settings not found.");
+        fontDialog.Font = new System.Drawing.Font (headerFont.Family, headerFont.Size, GraphicsUnit.Point);
 
         if (DialogResult.OK == fontDialog.ShowDialog (this))
         {
@@ -1256,7 +1265,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void printPreview_Click (object sender, EventArgs e)
+    private void printPreview_Click (object? sender, EventArgs e)
     {
         if (string.IsNullOrEmpty (activeFile))
         {

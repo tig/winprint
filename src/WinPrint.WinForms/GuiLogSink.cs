@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,7 +19,8 @@ public class GuiLogSink : ILogEventSink
 
     public ITextFormatter TextFormatter { get; set; }
 
-    public Control OutputWindow;
+    // Set by Program before log events are emitted.
+    public Control OutputWindow = null!;
 
     public GuiLogSink ()
     {

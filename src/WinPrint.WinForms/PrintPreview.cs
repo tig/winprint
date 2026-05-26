@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,7 +17,8 @@ namespace WinPrint.WinForms;
 /// </summary>
 public partial class PrintPreview : Control
 {
-    private SheetViewModel _svm;
+    // Assigned by MainWindow after designer initialization.
+    private SheetViewModel _svm = null!;
     [Browsable (false)]
     [DesignerSerializationVisibility (DesignerSerializationVisibility.Hidden)]
     public SheetViewModel SheetViewModel
@@ -54,9 +54,9 @@ public partial class PrintPreview : Control
         BackColor = SystemColors.AppWorkspace;
     }
 
-    private void _MouseWheel (object sender, MouseEventArgs e)
+    private void _MouseWheel (object? sender, MouseEventArgs e)
     {
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Mouse Wheel", new Dictionary<string, string> { ["ModifierKeys"] = ModifierKeys.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Mouse Wheel", new Dictionary<string, string?> { ["ModifierKeys"] = ModifierKeys.ToString () });
         if (ModifierKeys.HasFlag (Keys.Control))
         {
             if (e.Delta < 0)
@@ -92,7 +92,7 @@ public partial class PrintPreview : Control
 
         Zoom += multiplier;
         Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Zoom In", new Dictionary<string, string> { ["Zoom"] = Zoom.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Zoom In", new Dictionary<string, string?> { ["Zoom"] = Zoom.ToString () });
     }
 
     private void ZoomOut ()
@@ -111,7 +111,7 @@ public partial class PrintPreview : Control
         }
 
         Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Zoom Out", new Dictionary<string, string> { ["Zoom"] = Zoom.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Zoom Out", new Dictionary<string, string?> { ["Zoom"] = Zoom.ToString () });
     }
 
     protected override void OnResize (EventArgs e)
@@ -140,7 +140,7 @@ public partial class PrintPreview : Control
             throw new ArgumentNullException (nameof (e));
         }
 
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Key Up", new Dictionary<string, string> { ["KeyCode"] = e.KeyCode.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Key Up", new Dictionary<string, string?> { ["KeyCode"] = e.KeyCode.ToString () });
 
         base.OnKeyUp (e);
 
@@ -214,7 +214,7 @@ public partial class PrintPreview : Control
             CurrentSheet--;
             Invalidate ();
         }
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Page Up", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Page Up", new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
     }
 
     private void PageDown ()
@@ -225,21 +225,21 @@ public partial class PrintPreview : Control
             CurrentSheet++;
             Invalidate ();
         }
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Page Down", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Page Down", new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
     }
 
     private void Home ()
     {
         CurrentSheet = 1;
         Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Home", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Home", new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
     }
 
     private void End ()
     {
         CurrentSheet = _svm.NumSheets;
         Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview End", new Dictionary<string, string> { ["Page"] = CurrentSheet.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview End", new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
     }
 
     protected override void OnTextChanged (EventArgs e)

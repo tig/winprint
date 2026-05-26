@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -14,27 +13,29 @@ public partial class UpdateDialog : Form
         InitializeComponent ();
         StartPosition = FormStartPosition.CenterParent;
         labelNewVersion.Text = $"A newer version ({ServiceLocator.Current.UpdateService.LatestVersion}) is available.";
-        linkReleasePage.Links[0].LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri;
+        var releaseLink = linkReleasePage.Links[0] ?? throw new InvalidOperationException ("Release link was not initialized.");
+        releaseLink.LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri?.AbsoluteUri ?? throw new InvalidOperationException ("Release page URI was not initialized.");
     }
 
-    private void downloadButton_Click (object sender, EventArgs args)
+    private void downloadButton_Click (object? sender, EventArgs args)
     {
         ServiceLocator.Current.UpdateService.StartUpgradeAsync ().ConfigureAwait (false);
     }
 
-    private void linkReleasePage_LinkClicked (object sender, LinkLabelLinkClickedEventArgs args)
+    private void linkReleasePage_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs args)
     {
-        Log.Debug ($"Browsing to release page: {(string)linkReleasePage.Links[0].LinkData}");
+        var releasePage = linkReleasePage.Links[0]?.LinkData as string ?? throw new InvalidOperationException ("Release link data was not initialized.");
+        Log.Debug ($"Browsing to release page: {releasePage}");
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Release Page Click");
 
-        Process proc = null;
+        Process? proc = null;
         try
         {
             var psi = new ProcessStartInfo
             {
                 UseShellExecute = true,   // This is important
-                FileName = (string)linkReleasePage.Links[0].LinkData
+                FileName = releasePage
             };
             proc = Process.Start (psi);
         }
@@ -43,7 +44,7 @@ public partial class UpdateDialog : Form
             // TODO: Better error message (output of stderr?)
             ServiceLocator.Current.TelemetryService.TrackException (e, false);
 
-            Log.Error (e, $"Couldn't browse to {(string)linkReleasePage.Links[0].LinkData}.");
+            Log.Error (e, $"Couldn't browse to {releasePage}.");
         }
         finally
         {

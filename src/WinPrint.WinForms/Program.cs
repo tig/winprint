@@ -1,4 +1,3 @@
-#nullable disable
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
@@ -83,15 +82,18 @@ internal static class Program
         Environment.Exit (0);
     }
 
-    private static void TaskScheduler_UnobservedTaskException (object sender, UnobservedTaskExceptionEventArgs e)
+    private static void TaskScheduler_UnobservedTaskException (object? sender, UnobservedTaskExceptionEventArgs e)
     {
         ServiceLocator.Current.TelemetryService.TrackException (e.Exception);
     }
 
-    private static void CurrentDomain_UnhandledException (object sender, UnhandledExceptionEventArgs e)
+    private static void CurrentDomain_UnhandledException (object? sender, UnhandledExceptionEventArgs e)
     {
         var ex = e.ExceptionObject as Exception;
-        ServiceLocator.Current.TelemetryService.TrackException (ex);
+        if (ex is not null)
+        {
+            ServiceLocator.Current.TelemetryService.TrackException (ex);
+        }
     }
 }
 
