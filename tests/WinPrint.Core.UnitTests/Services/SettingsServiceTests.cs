@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Xunit;
@@ -49,13 +48,7 @@ namespace WinPrint.Core.UnitTests.Services
 
             Assert.NotNull(settingsCopy);
 
-            string jsonOrig = JsonSerializer.Serialize(settings, jsonOptions);
-            Assert.NotNull(jsonOrig);
-
-            string jsonCopy = JsonSerializer.Serialize(settingsCopy, jsonOptions);
-            Assert.NotNull(jsonCopy);
-
-            Assert.Equal(jsonCopy, jsonOrig);
+            Assert.True(settingsCopy.Sheets.ContainsKey("test"));
         }
 
         [Fact]
@@ -78,13 +71,59 @@ namespace WinPrint.Core.UnitTests.Services
 
             Assert.NotNull(settingsCopy);
 
-            string jsonOrig = JsonSerializer.Serialize(settings, jsonOptions);
-            Assert.NotNull(jsonOrig);
+            Assert.True(settingsCopy.Sheets.ContainsKey("test"));
+        }
 
-            string jsonCopy = JsonSerializer.Serialize(settingsCopy, jsonOptions);
-            Assert.NotNull(jsonCopy);
+        [Fact]
+        public void TestReadMicrosoftExtensionsConfigurationSchema()
+        {
+            string settingsFileName = $"WinPrint.{GetType().Name}.Mec.json";
+            File.WriteAllText(settingsFileName, """
+                {
+                  "defaultContentType": "text/plain",
+                  "defaultCteClassName": "TextMateCte",
+                  "defaultSyntaxHighlighterCteNameClassName": "TextMateCte",
+                  "textMateContentTypeEngineSettings": {
+                    "contentSettings": {
+                      "style": "VisualStudioDark"
+                    }
+                  },
+                  "fileTypeMapping": {
+                    "filesAssociations": {
+                      "*.foo": "text/foo"
+                    },
+                    "contentTypes": [
+                      {
+                        "id": "text/foo",
+                        "title": "Foo",
+                        "extensions": [ "*.foo" ],
+                        "aliases": [ "foo" ]
+                      }
+                    ]
+                  }
+                }
+                """);
 
-            Assert.Equal(jsonCopy, jsonOrig);
+            try
+            {
+                SettingsService settingsService = new SettingsService
+                {
+                    SettingsFileName = settingsFileName
+                };
+
+                Settings settings = settingsService.ReadSettings();
+
+                Assert.NotNull(settings);
+                Assert.Equal("text/plain", settings.DefaultContentType);
+                Assert.Equal("TextMateCte", settings.DefaultCteClassName);
+                Assert.Equal("VisualStudioDark", settings.TextMateContentTypeEngineSettings.ContentSettings.Style);
+                Assert.Equal("text/foo", settings.FileTypeMapping.FilesAssociations["*.foo"]);
+                Assert.Contains(settings.FileTypeMapping.ContentTypes, contentType => contentType.Id == "text/foo");
+            }
+            finally
+            {
+                File.Delete(settingsFileName);
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 {
-  "files.associations": {
+  "filesAssociations": {
     
   },
-  "languages": [
+  "contentTypes": [
     {
       "aliases": [
         "brainfuck",

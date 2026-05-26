@@ -8,9 +8,9 @@
 
 ### On Windows
 
-Go to [Releases](https://github.com/tig/winprint/releases). Copy the install script from the release page an paste into a PowerShell console.
+There is no installer in this branch. Build from source and run `winprint.exe` from the `src\WinPrint.cli\bin` output folder until the installer is recreated.
 
-Once installed, *winprint* can be started from the Start menu or as the `winprint` executable. The legacy PowerShell CmdLet (`out-winprint`) remains available as `WinPrint.PowerShell.dll`, but is deprecated and no longer the preferred command-line surface.
+The legacy PowerShell CmdLet (`out-winprint`) remains available as `WinPrint.PowerShell.dll`, but is deprecated and no longer the preferred command-line surface.
 
 ### On Linux
 

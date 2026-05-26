@@ -72,10 +72,10 @@ The PowerShell CmdLet (`out-winprint`) is deprecated. Prefer the `winprint` exec
 If you still need the deprecated CmdLet, import it into PowerShell by adding an `import-module` statement in the Powershell profile:
 
 ```powershell
-import-module 'C:\Program Files\Kindel Systems\winprint\WinPrint.PowerShell.dll'
+import-module '.\src\WinPrint.PowerShell\bin\x64\Debug\net10.0-windows\WinPrint.PowerShell.dll'
 ```
 
-The **winprint** installer does not currently add this line.
+There is no installer in this branch; import the module from the build output folder if you still need the deprecated CmdLet.
 
 Invoke the deprecated CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
 
@@ -259,7 +259,7 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 2. **`AnsiCte`** - This legacy CTE can format `text/plain` files and files with embedded `ANSI Escape Sequences`. It uses [Pygments](https://pygments.org/) for syntax highlighting when explicitly configured as the default syntax highlighter.
 
-3. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for the `text/plain` can be changed by editing the `textFileSettings` section of a Sheet Definition in the `WinPrint.config.json` file.
+3. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
 
 4. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
 
@@ -267,11 +267,13 @@ When using **winprint** from the command line, the `-ContentTypeEngine` paramete
 
 The extension of the file being printed (e.g. `.cs`) determines which Content Type rendering engine will be used. **winprint** has a built-in library of hundreds of file extension to content type/language mappings. When using **winprint** from the command line, the `-Langauge` parameter can be used to override this behavior.
 
-To associate a file extension with a particular Content Type Engine modify the `files.associations` section of `WinPrint.config.json` appropriately. For example to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below (the `WinPrint.config.json` generated when **winprint** runs the first time already provides this example, as an example):
+To associate a file extension with a particular Content Type Engine, modify the `fileTypeMapping.filesAssociations` section of `WinPrint.config.json`. For example, to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below:
 
 ```json
-    "files.associations": {
-      "*.htm": "text/html",
+    "fileTypeMapping": {
+      "filesAssociations": {
+        "*.htm": "text/html"
+      }
     }
 ```
 
@@ -285,29 +287,36 @@ The `out-winprint` parameter `-ContentTypeEngine` and the `winprint --content-ty
 
 ### Adding or Changing Language Associations
 
-To associate a file extension with a language modify the `files.associations` and `languages` sections of `WinPrint.config.json`. For example to associate files with a `.INTERCAL` extension with the JSON language (which would make no sense, since INTERCAL is unlike any other language) add a line as shown below:
+To associate a file extension with a language, modify the `fileTypeMapping.filesAssociations` and `fileTypeMapping.contentTypes` sections of `WinPrint.config.json`. For example, to associate files with a `.INTERCAL` extension with the JSON language add a line as shown below:
 
 ```json
-    "files.associations": {
-      "*.intercal": "JSON"
+    "fileTypeMapping": {
+      "filesAssociations": {
+        "*.intercal": "JSON"
+      }
     }
 ```
 
-A new language can be defined by modifying the `languages` section of `WinPrint.config.json`. For example to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29) which is a very C-like language the `files.associations` and `languages` sections would look like the following:
+A new language can be defined by modifying the `fileTypeMapping.contentTypes` section of `WinPrint.config.json`. For example, to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29), the `fileTypeMapping.filesAssociations` and `fileTypeMapping.contentTypes` sections would look like the following:
 
 ```json
-    "languages": [
-      {
-        "id": "text/x-INTERCAL",
-        "title": "Compiler Language With No Pronounceable Acronym",
-        "extensions": [
-          "*.intercal"
-        ],
-        "aliases": [
-            "INTERCAL"
-        ]
-      }
-    ]
+    "fileTypeMapping": {
+      "filesAssociations": {
+        "*.intercal": "text/x-INTERCAL"
+      },
+      "contentTypes": [
+        {
+          "id": "text/x-INTERCAL",
+          "title": "Compiler Language With No Pronounceable Acronym",
+          "extensions": [
+            "*.intercal"
+          ],
+          "aliases": [
+              "INTERCAL"
+          ]
+        }
+      ]
+    }
 ```
 
 For TextMate highlighting to work, the mapped language must resolve to a bundled TextMate grammar. If it does not, **winprint** still prints the file as plain text.

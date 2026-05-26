@@ -1,4 +1,4 @@
-# Build and Deploy
+# Build
 
 ## Getting source ready
 

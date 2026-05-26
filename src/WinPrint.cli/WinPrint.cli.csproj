@@ -35,15 +35,4 @@
         <EmbeddedResource Include="Resources\agent-guide.md" LogicalName="WinPrint.cli.agent-guide.md" />
     </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-        <PropertyGroup>
-            <WinPrintDeployDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\setup\Deploy'))</WinPrintDeployDir>
-        </PropertyGroup>
-        <MakeDir Directories="$(WinPrintDeployDir)" />
-        <Copy SourceFiles="$(TargetDir)$(TargetName).exe" DestinationFiles="$(WinPrintDeployDir)\winprint.exe" SkipUnchangedFiles="true" />
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(WinPrintDeployDir)" SkipUnchangedFiles="true" />
-        <Copy SourceFiles="$(TargetDir)$(TargetName).deps.json" DestinationFolder="$(WinPrintDeployDir)" SkipUnchangedFiles="true" />
-        <Copy SourceFiles="$(TargetDir)$(TargetName).runtimeconfig.json" DestinationFolder="$(WinPrintDeployDir)" SkipUnchangedFiles="true" />
-        <Copy SourceFiles="@(ReferenceCopyLocalPaths)" DestinationFolder="$(WinPrintDeployDir)" SkipUnchangedFiles="true" />
-    </Target>
 </Project>

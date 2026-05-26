@@ -57,6 +57,8 @@
         <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
 
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
         <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />

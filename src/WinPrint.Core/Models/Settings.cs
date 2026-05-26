@@ -115,9 +115,8 @@ public class Settings : ModelBase {
     public HtmlCte HtmlContentTypeEngineSettings { get; set; }
 
     /// <summary>
-    ///     File Type Mappings - note legacy property name. Don't change.
+    ///     File Type Mappings.
     /// </summary>
-    [JsonPropertyName("languageAssociations")]
     public FileTypeMapping FileTypeMapping { get; set; }
 
     [JsonIgnore]
