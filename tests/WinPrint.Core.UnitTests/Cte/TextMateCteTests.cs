@@ -1,7 +1,10 @@
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.Reflection;
 using System.Threading.Tasks;
+using TextMateSharp.Internal.Grammars;
+using TextMateSharp.Themes;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -76,5 +79,16 @@ public class TextMateCteTests {
 
         Assert.True(await cte.SetDocumentAsync("using System;\nConsole.WriteLine(\"hi\");"));
         Assert.Equal(1, await cte.RenderAsync(new PrinterResolution { X = 96, Y = 96 }, null));
+    }
+
+    [Fact]
+    public void GetForegroundColorUsesFirstColorMapEntryTest() {
+        var method = typeof(TextMateCte).GetMethod("GetForegroundColor", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var metadata = EncodedTokenAttributes.Set(0, 0, 0, null, FontStyle.NotSet, 1, 0);
+        var color = Assert.IsType<Color>(method.Invoke(null, [ metadata, new[] { "#123456" } ]));
+
+        Assert.Equal(ColorTranslator.FromHtml("#123456").ToArgb(), color.ToArgb());
     }
 }

@@ -363,7 +363,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable {
     private static Color GetForegroundColor(int metadata, string[] colorMap) {
         var colorId = EncodedTokenAttributes.GetForeground(metadata);
         var colorIndex = colorId - 1;
-        if (colorIndex <= 0 || colorIndex >= colorMap.Length) {
+        if (colorIndex < 0 || colorIndex >= colorMap.Length) {
             return Color.Black;
         }
 
