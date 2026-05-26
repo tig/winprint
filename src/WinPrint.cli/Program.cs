@@ -7,9 +7,9 @@ Assembly assembly = Assembly.GetExecutingAssembly();
 FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
 CliHost host = new(options => {
-    options.ApplicationName = "winprint.cli";
+    options.ApplicationName = "winprint";
     options.Version = versionInfo.ProductVersion ?? "0.0.0";
-    options.DefaultCommand = "print";
+    options.DefaultCommand = "winprint";
     options.AgentGuide = "WinPrint.cli.agent-guide.md";
     options.AgentGuideIsResource = true;
     options.ResourceAssembly = assembly;

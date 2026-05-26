@@ -19,9 +19,9 @@ using WinPrint.Core.Services;
 namespace WinPrint.cli;
 
 public sealed class PrintCommand : ICliCommand {
-    public string PrimaryAlias => "print";
+    public string PrimaryAlias => "winprint";
 
-    public IReadOnlyList<string> Aliases { get; } = ["print"];
+    public IReadOnlyList<string> Aliases { get; } = ["winprint"];
 
     public string Description => "Print a file or redirected text with WinPrint.";
 
@@ -53,11 +53,11 @@ public sealed class PrintCommand : ICliCommand {
         CancellationToken cancellationToken) {
         bool verbose = options.HasExtension("verbose");
         bool debug = options.HasExtension("debug");
-        ServiceLocator.Current.TelemetryService.Start("winprint.cli");
-        ServiceLocator.Current.LogService.Start("winprint.cli", null, debug, verbose);
+        ServiceLocator.Current.TelemetryService.Start("winprint");
+        ServiceLocator.Current.LogService.Start("winprint", null, debug, verbose);
 
         FileVersionInfo version = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService))!.Location);
-        WriteVerbose(options, $"winprint.cli {version.ProductVersion} - {version.LegalCopyright} - https://tig.github.io/winprint");
+        WriteVerbose(options, $"winprint {version.ProductVersion} - {version.LegalCopyright} - https://tig.github.io/winprint");
 
         try {
             if (GetFlag(options, "config")) {
@@ -74,7 +74,7 @@ public sealed class PrintCommand : ICliCommand {
             using Print print = new();
             ConfigurePrinter(print, options);
             SheetSettings sheet = ConfigureSheet(print, options);
-            string title = options.Title ?? fileName ?? "winprint.cli";
+            string title = options.Title ?? fileName ?? "winprint";
             string? contentType = GetOption(options, "language")
                                   ?? GetOption(options, "content-type")
                                   ?? ContentTypeEngineBase.GetContentType(fileName ?? "");
@@ -114,7 +114,7 @@ public sealed class PrintCommand : ICliCommand {
             return Ok(result, options);
         }
         catch (Exception ex) when (ex is InvalidPrinterException or InvalidOperationException or IOException or Win32Exception) {
-            Log.Error(ex, "winprint.cli failed.");
+            Log.Error(ex, "winprint failed.");
             return Error(ex);
         }
     }

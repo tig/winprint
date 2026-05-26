@@ -16,7 +16,7 @@ Advanced source code and text file printing for PowerShell, a scriptable CLI, an
 * The most capable PowerShell printing tool for printing from the command line.
   * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
   * Allows **winprint** to be used from other applications or solutions. The **winprint** PowerShell `Out-WinPrint` CmdLet is a drop-in replacement for `out-printer`.
-* `winprint.cli` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* `winprint` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 
@@ -34,24 +34,24 @@ Advanced source code and text file printing for PowerShell, a scriptable CLI, an
 
 ## Command Line Interfaces
 
-### `winprint.cli`
+### `winprint`
 
 Count sheets without printing and emit a JSON envelope:
 
 ```powershell
-winprint.cli print Program.cs --what-if --json
+winprint Program.cs --what-if --json
 ```
 
 Print a file to a named printer:
 
 ```powershell
-winprint.cli print Program.cs --printer "Microsoft Print to PDF" --title "Program.cs"
+winprint Program.cs --printer "Microsoft Print to PDF" --title "Program.cs"
 ```
 
 Get machine-readable command metadata:
 
 ```powershell
-winprint.cli --opencli
+winprint --opencli
 ```
 
 ### PowerShell Cmdlet
