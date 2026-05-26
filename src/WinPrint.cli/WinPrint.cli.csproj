@@ -19,11 +19,11 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <NeutralLanguage>en-US</NeutralLanguage>
         <Platforms>AnyCPU;x64</Platforms>
-        <ApplicationIcon>..\WinPrint.PowerShell\winprint.ico</ApplicationIcon>
+        <ApplicationIcon>winprint.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="..\WinPrint.PowerShell\winprint.ico" Link="winprint.ico" />
+            <Content Include="winprint.ico" />
     </ItemGroup>
 
     <ItemGroup>

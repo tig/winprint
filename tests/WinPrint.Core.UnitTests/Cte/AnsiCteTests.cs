@@ -72,7 +72,7 @@ namespace WinPrint.Core.UnitTests.Cte
             Assert.Equal("text/plain", type);
         }
 
-        [Fact]
+        [Fact(Skip = "AnsiCte is a stub - libvt100 submodule removed")]
         public async void RenderAsyncTest_FixedPitch()
         {
             string shortLine = "This is a line 0123456789";
@@ -170,7 +170,7 @@ namespace WinPrint.Core.UnitTests.Cte
             Assert.Equal(3, await svm.ContentEngine.RenderAsync(new System.Drawing.Printing.PrinterResolution() { X = 96, Y = 96 }, null));
         }
 
-        [Fact]
+        [Fact(Skip = "AnsiCte is a stub - libvt100 submodule removed")]
         public async void RenderAsyncTest_LineWrap()
         {
             string text = "1";

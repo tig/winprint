@@ -52,10 +52,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\libvt100\src\libvt100.csproj" />
-        <ProjectReference Include="..\LiteHtmlSharp\LiteHtmlLib\LiteHtmlLib.vcxproj" />
-        <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
-
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
