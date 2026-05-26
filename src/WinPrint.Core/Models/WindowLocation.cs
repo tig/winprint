@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Text.Json.Serialization;
-using WinPrint.Core.ContentTypeEngines;
-
 namespace WinPrint.Core.Models;
 
 public class WindowLocation

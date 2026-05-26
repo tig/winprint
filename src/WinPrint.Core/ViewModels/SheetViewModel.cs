@@ -1382,5 +1382,4 @@ public class SheetViewModel : ViewModelBase
             g.DrawString (text, font, brush, x, y);
         }
     }
-
 }

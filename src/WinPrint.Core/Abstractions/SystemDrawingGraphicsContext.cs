@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 
 namespace WinPrint.Core.Abstractions;
@@ -310,8 +309,4 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
 
         return result;
     }
-
-
-
-
 }
