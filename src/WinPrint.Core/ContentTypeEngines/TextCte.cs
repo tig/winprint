@@ -18,19 +18,6 @@ using Font = System.Drawing.Font;
 namespace WinPrint.Core.ContentTypeEngines;
 
 /// <summary>
-///     This struct keeps track of which lines are 'real' and thus get a printed line number
-///     and which are the result of wrapping.
-/// </summary>
-internal struct WrappedLine
-{
-    internal int _nonWrappedLineNumber; // 0 if wrapped
-    internal string _text; // contents of this part of the line
-#if DEBUG
-    internal string _textNonWrapped;
-#endif
-}
-
-/// <summary>
 ///     Implements text/plain file type support with word/line wrapping. No formmating other
 ///     than line numbers.
 /// </summary>

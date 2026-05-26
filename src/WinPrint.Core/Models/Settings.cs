@@ -7,42 +7,6 @@ using WinPrint.Core.ContentTypeEngines;
 
 namespace WinPrint.Core.Models;
 
-//
-// Summary:
-//     Specifies how a form window is displayed.
-
-public class WindowSize
-{
-    public WindowSize ()
-    {
-    }
-
-    public WindowSize (int width, int height)
-    {
-        Width = width;
-        Height = height;
-    }
-
-    public int Width { get; set; }
-    public int Height { get; set; }
-}
-
-public class WindowLocation
-{
-    public WindowLocation ()
-    {
-    }
-
-    public WindowLocation (int x, int y)
-    {
-        X = x;
-        Y = y;
-    }
-
-    public int X { get; set; }
-    public int Y { get; set; }
-}
-
 public class Settings : ModelBase
 {
     private Font _diagnosticRulesFont = new () { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };

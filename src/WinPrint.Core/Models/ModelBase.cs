@@ -8,11 +8,6 @@ using System.Text.Json;
 
 namespace WinPrint.Core.Models;
 
-[AttributeUsage (AttributeTargets.Property)]
-public class SafeForTelemetry : Attribute
-{
-}
-
 public abstract class ModelBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;

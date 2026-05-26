@@ -148,11 +148,3 @@ public abstract class HeaderFooter : ModelBase
         set => SetField (ref _verticalPadding, value);
     }
 }
-
-public class Header : HeaderFooter
-{
-}
-
-public class Footer : HeaderFooter
-{
-}
