@@ -36,10 +36,8 @@ ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winprint -p "Ep
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* The most capable PowerShell printing tool enabling printing from the command line.
-  * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
-  * Allows **WinPrint** to be used from other applications or solutions. The **WinPrint** PowerShell `Out-WinPrint` CmdLet is a drop-in replacement for `Out-Printer`.
 * `winprint` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* The legacy PowerShell `Out-WinPrint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `winprint.exe`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Theoretically Cross platform. Even though it's named **Win**pPrint, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.

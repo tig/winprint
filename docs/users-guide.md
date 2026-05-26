@@ -8,10 +8,8 @@
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* The most capable PowerShell printing tool enabling printing from the command line.
-  * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
-  * Allows **winprint** to be used from other applications or solutions. The **winprint** PowerShell `out-winprint` CmdLet is a drop-in replacement for `out-printer`.
 * `winprint` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* The legacy PowerShell `out-winprint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `winprint.exe`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
@@ -21,7 +19,7 @@
 **winprint** has two command line surfaces:
 
 * **`winprint`** - a Terminal.Gui.Cli-based executable intended for scripts, automation, and agents. It can return a JSON envelope and exposes OpenCLI metadata.
-* **`out-winprint`** - a PowerShell CmdLet designed as a stand-in for PowerShell's built-in `out-printer`.
+* **`out-winprint`** - a deprecated PowerShell CmdLet designed as a stand-in for PowerShell's built-in `out-printer`.
 
 ### `winprint`
 
@@ -65,21 +63,21 @@ winprint --opencli
 
 Common `winprint` options include `--printer`, `--paper-size`, `--sheet`, `--language`, `--content-type`, `--orientation`, `--line-numbers`, `--from-sheet`, `--to-sheet`, `--what-if`, `--gui`, and `--config`. The Terminal.Gui.Cli framework also provides `--help`, `--version`, `--json`, `--output`, `--initial`, `--timeout`, and `--opencli`.
 
-### PowerShell CmdLet
+### Deprecated PowerShell CmdLet
 
-Use **winprint** from the command line as a PowerShell CmdLet (`out-winprint`).
+The PowerShell CmdLet (`out-winprint`) is deprecated. Prefer the `winprint` executable for new scripts and automation.
 
 **`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet built into PowerShell.
 
-The **winprint** CmdLet must be imported into PowerShell for `out-winprint` to work. This is done by adding an `import-module` statement in the Powershell profile:
+If you still need the deprecated CmdLet, import it into PowerShell by adding an `import-module` statement in the Powershell profile:
 
 ```powershell
-import-module 'C:\Program Files\Kindel Systems\winprint\winprint.dll'
+import-module 'C:\Program Files\Kindel Systems\winprint\WinPrint.PowerShell.dll'
 ```
 
 The **winprint** installer does not currently add this line.
 
-Invoke the CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
+Invoke the deprecated CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
 
 Specify the `-Verbose` parameter switch to have **winprint** show progress. Otherwise, **winprint** is pretty darn quiet, respecting the norms of PowerShell.
 
@@ -181,7 +179,7 @@ SYNTAX
 
 When run as a Windows app (`winprintgui.exe`), **winprint** provides an easy to use GUI for previewing how a file will be printed and changing many settings. Start **winprint** from the Windows Start Menu like any other app.
 
-The **File button** opens a File Open Dialog for choosing the file to preview and/or print. The GUI app can print a single file at a time. Use the command line versions (`winprint` or `out-winprint`) to print multiple files at once.
+The **File button** opens a File Open Dialog for choosing the file to preview and/or print. The GUI app can print a single file at a time. Use the `winprint` command line to print multiple files at once.
 
 The **Print button** prints the currently selected file.
 
@@ -332,7 +330,7 @@ For TextMate highlighting to work, the mapped language must resolve to a bundled
 
 ## Logging & Diagnostics
 
-**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using `out-winprint`, specify `-Debug` to send diagnostic log entries to the console as well as the log file. When using `winprint`, specify `--debug`.
+**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using `winprint`, specify `--debug`. The deprecated PowerShell CmdLet still supports `-Debug`.
 
 Additional printing diagnostics can be turned on via settings in the configuration file.
 

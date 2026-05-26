@@ -7,10 +7,10 @@ rm -Recurse -Path setup/Deploy -Include *.*
 echo "Building"
 $env:winprint_telemetryId="put Kindel Systems key here"
 texttransform .\src\WinPrint.Core\Services\TelemetryService.tt
-msbuild /p:Configuration=Debug /p:Platform=x64 src/WinPrint.sln 
+msbuild /p:Configuration=Debug /p:Platform=x64 src/WinPrint.slnx
 
-echo "Testing Out-winprint"
-pwsh.exe -NoLogo -Command "Import-Module '.\setup\Deploy\winprint.dll'; Out-WinPrint .\testfiles\Program.cs -WhatIf -Verbose;"
+echo "Testing deprecated Out-winprint"
+pwsh.exe -NoLogo -Command "Import-Module '.\setup\Deploy\WinPrint.PowerShell.dll'; Out-WinPrint .\testfiles\Program.cs -WhatIf -Verbose;"
 
 echo "Testing winprint CLI"
 .\setup\Deploy\winprint.exe .\testfiles\Program.cs --what-if

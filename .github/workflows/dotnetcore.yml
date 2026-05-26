@@ -30,11 +30,11 @@ jobs:
 
     # Restore packages
     - name: Restore
-      run: msbuild src/WinPrint.sln /t:Restore /p:Configuration=Release /p:Platform=x64
+      run: msbuild src/WinPrint.slnx /t:Restore /p:Configuration=Release /p:Platform=x64
 
     # Build
     - name: Build
-      run: msbuild src/WinPrint.sln /p:Configuration=Release /p:Platform=x64 /p:DefineConstants="CI_BUILD"
+      run: msbuild src/WinPrint.slnx /p:Configuration=Release /p:Platform=x64 /p:DefineConstants="CI_BUILD"
 
     # Run Tests
     - name: Test

@@ -13,10 +13,8 @@ Advanced source code and text file printing for PowerShell, a scriptable CLI, an
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* The most capable PowerShell printing tool for printing from the command line.
-  * Complete control of printing features with dozens of parameters, including *Intellicode* parameter completion (using `tab` key).
-  * Allows **winprint** to be used from other applications or solutions. The **winprint** PowerShell `Out-WinPrint` CmdLet is a drop-in replacement for `out-printer`.
 * `winprint` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* The legacy PowerShell `Out-WinPrint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `winprint.exe`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 
@@ -54,7 +52,9 @@ Get machine-readable command metadata:
 winprint --opencli
 ```
 
-### PowerShell Cmdlet
+### Deprecated PowerShell Cmdlet
+
+The PowerShell module is deprecated. Prefer `winprint.exe`; use `Out-WinPrint` only for existing scripts that already depend on the CmdLet.
 
 See what version is installed:
 

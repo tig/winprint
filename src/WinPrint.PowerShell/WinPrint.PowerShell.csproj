@@ -5,15 +5,15 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0-windows</TargetFramework>
         <RootNamespace>WinPrint.PowerShell</RootNamespace>
-        <AssemblyTitle>winprint PowerShell Cmdlet</AssemblyTitle>
-        <AssemblyName>winprint</AssemblyName>
+        <AssemblyTitle>winprint PowerShell Cmdlet (Deprecated)</AssemblyTitle>
+        <AssemblyName>WinPrint.PowerShell</AssemblyName>
         <StartupObject>WinPrint.PowerShell.Program</StartupObject>
 
         <Version>2.1.0.400</Version>
         <Company>Kindel</Company>
         <Product>winprint</Product>
         <Authors>Tig Kindel</Authors>
-        <Description>winprint PowerShell Cmdlet</Description>
+        <Description>Deprecated winprint PowerShell Cmdlet</Description>
         <Copyright>Copyright Kindel, LLC</Copyright>
         <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>

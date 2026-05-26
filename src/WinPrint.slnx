@@ -1,0 +1,46 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/External/">
+    <Project Path="libvt100/src/libvt100.csproj" />
+    <Project Path="LiteHtmlSharp/LiteHtmlLib/LiteHtmlLib.vcxproj">
+      <Platform Solution="*|ARM" Project="x64" />
+      <Platform Solution="*|ARM64" Project="x64" />
+    </Project>
+    <Project Path="PowershellAsync/PowerShellAsync/PowerShellAsync.csproj" />
+  </Folder>
+  <Folder Name="/PowershellAsync/" />
+  <Folder Name="/Solution Items/">
+    <File Path="../.gitignore" />
+    <File Path="../README.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Terminal.Gui.Cli/" />
+  <Folder Name="/Terminal.Gui.Cli/src/">
+    <Project Path="Terminal.Gui.Cli/src/Terminal.Gui.Cli/Terminal.Gui.Cli.csproj" />
+  </Folder>
+  <Project Path="../tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="WinPrint.cli/WinPrint.cli.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="WinPrint.Core/WinPrint.Core.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="WinPrint.LiteHtml/WinPrint.LiteHtml.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="WinPrint.PowerShell/WinPrint.PowerShell.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="WinPrint.WinForms/WinPrint.WinForms.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>

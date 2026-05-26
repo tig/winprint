@@ -5,7 +5,7 @@
         <TargetFramework>net10.0-windows</TargetFramework>
         <RootNamespace>WinPrint.cli</RootNamespace>
         <AssemblyTitle>winprint CLI</AssemblyTitle>
-        <AssemblyName>winprint.cli</AssemblyName>
+        <AssemblyName>winprint</AssemblyName>
         <Version>2.1.0.400</Version>
         <Company>Kindel</Company>
         <Product>winprint</Product>
