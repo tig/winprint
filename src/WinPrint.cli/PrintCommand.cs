@@ -32,19 +32,23 @@ public sealed class PrintCommand : ICliCommand
 
     public bool AcceptsPositionalArgs => true;
 
-    public IReadOnlyList<CommandOptionDescriptor> Options { get; } = [
-        new("printer", "P", typeof(string), "Printer name. Defaults to the system default printer.", false, null),
-        new("paper-size", null, typeof(string), "Paper size supported by the selected printer.", false, null),
-        new("sheet", "s", typeof(string), "WinPrint sheet definition name or ID.", false, null),
-        new("content-type", "c", typeof(string), "Content type engine, content type, or language override.", false, null),
-        new("language", "l", typeof(string), "Language or content type override for syntax highlighting.", false, null),
-        new("orientation", null, typeof(string), "Page orientation: portrait or landscape.", false, null),
-        new("line-numbers", null, typeof(string), "Line number setting: yes or no.", false, null),
-        new("from-sheet", null, typeof(int), "First sheet to print.", false, null),
-        new("to-sheet", null, typeof(int), "Last sheet to print.", false, null),
-        new("what-if", "w", typeof(bool), "Count sheets without printing.", false, null),
-        new("gui", "g", typeof(bool), "Open the WinPrint GUI for the file instead of printing from the CLI.", false, null),
-        new("config", null, typeof(bool), "Open WinPrint.config.json in the default editor.", false, null)
+    public IReadOnlyList<CommandOptionDescriptor> Options { get; } =
+    [
+        new ("printer", "P", typeof (string), "Printer name. Defaults to the system default printer.", false, null),
+        new ("paper-size", null, typeof (string), "Paper size supported by the selected printer.", false, null),
+        new ("sheet", "s", typeof (string), "WinPrint sheet definition name or ID.", false, null),
+        new ("content-type", "c", typeof (string), "Content type engine, content type, or language override.", false,
+            null),
+        new ("language", "l", typeof (string), "Language or content type override for syntax highlighting.", false,
+            null),
+        new ("orientation", null, typeof (string), "Page orientation: portrait or landscape.", false, null),
+        new ("line-numbers", null, typeof (string), "Line number setting: yes or no.", false, null),
+        new ("from-sheet", null, typeof (int), "First sheet to print.", false, null),
+        new ("to-sheet", null, typeof (int), "Last sheet to print.", false, null),
+        new ("what-if", "w", typeof (bool), "Count sheets without printing.", false, null),
+        new ("gui", "g", typeof (bool), "Open the WinPrint GUI for the file instead of printing from the CLI.", false,
+            null),
+        new ("config", null, typeof (bool), "Open WinPrint.config.json in the default editor.", false, null)
     ];
 
     public async Task<CommandResult> RunAsync (
@@ -58,8 +62,9 @@ public sealed class PrintCommand : ICliCommand
         ServiceLocator.Current.TelemetryService.Start ("winprint");
         ServiceLocator.Current.LogService.Start ("winprint", null, debug, verbose);
 
-        FileVersionInfo version = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (UpdateService))!.Location);
-        WriteVerbose (options, $"winprint {version.ProductVersion} - {version.LegalCopyright} - https://tig.github.io/winprint");
+        var version = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (UpdateService))!.Location);
+        WriteVerbose (options,
+            $"winprint {version.ProductVersion} - {version.LegalCopyright} - https://tig.github.io/winprint");
 
         try
         {
@@ -95,15 +100,19 @@ public sealed class PrintCommand : ICliCommand
                 WriteVerbose (options, $"Title:               {title}");
                 WriteVerbose (options, $"Content Type:        {print.SheetViewModel.ContentType}");
                 WriteVerbose (options, $"Language:            {print.SheetViewModel.Language}");
-                WriteVerbose (options, $"Content Type Engine: {print.SheetViewModel.ContentEngine?.GetType ().Name ?? ""}");
+                WriteVerbose (options,
+                    $"Content Type Engine: {print.SheetViewModel.ContentEngine?.GetType ().Name ?? ""}");
                 WriteVerbose (options, $"Printer:             {print.PrintDocument.PrinterSettings.PrinterName}");
-                WriteVerbose (options, $"Paper Size:          {print.PrintDocument.DefaultPageSettings.PaperSize.PaperName}");
-                WriteVerbose (options, $"Orientation:         {(print.PrintDocument.DefaultPageSettings.Landscape ? "Landscape" : "Portrait")}");
+                WriteVerbose (options,
+                    $"Paper Size:          {print.PrintDocument.DefaultPageSettings.PaperSize.PaperName}");
+                WriteVerbose (options,
+                    $"Orientation:         {(print.PrintDocument.DefaultPageSettings.Landscape ? "Landscape" : "Portrait")}");
                 WriteVerbose (options, $"Sheet Definition:    {sheet.Name}");
             }
 
             int sheets = GetFlag (options, "what-if")
-                ? await print.CountSheets (GetInt (options, "from-sheet"), GetInt (options, "to-sheet")).ConfigureAwait (false)
+                ? await print.CountSheets (GetInt (options, "from-sheet"), GetInt (options, "to-sheet"))
+                    .ConfigureAwait (false)
                 : await print.DoPrint ().ConfigureAwait (false);
 
             PrintResult result = new (
@@ -119,7 +128,8 @@ public sealed class PrintCommand : ICliCommand
 
             return Ok (result, options);
         }
-        catch (Exception ex) when (ex is InvalidPrinterException or InvalidOperationException or IOException or Win32Exception)
+        catch (Exception ex) when (ex is InvalidPrinterException or InvalidOperationException or IOException
+                                       or Win32Exception)
         {
             Log.Error (ex, "winprint failed.");
             return Error (ex);
@@ -202,7 +212,7 @@ public sealed class PrintCommand : ICliCommand
 
     private static void OpenSettingsFile ()
     {
-        using Process? proc = Process.Start (new ProcessStartInfo
+        using var proc = Process.Start (new ProcessStartInfo
         {
             UseShellExecute = true,
             FileName = ServiceLocator.Current.SettingsService.SettingsFileName
@@ -212,7 +222,7 @@ public sealed class PrintCommand : ICliCommand
     private static void OpenGui (string? fileName)
     {
         string path = Path.GetDirectoryName (Assembly.GetAssembly (typeof (SettingsService))!.Location)!;
-        using Process? proc = Process.Start (new ProcessStartInfo
+        using var proc = Process.Start (new ProcessStartInfo
         {
             UseShellExecute = true,
             Arguments = fileName ?? "",

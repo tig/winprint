@@ -15,7 +15,7 @@ public class SheetSettingsTests : TestModelsBase
     [Fact]
     public void TestNew ()
     {
-        SheetSettings doc = new SheetSettings ();
+        var doc = new SheetSettings ();
         Assert.NotNull (doc);
 
         //Assert.AreEqual("sansserif", doc.DiagnosticRulesFont.Family);
@@ -27,7 +27,7 @@ public class SheetSettingsTests : TestModelsBase
     [Fact]
     public void TestPersist ()
     {
-        SheetSettings doc = new SheetSettings ();
+        var doc = new SheetSettings ();
 
         string json = JsonSerializer.Serialize (doc, jsonOptions);
         Assert.NotNull (json);
@@ -41,22 +41,23 @@ public class SheetSettingsTests : TestModelsBase
     [Fact]
     public void TestSerializeToFile ()
     {
-        SheetSettings doc = new SheetSettings ();
+        var doc = new SheetSettings ();
 
         // Use the name of the test file as the Document.File property
         string file = "WinPrint.Test.New.json";
         Assert.Equal ("WinPrint.Test.New.json", file);
 
-        string jsonString = JsonSerializer.Serialize (doc, jsonOptions); ;
+        string jsonString = JsonSerializer.Serialize (doc, jsonOptions);
+        ;
 
-        JsonWriterOptions writerOptions = new JsonWriterOptions { Indented = true };
-        JsonDocumentOptions documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
+        var writerOptions = new JsonWriterOptions { Indented = true };
+        var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
 
         // Use the name of the test file as the Document.File property
         using (FileStream fs = File.Create (file))
 
-        using (Utf8JsonWriter writer = new Utf8JsonWriter (fs, options: writerOptions))
-        using (JsonDocument document = JsonDocument.Parse (jsonString, documentOptions))
+        using (var writer = new Utf8JsonWriter (fs, writerOptions))
+        using (var document = JsonDocument.Parse (jsonString, documentOptions))
         {
             JsonElement root = document.RootElement;
 
@@ -93,9 +94,8 @@ public class SheetSettingsTests : TestModelsBase
         // Test with a default file
         //var doc = DeserializeFromFile(file);
         //Assert.AreEqual("", doc.Title, $"File property of {file} should have been \"\"");
-
-
     }
+
     [Fact]
     public void TestDeserializeAllPropertiesSet ()
     {
@@ -110,7 +110,8 @@ public class SheetSettingsTests : TestModelsBase
         string jsonString = File.ReadAllText (file);
         Assert.NotNull (jsonString);
 
-        return JsonSerializer.Deserialize<SheetSettings> (jsonString, jsonOptions) ?? throw new JsonException ("SheetSettings deserialized to null.");
+        return JsonSerializer.Deserialize<SheetSettings> (jsonString, jsonOptions) ??
+               throw new JsonException ("SheetSettings deserialized to null.");
     }
 
     //public void TestHeaderFooter(Core.Models.SheetSettings doc) {
@@ -143,5 +144,3 @@ public class SheetSettingsTests : TestModelsBase
     //    Assert.AreEqual(FontStyle.Italic, font.Style);
     //}
 }
-
-

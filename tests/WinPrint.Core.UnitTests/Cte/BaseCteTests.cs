@@ -1,7 +1,7 @@
-using Serilog.Sinks.XUnit;
-using System.Drawing;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using Serilog.Formatting.Display;
+using Serilog.Sinks.XUnit;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -14,17 +14,19 @@ public class BaseCteTests
 {
     public BaseCteTests (ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start (GetType ().Name, new TestOutputSink (output, new Serilog.Formatting.Display.MessageTemplateTextFormatter ("{Message:lj}")), true, true);
+        ServiceLocator.Current.LogService.Start (GetType ().Name,
+            new TestOutputSink (output, new MessageTemplateTextFormatter ("{Message:lj}")), true, true);
     }
 
     [Fact]
     public void CreateContentTypeEngine_CteClassName ()
     {
-        foreach (var cte in ContentTypeEngineBase.GetDerivedClassesCollection ())
+        foreach (ContentTypeEngineBase cte in ContentTypeEngineBase.GetDerivedClassesCollection ())
         {
-            var CteClassName = cte.GetType ().Name;
-            SheetViewModel svm = new SheetViewModel ();
-            (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine (CteClassName);
+            string CteClassName = cte.GetType ().Name;
+            var svm = new SheetViewModel ();
+            (svm.ContentEngine, svm.ContentType, svm.Language) =
+                ContentTypeEngineBase.CreateContentTypeEngine (CteClassName);
             Assert.NotNull (svm.ContentEngine);
 
             Assert.Equal (CteClassName, svm.ContentEngine!.GetType ().Name);
@@ -37,16 +39,16 @@ public class BaseCteTests
     {
         ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType ().Name}.json";
         File.Delete (ServiceLocator.Current.SettingsService.SettingsFileName);
-        var settings = ServiceLocator.Current.SettingsService.ReadSettings ();
+        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings ();
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
-        var ftm = ServiceLocator.Current.FileTypeMappingService.Load ();
+        FileTypeMapping ftm = ServiceLocator.Current.FileTypeMappingService.Load ();
         Assert.NotNull (ftm);
-        var langs = ftm.ContentTypes;
+        IList<ContentType> langs = ftm.ContentTypes;
         Assert.NotNull (langs);
         // For every cte, ensure every supported content type is valid
-        foreach (var c in ContentTypeEngineBase.GetDerivedClassesCollection ())
+        foreach (ContentTypeEngineBase c in ContentTypeEngineBase.GetDerivedClassesCollection ())
         {
-            foreach (var t in c.SupportedContentTypes)
+            foreach (string t in c.SupportedContentTypes)
             {
                 Assert.Contains (langs, l => l.Id == t || l.Aliases.Contains (t));
             }
@@ -112,8 +114,8 @@ public class BaseCteTests
         path = "kconfig";
         type = ContentTypeEngineBase.GetContentType (path);
         Assert.Equal ("text/x-kconfig", type);
-
     }
+
     [Fact]
     public void CreateContentTypeEngineTests ()
     {
@@ -121,14 +123,14 @@ public class BaseCteTests
         ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType ().Name}.json";
         File.Delete (ServiceLocator.Current.SettingsService.SettingsFileName);
 
-        var settings = ServiceLocator.Current.SettingsService.ReadSettings ();
+        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings ();
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
 
         // (ContentTypeEngineBase cte, string language) CreateContentTypeEngine(string contentType)
         ContentTypeEngineBase? cte;
         string? contentType, language;
 
-        var input = "json";
+        string input = "json";
         (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine (input);
         Assert.NotNull (cte);
         Assert.Equal (ContentTypeEngineBase.DefaultSyntaxHighlighterCteNameClassName, cte.GetType ().Name);
@@ -219,6 +221,4 @@ public class BaseCteTests
         Assert.Equal (input, contentType);
         Assert.Equal ("Smalltalk", language);
     }
-
 }
-

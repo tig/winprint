@@ -49,7 +49,8 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         return await Task.FromResult (true);
     }
 
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution, EventHandler<string>? reflowProgress)
+    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+        EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ("HtmlCte is a stub - LiteHtmlSharp dependency removed.");
         return await Task.FromResult (0);

@@ -32,10 +32,16 @@ public interface IGraphicsContext
 
     GraphicsSizeF MeasureString (string text, IGraphicsFont font);
     GraphicsSizeF MeasureString (string text, IGraphicsFont font, int width, GraphicsStringFormat format);
-    GraphicsSizeF MeasureString (string text, IGraphicsFont font, GraphicsSizeF proposedSize, GraphicsStringFormat format, out int charsFitted, out int linesFilled);
 
-    void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y, GraphicsStringFormat? format = null);
-    void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect, GraphicsStringFormat? format = null);
+    GraphicsSizeF MeasureString (string text, IGraphicsFont font, GraphicsSizeF proposedSize,
+        GraphicsStringFormat format, out int charsFitted, out int linesFilled);
+
+    void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y,
+        GraphicsStringFormat? format = null);
+
+    void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect,
+        GraphicsStringFormat? format = null);
+
     void DrawLine (IGraphicsPen pen, float x1, float y1, float x2, float y2);
     void DrawLine (IGraphicsPen pen, GraphicsPointF start, GraphicsPointF end);
     void DrawRectangle (IGraphicsPen pen, float x, float y, float width, float height);

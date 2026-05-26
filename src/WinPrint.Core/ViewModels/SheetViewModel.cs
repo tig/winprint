@@ -61,21 +61,65 @@ public class SheetViewModel : ViewModelBase
     private SheetSettings _sheet = null!;
     private string? _title;
 
-    public Margins Margins { get => _margins; set => SetField (ref _margins, value); }
-    public bool Landscape { get => _landscape; set => SetField (ref _landscape, value); }
-    public Font? DiagnosticRulesFont { get => _rulesFont; set => SetField (ref _rulesFont, value); }
-    public HeaderViewModel Header { get => _headerVM; set => SetField (ref _headerVM, value); }
-    public FooterViewModel Footer { get => _footerVM; set => SetField (ref _footerVM, value); }
+    public Margins Margins
+    {
+        get => _margins;
+        set => SetField (ref _margins, value);
+    }
 
-    public int Rows { get => _rows; set => SetField (ref _rows, value); }
+    public bool Landscape
+    {
+        get => _landscape;
+        set => SetField (ref _landscape, value);
+    }
 
-    public int Columns { get => _cols; set => SetField (ref _cols, value); }
+    public Font? DiagnosticRulesFont
+    {
+        get => _rulesFont;
+        set => SetField (ref _rulesFont, value);
+    }
 
-    public int Padding { get => _padding; set => SetField (ref _padding, value); }
+    public HeaderViewModel Header
+    {
+        get => _headerVM;
+        set => SetField (ref _headerVM, value);
+    }
 
-    public bool PageSeparator { get => _pageSeparator; set => SetField (ref _pageSeparator, value); }
+    public FooterViewModel Footer
+    {
+        get => _footerVM;
+        set => SetField (ref _footerVM, value);
+    }
 
-    public ContentSettings ContentSettings { get => _contentSettings; set => SetField (ref _contentSettings, value); }
+    public int Rows
+    {
+        get => _rows;
+        set => SetField (ref _rows, value);
+    }
+
+    public int Columns
+    {
+        get => _cols;
+        set => SetField (ref _cols, value);
+    }
+
+    public int Padding
+    {
+        get => _padding;
+        set => SetField (ref _padding, value);
+    }
+
+    public bool PageSeparator
+    {
+        get => _pageSeparator;
+        set => SetField (ref _pageSeparator, value);
+    }
+
+    public ContentSettings ContentSettings
+    {
+        get => _contentSettings;
+        set => SetField (ref _contentSettings, value);
+    }
 
     /// <summary>
     ///     The fully qualified path of the file being printed. Used for header/footer display purposes only.
@@ -116,7 +160,11 @@ public class SheetViewModel : ViewModelBase
     /// <summary>
     ///     The character encoding of the document
     /// </summary>
-    public Encoding? Encoding { get => _encoding; set => SetField (ref _encoding, value); }
+    public Encoding? Encoding
+    {
+        get => _encoding;
+        set => SetField (ref _encoding, value);
+    }
 
     /// <summary>
     ///     The number of sheets (NOT Pages) that will be printed.
@@ -134,13 +182,21 @@ public class SheetViewModel : ViewModelBase
         }
     }
 
-    public ContentTypeEngineBase? ContentEngine { get => _contentEngine; set => SetField (ref _contentEngine, value); }
+    public ContentTypeEngineBase? ContentEngine
+    {
+        get => _contentEngine;
+        set => SetField (ref _contentEngine, value);
+    }
 
     // These properties are all either calculated or dependent on printer settings
     /// <summary>
     ///     Size of the Sheet of Paper in 100ths of an inch.
     /// </summary>
-    public Size PaperSize { get => _paperSize; set => _paperSize = value; }
+    public Size PaperSize
+    {
+        get => _paperSize;
+        set => _paperSize = value;
+    }
 
     /// <summary>
     ///     Angle pages is rotated by
@@ -155,7 +211,11 @@ public class SheetViewModel : ViewModelBase
     /// <summary>
     ///     The physical bounds of the Sheet of paper as provided by PageSettings.
     /// </summary>
-    public Rectangle Bounds { get => _bounds; set => _bounds = value; }
+    public Rectangle Bounds
+    {
+        get => _bounds;
+        set => _bounds = value;
+    }
 
     public float HardMarginX { get; set; }
     public float HardMarginY { get; set; }
@@ -163,7 +223,11 @@ public class SheetViewModel : ViewModelBase
     /// <summary>
     ///     The printable area. Bounds minus margins and header/footer.
     /// </summary>
-    public RectangleF ContentBounds { get => _contentBounds; private set => _contentBounds = value; }
+    public RectangleF ContentBounds
+    {
+        get => _contentBounds;
+        private set => _contentBounds = value;
+    }
 
     /// <summary>
     ///     True if we're in the middle of loading the file. False otherwise.
@@ -368,7 +432,7 @@ public class SheetViewModel : ViewModelBase
 
         // If there's no file, this sets things up with an empty file which is good for 
         // print preview during startup.
-        var document = "";
+        string document = "";
         Encoding = Encoding.UTF8;
         if (string.IsNullOrEmpty (File))
         {
@@ -376,8 +440,8 @@ public class SheetViewModel : ViewModelBase
         }
         // LoadAsync will throw FNFE if file was not found. Loading will remain true in this case...
 
-        using var fileStream = System.IO.File.OpenRead (File);
-        var detected = CharsetDetector.DetectFromStream (fileStream).Detected;
+        using FileStream fileStream = System.IO.File.OpenRead (File);
+        DetectionDetail? detected = CharsetDetector.DetectFromStream (fileStream).Detected;
         if (detected != null)
         {
             Log.Debug ("File encoding detected: {encoding}", detected);
@@ -405,11 +469,11 @@ public class SheetViewModel : ViewModelBase
 
     private bool StreamHasAnsiEsc (Stream stream)
     {
-        var containsStr = false;
-        var streamBytes = new byte[stream.Length];
+        bool containsStr = false;
+        byte[] streamBytes = new byte[stream.Length];
         stream.Position = 0;
         stream.ReadExactly (streamBytes);
-        var stringOfStream = Encoding.UTF8.GetString (streamBytes);
+        string stringOfStream = Encoding.UTF8.GetString (streamBytes);
         // Look for the Default foreground color esc sequence
         // Note, just looking for the ESC[ sequence is not enough as PDF files
         // include.
@@ -429,7 +493,7 @@ public class SheetViewModel : ViewModelBase
     /// <returns>True if content type engine was initialized. False otherwise.</returns>
     public async Task<bool> LoadStringAsync (string document, string? contentType)
     {
-        var retval = false;
+        bool retval = false;
         LogService.TraceMessage ();
         if (document == null)
         {
@@ -465,7 +529,8 @@ public class SheetViewModel : ViewModelBase
             if (ContentEngine.SupportedContentTypes.Contains ("text/ansi") &&
                 !ContentEngine.SupportedContentTypes.Contains (ContentType))
             {
-                var (pygmentsInstalled, message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall ();
+                (bool pygmentsInstalled, string message) =
+                    ServiceLocator.Current.PygmentsConverterService.CheckInstall ();
                 if (pygmentsInstalled)
                 {
                     // Convert the document to ANSI using Pygments
@@ -592,8 +657,8 @@ public class SheetViewModel : ViewModelBase
         {
             _printableArea.X = Bounds.X - HardMarginX;
             _printableArea.Y = Bounds.Y - HardMarginY;
-            _printableArea.Width = Bounds.Width - (HardMarginX * 2);
-            _printableArea.Height = Bounds.Height - (HardMarginY * 2);
+            _printableArea.Width = Bounds.Width - HardMarginX * 2;
+            _printableArea.Height = Bounds.Height - HardMarginY * 2;
         }
 
         // Content bounds represents printable area, minus margins and header/footer.
@@ -665,10 +730,10 @@ public class SheetViewModel : ViewModelBase
 
     public bool CheckPrintOutsideHardMargins ()
     {
-        var leftMax = (int)Math.Round (_printableArea.X);
-        var topMax = (int)Math.Round (_printableArea.Top);
-        var rightMax = (int)Math.Round (_bounds.Width - _printableArea.Right);
-        var bottomMax = (int)Math.Round (_bounds.Height - _printableArea.Bottom);
+        int leftMax = (int)Math.Round (_printableArea.X);
+        int topMax = (int)Math.Round (_printableArea.Top);
+        int rightMax = (int)Math.Round (_bounds.Width - _printableArea.Right);
+        int bottomMax = (int)Math.Round (_bounds.Height - _printableArea.Bottom);
 
         if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax || Margins.Bottom < bottomMax)
         {
@@ -695,7 +760,7 @@ public class SheetViewModel : ViewModelBase
             if (!ModelLocator.Current.Settings.Sheets.TryGetValue (sheetName, out sheet))
             {
                 // Wasn't a GUID or isn't valid
-                var s = ModelLocator.Current.Settings.Sheets
+                KeyValuePair<string, SheetSettings> s = ModelLocator.Current.Settings.Sheets
                     .Where (s => s.Value.Name.Equals (sheetName, StringComparison.InvariantCultureIgnoreCase))
                     .FirstOrDefault ();
 
@@ -720,7 +785,7 @@ public class SheetViewModel : ViewModelBase
     {
         return (s, e) =>
         {
-            var reflow = false;
+            bool reflow = false;
             LogService.TraceMessage ($"sheet.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName)
             {
@@ -769,7 +834,7 @@ public class SheetViewModel : ViewModelBase
     {
         return (s, e) =>
         {
-            var reflow = false;
+            bool reflow = false;
             LogService.TraceMessage ($"{e.PropertyName}");
             switch (e.PropertyName)
             {
@@ -840,7 +905,7 @@ public class SheetViewModel : ViewModelBase
     {
         return (s, e) =>
         {
-            var reflow = false;
+            bool reflow = false;
             LogService.TraceMessage ($"SheetViewModel.PropertyChanged: {e.PropertyName}");
             switch (e.PropertyName)
             {
@@ -903,17 +968,31 @@ public class SheetViewModel : ViewModelBase
         return h;
     }
 
-    public int GetPageColumn (int n) { return (n - 1) % Columns; }
-    public int GetPageRow (int n) { return (n - 1) % (Rows * Columns) / Columns; }
+    public int GetPageColumn (int n)
+    {
+        return (n - 1) % Columns;
+    }
 
-    internal float GetXPadding (int n) { return GetPageColumn (n) == 0 ? 0F : _padding / Columns; }
-    internal float GetYPadding (int n) { return GetPageRow (n) == 0 ? 0F : _padding / Rows; }
+    public int GetPageRow (int n)
+    {
+        return (n - 1) % (Rows * Columns) / Columns;
+    }
+
+    internal float GetXPadding (int n)
+    {
+        return GetPageColumn (n) == 0 ? 0F : _padding / Columns;
+    }
+
+    internal float GetYPadding (int n)
+    {
+        return GetPageRow (n) == 0 ? 0F : _padding / Rows;
+    }
 
     public float GetPageX (int n)
     {
         //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
 
-        var f = ContentBounds.Left + (GetPageWidth () * GetPageColumn (n));
+        float f = ContentBounds.Left + GetPageWidth () * GetPageColumn (n);
         f += Padding * GetPageColumn (n);
         return f;
     }
@@ -922,14 +1001,21 @@ public class SheetViewModel : ViewModelBase
     {
         //Log.Debug(LogService.GetTraceMsg("{n}. {p}"), n, Padding);
 
-        var f = ContentBounds.Top + (GetPageHeight () * GetPageRow (n));
+        float f = ContentBounds.Top + GetPageHeight () * GetPageRow (n);
         f += Padding * GetPageRow (n);
         return f;
     }
 
     // If Columns == 1 there's no padding. But if Columns > 1 padding applies. Width is width - (padding/columns-1) (10/2 = 5)
-    public float GetPageWidth () { return (ContentBounds.Width / Columns) - (Padding * (Columns - 1) / Columns); }
-    public float GetPageHeight () { return (ContentBounds.Height / Rows) - (Padding * (Rows - 1) / Rows); }
+    public float GetPageWidth ()
+    {
+        return ContentBounds.Width / Columns - Padding * (Columns - 1) / Columns;
+    }
+
+    public float GetPageHeight ()
+    {
+        return ContentBounds.Height / Rows - Padding * (Rows - 1) / Rows;
+    }
 
     /// <summary>
     ///     Prints the content of a single Sheet to a Graphics.
@@ -939,7 +1025,7 @@ public class SheetViewModel : ViewModelBase
     public void PrintSheet (Graphics graphics, int sheetNum)
     {
         var graphicsContext = new SystemDrawingGraphicsContext (graphics);
-        var state = graphics.Save ();
+        GraphicsState state = graphics.Save ();
         //Log.Debug(LogService.GetTraceMsg("{n} PageUnit: {pu}"), sheetNum, graphics.PageUnit);
         if (graphics.PageUnit == GraphicsUnit.Display)
         {
@@ -977,17 +1063,17 @@ public class SheetViewModel : ViewModelBase
             return;
         }
 
-        var pagesPerSheet = _rows * _cols;
+        int pagesPerSheet = _rows * _cols;
         // 1-based; assume 4-up...
-        var startPage = ((sheetNum - 1) * pagesPerSheet) + 1;
-        var endPage = startPage + pagesPerSheet - 1;
+        int startPage = (sheetNum - 1) * pagesPerSheet + 1;
+        int endPage = startPage + pagesPerSheet - 1;
 
-        for (var pageOnSheet = startPage; pageOnSheet <= endPage; pageOnSheet++)
+        for (int pageOnSheet = startPage; pageOnSheet <= endPage; pageOnSheet++)
         {
-            var xPos = GetPageX (pageOnSheet);
-            var yPos = GetPageY (pageOnSheet);
-            var w = GetPageWidth ();
-            var h = GetPageHeight ();
+            float xPos = GetPageX (pageOnSheet);
+            float yPos = GetPageY (pageOnSheet);
+            float w = GetPageWidth ();
+            float h = GetPageHeight ();
 
             // Move origin to page's x & y
             g.TranslateTransform (xPos, yPos);
@@ -1002,13 +1088,13 @@ public class SheetViewModel : ViewModelBase
                 // If there will be a page to the left of this page, draw vert separator
                 if (Columns > 1 && GetPageColumn (pageOnSheet) < Columns - 1)
                 {
-                    g.DrawLine (Pens.Black, w + (Padding / 2), Padding / 2, w + (Padding / 2), h - Padding);
+                    g.DrawLine (Pens.Black, w + Padding / 2, Padding / 2, w + Padding / 2, h - Padding);
                 }
 
                 // If there will be a page below this one, draw a horz separator
                 if (Rows > 1 && GetPageRow (pageOnSheet) < Rows - 1)
                 {
-                    g.DrawLine (Pens.Black, Padding / 2, h + (Padding / 2), w - Padding, h + (Padding / 2));
+                    g.DrawLine (Pens.Black, Padding / 2, h + Padding / 2, w - Padding, h + Padding / 2);
                 }
             }
 
@@ -1026,10 +1112,10 @@ public class SheetViewModel : ViewModelBase
         {
             using var errorPen = new Pen (Color.Gray) { DashStyle = DashStyle.Dash, Width = 4 };
 
-            var leftMax = (int)Math.Round (_printableArea.X);
-            var topMax = (int)Math.Round (_printableArea.Top);
-            var rightMax = (int)Math.Round (_bounds.Width - _printableArea.Right);
-            var bottomMax = (int)Math.Round (_bounds.Height - _printableArea.Bottom);
+            int leftMax = (int)Math.Round (_printableArea.X);
+            int topMax = (int)Math.Round (_printableArea.Top);
+            int rightMax = (int)Math.Round (_bounds.Width - _printableArea.Right);
+            int bottomMax = (int)Math.Round (_bounds.Height - _printableArea.Bottom);
 
             if (Margins.Left < leftMax)
             {
@@ -1056,11 +1142,11 @@ public class SheetViewModel : ViewModelBase
             {
                 using var font = new System.Drawing.Font (FontFamily.GenericSansSerif, 14, FontStyle.Bold,
                     GraphicsUnit.Point);
-                var msg =
+                string msg =
                     $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
                 ServiceLocator.Current.TelemetryService.TrackEvent ("Margins of of bounds",
                     new Dictionary<string, string?> { ["Message"] = msg });
-                var size = g.MeasureString (msg, font);
+                SizeF size = g.MeasureString (msg, font);
                 using var fmt = new StringFormat (StringFormat.GenericDefault)
                 {
                     Alignment = StringAlignment.Center,
@@ -1088,7 +1174,7 @@ public class SheetViewModel : ViewModelBase
     /// <param name="pageNum"></param>
     internal void PaintPageNum (Graphics g, int pageNum)
     {
-        var settings = ModelLocator.Current.Settings;
+        Settings settings = ModelLocator.Current.Settings;
 
         System.Drawing.Font font;
 
@@ -1114,9 +1200,9 @@ public class SheetViewModel : ViewModelBase
         //g.DrawString($"{GetPageColumn(pageNum)},{GetPageRow(pageNum)}", font, Brushes.Orange, xPos, yPos, StringFormat.GenericTypographic);
 
         // Draw page # in center
-        var size = g.MeasureString ($"{pageNum}", font);
-        g.DrawString ($"{pageNum}", font, Brushes.DarkGray, xPos + ((GetPageWidth () / 2) - (size.Width / 2)),
-            yPos + ((GetPageHeight () / 2) - (size.Height / 2)), StringFormat.GenericTypographic);
+        SizeF size = g.MeasureString ($"{pageNum}", font);
+        g.DrawString ($"{pageNum}", font, Brushes.DarkGray, xPos + (GetPageWidth () / 2 - size.Width / 2),
+            yPos + (GetPageHeight () / 2 - size.Height / 2), StringFormat.GenericTypographic);
         font.Dispose ();
     }
 
@@ -1126,8 +1212,8 @@ public class SheetViewModel : ViewModelBase
     /// <param name="g"></param>
     internal void PaintRules (Graphics g)
     {
-        var settings = ModelLocator.Current.Settings;
-        var preview = g.PageUnit != GraphicsUnit.Display;
+        Settings settings = ModelLocator.Current.Settings;
+        bool preview = g.PageUnit != GraphicsUnit.Display;
         System.Drawing.Font font;
         if (g.PageUnit == GraphicsUnit.Display)
         {
@@ -1218,7 +1304,8 @@ public class SheetViewModel : ViewModelBase
         // Bounds
         if ((settings.PrintBounds && !preview) || (settings.PreviewBounds && preview))
         {
-            DrawRule (g, font, Color.Green, $"Left Bounds - {Bounds.Left / 100F}\"", new Point (Bounds.Left, Bounds.Top),
+            DrawRule (g, font, Color.Green, $"Left Bounds - {Bounds.Left / 100F}\"",
+                new Point (Bounds.Left, Bounds.Top),
                 new Point (Bounds.Left, Bounds.Bottom), 3F);
             DrawRule (g, font, Color.Green, $"Right Bounds - {Bounds.Right / 100F}\"",
                 new Point (Bounds.Right, Bounds.Top), new Point (Bounds.Right, Bounds.Bottom), 3F);
@@ -1265,19 +1352,19 @@ public class SheetViewModel : ViewModelBase
         }
 
         g.DrawLine (pen, start, end);
-        var textSize = g.MeasureString (text, font);
+        SizeF textSize = g.MeasureString (text, font);
         using Brush brush = new SolidBrush (color);
         if (start.X == end.X)
         {
             // Vertical
 
-            var state = g.Save ();
+            GraphicsState state = g.Save ();
             g.RotateTransform (90);
-            var x = start.X + (textSize.Height / 2F);
-            var y = ((start.Y + end.Y) / labelDiv) - (textSize.Width / 2F);
+            float x = start.X + textSize.Height / 2F;
+            float y = (start.Y + end.Y) / labelDiv - textSize.Width / 2F;
 
             // Weird hack - If we're zoomed, we need to multiply by the zoom factor (element[1]).
-            using var tx = g.Transform;
+            using Matrix tx = g.Transform;
             g.TranslateTransform (x * tx.Elements[1], y * tx.Elements[1], MatrixOrder.Append);
 
             var textRect = new RectangleF (new PointF (0, 0), textSize);
@@ -1288,8 +1375,8 @@ public class SheetViewModel : ViewModelBase
         else
         {
             // Horizontal
-            var x = ((start.X + end.X) / labelDiv) - (textSize.Width / 2F);
-            var y = start.Y - (textSize.Height / 2F);
+            float x = (start.X + end.X) / labelDiv - textSize.Width / 2F;
+            float y = start.Y - textSize.Height / 2F;
             var textRect = new RectangleF (new PointF (x, y), textSize);
             g.FillRectangles (Brushes.White, textRect);
             g.DrawString (text, font, brush, x, y);

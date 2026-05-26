@@ -1,31 +1,31 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
+using Serilog.Formatting.Display;
+
 //using TTRider.PowerShellAsync;
 
 namespace WinPrint.WinForms;
 
-
 public class GuiLogSink : ILogEventSink
 {
-    public static GuiLogSink Instance => _instance.Value;
-
-    private static readonly Lazy<GuiLogSink> _instance = new Lazy<GuiLogSink> (() => new GuiLogSink ());
-
-    public ITextFormatter TextFormatter { get; set; }
+    private static readonly Lazy<GuiLogSink> _instance = new (() => new GuiLogSink ());
 
     // Set by Program before log events are emitted.
     public Control OutputWindow = null!;
 
     public GuiLogSink ()
     {
-        TextFormatter = new Serilog.Formatting.Display.MessageTemplateTextFormatter ("{Message:lj}");
+        TextFormatter = new MessageTemplateTextFormatter ("{Message:lj}");
     }
+
+    public static GuiLogSink Instance => _instance.Value;
+
+    public ITextFormatter TextFormatter { get; set; }
 
     public void Emit (LogEvent logEvent)
     {
@@ -43,7 +43,7 @@ public class GuiLogSink : ILogEventSink
         TextFormatter.Format (logEvent, strWriter);
         try
         {
-            var msg = $"{strWriter}";
+            string msg = $"{strWriter}";
             switch (logEvent.Level)
             {
                 // -Verbose
@@ -64,7 +64,7 @@ public class GuiLogSink : ILogEventSink
                 // The Write-Error cmdlet declares a non-terminating error.
                 case LogEventLevel.Error:
                     //cmdlet.WriteDebug("error: " + strWriter.ToString());
-                    var ex = logEvent.Exception;
+                    Exception? ex = logEvent.Exception;
                     if (logEvent.Exception == null)
                     {
                         ex = new Exception ();
@@ -79,11 +79,6 @@ public class GuiLogSink : ILogEventSink
                     //cmdlet.ThrowTerminatingError(fatal);
                     OutputWindow.Text = msg;
                     break;
-
-                default:
-                    //OutputWindow.Text = msg;
-
-                    break;
             }
         }
         catch (Exception e)
@@ -92,4 +87,3 @@ public class GuiLogSink : ILogEventSink
         }
     }
 }
-

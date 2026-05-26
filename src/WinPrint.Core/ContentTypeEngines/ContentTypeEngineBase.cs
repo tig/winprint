@@ -59,7 +59,10 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     };
 
     public static readonly TextRenderingHint TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-    public static readonly GraphicsTextRenderingMode GraphicsTextRenderingMode = GraphicsTextRenderingMode.ClearTypeGridFit;
+
+    public static readonly GraphicsTextRenderingMode GraphicsTextRenderingMode =
+        GraphicsTextRenderingMode.ClearTypeGridFit;
+
     private ContentSettings? _contentSettings;
     internal string? _document;
     private Encoding? _encoding = Encoding.Default;
@@ -78,7 +81,11 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     ///     Holds content settings for the CTE. These are used as defaults when a Sheet does not
     ///     specify any.
     /// </summary>
-    public ContentSettings? ContentSettings { get => _contentSettings; set => SetField (ref _contentSettings, value); }
+    public ContentSettings? ContentSettings
+    {
+        get => _contentSettings;
+        set => SetField (ref _contentSettings, value);
+    }
 
     /// <summary>
     ///     The contents of the file to be printed.
@@ -96,7 +103,11 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     ///     The contents encoding of the file to be printed.
     /// </summary>
     [JsonIgnore]
-    public Encoding? Encoding { get => _encoding; set => SetField (ref _encoding, value); }
+    public Encoding? Encoding
+    {
+        get => _encoding;
+        set => SetField (ref _encoding, value);
+    }
 
     public new event PropertyChangedEventHandler? PropertyChanged;
 
@@ -132,7 +143,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     public static ICollection<ContentTypeEngineBase> GetDerivedClassesCollection ()
     {
         var objects = new List<ContentTypeEngineBase> ();
-        foreach (var type in typeof (ContentTypeEngineBase).Assembly.GetTypes ()
+        foreach (Type type in typeof (ContentTypeEngineBase).Assembly.GetTypes ()
                      .Where (myType =>
                          myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf (typeof (ContentTypeEngineBase))))
         {
@@ -177,15 +188,17 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     {
         LogService.TraceMessage ();
 
-        contentType = string.IsNullOrEmpty (contentType) ? ModelLocator.Current.Settings.DefaultContentType : contentType;
+        contentType = string.IsNullOrEmpty (contentType)
+            ? ModelLocator.Current.Settings.DefaultContentType
+            : contentType;
         Debug.Assert (ModelLocator.Current.FileTypeMapping != null);
         Debug.Assert (ModelLocator.Current.FileTypeMapping.ContentTypes != null);
 
         // If contentType matches one of our CTE Names, this will succeed.
-        var cte = GetDerivedClassesCollection ()
+        ContentTypeEngineBase? cte = GetDerivedClassesCollection ()
             .FirstOrDefault (c => contentType.Equals (c.GetType ().Name, StringComparison.OrdinalIgnoreCase));
-        var language = string.Empty;
-        var languageId = string.Empty;
+        string language = string.Empty;
+        string languageId = string.Empty;
 
         if (cte != null)
         {
@@ -209,7 +222,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         // },
         // Is it a file extension? (*.an)
 
-        var extension = ModelLocator.Current.FileTypeMapping.ContentTypes
+        ContentType? extension = ModelLocator.Current.FileTypeMapping.ContentTypes
             .FirstOrDefault (l => l.Extensions.Any (i =>
                 CultureInfo.CurrentCulture.CompareInfo.Compare (i, contentType, CompareOptions.IgnoreCase) == 0));
         if (extension != null && !string.IsNullOrEmpty (extension.Id))
@@ -228,7 +241,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         else
         {
             // Is it a content type (Landuage.Id)? (text/ansi)
-            var lang = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault (l =>
+            ContentType? lang = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault (l =>
                 l.Id.Equals (contentType, StringComparison.OrdinalIgnoreCase));
             if (lang != null)
             {
@@ -247,7 +260,8 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
 
             // Is it a language name found in a Language alias? (ansi)
             lang = ModelLocator.Current.FileTypeMapping.ContentTypes
-                .FirstOrDefault (l => l.Aliases.Any (i => CultureInfo.CurrentCulture.CompareInfo.Compare (i, contentType,
+                .FirstOrDefault (l => l.Aliases.Any (i => CultureInfo.CurrentCulture.CompareInfo.Compare (i,
+                    contentType,
                     CompareOptions.IgnoreCase) == 0));
             if (lang != null)
             {
@@ -259,10 +273,10 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             {
                 // Is the Id supported directly (e.g. text/html is supported directly by HtmlCte) 
                 // If supported by multiple, pick the default.
-                var id = languageId;
-                var ctes = GetDerivedClassesCollection ()
+                string id = languageId;
+                IEnumerable<ContentTypeEngineBase> ctes = GetDerivedClassesCollection ()
                     .Where (c => c.SupportedContentTypes.Contains (id.ToLower ()));
-                var contentTypeEngineBases = ctes as ContentTypeEngineBase[] ?? ctes.ToArray ();
+                ContentTypeEngineBase[] contentTypeEngineBases = ctes as ContentTypeEngineBase[] ?? ctes.ToArray ();
                 cte = contentTypeEngineBases.Count () > 1
                     ? contentTypeEngineBases.First (c =>
                         c.GetType ().Name == ModelLocator.Current.Settings.DefaultCteClassName)
@@ -313,7 +327,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// <returns>The content type</returns>
     public static string GetContentType (string filePath)
     {
-        var contentType = ModelLocator.Current.Settings.DefaultContentType;
+        string contentType = ModelLocator.Current.Settings.DefaultContentType;
 
         if (string.IsNullOrEmpty (filePath))
         {
@@ -324,11 +338,11 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         filePath = Path.GetFullPath (filePath);
 
         // If there's a file extension get the content type from the file type association mapper
-        var ext = Path.GetExtension (filePath).ToLower ();
+        string ext = Path.GetExtension (filePath).ToLower ();
         if (ext != string.Empty)
         {
             // BUGBUG: This assumes all extensions in FilesAssociations are lowercase
-            if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue ("*" + ext, out var ct))
+            if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue ("*" + ext, out string? ct))
             {
                 // Now find Id in Languages
                 contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
@@ -342,10 +356,11 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
                 contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
                     .Where (lang => lang.Extensions
                         .Count (i => CultureInfo.CurrentCulture.CompareInfo.Compare (i, "*" + ext,
-                                        CompareOptions.IgnoreCase) ==
-                                    0 ||
-                                    CultureInfo.CurrentCulture.CompareInfo.Compare (i, ext, CompareOptions.IgnoreCase) ==
-                                    0) > 0)
+                                         CompareOptions.IgnoreCase) ==
+                                     0 ||
+                                     CultureInfo.CurrentCulture.CompareInfo.Compare (i, ext,
+                                         CompareOptions.IgnoreCase) ==
+                                     0) > 0)
                     .DefaultIfEmpty (new ContentType { Id = ModelLocator.Current.Settings.DefaultContentType })
                     .First ().Id;
             }
@@ -354,7 +369,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         {
             // Empty means no extension (e.g. .\.ssh\config) - use filename
             if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue ("*" + Path.GetFileName (filePath),
-                    out var ct))
+                    out string? ct))
             {
                 contentType = ct;
             }

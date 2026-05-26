@@ -44,7 +44,8 @@ public class Options : ModelBase
     public string? PaperSize { get; set; }
 
     [SafeForTelemetry]
-    [Option ('f', "from-sheet", Default = 0, HelpText = "Number of first sheet to print (may be used with --to-sheet).")]
+    [Option ('f', "from-sheet", Default = 0,
+        HelpText = "Number of first sheet to print (may be used with --to-sheet).")]
     public int FromPage { get; set; }
 
     [SafeForTelemetry]
@@ -77,16 +78,17 @@ public class Options : ModelBase
     public bool Gui { get; set; }
 
     [Usage (ApplicationAlias = "winprint")]
-    public static IEnumerable<Example> Examples => new List<Example> {
-        new("Print Program.cs in landscape mode",
+    public static IEnumerable<Example> Examples => new List<Example>
+    {
+        new ("Print Program.cs in landscape mode",
             new Options { Files = new List<string> { "Program.cs" }, Landscape = true }),
-        new("Print all .cs files on a specific printer with a specific paper size",
+        new ("Print all .cs files on a specific printer with a specific paper size",
             new Options { Files = new List<string> { "*.cs" }, Printer = "Fabricam 535", PaperSize = "A4" }),
-        new("Print the first two sheets of Program.cs",
+        new ("Print the first two sheets of Program.cs",
             new Options { Files = new List<string> { "Program.cs" }, FromPage = 1, ToPage = 2 }),
-        new("Print Program.cs using the 2 Up sheet definition",
+        new ("Print Program.cs using the 2 Up sheet definition",
             new Options { Files = new List<string> { "Program.cs" }, Sheet = "2 Up" }),
-        new("Print tapes.pas using C-like syntax highlighting.",
+        new ("Print tapes.pas using C-like syntax highlighting.",
             new Options { Files = new List<string> { "tapes.pas" }, ContentType = "clike" })
     };
 }

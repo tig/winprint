@@ -38,7 +38,8 @@ public class TextMateCteTests
     public void NewContentTypeEngineTest ()
     {
         var svm = new SheetViewModel ();
-        (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine (CteClassName);
+        (svm.ContentEngine, svm.ContentType, svm.Language) =
+            ContentTypeEngineBase.CreateContentTypeEngine (CteClassName);
         Assert.NotNull (svm.ContentEngine);
 
         Assert.Equal (CteClassName, svm.ContentEngine!.GetType ().Name);
@@ -52,7 +53,8 @@ public class TextMateCteTests
         var settings = Settings.CreateDefaultSettings ();
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
 
-        var (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine ("csharp");
+        (ContentTypeEngineBase? cte, string contentType, string language) =
+            ContentTypeEngineBase.CreateContentTypeEngine ("csharp");
 
         Assert.IsType<TextMateCte> (cte);
         Assert.Equal ("text/x-csharp", contentType);
@@ -113,11 +115,11 @@ public class TextMateCteTests
         Assert.True (await cte.SetDocumentAsync ("alpha\fbravo\ncharlie"));
         await cte.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null);
 
-        var wrappedLinesField = typeof (TextMateCte).GetField ("_wrappedLines",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        FieldInfo? wrappedLinesField = typeof (TextMateCte).GetField ("_wrappedLines",
+            BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.NotNull (wrappedLinesField);
-        var wrappedLines = Assert.IsAssignableFrom<IEnumerable> (wrappedLinesField.GetValue (cte));
-        var lineNumbers = wrappedLines.Cast<object> ()
+        IEnumerable wrappedLines = Assert.IsAssignableFrom<IEnumerable> (wrappedLinesField.GetValue (cte));
+        int[] lineNumbers = wrappedLines.Cast<object> ()
             .Select (line => (int)line.GetType ().GetProperty ("NonWrappedLineNumber")!.GetValue (line)!)
             .Where (lineNumber => lineNumber > 0)
             .ToArray ();
@@ -128,13 +130,13 @@ public class TextMateCteTests
     [Fact]
     public void GetForegroundColorUsesFirstColorMapEntryTest ()
     {
-        var method = typeof (TextMateCte).GetMethod ("GetForegroundColor", BindingFlags.NonPublic | BindingFlags.Static);
+        MethodInfo? method =
+            typeof (TextMateCte).GetMethod ("GetForegroundColor", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull (method);
 
-        var metadata = EncodedTokenAttributes.Set (0, 0, 0, null, TextMateFontStyle.NotSet, 1, 0);
-        var color = Assert.IsType<Color> (method.Invoke (null, [metadata, new[] { "#123456" }]));
+        int metadata = EncodedTokenAttributes.Set (0, 0, 0, null, TextMateFontStyle.NotSet, 1, 0);
+        Color color = Assert.IsType<Color> (method.Invoke (null, [metadata, new[] { "#123456" }]));
 
         Assert.Equal (ColorTranslator.FromHtml ("#123456").ToArgb (), color.ToArgb ());
     }
 }
-

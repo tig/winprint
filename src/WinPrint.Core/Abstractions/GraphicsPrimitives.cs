@@ -126,8 +126,22 @@ public sealed class GraphicsStringFormat
     public GraphicsStringTrimming Trimming { get; set; } = GraphicsStringTrimming.None;
 }
 
-public interface IGraphicsResource : IDisposable { }
-public interface IGraphicsFont : IGraphicsResource { }
-public interface IGraphicsBrush : IGraphicsResource { }
-public interface IGraphicsPen : IGraphicsResource { }
-public interface IGraphicsState { }
+public interface IGraphicsResource : IDisposable
+{
+}
+
+public interface IGraphicsFont : IGraphicsResource
+{
+}
+
+public interface IGraphicsBrush : IGraphicsResource
+{
+}
+
+public interface IGraphicsPen : IGraphicsResource
+{
+}
+
+public interface IGraphicsState
+{
+}

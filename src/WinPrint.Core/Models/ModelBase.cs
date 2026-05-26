@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
@@ -52,13 +53,13 @@ public abstract class ModelBase : INotifyPropertyChanged
         {
             if (property.Attributes.Contains (new SafeForTelemetry ()))
             {
-                var value = property.GetValue (this);
+                object? value = property.GetValue (this);
                 if (value != null)
                 {
                     if (property.PropertyType.IsSubclassOf (typeof (ModelBase)))
                     {
                         // Go deep
-                        var propDict = ((ModelBase)value).GetTelemetryDictionary ();
+                        IDictionary<string, string?> propDict = ((ModelBase)value).GetTelemetryDictionary ();
                         dictionary.Add (property.Name, JsonSerializer.Serialize (propDict, propDict.GetType ()));
                     }
                     else
@@ -89,7 +90,7 @@ public abstract class ModelBase : INotifyPropertyChanged
 
         var sourceProps = source.GetType ().GetProperties ().Where (x => x.CanRead).ToList ();
         var destProps = GetType ().GetProperties ().Where (x => x.CanWrite).ToList ();
-        foreach (var (sourceProp, destProp) in
+        foreach ((PropertyInfo? sourceProp, PropertyInfo? destProp) in
                  // check if the property can be set or no.
                  from sourceProp in sourceProps
                  where destProps.Any (x => x.Name == sourceProp.Name)
@@ -126,11 +127,15 @@ public abstract class ModelBase : INotifyPropertyChanged
             }
             else
             {
-                var sourceList = sourceProp.GetValue (source) as Dictionary<string, SheetSettings> ?? new Dictionary<string, SheetSettings> ();
+                Dictionary<string, SheetSettings> sourceList =
+                    sourceProp.GetValue (source) as Dictionary<string, SheetSettings> ??
+                    new Dictionary<string, SheetSettings> ();
 
-                var destList = destProp.GetValue (this) as Dictionary<string, SheetSettings> ?? new Dictionary<string, SheetSettings> ();
+                Dictionary<string, SheetSettings> destList =
+                    destProp.GetValue (this) as Dictionary<string, SheetSettings> ??
+                    new Dictionary<string, SheetSettings> ();
 
-                foreach (var src in sourceList)
+                foreach (KeyValuePair<string, SheetSettings> src in sourceList)
                 {
                     if (destList.ContainsKey (src.Key))
                     {

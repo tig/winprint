@@ -49,8 +49,8 @@ public class SettingsService
         get
         {
             // Get dir of .exe
-            var path = Path.GetDirectoryName (Assembly.GetAssembly (typeof (SettingsService))!.Location);
-            var appdata = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
+            string? path = Path.GetDirectoryName (Assembly.GetAssembly (typeof (SettingsService))!.Location);
+            string appdata = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
             //Log.Debug("path = {path}", path);
             //Log.Debug("appdata = {appdata}", appdata);
 
@@ -67,7 +67,8 @@ public class SettingsService
                 var fvi = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (SettingsService))!.Location);
 
                 // is this in Kindel\winprint?
-                if (path is not null && path.Contains ($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
+                if (path is not null &&
+                    path.Contains ($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
                 {
                     // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
                     path =
@@ -112,7 +113,8 @@ public class SettingsService
                     SettingsFileName);
                 settings = BindSettings ();
 
-                ServiceLocator.Current.TelemetryService.TrackEvent ("Read Settings", settings.GetTelemetryDictionary ());
+                ServiceLocator.Current.TelemetryService.TrackEvent ("Read Settings",
+                    settings.GetTelemetryDictionary ());
             }
         }
         catch (InvalidDataException ide)
@@ -145,15 +147,15 @@ public class SettingsService
     private Settings BindSettings ()
     {
         var settings = Settings.CreateDefaultSettings ();
-        var configuration = BuildConfiguration ();
+        IConfigurationRoot configuration = BuildConfiguration ();
         configuration.Bind (settings);
         return settings;
     }
 
     private IConfigurationRoot BuildConfiguration ()
     {
-        var fullPath = Path.GetFullPath (SettingsFileName);
-        var directory = Path.GetDirectoryName (fullPath);
+        string fullPath = Path.GetFullPath (SettingsFileName);
+        string? directory = Path.GetDirectoryName (fullPath);
         if (string.IsNullOrEmpty (directory))
         {
             directory = Directory.GetCurrentDirectory ();
@@ -161,7 +163,7 @@ public class SettingsService
 
         return new ConfigurationBuilder ()
             .SetBasePath (directory)
-            .AddJsonFile (Path.GetFileName (fullPath), optional: false, reloadOnChange: false)
+            .AddJsonFile (Path.GetFileName (fullPath), false, false)
             .Build ();
     }
 
@@ -185,7 +187,7 @@ public class SettingsService
 
         try
         {
-            var changedSettings = BindSettings ();
+            Settings changedSettings = BindSettings ();
 
             if (ModelLocator.Current?.Settings == null)
             {
@@ -232,7 +234,7 @@ public class SettingsService
             _watcher = null;
         }
 
-        var directory = Path.GetDirectoryName (Path.GetFullPath (SettingsFileName));
+        string? directory = Path.GetDirectoryName (Path.GetFullPath (SettingsFileName));
         if (!string.IsNullOrEmpty (directory))
         {
             Directory.CreateDirectory (directory);
@@ -252,7 +254,7 @@ public class SettingsService
     public static Settings? Create ()
     {
         LogService.TraceMessage ();
-        var settingsService = ServiceLocator.Current.SettingsService.ReadSettings ();
+        Settings? settingsService = ServiceLocator.Current.SettingsService.ReadSettings ();
         return settingsService;
     }
 }

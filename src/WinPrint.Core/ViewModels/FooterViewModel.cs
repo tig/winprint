@@ -10,7 +10,7 @@ public class FooterViewModel (SheetViewModel svm, HeaderFooter hf) : HeaderFoote
 {
     internal override RectangleF CalcBounds ()
     {
-        var h = SheetViewModel.GetFontHeight (Font) + VerticalPadding;
+        float h = SheetViewModel.GetFontHeight (Font) + VerticalPadding;
         if (!Enabled)
         {
             return new RectangleF (0, 0, 0, 0);

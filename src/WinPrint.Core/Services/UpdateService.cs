@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -97,7 +98,8 @@ public class UpdateService
         try
         {
             var github = new GitHubClient (new ProductHeaderValue ("tig-winprint"));
-            var allReleases = await github.Repository.Release.GetAll ("tig", "winprint").ConfigureAwait (false);
+            IReadOnlyList<Release>? allReleases =
+                await github.Repository.Release.GetAll ("tig", "winprint").ConfigureAwait (false);
 
             //#if DEBUG
             //                Debug.WriteLine("Pausing 2s to simulate version check taking a long time...");
@@ -108,7 +110,7 @@ public class UpdateService
 
             // Get all releases and pre-releases
 #if DEBUG
-            var releases = allReleases.Where (r => r.Prerelease)
+            Release[] releases = allReleases.Where (r => r.Prerelease)
                 .OrderByDescending (r => new Version (r.TagName.Replace ('v', ' '))).ToArray ();
 #else
                 var releases =
@@ -156,7 +158,8 @@ public class UpdateService
             throw new InvalidOperationException ("Installer URI is not available.");
         }
 
-        await File.WriteAllBytesAsync (_tempFilename, await _httpClient.GetByteArrayAsync (InstallerUri).ConfigureAwait (false)).ConfigureAwait (false);
+        await File.WriteAllBytesAsync (_tempFilename,
+            await _httpClient.GetByteArrayAsync (InstallerUri).ConfigureAwait (false)).ConfigureAwait (false);
         OnDownloadComplete (_tempFilename);
         return _tempFilename;
     }

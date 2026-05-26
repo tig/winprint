@@ -53,7 +53,8 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable
         return await Task.FromResult (true);
     }
 
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution, EventHandler<string>? reflowProgress)
+    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+        EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ("AnsiCte is a stub - libvt100 submodule removed.");
         return await Task.FromResult (0);

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -6,24 +7,9 @@ namespace WinPrint.WinForms;
 
 internal class NativeMethods
 {
-
-    [DllImport ("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    private static extern uint AssocQueryString (AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder? pszOut, [In][Out] ref uint pcchOut);
-
-    [System.Diagnostics.CodeAnalysis.SuppressMessage ("Performance", "CA1806:Do not ignore method results", Justification = "<Pending>")]
-    public static string FileExtentionInfo (AssocStr assocStr, string doctype)
-    {
-        uint pcchOut = 0;
-        AssocQueryString (AssocF.Verify, assocStr, doctype, null, null, ref pcchOut);
-
-        var pszOut = new StringBuilder ((int)pcchOut);
-        AssocQueryString (AssocF.Verify, assocStr, doctype, null, pszOut, ref pcchOut);
-        return pszOut.ToString ();
-    }
-
     [Flags]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage ("Naming", "CA1714:Flags enums should have plural names", Justification = "<Pending>")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>")]
+    [SuppressMessage ("Naming", "CA1714:Flags enums should have plural names", Justification = "<Pending>")]
+    [SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>")]
     public enum AssocF
     {
         Init_NoRemapCLSID = 0x1,
@@ -52,5 +38,19 @@ internal class NativeMethods
         DDEApplication,
         DDETopic
     }
-}
 
+    [DllImport ("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern uint AssocQueryString (AssocF flags, AssocStr str, string pszAssoc, string? pszExtra,
+        [Out] StringBuilder? pszOut, [In][Out] ref uint pcchOut);
+
+    [SuppressMessage ("Performance", "CA1806:Do not ignore method results", Justification = "<Pending>")]
+    public static string FileExtentionInfo (AssocStr assocStr, string doctype)
+    {
+        uint pcchOut = 0;
+        AssocQueryString (AssocF.Verify, assocStr, doctype, null, null, ref pcchOut);
+
+        var pszOut = new StringBuilder ((int)pcchOut);
+        AssocQueryString (AssocF.Verify, assocStr, doctype, null, pszOut, ref pcchOut);
+        return pszOut.ToString ();
+    }
+}

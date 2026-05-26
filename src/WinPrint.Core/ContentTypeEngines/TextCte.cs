@@ -44,13 +44,13 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     private bool _disposed;
 
     private float _lineHeight;
+
+    private float _lineNumberWidth;
     private int _linesPerPage;
     private int _minLineLen;
 
     // All of the lines of the text file, after reflow/line-wrap
     private List<WrappedLine>? _wrappedLines;
-
-    private float _lineNumberWidth;
 
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
@@ -107,7 +107,8 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <param name="printerResolution"></param>
     /// <param name="reflowProgress"></param>
     /// <returns></returns>
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution, EventHandler<string>? reflowProgress)
+    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+        EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ();
 
@@ -121,8 +122,8 @@ public class TextCte : ContentTypeEngineBase, IDisposable
             throw new ArgumentNullException (nameof (printerResolution));
         }
 
-        var dpiX = printerResolution.X;
-        var dpiY = printerResolution.Y;
+        int dpiX = printerResolution.X;
+        int dpiY = printerResolution.Y;
 
         // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
         // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
@@ -176,7 +177,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         // Note, MeasureLines may increment numPages due to form feeds and line wrapping
         _wrappedLines = LineWrapDocument (g, Document); // new List<string>();
 
-        var n = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
+        int n = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
 
         Log.Debug ("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n,
             _linesPerPage, _wrappedLines.Count);
@@ -199,10 +200,10 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         var wrapped = new List<WrappedLine> ();
 
 
-        var lineCount = 0;
+        int lineCount = 0;
 
         // convert string to stream
-        var byteArray = Encoding.UTF8.GetBytes (document);
+        byte[] byteArray = Encoding.UTF8.GetBytes (document);
         var stream = new MemoryStream (byteArray);
         var reader = new StreamReader (stream);
         while (reader.ReadLine () is { } line)
@@ -243,9 +244,9 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <returns></returns>
     private int ExpandFormFeeds (Graphics g, List<WrappedLine> list, string line, int lineCount)
     {
-        var lineToAdd = "";
+        string lineToAdd = "";
 
-        for (var i = 0; i < line.Length; i++)
+        for (int i = 0; i < line.Length; i++)
         {
             if (line[i] == '\f')
             {
@@ -301,7 +302,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     private int AddLine (Graphics g, List<WrappedLine> wrappedList, string lineToAdd, int lineCount)
     {
         // TODO: Profile AddLine for performance
-        MeasureString (g, lineToAdd, out var numCharsThatFit, out var l1);
+        MeasureString (g, lineToAdd, out int numCharsThatFit, out int l1);
         //Log.Debug("   AddLine: {lineToAdd} - this line should {not}wrap", lineToAdd, lineToAdd.Length <= numCharsThatFit ? "not " : "");
         if (lineToAdd.Length > numCharsThatFit)
         {
@@ -310,12 +311,12 @@ public class TextCte : ContentTypeEngineBase, IDisposable
             // Starting at minLineLen into the line, keep trying until it wraps again
             // For fixed-pitch fonts, minLineLen will match exactly, so all this is not needed
             // But for variable-pitched fonts, we have to char-by-char
-            var start = 0;
-            var end = _minLineLen;
-            for (var i = _minLineLen; i <= lineToAdd.Length; i++)
+            int start = 0;
+            int end = _minLineLen;
+            for (int i = _minLineLen; i <= lineToAdd.Length; i++)
             {
-                var truncatedLine = lineToAdd[start..end++];
-                MeasureString (g, truncatedLine, out var numCharsThatFitTruncated, out var l2);
+                string truncatedLine = lineToAdd[start..end++];
+                MeasureString (g, truncatedLine, out int numCharsThatFitTruncated, out int l2);
                 if (truncatedLine.Length > numCharsThatFitTruncated)
                 {
                     // The truncated line now too big, so shorten it by one char and add it
@@ -350,7 +351,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
 
     private SizeF MeasureString (Graphics g, string text)
     {
-        return MeasureString (g, text, out var charsFitted, out var linesFilled);
+        return MeasureString (g, text, out int charsFitted, out int linesFilled);
     }
 
     /// <summary>
@@ -375,10 +376,10 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         g.TextRenderingHint = TextRenderingHint;
 
         // determine width     
-        var fontHeight = _lineHeight;
+        float fontHeight = _lineHeight;
         // Use page settings including lineNumberWidth
-        var proposedSize = new SizeF (PageSize.Width - _lineNumberWidth, _lineHeight + (_lineHeight / 2));
-        var size = g.MeasureString (text, _cachedFont!, proposedSize, StringFormat, out charsFitted, out linesFilled);
+        var proposedSize = new SizeF (PageSize.Width - _lineNumberWidth, _lineHeight + _lineHeight / 2);
+        SizeF size = g.MeasureString (text, _cachedFont!, proposedSize, StringFormat, out charsFitted, out linesFilled);
 
         // TODO: HACK to work around MeasureString not working right on Linux
         //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -401,20 +402,21 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         }
 
         g.SetTextRenderingMode (GraphicsTextRenderingMode);
-        using var paintFont = CreatePaintFont (g);
+        using IGraphicsFont paintFont = CreatePaintFont (g);
 
         // Paint each line of the file (each element of _wrappedLines that go on pageNum
-        var firstLineInWrappedLines = _linesPerPage * (pageNum - 1);
+        int firstLineInWrappedLines = _linesPerPage * (pageNum - 1);
         int i;
         for (i = firstLineInWrappedLines;
              i < firstLineInWrappedLines + _linesPerPage && i < _wrappedLines.Count;
              i++)
         {
-            var yPos = (i - (_linesPerPage * (pageNum - 1))) * _lineHeight;
+            float yPos = (i - _linesPerPage * (pageNum - 1)) * _lineHeight;
 
             // Right justify line number
-            var x = ContentSettings!.LineNumberSeparator
-                ? (int)(_lineNumberWidth - 6 - MeasureString (g, $"{_wrappedLines[i]._nonWrappedLineNumber}", paintFont).Width)
+            int x = ContentSettings!.LineNumberSeparator
+                ? (int)(_lineNumberWidth - 6 -
+                        MeasureString (g, $"{_wrappedLines[i]._nonWrappedLineNumber}", paintFont).Width)
                 : 0;
 
             // Line #s
@@ -437,7 +439,8 @@ public class TextCte : ContentTypeEngineBase, IDisposable
             }
 
             // Text
-            g.DrawString (_wrappedLines[i]._text, paintFont, g.BlackBrush, _lineNumberWidth, yPos, GraphicsStringFormat);
+            g.DrawString (_wrappedLines[i]._text, paintFont, g.BlackBrush, _lineNumberWidth, yPos,
+                GraphicsStringFormat);
             if (ContentSettings.Diagnostics)
             {
                 g.DrawRectangle (g.RedPen, _lineNumberWidth, yPos, PageSize.Width - _lineNumberWidth, _lineHeight);
@@ -449,8 +452,8 @@ public class TextCte : ContentTypeEngineBase, IDisposable
 
     private IGraphicsFont CreatePaintFont (IGraphicsContext g)
     {
-        var unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
-        var size = g.IsDisplayUnit ? ContentSettings!.Font.Size : ContentSettings!.Font.Size / 72F * 96F;
+        GraphicsFontUnit unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
+        float size = g.IsDisplayUnit ? ContentSettings!.Font.Size : ContentSettings!.Font.Size / 72F * 96F;
         return g.CreateFont (ContentSettings.Font.Family, size,
             SystemDrawingAdapters.ToGraphicsFontStyle (ContentSettings.Font.Style), unit);
     }
@@ -464,7 +467,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         out int linesFilled)
     {
         g.SetTextRenderingMode (GraphicsTextRenderingMode);
-        var proposedSize = new GraphicsSizeF (PageSize.Width - _lineNumberWidth, _lineHeight + (_lineHeight / 2));
+        var proposedSize = new GraphicsSizeF (PageSize.Width - _lineNumberWidth, _lineHeight + _lineHeight / 2);
         return g.MeasureString (text, font, proposedSize, GraphicsStringFormat, out charsFitted, out linesFilled);
     }
 }

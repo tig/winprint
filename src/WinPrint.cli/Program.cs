@@ -3,8 +3,8 @@ using System.Reflection;
 using Terminal.Gui.Cli;
 using WinPrint.cli;
 
-Assembly assembly = Assembly.GetExecutingAssembly ();
-FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo (assembly.Location);
+var assembly = Assembly.GetExecutingAssembly ();
+var versionInfo = FileVersionInfo.GetVersionInfo (assembly.Location);
 
 CliHost host = new (options =>
 {

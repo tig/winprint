@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Xunit;
@@ -23,14 +21,14 @@ public class FileTypeMappingServiceTests : TestServicesBase
         ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType ().Name}.json";
         File.Delete (ServiceLocator.Current.SettingsService.SettingsFileName);
 
-        var settings = ServiceLocator.Current.SettingsService.ReadSettings ();
+        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings ();
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
 
         // There are three assocations defined in default .config
         // settings.LanguageAssociations = new FileAssociations() 
         // ...
 
-        var files = ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations;
+        Dictionary<string, string> files = ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations;
         Assert.NotNull (files);
         Assert.Equal (4, files.Count);
 
@@ -50,16 +48,16 @@ public class FileTypeMappingServiceTests : TestServicesBase
         ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType ().Name}.json";
         File.Delete (ServiceLocator.Current.SettingsService.SettingsFileName);
 
-        var settings = ServiceLocator.Current.SettingsService.ReadSettings ();
+        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings ();
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
 
         // We define these file types in default settings:
         // text/plain - because it is not defined by Pygments
         // text/ansi- because it is not defined by Pygments
         // icon - Icon is so esoteric it makes a good test
-        var ftm = ModelLocator.Current.Settings.FileTypeMapping;
+        FileTypeMapping ftm = ModelLocator.Current.Settings.FileTypeMapping;
         Assert.NotNull (ftm);
-        var langs = ftm.ContentTypes;
+        IList<ContentType> langs = ftm.ContentTypes;
         Assert.NotNull (langs);
         Assert.Equal (2, langs.Count);
 
@@ -78,7 +76,6 @@ public class FileTypeMappingServiceTests : TestServicesBase
 
         // Find Id by ext
         Assert.Equal ("text/plain", langs.First (l => l.Extensions.Contains ("*.txt")).Id);
-
     }
 
     [Fact]
@@ -87,12 +84,12 @@ public class FileTypeMappingServiceTests : TestServicesBase
         ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType ().Name}.json";
         File.Delete (ServiceLocator.Current.SettingsService.SettingsFileName);
 
-        var settings = ServiceLocator.Current.SettingsService.ReadSettings ();
+        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings ();
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
 
-        var ftm = ServiceLocator.Current.FileTypeMappingService.Load ();
+        FileTypeMapping ftm = ServiceLocator.Current.FileTypeMappingService.Load ();
         Assert.NotNull (ftm);
-        var langs = ftm.ContentTypes;
+        IList<ContentType> langs = ftm.ContentTypes;
         Assert.NotNull (langs);
         Assert.True (langs.Count > 1);
 
@@ -117,7 +114,7 @@ public class FileTypeMappingServiceTests : TestServicesBase
         Assert.Equal ("JSON", langs.First (l => l.Aliases.Contains ("json")).Title);
 
         // This should fail
-        Assert.Throws<System.InvalidOperationException> (() => langs.First (l => l.Aliases.Contains ("application/json")));
+        Assert.Throws<InvalidOperationException> (() => langs.First (l => l.Aliases.Contains ("application/json")));
 
         // Find Title by ext
         Assert.Equal ("JSON", langs.First (l => l.Extensions.Contains ("*.json")).Title);
@@ -129,4 +126,3 @@ public class FileTypeMappingServiceTests : TestServicesBase
         Assert.Equal ("application/json", langs.First (l => l.Extensions.Contains ("*.json")).Id);
     }
 }
-

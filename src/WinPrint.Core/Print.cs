@@ -94,7 +94,7 @@ public class Print : IDisposable
     {
         if (!string.IsNullOrEmpty (paperSizeName))
         {
-            var found = false;
+            bool found = false;
             foreach (PaperSize size in PrintDocument.PrinterSettings.PaperSizes)
             {
                 if (size.PaperName.Equals (paperSizeName, StringComparison.InvariantCultureIgnoreCase))
@@ -248,6 +248,7 @@ public class Print : IDisposable
             {
                 SheetViewModel.PrintSheet (ev.Graphics, _curSheet);
             }
+
             _sheetsPrinted++;
         }
 
@@ -256,5 +257,4 @@ public class Print : IDisposable
     }
 
     #endregion
-
 }

@@ -108,8 +108,11 @@ public sealed class Macros (SheetViewModel svm)
         }
 
         var containsABadCharacter = new Regex ("["
-                                              + Regex.Escape (new string (Path.GetInvalidPathChars ())) + "]");
-        if (containsABadCharacter.IsMatch (testName)) { return false; }
+                                               + Regex.Escape (new string (Path.GetInvalidPathChars ())) + "]");
+        if (containsABadCharacter.IsMatch (testName))
+        {
+            return false;
+        }
 
         ;
 
@@ -126,7 +129,7 @@ public sealed class Macros (SheetViewModel svm)
     // Title and FileName are synomous. 
     private string GetFileNameOrTitle ()
     {
-        var retval = "";
+        string retval = "";
 
         if (string.IsNullOrEmpty (SheetViewModel.File))
         {
@@ -161,18 +164,18 @@ public sealed class Macros (SheetViewModel svm)
     {
         return Regex.Replace (value!, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match =>
         {
-            var p = Expression.Parameter (typeof (Macros), "Macros");
+            ParameterExpression p = Expression.Parameter (typeof (Macros), "Macros");
 
-            var startGroup = match.Groups["start"];
-            var propertyGroup = match.Groups["property"];
-            var formatGroup = match.Groups["format"];
-            var endGroup = match.Groups["end"];
+            Group startGroup = match.Groups["start"];
+            Group propertyGroup = match.Groups["property"];
+            Group formatGroup = match.Groups["format"];
+            Group endGroup = match.Groups["end"];
 
             try
             {
                 // Generate and parse a LambdaExpression
-                var e = DynamicExpressionParser.ParseLambda (new[] { p }, null, propertyGroup.Value);
-                var computedValue = e.Compile ().DynamicInvoke (this);
+                LambdaExpression e = DynamicExpressionParser.ParseLambda (new[] { p }, null, propertyGroup.Value);
+                object? computedValue = e.Compile ().DynamicInvoke (this);
                 if (formatGroup.Success)
                 {
                     // There's a format specifier

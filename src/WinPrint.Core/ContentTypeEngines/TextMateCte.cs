@@ -11,7 +11,6 @@ using Serilog;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars;
 using TextMateSharp.Registry;
-using TextMateSharp.Themes;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -42,14 +41,14 @@ internal sealed class TextMateWrappedLine
 public class TextMateCte : ContentTypeEngineBase, IDisposable
 {
     private static readonly string[] _supportedContentTypes = ["text/plain"];
+    private DrawingFont? _boldFont;
+    private DrawingFont? _boldItalicFont;
 
     private DrawingFont? _cachedFont;
-    private DrawingFont? _boldFont;
-    private DrawingFont? _italicFont;
-    private DrawingFont? _boldItalicFont;
     private bool _disposed;
     private string? _filePath;
     private IGrammar? _grammar;
+    private DrawingFont? _italicFont;
     private float _lineHeight;
     private float _lineNumberWidth;
     private int _linesPerPage;
@@ -61,6 +60,12 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     public string? Language { get; private set; }
 
     public override string[] SupportedContentTypes => _supportedContentTypes;
+
+    public void Dispose ()
+    {
+        Dispose (true);
+        GC.SuppressFinalize (this);
+    }
 
     public static TextMateCte Create ()
     {
@@ -74,12 +79,6 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         ContentType = contentType;
         Language = language;
         _filePath = filePath;
-    }
-
-    public void Dispose ()
-    {
-        Dispose (true);
-        GC.SuppressFinalize (this);
     }
 
     private void Dispose (bool disposing)
@@ -109,7 +108,8 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         return await Task.FromResult (true);
     }
 
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution, EventHandler<string>? reflowProgress)
+    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+        EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ();
 
@@ -123,8 +123,8 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             throw new ArgumentNullException (nameof (printerResolution));
         }
 
-        var dpiX = printerResolution.X;
-        var dpiY = printerResolution.Y;
+        int dpiX = printerResolution.X;
+        int dpiY = printerResolution.Y;
         if (!RuntimeInformation.IsOSPlatform (OSPlatform.Windows) || dpiX < 0 || dpiY < 0)
         {
             dpiX = dpiY = 96;
@@ -160,17 +160,19 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         }
 
         _linesPerPage = (int)Math.Floor (PageSize.Height / _lineHeight);
-        var logicalLineCount = CountLogicalLines (Document, ContentSettings.NewPageOnFormFeed);
-        var lineNumberDigits = Math.Max (3, logicalLineCount.ToString (CultureInfo.InvariantCulture).Length);
-        _lineNumberWidth = ContentSettings.LineNumbers ? MeasureString (g, new string ('0', lineNumberDigits + 1)).Width : 0;
+        int logicalLineCount = CountLogicalLines (Document, ContentSettings.NewPageOnFormFeed);
+        int lineNumberDigits = Math.Max (3, logicalLineCount.ToString (CultureInfo.InvariantCulture).Length);
+        _lineNumberWidth = ContentSettings.LineNumbers
+            ? MeasureString (g, new string ('0', lineNumberDigits + 1)).Width
+            : 0;
 
-        var charWidth = Math.Max (1, MeasureString (g, "W").Width);
-        var maxLineChars = Math.Max (1, (int)Math.Floor ((PageSize.Width - _lineNumberWidth) / charWidth));
+        float charWidth = Math.Max (1, MeasureString (g, "W").Width);
+        int maxLineChars = Math.Max (1, (int)Math.Floor ((PageSize.Width - _lineNumberWidth) / charWidth));
 
         InitializeGrammar ();
         _wrappedLines = TokenizeAndWrap (Document, maxLineChars);
 
-        var pages = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
+        int pages = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
         Log.Debug ("Rendered {pages} TextMate pages of {linesperpage} lines per page, for a total of {lines} lines.",
             pages, _linesPerPage, _wrappedLines.Count);
         return await Task.FromResult (pages);
@@ -183,7 +185,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             throw new NotSupportedException ("TextMateCte currently requires a System.Drawing graphics context.");
         }
 
-        var g = context.Graphics;
+        Graphics g = context.Graphics;
         LogService.TraceMessage ($"{pageNum}");
         if (_wrappedLines is null || _cachedFont is null)
         {
@@ -192,19 +194,19 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         }
 
         g.TextRenderingHint = TextRenderingHint;
-        var firstLineOnPage = _linesPerPage * (pageNum - 1);
+        int firstLineOnPage = _linesPerPage * (pageNum - 1);
         int i;
         for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _wrappedLines.Count; i++)
         {
-            var line = _wrappedLines[i];
-            var yPos = (i - firstLineOnPage) * _lineHeight;
+            TextMateWrappedLine line = _wrappedLines[i];
+            float yPos = (i - firstLineOnPage) * _lineHeight;
 
             if (ContentSettings!.LineNumbers && _lineNumberWidth != 0)
             {
                 if (line.NonWrappedLineNumber > 0)
                 {
-                    var lineNumber = line.NonWrappedLineNumber.ToString (CultureInfo.InvariantCulture);
-                    var x = ContentSettings.LineNumberSeparator
+                    string lineNumber = line.NonWrappedLineNumber.ToString (CultureInfo.InvariantCulture);
+                    float x = ContentSettings.LineNumberSeparator
                         ? _lineNumberWidth - 6 - MeasureString (g, lineNumber).Width
                         : 0;
                     g.DrawString (lineNumber, _cachedFont, Brushes.Gray, x, yPos, StringFormat);
@@ -221,19 +223,19 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
                 g.DrawRectangle (Pens.Red, _lineNumberWidth, yPos, PageSize.Width - _lineNumberWidth, _lineHeight);
             }
 
-            var xPos = _lineNumberWidth;
-            foreach (var run in line.Runs)
+            float xPos = _lineNumberWidth;
+            foreach (TextMateWrappedRun run in line.Runs)
             {
                 if (run.Start >= line.Text.Length || run.Length <= 0)
                 {
                     continue;
                 }
 
-                var text = line.Text.Substring (run.Start, Math.Min (run.Length, line.Text.Length - run.Start));
-                var font = GetFont (run.FontStyle);
+                string text = line.Text.Substring (run.Start, Math.Min (run.Length, line.Text.Length - run.Start));
+                DrawingFont font = GetFont (run.FontStyle);
                 using var brush = new SolidBrush (run.Foreground);
                 g.DrawString (text, font, brush, xPos, yPos, StringFormat);
-                var size = MeasureString (g, font, text);
+                SizeF size = MeasureString (g, font, text);
 
                 if (ContentSettings.Diagnostics)
                 {
@@ -249,7 +251,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
     private void InitializeGrammar ()
     {
-        var theme = ParseTheme (ContentSettings?.Style);
+        ThemeName theme = ParseTheme (ContentSettings?.Style);
         var options = new RegistryOptions (theme);
         _registry = new Registry (options);
         _resolvedScopeName = ResolveScopeName (options);
@@ -261,10 +263,10 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     {
         if (!string.IsNullOrEmpty (_filePath))
         {
-            var extension = Path.GetExtension (_filePath);
+            string extension = Path.GetExtension (_filePath);
             if (!string.IsNullOrEmpty (extension))
             {
-                var scope = options.GetScopeByExtension (extension);
+                string? scope = options.GetScopeByExtension (extension);
                 if (!string.IsNullOrEmpty (scope))
                 {
                     return scope;
@@ -272,10 +274,10 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             }
         }
 
-        var languages = options.GetAvailableLanguages ();
-        var normalizedContentType = Normalize (ContentType);
-        var normalizedLanguage = Normalize (Language);
-        var match = languages.FirstOrDefault (l =>
+        List<Language>? languages = options.GetAvailableLanguages ();
+        string? normalizedContentType = Normalize (ContentType);
+        string? normalizedLanguage = Normalize (Language);
+        Language? match = languages.FirstOrDefault (l =>
             Matches (l.Id, normalizedLanguage) ||
             Matches (l.Id, normalizedContentType) ||
             (l.Aliases?.Any (a => Matches (a, normalizedLanguage) || Matches (a, normalizedContentType)) ?? false) ||
@@ -300,7 +302,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     {
         var wrapped = new List<TextMateWrappedLine> ();
         IStateStack? ruleStack = null;
-        var lineNumber = 0;
+        int lineNumber = 0;
 
         using var reader = new StringReader (document);
         string? line;
@@ -314,8 +316,8 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             lineNumber++;
             if (ContentSettings.NewPageOnFormFeed && line.Contains ('\f'))
             {
-                var parts = line.Split ('\f');
-                for (var i = 0; i < parts.Length; i++)
+                string[] parts = line.Split ('\f');
+                for (int i = 0; i < parts.Length; i++)
                 {
                     if (i > 0)
                     {
@@ -351,28 +353,30 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         }
     }
 
-    private void AddTokenizedLine (List<TextMateWrappedLine> wrapped, string line, int lineNumber, int maxLineChars, ref IStateStack? ruleStack)
+    private void AddTokenizedLine (List<TextMateWrappedLine> wrapped, string line, int lineNumber, int maxLineChars,
+        ref IStateStack? ruleStack)
     {
-        var tokens = TokenizeLine (line, ref ruleStack);
+        List<(int Start, int End, Color Foreground, TextMateFontStyle FontStyle)> tokens =
+            TokenizeLine (line, ref ruleStack);
         if (line.Length == 0)
         {
             wrapped.Add (new TextMateWrappedLine { NonWrappedLineNumber = lineNumber });
             return;
         }
 
-        for (var start = 0; start < line.Length; start += maxLineChars)
+        for (int start = 0; start < line.Length; start += maxLineChars)
         {
-            var length = Math.Min (maxLineChars, line.Length - start);
+            int length = Math.Min (maxLineChars, line.Length - start);
             var wrappedLine = new TextMateWrappedLine
             {
                 NonWrappedLineNumber = start == 0 ? lineNumber : 0,
                 Text = line.Substring (start, length)
             };
 
-            foreach (var token in tokens)
+            foreach ((int Start, int End, Color Foreground, TextMateFontStyle FontStyle) token in tokens)
             {
-                var intersectionStart = Math.Max (token.Start, start);
-                var intersectionEnd = Math.Min (token.End, start + length);
+                int intersectionStart = Math.Max (token.Start, start);
+                int intersectionEnd = Math.Min (token.End, start + length);
                 if (intersectionEnd <= intersectionStart)
                 {
                     continue;
@@ -396,7 +400,8 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         }
     }
 
-    private List<(int Start, int End, Color Foreground, TextMateFontStyle FontStyle)> TokenizeLine (string line, ref IStateStack? ruleStack)
+    private List<(int Start, int End, Color Foreground, TextMateFontStyle FontStyle)> TokenizeLine (string line,
+        ref IStateStack? ruleStack)
     {
         if (_grammar is null || _registry is null)
         {
@@ -404,23 +409,25 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             return [(0, line.Length, Color.Black, TextMateFontStyle.None)];
         }
 
-        var result = _grammar.TokenizeLine2 (new LineText (line), ruleStack, TimeSpan.FromSeconds (1));
+        ITokenizeLineResult2? result =
+            _grammar.TokenizeLine2 (new LineText (line), ruleStack, TimeSpan.FromSeconds (1));
         ruleStack = result.RuleStack;
-        var encodedTokens = result.Tokens;
-        var colorMap = _registry.GetColorMap ().ToArray ();
+        int[]? encodedTokens = result.Tokens;
+        string[] colorMap = _registry.GetColorMap ().ToArray ();
         var tokens = new List<(int Start, int End, Color Foreground, TextMateFontStyle FontStyle)> ();
 
-        for (var i = 0; i < encodedTokens.Length; i += 2)
+        for (int i = 0; i < encodedTokens.Length; i += 2)
         {
-            var start = encodedTokens[i];
-            var end = i + 2 < encodedTokens.Length ? encodedTokens[i + 2] : line.Length;
+            int start = encodedTokens[i];
+            int end = i + 2 < encodedTokens.Length ? encodedTokens[i + 2] : line.Length;
             if (end <= start)
             {
                 continue;
             }
 
-            var metadata = encodedTokens[i + 1];
-            tokens.Add ((start, end, GetForegroundColor (metadata, colorMap), EncodedTokenAttributes.GetFontStyle (metadata)));
+            int metadata = encodedTokens[i + 1];
+            tokens.Add ((start, end, GetForegroundColor (metadata, colorMap),
+                EncodedTokenAttributes.GetFontStyle (metadata)));
         }
 
         return tokens.Count == 0 ? [(0, line.Length, Color.Black, TextMateFontStyle.None)] : tokens;
@@ -428,14 +435,14 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
     private static Color GetForegroundColor (int metadata, string[] colorMap)
     {
-        var colorId = EncodedTokenAttributes.GetForeground (metadata);
-        var colorIndex = colorId - 1;
+        int colorId = EncodedTokenAttributes.GetForeground (metadata);
+        int colorIndex = colorId - 1;
         if (colorIndex < 0 || colorIndex >= colorMap.Length)
         {
             return Color.Black;
         }
 
-        var color = colorMap[colorIndex];
+        string color = colorMap[colorIndex];
         return ColorTranslator.FromHtml (color);
     }
 
@@ -446,7 +453,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             return _cachedFont!;
         }
 
-        var style = DrawingFontStyle.Regular;
+        DrawingFontStyle style = DrawingFontStyle.Regular;
         if (textMateStyle.HasFlag (TextMateFontStyle.Bold))
         {
             style |= DrawingFontStyle.Bold;
@@ -459,7 +466,8 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
         if (style == (DrawingFontStyle.Bold | DrawingFontStyle.Italic))
         {
-            return _boldItalicFont ??= new DrawingFont (_cachedFont!.FontFamily, _cachedFont.Size, style, _cachedFont.Unit);
+            return _boldItalicFont ??=
+                new DrawingFont (_cachedFont!.FontFamily, _cachedFont.Size, style, _cachedFont.Unit);
         }
 
         if (style == DrawingFontStyle.Bold)
@@ -482,13 +490,13 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
     private static SizeF MeasureString (Graphics g, DrawingFont? font, string text)
     {
-        var proposedSize = new SizeF (10000, font!.GetHeight () + (font.GetHeight () / 2));
+        var proposedSize = new SizeF (10000, font!.GetHeight () + font.GetHeight () / 2);
         return g.MeasureString (text, font, proposedSize, StringFormat, out _, out _);
     }
 
     private static ThemeName ParseTheme (string? style)
     {
-        return Enum.TryParse<ThemeName> (style, ignoreCase: true, out var theme) ? theme : ThemeName.VisualStudioLight;
+        return Enum.TryParse (style, true, out ThemeName theme) ? theme : ThemeName.VisualStudioLight;
     }
 
     private static int CountLogicalLines (string document, bool countFormFeeds)
@@ -498,8 +506,8 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             return 1;
         }
 
-        var lines = 1;
-        foreach (var ch in document)
+        int lines = 1;
+        foreach (char ch in document)
         {
             if (ch == '\n' || (countFormFeeds && ch == '\f'))
             {

@@ -40,7 +40,8 @@ public class FileTypeMappingService
             ReadCommentHandling = JsonCommentHandling.Skip
         };
 
-        var associations = JsonSerializer.Deserialize<FileTypeMapping> (Resources.languages, jsonOptions) ?? new FileTypeMapping ();
+        FileTypeMapping associations = JsonSerializer.Deserialize<FileTypeMapping> (Resources.languages, jsonOptions) ??
+                                       new FileTypeMapping ();
 
         // TODO: Consider calling into lang-map and/or Pygments to update extensions at runtime?
         // https://github.com/jonschlinkert/lang-map
@@ -50,7 +51,7 @@ public class FileTypeMappingService
         Debug.Assert (ModelLocator.Current.Settings.FileTypeMapping.ContentTypes != null);
         if (ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations != null)
         {
-            foreach (var fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations)
+            foreach (KeyValuePair<string, string> fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations)
             {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }

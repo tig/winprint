@@ -37,7 +37,7 @@ public class PygmentsConverterService
             return (true, "Pygments is is functional.");
         }
 
-        var message = String.Empty;
+        string message = string.Empty;
 
         var proc = new Process ();
 
@@ -49,7 +49,7 @@ public class PygmentsConverterService
         proc.EnableRaisingEvents = false;
 
         // Test for Python 3.x
-        var python = false;
+        bool python = false;
         try
         {
             Log.Information ("Source code formatting: Verifying Python is installed");
@@ -60,7 +60,7 @@ public class PygmentsConverterService
 
             if (proc.WaitForExit (5000))
             {
-                var output = proc.StandardOutput.ReadLine ();
+                string? output = proc.StandardOutput.ReadLine ();
                 if (output != null && output.StartsWith ("Python "))
                 {
                     python = true;
@@ -149,7 +149,7 @@ public class PygmentsConverterService
 
             if (proc.WaitForExit (5000))
             {
-                var output = proc.StandardOutput.ReadLine ();
+                string? output = proc.StandardOutput.ReadLine ();
                 if (output != null && output.StartsWith ("Pygments version "))
                 {
                     _pygmentsInstalled = true;
@@ -263,7 +263,7 @@ public class PygmentsConverterService
         proc.EnableRaisingEvents = false;
 
         // Install Pygments via pip install
-        var pygments = false;
+        bool pygments = false;
         try
         {
             Log.Information ("Source code formatting: Installing Pygments");
@@ -277,9 +277,9 @@ public class PygmentsConverterService
             // TODO: 30 secs is a long time without status updates 
             if (proc.WaitForExit (30000))
             {
-                var output = proc.StandardOutput.ReadToEnd ();
-                if ((output.Contains ("Successfully installed Pygments") ||
-                     output.Contains ("Requirement already satisfied")))
+                string output = proc.StandardOutput.ReadToEnd ();
+                if (output.Contains ("Successfully installed Pygments") ||
+                    output.Contains ("Requirement already satisfied"))
                 {
                     pygments = true;
                     Log.Debug ("Pygments: Pygments is installed: {output}", output);
@@ -324,14 +324,14 @@ public class PygmentsConverterService
 
         if (string.IsNullOrEmpty (_scriptsPath))
         {
-            var (installed, message) = CheckInstall ();
+            (bool installed, string message) = CheckInstall ();
             if (!installed)
             {
                 throw new InvalidOperationException ($"Pygments: {message}");
             }
         }
 
-        var file = Path.GetTempFileName ();
+        string file = Path.GetTempFileName ();
         _proc = new Process ();
         _proc.StartInfo.FileName = @$"{_scriptsPath}\pygmentize.exe";
         _proc.StartInfo.Arguments =
@@ -358,9 +358,9 @@ public class PygmentsConverterService
 
             if (_proc.ExitCode != 0)
             {
-                var stdErr = await _proc.StandardError.ReadToEndAsync ();
+                string stdErr = await _proc.StandardError.ReadToEndAsync ();
                 Log.Debug ("Pygments: StandardError: {stdErr}", stdErr);
-                var stdOut = await _proc.StandardOutput.ReadToEndAsync ();
+                string stdOut = await _proc.StandardOutput.ReadToEndAsync ();
                 Log.Debug ("Pygments: StandardOutput: {stdOut}", stdOut);
                 if (stdErr.StartsWith ("Usage:"))
                 {
@@ -387,7 +387,7 @@ public class PygmentsConverterService
                 else
                 {
                     // TODO: This should really throw an exception
-                    var stdErr = await _proc.StandardError.ReadToEndAsync ();
+                    string stdErr = await _proc.StandardError.ReadToEndAsync ();
                     document = $"Pygments failed to create converter file: {stdErr}";
                     Log.Debug ("Pygments: {document}", document);
                     throw new InvalidOperationException (document);

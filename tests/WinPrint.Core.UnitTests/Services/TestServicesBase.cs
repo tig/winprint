@@ -1,6 +1,7 @@
-using Serilog.Sinks.XUnit;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Serilog.Formatting.Display;
+using Serilog.Sinks.XUnit;
 using WinPrint.Core.Services;
 using Xunit.Abstractions;
 
@@ -9,9 +10,11 @@ namespace WinPrint.Core.UnitTests.Services;
 public class TestServicesBase
 {
     public JsonSerializerOptions jsonOptions;
+
     public TestServicesBase (ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start (GetType ().Name, new TestOutputSink (output, new Serilog.Formatting.Display.MessageTemplateTextFormatter ("{Message:lj}")), true, true);
+        ServiceLocator.Current.LogService.Start (GetType ().Name,
+            new TestOutputSink (output, new MessageTemplateTextFormatter ("{Message:lj}")), true, true);
         jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,

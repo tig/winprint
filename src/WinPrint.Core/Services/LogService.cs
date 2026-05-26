@@ -44,7 +44,7 @@ public class LogService
             // TODO: Keep this at Debug until after Beta, then change it to Information
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #endif
-        var productVersion = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (LogService))!.Location)
+        string? productVersion = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (LogService))!.Location)
             .FileVersion;
         LogPath =
             $"{SettingsService.SettingsPath}{Path.DirectorySeparatorChar}logs{Path.DirectorySeparatorChar}{appName}.log"
@@ -82,7 +82,7 @@ public class LogService
 #if CI_BUILD
                 var msg = "CI_BUILD so no telemetry will be tracked.";
 #else
-            var msg = string.IsNullOrEmpty (TelemetryService.GetInstrumentationKey ())
+            string msg = string.IsNullOrEmpty (TelemetryService.GetInstrumentationKey ())
                 ? "However, telemetry key is missing so no telemetry will be tracked."
                 : "";
 #endif

@@ -13,8 +13,10 @@ public partial class UpdateDialog : Form
         InitializeComponent ();
         StartPosition = FormStartPosition.CenterParent;
         labelNewVersion.Text = $"A newer version ({ServiceLocator.Current.UpdateService.LatestVersion}) is available.";
-        var releaseLink = linkReleasePage.Links[0] ?? throw new InvalidOperationException ("Release link was not initialized.");
-        releaseLink.LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri?.AbsoluteUri ?? throw new InvalidOperationException ("Release page URI was not initialized.");
+        LinkLabel.Link releaseLink = linkReleasePage.Links[0] ??
+                                     throw new InvalidOperationException ("Release link was not initialized.");
+        releaseLink.LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri?.AbsoluteUri ??
+                               throw new InvalidOperationException ("Release page URI was not initialized.");
     }
 
     private void downloadButton_Click (object? sender, EventArgs args)
@@ -24,7 +26,8 @@ public partial class UpdateDialog : Form
 
     private void linkReleasePage_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs args)
     {
-        var releasePage = linkReleasePage.Links[0]?.LinkData as string ?? throw new InvalidOperationException ("Release link data was not initialized.");
+        string releasePage = linkReleasePage.Links[0]?.LinkData as string ??
+                             throw new InvalidOperationException ("Release link data was not initialized.");
         Log.Debug ($"Browsing to release page: {releasePage}");
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Release Page Click");
@@ -34,7 +37,7 @@ public partial class UpdateDialog : Form
         {
             var psi = new ProcessStartInfo
             {
-                UseShellExecute = true,   // This is important
+                UseShellExecute = true, // This is important
                 FileName = releasePage
             };
             proc = Process.Start (psi);
@@ -42,7 +45,7 @@ public partial class UpdateDialog : Form
         catch (Exception e)
         {
             // TODO: Better error message (output of stderr?)
-            ServiceLocator.Current.TelemetryService.TrackException (e, false);
+            ServiceLocator.Current.TelemetryService.TrackException (e);
 
             Log.Error (e, $"Couldn't browse to {releasePage}.");
         }
@@ -52,4 +55,3 @@ public partial class UpdateDialog : Form
         }
     }
 }
-

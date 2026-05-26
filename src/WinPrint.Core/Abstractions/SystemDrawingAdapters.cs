@@ -11,18 +11,22 @@ public static class SystemDrawingAdapters
         {
             result |= GraphicsFontStyle.Bold;
         }
+
         if ((style & FontStyle.Italic) == FontStyle.Italic)
         {
             result |= GraphicsFontStyle.Italic;
         }
+
         if ((style & FontStyle.Underline) == FontStyle.Underline)
         {
             result |= GraphicsFontStyle.Underline;
         }
+
         if ((style & FontStyle.Strikeout) == FontStyle.Strikeout)
         {
             result |= GraphicsFontStyle.Strikeout;
         }
+
         return result;
     }
 

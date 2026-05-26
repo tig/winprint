@@ -6,11 +6,10 @@ namespace WinPrint.LiteHtml;
 
 public class HtmlResources (string filePath)
 {
-
     public byte[] GetResourceBytes (string resource)
     {
         LogService.TraceMessage ($"{resource}");
-        var data = Array.Empty<byte> ();
+        byte[] data = Array.Empty<byte> ();
         if (string.IsNullOrWhiteSpace (resource))
         {
             return data;
@@ -31,7 +30,7 @@ public class HtmlResources (string filePath)
     public string GetResourceString (string resource)
     {
         LogService.TraceMessage ($"{resource}");
-        var data = string.Empty;
+        string data = string.Empty;
         if (string.IsNullOrWhiteSpace (resource))
         {
             return data;

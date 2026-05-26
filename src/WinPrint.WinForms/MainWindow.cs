@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -19,23 +19,26 @@ using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.WinForms;
+using Font = WinPrint.Core.Models.Font;
+using FormWindowState = System.Windows.Forms.FormWindowState;
 
 namespace WinPrint.Winforms;
 
 public partial class MainWindow : Form
 {
+    private readonly CancellationTokenSource _cancellationToken = new ();
+    private readonly OpenFileDialog openFileDialog = new ();
 
     // The Windows printer document
-    private PrintDocument printDoc = new PrintDocument ();
+    private readonly PrintDocument printDoc = new ();
+
+    public PrintPreview PrintPreview;
 
     // The active file
     private string activeFile = string.Empty;
-    private OpenFileDialog openFileDialog = new OpenFileDialog ();
 
-    public WinPrint.WinForms.PrintPreview PrintPreview;
-
-    private SheetSettings CurrentSheetSettings => ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ())
-        ?? throw new InvalidOperationException ("Default sheet settings not found.");
+    // Flag: Has Dispose already been called?
+    private bool disposed;
 
     public MainWindow ()
     {
@@ -57,7 +60,7 @@ public partial class MainWindow : Form
             TabIndex = 1,
             TabStop = true
         };
-        PrintPreview.Click += new System.EventHandler (printPreview_Click);
+        PrintPreview.Click += printPreview_Click;
 
         Color ();
 
@@ -73,7 +76,7 @@ public partial class MainWindow : Form
         }
 
 #if DEBUG
-        openFileDialog.InitialDirectory = $@"..\..\..\..\..\testfiles\";
+        openFileDialog.InitialDirectory = @"..\..\..\..\..\testfiles\";
 #else
         openFileDialog.InitialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}";
 #endif
@@ -82,16 +85,20 @@ public partial class MainWindow : Form
         fontDialog.ShowEffects = false;
         fontDialog.ShowColor = true;
         fontDialog.AllowScriptChange = false;
-        fontDialog.AllowSimulations = false;  // GDI+ does not support OFT fonts
+        fontDialog.AllowSimulations = false; // GDI+ does not support OFT fonts
         fontDialog.AllowVectorFonts = false;
         // fontDialog.AllowVerticalFonts = false;
         fontDialog.ShowHelp = false;
     }
 
+    private SheetSettings CurrentSheetSettings =>
+        ModelLocator.Current.Settings.Sheets.GetValueOrDefault (ModelLocator.Current.Settings.DefaultSheet.ToString ())
+        ?? throw new InvalidOperationException ("Default sheet settings not found.");
+
     private void Color ()
     {
         var back = System.Drawing.Color.FromName ("white");
-        var text = System.Drawing.SystemColors.ControlText;
+        Color text = SystemColors.ControlText;
         //printPreview.BackColor = back;
         printersCB.BackColor = back;
 
@@ -175,11 +182,9 @@ public partial class MainWindow : Form
         pagesLabel.ForeColor = text;
     }
 
-    // Flag: Has Dispose already been called?
-    private bool disposed = false;
     // Protected implementation of Dispose pattern.
     /// <summary>
-    ///  Clean up any resources being used.
+    ///     Clean up any resources being used.
     /// </summary>
     /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
     protected override void Dispose (bool disposing)
@@ -189,7 +194,7 @@ public partial class MainWindow : Form
             return;
         }
 
-        if (disposing && (components != null))
+        if (disposing && components != null)
         {
             components.Dispose ();
             //if (streamToPrint != null) streamToPrint.Dispose();
@@ -203,13 +208,14 @@ public partial class MainWindow : Form
                 PrintPreview.Dispose ();
             }
         }
+
         disposed = true;
         base.Dispose (disposing);
     }
 
     /// <summary>
-    /// Wire up property change notifications from the View Model.
-    /// This should only be called once
+    ///     Wire up property change notifications from the View Model.
+    ///     This should only be called once
     /// </summary>
     // TODO: Refactor PropertyChanged lambdas to be functions so they can be -=
     private void SetupSheetViewModelNotifications ()
@@ -240,7 +246,6 @@ public partial class MainWindow : Form
             LogService.TraceMessage ($"{loading}");
             if (loading)
             {
-                return;
             }
         }
     }
@@ -307,7 +312,8 @@ public partial class MainWindow : Form
                 case "Header":
                     headerTextBox.Text = PrintPreview.SheetViewModel.Header.Text;
                     enableHeader.Checked = PrintPreview.SheetViewModel.Header.Enabled;
-                    headerFooterFontLink.Text = PrintPreview.SheetViewModel.Header.Font?.ToString () ?? throw new InvalidOperationException ("Header font settings not found.");
+                    headerFooterFontLink.Text = PrintPreview.SheetViewModel.Header.Font?.ToString () ??
+                                                throw new InvalidOperationException ("Header font settings not found.");
                     break;
 
                 case "Footer":
@@ -322,7 +328,8 @@ public partial class MainWindow : Form
                     bottomMargin.Value = PrintPreview.SheetViewModel.Margins.Bottom / 100M;
 
                     // Keep PrintDocument updated for WinForms.PrintPreview
-                    printDoc.PrinterSettings.DefaultPageSettings.Margins = (Margins)PrintPreview.SheetViewModel.Margins.Clone ();
+                    printDoc.PrinterSettings.DefaultPageSettings.Margins =
+                        (Margins)PrintPreview.SheetViewModel.Margins.Clone ();
                     break;
 
                 case "PageSeparator":
@@ -362,7 +369,8 @@ public partial class MainWindow : Form
                     break;
 
                 case "ContentSettings":
-                    contentFontLink.Text = PrintPreview.SheetViewModel.ContentSettings.Font?.ToString () ?? throw new InvalidOperationException ("Content font settings not found.");
+                    contentFontLink.Text = PrintPreview.SheetViewModel.ContentSettings.Font?.ToString () ??
+                                           throw new InvalidOperationException ("Content font settings not found.");
                     lineNumbers.Checked = PrintPreview.SheetViewModel.ContentSettings.LineNumbers;
                     //lineNumberSeparator.Checked = printPreview.SheetViewModel.ContentSettings.lineNumberSeparator;
                     break;
@@ -415,8 +423,6 @@ public partial class MainWindow : Form
         }
     }
 
-    private CancellationTokenSource _cancellationToken = new CancellationTokenSource ();
-
     private void MainWindow_Load (object? sender, EventArgs e)
     {
         // Check for updates
@@ -438,6 +444,7 @@ public partial class MainWindow : Form
             MessageBox.Show (Resources.SettingsLoadMsg);
             return;
         }
+
         if (ModelLocator.Current.Settings.Size != null)
         {
             Size = new Size (ModelLocator.Current.Settings.Size.Width, ModelLocator.Current.Settings.Size.Height);
@@ -448,7 +455,7 @@ public partial class MainWindow : Form
             Location = new Point (ModelLocator.Current.Settings.Location.X, ModelLocator.Current.Settings.Location.Y);
         }
 
-        WindowState = (System.Windows.Forms.FormWindowState)ModelLocator.Current.Settings.WindowState;
+        WindowState = (FormWindowState)ModelLocator.Current.Settings.WindowState;
 
         PrintPreview.KeyUp += (s, e) =>
         {
@@ -465,10 +472,11 @@ public partial class MainWindow : Form
         };
 
         //this.Cursor = Cursors.WaitCursor;
-        var sheets = ModelLocator.Current.Settings.Sheets;
+        Dictionary<string, SheetSettings> sheets = ModelLocator.Current.Settings.Sheets;
 
         // Load Language/ContentType mapping
-        LogService.TraceMessage ($"{ModelLocator.Current.FileTypeMapping.ContentTypes.Count} languages, {ModelLocator.Current.FileTypeMapping.FilesAssociations.Count} file assocations");
+        LogService.TraceMessage (
+            $"{ModelLocator.Current.FileTypeMapping.ContentTypes.Count} languages, {ModelLocator.Current.FileTypeMapping.FilesAssociations.Count} file assocations");
 
         ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke ((Action)(() =>
         {
@@ -483,13 +491,13 @@ public partial class MainWindow : Form
 
         comboBoxSheet.DisplayMember = "Value";
         comboBoxSheet.ValueMember = "Key";
-        foreach (var s in sheets)
+        foreach (KeyValuePair<string, SheetSettings> s in sheets)
         {
             comboBoxSheet.Items.Add (new KeyValuePair<string, string> (s.Key, s.Value.Name));
         }
 
         // Select default printer and paper size
-        foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters)
+        foreach (string printer in PrinterSettings.InstalledPrinters)
         {
             printersCB.Items.Add (printer);
             if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName)
@@ -540,11 +548,12 @@ public partial class MainWindow : Form
 
         // --s
         // Select default Sheet 
-        var newSheet = CurrentSheetSettings;
+        SheetSettings newSheet = CurrentSheetSettings;
         if (!string.IsNullOrEmpty (ModelLocator.Current.Options.Sheet))
         {
-            newSheet = PrintPreview.SheetViewModel.FindSheet (ModelLocator.Current.Options.Sheet, out var sheetID);
+            newSheet = PrintPreview.SheetViewModel.FindSheet (ModelLocator.Current.Options.Sheet, out string sheetID);
         }
+
         comboBoxSheet.Text = newSheet.Name;
         // This will cause a flurry of property change notifications, setting all UI elements
         PrintPreview.SheetViewModel.SetSheet (newSheet);
@@ -598,17 +607,18 @@ public partial class MainWindow : Form
     {
         //Process.Start(ServiceLocator.Current.UpdateService.ReleasePageUri.AbsoluteUri);
 #if DEBUG
-        var log = "-lv winprint.msiexec.log";
+        string log = "-lv winprint.msiexec.log";
 #else
         string log = "";
 #endif
         using var p = new Process
         {
-            StartInfo = {
-                    FileName = $"msiexec.exe",
-                    Arguments = $"{log} -i {path}",
-                    UseShellExecute = true
-                },
+            StartInfo =
+            {
+                FileName = "msiexec.exe",
+                Arguments = $"{log} -i {path}",
+                UseShellExecute = true
+            }
         };
 
         try
@@ -617,7 +627,8 @@ public partial class MainWindow : Form
         }
         catch (Win32Exception we)
         {
-            Log.Information ($"{GetType ().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
+            Log.Information (
+                $"{GetType ().Name}: '{p.StartInfo.FileName} {p.StartInfo.Arguments}' failed to run with error: {we.Message}");
         }
 
         BeginInvoke ((Action)(() => Close ()));
@@ -631,10 +642,10 @@ public partial class MainWindow : Form
         }
         else
         {
-
             if (version == null && !string.IsNullOrWhiteSpace (ServiceLocator.Current.UpdateService.ErrorMessage))
             {
-                Log.Information ($"Could not access tig.github.io/winprint to see if a newer version is available. {ServiceLocator.Current.UpdateService.ErrorMessage}");
+                Log.Information (
+                    $"Could not access tig.github.io/winprint to see if a newer version is available. {ServiceLocator.Current.UpdateService.ErrorMessage}");
             }
             else if (ServiceLocator.Current.UpdateService.CompareVersions () < 0)
             {
@@ -648,7 +659,8 @@ public partial class MainWindow : Form
             }
             else if (ServiceLocator.Current.UpdateService.CompareVersions () > 0)
             {
-                Log.Information ($"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})");
+                Log.Information (
+                    $"You are are running a MORE recent version than can be found at tig.github.io/winprint ({version})");
             }
             else
             {
@@ -692,14 +704,11 @@ public partial class MainWindow : Form
             //    - reflow
             Task.Run (async () =>
             {
-                var stage = "Loading";
-                var fileToPrint = activeFile;
+                string stage = "Loading";
+                string fileToPrint = activeFile;
                 try
                 {
-                    BeginInvoke ((Action)(() =>
-                    {
-                        PrintPreview.Text = $"{stage}...";
-                    }));
+                    BeginInvoke ((Action)(() => { PrintPreview.Text = $"{stage}..."; }));
                     // This is an IO bound operation. 
                     // TODO: This does not need to run on another thread if we are using async/await correctly
                     // Core requires a fully qualified path. If FileName was provided, ensure it's fully qualified.
@@ -708,33 +717,27 @@ public partial class MainWindow : Form
                     {
                         fileToPrint = Path.GetFullPath (fileToPrint, Directory.GetCurrentDirectory ());
                     }
-                    await PrintPreview.SheetViewModel.LoadFileAsync (fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait (false);
+
+                    await PrintPreview.SheetViewModel
+                        .LoadFileAsync (fileToPrint, ModelLocator.Current.Options.ContentType).ConfigureAwait (false);
 
                     // Set landscape. This causes other DefaultPageSettings to change
                     // These are CPU bound operations. 
                     // TODO: Do not use async/await for CPU bound operations https://docs.microsoft.com/en-us/dotnet/standard/async-in-depth
                     stage = "Getting Printer Page Settings";
-                    BeginInvoke ((Action)(() =>
-                    {
-                        PrintPreview.Text = $"{stage}...";
-                    }));
+                    BeginInvoke ((Action)(() => { PrintPreview.Text = $"{stage}..."; }));
                     printDoc.DefaultPageSettings.Landscape = PrintPreview.SheetViewModel.Landscape;
                     PrintPreview.SheetViewModel.SetPrinterPageSettings (printDoc.DefaultPageSettings);
 
 
                     stage = "Rendering";
-                    BeginInvoke ((Action)(() =>
-                    {
-                        PrintPreview.Text = $"{stage}...";
-                    }));
+                    BeginInvoke ((Action)(() => { PrintPreview.Text = $"{stage}..."; }));
                     await PrintPreview.SheetViewModel.ReflowAsync ().ConfigureAwait (false);
-
                 }
                 catch (DirectoryNotFoundException dnfe)
                 {
                     Log.Error (dnfe, "File Not Found");
                     ShowMessage ($"{stage}: {dnfe.Message}");
-                    return;
                 }
                 catch (FileNotFoundException fnfe)
                 {
@@ -744,7 +747,7 @@ public partial class MainWindow : Form
                 }
                 catch (InvalidOperationException ioe)
                 {
-                    ServiceLocator.Current.TelemetryService.TrackException (ioe, false);
+                    ServiceLocator.Current.TelemetryService.TrackException (ioe);
                     Log.Error (ioe, "Error Operation {file}", fileToPrint);
                     ShowMessage ($"{stage}: {ioe.Message}");
                     //                fileButton_Click(null, null);
@@ -753,7 +756,7 @@ public partial class MainWindow : Form
                 catch (Exception e)
                 {
 #pragma warning restore CA1031 // Do not catch general exception types
-                    ServiceLocator.Current.TelemetryService.TrackException (e, false);
+                    ServiceLocator.Current.TelemetryService.TrackException (e);
                     Log.Error (e, "Exception {file}", fileToPrint);
                     ShowMessage ($"{stage}: Exception: {e.Message}{Environment.NewLine}({fileToPrint})");
                 }
@@ -764,7 +767,6 @@ public partial class MainWindow : Form
                     //printPreview.SheetViewModel.Ready = false;
                     PrintPreview.Select ();
                     PrintPreview.Focus ();
-
                 }
             });
         }
@@ -806,7 +808,7 @@ public partial class MainWindow : Form
     private void SheetChanged ()
     {
         LogService.TraceMessage ();
-        var newSheet = CurrentSheetSettings;
+        SheetSettings newSheet = CurrentSheetSettings;
         comboBoxSheet.Text = newSheet.Name;
         PrintPreview.SheetViewModel.SetSheet (newSheet);
         //SheetSettingsChanged();
@@ -814,9 +816,9 @@ public partial class MainWindow : Form
     }
 
     /// <summary>
-    /// If Sheet settings change (either a new sheet or something that causes a reflow)
-    /// Update printer settings and Reflow.
-    /// Because getting printer settings can take 4-5 seconds we do that and reflow on another thread
+    ///     If Sheet settings change (either a new sheet or something that causes a reflow)
+    ///     Update printer settings and Reflow.
+    ///     Because getting printer settings can take 4-5 seconds we do that and reflow on another thread
     ///// </summary>
     //internal void SheetSettingsChanged() {
     //    LogService.TraceMessage();
@@ -825,7 +827,6 @@ public partial class MainWindow : Form
 
     //    });
     //}
-
     private void MainWindow_FormClosing (object? sender, FormClosingEventArgs e)
     {
         if (ModelLocator.Current.Settings is null)
@@ -834,27 +835,30 @@ public partial class MainWindow : Form
         }
 
         ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;
-        ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete; ;
+        ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete;
+        ;
 
         // Save Window state
-        if (WindowState == System.Windows.Forms.FormWindowState.Normal)
+        if (WindowState == FormWindowState.Normal)
         {
-            ModelLocator.Current.Settings.Size = new Core.Models.WindowSize (Size.Width, Size.Height);
-            ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation (Location.X, Location.Y);
+            ModelLocator.Current.Settings.Size = new WindowSize (Size.Width, Size.Height);
+            ModelLocator.Current.Settings.Location = new WindowLocation (Location.X, Location.Y);
         }
         else
         {
-            ModelLocator.Current.Settings.Size = new Core.Models.WindowSize (RestoreBounds.Width, RestoreBounds.Height);
-            ModelLocator.Current.Settings.Location = new Core.Models.WindowLocation (RestoreBounds.X, RestoreBounds.Y);
+            ModelLocator.Current.Settings.Size = new WindowSize (RestoreBounds.Width, RestoreBounds.Height);
+            ModelLocator.Current.Settings.Location = new WindowLocation (RestoreBounds.X, RestoreBounds.Y);
         }
+
         ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Form Closing",
-             properties: new Dictionary<string, string?> {
-                {"windowState", ModelLocator.Current.Settings.WindowState.ToString() },
-                {"size", $"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}" },
-                {"location", $"{ModelLocator.Current.Settings.Location.X}x{ModelLocator.Current.Settings.Location.Y}"},
-             });
+            new Dictionary<string, string?>
+            {
+                { "windowState", ModelLocator.Current.Settings.WindowState.ToString () },
+                { "size", $"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}" },
+                { "location", $"{ModelLocator.Current.Settings.Location.X}x{ModelLocator.Current.Settings.Location.Y}" }
+            });
 
         ServiceLocator.Current.SettingsService.SaveSettings (ModelLocator.Current.Settings);
     }
@@ -864,7 +868,7 @@ public partial class MainWindow : Form
         // This event is raised once at startup with the AffectedControl
         // and AffectedProperty properties on the LayoutEventArgs as null. 
         // The event provides size preferences for that case.
-        if ((e.AffectedControl != null) && (e.AffectedProperty != null))
+        if (e.AffectedControl != null && e.AffectedProperty != null)
         {
             // Ensure that the affected property is the Bounds property
             // of the form.
@@ -879,12 +883,13 @@ public partial class MainWindow : Form
         LogService.TraceMessage ($"{landscapeCheckbox.Checked}");
         CurrentSheetSettings.Landscape =
             printDoc.DefaultPageSettings.Landscape =
-            landscapeCheckbox.Checked;
+                landscapeCheckbox.Checked;
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("landscapeCheckbox_CheckedChanged",
-             properties: new Dictionary<string, string?> {
-                                    {"landscape", landscapeCheckbox.Checked.ToString() }
-             });
+            new Dictionary<string, string?>
+            {
+                { "landscape", landscapeCheckbox.Checked.ToString () }
+            });
     }
 
     private void headerTextBox_TextChanged (object? sender, EventArgs e)
@@ -914,19 +919,22 @@ public partial class MainWindow : Form
             printDoc.PrinterSettings.PrinterName = selectedPrinter;
 
             ServiceLocator.Current.TelemetryService.TrackEvent ("printersCB_SelectedIndexChanged",
-                 properties: new Dictionary<string, string?> {
-                        {"printerName", printDoc.PrinterSettings.PrinterName }
-                 });
+                new Dictionary<string, string?>
+                {
+                    { "printerName", printDoc.PrinterSettings.PrinterName }
+                });
 
             paperSizesCB.Items.Clear ();
             foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
             {
                 paperSizesCB.Items.Add (ps.PaperName);
             }
+
             ServiceLocator.Current.TelemetryService.TrackEvent ("printersCB_SelectedIndexChanged",
-                 properties: new Dictionary<string, string?> {
-                        {"printerName", printDoc.PrinterSettings.PrinterName }
-                 });
+                new Dictionary<string, string?>
+                {
+                    { "printerName", printDoc.PrinterSettings.PrinterName }
+                });
 
             paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
         }
@@ -940,21 +948,23 @@ public partial class MainWindow : Form
             // Set the paper size based upon the selection in the combo box.
             if (paperSizesCB.SelectedIndex != -1)
             {
-                printDoc.DefaultPageSettings.PaperSize = printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
+                printDoc.DefaultPageSettings.PaperSize =
+                    printDoc.PrinterSettings.PaperSizes[paperSizesCB.SelectedIndex];
                 ServiceLocator.Current.TelemetryService.TrackEvent ("paperSizesCB_SelectedIndexChanged",
-                     properties: new Dictionary<string, string?> {
-                        {"paperName", printDoc.DefaultPageSettings.PaperSize.PaperName }
-                     });
-
+                    new Dictionary<string, string?>
+                    {
+                        { "paperName", printDoc.DefaultPageSettings.PaperSize.PaperName }
+                    });
             }
+
             LoadFile ();
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage ("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
+    [SuppressMessage ("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
     private async void printButton_Click (object? sender, EventArgs args)
     {
-        using var print = new Core.Print ();
+        using var print = new Print ();
         // TODO: It's hokey that Landscape is the only printer setting that's treated specially
         // 
         print.PrintDocument.DefaultPageSettings.Landscape = landscapeCheckbox.Checked;
@@ -963,11 +973,12 @@ public partial class MainWindow : Form
         try
         {
             ShowMessage ("Preparing to print..");
-            await print.SheetViewModel.LoadFileAsync (PrintPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType).ConfigureAwait (false);
+            await print.SheetViewModel
+                .LoadFileAsync (PrintPreview.SheetViewModel.File, ModelLocator.Current.Options.ContentType)
+                .ConfigureAwait (false);
 
             print.SetPrinter (printDoc.PrinterSettings.PrinterName);
             print.SetPaperSize (printDoc.DefaultPageSettings.PaperSize.PaperName);
-
         }
         catch (FileNotFoundException fnfe)
         {
@@ -977,7 +988,7 @@ public partial class MainWindow : Form
         }
         catch (InvalidOperationException ioe)
         {
-            ServiceLocator.Current.TelemetryService.TrackException (ioe, false);
+            ServiceLocator.Current.TelemetryService.TrackException (ioe);
             Log.Error (ioe, "Error Operation {file}", activeFile);
             ShowMessage ($"{ioe.Message}");
             return;
@@ -986,24 +997,22 @@ public partial class MainWindow : Form
         catch (Exception e)
         {
 #pragma warning restore CA1031 // Do not catch general exception types
-            ServiceLocator.Current.TelemetryService.TrackException (e, false);
+            ServiceLocator.Current.TelemetryService.TrackException (e);
             Log.Error (e, "Exception {file}", activeFile);
             ShowMessage ($"Exception: {e.Message}{Environment.NewLine}({activeFile})");
             return;
         }
-        finally
-        {
-        }
 
-        if (!int.TryParse (fromText.Text, out var from))
+        if (!int.TryParse (fromText.Text, out int from))
         {
             from = 0;
         }
+
         // Ideally we'd get NumSheets from print.SheetSVM but that would cause a
         // un-needed Reflow. So use the printPreview VM.
-        if (!int.TryParse (toText.Text, out var to))
+        if (!int.TryParse (toText.Text, out int to))
         {
-            to = 0;// printPreview.SheetViewModel.NumSheets;
+            to = 0; // printPreview.SheetViewModel.NumSheets;
         }
 
         if (from > 0 && to > 0)
@@ -1015,7 +1024,7 @@ public partial class MainWindow : Form
 
         if (ModelLocator.Current.Settings.ShowPrintDialog)
         {
-            BeginInvoke ((Action)(async () =>
+            BeginInvoke (async () =>
             {
                 using var printDialog = new PrintDialog
                 {
@@ -1038,14 +1047,15 @@ public partial class MainWindow : Form
                         print.PrintDocument.PrinterSettings.FromPage = printDialog.PrinterSettings.FromPage;
                         print.PrintDocument.PrinterSettings.ToPage = printDialog.PrinterSettings.ToPage;
                     }
+
                     ShowMessage ($"Printing to {printDoc.PrinterSettings.PrinterName}");
                     // BUGBUG: having the printpreview invalidate while we're printing causes an exception
                     // in litehtml. Do not un comment this until figured out
                     //print.PrintingSheet += Print_PrintingSheet;
                     await print.DoPrint ().ConfigureAwait (false);
-                    ShowMessage ($"");
+                    ShowMessage ("");
                 }
-            }));
+            });
         }
         else
         {
@@ -1099,14 +1109,16 @@ public partial class MainWindow : Form
         {
             return;
         }
+
         LogService.TraceMessage ($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
         if (printersCB.Enabled)
         {
             ModelLocator.Current.Settings.DefaultSheet = Guid.Parse (si.Key);
             ServiceLocator.Current.TelemetryService.TrackEvent ("Change Selected Sheet Settings",
-                properties: new Dictionary<string, string?> {
-                                {"sheetSettingsName", si.Value },
-                                {"sheetSettingsId", si.Key },
+                new Dictionary<string, string?>
+                {
+                    { "sheetSettingsName", si.Value },
+                    { "sheetSettingsId", si.Key }
                 });
             //ChangeSheet(ModelLocator.Current.Settings.Sheets[si.Key]);
         }
@@ -1153,7 +1165,6 @@ public partial class MainWindow : Form
     private void columns_ValueChanged (object? sender, EventArgs e)
     {
         CurrentSheetSettings.Columns = (int)columns.Value;
-
     }
 
     private void padding_ValueChanged (object? sender, EventArgs e)
@@ -1169,11 +1180,12 @@ public partial class MainWindow : Form
     private void lineNumbers_CheckedChanged (object? sender, EventArgs e)
     {
         LogService.TraceMessage ($"lineNumbers_CheckedChanged: {lineNumbers.Checked}");
-        var contentSettings = CurrentSheetSettings.ContentSettings ?? throw new InvalidOperationException ("Content settings not found.");
+        ContentSettings contentSettings = CurrentSheetSettings.ContentSettings ??
+                                          throw new InvalidOperationException ("Content settings not found.");
         contentSettings.LineNumbers = lineNumbers.Checked;
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage ("Design",
+    [SuppressMessage ("Design",
         "CA1031:Do not catch general exception types", Justification = "<Pending>")]
     private void settingsButton_Click (object? sender, EventArgs args)
     {
@@ -1186,7 +1198,7 @@ public partial class MainWindow : Form
         {
             var psi = new ProcessStartInfo
             {
-                UseShellExecute = true,   // This is important
+                UseShellExecute = true, // This is important
                 FileName = ServiceLocator.Current.SettingsService.SettingsFileName
             };
             proc = Process.Start (psi);
@@ -1194,7 +1206,7 @@ public partial class MainWindow : Form
         catch (Exception e)
         {
             // TODO: Better error message (output of stderr?)
-            ServiceLocator.Current.TelemetryService.TrackException (e, false);
+            ServiceLocator.Current.TelemetryService.TrackException (e);
 
             Log.Error (e, $"Couldn't open settings file {ServiceLocator.Current.SettingsService.SettingsFileName}.");
         }
@@ -1204,11 +1216,11 @@ public partial class MainWindow : Form
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage ("Design",
+    [SuppressMessage ("Design",
         "CA1031:Do not catch general exception types", Justification = "<Pending>")]
     private void helpaboutLink_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs args)
     {
-        var url = "https://tig.github.io/winprint";
+        string url = "https://tig.github.io/winprint";
         Log.Debug ($"Browsing to home page: {url}");
 
         ServiceLocator.Current.TelemetryService.TrackEvent ("Help/About Link Click");
@@ -1218,7 +1230,7 @@ public partial class MainWindow : Form
         {
             var psi = new ProcessStartInfo
             {
-                UseShellExecute = true,   // This is important
+                UseShellExecute = true, // This is important
                 FileName = url
             };
             proc = Process.Start (psi);
@@ -1226,7 +1238,7 @@ public partial class MainWindow : Form
         catch (Exception e)
         {
             // TODO: Better error message (output of stderr?)
-            ServiceLocator.Current.TelemetryService.TrackException (e, false);
+            ServiceLocator.Current.TelemetryService.TrackException (e);
 
             Log.Error (e, $"Couldn't browse to {url}.");
         }
@@ -1238,29 +1250,42 @@ public partial class MainWindow : Form
 
     private void contentFontLink_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs e)
     {
-        var contentSettings = CurrentSheetSettings.ContentSettings ?? throw new InvalidOperationException ("Content settings not found.");
+        ContentSettings contentSettings = CurrentSheetSettings.ContentSettings ??
+                                          throw new InvalidOperationException ("Content settings not found.");
 
-        var contentFont = contentSettings.Font ?? throw new InvalidOperationException ("Content font settings not found.");
-        fontDialog.Font = new System.Drawing.Font (contentFont.Family, contentFont.Size, contentFont.Style, GraphicsUnit.Point);
+        Font contentFont = contentSettings.Font ??
+                           throw new InvalidOperationException ("Content font settings not found.");
+        fontDialog.Font =
+            new System.Drawing.Font (contentFont.Family, contentFont.Size, contentFont.Style, GraphicsUnit.Point);
         if (DialogResult.OK == fontDialog.ShowDialog (this))
         {
-            contentSettings.Font = new Core.Models.Font () { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round (fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
+            contentSettings.Font = new Font
+            {
+                Family = fontDialog.Font.FontFamily.Name,
+                Size = (float)Math.Round (fontDialog.Font.SizeInPoints),
+                Style = fontDialog.Font.Style
+            };
             contentFontLink.Text = contentSettings.Font.ToString ();
         }
     }
 
     private void headerFooterFontLink_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs e)
     {
-        var header = CurrentSheetSettings.Header;
-        var footer = CurrentSheetSettings.Footer;
+        Header header = CurrentSheetSettings.Header;
+        Footer footer = CurrentSheetSettings.Footer;
 
-        var headerFont = header.Font ?? throw new InvalidOperationException ("Header font settings not found.");
+        Font headerFont = header.Font ?? throw new InvalidOperationException ("Header font settings not found.");
         fontDialog.Font = new System.Drawing.Font (headerFont.Family, headerFont.Size, GraphicsUnit.Point);
 
         if (DialogResult.OK == fontDialog.ShowDialog (this))
         {
             // Note we set BOTH the header & footer to the same thing. But for GUI we use the Header as source of truth.
-            header.Font = footer.Font = new Core.Models.Font () { Family = fontDialog.Font.FontFamily.Name, Size = (float)Math.Round (fontDialog.Font.SizeInPoints), Style = fontDialog.Font.Style };
+            header.Font = footer.Font = new Font
+            {
+                Family = fontDialog.Font.FontFamily.Name,
+                Size = (float)Math.Round (fontDialog.Font.SizeInPoints),
+                Style = fontDialog.Font.Style
+            };
             headerFooterFontLink.Text = header.Font.ToString ();
         }
     }
@@ -1273,4 +1298,3 @@ public partial class MainWindow : Form
         }
     }
 }
-

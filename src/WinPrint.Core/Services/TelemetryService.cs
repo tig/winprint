@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.Win32;
@@ -14,8 +15,11 @@ using Serilog;
 
 namespace WinPrint.Core.Services;
 
-public partial class TelemetryService
+public class TelemetryService
 {
+    private Stopwatch runtime = null!;
+
+    private TelemetryClient telemetry = null!;
     public bool TelemetryEnabled { get; set; }
 
     public TelemetryClient GetTelemetryClient ()
@@ -23,16 +27,12 @@ public partial class TelemetryService
         return telemetry;
     }
 
-    private TelemetryClient telemetry = null!;
-
-    private Stopwatch runtime = null!;
-
     public void Start (string appName, IDictionary<string, string?>? startProperties = null)
     {
-        runtime = System.Diagnostics.Stopwatch.StartNew ();
+        runtime = Stopwatch.StartNew ();
 
-        var val = Registry.GetValue (@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
-        TelemetryEnabled = (val != null && val.ToString () == "1") ? true : false;
+        object? val = Registry.GetValue (@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
+        TelemetryEnabled = val != null && val.ToString () == "1" ? true : false;
 
         // Setup telemetry via Azure Application Insights.
         var config = TelemetryConfiguration.CreateDefault ();
@@ -53,13 +53,14 @@ public partial class TelemetryService
 #endif
 
         telemetry = new TelemetryClient (config);
-        telemetry.Context.Component.Version = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (TelemetryService))!.Location).FileVersion;
+        telemetry.Context.Component.Version = FileVersionInfo
+            .GetVersionInfo (Assembly.GetAssembly (typeof (TelemetryService))!.Location).FileVersion;
         telemetry.Context.Session.Id = Guid.NewGuid ().ToString ();
         telemetry.Context.Device.OperatingSystem = Environment.OSVersion.ToString ();
         // Anonymyize user ID
         using var h = SHA256.Create ();
         h.Initialize ();
-        var userHash = h.ComputeHash (Encoding.UTF8.GetBytes ($"{Environment.UserName}/{Environment.MachineName}"));
+        byte[] userHash = h.ComputeHash (Encoding.UTF8.GetBytes ($"{Environment.UserName}/{Environment.MachineName}"));
         telemetry.Context.User.Id = Convert.ToBase64String (userHash);
         // See: https://stackoverflow.com/questions/42861344/how-to-overwrite-or-ignore-cloud-roleinstance-with-application-insights
         telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
@@ -85,19 +86,21 @@ public partial class TelemetryService
     public void Stop ()
     {
         TrackEvent ("Application Stopped", metrics: new Dictionary<string, double>
-            {{"runTime", runtime.Elapsed.TotalMilliseconds}});
+            { { "runTime", runtime.Elapsed.TotalMilliseconds } });
 
         // before exit, flush the remaining data
         Flush ();
         // Flush is not blocking so wait a bit
         Task.Delay (1000).Wait ();
     }
+
     public void SetUser (string user)
     {
         telemetry.Context.User.AuthenticatedUserId = user;
     }
 
-    public void TrackEvent (string key, IDictionary<string, string?>? properties = null, IDictionary<string, double>? metrics = null)
+    public void TrackEvent (string key, IDictionary<string, string?>? properties = null,
+        IDictionary<string, double>? metrics = null)
     {
         if (TelemetryEnabled && telemetry != null)
         {
@@ -114,11 +117,12 @@ public partial class TelemetryService
 
         if (telemetry != null && ex != null && TelemetryEnabled)
         {
-            var telex = new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry (ex);
+            var telex = new ExceptionTelemetry (ex);
             telemetry.TrackException (telex);
             Flush ();
         }
     }
+
     internal void Flush ()
     {
         if (telemetry != null)
