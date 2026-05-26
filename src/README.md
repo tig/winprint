@@ -8,8 +8,7 @@
 # Pre-reqs
 
 * VS 2022+
-* Python: `winget install python`
-* Pygments: `pip install Pygments`
+* Python/Pygments are only needed when using the legacy `AnsiCte` highlighter.
 
 # Enable telemtry/logging key
 
@@ -20,4 +19,4 @@
 
 * Used to be managed by `msbump` https://github.com/BalassaMarton/MSBump
     * Prime version is stored in `Winprint.Core.dll` via `src\WinPrint.Core\WinPrint.Core.csproj`: `<Version>2.1.0.0</Version>`
-        * Must manually bump `major.minor.rel` in `WinPrint.WinForms.csproj`, `WinPrint.Console.csproj`, and `Winprint.LiteHtml.csproj` before release
+        * Must manually bump `major.minor.rel` in `WinPrint.WinForms.csproj`, `WinPrint.PowerShell.csproj`, `WinPrint.cli.csproj`, and `Winprint.LiteHtml.csproj` before release

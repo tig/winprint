@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,7 +24,7 @@ using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
-namespace WinPrint.Console {
+namespace WinPrint.PowerShell {
 
     [Cmdlet(VerbsData.Out,
         nounName: "WinPrint",

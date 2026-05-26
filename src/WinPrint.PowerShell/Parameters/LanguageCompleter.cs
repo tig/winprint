@@ -1,11 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using WinPrint.Core.Models;
 
-namespace WinPrint.Console {
+namespace WinPrint.PowerShell {
     public sealed class LanguageCompleter : IArgumentCompleter {
         public LanguageCompleter() {
         }

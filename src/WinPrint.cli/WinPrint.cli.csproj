@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <RootNamespace>WinPrint.cli</RootNamespace>
+        <AssemblyTitle>winprint CLI</AssemblyTitle>
+        <AssemblyName>winprint.cli</AssemblyName>
+        <Version>2.1.0.400</Version>
+        <Company>Kindel</Company>
+        <Product>winprint</Product>
+        <Authors>Tig Kindel</Authors>
+        <Description>winprint Terminal.Gui.Cli command line interface</Description>
+        <Copyright>Copyright Kindel, LLC</Copyright>
+        <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <LangVersion>12</LangVersion>
+        <Nullable>enable</Nullable>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <Platforms>AnyCPU;x64</Platforms>
+        <ApplicationIcon>..\WinPrint.PowerShell\winprint.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="..\WinPrint.PowerShell\winprint.ico" Link="winprint.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Terminal.Gui.Cli\src\Terminal.Gui.Cli\Terminal.Gui.Cli.csproj" />
+        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\agent-guide.md" LogicalName="WinPrint.cli.agent-guide.md" />
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+        <MakeDir Directories="$(SolutionDir)..\setup\Deploy" />
+        <Copy SourceFiles="$(TargetDir)$(TargetName).exe" DestinationFolder="$(SolutionDir)..\setup\Deploy" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SolutionDir)..\setup\Deploy" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(TargetDir)$(TargetName).deps.json" DestinationFolder="$(SolutionDir)..\setup\Deploy" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(TargetDir)$(TargetName).runtimeconfig.json" DestinationFolder="$(SolutionDir)..\setup\Deploy" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(ReferenceCopyLocalPaths)" DestinationFolder="$(SolutionDir)..\setup\Deploy" SkipUnchangedFiles="true" />
+    </Target>
+</Project>

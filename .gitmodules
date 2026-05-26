@@ -7,3 +7,7 @@
 [submodule "src/LiteHtmlSharp"]
 	path = src/LiteHtmlSharp
 	url = https://github.com/tig/LiteHtmlSharp.git
+[submodule "src/Terminal.Gui.Cli"]
+	path = src/Terminal.Gui.Cli
+	url = https://github.com/gui-cs/cli.git
+	branch = develop

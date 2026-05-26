@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing.Printing;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 //using TTRider.PowerShellAsync;
 
-namespace WinPrint.Console {
+namespace WinPrint.PowerShell {
     public sealed class PrinterNameCompleter : IArgumentCompleter {
         public PrinterNameCompleter() {
         }

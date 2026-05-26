@@ -1,19 +1,19 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0-windows</TargetFramework>
-        <RootNamespace>WinPrint.Console</RootNamespace>
-        <AssemblyTitle>winprint Console App</AssemblyTitle>
+        <RootNamespace>WinPrint.PowerShell</RootNamespace>
+        <AssemblyTitle>winprint PowerShell Cmdlet</AssemblyTitle>
         <AssemblyName>winprint</AssemblyName>
-        <StartupObject>WinPrint.Console.Program</StartupObject>
+        <StartupObject>WinPrint.PowerShell.Program</StartupObject>
 
         <Version>2.1.0.400</Version>
         <Company>Kindel</Company>
         <Product>winprint</Product>
         <Authors>Tig Kindel</Authors>
-        <Description>winprint Console App</Description>
+        <Description>winprint PowerShell Cmdlet</Description>
         <Copyright>Copyright Kindel, LLC</Copyright>
         <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>

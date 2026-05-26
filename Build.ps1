@@ -12,5 +12,8 @@ msbuild /p:Configuration=Debug /p:Platform=x64 src/WinPrint.sln
 echo "Testing Out-winprint"
 pwsh.exe -NoLogo -Command "Import-Module '.\setup\Deploy\winprint.dll'; Out-WinPrint .\testfiles\Program.cs -WhatIf -Verbose;"
 
+echo "Testing winprint.cli"
+.\setup\Deploy\winprint.cli.exe print .\testfiles\Program.cs --what-if
+
 echo "Testing winprintgui"
 .\setup\Deploy\winprintgui.exe .\testfiles\Program.cs 

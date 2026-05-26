@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,7 +8,7 @@ using Serilog.Events;
 using Serilog.Formatting;
 //using TTRider.PowerShellAsync;
 
-namespace WinPrint.Console {
+namespace WinPrint.PowerShell {
 
     public class PowerShellSink : ILogEventSink {
         public static PowerShellSink Instance => _instance.Value;

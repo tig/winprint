@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace WinPrint.Console {
+namespace WinPrint.PowerShell {
 
     /// <summary>
     ///		Base class for Cmdlets that run asynchronously.

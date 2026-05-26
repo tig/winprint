@@ -13,7 +13,7 @@ In 2019 got a wild-hair to write some code as a way of blowing off steam, and pr
 This all led to me re-discovering my old WinPrint 2.0 source code. Reminiscing on how much time I wasted back then, and how effective it was as a procrastination tool, I just had to try again. So I did. And, just to be clear, here's what I did:
 
 1) I wrote a *printing* app in 2019-2020. Nobody prints these days. *I* don't even print anymore.
-2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. A full command-line interface. It can syntax-highlight over 200 different programming languages. It's cross-platform. It's written in C# using the very latest .NET Core. It uses NodeJS and C++ under the covers. And more.
+2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. PowerShell and scriptable command-line interfaces. It can syntax-highlight source code with bundled TextMate grammars. It's written in C# using modern .NET. And more.
 3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
 
 So, there you are: I present to you WinPrint 2.0. I hope you enjoy it.
