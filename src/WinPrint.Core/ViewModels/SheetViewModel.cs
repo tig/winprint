@@ -402,6 +402,9 @@ public class SheetViewModel : ViewModelBase {
 
         try {
             (ContentEngine, ContentType, Language) = ContentTypeEngineBase.CreateContentTypeEngine(contentType);
+            if (ContentEngine is TextMateCte textMateCte) {
+                textMateCte.Configure(ContentType, Language, File);
+            }
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null) {

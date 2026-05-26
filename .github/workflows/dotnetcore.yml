@@ -2,9 +2,9 @@ name: .NET Core
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, v2.1 ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, v2.1 ]
 
 jobs:
   build:
@@ -14,33 +14,28 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout source
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         # Checkout libvt100 & litehtml
-        submodules: 'true'
+        submodules: 'recursive'
 
     # Setup .NET
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 10.0.x
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
     # Restore packages
     - name: Restore
-      run: |
-        dotnet restore src/WinPrint.Core
-        dotnet restore src/WinPrint.Console
-        dotnet restore src/WinPrint.LiteHtml
-        dotnet restore tests/WinPrint.Core.UnitTests
+      run: msbuild src/WinPrint.sln /t:Restore /p:Configuration=Release /p:Platform=x64
 
     # Build
     - name: Build
-      run: |
-        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.LiteHtml
-        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.Core
-        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" src/WinPrint.Console
-        dotnet build --configuration Release --no-restore /p:DefineConstants="CI_BUILD" tests/WinPrint.Core.UnitTests
+      run: msbuild src/WinPrint.sln /p:Configuration=Release /p:Platform=x64 /p:DefineConstants="CI_BUILD"
 
     # Run Tests
     - name: Test
-      run: dotnet test --no-restore --verbosity normal /p:DefineConstants="CI_BUILD" tests/WinPrint.Core.UnitTests
+      run: dotnet test tests/WinPrint.Core.UnitTests --configuration Release -p:Platform=x64 --no-build --verbosity normal /p:DefineConstants="CI_BUILD"

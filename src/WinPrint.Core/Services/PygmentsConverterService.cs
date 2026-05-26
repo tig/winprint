@@ -289,7 +289,10 @@ public class PygmentsConverterService {
         }
 
         if (string.IsNullOrEmpty(_scriptsPath)) {
-            throw new InvalidOperationException("Pygments: Pygments is not configured; script path is not set.");
+            var (installed, message) = CheckInstall();
+            if (!installed) {
+                throw new InvalidOperationException($"Pygments: {message}");
+            }
         }
 
         var file = Path.GetTempFileName();

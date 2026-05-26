@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <StartupObject>WinPrint.Winforms.Program</StartupObject>
@@ -22,6 +22,8 @@
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>12</LangVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
   </PropertyGroup>
 

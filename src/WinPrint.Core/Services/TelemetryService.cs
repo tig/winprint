@@ -37,7 +37,7 @@ namespace WinPrint.Core.Services {
 #if CI_BUILD
             config.InstrumentationKey = string.Empty;
 #else
-            config.InstrumentationKey = TelemetryService.Key;
+            config.InstrumentationKey = GetInstrumentationKey();
 #endif
 
             // Turn off Debug spew
@@ -110,6 +110,10 @@ namespace WinPrint.Core.Services {
             if (telemetry != null) {
                 telemetry.Flush();
             }
+        }
+
+        internal static string GetInstrumentationKey() {
+            return Environment.GetEnvironmentVariable("winprint_telemetryId") ?? string.Empty;
         }
 
         //private class CustomConverter : TraceTelemetryConverter {

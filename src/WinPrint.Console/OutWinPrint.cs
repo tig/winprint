@@ -410,10 +410,13 @@ namespace WinPrint.Console {
                 return;
             }
 
-            // Check to ensure Python/Pygments is working
-            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-            if (!installed) {
-                Log.Warning(message);
+            if (ModelLocator.Current.Settings.DefaultSyntaxHighlighterCteNameClassName.Equals(nameof(AnsiCte),
+                    StringComparison.OrdinalIgnoreCase)) {
+                // Check to ensure Python/Pygments is working when the legacy Pygments-backed CTE is configured.
+                (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+                if (!installed) {
+                    Log.Warning(message);
+                }
             }
 
             SetupUpdateHandler();

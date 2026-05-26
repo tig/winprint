@@ -27,7 +27,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged 
     // These can be overidden in Settings
     //public static string DefaultContentType = "text/plain";
     public static string DefaultCteClassName = "AnsiCte";
-    public static string DefaultSyntaxHighlighterCteNameClassName = "AnsiCte";
+    public static string DefaultSyntaxHighlighterCteNameClassName = "TextMateCte";
     private static readonly string?[]? _supportedContentTypes = null;
 
     /// <summary>
@@ -165,7 +165,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged 
         if (cte != null) {
             languageId = cte.SupportedContentTypes![0];
             language = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(lang =>
-                lang.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))!.Title;
+                lang.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))?.Title ?? languageId;
             return (cte, languageId, language);
         }
 
@@ -259,7 +259,8 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged 
         else {
             // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
             cte = GetDerivedClassesCollection().FirstOrDefault(c =>
-                c.GetType().Name.Equals(DefaultSyntaxHighlighterCteNameClassName, StringComparison.OrdinalIgnoreCase));
+                c.GetType().Name.Equals(ModelLocator.Current.Settings.DefaultSyntaxHighlighterCteNameClassName,
+                    StringComparison.OrdinalIgnoreCase));
             //if (string.IsNullOrWhiteSpace(language)) {
             //    language = contentType;
             //}

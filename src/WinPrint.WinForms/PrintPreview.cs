@@ -16,6 +16,8 @@ namespace WinPrint.WinForms {
     /// </summary>
     public partial class PrintPreview : Control {
         private SheetViewModel _svm;
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SheetViewModel SheetViewModel {
             get => _svm; set =>
                 // Wire up notificatins?
@@ -27,6 +29,7 @@ namespace WinPrint.WinForms {
             Description("Specifies the page number of the current sheet.")
         ]
         [Bindable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int CurrentSheet { get; set; }
 
         [

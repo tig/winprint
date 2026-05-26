@@ -110,6 +110,7 @@ public class Settings : ModelBase {
     /// </summary>
     public AnsiCte AnsiContentTypeEngineSettings { get; set; }
 
+    public TextMateCte TextMateContentTypeEngineSettings { get; set; }
     public TextCte TextContentTypeEngineSettings { get; set; }
     public HtmlCte HtmlContentTypeEngineSettings { get; set; }
 
@@ -244,9 +245,12 @@ public class Settings : ModelBase {
             //settings.location = new WindowLocation(100, 100);
 
             DefaultContentType = "text/plain",
-            DefaultCteClassName = "AnsiCte",
-            DefaultSyntaxHighlighterCteNameClassName = "AnsiCte",
+            DefaultCteClassName = "TextMateCte",
+            DefaultSyntaxHighlighterCteNameClassName = "TextMateCte",
             AnsiContentTypeEngineSettings = new AnsiCte { ContentSettings = new ContentSettings { Style = "pastie" } },
+            TextMateContentTypeEngineSettings = new TextMateCte {
+                ContentSettings = new ContentSettings { Style = "VisualStudioLight" }
+            },
             TextContentTypeEngineSettings = new TextCte {
                 // This font will be overriddent by Sheet defined fonts (if any)
                 //ContentSettings = new ContentSettings() {

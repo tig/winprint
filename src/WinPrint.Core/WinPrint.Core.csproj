@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net10.0-windows</TargetFramework>
         <Platforms>AnyCPU;x64;x86</Platforms>
         <Version>2.2.0.000</Version>
         <Company>Kindel</Company>
@@ -13,6 +13,8 @@
         <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
         <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
         <Nullable>enable</Nullable>
+        <LangVersion>12</LangVersion>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/tig/winprint</RepositoryUrl>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -39,11 +41,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="..\..\..\..\gui-cs\Terminal.Gui\README.md">
+      <None Include="..\..\README.md">
         <Pack>True</Pack>
         <PackagePath>\</PackagePath>
       </None>
-      <None Include="D:\s\kindel\winprint\LICENSE">
+      <None Include="..\..\LICENSE">
         <Pack>True</Pack>
         <PackagePath>\</PackagePath>
       </None>
@@ -55,7 +57,7 @@
         <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
 
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
         <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
         <PackageReference Include="Octokit" Version="13.0.1" />
@@ -64,9 +66,11 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-        <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
         <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.9" />
+        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" />
+        <PackageReference Include="TextMateSharp" Version="2.0.3" />
+        <PackageReference Include="TextMateSharp.Grammars" Version="2.0.3" />
         <PackageReference Include="UTF.Unknown" Version="2.5.1" />
     </ItemGroup>
 
@@ -109,4 +113,3 @@
     </ItemGroup>
 
 </Project>
-

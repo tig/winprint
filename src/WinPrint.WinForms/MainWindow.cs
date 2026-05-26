@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using LiteHtmlSharp;
 using Serilog;
 using WinPrint.Core;
+using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.WinForms;
@@ -516,10 +517,13 @@ namespace WinPrint.Winforms {
                 activeFile = ModelLocator.Current.Options.Files.ToList()[0];
             }
 
-            // Verify Pygments is installed
-            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-            if (!installed) {
-                MessageBox.Show(message, "Warning");
+            if (ModelLocator.Current.Settings.DefaultSyntaxHighlighterCteNameClassName.Equals(nameof(AnsiCte),
+                    StringComparison.OrdinalIgnoreCase)) {
+                // Verify Pygments is installed when the legacy Pygments-backed CTE is configured.
+                (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
+                if (!installed) {
+                    MessageBox.Show(message, "Warning");
+                }
             }
 
             // By running this on a different thread, we enable the main window to show

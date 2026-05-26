@@ -76,7 +76,7 @@ public class LogService {
 #if CI_BUILD
                 var msg = "CI_BUILD so no telemetry will be tracked.";
 #else
-            var msg = string.IsNullOrEmpty(TelemetryService.Key)
+            var msg = string.IsNullOrEmpty(TelemetryService.GetInstrumentationKey())
                 ? "However, telemetry key is missing so no telemetry will be tracked."
                 : "";
 #endif
