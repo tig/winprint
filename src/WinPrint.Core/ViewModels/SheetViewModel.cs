@@ -1383,9 +1383,4 @@ public class SheetViewModel : ViewModelBase
         }
     }
 
-    public class SheetViewModelSettingsChangedEvent
-    {
-        public bool Reflow { get; set; }
-        public string PropertyName { get; set; } = string.Empty;
-    }
 }

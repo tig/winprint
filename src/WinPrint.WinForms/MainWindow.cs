@@ -394,7 +394,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void SettingsChangedEventHandler (object? o, SheetViewModel.SheetViewModelSettingsChangedEvent e)
+    private void SettingsChangedEventHandler (object? o, SheetViewModelSettingsChangedEvent e)
     {
         if (InvokeRequired)
         {
