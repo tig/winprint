@@ -1,3 +1,4 @@
+#nullable disable
 using System.Collections;
 using Serilog.Sinks.XUnit;
 using System.Drawing;
@@ -137,3 +138,4 @@ public class TextMateCteTests
         Assert.Equal (ColorTranslator.FromHtml ("#123456").ToArgb (), color.ToArgb ());
     }
 }
+

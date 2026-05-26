@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -129,3 +130,4 @@ public class FileTypeMappingServiceTests : TestServicesBase
         Assert.Equal ("application/json", langs.First (l => l.Extensions.Contains ("*.json")).Id);
     }
 }
+

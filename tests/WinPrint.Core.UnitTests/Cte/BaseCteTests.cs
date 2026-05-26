@@ -1,3 +1,4 @@
+#nullable disable
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using System.IO;
@@ -221,3 +222,4 @@ public class BaseCteTests
     }
 
 }
+

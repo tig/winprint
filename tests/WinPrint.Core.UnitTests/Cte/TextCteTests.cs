@@ -1,3 +1,5 @@
+#nullable disable
+using System.Threading.Tasks;
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using WinPrint.Core.ContentTypeEngines;
@@ -90,7 +92,7 @@ public class TextCteTests
 
 
     [Fact]
-    public async void RenderAsyncTest_FixedPitch ()
+    public async Task RenderAsyncTest_FixedPitch ()
     {
         string shortLine = "This is a line 0123456789";
         string longLine = "This is a line 01234567890";
@@ -157,7 +159,7 @@ public class TextCteTests
     }
 
     [Fact]
-    public async void RenderAsyncTest_VariablePitch ()
+    public async Task RenderAsyncTest_VariablePitch ()
     {
         string shortLine = "1 01234567890123456789";
         string longLine = "2 01234567890123456789A";
@@ -223,3 +225,4 @@ public class TextCteTests
         Assert.Equal (3, await svm.ContentEngine.RenderAsync (new System.Drawing.Printing.PrinterResolution () { X = 96, Y = 96 }, null));
     }
 }
+

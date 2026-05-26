@@ -1,3 +1,5 @@
+#nullable disable
+using System.Threading.Tasks;
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using System.IO;
@@ -73,7 +75,7 @@ public class AnsiCteTests
     }
 
     [Fact (Skip = "AnsiCte is a stub - libvt100 submodule removed")]
-    public async void RenderAsyncTest_FixedPitch ()
+    public async Task RenderAsyncTest_FixedPitch ()
     {
         string shortLine = "This is a line 0123456789";
         string longLine = "This is a line 01234567890";
@@ -171,7 +173,7 @@ public class AnsiCteTests
     }
 
     [Fact (Skip = "AnsiCte is a stub - libvt100 submodule removed")]
-    public async void RenderAsyncTest_LineWrap ()
+    public async Task RenderAsyncTest_LineWrap ()
     {
         string text = "1";
         string ansiText = "[38;2;0;0;207;01m1[39;00m";
@@ -286,3 +288,4 @@ public class AnsiCteTests
     //    Assert.Equal(3, await svm.ContentEngine.RenderAsync(new System.Drawing.Printing.PrinterResolution() { X = 96, Y = 96 }, null));
     //}
 }
+

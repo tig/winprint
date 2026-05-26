@@ -1,3 +1,4 @@
+#nullable disable
 using System.Drawing;
 using System.Text.Json;
 using Xunit;
@@ -114,4 +115,5 @@ public class FontTests : TestModelsBase
         Assert.Equal (FontStyle.Italic, font.Style);
     }
 }
+
 

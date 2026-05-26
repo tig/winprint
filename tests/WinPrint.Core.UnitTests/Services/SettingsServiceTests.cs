@@ -1,3 +1,4 @@
+#nullable disable
 using System.Collections.Generic;
 using System.IO;
 using WinPrint.Core.Models;
@@ -126,3 +127,4 @@ public class SettingsServiceTests : TestServicesBase
         }
     }
 }
+

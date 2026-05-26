@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using WinPrint.Core.ContentTypeEngines;
@@ -19,7 +20,7 @@ public class PygmentsConverterServiceTests
 #if CI_BUILD
 #else
     [Fact]
-    public async void ConvertAsyncTest ()
+    public async Task ConvertAsyncTest ()
     {
         var ps = new PygmentsConverterService ();
         var input = $@"using system;";

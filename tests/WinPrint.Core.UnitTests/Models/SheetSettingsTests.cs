@@ -1,3 +1,4 @@
+#nullable disable
 using System.IO;
 using System.Text.Json;
 using WinPrint.Core.Models;
@@ -143,4 +144,5 @@ public class SheetSettingsTests : TestModelsBase
     //    Assert.AreEqual(FontStyle.Italic, font.Style);
     //}
 }
+
 
