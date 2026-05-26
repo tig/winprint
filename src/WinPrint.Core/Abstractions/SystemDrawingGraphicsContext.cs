@@ -311,76 +311,7 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
         return result;
     }
 
-    private sealed class SystemDrawingState : IGraphicsState
-    {
-        public SystemDrawingState (GraphicsState state)
-        {
-            State = state;
-        }
 
-        public GraphicsState State { get; }
-    }
 
-    private sealed class SystemDrawingFont : IGraphicsFont
-    {
-        private readonly bool _ownsNative;
 
-        public SystemDrawingFont (Font font, bool ownsNative = true)
-        {
-            Font = font ?? throw new ArgumentNullException (nameof (font));
-            _ownsNative = ownsNative;
-        }
-
-        public Font Font { get; }
-
-        public void Dispose ()
-        {
-            if (_ownsNative)
-            {
-                Font.Dispose ();
-            }
-        }
-    }
-
-    private sealed class SystemDrawingBrush : IGraphicsBrush
-    {
-        private readonly bool _ownsNative;
-
-        public SystemDrawingBrush (Brush brush, bool ownsNative = true)
-        {
-            Brush = brush ?? throw new ArgumentNullException (nameof (brush));
-            _ownsNative = ownsNative;
-        }
-
-        public Brush Brush { get; }
-
-        public void Dispose ()
-        {
-            if (_ownsNative)
-            {
-                Brush.Dispose ();
-            }
-        }
-    }
-
-    private sealed class SystemDrawingPen : IGraphicsPen
-    {
-        private readonly bool _ownsNative;
-
-        public SystemDrawingPen (Pen pen, bool ownsNative = true)
-        {
-            Pen = pen ?? throw new ArgumentNullException (nameof (pen));
-            _ownsNative = ownsNative;
-        }
-
-        public Pen Pen { get; }
-
-        public void Dispose ()
-        {
-            if (_ownsNative)
-            {
-                Pen.Dispose ();
-            }
-        }
-    }
 }
