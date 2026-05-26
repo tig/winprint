@@ -12,4 +12,16 @@
     <NoWarn>$(NoWarn);NU1510</NoWarn>
   </PropertyGroup>
 
+  <!-- House-style analyzers (one type per file, no nested types). Excluded from the
+       analyzer project itself to avoid a circular reference. -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'WinPrint.Analyzers'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)tools\WinPrint.Analyzers\WinPrint.Analyzers.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Analyzer</OutputItemType>
+      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+
 </Project>
+

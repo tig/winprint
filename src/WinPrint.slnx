@@ -14,6 +14,9 @@
     <File Path="../README.md" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="../tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj" />
+  </Folder>
   <Project Path="../tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
