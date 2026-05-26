@@ -1,4 +1,3 @@
-#nullable disable
 using Serilog.Sinks.XUnit;
 using System.Drawing;
 using System.IO;
@@ -28,7 +27,7 @@ public class BaseCteTests
             (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine (CteClassName);
             Assert.NotNull (svm.ContentEngine);
 
-            Assert.Equal (CteClassName, svm.ContentEngine.GetType ().Name);
+            Assert.Equal (CteClassName, svm.ContentEngine!.GetType ().Name);
             Assert.Equal (cte.SupportedContentTypes[0], svm.ContentType);
         }
     }
@@ -126,8 +125,8 @@ public class BaseCteTests
         ModelLocator.Current.Settings.CopyPropertiesFrom (settings);
 
         // (ContentTypeEngineBase cte, string language) CreateContentTypeEngine(string contentType)
-        ContentTypeEngineBase cte;
-        string contentType, language;
+        ContentTypeEngineBase? cte;
+        string? contentType, language;
 
         var input = "json";
         (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine (input);

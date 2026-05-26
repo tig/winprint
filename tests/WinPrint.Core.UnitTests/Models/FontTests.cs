@@ -1,4 +1,3 @@
-#nullable disable
 using System.Drawing;
 using System.Text.Json;
 using Xunit;
@@ -66,7 +65,7 @@ public class FontTests : TestModelsBase
         Assert.NotNull (json);
         Assert.True (json.Length > 0);
 
-        Core.Models.Font font2 = JsonSerializer.Deserialize<Core.Models.Font> (json);
+        Core.Models.Font? font2 = JsonSerializer.Deserialize<Core.Models.Font> (json);
         Assert.NotNull (font2);
         Assert.Equal (font.Family, font2.Family);
         Assert.Equal (font.Size, font2.Size);
@@ -78,7 +77,7 @@ public class FontTests : TestModelsBase
     {
         // Defaults
         string json = "{\"Family\":\"Microsoft Sans Serif\",\"Style\":\"Regular\",\"Size\":8}";
-        Core.Models.Font font = JsonSerializer.Deserialize<Core.Models.Font> (json, jsonOptions);
+        Core.Models.Font? font = JsonSerializer.Deserialize<Core.Models.Font> (json, jsonOptions);
         Assert.NotNull (font);
         Assert.Equal ("Microsoft Sans Serif", font.Family);
         Assert.Equal (8, font.Size);

@@ -1,4 +1,3 @@
-#nullable disable
 using System.Collections.Generic;
 using System.IO;
 using WinPrint.Core.Models;
@@ -24,7 +23,7 @@ public class SettingsServiceTests : TestServicesBase
             { "test", new SheetSettings() }
         }
         };
-        IDictionary<string, string> dict = settings.GetTelemetryDictionary ();
+        IDictionary<string, string?> dict = settings.GetTelemetryDictionary ();
         Assert.NotNull (dict);
     }
 
@@ -45,7 +44,7 @@ public class SettingsServiceTests : TestServicesBase
 
         settingsService.SaveSettings (settings);
 
-        Settings settingsCopy = settingsService.ReadSettings ();
+        Settings? settingsCopy = settingsService.ReadSettings ();
 
         Assert.NotNull (settingsCopy);
 
@@ -68,7 +67,7 @@ public class SettingsServiceTests : TestServicesBase
 
         settingsService.SaveSettings (settings);
 
-        Settings settingsCopy = settingsService.ReadSettings ();
+        Settings? settingsCopy = settingsService.ReadSettings ();
 
         Assert.NotNull (settingsCopy);
 
@@ -112,12 +111,12 @@ public class SettingsServiceTests : TestServicesBase
                 SettingsFileName = settingsFileName
             };
 
-            Settings settings = settingsService.ReadSettings ();
+            Settings? settings = settingsService.ReadSettings ();
 
             Assert.NotNull (settings);
             Assert.Equal ("text/plain", settings.DefaultContentType);
             Assert.Equal ("TextMateCte", settings.DefaultCteClassName);
-            Assert.Equal ("VisualStudioDark", settings.TextMateContentTypeEngineSettings.ContentSettings.Style);
+            Assert.Equal ("VisualStudioDark", settings.TextMateContentTypeEngineSettings.ContentSettings!.Style);
             Assert.Equal ("text/foo", settings.FileTypeMapping.FilesAssociations["*.foo"]);
             Assert.Contains (settings.FileTypeMapping.ContentTypes, contentType => contentType.Id == "text/foo");
         }

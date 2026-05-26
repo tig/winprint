@@ -1,4 +1,3 @@
-#nullable disable
 using System.Collections;
 using Serilog.Sinks.XUnit;
 using System.Drawing;
@@ -42,7 +41,7 @@ public class TextMateCteTests
         (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine (CteClassName);
         Assert.NotNull (svm.ContentEngine);
 
-        Assert.Equal (CteClassName, svm.ContentEngine.GetType ().Name);
+        Assert.Equal (CteClassName, svm.ContentEngine!.GetType ().Name);
         Assert.Equal ("text/plain", svm.ContentType);
         Assert.Equal ("Plain Text", svm.Language);
     }

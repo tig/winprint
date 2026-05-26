@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -65,20 +64,20 @@ public class FileTypeMappingServiceTests : TestServicesBase
         Assert.Equal (2, langs.Count);
 
         // Find Title by Id
-        Assert.Equal ("Plain Text", langs.FirstOrDefault (l => l.Id == "text/plain").Title);
+        Assert.Equal ("Plain Text", langs.First (l => l.Id == "text/plain").Title);
 
         // Find Title by Alias
-        Assert.Equal ("Plain Text", langs.FirstOrDefault (l => l.Aliases.Contains ("text")).Title);
-        Assert.Equal ("ANSI Text", langs.FirstOrDefault (l => l.Aliases.Contains ("ansi")).Title);
+        Assert.Equal ("Plain Text", langs.First (l => l.Aliases.Contains ("text")).Title);
+        Assert.Equal ("ANSI Text", langs.First (l => l.Aliases.Contains ("ansi")).Title);
 
         // Prove not found
         Assert.DoesNotContain (langs, l => l.Id == "txt");
 
         // Find Title by ext
-        Assert.Equal ("Plain Text", langs.FirstOrDefault (l => l.Extensions.Contains ("*.txt")).Title);
+        Assert.Equal ("Plain Text", langs.First (l => l.Extensions.Contains ("*.txt")).Title);
 
         // Find Id by ext
-        Assert.Equal ("text/plain", langs.FirstOrDefault (l => l.Extensions.Contains ("*.txt")).Id);
+        Assert.Equal ("text/plain", langs.First (l => l.Extensions.Contains ("*.txt")).Id);
 
     }
 

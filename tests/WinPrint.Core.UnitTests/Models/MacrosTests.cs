@@ -1,4 +1,3 @@
-#nullable disable
 using System;
 using System.IO;
 using System.Reflection;
@@ -141,7 +140,7 @@ public class MacrosTests : TestModelsBase
     private string InvalidFileName => Path.GetTempFileName ().Replace (@"\tmp", @$"\{Path.GetInvalidFileNameChars ()[0]}mp");
     private string InvalidDirectoryName => Path.GetTempFileName ().Replace (@"\Temp", $@"\{Path.GetInvalidPathChars ()[0]}emp");
 
-    private string NullName => null;
+    private string? NullName => null;
     private string EmptyName = "";
 
 
@@ -153,30 +152,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -186,30 +185,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -219,7 +218,7 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.Title = ExistingFile;
-        Assert.Equal (svm.Title, macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (svm.Title, macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -229,30 +228,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFileNameWithoutExtension (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -262,30 +261,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetDirectoryName (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -295,30 +294,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal (Path.GetFullPath (svm.File), macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ("", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -364,7 +363,7 @@ public class MacrosTests : TestModelsBase
         // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
         //  "u" Universal sortable date / time pattern.
         //  2009 - 06 - 15 13:45:30Z
-        Assert.StartsWith ($"{DateTime.Now:u}"[..^3], macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}:u}}"));
+        Assert.StartsWith ($"{DateTime.Now:u}"[..^3], macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}:u}}"));
     }
 
     [Fact]
@@ -374,30 +373,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal ($"{File.GetLastWriteTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{File.GetLastWriteTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal ($"{File.GetLastWriteTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{File.GetLastWriteTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
 
@@ -408,30 +407,30 @@ public class MacrosTests : TestModelsBase
         Macros macros = new Macros (svm);
 
         svm.File = ExistingFile;
-        Assert.Equal ($"{File.GetCreationTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{File.GetCreationTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = ExistingFileNoExtension;
-        Assert.Equal ($"{File.GetCreationTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{File.GetCreationTime (svm.File)}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFile;
         File.Delete (svm.File);
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = NonExistingFileNoExtension;
         File.Delete (svm.File);
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
-        svm.File = NullName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        svm.File = NullName!; // Intentional null input exercises macro fallback.
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         svm.File = EmptyName;
-        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{DateTime.MinValue}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
     }
 
     [Fact]
@@ -453,7 +452,7 @@ public class MacrosTests : TestModelsBase
         foreach (var cte in ContentTypeEngineBase.GetDerivedClassesCollection ())
         {
             (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine (cte.GetType ().Name);
-            Assert.Equal (svm.ContentEngine.GetType ().Name, macros.ReplaceMacros ($"{{{macroName}}}"));
+            Assert.Equal (svm.ContentEngine!.GetType ().Name, macros.ReplaceMacros ($"{{{macroName}}}"));
 
         }
     }
@@ -632,10 +631,10 @@ public class MacrosTests : TestModelsBase
         SheetViewModel svm = SetupSVM ();
         Macros macros = new Macros (svm);
 
-        Assert.Equal ($"{0}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{0}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         // Hex
-        Assert.Equal ($"{0:X8}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}:X8}}"));
+        Assert.Equal ($"{0:X8}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}:X8}}"));
 
     }
 
@@ -646,10 +645,10 @@ public class MacrosTests : TestModelsBase
         SheetViewModel svm = SetupSVM ();
         Macros macros = new Macros (svm);
 
-        Assert.Equal ($"{0}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}}}"));
+        Assert.Equal ($"{0}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}}}"));
 
         // Hex
-        Assert.Equal ($"{0:X8}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ().Name}:X8}}"));
+        Assert.Equal ($"{0:X8}", macros.ReplaceMacros ($"{{{MethodBase.GetCurrentMethod ()!.Name}:X8}}"));
 
     }
 }

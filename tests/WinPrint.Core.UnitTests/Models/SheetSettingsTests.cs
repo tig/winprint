@@ -1,4 +1,3 @@
-#nullable disable
 using System.IO;
 using System.Text.Json;
 using WinPrint.Core.Models;
@@ -35,7 +34,7 @@ public class SheetSettingsTests : TestModelsBase
 
         Assert.True (json.Length > 0);
 
-        SheetSettings doc2 = JsonSerializer.Deserialize<SheetSettings> (json);
+        SheetSettings? doc2 = JsonSerializer.Deserialize<SheetSettings> (json);
         Assert.NotNull (doc2);
     }
 
@@ -111,7 +110,7 @@ public class SheetSettingsTests : TestModelsBase
         string jsonString = File.ReadAllText (file);
         Assert.NotNull (jsonString);
 
-        return JsonSerializer.Deserialize<SheetSettings> (jsonString, jsonOptions);
+        return JsonSerializer.Deserialize<SheetSettings> (jsonString, jsonOptions) ?? throw new JsonException ("SheetSettings deserialized to null.");
     }
 
     //public void TestHeaderFooter(Core.Models.SheetSettings doc) {
