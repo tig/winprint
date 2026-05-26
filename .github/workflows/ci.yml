@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main, develop, v2.1]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: msbuild src/WinPrint.slnx /t:Restore /p:Configuration=Debug /p:Platform=x64
+
+      - name: Build
+        run: msbuild src/WinPrint.slnx /t:Build /p:Configuration=Debug /p:Platform=x64 /p:DefineConstants="CI_BUILD"
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Verify code style
+        shell: bash
+        run: |
+          dotnet jb cleanupcode src/WinPrint.slnx --no-build --verbosity=WARN
+          dotnet format src/WinPrint.slnx --no-restore
+          git diff --exit-code
+
+      - name: Test
+        run: dotnet test tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal

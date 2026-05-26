@@ -7,13 +7,12 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Solution Items/">
+    <File Path="../.editorconfig" />
     <File Path="../.gitignore" />
+    <File Path="../Directory.Build.props" />
+    <File Path="../Directory.Build.targets" />
     <File Path="../README.md" />
     <File Path="README.md" />
-  </Folder>
-  <Folder Name="/Terminal.Gui.Cli/" />
-  <Folder Name="/Terminal.Gui.Cli/src/">
-    <Project Path="Terminal.Gui.Cli/src/Terminal.Gui.Cli/Terminal.Gui.Cli.csproj" />
   </Folder>
   <Project Path="../tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj">
     <Platform Solution="*|x64" Project="x64" />

@@ -12,8 +12,6 @@
         <Copyright>Copyright Kindel, LLC</Copyright>
         <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
         <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-        <Nullable>enable</Nullable>
-        <LangVersion>12</LangVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/tig/winprint</RepositoryUrl>
