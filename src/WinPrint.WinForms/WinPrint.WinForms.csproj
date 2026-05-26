@@ -57,8 +57,4 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\tools\pygmentize.exe" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
-  </Target>
-
 </Project>

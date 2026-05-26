@@ -4,10 +4,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Printing;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using libvt100;
-using Serilog;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Font = System.Drawing.Font;
@@ -15,35 +12,17 @@ using Font = System.Drawing.Font;
 namespace WinPrint.Core.ContentTypeEngines;
 
 /// <summary>
-///     Implements text/plain and text/ansi file type support. Uses libvt100 to parse/render ANSI formatted
-///     text.
-///     Relies on libvt100 for word/line wrapping (whereas TextCte implements our own wrapping logic for
-///     text files).
+///     Implements text/plain and text/ansi file type support. Previously used libvt100 to parse/render
+///     ANSI formatted text. The libvt100 submodule has been removed; this class is a stub that can be
+///     re-implemented when the dependency is restored.
 ///     NOTE: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 /// </summary>
 public class AnsiCte : ContentTypeEngineBase, IDisposable {
     private static readonly string?[]? _supportedContentTypes = ["text/plain", "text/ansi"];
-    private Font? _cachedFont;
 
-    private SizeF _charSize;
-
-    // Protected implementation of Dispose pattern.
-    // Flag: Has Dispose already been called?
     private bool _disposed;
 
-    private float _lineNumberWidth;
-    private int _linesPerPage;
-    private int _minLineLen;
-
-    // All the lines of the text file, after reflow/line-wrap
-    private DynamicScreen? _screen;
-
-    /// <summary>
-    ///     ContentType identifier (shorthand for class name).
-    /// </summary>
     public override string?[]? SupportedContentTypes => _supportedContentTypes;
-
-    public IAnsiDecoderClient? DecoderClient => _screen!;
 
     public void Dispose() {
         Dispose(true);
@@ -52,250 +31,27 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable {
 
     public static AnsiCte Create() {
         var engine = new AnsiCte();
-        // Populate it with the common settings
         engine.CopyPropertiesFrom(ModelLocator.Current.Settings.AnsiContentTypeEngineSettings);
         return engine;
     }
 
     private void Dispose(bool disposing) {
-        LogService.TraceMessage($"disposing: {disposing}");
-
-        if (_disposed) {
-            return;
-        }
-
-        if (disposing) {
-            if (_cachedFont != null) {
-                _cachedFont.Dispose();
-            }
-
-            _screen = null;
-        }
-
+        if (_disposed) return;
         _disposed = true;
     }
 
-    // TODO: Pass doc around by ref to save copies
     public override async Task<bool> SetDocumentAsync(string doc) {
         Document = doc;
         return await Task.FromResult(true);
     }
 
-    /// <summary>
-    ///     Renders source file to a libvt100 canvas.
-    ///     Returns total count of pages. Sets any local page-size related values (e.g. linesPerPage).
-    /// </summary>
-    /// <param name="printerResolution"></param>
-    /// <param name="reflowProgress"></param>
-    /// <returns></returns>
     public override async Task<int> RenderAsync(PrinterResolution? printerResolution, EventHandler<string>? reflowProgress) {
-        LogService.TraceMessage();
-
-        if (Document == null) {
-            throw new InvalidOperationException("Document can't be null for RenderAsync");
-        }
-
-        var dpiX = printerResolution!.X;
-        var dpiY = printerResolution.Y;
-
-        // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
-        // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0) {
-            dpiX = dpiY = 96;
-        }
-
-        // Create a representative Graphics used for determining glyph metrics.      
-        using var bitmap = new Bitmap(1, 1);
-        bitmap.SetResolution(dpiX, dpiY);
-        var g = Graphics.FromImage(bitmap);
-        g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
-
-        // Calculate the number of lines per page; first we need our font. Keep it around.
-        _cachedFont = new Font(ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96,
-            ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
-        Log.Debug("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints,
-            _cachedFont.Style);
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            _cachedFont.Dispose();
-            _cachedFont = new Font(ContentSettings.Font.Family, ContentSettings.Font.Size, ContentSettings.Font.Style,
-                GraphicsUnit.Point);
-            Log.Debug("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints,
-                _cachedFont.Style);
-            g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
-        }
-
-        _charSize = MeasureString(g, _cachedFont, "i");
-
-        if (PageSize.Height < (int)Math.Floor(_charSize.Height)) {
-            throw new InvalidOperationException("The line height is greater than page height.");
-        }
-
-        // Round down # of lines per page to ensure lines don't clip on bottom
-        _linesPerPage = (int)Math.Floor(PageSize.Height / (int)Math.Floor(_charSize.Height));
-
-        // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
-        // TODO: Make line number width dynamic
-        // Note, MeasureString is actually dependent on lineNumberWidth!
-        _lineNumberWidth = ContentSettings.LineNumbers ? _charSize.Width * 4 : 0;
-
-        // This is the shortest line length (in chars) that we think we'll see. 
-        _minLineLen = (int)((PageSize.Width - _lineNumberWidth) / _charSize.Width);
-
-        _screen = new DynamicScreen(_minLineLen);
-        IAnsiDecoder vt100 = new AnsiDecoder();
-        vt100.Encoding = Encoding;
-        vt100.Subscribe(_screen);
-
-        var bytes = vt100.Encoding.GetBytes(Document);
-        if (bytes is { Length: > 0 }) {
-            vt100.Input(bytes);
-        }
-
-        var n = (int)Math.Ceiling(_screen.Lines.Count / (double)_linesPerPage);
-        Log.Debug("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n,
-            _linesPerPage, _screen.Lines.Count);
-        return await Task.FromResult(n);
+        LogService.TraceMessage("AnsiCte is a stub - libvt100 submodule removed.");
+        return await Task.FromResult(0);
     }
 
-    private SizeF MeasureString(Graphics g, Font? font, string text) {
-        return MeasureString(g, text, font, out var charsFitted, out var linesFilled);
-    }
-
-    /// <summary>
-    ///     Measures how much width a string will take, given current page settings
-    /// </summary>
-    /// <param name="g"></param>
-    /// <param name="text"></param>
-    /// <param name="charsFitted"></param>
-    /// <param name="linesFilled"></param>
-    /// <returns></returns>
-    private SizeF MeasureString(Graphics? g, string text, Font? font, out int charsFitted, out int linesFilled) {
-        if (g is null) {
-            // define context used for determining glyph metrics.        
-            using var bitmap = new Bitmap(1, 1);
-            g = Graphics.FromImage(bitmap);
-            g.PageUnit = GraphicsUnit.Display;
-        }
-
-        g.TextRenderingHint = TextRenderingHint;
-
-        // determine width     
-        var fontHeight = (int)Math.Floor(_charSize.Height);
-        // Use page settings including lineNumberWidth
-        var proposedSize = new SizeF(PageSize.Width,
-            (int)Math.Floor(_charSize.Height) + ((int)Math.Floor(_charSize.Height) / 2));
-        var size = g.MeasureString(text, font!, proposedSize, StringFormat, out charsFitted, out linesFilled);
-
-        // TODO: HACK to work around MeasureString not working right on Linux
-        //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        //    linesFilled = 1;
-        return size;
-    }
-
-    /// <summary>
-    ///     Paints a single page by iterating through the relevant part of the libvt100 screen (_screen),
-    ///     formatting each as needed.
-    /// </summary>
-    /// <param name="g">Graphics with 0,0 being the origin of the Page</param>
-    /// <param name="pageNum">Page number to print</param>
     public override void PaintPage(Graphics? g, int pageNum) {
-        LogService.TraceMessage($"{pageNum}");
-        if (_screen is null) {
-            Log.Debug("_screen must not be null");
-            return;
-        }
-
-        g.TextRenderingHint = TextRenderingHint;
-
-        // Paint each line of the file 
-        var firstLineOnPage = _linesPerPage * (pageNum - 1);
-        int i;
-        for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _screen.Lines.Count; i++) {
-            var yPos = (i - (_linesPerPage * (pageNum - 1))) * (int)Math.Floor(_charSize.Height);
-
-            // Right align line number
-            // TODO: Why "6". Make it a setting?
-            var x = ContentSettings!.LineNumberSeparator
-                ? (int)(_lineNumberWidth - 6 - MeasureString(g, _cachedFont, $"{_screen.Lines[i].LineNumber}").Width)
-                : 0;
-
-            // Line #s
-            if (ContentSettings.LineNumbers && _lineNumberWidth != 0) {
-                if (_screen.Lines[i].LineNumber > 0) {
-                    // TODO: Figure out how to make the spacing around separator more dynamic
-                    // TODO: Allow a different (non-monospace) font for line numbers
-                    g.DrawString($"{_screen.Lines[i].LineNumber}", _cachedFont!, Brushes.Gray, x, yPos, StringFormat);
-                }
-
-                // Line # separator (draw even if there's no line number, but stop at end of doc)
-                // TODO: Support setting color of line #s and separator
-                if (ContentSettings.LineNumberSeparator) {
-                    g.DrawLine(Pens.Gray, _lineNumberWidth - 4, yPos, _lineNumberWidth - 4,
-                        yPos + (int)Math.Floor(_charSize.Height));
-                }
-            }
-
-            // Text
-            var xPos = _lineNumberWidth;
-            foreach (var run in _screen.Lines[i].Runs) {
-                if (ContentSettings.Diagnostics) {
-                    g.DrawRectangle(Pens.Red, _lineNumberWidth, yPos, PageSize.Width - _lineNumberWidth,
-                        (int)Math.Floor(_charSize.Height));
-                }
-
-                var font = _cachedFont;
-                if (!ContentSettings.DisableFontStyles && run.Attributes.Bold) {
-                    if (run.Attributes.Italic) {
-                        font = new Font(_cachedFont!.FontFamily, _cachedFont.SizeInPoints,
-                            FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point);
-                    }
-                    else {
-                        font = new Font(_cachedFont!.FontFamily, _cachedFont.SizeInPoints, FontStyle.Bold,
-                            GraphicsUnit.Point);
-                    }
-                }
-                else if (!ContentSettings.DisableFontStyles && run.Attributes.Italic) {
-                    font = new Font(_cachedFont!.FontFamily, _cachedFont.SizeInPoints, FontStyle.Italic,
-                        GraphicsUnit.Point);
-                }
-
-                var fg = Color.Black;
-                if (run.Attributes.ForegroundColor != Color.White) {
-                    fg = run.Attributes.ForegroundColor;
-                }
-
-                var text = _screen.Lines[i].Text[run.Start..(run.Start + run.Length)];
-                g.DrawString(text, font, new SolidBrush(fg), xPos, yPos, StringFormat);
-                var size = MeasureString(g, font, text);
-
-                if (ContentSettings.Diagnostics) {
-                    g.DrawRectangle(new Pen(Color.Orange, 1), xPos, yPos, size.Width, size.Height);
-                }
-
-                if (ContentSettings.Diagnostics && run.HasTab) {
-                    var pen = new Pen(Color.Red, 1);
-                    g.DrawRectangle(pen, xPos, yPos, text.Length * (int)Math.Floor(_charSize.Width),
-                        (int)Math.Floor(_charSize.Height));
-                    g.DrawString("\u2192", font, new SolidBrush(Color.DarkGray), xPos, yPos, StringFormat);
-                }
-
-                xPos += size.Width;
-            }
-        }
-
-#if CURSOR
-            if (_screen.CursorPosition.Y >= firstLineOnPage && _screen.CursorPosition.Y < firstLineOnPage + _linesPerPage) {
-                var text = $"{(char)219}";
-                var x = ContentSettings.LineNumberSeparator ? (int)(lineNumberWidth) : 0;
-
-                var width = MeasureString(g, _cachedFont, text).Width;
-                RectangleF rect =
- new RectangleF(x + _screen.CursorPosition.X * width, _screen.CursorPosition.Y * _lineHeight, width, _lineHeight);
-                //g.DrawString(text, _cachedFont, new SolidBrush(Color.Blue), rect, StringFormat);
-                g.DrawRectangle(Pens.Black, x + _screen.CursorPosition.X * width, _screen.CursorPosition.Y * _lineHeight, width, _lineHeight);
-            }
-#endif
-        Log.Debug("Painted {lineOnPage} lines.", i - 1);
+        // Stub: libvt100 submodule removed
     }
 }
+
