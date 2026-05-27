@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using TextMateSharp.Internal.Grammars;
 using TextMateFontStyle = TextMateSharp.Themes.FontStyle;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -84,12 +85,12 @@ public class TextMateCteTests
         using var g = Graphics.FromImage (bitmap);
         using var font = new System.Drawing.Font (cte.ContentSettings.Font.Family,
             cte.ContentSettings.Font.Size / 72F * 96,
-            cte.ContentSettings.Font.Style, GraphicsUnit.Pixel);
+            (System.Drawing.FontStyle)cte.ContentSettings.Font.Style, GraphicsUnit.Pixel);
 
         cte.PageSize = new SizeF (1000, font.GetHeight () * 5);
 
         Assert.True (await cte.SetDocumentAsync ("using System;\nConsole.WriteLine(\"hi\");"));
-        Assert.Equal (1, await cte.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (1, await cte.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
     }
 
     [Fact]
@@ -108,12 +109,12 @@ public class TextMateCteTests
         bitmap.SetResolution (96, 96);
         using var font = new System.Drawing.Font (cte.ContentSettings.Font.Family,
             cte.ContentSettings.Font.Size / 72F * 96,
-            cte.ContentSettings.Font.Style, GraphicsUnit.Pixel);
+            (System.Drawing.FontStyle)cte.ContentSettings.Font.Style, GraphicsUnit.Pixel);
 
         cte.PageSize = new SizeF (1000, font.GetHeight () * 5);
 
         Assert.True (await cte.SetDocumentAsync ("alpha\fbravo\ncharlie"));
-        await cte.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null);
+        await cte.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null);
 
         FieldInfo? wrappedLinesField = typeof (TextMateCte).GetField ("_wrappedLines",
             BindingFlags.Instance | BindingFlags.NonPublic);
