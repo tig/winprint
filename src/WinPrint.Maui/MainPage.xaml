@@ -2,7 +2,36 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WinPrint.Maui.MainPage">
-    <Grid />
+             x:Class="WinPrint.Maui.MainPage"
+             Title="{Binding Title}">
+
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+        <!-- Toolbar -->
+        <HorizontalStackLayout Grid.Row="0" Spacing="8" Padding="8">
+            <Button Text="Open" Command="{Binding OpenFileCommand}" />
+            <Button Text="Print" Command="{Binding PrintCommand}" />
+            <BoxView WidthRequest="1" Color="Gray" />
+            <Button Text="−" Command="{Binding ZoomOutCommand}" WidthRequest="40" />
+            <Label Text="{Binding ZoomFactor, StringFormat='{0:P0}'}" VerticalOptions="Center" />
+            <Button Text="+" Command="{Binding ZoomInCommand}" WidthRequest="40" />
+            <Button Text="Fit" Command="{Binding ZoomFitCommand}" />
+            <BoxView WidthRequest="1" Color="Gray" />
+            <Button Text="◀" Command="{Binding PreviousPageCommand}" WidthRequest="40" />
+            <Label Text="{Binding PageIndicator}" VerticalOptions="Center" />
+            <Button Text="▶" Command="{Binding NextPageCommand}" WidthRequest="40" />
+        </HorizontalStackLayout>
+
+        <!-- Print Preview Area -->
+        <GraphicsView x:Name="PreviewGraphicsView"
+                      Grid.Row="1"
+                      BackgroundColor="LightGray" />
+
+        <!-- Status Bar -->
+        <Label Grid.Row="2"
+               Text="{Binding StatusText}"
+               Padding="8,4"
+               FontSize="12"
+               BackgroundColor="{AppThemeBinding Light=WhiteSmoke, Dark=#333}" />
+    </Grid>
 
 </ContentPage>
