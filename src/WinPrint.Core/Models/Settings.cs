@@ -28,15 +28,15 @@ public class Settings : ModelBase
     private bool _printPageSize;
     private bool _printPrintableArea;
     private Guid defaultSheet;
-    private WindowLocation location = new ();
-    private WindowSize size = new ();
+    private WindowLocation? location;
+    private WindowSize? size;
     private FormWindowState windowState;
 
     /// <summary>
     ///     Window location
     /// </summary>
     [SafeForTelemetry]
-    public WindowLocation Location
+    public WindowLocation? Location
     {
         get => location;
         set => SetField (ref location, value);
@@ -46,7 +46,7 @@ public class Settings : ModelBase
     ///     Window size
     /// </summary>
     [SafeForTelemetry]
-    public WindowSize Size
+    public WindowSize? Size
     {
         get => size;
         set => SetField (ref size, value);
