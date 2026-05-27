@@ -28,6 +28,11 @@ jobs:
       - name: Restore
         run: dotnet restore src/WinPrint.slnx /p:Configuration=Debug /p:Platform=x64
 
+      - name: Build analyzer
+        # Pre-build the WinPrint.Analyzers project so the solution build doesn't
+        # race two TargetFramework builds against the same Analyzer DLL output.
+        run: dotnet build tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj --no-restore /p:Configuration=Debug
+
       - name: Build
         run: dotnet build src/WinPrint.slnx --no-restore /p:Configuration=Debug /p:Platform=x64 /p:DefineConstants="CI_BUILD"
 
