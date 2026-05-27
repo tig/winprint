@@ -290,10 +290,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var sheetKey = settings.DefaultSheet.ToString ();
         if (settings.Sheets.TryGetValue (sheetKey, out var sheetSettings))
         {
-            SheetViewModel.Margins = sheetSettings.Margins;
-            SheetViewModel.Rows = sheetSettings.Rows;
-            SheetViewModel.Columns = sheetSettings.Columns;
-            SheetViewModel.PageSeparator = sheetSettings.PageSeparator;
+            // SetSheet initializes the internal _sheet field, header/footer VMs, and
+            // content settings — required before SetPrinterPageSettings can be called.
+            SheetViewModel.SetSheet (sheetSettings);
         }
     }
 
