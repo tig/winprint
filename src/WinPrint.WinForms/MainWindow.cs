@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
 using WinPrint.Core;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -1126,28 +1127,28 @@ public partial class MainWindow : Form
 
     private void topMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
+        var margins = (PrintMargins)CurrentSheetSettings.Margins.Clone ();
         margins.Top = (int)(topMargin.Value * 100M);
         CurrentSheetSettings.Margins = margins;
     }
 
     private void leftMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
+        var margins = (PrintMargins)CurrentSheetSettings.Margins.Clone ();
         margins.Left = (int)(leftMargin.Value * 100M);
         CurrentSheetSettings.Margins = margins;
     }
 
     private void rightMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
+        var margins = (PrintMargins)CurrentSheetSettings.Margins.Clone ();
         margins.Right = (int)(rightMargin.Value * 100M);
         CurrentSheetSettings.Margins = margins;
     }
 
     private void bottomMargin_ValueChanged (object? sender, EventArgs e)
     {
-        var margins = (Margins)CurrentSheetSettings.Margins.Clone ();
+        var margins = (PrintMargins)CurrentSheetSettings.Margins.Clone ();
         margins.Bottom = (int)(bottomMargin.Value * 100M);
         CurrentSheetSettings.Margins = margins;
     }
@@ -1256,14 +1257,14 @@ public partial class MainWindow : Form
         Font contentFont = contentSettings.Font ??
                            throw new InvalidOperationException ("Content font settings not found.");
         fontDialog.Font =
-            new System.Drawing.Font (contentFont.Family, contentFont.Size, contentFont.Style, GraphicsUnit.Point);
+            new System.Drawing.Font (new FontFamily (contentFont.Family), contentFont.Size, (System.Drawing.FontStyle)contentFont.Style, GraphicsUnit.Point);
         if (DialogResult.OK == fontDialog.ShowDialog (this))
         {
             contentSettings.Font = new Font
             {
                 Family = fontDialog.Font.FontFamily.Name,
                 Size = (float)Math.Round (fontDialog.Font.SizeInPoints),
-                Style = fontDialog.Font.Style
+                Style = (WinPrint.Core.Models.FontStyle)fontDialog.Font.Style
             };
             contentFontLink.Text = contentSettings.Font.ToString ();
         }
@@ -1275,7 +1276,7 @@ public partial class MainWindow : Form
         Footer footer = CurrentSheetSettings.Footer;
 
         Font headerFont = header.Font ?? throw new InvalidOperationException ("Header font settings not found.");
-        fontDialog.Font = new System.Drawing.Font (headerFont.Family, headerFont.Size, GraphicsUnit.Point);
+        fontDialog.Font = new System.Drawing.Font (new FontFamily (headerFont.Family), headerFont.Size, GraphicsUnit.Point);
 
         if (DialogResult.OK == fontDialog.ShowDialog (this))
         {
@@ -1284,7 +1285,7 @@ public partial class MainWindow : Form
             {
                 Family = fontDialog.Font.FontFamily.Name,
                 Size = (float)Math.Round (fontDialog.Font.SizeInPoints),
-                Style = fontDialog.Font.Style
+                Style = (WinPrint.Core.Models.FontStyle)fontDialog.Font.Style
             };
             headerFooterFontLink.Text = header.Font.ToString ();
         }
