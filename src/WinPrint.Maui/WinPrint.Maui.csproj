@@ -39,6 +39,11 @@
 		<WindowsPackageType>None</WindowsPackageType>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+
+		<!-- Suppress NuGet audit warnings for transitive vulnerabilities pulled in by the
+		     MAUI workload templates (e.g. System.Private.Uri 4.3.0). These come from packages
+		     we don't directly reference and cannot upgrade without waiting on upstream. -->
+		<NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

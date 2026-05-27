@@ -22,14 +22,14 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Install MAUI workloads
+        run: dotnet workload install maui
 
       - name: Restore
-        run: msbuild src/WinPrint.slnx /t:Restore /p:Configuration=Debug /p:Platform=x64
+        run: dotnet restore src/WinPrint.slnx /p:Configuration=Debug /p:Platform=x64
 
       - name: Build
-        run: msbuild src/WinPrint.slnx /t:Build /p:Configuration=Debug /p:Platform=x64 /p:DefineConstants="CI_BUILD"
+        run: dotnet build src/WinPrint.slnx --no-restore /p:Configuration=Debug /p:Platform=x64 /p:DefineConstants="CI_BUILD"
 
       - name: Restore .NET tools
         run: dotnet tool restore
