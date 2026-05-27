@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+#if WINDOWS
 using System.Drawing.Printing;
+#endif
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,7 +15,9 @@ using Serilog;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+#if WINDOWS
 using Font = System.Drawing.Font;
+#endif
 
 namespace WinPrint.Core.ContentTypeEngines;
 
@@ -94,7 +98,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <param name="printerResolution"></param>
     /// <param name="reflowProgress"></param>
     /// <returns></returns>
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+    public override async Task<int> RenderAsync (PrintResolution? printerResolution,
         EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ();
@@ -126,15 +130,15 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
 
         // Calculate the number of lines per page; first we need our font. Keep it around.
-        _cachedFont = new Font (ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96,
-            ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
+        _cachedFont = new Font (new FontFamily (ContentSettings!.Font.Family), ContentSettings.Font.Size / 72F * 96,
+            (System.Drawing.FontStyle)ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
         Log.Debug ("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints,
             _cachedFont.Style);
 
         if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))
         {
             _cachedFont.Dispose ();
-            _cachedFont = new Font (ContentSettings.Font.Family, ContentSettings.Font.Size, ContentSettings.Font.Style,
+            _cachedFont = new Font (new FontFamily (ContentSettings.Font.Family), ContentSettings.Font.Size, (System.Drawing.FontStyle)ContentSettings.Font.Style,
                 GraphicsUnit.Point);
             Log.Debug ("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints,
                 _cachedFont.Style);
@@ -442,7 +446,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         GraphicsFontUnit unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
         float size = g.IsDisplayUnit ? ContentSettings!.Font.Size : ContentSettings!.Font.Size / 72F * 96F;
         return g.CreateFont (ContentSettings.Font.Family, size,
-            SystemDrawingAdapters.ToGraphicsFontStyle (ContentSettings.Font.Style), unit);
+            (GraphicsFontStyle)ContentSettings.Font.Style, unit);
     }
 
     private GraphicsSizeF MeasureString (IGraphicsContext g, string text, IGraphicsFont font)

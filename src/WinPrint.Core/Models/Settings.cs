@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using WinPrint.Core.ContentTypeEngines;
@@ -102,8 +101,10 @@ public class Settings : ModelBase
     /// </summary>
     public AnsiCte AnsiContentTypeEngineSettings { get; set; } = new ();
 
+#if WINDOWS
     public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
     public TextCte TextContentTypeEngineSettings { get; set; } = new ();
+#endif
     public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
 
     /// <summary>
@@ -312,6 +313,7 @@ public class Settings : ModelBase
             DefaultCteClassName = "TextMateCte",
             DefaultSyntaxHighlighterCteNameClassName = "TextMateCte",
             AnsiContentTypeEngineSettings = new AnsiCte { ContentSettings = new ContentSettings { Style = "pastie" } },
+#if WINDOWS
             TextMateContentTypeEngineSettings = new TextMateCte
             {
                 ContentSettings = new ContentSettings { Style = "VisualStudioLight" }
@@ -330,6 +332,7 @@ public class Settings : ModelBase
                 //NewPageOnFormFeed = false,
                 //TabSpaces = 4
             },
+#endif
 
             // Html fonts are determined by:
             // 1) Sheet (all HTML & CSS ignored)

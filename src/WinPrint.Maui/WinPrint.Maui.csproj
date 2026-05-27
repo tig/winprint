@@ -69,7 +69,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+	<ItemGroup>
 		<ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
 	</ItemGroup>
 

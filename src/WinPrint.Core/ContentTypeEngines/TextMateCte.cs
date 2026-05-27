@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+#if WINDOWS
 using System.Drawing.Printing;
+#endif
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,8 +16,12 @@ using TextMateSharp.Registry;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+#if WINDOWS
 using DrawingFont = System.Drawing.Font;
+#endif
+#if WINDOWS
 using DrawingFontStyle = System.Drawing.FontStyle;
+#endif
 using TextMateFontStyle = TextMateSharp.Themes.FontStyle;
 
 namespace WinPrint.Core.ContentTypeEngines;
@@ -93,7 +99,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         return await Task.FromResult (true);
     }
 
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+    public override async Task<int> RenderAsync (PrintResolution? printerResolution,
         EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ();
@@ -129,13 +135,13 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         _italicFont = null;
         _boldItalicFont = null;
 
-        _cachedFont = new DrawingFont (ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96,
-            ContentSettings.Font.Style, GraphicsUnit.Pixel);
+        _cachedFont = new DrawingFont (new FontFamily (ContentSettings!.Font.Family), ContentSettings.Font.Size / 72F * 96,
+            (DrawingFontStyle)ContentSettings.Font.Style, GraphicsUnit.Pixel);
         if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))
         {
             _cachedFont.Dispose ();
-            _cachedFont = new DrawingFont (ContentSettings.Font.Family, ContentSettings.Font.Size,
-                ContentSettings.Font.Style, GraphicsUnit.Point);
+            _cachedFont = new DrawingFont (new FontFamily (ContentSettings.Font.Family), ContentSettings.Font.Size,
+                (DrawingFontStyle)ContentSettings.Font.Style, GraphicsUnit.Point);
         }
 
         _lineHeight = _cachedFont.GetHeight (dpiY);

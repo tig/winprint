@@ -1,4 +1,4 @@
-using System.Drawing.Printing;
+using WinPrint.Core.Abstractions;
 
 namespace WinPrint.Core.Models;
 
@@ -17,7 +17,7 @@ public class SheetSettings : ModelBase
     private Header _header = new ();
 
     private bool _landscape;
-    private Margins _margins = new (0, 0, 0, 0);
+    private PrintMargins _margins = new (0, 0, 0, 0);
 
     //private Guid id;
     private string _name = "";
@@ -87,7 +87,7 @@ public class SheetSettings : ModelBase
     ///     Sheet margins in 100ths of an inch. Impacts headers, footers, and content.
     /// </summary>
     [SafeForTelemetry]
-    public Margins Margins
+    public PrintMargins Margins
     {
         get => _margins;
         set => SetField (ref _margins, value);
