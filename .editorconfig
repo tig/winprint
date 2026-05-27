@@ -1,0 +1,70 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.{csproj,props,targets,slnx,xml,config,resx}]
+indent_size = 2
+
+[*.{cs,vb}]
+
+# IDE0130: Namespace does not match folder structure
+dotnet_style_namespace_match_folder = false
+
+[*.cs]
+
+# IDE0160: Convert to block scoped namespace
+dotnet_diagnostic.IDE0160.severity = silent
+
+# Always use braces - no single-line if/else/for/while/using
+csharp_prefer_braces = true:warning
+
+# Prefer file-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Prefer explicit type over var unless the type is apparent from the RHS
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Prefer pattern matching and modern C# idioms
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+
+# Prefer target-typed new
+csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+
+# Prefer collection expressions
+dotnet_style_prefer_collection_expression = true:suggestion
+
+# Space before parentheses in calls/declarations: `Method (arg)`, `new ()`, `if (x)`
+csharp_space_between_method_call_name_and_opening_parenthesis = true
+csharp_space_between_method_declaration_name_and_open_parenthesis = true
+csharp_space_after_keywords_in_control_flow_statements = true
+
+# ReSharper-specific space rules - dotnet format reads the csharp_space_* keys above, but
+# ReSharper has additional knobs. These keep ReSharper's code-cleanup output aligned with
+# clet's house style (space before parens).
+resharper_space_before_new_parentheses = true
+resharper_space_before_method_call_parentheses = true
+resharper_space_before_method_parentheses = true
+resharper_space_before_empty_method_call_parentheses = true
+resharper_space_before_empty_method_parentheses = true
+resharper_space_before_typeof_parentheses = true
+resharper_space_before_default_parentheses = true
+resharper_space_before_checked_parentheses = true
+resharper_space_before_sizeof_parentheses = true
+resharper_space_before_nameof_parentheses = true

@@ -1,11 +1,11 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace WinPrint.Core.Helpers;
 
-internal class Diagnostics {
-
-    [DllImport("libgdiplus", ExactSpelling = true)]
-    internal static extern string GetLibgdiplusVersion();
+internal class Diagnostics
+{
+    [DllImport ("libgdiplus", ExactSpelling = true)]
+    internal static extern string GetLibgdiplusVersion ();
 
     ///// <summary>
     ///// Gets the version of libgdiplus. 
@@ -28,5 +28,4 @@ internal class Diagnostics {
     //        return $"Unable to determine libgdiplus version using `dpkg-query`. exception: {ex}";
     //    }
     //}
-
 }

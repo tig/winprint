@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Drawing;
 using Serilog;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.ViewModels;
 using Font = WinPrint.Core.Models.Font;
@@ -11,7 +12,8 @@ namespace WinPrint.Core;
 ///     Knows how to paint a header or footer.
 /// </summary>
 // TODO: Add a Padding property to provide padding below bottom of header/above top of footer
-public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
+public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
+{
     private bool _bottomBorder;
 
     // Protected implementation of Dispose pattern.
@@ -22,7 +24,7 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
     private bool _leftBorder;
     private bool _rightBorder;
 
-    internal SheetViewModel? _svm;
+    internal SheetViewModel _svm;
 
     private string? _text;
 
@@ -32,12 +34,14 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
     private int _verticalPadding = 10; // Vertical padding below/above header/footer in 100ths of inch
 
     /// <inheritdoc />
-    protected HeaderFooterViewModel(SheetViewModel? svm, HeaderFooter? hf) {
-        if (hf is null) {
-            throw new ArgumentNullException(nameof(hf));
+    protected HeaderFooterViewModel (SheetViewModel? svm, HeaderFooter? hf)
+    {
+        if (hf is null)
+        {
+            throw new ArgumentNullException (nameof (hf));
         }
 
-        _svm = svm ?? throw new ArgumentNullException(nameof(svm));
+        _svm = svm ?? throw new ArgumentNullException (nameof (svm));
 
         Text = hf.Text;
         LeftBorder = hf.LeftBorder;
@@ -46,17 +50,20 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
         BottomBorder = hf.BottomBorder;
 
         // Font can be null (provided by Sheet definition)
-        if (hf.Font != null) {
-            Font = (Font)hf.Font.Clone();
+        if (hf.Font != null)
+        {
+            Font = (Font)hf.Font.Clone ();
         }
 
         Enabled = hf.Enabled;
         VerticalPadding = hf.VerticalPadding;
 
         // Wire up changes from Header / Footer models
-        hf.PropertyChanged += (s, e) => {
-            var reflow = false;
-            switch (e.PropertyName) {
+        hf.PropertyChanged += (s, e) =>
+        {
+            bool reflow = false;
+            switch (e.PropertyName)
+            {
                 case "Text":
                     Text = hf.Text;
                     break;
@@ -85,63 +92,99 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
                     reflow = true;
                     break;
                 default:
-                    throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
+                    throw new InvalidOperationException ($"Property change not handled: {e.PropertyName}");
             }
 
-            OnSettingsChanged(reflow);
+            OnSettingsChanged (reflow);
         };
     }
 
-    public string? Text { get => _text; set => SetField(ref _text, value); }
+    public string? Text
+    {
+        get => _text;
+        set => SetField (ref _text, value);
+    }
 
     /// <summary>
     ///     Font used for header or footer text
     /// </summary>
-    public Font? Font { get => _font; set => SetField(ref _font, value); }
+    public Font? Font
+    {
+        get => _font;
+        set => SetField (ref _font, value);
+    }
 
     /// <summary>
     ///     Enables or disables printing of left border of heder/footer
     /// </summary>
-    public bool LeftBorder { get => _leftBorder; set => SetField(ref _leftBorder, value); }
+    public bool LeftBorder
+    {
+        get => _leftBorder;
+        set => SetField (ref _leftBorder, value);
+    }
 
     /// <summary>
     ///     Enables or disables printing of Top border of heder/footer
     /// </summary>
-    public bool TopBorder { get => _topBorder; set => SetField(ref _topBorder, value); }
+    public bool TopBorder
+    {
+        get => _topBorder;
+        set => SetField (ref _topBorder, value);
+    }
 
     /// <summary>
     ///     Enables or disables printing of Right border of heder/footer
     /// </summary>
-    public bool RightBorder { get => _rightBorder; set => SetField(ref _rightBorder, value); }
+    public bool RightBorder
+    {
+        get => _rightBorder;
+        set => SetField (ref _rightBorder, value);
+    }
 
     /// <summary>
     ///     Enables or disables printing of Bottom border of heder/footer
     /// </summary>
-    public bool BottomBorder { get => _bottomBorder; set => SetField(ref _bottomBorder, value); }
+    public bool BottomBorder
+    {
+        get => _bottomBorder;
+        set => SetField (ref _bottomBorder, value);
+    }
 
     /// <summary>
     ///     Enable or disable header/footer
     /// </summary>
-    public bool Enabled { get => _enabled; set => SetField(ref _enabled, value); }
+    public bool Enabled
+    {
+        get => _enabled;
+        set => SetField (ref _enabled, value);
+    }
 
-    public int VerticalPadding { get => _verticalPadding; set => SetField(ref _verticalPadding, value); }
+    public int VerticalPadding
+    {
+        get => _verticalPadding;
+        set => SetField (ref _verticalPadding, value);
+    }
 
     /// <summary>
     ///     Header/Footer bounds (page minus margins)
     /// </summary>
-    public RectangleF Bounds => CalcBounds();
+    public RectangleF Bounds => CalcBounds ();
 
-    public void Dispose() {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+    public void Dispose ()
+    {
+        Dispose (true);
+        GC.SuppressFinalize (this);
     }
 
-    protected virtual void Dispose(bool disposing) {
-        if (_disposed) {
+    protected virtual void Dispose (bool disposing)
+    {
+        if (_disposed)
+        {
             return;
         }
 
-        if (disposing) {
+        if (disposing)
+        {
             //if (Font != null) Font.Dispose();
         }
 
@@ -152,90 +195,101 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
     ///     Calculate the Header or Footer bounds (position and size on sheet) based on containing document and font size.
     /// </summary>
     /// <returns></returns>
-    internal abstract RectangleF CalcBounds();
+    internal abstract RectangleF CalcBounds ();
 
-    internal abstract bool IsAlignTop();
+    internal abstract bool IsAlignTop ();
 
-    public void Paint(Graphics? g, int sheetNum) {
-        if (!Enabled) {
+    public void Paint (IGraphicsContext g, int sheetNum)
+    {
+        if (!Enabled)
+        {
             return;
         }
 
-        if (g is null) {
-            throw new ArgumentNullException(nameof(g));
-        }
-
-        var boundsHF = CalcBounds();
-        boundsHF.Y += IsAlignTop() ? 0 : _verticalPadding;
+        RectangleF boundsHF = CalcBounds ();
+        boundsHF.Y += IsAlignTop () ? 0 : _verticalPadding;
         boundsHF.Height -= _verticalPadding;
 
-        if (LeftBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
+        if (LeftBorder)
+        {
+            g.DrawLine (g.BlackPen, boundsHF.Left, boundsHF.Top, boundsHF.Left, boundsHF.Bottom);
         }
 
-        if (TopBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Top, boundsHF.Right, boundsHF.Top);
+        if (TopBorder)
+        {
+            g.DrawLine (g.BlackPen, boundsHF.Left, boundsHF.Top, boundsHF.Right, boundsHF.Top);
         }
 
-        if (RightBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Right, boundsHF.Top, boundsHF.Right, boundsHF.Bottom);
+        if (RightBorder)
+        {
+            g.DrawLine (g.BlackPen, boundsHF.Right, boundsHF.Top, boundsHF.Right, boundsHF.Bottom);
         }
 
-        if (BottomBorder) {
-            g.DrawLine(Pens.Black, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
+        if (BottomBorder)
+        {
+            g.DrawLine (g.BlackPen, boundsHF.Left, boundsHF.Bottom, boundsHF.Right, boundsHF.Bottom);
         }
 
-        Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
-        var macros = new Macros(_svm) { Page = sheetNum };
-        var parts = macros.ReplaceMacros(Text).Split('\t', '|');
+        Log.Debug ($"{GetType ().Name}: Expanding Macros - {Text}");
+        var macros = new Macros (_svm) { Page = sheetNum };
+        string[] parts = macros.ReplaceMacros (Text ?? string.Empty).Split ('\t', '|');
 
         // Left\tCenter\tRight
-        if (parts.Length == 0) {
+        if (parts.Length == 0)
+        {
             return;
         }
 
-        using var tempFont = CreateTempFont(g);
+        using IGraphicsFont tempFont = CreateTempFont (g);
 
-        using var fmt = new StringFormat(StringFormat.GenericTypographic) {
-            Trimming = StringTrimming.None,
+        var fmt = new GraphicsStringFormat
+        {
+            Trimming = GraphicsStringTrimming.None,
             // BUGBUG: This is a work around for https://stackoverflow.com/questions/59159919/stringformat-trimming-changes-vertical-placement-of-text
             //         (turning on NoWrap). 
-            FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.NoWrap | StringFormatFlags.NoClip
+            FormatFlags = GraphicsStringFormatFlags.LineLimit | GraphicsStringFormatFlags.NoWrap |
+                          GraphicsStringFormatFlags.NoClip
         };
 
-        fmt.LineAlignment = IsAlignTop() ? StringAlignment.Near : StringAlignment.Far;
+        fmt.LineAlignment = IsAlignTop () ? GraphicsTextAlignment.Near : GraphicsTextAlignment.Far;
 
         // Center goes first - it has priority - ensure it gets drawn completely where
         // Left & Right can be trimmed
-        var sizeCenter = new SizeF(0, 0);
+        var sizeCenter = new GraphicsSizeF (0, 0);
+        var boundsRect = new GraphicsRectF (boundsHF.X, boundsHF.Y, boundsHF.Width, boundsHF.Height);
 
-        if (parts.Length > 1) {
-            fmt.Alignment = StringAlignment.Center;
-            sizeCenter = g.MeasureString(parts[1], tempFont, (int)boundsHF.Width, fmt);
+        if (parts.Length > 1)
+        {
+            fmt.Alignment = GraphicsTextAlignment.Center;
+            sizeCenter = g.MeasureString (parts[1], tempFont, (int)boundsHF.Width, fmt);
             // g.DrawRectangle(Pens.Purple, boundsHF.Left, boundsHF.Top, boundsHF.Width, boundsHF.Height);
-            g.DrawString(parts[1], tempFont, Brushes.Black, boundsHF, fmt);
+            g.DrawString (parts[1], tempFont, g.BlackBrush, boundsRect, fmt);
         }
 
         // Left
         // Remove the space taken up by the center from the bounds
-        var textCenterBounds = (boundsHF.Width - sizeCenter.Width) / 2;
+        float textCenterBounds = (boundsHF.Width - sizeCenter.Width) / 2;
 
-        var boundsLeft = new RectangleF(boundsHF.X, boundsHF.Y, textCenterBounds, boundsHF.Height);
-        var sizeLeft = g.MeasureString(parts[0], tempFont, (int)textCenterBounds, fmt);
+        var boundsLeft = new RectangleF (boundsHF.X, boundsHF.Y, textCenterBounds, boundsHF.Height);
+        GraphicsSizeF sizeLeft = g.MeasureString (parts[0], tempFont, (int)textCenterBounds, fmt);
 
-        fmt.Alignment = StringAlignment.Near;
-        fmt.Trimming = StringTrimming.None;
+        fmt.Alignment = GraphicsTextAlignment.Near;
+        fmt.Trimming = GraphicsStringTrimming.None;
         //g.DrawRectangle(Pens.Orange, boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height);
-        g.DrawString(parts[0], tempFont, Brushes.Black, boundsLeft, fmt);
+        g.DrawString (parts[0], tempFont, g.BlackBrush,
+            new GraphicsRectF (boundsLeft.X, boundsLeft.Y, boundsLeft.Width, boundsLeft.Height), fmt);
 
         //Right
-        var boundsRight = new RectangleF(boundsHF.X + (boundsHF.Width - textCenterBounds), boundsHF.Y, textCenterBounds,
+        var boundsRight = new RectangleF (boundsHF.X + (boundsHF.Width - textCenterBounds), boundsHF.Y,
+            textCenterBounds,
             boundsHF.Height);
-        if (parts.Length > 2) {
-            fmt.Alignment = StringAlignment.Far;
-            fmt.Trimming = StringTrimming.None;
+        if (parts.Length > 2)
+        {
+            fmt.Alignment = GraphicsTextAlignment.Far;
+            fmt.Trimming = GraphicsStringTrimming.None;
             //g.DrawRectangle(Pens.Blue, boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height);
-            g.DrawString(parts[2], tempFont, Brushes.Black, boundsRight, fmt);
+            g.DrawString (parts[2], tempFont, g.BlackBrush,
+                new GraphicsRectF (boundsRight.X, boundsRight.Y, boundsRight.Width, boundsRight.Height), fmt);
         }
     }
 
@@ -244,14 +298,18 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
     /// </summary>
     /// <param name="g"></param>
     /// <returns></returns>
-    private System.Drawing.Font? CreateTempFont(Graphics? g) {
-        if (Font == null) {
-            return SystemFonts.DefaultFont;
+    private IGraphicsFont CreateTempFont (IGraphicsContext g)
+    {
+        if (Font == null)
+        {
+            return g.CreateFont ("sansserif", 8F, GraphicsFontStyle.Regular, GraphicsFontUnit.Point);
         }
 
-        var tempFont = g.PageUnit == GraphicsUnit.Display ? new System.Drawing.Font(Font.Family, Font.Size, Font.Style, GraphicsUnit.Point) :
-            // Convert font to pixel units if we're in preview
-            new System.Drawing.Font(Font.Family, Font.Size / 72F * 96F, Font.Style, GraphicsUnit.Pixel);
+        IGraphicsFont tempFont = g.IsDisplayUnit
+            ? g.CreateFont (Font.Family, Font.Size, SystemDrawingAdapters.ToGraphicsFontStyle (Font.Style),
+                GraphicsFontUnit.Point)
+            : g.CreateFont (Font.Family, Font.Size / 72F * 96F, SystemDrawingAdapters.ToGraphicsFontStyle (Font.Style),
+                GraphicsFontUnit.Pixel);
 
         return tempFont;
     }
@@ -260,7 +318,8 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable {
     // if bool is true, reflow. Otherwise just paint
     public event EventHandler<bool>? SettingsChanged;
 
-    protected void OnSettingsChanged(bool reflow) {
-        SettingsChanged?.Invoke(this, reflow);
+    protected void OnSettingsChanged (bool reflow)
+    {
+        SettingsChanged?.Invoke (this, reflow);
     }
 }

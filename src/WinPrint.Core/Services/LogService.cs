@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -15,12 +15,13 @@ namespace WinPrint.Core.Services;
 ///     Configures Serilog for logging to the console and logfiles. Provides simple helper
 ///     functions for tracing.
 /// </summary>
-public class LogService {
+public class LogService
+{
     public string? LogPath { get; set; }
-    public LoggingLevelSwitch MasterLevelSwitch { get; set; } = new();
-    public LoggingLevelSwitch FileLevelSwitch { get; set; } = new();
-    public LoggingLevelSwitch ConsoleLevelSwitch { get; set; } = new();
-    public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new();
+    public LoggingLevelSwitch MasterLevelSwitch { get; set; } = new ();
+    public LoggingLevelSwitch FileLevelSwitch { get; set; } = new ();
+    public LoggingLevelSwitch ConsoleLevelSwitch { get; set; } = new ();
+    public LoggingLevelSwitch DebugLevelSwitch { get; set; } = new ();
 
     /// <summary>
     ///     Starts Serilog-based logging.
@@ -29,7 +30,8 @@ public class LogService {
     /// <param name="consoleSink">Provides the ILogEventSink for the console.</param>
     /// <param name="debug">If true, the console log will emit LogEventLevel.Debug entries</param>
     /// <param name="verbose">If true, the console log will emit LogEventLevel.Information entries.</param>
-    public void Start(string appName, ILogEventSink? consoleSink = null, bool debug = false, bool verbose = false) {
+    public void Start (string appName, ILogEventSink? consoleSink = null, bool debug = false, bool verbose = false)
+    {
         MasterLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
         DebugLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 
@@ -42,60 +44,66 @@ public class LogService {
             // TODO: Keep this at Debug until after Beta, then change it to Information
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #endif
-        var productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService))!.Location)
+        string? productVersion = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (LogService))!.Location)
             .FileVersion;
         LogPath =
             $"{SettingsService.SettingsPath}{Path.DirectorySeparatorChar}logs{Path.DirectorySeparatorChar}{appName}.log"
-                .Replace(@"file:\", "");
+                .Replace (@"file:\", "");
 
-        if (consoleSink == null) {
+        if (consoleSink == null)
+        {
             ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Fatal;
         }
 
         // Setup logging
-        if (consoleSink == null) {
+        if (consoleSink == null)
+        {
             // GUI
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(MasterLevelSwitch)
-                .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
-                .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
-                .CreateLogger();
+            Log.Logger = new LoggerConfiguration ()
+                .MinimumLevel.ControlledBy (MasterLevelSwitch)
+                .WriteTo.Debug (levelSwitch: DebugLevelSwitch)
+                .WriteTo.File (LogPath, shared: true, levelSwitch: FileLevelSwitch)
+                .CreateLogger ();
         }
-        else {
+        else
+        {
             // Console / Powershell
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.ControlledBy(MasterLevelSwitch)
-                .WriteTo.Sink(consoleSink, levelSwitch: ConsoleLevelSwitch)
-                .WriteTo.Debug(levelSwitch: DebugLevelSwitch)
-                .WriteTo.File(LogPath, shared: true, levelSwitch: FileLevelSwitch)
-                .CreateLogger();
+            Log.Logger = new LoggerConfiguration ()
+                .MinimumLevel.ControlledBy (MasterLevelSwitch)
+                .WriteTo.Sink (consoleSink, levelSwitch: ConsoleLevelSwitch)
+                .WriteTo.Debug (levelSwitch: DebugLevelSwitch)
+                .WriteTo.File (LogPath, shared: true, levelSwitch: FileLevelSwitch)
+                .CreateLogger ();
         }
 
-        Log.Debug("--------- {app} {v} ---------", appName, productVersion);
-        if (ServiceLocator.Current.TelemetryService.TelemetryEnabled) {
+        Log.Debug ("--------- {app} {v} ---------", appName, productVersion);
+        if (ServiceLocator.Current.TelemetryService.TelemetryEnabled)
+        {
 #if CI_BUILD
                 var msg = "CI_BUILD so no telemetry will be tracked.";
 #else
-            var msg = string.IsNullOrEmpty(TelemetryService.GetInstrumentationKey())
+            string msg = string.IsNullOrEmpty (TelemetryService.GetInstrumentationKey ())
                 ? "However, telemetry key is missing so no telemetry will be tracked."
                 : "";
 #endif
-            Log.Debug($"Telemetry is enabled. {msg}");
+            Log.Debug ($"Telemetry is enabled. {msg}");
         }
 
-        Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);
-        Log.Debug("OS Environment: {os}, architecture: {arch}, .NET version: {dotnet}",
+        Log.Debug ("Logging to {path}", ServiceLocator.Current.LogService.LogPath);
+        Log.Debug ("OS Environment: {os}, architecture: {arch}, .NET version: {dotnet}",
             Environment.OSVersion, Environment.Is64BitProcess ? "x64" : "x86", Environment.Version);
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-            Log.Debug("libgdiplus version: {v}", Diagnostics.GetLibgdiplusVersion());
+        if (!RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
+        {
+            Log.Debug ("libgdiplus version: {v}", Diagnostics.GetLibgdiplusVersion ());
         }
     }
 
-    public static void TraceMessage(string msg = "",
+    public static void TraceMessage (string msg = "",
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0) {
-        Log.Debug($"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}: {{msg}}", msg);
+        [CallerLineNumber] int sourceLineNumber = 0)
+    {
+        Log.Debug ($"{Path.GetFileName (sourceFilePath)}:{sourceLineNumber} {memberName}: {{msg}}", msg);
     }
 
     /// <summary>
@@ -108,10 +116,11 @@ public class LogService {
     /// <param name="sourceFilePath"></param>
     /// <param name="sourceLineNumber"></param>
     /// <returns></returns>
-    public static string GetTraceMsg(string msg = "",
+    public static string GetTraceMsg (string msg = "",
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0) {
-        return $"{Path.GetFileName(sourceFilePath)}:{sourceLineNumber} {memberName}: {msg}";
+        [CallerLineNumber] int sourceLineNumber = 0)
+    {
+        return $"{Path.GetFileName (sourceFilePath)}:{sourceLineNumber} {memberName}: {msg}";
     }
 }

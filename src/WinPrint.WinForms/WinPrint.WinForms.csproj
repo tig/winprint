@@ -22,7 +22,6 @@
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Platforms>AnyCPU;x64</Platforms>
-    <LangVersion>12</LangVersion>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
   </PropertyGroup>

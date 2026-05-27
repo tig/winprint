@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -13,12 +13,14 @@ namespace WinPrint.Core.Services;
 ///     TOOD: Convert to use `pygmentize `pygmentize -L lexers --json` (see
 ///     https://github.com/pygments/pygments/issues/1437)
 /// </summary>
-public class FileTypeMappingService {
+public class FileTypeMappingService
+{
     // Factory - creates 
-    public static FileTypeMapping Create() {
+    public static FileTypeMapping Create ()
+    {
         // 
-        LogService.TraceMessage("FileAssociationsService.Create()");
-        return ServiceLocator.Current.FileTypeMappingService.Load();
+        LogService.TraceMessage ("FileAssociationsService.Create()");
+        return ServiceLocator.Current.FileTypeMappingService.Load ();
     }
 
     /// <summary>
@@ -27,9 +29,10 @@ public class FileTypeMappingService {
     ///     defined there in.
     /// </summary>
     /// <returns></returns>
-    public FileTypeMapping? Load() {
-        FileTypeMapping? associations = null;
-        var jsonOptions = new JsonSerializerOptions {
+    public FileTypeMapping Load ()
+    {
+        var jsonOptions = new JsonSerializerOptions
+        {
             WriteIndented = true,
             AllowTrailingCommas = true,
             PropertyNameCaseInsensitive = true,
@@ -37,29 +40,28 @@ public class FileTypeMappingService {
             ReadCommentHandling = JsonCommentHandling.Skip
         };
 
-        associations = JsonSerializer.Deserialize<FileTypeMapping>(Resources.languages, jsonOptions);
-
-        if (associations is null) {
-            return null;
-        }
+        FileTypeMapping associations = JsonSerializer.Deserialize<FileTypeMapping> (Resources.languages, jsonOptions) ??
+                                       new FileTypeMapping ();
 
         // TODO: Consider calling into lang-map and/or Pygments to update extensions at runtime?
         // https://github.com/jonschlinkert/lang-map
 
         // Merge in any associations set in settings file
-        Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping != null);
-        Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes != null);
-        if (ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations != null) {
-            foreach (var fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations) {
-                associations.FilesAssociations![fa.Key] = fa.Value;
+        Debug.Assert (ModelLocator.Current.Settings.FileTypeMapping != null);
+        Debug.Assert (ModelLocator.Current.Settings.FileTypeMapping.ContentTypes != null);
+        if (ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations != null)
+        {
+            foreach (KeyValuePair<string, string> fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations)
+            {
+                associations.FilesAssociations[fa.Key] = fa.Value;
             }
         }
 
         // Merge in any language defintions set in settings file
-        var langs = new List<ContentType>(associations.ContentTypes!);
-        var langsSettings = new List<ContentType>(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes);
+        var langs = new List<ContentType> (associations.ContentTypes);
+        var langsSettings = new List<ContentType> (ModelLocator.Current.Settings.FileTypeMapping.ContentTypes);
         // TODO: override Equals and GetHashCode for Language
-        var result = langsSettings.Union(langs).ToList();
+        var result = langsSettings.Union (langs).ToList ();
 
         associations.ContentTypes = result;
 

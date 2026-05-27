@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -7,38 +7,9 @@ using WinPrint.Core.ContentTypeEngines;
 
 namespace WinPrint.Core.Models;
 
-//
-// Summary:
-//     Specifies how a form window is displayed.
-
-public class WindowSize {
-    public WindowSize() {
-    }
-
-    public WindowSize(int width, int height) {
-        Width = width;
-        Height = height;
-    }
-
-    public int Width { get; set; }
-    public int Height { get; set; }
-}
-
-public class WindowLocation {
-    public WindowLocation() {
-    }
-
-    public WindowLocation(int x, int y) {
-        X = x;
-        Y = y;
-    }
-
-    public int X { get; set; }
-    public int Y { get; set; }
-}
-
-public class Settings : ModelBase {
-    private Font _diagnosticRulesFont = new() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
+public class Settings : ModelBase
+{
+    private Font _diagnosticRulesFont = new () { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
     private bool _previewBounds;
     private bool _previewContentBounds;
     private bool _previewHardMargins;
@@ -57,41 +28,60 @@ public class Settings : ModelBase {
     private bool _printPageSize;
     private bool _printPrintableArea;
     private Guid defaultSheet;
-    private WindowLocation location;
-    private WindowSize size;
+    private WindowLocation? location;
+    private WindowSize? size;
     private FormWindowState windowState;
 
     /// <summary>
     ///     Window location
     /// </summary>
     [SafeForTelemetry]
-    public WindowLocation Location { get => location; set => SetField(ref location, value); }
+    public WindowLocation? Location
+    {
+        get => location;
+        set => SetField (ref location, value);
+    }
 
     /// <summary>
     ///     Window size
     /// </summary>
     [SafeForTelemetry]
-    public WindowSize Size { get => size; set => SetField(ref size, value); }
+    public WindowSize? Size
+    {
+        get => size;
+        set => SetField (ref size, value);
+    }
 
     [SafeForTelemetry]
-    public FormWindowState WindowState { get => windowState; set => SetField(ref windowState, value); }
+    public FormWindowState WindowState
+    {
+        get => windowState;
+        set => SetField (ref windowState, value);
+    }
 
     /// <summary>
     ///     Default sheet (guid)
     /// </summary>
     [SafeForTelemetry]
-    public Guid DefaultSheet { get => defaultSheet; set => SetField(ref defaultSheet, value); }
+    public Guid DefaultSheet
+    {
+        get => defaultSheet;
+        set => SetField (ref defaultSheet, value);
+    }
 
     /// <summary>
     ///     Sheet definitons
     /// </summary>
-    public Dictionary<string, SheetSettings> Sheets { get; set; }
+    public Dictionary<string, SheetSettings> Sheets { get; set; } = new ();
 
     [JsonIgnore]
     [SafeForTelemetry]
-    public int NumSheets {
-        get {
-            if (Sheets == null) {
+    public int NumSheets
+    {
+        get
+        {
+            if (Sheets == null)
+            {
                 return 0;
             }
 
@@ -99,31 +89,36 @@ public class Settings : ModelBase {
         }
     }
 
-    [SafeForTelemetry] public string? DefaultContentType { get; set; } // "text/plain";
+    [SafeForTelemetry] public string DefaultContentType { get; set; } = "text/plain";
 
-    [SafeForTelemetry] public string DefaultCteClassName { get; set; } // "AnsiCte";
+    [SafeForTelemetry] public string DefaultCteClassName { get; set; } = ContentTypeEngineBase.DefaultCteClassName;
 
-    [SafeForTelemetry] public string DefaultSyntaxHighlighterCteNameClassName { get; set; } // "AnsiCte";
+    [SafeForTelemetry]
+    public string DefaultSyntaxHighlighterCteNameClassName { get; set; } =
+        ContentTypeEngineBase.DefaultSyntaxHighlighterCteNameClassName;
 
     /// <summary>
     ///     Content type handlers
     /// </summary>
-    public AnsiCte AnsiContentTypeEngineSettings { get; set; }
+    public AnsiCte AnsiContentTypeEngineSettings { get; set; } = new ();
 
-    public TextMateCte TextMateContentTypeEngineSettings { get; set; }
-    public TextCte TextContentTypeEngineSettings { get; set; }
-    public HtmlCte HtmlContentTypeEngineSettings { get; set; }
+    public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
+    public TextCte TextContentTypeEngineSettings { get; set; } = new ();
+    public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
 
     /// <summary>
     ///     File Type Mappings.
     /// </summary>
-    public FileTypeMapping FileTypeMapping { get; set; }
+    public FileTypeMapping FileTypeMapping { get; set; } = new ();
 
     [JsonIgnore]
     [SafeForTelemetry]
-    public int NumFilesAssociations {
-        get {
-            if (FileTypeMapping == null || FileTypeMapping.FilesAssociations == null) {
+    public int NumFilesAssociations
+    {
+        get
+        {
+            if (FileTypeMapping == null || FileTypeMapping.FilesAssociations == null)
+            {
                 return 0;
             }
 
@@ -133,9 +128,12 @@ public class Settings : ModelBase {
 
     [JsonIgnore]
     [SafeForTelemetry]
-    public int NumLanguages {
-        get {
-            if (FileTypeMapping == null || FileTypeMapping.ContentTypes == null) {
+    public int NumLanguages
+    {
+        get
+        {
+            if (FileTypeMapping == null || FileTypeMapping.ContentTypes == null)
+            {
                 return 0;
             }
 
@@ -151,95 +149,162 @@ public class Settings : ModelBase {
     ///     Font used for diagnostic rules
     /// </summary>
     [SafeForTelemetry]
-    public Font DiagnosticRulesFont { get => _diagnosticRulesFont; set => SetField(ref _diagnosticRulesFont, value); }
+    public Font DiagnosticRulesFont
+    {
+        get => _diagnosticRulesFont;
+        set => SetField (ref _diagnosticRulesFont, value);
+    }
 
     [SafeForTelemetry]
-    public bool PreviewPrintableArea {
+    public bool PreviewPrintableArea
+    {
         get => _previewPrintableArea;
-        set => SetField(ref _previewPrintableArea, value);
+        set => SetField (ref _previewPrintableArea, value);
     }
 
     [SafeForTelemetry]
-    public bool PrintPrintableArea { get => _printPrintableArea; set => SetField(ref _printPrintableArea, value); }
+    public bool PrintPrintableArea
+    {
+        get => _printPrintableArea;
+        set => SetField (ref _printPrintableArea, value);
+    }
 
     [SafeForTelemetry]
-    public bool PreviewPaperSize { get => _previewPageSize; set => SetField(ref _previewPageSize, value); }
-
-    [SafeForTelemetry] public bool PrintPaperSize { get => _printPageSize; set => SetField(ref _printPageSize, value); }
-
-    [SafeForTelemetry]
-    public bool PreviewMargins { get => _previewMargins; set => SetField(ref _previewMargins, value); }
-
-    [SafeForTelemetry] public bool PrintMargins { get => _printMargins; set => SetField(ref _printMargins, value); }
+    public bool PreviewPaperSize
+    {
+        get => _previewPageSize;
+        set => SetField (ref _previewPageSize, value);
+    }
 
     [SafeForTelemetry]
-    public bool PreviewHardMargins { get => _previewHardMargins; set => SetField(ref _previewHardMargins, value); }
+    public bool PrintPaperSize
+    {
+        get => _printPageSize;
+        set => SetField (ref _printPageSize, value);
+    }
 
     [SafeForTelemetry]
-    public bool PrintHardMargins { get => _printHardMargins; set => SetField(ref _printHardMargins, value); }
-
-    [SafeForTelemetry] public bool PrintBounds { get => _printBounds; set => SetField(ref _printBounds, value); }
-
-    [SafeForTelemetry] public bool PreviewBounds { get => _previewBounds; set => SetField(ref _previewBounds, value); }
-
-    [SafeForTelemetry]
-    public bool PrintContentBounds { get => _printContentBounds; set => SetField(ref _printContentBounds, value); }
+    public bool PreviewMargins
+    {
+        get => _previewMargins;
+        set => SetField (ref _previewMargins, value);
+    }
 
     [SafeForTelemetry]
-    public bool PreviewContentBounds {
+    public bool PrintMargins
+    {
+        get => _printMargins;
+        set => SetField (ref _printMargins, value);
+    }
+
+    [SafeForTelemetry]
+    public bool PreviewHardMargins
+    {
+        get => _previewHardMargins;
+        set => SetField (ref _previewHardMargins, value);
+    }
+
+    [SafeForTelemetry]
+    public bool PrintHardMargins
+    {
+        get => _printHardMargins;
+        set => SetField (ref _printHardMargins, value);
+    }
+
+    [SafeForTelemetry]
+    public bool PrintBounds
+    {
+        get => _printBounds;
+        set => SetField (ref _printBounds, value);
+    }
+
+    [SafeForTelemetry]
+    public bool PreviewBounds
+    {
+        get => _previewBounds;
+        set => SetField (ref _previewBounds, value);
+    }
+
+    [SafeForTelemetry]
+    public bool PrintContentBounds
+    {
+        get => _printContentBounds;
+        set => SetField (ref _printContentBounds, value);
+    }
+
+    [SafeForTelemetry]
+    public bool PreviewContentBounds
+    {
         get => _previewContentBounds;
-        set => SetField(ref _previewContentBounds, value);
+        set => SetField (ref _previewContentBounds, value);
     }
 
     [SafeForTelemetry]
-    public bool PrintHeaderFooterBounds {
+    public bool PrintHeaderFooterBounds
+    {
         get => _printHeaderFooterBounds;
-        set => SetField(ref _printHeaderFooterBounds, value);
+        set => SetField (ref _printHeaderFooterBounds, value);
     }
 
     [SafeForTelemetry]
-    public bool PreviewHeaderFooterBounds {
+    public bool PreviewHeaderFooterBounds
+    {
         get => _previewHeaderFooterBounds;
-        set => SetField(ref _previewHeaderFooterBounds, value);
+        set => SetField (ref _previewHeaderFooterBounds, value);
     }
 
     [SafeForTelemetry]
-    public bool PreviewPageBounds { get => _previewPageBounds; set => SetField(ref _previewPageBounds, value); }
+    public bool PreviewPageBounds
+    {
+        get => _previewPageBounds;
+        set => SetField (ref _previewPageBounds, value);
+    }
 
     [SafeForTelemetry]
-    public bool PrintPageBounds { get => _printPageBounds; set => SetField(ref _printPageBounds, value); }
+    public bool PrintPageBounds
+    {
+        get => _printPageBounds;
+        set => SetField (ref _printPageBounds, value);
+    }
 
     /// <summary>
     ///     If true, print dialog is shown when printing
     /// </summary>
     [SafeForTelemetry]
-    public bool ShowPrintDialog { get => _printDialog; set => SetField(ref _printDialog, value); }
+    public bool ShowPrintDialog
+    {
+        get => _printDialog;
+        set => SetField (ref _printDialog, value);
+    }
 
     /// <summary>
     ///     Creates a default set of settings that can be persisted to create
     ///     the .config.json file.
     /// </summary>
     /// <returns>A Settings object with default settings.</returns>
-    public static Settings CreateDefaultSettings() {
-        var monoSpaceFamily = "monospace";
-        var sansSerifFamily = "sansserif";
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+    public static Settings CreateDefaultSettings ()
+    {
+        string monoSpaceFamily = "monospace";
+        string sansSerifFamily = "sansserif";
+        if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
+        {
             monoSpaceFamily = "Consolas";
             sansSerifFamily = "Calibri";
         }
 
-        var defaultContentFontFamily = monoSpaceFamily;
-        var defaultContentFontSize = 8F;
-        var defaultContentFontStyle = FontStyle.Regular;
+        string defaultContentFontFamily = monoSpaceFamily;
+        float defaultContentFontSize = 8F;
+        FontStyle defaultContentFontStyle = FontStyle.Regular;
 
-        var defaultHFFontFamily = sansSerifFamily;
-        var defaultHFFontSize = 10F;
-        var defaultHFFontStyle = FontStyle.Bold;
+        string defaultHFFontFamily = sansSerifFamily;
+        float defaultHFFontSize = 10F;
+        FontStyle defaultHFFontStyle = FontStyle.Bold;
 
-        var defaultHeaderText = "{DateRevised:D}|{FileName}|Language: {Language}";
-        var defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
+        string defaultHeaderText = "{DateRevised:D}|{FileName}|Language: {Language}";
+        string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
-        var settings = new Settings {
+        var settings = new Settings
+        {
             //settings.size = new WindowSize(1024, 800);
             //settings.location = new WindowLocation(100, 100);
 
@@ -247,10 +312,12 @@ public class Settings : ModelBase {
             DefaultCteClassName = "TextMateCte",
             DefaultSyntaxHighlighterCteNameClassName = "TextMateCte",
             AnsiContentTypeEngineSettings = new AnsiCte { ContentSettings = new ContentSettings { Style = "pastie" } },
-            TextMateContentTypeEngineSettings = new TextMateCte {
+            TextMateContentTypeEngineSettings = new TextMateCte
+            {
                 ContentSettings = new ContentSettings { Style = "VisualStudioLight" }
             },
-            TextContentTypeEngineSettings = new TextCte {
+            TextContentTypeEngineSettings = new TextCte
+            {
                 // This font will be overriddent by Sheet defined fonts (if any)
                 //ContentSettings = new ContentSettings() {
                 //    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
@@ -268,7 +335,8 @@ public class Settings : ModelBase {
             // 1) Sheet (all HTML & CSS ignored)
             // 2) winprint.css (Body -> Font, Pre -> Monospace Font)
             // 3) HtmlileContent settings
-            HtmlContentTypeEngineSettings = new HtmlCte {
+            HtmlContentTypeEngineSettings = new HtmlCte
+            {
                 //ContentSettings = new ContentSettings() {
                 //    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
                 //    Darkness = 100,
@@ -277,20 +345,25 @@ public class Settings : ModelBase {
                 //},
             },
             DefaultSheet = Uuid.DefaultSheet,
-            Sheets = new Dictionary<string, SheetSettings>()
+            Sheets = new Dictionary<string, SheetSettings> ()
         };
 
         // Create default 2 Up sheet
-        var sheet = new SheetSettings {
+        var sheet = new SheetSettings
+        {
             Name = "Default 2-Up",
             Columns = 2,
             Rows = 1,
             Landscape = true,
             Padding = 3,
             PageSeparator = false,
-            ContentSettings = new ContentSettings {
-                Font = new Font {
-                    Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font
+                {
+                    Family = defaultContentFontFamily,
+                    Size = defaultContentFontSize,
+                    Style = defaultContentFontStyle
                 },
                 Style = "pastie",
                 Darkness = 100,
@@ -301,33 +374,44 @@ public class Settings : ModelBase {
         sheet.Header.Enabled = true;
         sheet.Header.Text = defaultHeaderText;
         sheet.Header.BottomBorder = true;
-        sheet.Header.Font = new Font {
-            Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle
+        sheet.Header.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
         };
         sheet.Header.VerticalPadding = 1;
 
         sheet.Footer.Enabled = true;
         sheet.Footer.TopBorder = true;
         sheet.Footer.Text = defualtFooterText;
-        sheet.Footer.Font = new Font {
-            Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle
+        sheet.Footer.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
         };
         sheet.Footer.VerticalPadding = 1;
 
         sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
-        settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
+        settings.Sheets.Add (Uuid.DefaultSheet.ToString (), sheet);
 
         // Create default 1 Up sheet
-        sheet = new SheetSettings {
+        sheet = new SheetSettings
+        {
             Name = "Default 1-Up",
             Columns = 1,
             Rows = 1,
             Landscape = false,
             Padding = 3,
             PageSeparator = false,
-            ContentSettings = new ContentSettings {
-                Font = new Font {
-                    Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font
+                {
+                    Family = defaultContentFontFamily,
+                    Size = defaultContentFontSize,
+                    Style = defaultContentFontStyle
                 },
                 Style = "pastie",
                 Darkness = 100,
@@ -341,24 +425,32 @@ public class Settings : ModelBase {
         sheet.Header.Enabled = true;
         sheet.Header.Text = defaultHeaderText;
         sheet.Header.BottomBorder = true;
-        sheet.Header.Font = new Font {
-            Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle
+        sheet.Header.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
         };
         sheet.Header.VerticalPadding = 1;
 
         sheet.Footer.Enabled = true;
         sheet.Footer.Text = defualtFooterText;
         sheet.Footer.TopBorder = true;
-        sheet.Footer.Font = new Font {
-            Family = defaultHFFontFamily, Size = defaultHFFontSize, Style = defaultHFFontStyle
+        sheet.Footer.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
         };
         sheet.Footer.VerticalPadding = 1;
 
         sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
-        settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
+        settings.Sheets.Add (Uuid.DefaultSheet1Up.ToString (), sheet);
 
-        settings.FileTypeMapping = new FileTypeMapping {
-            FilesAssociations = new Dictionary<string, string> {
+        settings.FileTypeMapping = new FileTypeMapping
+        {
+            FilesAssociations = new Dictionary<string, string>
+            {
                 // Enables printing our own config files
                 { "*.config", "application/json" },
                 // Enables printing HTML
@@ -370,14 +462,17 @@ public class Settings : ModelBase {
             // text/plain - because it is not defined by Pygments
             // text/ansi - because it is not defined by Pygments
             // icon - Icon is so esoteric it makes a good test
-            ContentTypes = new List<ContentType> {
-                new() {
+            ContentTypes = new List<ContentType>
+            {
+                new ()
+                {
                     Id = "text/plain",
                     Title = "Plain Text",
                     Extensions = new List<string> { "*.txt" },
                     Aliases = new List<string> { "text" }
                 },
-                new() {
+                new ()
+                {
                     Id = "text/ansi",
                     Title = "ANSI Text",
                     Extensions = new List<string> { "*.an", "*.ans", "*.ansi" },

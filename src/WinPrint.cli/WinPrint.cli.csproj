@@ -14,8 +14,6 @@
         <Copyright>Copyright Kindel, LLC</Copyright>
         <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-        <LangVersion>12</LangVersion>
-        <Nullable>enable</Nullable>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <NeutralLanguage>en-US</NeutralLanguage>
         <Platforms>AnyCPU;x64</Platforms>
@@ -27,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Terminal.Gui.Cli\src\Terminal.Gui.Cli\Terminal.Gui.Cli.csproj" />
+        <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
         <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
     </ItemGroup>
 

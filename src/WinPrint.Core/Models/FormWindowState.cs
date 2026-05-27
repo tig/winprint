@@ -1,9 +1,10 @@
-﻿// Copyright Kindel, LLC - http://www.kindel.com
+// Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
 namespace WinPrint.Core.Models;
 
-public enum FormWindowState {
+public enum FormWindowState
+{
     //
     // Summary:
     //     A default sized window.
