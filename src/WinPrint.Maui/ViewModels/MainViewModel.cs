@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using WinPrint.Core;
@@ -12,7 +13,7 @@ namespace WinPrint.Maui.ViewModels;
 
 /// <summary>
 ///     Main view model for the MAUI print preview application.
-///     Implements the behavioral spec from specs/ui-behavioral-spec.md.
+///     Mirrors the WinForms MainWindow layout and behavior.
 /// </summary>
 public sealed class MainViewModel : INotifyPropertyChanged
 {
@@ -25,6 +26,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private int _totalPages;
     private float _zoomFactor = 1.0f;
 
+    // Sheet settings
+    private int _selectedSheetIndex;
+    private bool _landscape;
+    private string _marginTop = "0.50";
+    private string _marginBottom = "0.50";
+    private string _marginLeft = "0.50";
+    private string _marginRight = "0.50";
+    private int _rows = 1;
+    private int _columns = 1;
+    private string _paddingValue = "0.03";
+    private bool _pageSeparator;
+    private bool _lineNumbers;
+
+    // Header/Footer
+    private bool _headerEnabled = true;
+    private string _headerText = "{FullFileName}";
+    private bool _footerEnabled = true;
+    private string _footerText = "Page {Page} of {NumPages}";
+
+    // Printer
+    private string? _selectedPrinter;
+    private string? _selectedPaperSize;
+    private string _fromPage = "";
+    private string _toPage = "";
+
     public MainViewModel ()
     {
         OpenFileCommand = new RelayCommand (async () => await OpenFileAsync ());
@@ -34,8 +60,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ZoomInCommand = new RelayCommand (() => ZoomFactor = Math.Min (ZoomFactor + 0.25f, 4.0f));
         ZoomOutCommand = new RelayCommand (() => ZoomFactor = Math.Max (ZoomFactor - 0.25f, 0.25f));
         ZoomFitCommand = new RelayCommand (() => ZoomFactor = 1.0f);
+        SettingsCommand = new RelayCommand (() => { /* TODO: Open settings dialog */ });
 
-        // Initialize with default settings
         SheetViewModel = new SheetViewModel ();
         LoadSettings ();
     }
@@ -43,6 +69,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public SheetViewModel SheetViewModel { get; }
+
+    // --- Title and state ---
 
     public string Title
     {
@@ -80,6 +108,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _statusText;
         private set => SetField (ref _statusText, value);
     }
+
+    // --- Page navigation ---
 
     public int CurrentPage
     {
@@ -120,63 +150,296 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    // Sheet settings bindings
-    public PrintMargins Margins
+    // --- Sheet selector ---
+
+    public ObservableCollection<string> SheetNames { get; } = new ();
+    private List<string> _sheetKeys = new ();
+
+    public int SelectedSheetIndex
     {
-        get => SheetViewModel.Margins;
+        get => _selectedSheetIndex;
         set
         {
-            SheetViewModel.Margins = value;
-            OnPropertyChanged ();
-            ReflowAsync ().ConfigureAwait (false);
+            if (SetField (ref _selectedSheetIndex, value) && value >= 0 && value < _sheetKeys.Count)
+            {
+                ApplySheet (_sheetKeys[value]);
+            }
+        }
+    }
+
+    // --- Sheet settings ---
+
+    public bool Landscape
+    {
+        get => _landscape;
+        set
+        {
+            if (SetField (ref _landscape, value))
+            {
+                SheetViewModel.Landscape = value;
+                ReflowAsync ().ConfigureAwait (false);
+            }
+        }
+    }
+
+    public string MarginTop
+    {
+        get => _marginTop;
+        set
+        {
+            if (SetField (ref _marginTop, value))
+            {
+                UpdateMargins ();
+            }
+        }
+    }
+
+    public string MarginBottom
+    {
+        get => _marginBottom;
+        set
+        {
+            if (SetField (ref _marginBottom, value))
+            {
+                UpdateMargins ();
+            }
+        }
+    }
+
+    public string MarginLeft
+    {
+        get => _marginLeft;
+        set
+        {
+            if (SetField (ref _marginLeft, value))
+            {
+                UpdateMargins ();
+            }
+        }
+    }
+
+    public string MarginRight
+    {
+        get => _marginRight;
+        set
+        {
+            if (SetField (ref _marginRight, value))
+            {
+                UpdateMargins ();
+            }
         }
     }
 
     public int Rows
     {
-        get => SheetViewModel.Rows;
+        get => _rows;
         set
         {
-            SheetViewModel.Rows = value;
-            OnPropertyChanged ();
-            ReflowAsync ().ConfigureAwait (false);
+            if (SetField (ref _rows, value))
+            {
+                SheetViewModel.Rows = value;
+                ReflowAsync ().ConfigureAwait (false);
+            }
         }
     }
 
     public int Columns
     {
-        get => SheetViewModel.Columns;
+        get => _columns;
         set
         {
-            SheetViewModel.Columns = value;
-            OnPropertyChanged ();
-            ReflowAsync ().ConfigureAwait (false);
+            if (SetField (ref _columns, value))
+            {
+                SheetViewModel.Columns = value;
+                ReflowAsync ().ConfigureAwait (false);
+            }
+        }
+    }
+
+    public string PaddingValue
+    {
+        get => _paddingValue;
+        set
+        {
+            if (SetField (ref _paddingValue, value) && decimal.TryParse (value, out var d))
+            {
+                SheetViewModel.Padding = (int)(d * 100m);
+                ReflowAsync ().ConfigureAwait (false);
+            }
         }
     }
 
     public bool PageSeparator
     {
-        get => SheetViewModel.PageSeparator;
+        get => _pageSeparator;
         set
         {
-            SheetViewModel.PageSeparator = value;
-            OnPropertyChanged ();
-            InvalidatePreview?.Invoke ();
+            if (SetField (ref _pageSeparator, value))
+            {
+                SheetViewModel.PageSeparator = value;
+                InvalidatePreview?.Invoke ();
+            }
         }
     }
 
-    public bool Landscape
+    public bool LineNumbers
     {
-        get => SheetViewModel.Landscape;
+        get => _lineNumbers;
         set
         {
-            SheetViewModel.Landscape = value;
-            OnPropertyChanged ();
-            ReflowAsync ().ConfigureAwait (false);
+            if (SetField (ref _lineNumbers, value))
+            {
+                if (SheetViewModel.ContentSettings != null)
+                {
+                    SheetViewModel.ContentSettings.LineNumbers = value;
+                }
+                ReflowAsync ().ConfigureAwait (false);
+            }
         }
     }
 
-    // Commands
+    // --- Fonts (display only for now) ---
+
+    public string ContentFontDescription
+    {
+        get
+        {
+            var cs = SheetViewModel.ContentSettings;
+            if (cs?.Font != null)
+            {
+                return $"{cs.Font.Family}, {cs.Font.Style}, {cs.Font.Size}pt";
+            }
+            return "Default";
+        }
+    }
+
+    public string HeaderFooterFontDescription
+    {
+        get
+        {
+            var header = SheetViewModel.Header;
+            if (header?.Font != null)
+            {
+                return $"{header.Font.Family}, {header.Font.Style}, {header.Font.Size}pt";
+            }
+            return "Default";
+        }
+    }
+
+    // --- Header/Footer ---
+
+    public bool HeaderEnabled
+    {
+        get => _headerEnabled;
+        set
+        {
+            if (SetField (ref _headerEnabled, value))
+            {
+                if (SheetViewModel.Header != null)
+                {
+                    SheetViewModel.Header.Enabled = value;
+                }
+                ReflowAsync ().ConfigureAwait (false);
+            }
+        }
+    }
+
+    public string HeaderText
+    {
+        get => _headerText;
+        set
+        {
+            if (SetField (ref _headerText, value))
+            {
+                if (SheetViewModel.Header != null)
+                {
+                    SheetViewModel.Header.Text = value;
+                }
+                InvalidatePreview?.Invoke ();
+            }
+        }
+    }
+
+    public bool FooterEnabled
+    {
+        get => _footerEnabled;
+        set
+        {
+            if (SetField (ref _footerEnabled, value))
+            {
+                if (SheetViewModel.Footer != null)
+                {
+                    SheetViewModel.Footer.Enabled = value;
+                }
+                ReflowAsync ().ConfigureAwait (false);
+            }
+        }
+    }
+
+    public string FooterText
+    {
+        get => _footerText;
+        set
+        {
+            if (SetField (ref _footerText, value))
+            {
+                if (SheetViewModel.Footer != null)
+                {
+                    SheetViewModel.Footer.Text = value;
+                }
+                InvalidatePreview?.Invoke ();
+            }
+        }
+    }
+
+    // --- Printer (stubs for now — MAUI has limited print API) ---
+
+    public ObservableCollection<string> PrinterNames { get; } = new () { "(Default Printer)" };
+    public ObservableCollection<string> PaperSizes { get; } = new () { "Letter (8.5 x 11)", "Legal (8.5 x 14)", "A4 (210 x 297mm)" };
+
+    public string? SelectedPrinter
+    {
+        get => _selectedPrinter;
+        set => SetField (ref _selectedPrinter, value);
+    }
+
+    public string? SelectedPaperSize
+    {
+        get => _selectedPaperSize;
+        set => SetField (ref _selectedPaperSize, value);
+    }
+
+    public string FromPage
+    {
+        get => _fromPage;
+        set => SetField (ref _fromPage, value);
+    }
+
+    public string ToPage
+    {
+        get => _toPage;
+        set => SetField (ref _toPage, value);
+    }
+
+    // --- Version ---
+
+    public string VersionText
+    {
+        get
+        {
+            try
+            {
+                return $"v{FileVersionInfo.GetVersionInfo (typeof (LogService).Assembly.Location).FileVersion}";
+            }
+            catch
+            {
+                return "v0.0.0";
+            }
+        }
+    }
+
+    // --- Commands ---
+
     public ICommand OpenFileCommand { get; }
     public ICommand PrintCommand { get; }
     public ICommand NextPageCommand { get; }
@@ -184,6 +447,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ZoomInCommand { get; }
     public ICommand ZoomOutCommand { get; }
     public ICommand ZoomFitCommand { get; }
+    public ICommand SettingsCommand { get; }
 
     /// <summary>
     ///     Callback to invalidate the print preview rendering.
@@ -287,12 +551,102 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void LoadSettings ()
     {
         var settings = ModelLocator.Current.Settings;
-        var sheetKey = settings.DefaultSheet.ToString ();
-        if (settings.Sheets.TryGetValue (sheetKey, out var sheetSettings))
+
+        // Populate sheet names
+        _sheetKeys.Clear ();
+        SheetNames.Clear ();
+        foreach (var kvp in settings.Sheets)
         {
-            // SetSheet initializes the internal _sheet field, header/footer VMs, and
-            // content settings — required before SetPrinterPageSettings can be called.
-            SheetViewModel.SetSheet (sheetSettings);
+            _sheetKeys.Add (kvp.Key);
+            SheetNames.Add (kvp.Value.Name);
+        }
+
+        // Select the default sheet
+        var defaultKey = settings.DefaultSheet.ToString ();
+        int idx = _sheetKeys.IndexOf (defaultKey);
+        if (idx >= 0)
+        {
+            _selectedSheetIndex = idx;
+            ApplySheet (defaultKey);
+        }
+        else if (_sheetKeys.Count > 0)
+        {
+            _selectedSheetIndex = 0;
+            ApplySheet (_sheetKeys[0]);
+        }
+    }
+
+    private void ApplySheet (string sheetKey)
+    {
+        var settings = ModelLocator.Current.Settings;
+        if (!settings.Sheets.TryGetValue (sheetKey, out var sheetSettings))
+        {
+            return;
+        }
+
+        // Initialize via SetSheet (required for internal state)
+        SheetViewModel.SetSheet (sheetSettings);
+
+        // Sync local properties from the sheet without triggering reflow
+        _landscape = sheetSettings.Landscape;
+        OnPropertyChanged (nameof (Landscape));
+
+        _rows = sheetSettings.Rows;
+        OnPropertyChanged (nameof (Rows));
+
+        _columns = sheetSettings.Columns;
+        OnPropertyChanged (nameof (Columns));
+
+        _paddingValue = (sheetSettings.Padding / 100.0).ToString ("F2");
+        OnPropertyChanged (nameof (PaddingValue));
+
+        _pageSeparator = sheetSettings.PageSeparator;
+        OnPropertyChanged (nameof (PageSeparator));
+
+        // Margins (stored in hundredths of an inch, display as inches)
+        _marginTop = (sheetSettings.Margins.Top / 100.0).ToString ("F2");
+        _marginBottom = (sheetSettings.Margins.Bottom / 100.0).ToString ("F2");
+        _marginLeft = (sheetSettings.Margins.Left / 100.0).ToString ("F2");
+        _marginRight = (sheetSettings.Margins.Right / 100.0).ToString ("F2");
+        OnPropertyChanged (nameof (MarginTop));
+        OnPropertyChanged (nameof (MarginBottom));
+        OnPropertyChanged (nameof (MarginLeft));
+        OnPropertyChanged (nameof (MarginRight));
+
+        // Header/Footer
+        _headerEnabled = sheetSettings.Header?.Enabled ?? true;
+        _headerText = sheetSettings.Header?.Text ?? "";
+        _footerEnabled = sheetSettings.Footer?.Enabled ?? true;
+        _footerText = sheetSettings.Footer?.Text ?? "";
+        OnPropertyChanged (nameof (HeaderEnabled));
+        OnPropertyChanged (nameof (HeaderText));
+        OnPropertyChanged (nameof (FooterEnabled));
+        OnPropertyChanged (nameof (FooterText));
+
+        // Line numbers
+        _lineNumbers = sheetSettings.ContentSettings?.LineNumbers ?? false;
+        OnPropertyChanged (nameof (LineNumbers));
+
+        // Font descriptions
+        OnPropertyChanged (nameof (ContentFontDescription));
+        OnPropertyChanged (nameof (HeaderFooterFontDescription));
+
+        // Printer selection defaults
+        _selectedPrinter = PrinterNames.FirstOrDefault ();
+        _selectedPaperSize = PaperSizes.FirstOrDefault ();
+        OnPropertyChanged (nameof (SelectedPrinter));
+        OnPropertyChanged (nameof (SelectedPaperSize));
+    }
+
+    private void UpdateMargins ()
+    {
+        if (decimal.TryParse (_marginTop, out var top) &&
+            decimal.TryParse (_marginBottom, out var bottom) &&
+            decimal.TryParse (_marginLeft, out var left) &&
+            decimal.TryParse (_marginRight, out var right))
+        {
+            SheetViewModel.Margins = new PrintMargins ((int)(left * 100), (int)(right * 100), (int)(top * 100), (int)(bottom * 100));
+            ReflowAsync ().ConfigureAwait (false);
         }
     }
 
