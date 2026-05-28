@@ -177,11 +177,22 @@ public sealed class MauiGraphicsContext : IGraphicsContext
         var mauiFont = (MauiFont)font;
         var mauiBrush = (MauiBrush)brush;
 
-        _canvas.FontColor = mauiBrush.Color;
-        _canvas.Font = new Microsoft.Maui.Graphics.Font (mauiFont.Family, GetFontWeight (mauiFont.Style),
+        var mFont = new Microsoft.Maui.Graphics.Font (mauiFont.Family, GetFontWeight (mauiFont.Style),
             GetFontStyleType (mauiFont.Style));
+        _canvas.FontColor = mauiBrush.Color;
+        _canvas.Font = mFont;
         _canvas.FontSize = mauiFont.Size;
-        _canvas.DrawString (text, x, y, HorizontalAlignment.Left);
+
+        // The single-point ICanvas.DrawString(text, x, y, alignment) overload treats Y as
+        // the text baseline (text is drawn ABOVE Y) and on WinUI it also drops some
+        // punctuation glyphs (e.g. "."). WinPrint.Core's text engine expects top-left
+        // semantics for all DrawString calls, so route through the rect-based overload
+        // which gives us a deterministic VerticalAlignment.Top behavior and uses the
+        // platform's normal text layout path.
+        SizeF size = MeasurePreservingWhitespace (text, mFont, mauiFont.Size);
+        float w = Math.Max (size.Width, mauiFont.Size); // ensure non-zero rect for single-char tokens
+        float h = Math.Max (size.Height, mauiFont.Size * 1.5f);
+        _canvas.DrawString (text, x, y, w, h, HorizontalAlignment.Left, VerticalAlignment.Top);
     }
 
     public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect,
