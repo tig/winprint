@@ -70,8 +70,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         // Forward AppViewModel state changes so XAML bindings update.
         _app.PropertyChanged += OnAppPropertyChanged;
-        _app.PreviewInvalidated += (_, _) => InvalidatePreview?.Invoke ();
-        _app.SheetApplied += (_, _) => OnSheetApplied ();
+        _app.PreviewInvalidated += (_, _) =>
+        {
+            if (MainThread.IsMainThread)
+            {
+                InvalidatePreview?.Invoke ();
+            }
+            else
+            {
+                MainThread.BeginInvokeOnMainThread (() => InvalidatePreview?.Invoke ());
+            }
+        };
+        _app.SheetApplied += (_, _) =>
+        {
+            if (MainThread.IsMainThread)
+            {
+                OnSheetApplied ();
+            }
+            else
+            {
+                MainThread.BeginInvokeOnMainThread (OnSheetApplied);
+            }
+        };
 
         _app.LoadSheets ();
         SyncMarginsFromCurrentSheet ();
@@ -577,8 +597,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void OnAppPropertyChanged (object? sender, PropertyChangedEventArgs e)
     {
+        // AppViewModel.LoadFileAsync / ReflowAsync use ConfigureAwait(false), so
+        // continuations (including the IsBusy=false flip) run on the thread pool.
+        // MAUI binding/CanExecute updates must touch UI types on the main thread,
+        // so marshal every forwarded notification.
+        if (MainThread.IsMainThread)
+        {
+            ForwardAppPropertyChanged (e.PropertyName);
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread (() => ForwardAppPropertyChanged (e.PropertyName));
+        }
+    }
+
+    private void ForwardAppPropertyChanged (string? propertyName)
+    {
         // Forward state changes so XAML bindings update.
-        switch (e.PropertyName)
+        switch (propertyName)
         {
             case nameof (AppViewModel.ActiveFile):
                 OnPropertyChanged (nameof (ActiveFile));

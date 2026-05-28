@@ -11,6 +11,7 @@
     "Windows Program.cs": {
       "commandName": "Project",
       "commandLineArgs": "Program.cs",
+      "workingDirectory": "../../",
       "nativeDebugging": false
     }
   }
