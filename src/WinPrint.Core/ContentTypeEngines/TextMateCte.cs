@@ -135,12 +135,12 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         _italicFont = null;
         _boldItalicFont = null;
 
-        _cachedFont = new DrawingFont (new FontFamily (ContentSettings!.Font.Family), ContentSettings.Font.Size / 72F * 96,
+        _cachedFont = new DrawingFont (ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96,
             (DrawingFontStyle)ContentSettings.Font.Style, GraphicsUnit.Pixel);
         if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))
         {
             _cachedFont.Dispose ();
-            _cachedFont = new DrawingFont (new FontFamily (ContentSettings.Font.Family), ContentSettings.Font.Size,
+            _cachedFont = new DrawingFont (ContentSettings.Font.Family, ContentSettings.Font.Size,
                 (DrawingFontStyle)ContentSettings.Font.Style, GraphicsUnit.Point);
         }
 
@@ -173,12 +173,6 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
     public override void PaintPage (IGraphicsContext graphicsContext, int pageNum)
     {
-        if (graphicsContext is not SystemDrawingGraphicsContext context)
-        {
-            throw new NotSupportedException ("TextMateCte currently requires a System.Drawing graphics context.");
-        }
-
-        Graphics g = context.Graphics;
         LogService.TraceMessage ($"{pageNum}");
         if (_wrappedLines is null || _cachedFont is null)
         {
@@ -186,7 +180,16 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             return;
         }
 
-        g.TextRenderingHint = TextRenderingHint;
+        graphicsContext.SetTextRenderingMode (GraphicsTextRenderingMode);
+
+        // Create IGraphicsFont equivalents for cross-platform rendering
+        GraphicsFontUnit unit = graphicsContext.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
+        float size = graphicsContext.IsDisplayUnit
+            ? ContentSettings!.Font.Size
+            : ContentSettings!.Font.Size / 72F * 96F;
+        using IGraphicsFont baseFont = graphicsContext.CreateFont (ContentSettings.Font.Family, size,
+            (GraphicsFontStyle)ContentSettings.Font.Style, unit);
+
         int firstLineOnPage = _linesPerPage * (pageNum - 1);
         int i;
         for (i = firstLineOnPage; i < firstLineOnPage + _linesPerPage && i < _wrappedLines.Count; i++)
@@ -194,26 +197,30 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             TextMateWrappedLine line = _wrappedLines[i];
             float yPos = (i - firstLineOnPage) * _lineHeight;
 
-            if (ContentSettings!.LineNumbers && _lineNumberWidth != 0)
+            if (ContentSettings.LineNumbers && _lineNumberWidth != 0)
             {
                 if (line.NonWrappedLineNumber > 0)
                 {
                     string lineNumber = line.NonWrappedLineNumber.ToString (CultureInfo.InvariantCulture);
+                    float measuredWidth = graphicsContext.MeasureString (lineNumber, baseFont).Width;
                     float x = ContentSettings.LineNumberSeparator
-                        ? _lineNumberWidth - 6 - MeasureString (g, lineNumber).Width
+                        ? _lineNumberWidth - 6 - measuredWidth
                         : 0;
-                    g.DrawString (lineNumber, _cachedFont, Brushes.Gray, x, yPos, StringFormat);
+                    graphicsContext.DrawString (lineNumber, baseFont, graphicsContext.GrayBrush, x, yPos,
+                        GraphicsStringFormat);
                 }
 
                 if (ContentSettings.LineNumberSeparator)
                 {
-                    g.DrawLine (Pens.Gray, _lineNumberWidth - 4, yPos, _lineNumberWidth - 4, yPos + _lineHeight);
+                    graphicsContext.DrawLine (graphicsContext.GrayPen, _lineNumberWidth - 4, yPos,
+                        _lineNumberWidth - 4, yPos + _lineHeight);
                 }
             }
 
             if (ContentSettings.Diagnostics)
             {
-                g.DrawRectangle (Pens.Red, _lineNumberWidth, yPos, PageSize.Width - _lineNumberWidth, _lineHeight);
+                graphicsContext.DrawRectangle (graphicsContext.RedPen, _lineNumberWidth, yPos,
+                    PageSize.Width - _lineNumberWidth, _lineHeight);
             }
 
             float xPos = _lineNumberWidth;
@@ -225,21 +232,42 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
                 }
 
                 string text = line.Text.Substring (run.Start, Math.Min (run.Length, line.Text.Length - run.Start));
-                DrawingFont font = GetFont (run.FontStyle);
-                using var brush = new SolidBrush (run.Foreground);
-                g.DrawString (text, font, brush, xPos, yPos, StringFormat);
-                SizeF size = MeasureString (g, font, text);
+                GraphicsFontStyle fontStyle = GetGraphicsFontStyle (run.FontStyle);
+                using IGraphicsFont runFont = graphicsContext.CreateFont (ContentSettings.Font.Family, size,
+                    fontStyle, unit);
+                using IGraphicsBrush brush = graphicsContext.CreateSolidBrush (
+                    GraphicsColor.FromArgb (run.Foreground.A, run.Foreground.R, run.Foreground.G, run.Foreground.B));
+                graphicsContext.DrawString (text, runFont, brush, xPos, yPos, GraphicsStringFormat);
+                GraphicsSizeF measuredSize = graphicsContext.MeasureString (text, runFont);
 
                 if (ContentSettings.Diagnostics)
                 {
-                    g.DrawRectangle (new Pen (Color.Orange, 1), xPos, yPos, size.Width, size.Height);
+                    using IGraphicsPen orangePen = graphicsContext.CreatePen (
+                        GraphicsColor.FromRgb (255, 165, 0));
+                    graphicsContext.DrawRectangle (orangePen, xPos, yPos, measuredSize.Width, measuredSize.Height);
                 }
 
-                xPos += size.Width;
+                xPos += measuredSize.Width;
             }
         }
 
         Log.Debug ("Painted {lineOnPage} TextMate lines.", i - 1);
+    }
+
+    private static GraphicsFontStyle GetGraphicsFontStyle (TextMateFontStyle textMateStyle)
+    {
+        var style = GraphicsFontStyle.Regular;
+        if (textMateStyle.HasFlag (TextMateFontStyle.Bold))
+        {
+            style |= GraphicsFontStyle.Bold;
+        }
+
+        if (textMateStyle.HasFlag (TextMateFontStyle.Italic))
+        {
+            style |= GraphicsFontStyle.Italic;
+        }
+
+        return style;
     }
 
     private void InitializeGrammar ()

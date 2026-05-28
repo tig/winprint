@@ -1,6 +1,10 @@
 {
   "profiles": {
-    "Windows Machine": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Windows": {
       "commandName": "Project",
       "nativeDebugging": false
     }
