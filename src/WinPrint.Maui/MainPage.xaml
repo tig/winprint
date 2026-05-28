@@ -15,9 +15,9 @@
                 <!-- File / Print buttons -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
-                            FontSize="11" Padding="4,0" HeightRequest="28" />
+                            FontSize="10" Padding="4,0" HeightRequest="24" />
                     <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
-                            FontSize="11" Padding="4,0" HeightRequest="28" />
+                            FontSize="10" Padding="4,0" HeightRequest="24" />
                 </Grid>
 
                 <!-- Sheet Definition group (collapsible) -->

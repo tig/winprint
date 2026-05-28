@@ -11,8 +11,8 @@ public class WindowsPrintJob : IPrintJob, IDisposable
 {
     private readonly PrintDocument _printDocument;
     private readonly PrintPageSetup _pageSetup;
-    private int _currentPage;
-    private Action<IGraphicsContext, int>? _renderCallback;
+    private readonly List<(int PageNum, Action<IGraphicsContext, int> Render)> _pages = new ();
+    private int _pageIndex;
     private bool _disposed;
 
     public WindowsPrintJob (PrintPageSetup pageSetup, string documentName)
@@ -43,24 +43,21 @@ public class WindowsPrintJob : IPrintJob, IDisposable
 
     public void Begin ()
     {
-        // Nothing to do — PrintDocument.Print() drives the page loop
+        _pages.Clear ();
+        _pageIndex = 0;
     }
 
     public void PrintPage (int pageNumber, Action<IGraphicsContext, int> renderPage)
     {
-        _currentPage = pageNumber;
-        _renderCallback = renderPage;
-
-        _printDocument.PrinterSettings.FromPage = pageNumber;
-        _printDocument.PrinterSettings.ToPage = pageNumber;
-        _printDocument.PrinterSettings.PrintRange = PrintRange.SomePages;
-
-        _printDocument.Print ();
+        _pages.Add ((pageNumber, renderPage));
     }
 
     public void End ()
     {
-        // Printing is synchronous per page via PrintDocument events
+        if (_pages.Count > 0)
+        {
+            _printDocument.Print ();
+        }
     }
 
     public void Dispose ()
@@ -77,12 +74,14 @@ public class WindowsPrintJob : IPrintJob, IDisposable
 
     private void OnPrintPage (object sender, PrintPageEventArgs e)
     {
-        if (e.Graphics is not null && _renderCallback is not null)
+        if (e.Graphics is not null && _pageIndex < _pages.Count)
         {
+            var (pageNum, render) = _pages[_pageIndex];
             var context = new SystemDrawingGraphicsContext (e.Graphics);
-            _renderCallback (context, _currentPage);
+            render (context, pageNum);
         }
 
-        e.HasMorePages = false;
+        _pageIndex++;
+        e.HasMorePages = _pageIndex < _pages.Count;
     }
 }
