@@ -107,7 +107,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
             GetFontStyleType (mauiFont.Style));
         _canvas.Font = mFont;
         _canvas.FontSize = mauiFont.Size;
-        SizeF size = _canvas.GetStringSize (text, mFont, mauiFont.Size);
+        SizeF size = MeasurePreservingWhitespace (text, mFont, mauiFont.Size);
         return new GraphicsSizeF (size.Width, size.Height);
     }
 
@@ -118,7 +118,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
             GetFontStyleType (mauiFont.Style));
         _canvas.Font = mFont;
         _canvas.FontSize = mauiFont.Size;
-        SizeF size = _canvas.GetStringSize (text, mFont, mauiFont.Size, HorizontalAlignment.Left, VerticalAlignment.Top);
+        SizeF size = MeasurePreservingWhitespace (text, mFont, mauiFont.Size);
         return new GraphicsSizeF (Math.Min (size.Width, width), size.Height);
     }
 
@@ -130,7 +130,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
             GetFontStyleType (mauiFont.Style));
         _canvas.Font = mFont;
         _canvas.FontSize = mauiFont.Size;
-        SizeF size = _canvas.GetStringSize (text, mFont, mauiFont.Size);
+        SizeF size = MeasurePreservingWhitespace (text, mFont, mauiFont.Size);
 
         float charWidth = size.Width / Math.Max (1, text.Length);
         charsFitted = charWidth > 0 ? (int)(proposedSize.Width / charWidth) : text.Length;
@@ -139,6 +139,36 @@ public sealed class MauiGraphicsContext : IGraphicsContext
 
         return new GraphicsSizeF (Math.Min (size.Width, proposedSize.Width),
             Math.Min (size.Height, proposedSize.Height));
+    }
+
+    /// <summary>
+    ///     MAUI's WinUI <c>GetStringSize</c> trims leading/trailing whitespace before
+    ///     measuring (TextBlock semantics), which collapses any token that is purely
+    ///     whitespace to zero width and makes adjacent tokens run together in the
+    ///     preview. Wrap the text in sentinel characters and subtract the bookends so
+    ///     spaces, tabs, and trailing whitespace round-trip correctly.
+    /// </summary>
+    private SizeF MeasurePreservingWhitespace (string text, Microsoft.Maui.Graphics.Font mFont, float fontSize)
+    {
+        if (string.IsNullOrEmpty (text))
+        {
+            return new SizeF (0, 0);
+        }
+
+        // Fast path: text has no whitespace at either end so trimming is a no-op.
+        bool needsSentinels = char.IsWhiteSpace (text[0]) || char.IsWhiteSpace (text[text.Length - 1]);
+        if (!needsSentinels)
+        {
+            return _canvas.GetStringSize (text, mFont, fontSize);
+        }
+
+        // Use a narrow but non-zero-width sentinel that the renderer will not collapse.
+        const string sentinel = "|";
+        var withText = _canvas.GetStringSize (sentinel + text + sentinel, mFont, fontSize);
+        var bookends = _canvas.GetStringSize (sentinel + sentinel, mFont, fontSize);
+        float width = Math.Max (0, withText.Width - bookends.Width);
+        // Use the un-trimmed measurement's height so descender/ascender are correct.
+        return new SizeF (width, withText.Height);
     }
 
     public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y,

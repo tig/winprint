@@ -22,9 +22,21 @@ public sealed class PrintPreviewDrawable : IDrawable
         canvas.FillColor = Colors.LightGray;
         canvas.FillRectangle (dirtyRect);
 
+        bool hasError = !string.IsNullOrEmpty (_viewModel.StatusText) &&
+            _viewModel.StatusText.StartsWith ("Error", StringComparison.OrdinalIgnoreCase);
+
         if (!_viewModel.IsFileLoaded || _viewModel.TotalPages == 0)
         {
-            DrawPlaceholder (canvas, dirtyRect);
+            // If a load failed (no file open) still show the error message so the user
+            // sees what went wrong with the CLI argument / file open.
+            if (hasError)
+            {
+                DrawErrorOverlay (canvas, dirtyRect);
+            }
+            else
+            {
+                DrawPlaceholder (canvas, dirtyRect);
+            }
             return;
         }
 
@@ -97,12 +109,26 @@ public sealed class PrintPreviewDrawable : IDrawable
         if (!string.IsNullOrEmpty (_viewModel.StatusText) &&
             _viewModel.StatusText.StartsWith ("Error", StringComparison.OrdinalIgnoreCase))
         {
-            canvas.FontColor = Colors.OrangeRed;
-            canvas.FontSize = 12;
-            canvas.DrawString (_viewModel.StatusText,
-                4, dirtyRect.Height - 24, dirtyRect.Width - 8, 20,
-                HorizontalAlignment.Left, VerticalAlignment.Center);
+            DrawErrorOverlay (canvas, dirtyRect);
         }
+    }
+
+    private void DrawErrorOverlay (ICanvas canvas, RectF dirtyRect)
+    {
+        // Filled banner so the message is unmistakable, top-center of the preview area.
+        const float bannerH = 56f;
+        var bannerRect = new RectF (dirtyRect.X + 16, dirtyRect.Y + 16, dirtyRect.Width - 32, bannerH);
+        canvas.FillColor = new Color (1.0f, 0.93f, 0.86f); // light orange
+        canvas.FillRoundedRectangle (bannerRect, 6);
+        canvas.StrokeColor = Colors.OrangeRed;
+        canvas.StrokeSize = 1f;
+        canvas.DrawRoundedRectangle (bannerRect, 6);
+
+        canvas.FontColor = Colors.OrangeRed;
+        canvas.FontSize = 14;
+        canvas.DrawString (_viewModel.StatusText,
+            bannerRect.X + 12, bannerRect.Y, bannerRect.Width - 24, bannerRect.Height,
+            HorizontalAlignment.Left, VerticalAlignment.Center);
     }
 
     private static void DrawPlaceholder (ICanvas canvas, RectF dirtyRect)
