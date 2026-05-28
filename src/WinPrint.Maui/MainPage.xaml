@@ -36,7 +36,11 @@
                                     FontSize="12" />
                             <HorizontalStackLayout Spacing="4">
                                 <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.7" />
-                                <Label Text="Landscape" VerticalOptions="Center" FontSize="12" />
+                                <Label Text="Landscape" VerticalOptions="Center" FontSize="12">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
+                                    </Label.GestureRecognizers>
+                                </Label>
                             </HorizontalStackLayout>
 
                             <!-- Margins (diamond layout like WinForms) -->
@@ -92,7 +96,11 @@
                                 </HorizontalStackLayout>
                                 <HorizontalStackLayout Spacing="4">
                                     <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
-                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="10" />
+                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="10">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
 
@@ -120,7 +128,11 @@
                             <!-- Line Numbers -->
                             <HorizontalStackLayout Spacing="4">
                                 <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.65" />
-                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="12" />
+                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="12">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
+                                    </Label.GestureRecognizers>
+                                </Label>
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>

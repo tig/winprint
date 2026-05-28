@@ -276,6 +276,34 @@ public partial class MainPage : ContentPage
         ToggleSection (MarginsContent, MarginsHeader, "Margins (inches)");
     }
 
+    /// <summary>
+    ///     MAUI's CheckBox has no built-in Text/label, and unlike WinForms a Label
+    ///     sitting next to a CheckBox is not click-connected to it. Wire this
+    ///     handler to a TapGestureRecognizer on each "checkbox label" so clicking
+    ///     the label toggles the sibling CheckBox -- the behavior users (rightly)
+    ///     expect on every other platform.
+    /// </summary>
+    private void OnCheckBoxLabelTapped (object? sender, TappedEventArgs e)
+    {
+        if (sender is not Label label || label.Parent is not Layout layout)
+        {
+            return;
+        }
+
+        // Find the first CheckBox sibling in the same layout and toggle it.
+        foreach (var child in layout.Children)
+        {
+            if (child is CheckBox cb)
+            {
+                if (cb.IsEnabled)
+                {
+                    cb.IsChecked = !cb.IsChecked;
+                }
+                return;
+            }
+        }
+    }
+
     private void OnPagesUpHeaderTapped (object? sender, TappedEventArgs e)
     {
         ToggleSection (PagesUpContent, PagesUpHeader, "Pages Up");
