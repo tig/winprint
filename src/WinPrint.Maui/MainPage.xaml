@@ -190,7 +190,11 @@
             <!-- Print Preview -->
             <GraphicsView x:Name="PreviewGraphicsView"
                           Grid.Row="1"
-                          BackgroundColor="{AppThemeBinding Light=DarkGray, Dark=#555}" />
+                          BackgroundColor="{AppThemeBinding Light=DarkGray, Dark=#555}">
+                <GraphicsView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPreviewTapped" />
+                </GraphicsView.GestureRecognizers>
+            </GraphicsView>
 
             <!-- Footer bar -->
             <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Padding="4,2"

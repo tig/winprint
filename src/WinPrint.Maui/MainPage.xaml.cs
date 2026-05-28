@@ -184,4 +184,15 @@ public partial class MainPage : ContentPage
         float size = parts.Length > 1 && float.TryParse (parts[1], out var s) ? s : currentSize;
         return (family, size, currentStyle);
     }
+
+    /// <summary>
+    ///     When preview is tapped and no file is loaded, open file dialog (per spec).
+    /// </summary>
+    private async void OnPreviewTapped (object? sender, TappedEventArgs e)
+    {
+        if (!_viewModel.IsFileLoaded)
+        {
+            await _viewModel.OpenFileAsync ();
+        }
+    }
 }

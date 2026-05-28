@@ -28,8 +28,11 @@ public sealed class PrintPreviewDrawable : IDrawable
             return;
         }
 
-        // Calculate page dimensions maintaining aspect ratio (8.5x11 default)
-        float pageAspect = 8.5f / 11f;
+        // Use actual sheet bounds for aspect ratio (supports landscape/portrait)
+        var bounds = _viewModel.SheetViewModel.Bounds;
+        float boundsW = bounds.Width > 0 ? bounds.Width : 850;
+        float boundsH = bounds.Height > 0 ? bounds.Height : 1100;
+        float pageAspect = boundsW / boundsH;
         float zoom = _viewModel.ZoomFactor;
 
         float availWidth = dirtyRect.Width * 0.9f;
@@ -47,9 +50,11 @@ public sealed class PrintPreviewDrawable : IDrawable
             pageHeight = pageWidth / pageAspect;
         }
 
-        // Center the page
+        // Position: center at ≤100% zoom; top-center at >100% (per spec)
         float x = (dirtyRect.Width - pageWidth) / 2;
-        float y = (dirtyRect.Height - pageHeight) / 2;
+        float y = zoom <= 1.0f
+            ? (dirtyRect.Height - pageHeight) / 2
+            : dirtyRect.Height * 0.02f;
 
         // Draw page shadow
         canvas.FillColor = Colors.DarkGray;
@@ -68,15 +73,25 @@ public sealed class PrintPreviewDrawable : IDrawable
         canvas.SaveState ();
         canvas.Translate (x, y);
 
-        // Scale to fit the page area (SheetViewModel works in hundredths of an inch at 96 DPI)
-        float scaleX = pageWidth / 850f; // 8.5" * 100
-        float scaleY = pageHeight / 1100f; // 11" * 100
+        // Scale to fit the page area (SheetViewModel works in hundredths of an inch)
+        float scaleX = pageWidth / boundsW;
+        float scaleY = pageHeight / boundsH;
         canvas.Scale (scaleX, scaleY);
 
         var context = new MauiGraphicsContext (canvas, 96f, 96f, true);
         _viewModel.PaintCurrentPage (context);
 
         canvas.RestoreState ();
+
+        // Zoom overlay text when zoomed (per spec)
+        if (Math.Abs (zoom - 1.0f) > 0.01f)
+        {
+            canvas.FontColor = Colors.Gray;
+            canvas.FontSize = 12;
+            canvas.DrawString ($"{zoom * 100:F0}%",
+                dirtyRect.Width - 60, dirtyRect.Height - 24, 56, 20,
+                HorizontalAlignment.Right, VerticalAlignment.Center);
+        }
     }
 
     private static void DrawPlaceholder (ICanvas canvas, RectF dirtyRect)
