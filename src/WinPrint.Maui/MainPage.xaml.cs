@@ -61,6 +61,11 @@ public partial class MainPage : ContentPage
             Window.X = settings.Location.X;
             Window.Y = settings.Location.Y;
         }
+
+#if WINDOWS
+        // Hook native WinUI keyboard and pointer wheel events
+        HookNativeWindowEvents ();
+#endif
     }
 
     /// <summary>
@@ -223,4 +228,71 @@ public partial class MainPage : ContentPage
         content.IsVisible = !content.IsVisible;
         header.Text = (content.IsVisible ? "▼ " : "▶ ") + title;
     }
+
+#if WINDOWS
+    private void HookNativeWindowEvents ()
+    {
+        var mauiWindow = Window;
+        if (mauiWindow?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
+        {
+            return;
+        }
+
+        var content = nativeWindow.Content as Microsoft.UI.Xaml.UIElement;
+        if (content == null)
+        {
+            return;
+        }
+
+        content.KeyDown += OnNativeKeyDown;
+        content.PointerWheelChanged += OnNativePointerWheel;
+    }
+
+    private void OnNativeKeyDown (object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        var window = sender as Microsoft.UI.Xaml.UIElement;
+        bool ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread (Windows.System.VirtualKey.Control)
+            .HasFlag (Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread (Windows.System.VirtualKey.Shift)
+            .HasFlag (Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        string key = e.Key.ToString ();
+        HandleKeyDown (key, ctrl, shift);
+    }
+
+    private void OnNativePointerWheel (object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint (sender as Microsoft.UI.Xaml.UIElement);
+        int delta = point.Properties.MouseWheelDelta;
+        bool ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread (Windows.System.VirtualKey.Control)
+            .HasFlag (Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        if (ctrl)
+        {
+            // Ctrl+Wheel = zoom
+            if (delta > 0)
+            {
+                _viewModel.ZoomInCommand.Execute (null);
+            }
+            else if (delta < 0)
+            {
+                _viewModel.ZoomOutCommand.Execute (null);
+            }
+            e.Handled = true;
+        }
+        else
+        {
+            // Plain wheel = page navigation
+            if (delta > 0)
+            {
+                _viewModel.PreviousPageCommand.Execute (null);
+            }
+            else if (delta < 0)
+            {
+                _viewModel.NextPageCommand.Execute (null);
+            }
+            e.Handled = true;
+        }
+    }
+#endif
 }

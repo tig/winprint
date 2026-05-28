@@ -203,9 +203,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField (ref _marginTop, value))
             {
+                OnPropertyChanged (nameof (MarginTopValue));
                 UpdateMargins ();
             }
         }
+    }
+
+    public double MarginTopValue
+    {
+        get => double.TryParse (_marginTop, out var v) ? v : 0;
+        set => MarginTop = value.ToString ("F2");
     }
 
     public string MarginBottom
@@ -215,9 +222,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField (ref _marginBottom, value))
             {
+                OnPropertyChanged (nameof (MarginBottomValue));
                 UpdateMargins ();
             }
         }
+    }
+
+    public double MarginBottomValue
+    {
+        get => double.TryParse (_marginBottom, out var v) ? v : 0;
+        set => MarginBottom = value.ToString ("F2");
     }
 
     public string MarginLeft
@@ -227,9 +241,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField (ref _marginLeft, value))
             {
+                OnPropertyChanged (nameof (MarginLeftValue));
                 UpdateMargins ();
             }
         }
+    }
+
+    public double MarginLeftValue
+    {
+        get => double.TryParse (_marginLeft, out var v) ? v : 0;
+        set => MarginLeft = value.ToString ("F2");
     }
 
     public string MarginRight
@@ -239,9 +260,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField (ref _marginRight, value))
             {
+                OnPropertyChanged (nameof (MarginRightValue));
                 UpdateMargins ();
             }
         }
+    }
+
+    public double MarginRightValue
+    {
+        get => double.TryParse (_marginRight, out var v) ? v : 0;
+        set => MarginRight = value.ToString ("F2");
     }
 
     public int Rows
@@ -725,6 +753,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _selectedPaperSize = PaperSizes.FirstOrDefault ();
         OnPropertyChanged (nameof (SelectedPrinter));
         OnPropertyChanged (nameof (SelectedPaperSize));
+
+        // Reflow with new sheet settings
+        ReflowAsync ().ConfigureAwait (false);
     }
 
     private void UpdateMargins ()
