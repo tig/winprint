@@ -182,6 +182,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public ObservableCollection<string> SheetNames { get; } = new ();
     private List<string> _sheetKeys = new ();
+    private SheetSettings? _currentSheetSettings;
+
+    /// <summary>
+    ///     Reference to the current sheet's settings object in ModelLocator.Settings.Sheets.
+    ///     Changes made here are persisted when SaveWindowState is called (on close).
+    /// </summary>
+    private SheetSettings? CurrentSheetSettings => _currentSheetSettings;
 
     public int SelectedSheetIndex
     {
@@ -206,6 +213,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 SheetViewModel.Landscape = value;
                 _currentPageSetup.Landscape = value;
+                if (_currentSheetSettings != null)
+                {
+                    _currentSheetSettings.Landscape = value;
+                }
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -295,6 +306,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField (ref _rows, value))
             {
                 SheetViewModel.Rows = value;
+                if (_currentSheetSettings != null) { _currentSheetSettings.Rows = value; }
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -308,6 +320,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField (ref _columns, value))
             {
                 SheetViewModel.Columns = value;
+                if (_currentSheetSettings != null) { _currentSheetSettings.Columns = value; }
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -320,7 +333,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField (ref _paddingValue, value) && decimal.TryParse (value, out var d))
             {
-                SheetViewModel.Padding = (int)(d * 100m);
+                int padding = (int)(d * 100m);
+                SheetViewModel.Padding = padding;
+                if (_currentSheetSettings != null) { _currentSheetSettings.Padding = padding; }
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -334,6 +349,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField (ref _pageSeparator, value))
             {
                 SheetViewModel.PageSeparator = value;
+                if (_currentSheetSettings != null) { _currentSheetSettings.PageSeparator = value; }
                 InvalidatePreview?.Invoke ();
             }
         }
@@ -349,6 +365,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (SheetViewModel.ContentSettings != null)
                 {
                     SheetViewModel.ContentSettings.LineNumbers = value;
+                }
+                if (_currentSheetSettings?.ContentSettings != null)
+                {
+                    _currentSheetSettings.ContentSettings.LineNumbers = value;
                 }
                 ReflowAsync ().ConfigureAwait (false);
             }
@@ -396,6 +416,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 {
                     SheetViewModel.Header.Enabled = value;
                 }
+                if (_currentSheetSettings?.Header != null)
+                {
+                    _currentSheetSettings.Header.Enabled = value;
+                }
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -411,6 +435,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (SheetViewModel.Header != null)
                 {
                     SheetViewModel.Header.Text = value;
+                }
+                if (_currentSheetSettings?.Header != null)
+                {
+                    _currentSheetSettings.Header.Text = value;
                 }
                 InvalidatePreview?.Invoke ();
             }
@@ -428,6 +456,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 {
                     SheetViewModel.Footer.Enabled = value;
                 }
+                if (_currentSheetSettings?.Footer != null)
+                {
+                    _currentSheetSettings.Footer.Enabled = value;
+                }
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -443,6 +475,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (SheetViewModel.Footer != null)
                 {
                     SheetViewModel.Footer.Text = value;
+                }
+                if (_currentSheetSettings?.Footer != null)
+                {
+                    _currentSheetSettings.Footer.Text = value;
                 }
                 InvalidatePreview?.Invoke ();
             }
@@ -738,6 +774,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // Keep a reference to the live settings object for persistence
+        _currentSheetSettings = sheetSettings;
+
         // Initialize via SetSheet (required for internal state)
         SheetViewModel.SetSheet (sheetSettings);
 
@@ -812,11 +851,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
             decimal.TryParse (_marginLeft, out var left) &&
             decimal.TryParse (_marginRight, out var right))
         {
-            SheetViewModel.Margins = new PrintMargins ((int)(left * 100), (int)(right * 100), (int)(top * 100), (int)(bottom * 100));
+            var margins = new PrintMargins ((int)(left * 100), (int)(right * 100), (int)(top * 100), (int)(bottom * 100));
+            SheetViewModel.Margins = margins;
             _currentPageSetup.MarginTop = (int)(top * 100);
             _currentPageSetup.MarginBottom = (int)(bottom * 100);
             _currentPageSetup.MarginLeft = (int)(left * 100);
             _currentPageSetup.MarginRight = (int)(right * 100);
+            if (_currentSheetSettings != null)
+            {
+                _currentSheetSettings.Margins = margins;
+            }
             ReflowAsync ().ConfigureAwait (false);
         }
     }
@@ -834,6 +878,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             // Always apply page settings before reflowing to ensure ContentEngine.PageSize is set.
             // This mirrors WinForms behavior where page settings are always current before reflow.
             SheetViewModel.SetPrinterPageSettings (_currentPageSetup);
+
+            // Sync sheet-level ContentSettings to the ContentEngine so changes like
+            // LineNumbers are applied without requiring a full file reload.
+            if (SheetViewModel.ContentEngine?.ContentSettings != null)
+            {
+                SheetViewModel.ContentEngine.ContentSettings.CopyPropertiesFrom (SheetViewModel.ContentSettings);
+            }
+
             await SheetViewModel.ReflowAsync ();
             TotalPages = SheetViewModel.NumSheets;
             CurrentPage = Math.Min (CurrentPage, TotalPages);
@@ -878,12 +930,39 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     /// <summary>
     ///     Saves window state and settings on close (per spec).
+    ///     Mirrors WinForms pattern: when maximized, persist the "restore bounds" (last normal size)
+    ///     so that restoring from maximized returns to the correct size.
     /// </summary>
-    public void SaveWindowState (double x, double y, double width, double height)
+    public void SaveWindowState (double x, double y, double width, double height, bool isMaximized)
+    {
+        var settings = ModelLocator.Current.Settings;
+        settings.WindowState = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
+
+        if (!isMaximized)
+        {
+            // Normal: save actual position and size
+            settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
+            settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
+        }
+        // When maximized, keep the previously saved normal size/location (RestoreBounds equivalent)
+
+        // Also persist selected sheet
+        if (_selectedSheetIndex >= 0 && _selectedSheetIndex < _sheetKeys.Count)
+        {
+            settings.DefaultSheet = Guid.Parse (_sheetKeys[_selectedSheetIndex]);
+        }
+
+        ServiceLocator.Current.SettingsService.SaveSettings (settings, saveCTESettings: false);
+    }
+
+    /// <summary>
+    ///     Saves current normal bounds (call when window moves/resizes while not maximized).
+    ///     This ensures we always have the last normal bounds for RestoreBounds equivalent.
+    /// </summary>
+    public void SaveNormalBounds (double x, double y, double width, double height)
     {
         var settings = ModelLocator.Current.Settings;
         settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
         settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
-        ServiceLocator.Current.SettingsService.SaveSettings (settings, saveCTESettings: false);
     }
 }

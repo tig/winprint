@@ -97,7 +97,7 @@
                             </VerticalStackLayout>
 
                             <!-- Fonts (collapsible) -->
-                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="10" Margin="0,2,0,0">
+                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="12" Margin="0,2,0,0">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnFontsHeaderTapped" />
                                 </Label.GestureRecognizers>
@@ -156,7 +156,11 @@
                 <!-- Version / Help -->
                 <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
                     <Label Grid.Column="0" Text="Help &amp; about..." FontSize="12"
-                           TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline" />
+                           TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHelpTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
                     <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="12"
                            HorizontalTextAlignment="End" />
                 </Grid>

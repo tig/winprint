@@ -47,6 +47,9 @@ public partial class MainPage : ContentPage
         // Populate printer list from platform service
         PopulatePrinters ();
 
+        // Apply command-line options (same pattern as WinForms)
+        ApplyCommandLineOptions ();
+
         // Subscribe to window lifecycle for state save
         Unloaded += OnPageUnloaded;
     }
@@ -55,15 +58,14 @@ public partial class MainPage : ContentPage
     {
         base.OnHandlerChanged ();
 
-        // Restore saved window size
+        // Restore saved window size and state (mirrors WinForms pattern)
         var settings = WinPrint.Core.Models.ModelLocator.Current.Settings;
-        if (settings.Size is { Width: > 0, Height: > 0 })
+
+        // First set the normal size/location (this is the "restore bounds" if maximized)
+        if (settings.Size is { Width: > 0, Height: > 0 } && Window != null)
         {
-            if (Window != null)
-            {
-                Window.Width = settings.Size.Width;
-                Window.Height = settings.Size.Height;
-            }
+            Window.Width = settings.Size.Width;
+            Window.Height = settings.Size.Height;
         }
         if (settings.Location != null && Window != null)
         {
@@ -72,8 +74,28 @@ public partial class MainPage : ContentPage
         }
 
 #if WINDOWS
+        // Then apply maximized state if saved
+        if (settings.WindowState == WinPrint.Core.Models.FormWindowState.Maximized)
+        {
+            // Defer maximization until the native window is ready
+            MainThread.BeginInvokeOnMainThread (() =>
+            {
+                if (Window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
+                {
+                    var appWindow = nativeWindow.AppWindow;
+                    if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+                    {
+                        presenter.Maximize ();
+                    }
+                }
+            });
+        }
+
         // Hook native WinUI keyboard and pointer wheel events
         HookNativeWindowEvents ();
+
+        // Track window size changes to capture normal bounds
+        HookWindowStateTracking ();
 #endif
     }
 
@@ -129,7 +151,18 @@ public partial class MainPage : ContentPage
     {
         if (Window != null)
         {
-            _viewModel.SaveWindowState (Window.X, Window.Y, Window.Width, Window.Height);
+            bool isMaximized = false;
+#if WINDOWS
+            if (Window.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
+            {
+                var appWindow = nativeWindow.AppWindow;
+                if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+                {
+                    isMaximized = presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized;
+                }
+            }
+#endif
+            _viewModel.SaveWindowState (Window.X, Window.Y, Window.Width, Window.Height, isMaximized);
         }
     }
 
@@ -154,6 +187,64 @@ public partial class MainPage : ContentPage
         if (_viewModel.SelectedPrinter == null && _viewModel.PrinterNames.Count > 0)
         {
             _viewModel.SelectedPrinter = _viewModel.PrinterNames[0];
+        }
+    }
+
+    /// <summary>
+    ///     Apply command-line options (same pattern as WinForms Program.cs / MainWindow).
+    ///     Honors --printer, --landscape, --paper-size, --sheet, and file arguments.
+    /// </summary>
+    private void ApplyCommandLineOptions ()
+    {
+        var options = WinPrint.Core.Models.ModelLocator.Current.Options;
+
+        // --printer: select the specified printer
+        if (!string.IsNullOrEmpty (options.Printer) && _viewModel.PrinterNames.Contains (options.Printer))
+        {
+            _viewModel.SelectedPrinter = options.Printer;
+        }
+
+        // --landscape / --portrait
+        if (options.Landscape)
+        {
+            _viewModel.Landscape = true;
+        }
+        else if (options.Portrait)
+        {
+            _viewModel.Landscape = false;
+        }
+
+        // --paper-size
+        if (!string.IsNullOrEmpty (options.PaperSize) && _viewModel.PaperSizes.Contains (options.PaperSize))
+        {
+            _viewModel.SelectedPaperSize = options.PaperSize;
+        }
+
+        // --sheet: select by name or ID
+        if (!string.IsNullOrEmpty (options.Sheet))
+        {
+            for (int i = 0; i < _viewModel.SheetNames.Count; i++)
+            {
+                if (string.Equals (_viewModel.SheetNames[i], options.Sheet, StringComparison.OrdinalIgnoreCase))
+                {
+                    _viewModel.SelectedSheetIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Files: open the first file specified on command line
+        if (options.Files != null && options.Files.Any ())
+        {
+            string? file = options.Files.FirstOrDefault ();
+            if (!string.IsNullOrEmpty (file) && File.Exists (file))
+            {
+                // Defer file load until the UI is ready
+                MainThread.BeginInvokeOnMainThread (async () =>
+                {
+                    await _viewModel.LoadFileAsync (file);
+                });
+            }
         }
     }
 
@@ -245,6 +336,11 @@ public partial class MainPage : ContentPage
 
     private bool _leftPanelVisible = true;
 
+    private async void OnHelpTapped (object? sender, TappedEventArgs e)
+    {
+        await Launcher.OpenAsync("https://tig.github.io/winprint");
+    }
+
     private void OnPanelToggleTapped (object? sender, TappedEventArgs e)
     {
         _leftPanelVisible = !_leftPanelVisible;
@@ -316,6 +412,34 @@ public partial class MainPage : ContentPage
             }
             e.Handled = true;
         }
+    }
+
+    /// <summary>
+    ///     Track window position/size changes while in normal (non-maximized) state.
+    ///     This gives us the "RestoreBounds" equivalent for persisting.
+    /// </summary>
+    private void HookWindowStateTracking ()
+    {
+        if (Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
+        {
+            return;
+        }
+
+        var appWindow = nativeWindow.AppWindow;
+        appWindow.Changed += (s, args) =>
+        {
+            if (!args.DidPositionChange && !args.DidSizeChange)
+            {
+                return;
+            }
+
+            // Only save normal bounds when not maximized
+            if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter &&
+                presenter.State != Microsoft.UI.Windowing.OverlappedPresenterState.Maximized)
+            {
+                _viewModel.SaveNormalBounds (Window.X, Window.Y, Window.Width, Window.Height);
+            }
+        };
     }
 #endif
 }
