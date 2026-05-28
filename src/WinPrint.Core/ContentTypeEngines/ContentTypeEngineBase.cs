@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+#if WINDOWS
 using System.Drawing.Printing;
 using System.Drawing.Text;
+#endif
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -32,6 +34,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     public static string DefaultSyntaxHighlighterCteNameClassName = "TextMateCte";
     private static readonly string[] _supportedContentTypes = [];
 
+#if WINDOWS
     /// <summary>
     ///     These are the global StringFormat settings; set here to ensure all rendering and measuring uses same settings
     /// </summary>
@@ -46,6 +49,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         LineAlignment = StringAlignment.Near,
         Trimming = StringTrimming.None
     };
+#endif
 
     public static readonly GraphicsStringFormat GraphicsStringFormat = new ()
     {
@@ -58,7 +62,9 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         Trimming = GraphicsStringTrimming.None
     };
 
+#if WINDOWS
     public static readonly TextRenderingHint TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+#endif
 
     public static readonly GraphicsTextRenderingMode GraphicsTextRenderingMode =
         GraphicsTextRenderingMode.ClearTypeGridFit;
@@ -160,7 +166,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// <param name="printerResolution"></param>
     /// <param name="reflowProgress"></param>
     /// <returns>Number of sheets.</returns>
-    public virtual async Task<int> RenderAsync (PrinterResolution? printerResolution,
+    public virtual async Task<int> RenderAsync (PrintResolution? printerResolution,
         EventHandler<string>? reflowProgress)
     {
         if (Document == null)

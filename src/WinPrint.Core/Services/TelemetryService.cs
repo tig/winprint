@@ -6,11 +6,13 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+#if WINDOWS
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.Win32;
+#endif
 using Serilog;
 
 namespace WinPrint.Core.Services;
@@ -19,18 +21,23 @@ public class TelemetryService
 {
     private Stopwatch runtime = null!;
 
+#if WINDOWS
     private TelemetryClient telemetry = null!;
+#endif
     public bool TelemetryEnabled { get; set; }
 
+#if WINDOWS
     public TelemetryClient GetTelemetryClient ()
     {
         return telemetry;
     }
+#endif
 
     public void Start (string appName, IDictionary<string, string?>? startProperties = null)
     {
         runtime = Stopwatch.StartNew ();
 
+#if WINDOWS
         object? val = Registry.GetValue (@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
         TelemetryEnabled = val != null && val.ToString () == "1" ? true : false;
 
@@ -81,10 +88,14 @@ public class TelemetryService
             ["dotNetVersion"] = Environment.Version.ToString ()
         }).ToDictionary (kvp => kvp.Key, kvp => kvp.Value);
         TrackEvent ("Application Started", startProperties);
+#else
+        TelemetryEnabled = false;
+#endif
     }
 
     public void Stop ()
     {
+#if WINDOWS
         TrackEvent ("Application Stopped", metrics: new Dictionary<string, double>
             { { "runTime", runtime.Elapsed.TotalMilliseconds } });
 
@@ -92,20 +103,25 @@ public class TelemetryService
         Flush ();
         // Flush is not blocking so wait a bit
         Task.Delay (1000).Wait ();
+#endif
     }
 
     public void SetUser (string user)
     {
+#if WINDOWS
         telemetry.Context.User.AuthenticatedUserId = user;
+#endif
     }
 
     public void TrackEvent (string key, IDictionary<string, string?>? properties = null,
         IDictionary<string, double>? metrics = null)
     {
+#if WINDOWS
         if (TelemetryEnabled && telemetry != null)
         {
             telemetry.TrackEvent (key, properties, metrics);
         }
+#endif
     }
 
     public void TrackException (Exception ex, bool log = false)
@@ -115,20 +131,24 @@ public class TelemetryService
             Log.Error (ex, "{msg}", ex.Message);
         }
 
+#if WINDOWS
         if (telemetry != null && ex != null && TelemetryEnabled)
         {
             var telex = new ExceptionTelemetry (ex);
             telemetry.TrackException (telex);
             Flush ();
         }
+#endif
     }
 
     internal void Flush ()
     {
+#if WINDOWS
         if (telemetry != null)
         {
             telemetry.Flush ();
         }
+#endif
     }
 
     internal static string GetInstrumentationKey ()

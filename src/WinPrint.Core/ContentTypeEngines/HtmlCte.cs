@@ -1,5 +1,7 @@
 using System;
+#if WINDOWS
 using System.Drawing.Printing;
+#endif
 using System.Threading.Tasks;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
@@ -49,7 +51,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         return await Task.FromResult (true);
     }
 
-    public override async Task<int> RenderAsync (PrinterResolution? printerResolution,
+    public override async Task<int> RenderAsync (PrintResolution? printerResolution,
         EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage ("HtmlCte is a stub - LiteHtmlSharp dependency removed.");

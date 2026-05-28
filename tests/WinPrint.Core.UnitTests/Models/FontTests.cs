@@ -1,5 +1,5 @@
-using System.Drawing;
 using System.Text.Json;
+using WinPrint.Core.Models;
 using Xunit;
 using Xunit.Abstractions;
 using Font = WinPrint.Core.Models.Font;

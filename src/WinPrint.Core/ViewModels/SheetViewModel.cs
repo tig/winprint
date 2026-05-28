@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+#if WINDOWS
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
+#endif
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -45,7 +47,7 @@ public class SheetViewModel : ViewModelBase
     private bool _loading;
 
     // These properties are all defined by user and sync'd with the Sheet model
-    private Margins _margins = new (0, 0, 0, 0);
+    private PrintMargins _margins = new (0, 0, 0, 0);
 
     private int _numPages;
     private int _padding;
@@ -61,7 +63,7 @@ public class SheetViewModel : ViewModelBase
     private SheetSettings _sheet = null!;
     private string? _title;
 
-    public Margins Margins
+    public PrintMargins Margins
     {
         get => _margins;
         set => SetField (ref _margins, value);
@@ -203,7 +205,7 @@ public class SheetViewModel : ViewModelBase
     /// </summary>
     public int LandscapeAngle { get; set; }
 
-    public PrinterResolution? PrinterResolution { get; set; }
+    public PrintResolution? PrinterResolution { get; set; }
 
     public bool PrintInColor { get; set; }
 
@@ -366,7 +368,7 @@ public class SheetViewModel : ViewModelBase
         Columns = newSheet.Columns;
         Padding = newSheet.Padding;
         PageSeparator = newSheet.PageSeparator;
-        Margins = (Margins)newSheet.Margins.Clone ();
+        Margins = (PrintMargins)newSheet.Margins.Clone ();
 
         if (_contentSettings != null)
         {
@@ -512,10 +514,12 @@ public class SheetViewModel : ViewModelBase
                 throw new InvalidOperationException ($"Content type engine not found for '{contentType}'.");
             }
 
+#if WINDOWS
             if (ContentEngine is TextMateCte textMateCte)
             {
                 textMateCte.Configure (ContentType, Language, File);
             }
+#endif
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null)
@@ -562,6 +566,84 @@ public class SheetViewModel : ViewModelBase
         return retval;
     }
 
+    /// <summary>
+    ///     Set the page settings from a cross-platform PrintPageSetup instance.
+    /// </summary>
+    public void SetPrinterPageSettings (PrintPageSetup pageSetup)
+    {
+        LogService.TraceMessage ();
+        if (pageSetup is null)
+        {
+            throw new ArgumentNullException (nameof (pageSetup));
+        }
+
+        LandscapeAngle = pageSetup.Landscape ? 90 : 0;
+
+        if (_sheet != null && _sheet.Landscape)
+        {
+            HardMarginX = 0;
+            HardMarginY = 0;
+
+            _printableArea.X = 0;
+            _printableArea.Y = 0;
+            _printableArea.Width = pageSetup.PaperHeight;
+            _printableArea.Height = pageSetup.PaperWidth;
+
+            _paperSize.Height = pageSetup.PaperWidth;
+            _paperSize.Width = pageSetup.PaperHeight;
+        }
+        else
+        {
+            HardMarginX = 0;
+            HardMarginY = 0;
+
+            _printableArea.X = 0;
+            _printableArea.Y = 0;
+            _printableArea.Width = pageSetup.PaperWidth;
+            _printableArea.Height = pageSetup.PaperHeight;
+
+            _paperSize.Width = pageSetup.PaperWidth;
+            _paperSize.Height = pageSetup.PaperHeight;
+        }
+
+        PrinterResolution = new PrintResolution (pageSetup.DpiX, pageSetup.DpiY);
+        PrintInColor = true;
+
+        Bounds = new Rectangle (0, 0, _paperSize.Width, _paperSize.Height);
+
+        // Content bounds represents printable area, minus margins and header/footer.
+        if (_sheet is null)
+        {
+            throw new InvalidOperationException ("Sheet settings must be set before page settings.");
+        }
+
+        _contentBounds.Location = new PointF (_sheet.Margins.Left, _sheet.Margins.Top + _headerVM.Bounds.Height);
+        _contentBounds.Width = Bounds.Width - _sheet.Margins.Left - _sheet.Margins.Right;
+        _contentBounds.Height = Bounds.Height - _sheet.Margins.Top - _sheet.Margins.Bottom - _headerVM.Bounds.Height -
+                                _footerVM.Bounds.Height;
+        if (ContentEngine is null)
+        {
+            LogService.TraceMessage ("SheetViewModel.ReflowAsync - Content is null");
+        }
+        else
+        {
+            ContentEngine.PageSize = new SizeF (GetPageWidth (), GetPageHeight ());
+        }
+
+        Log.Debug ("Printer Resolution: {w} x {h}DPI", PrinterResolution.X, PrinterResolution.Y);
+        Log.Debug ("Paper Size: {w} x {h}\"", PaperSize.Width / 100F, PaperSize.Height / 100F);
+        Log.Debug ("Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w}x{h}\")",
+            Bounds.Left / 100F, Bounds.Top / 100F, Bounds.Right / 100F, Bounds.Bottom / 100F, Bounds.Width / 100F,
+            Bounds.Height / 100F);
+        Log.Debug ("Content Bounds: {left}\", {top}\", {right}\", {bottom}\" ({w} x {h}\")",
+            ContentBounds.Left / 100F, ContentBounds.Top / 100F, ContentBounds.Right / 100F,
+            ContentBounds.Bottom / 100F, ContentBounds.Width / 100F, ContentBounds.Height / 100F);
+        Log.Debug ("Page Size: {w} x {h}\"", GetPageWidth () / 100F, GetPageHeight () / 100F);
+
+        OnPageSettingsSet ();
+    }
+
+#if WINDOWS
     /// <summary>
     ///     Set the page setting from a PageSettings instance. Note that accessing
     ///     PageSettings can be expensive so we cache the values instead of just holding
@@ -640,7 +722,7 @@ public class SheetViewModel : ViewModelBase
             _paperSize.Height = pageSettings.PaperSize.Height;
         }
 
-        PrinterResolution = pageSettings.PrinterResolution;
+        PrinterResolution = new PrintResolution (pageSettings.PrinterResolution.X, pageSettings.PrinterResolution.Y);
 
         // TODO: Do something if printer is set to color or bw?
         PrintInColor = pageSettings.Color;
@@ -697,12 +779,12 @@ public class SheetViewModel : ViewModelBase
 
         OnPageSettingsSet ();
     }
+#endif
 
     /// <summary>
-    ///     Reflows the sheet based on page settings from a PageSettings instance. Caches those settings
+    ///     Reflows the sheet based on page settings. Caches those settings
     ///     for performance (and for platform independence).
     /// </summary>
-    /// <param name="pageSettings"></param>
     public async Task ReflowAsync ()
     {
         LogService.TraceMessage ();
@@ -936,6 +1018,7 @@ public class SheetViewModel : ViewModelBase
 
     public static float GetFontHeight (Font? font)
     {
+#if WINDOWS
         //if (font is null) throw new ArgumentNullException(nameof(font));
 
         //Log.Debug(LogService.GetTraceMsg(), $"{font.Family}, {font.Size}, {font.Style}");
@@ -945,7 +1028,7 @@ public class SheetViewModel : ViewModelBase
         {
             if (font != null)
             {
-                f = new System.Drawing.Font (font.Family, font.Size, font.Style, GraphicsUnit.Point);
+                f = new System.Drawing.Font (font.Family, font.Size, (System.Drawing.FontStyle)font.Style, GraphicsUnit.Point);
             }
             else
             {
@@ -966,6 +1049,9 @@ public class SheetViewModel : ViewModelBase
         }
 
         return h;
+#else
+        return font?.Size ?? 8F;
+#endif
     }
 
     public int GetPageColumn (int n)
@@ -1017,6 +1103,79 @@ public class SheetViewModel : ViewModelBase
         return ContentBounds.Height / Rows - Padding * (Rows - 1) / Rows;
     }
 
+    /// <summary>
+    ///     Prints the content of a single Sheet to an IGraphicsContext (cross-platform).
+    /// </summary>
+    /// <param name="graphicsContext">Graphics context to render on</param>
+    /// <param name="sheetNum">Sheet to print. 1-based.</param>
+    /// <param name="isDisplayUnit">True when rendering for print (Display unit); false for preview.</param>
+    public void PrintSheet (IGraphicsContext graphicsContext, int sheetNum, bool isDisplayUnit = false)
+    {
+        IGraphicsState state = graphicsContext.Save ();
+        if (isDisplayUnit)
+        {
+            graphicsContext.TranslateTransform (-_printableArea.Left, -_printableArea.Top);
+        }
+
+        PaintSheet (graphicsContext, sheetNum);
+        graphicsContext.Restore (state);
+    }
+
+    private void PaintSheet (IGraphicsContext g, int sheetNum)
+    {
+        LogService.TraceMessage ($"{sheetNum}");
+
+        _headerVM.Paint (g, sheetNum);
+        _footerVM.Paint (g, sheetNum);
+
+        if (Loading)
+        {
+            Log.Debug ("SheetViewModel.PaintSheet - Loading; can't paint");
+            return;
+        }
+
+        if (!Ready)
+        {
+            Log.Debug ("SheetViewModel.PaintSheet - Not Ready; can't paint");
+            return;
+        }
+
+        int pagesPerSheet = _rows * _cols;
+        int startPage = (sheetNum - 1) * pagesPerSheet + 1;
+        int endPage = startPage + pagesPerSheet - 1;
+
+        for (int pageOnSheet = startPage; pageOnSheet <= endPage; pageOnSheet++)
+        {
+            float xPos = GetPageX (pageOnSheet);
+            float yPos = GetPageY (pageOnSheet);
+            float w = GetPageWidth ();
+            float h = GetPageHeight ();
+
+            g.TranslateTransform (xPos, yPos);
+
+            if (_pageSeparator)
+            {
+                if (Columns > 1 && GetPageColumn (pageOnSheet) < Columns - 1)
+                {
+                    g.DrawLine (g.BlackPen, w + Padding / 2, Padding / 2, w + Padding / 2, h - Padding);
+                }
+
+                if (Rows > 1 && GetPageRow (pageOnSheet) < Rows - 1)
+                {
+                    g.DrawLine (g.BlackPen, Padding / 2, h + Padding / 2, w - Padding, h + Padding / 2);
+                }
+            }
+
+            if (ContentEngine != null)
+            {
+                ContentEngine.PaintPage (g, pageOnSheet);
+            }
+
+            g.TranslateTransform (-xPos, -yPos);
+        }
+    }
+
+#if WINDOWS
     /// <summary>
     ///     Prints the content of a single Sheet to a Graphics.
     /// </summary>
@@ -1140,7 +1299,7 @@ public class SheetViewModel : ViewModelBase
             if (Margins.Left < leftMax || Margins.Top < topMax || Margins.Right < rightMax ||
                 Margins.Bottom < bottomMax)
             {
-                using var font = new System.Drawing.Font (FontFamily.GenericSansSerif, 14, FontStyle.Bold,
+                using var font = new System.Drawing.Font (FontFamily.GenericSansSerif, 14, System.Drawing.FontStyle.Bold,
                     GraphicsUnit.Point);
                 string msg =
                     $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
@@ -1180,14 +1339,14 @@ public class SheetViewModel : ViewModelBase
 
         if (g.PageUnit == GraphicsUnit.Display)
         {
-            font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, 48, settings.DiagnosticRulesFont.Style,
+            font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, 48, (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style,
                 GraphicsUnit.Point);
         }
         else
         {
             // Convert font to pixel units if we're in preview
             font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, 48 / 72F * 96F,
-                settings.DiagnosticRulesFont.Style, GraphicsUnit.Pixel);
+                (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style, GraphicsUnit.Pixel);
         }
 
         float xPos = 0; // GetPageX(pageNum);
@@ -1218,13 +1377,13 @@ public class SheetViewModel : ViewModelBase
         if (g.PageUnit == GraphicsUnit.Display)
         {
             font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, settings.DiagnosticRulesFont.Size,
-                settings.DiagnosticRulesFont.Style, GraphicsUnit.Point);
+                (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style, GraphicsUnit.Point);
         }
         else
         {
             // Convert font to pixel units if we're in preview
             font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family,
-                settings.DiagnosticRulesFont.Size / 72F * 96F, settings.DiagnosticRulesFont.Style, GraphicsUnit.Pixel);
+                settings.DiagnosticRulesFont.Size / 72F * 96F, (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style, GraphicsUnit.Pixel);
         }
 
         // Draw Rules that are physical
@@ -1382,4 +1541,5 @@ public class SheetViewModel : ViewModelBase
             g.DrawString (text, font, brush, x, y);
         }
     }
+#endif
 }

@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0" y="0" width="456" height="456" fill="#512BD4" />
+    <!-- Background -->
+    <rect x="0" y="0" width="456" height="456" fill="#2B579A" rx="48" ry="48"/>
+    <!-- Paper/document -->
+    <rect x="128" y="60" width="200" height="260" fill="white" rx="4" ry="4"/>
+    <!-- Text lines on paper -->
+    <rect x="152" y="90" width="152" height="8" fill="#CCCCCC" rx="2"/>
+    <rect x="152" y="112" width="140" height="8" fill="#CCCCCC" rx="2"/>
+    <rect x="152" y="134" width="160" height="8" fill="#CCCCCC" rx="2"/>
+    <rect x="152" y="156" width="120" height="8" fill="#CCCCCC" rx="2"/>
+    <rect x="152" y="178" width="148" height="8" fill="#CCCCCC" rx="2"/>
+    <rect x="152" y="200" width="130" height="8" fill="#CCCCCC" rx="2"/>
+    <!-- Printer body -->
+    <rect x="88" y="220" width="280" height="140" fill="#E8E8E8" rx="12" ry="12"/>
+    <rect x="88" y="220" width="280" height="40" fill="#555555" rx="12" ry="12"/>
+    <!-- Printer output tray -->
+    <rect x="148" y="340" width="160" height="60" fill="white" rx="4" ry="4"/>
+    <!-- Printer indicator light -->
+    <circle cx="340" cy="240" r="8" fill="#4CAF50"/>
 </svg>

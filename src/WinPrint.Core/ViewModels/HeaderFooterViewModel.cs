@@ -306,9 +306,9 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
         }
 
         IGraphicsFont tempFont = g.IsDisplayUnit
-            ? g.CreateFont (Font.Family, Font.Size, SystemDrawingAdapters.ToGraphicsFontStyle (Font.Style),
+            ? g.CreateFont (Font.Family, Font.Size, (GraphicsFontStyle)Font.Style,
                 GraphicsFontUnit.Point)
-            : g.CreateFont (Font.Family, Font.Size / 72F * 96F, SystemDrawingAdapters.ToGraphicsFontStyle (Font.Style),
+            : g.CreateFont (Font.Family, Font.Size / 72F * 96F, (GraphicsFontStyle)Font.Style,
                 GraphicsFontUnit.Pixel);
 
         return tempFont;

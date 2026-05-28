@@ -3,6 +3,7 @@ using System.Drawing.Printing;
 using System.Threading.Tasks;
 using Serilog.Formatting.Display;
 using Serilog.Sinks.XUnit;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -111,7 +112,7 @@ public class TextCteTests
         svm.ContentEngine!.ContentSettings = new ContentSettings ();
 
         // Setup page so only 1 line will fit
-        svm.Margins = new Margins (0, 0, 0, 0);
+        svm.Margins = new PrintMargins (0, 0, 0, 0);
 
         // Setup page so 10 chars can fit across
         using var bitmap = new Bitmap (1, 1);
@@ -125,7 +126,7 @@ public class TextCteTests
             new Font { Family = "Courier New", Size = 72 }; // 72 points is 1" high
         var font = new System.Drawing.Font (svm.ContentEngine!.ContentSettings.Font.Family,
             svm.ContentEngine!.ContentSettings.Font.Size / 72F * 96,
-            svm.ContentEngine!.ContentSettings.Font.Style, GraphicsUnit.Pixel);
+            (System.Drawing.FontStyle)svm.ContentEngine!.ContentSettings.Font.Style, GraphicsUnit.Pixel);
 
         // determine width     
         // Use page settings including lineNumberWidth
@@ -137,30 +138,30 @@ public class TextCteTests
         svm.ContentEngine!.PageSize = new SizeF (size.Width, font.GetHeight ()); // a line will be about 108 high
 
         Assert.True (await svm.ContentEngine!.SetDocumentAsync (shortLine));
-        Assert.Equal (1, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (1, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{shortLine}\n{shortLine}"));
-        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{shortLine}\n{shortLine}\n{shortLine}"));
-        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         // Test line wrapping
         // 0123456789
         // 0
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{longLine}"));
-        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         // 0123456789
         // 0A
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{longLine}A"));
-        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         // 0123456789
         // 0A01234567
         // 89
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{longLine}A{longLine}"));
-        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
     }
 
     [Fact]
@@ -181,7 +182,7 @@ public class TextCteTests
         svm.ContentEngine!.ContentSettings = new ContentSettings ();
 
         // Setup page so only 1 line will fit
-        svm.Margins = new Margins (0, 0, 0, 0);
+        svm.Margins = new PrintMargins (0, 0, 0, 0);
 
         // Setup page so 10 chars can fit across
         using var bitmap = new Bitmap (1, 1);
@@ -194,7 +195,7 @@ public class TextCteTests
         svm.ContentEngine!.ContentSettings.Font = new Font { Family = "Arial", Size = 72 }; // 72 points is 1" high
         var font = new System.Drawing.Font (svm.ContentEngine!.ContentSettings.Font.Family,
             svm.ContentEngine!.ContentSettings.Font.Size / 72F * 96,
-            svm.ContentEngine!.ContentSettings.Font.Style, GraphicsUnit.Pixel);
+            (System.Drawing.FontStyle)svm.ContentEngine!.ContentSettings.Font.Style, GraphicsUnit.Pixel);
 
         // determine width     
         // Use page settings including lineNumberWidth
@@ -206,29 +207,29 @@ public class TextCteTests
         svm.ContentEngine!.PageSize = new SizeF (size.Width, font.GetHeight ()); // a line will be about 108 high
 
         Assert.True (await svm.ContentEngine!.SetDocumentAsync (shortLine));
-        Assert.Equal (1, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (1, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{shortLine}\n{shortLine}"));
-        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{shortLine}\n{shortLine}\n{shortLine}"));
-        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         // Test line wrapping
         // 0123456789
         // 0
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{longLine}"));
-        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         // 0123456789
         // 0A
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{longLine}A"));
-        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (2, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
 
         // 0123456789
         // 0A01234567
         // 89
         Assert.True (await svm.ContentEngine!.SetDocumentAsync ($"{longLine}A{shortLine}"));
-        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrinterResolution { X = 96, Y = 96 }, null));
+        Assert.Equal (3, await svm.ContentEngine!.RenderAsync (new PrintResolution { X = 96, Y = 96 }, null));
     }
 }

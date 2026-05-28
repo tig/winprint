@@ -32,8 +32,9 @@
 		<ApplicationId>com.companyname.winprint.maui</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>2.5.0.0</ApplicationDisplayVersion>
+		<ApplicationVersion>2500</ApplicationVersion>
+		<Version>2.5.0.0</Version>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -44,6 +45,16 @@
 		     MAUI workload templates (e.g. System.Private.Uri 4.3.0). These come from packages
 		     we don't directly reference and cannot upgrade without waiting on upstream. -->
 		<NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+	</PropertyGroup>
+
+	<!-- Windows-specific: define WINDOWS -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+	</PropertyGroup>
+
+	<!-- Mac Catalyst define -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<DefineConstants>$(DefineConstants);MACCATALYST</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -69,7 +80,13 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
+	<!-- Windows: reference WinForms (for PrintDialog) and System.Drawing.Common (for PrintDocument) -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
 	</ItemGroup>
 

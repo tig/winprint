@@ -1,8 +1,224 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WinPrint.Maui.MainPage">
-    <Grid />
+             x:Class="WinPrint.Maui.MainPage"
+             Title="{Binding Title}">
+
+    <Grid ColumnDefinitions="Auto,Auto,*">
+
+        <!-- LEFT PANEL: Settings (collapsible horizontally) -->
+        <ScrollView x:Name="LeftPanel" Grid.Column="0" WidthRequest="210"
+                    BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
+            <VerticalStackLayout Padding="6,4" Spacing="2">
+
+                <!-- File / Print buttons -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                    <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
+                            FontSize="12" Padding="4,0" HeightRequest="18" />
+                    <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
+                            FontSize="12" Padding="4,0" HeightRequest="18" />
+                </Grid>
+
+                <!-- Sheet Definition group (collapsible) -->
+                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,4,0,0"
+                        StrokeShape="RoundRectangle 3">
+                    <VerticalStackLayout Spacing="2">
+                        <Label x:Name="SheetDefHeader" Text="▼ Sheet Definition" FontAttributes="Bold" FontSize="12">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSheetDefHeaderTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <VerticalStackLayout x:Name="SheetDefContent" Spacing="2">
+                            <!-- Sheet selector -->
+                            <Picker ItemsSource="{Binding SheetNames}"
+                                    SelectedIndex="{Binding SelectedSheetIndex}"
+                                    FontSize="12" />
+                            <HorizontalStackLayout Spacing="4">
+                                <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.7" />
+                                <Label Text="Landscape" VerticalOptions="Center" FontSize="12">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
+
+                            <!-- Margins (diamond layout like WinForms) -->
+                            <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="12" Margin="0,2,0,0">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <VerticalStackLayout x:Name="MarginsContent" Spacing="2">
+                                <!-- Top (centered) -->
+                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
+                                    <Label Text="Top:" VerticalOptions="Center" FontSize="12" />
+                                    <Entry Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="54" />
+                                </HorizontalStackLayout>
+                                <!-- Left and Right (side by side) -->
+                                <Grid ColumnDefinitions="*,*" Margin="0">
+                                    <HorizontalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Start">
+                                        <Label Text="Left:" VerticalOptions="Center" FontSize="12" />
+                                        <Entry Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="54" />
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="End">
+                                        <Label Text="Right:" VerticalOptions="Center" FontSize="12" />
+                                        <Entry Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="54" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+                                <!-- Bottom (centered) -->
+                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
+                                    <Label Text="Bot:" VerticalOptions="Center" FontSize="12" />
+                                    <Entry Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="54" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+
+                            <!-- Multiple Pages Up -->
+                            <Label x:Name="PagesUpHeader" Text="▼ Pages Up" FontAttributes="Bold" FontSize="12" Margin="0,2,0,0">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnPagesUpHeaderTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <VerticalStackLayout x:Name="PagesUpContent" Spacing="2" Margin="4,0,0,0">
+                                <Grid ColumnDefinitions="*,*">
+                                    <HorizontalStackLayout Grid.Column="0" Spacing="4">
+                                        <Label Text="Rows:" VerticalOptions="Center" FontSize="12" />
+                                        <Entry Text="{Binding Rows}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="40" />
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                        <Label Text="Cols:" VerticalOptions="Center" FontSize="12" />
+                                        <Entry Text="{Binding Columns}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="40" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label Text="Padding:" VerticalOptions="Center" FontSize="12" />
+                                    <Entry Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="12" HeightRequest="24" WidthRequest="54" />
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="4">
+                                    <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
+                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="10">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+
+                            <!-- Fonts (collapsible) -->
+                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="12" Margin="0,2,0,0">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnFontsHeaderTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <VerticalStackLayout x:Name="FontsContent" Spacing="1" Margin="4,0,0,0">
+                                <Label Text="Content font:" FontSize="12" />
+                                <Label Text="{Binding ContentFontDescription}" FontSize="12" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ChangeContentFontCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                <Label Text="Header/Footer font:" FontSize="12" />
+                                <Label Text="{Binding HeaderFooterFontDescription}" FontSize="12" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ChangeHeaderFooterFontCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </VerticalStackLayout>
+
+                            <!-- Line Numbers -->
+                            <HorizontalStackLayout Spacing="4">
+                                <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.65" />
+                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="12">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Printer group (collapsible) -->
+                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,4,0,0"
+                        StrokeShape="RoundRectangle 3">
+                    <VerticalStackLayout Spacing="2">
+                        <Label x:Name="PrinterHeader" Text="▼ Printer" FontAttributes="Bold" FontSize="12">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPrinterHeaderTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <VerticalStackLayout x:Name="PrinterContent" Spacing="2">
+                            <Picker ItemsSource="{Binding PrinterNames}"
+                                    SelectedItem="{Binding SelectedPrinter}"
+                                    FontSize="12" />
+                            <Label Text="Paper:" FontSize="12" />
+                            <Picker ItemsSource="{Binding PaperSizes}"
+                                    SelectedItem="{Binding SelectedPaperSize}"
+                                    FontSize="12" />
+                            <Grid ColumnDefinitions="38,44,18,44" ColumnSpacing="2">
+                                <Label Grid.Column="0" Text="Pages:" VerticalOptions="Center" FontSize="12" />
+                                <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="12" HeightRequest="22" Placeholder="From" />
+                                <Label Grid.Column="2" Text="to" VerticalOptions="Center" FontSize="12" HorizontalTextAlignment="Center" />
+                                <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="12" HeightRequest="22" Placeholder="To" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Version / Help -->
+                <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="Help &amp; about..." FontSize="12"
+                           TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHelpTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="12"
+                           HorizontalTextAlignment="End" />
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Panel collapse toggle -->
+        <VerticalStackLayout Grid.Column="1" WidthRequest="14" VerticalOptions="Center"
+                             BackgroundColor="{AppThemeBinding Light=#E0E0E0, Dark=#3A3A3A}">
+            <Label x:Name="PanelToggle" Text="◀" FontSize="12" HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="Center" HeightRequest="36">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPanelToggleTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </VerticalStackLayout>
+
+        <!-- RIGHT PANEL: Preview area -->
+        <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto">
+
+            <!-- Header bar -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="2,0"
+                  BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
+                <CheckBox Grid.Column="0" IsChecked="{Binding HeaderEnabled}" VerticalOptions="Center" Scale="0.65" />
+                <Entry Grid.Column="1" Text="{Binding HeaderText}" FontSize="12" HeightRequest="20"
+                       HorizontalTextAlignment="Center" Placeholder="Header Text" />
+            </Grid>
+
+            <!-- Print Preview -->
+            <GraphicsView x:Name="PreviewGraphicsView"
+                          Grid.Row="1"
+                          BackgroundColor="{AppThemeBinding Light=DarkGray, Dark=#555}">
+                <GraphicsView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPreviewTapped" />
+                </GraphicsView.GestureRecognizers>
+            </GraphicsView>
+
+            <!-- Footer bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Padding="2,0"
+                  BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
+                <CheckBox Grid.Column="0" IsChecked="{Binding FooterEnabled}" VerticalOptions="Center" Scale="0.65" />
+                <Entry Grid.Column="1" Text="{Binding FooterText}" FontSize="12" HeightRequest="20"
+                       HorizontalTextAlignment="Center" Placeholder="Footer Text" />
+            </Grid>
+        </Grid>
+
+    </Grid>
 
 </ContentPage>

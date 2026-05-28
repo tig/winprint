@@ -48,11 +48,12 @@ public class SettingsService
     {
         get
         {
-            // Get dir of .exe
-            string? path = Path.GetDirectoryName (Assembly.GetAssembly (typeof (SettingsService))!.Location);
+            // Get dir of .exe — use AppContext.BaseDirectory as fallback for MAUI/single-file apps
+            string assemblyLocation = Assembly.GetAssembly (typeof (SettingsService))!.Location;
+            string? path = !string.IsNullOrEmpty (assemblyLocation)
+                ? Path.GetDirectoryName (assemblyLocation)
+                : AppContext.BaseDirectory.TrimEnd (Path.DirectorySeparatorChar);
             string appdata = Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData);
-            //Log.Debug("path = {path}", path);
-            //Log.Debug("appdata = {appdata}", appdata);
 
             if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX))
             {
@@ -64,21 +65,24 @@ public class SettingsService
             }
             else
             {
-                var fvi = FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (SettingsService))!.Location);
-
-                // is this in Kindel\winprint?
-                if (path is not null &&
-                    path.Contains ($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
+                if (!string.IsNullOrEmpty (assemblyLocation))
                 {
-                    // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
-                    path =
-                        $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
-                }
+                    var fvi = FileVersionInfo.GetVersionInfo (assemblyLocation);
 
-                // TODO: Remove internal knowledge of Out-WinPrint from here
-                if (path is not null && path.Contains ($@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
-                {
-                    path = Path.GetDirectoryName (Assembly.GetAssembly (typeof (SettingsService))!.Location);
+                    // is this in Kindel\winprint?
+                    if (path is not null &&
+                        path.Contains ($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
+                    {
+                        // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
+                        path =
+                            $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
+                    }
+
+                    // TODO: Remove internal knowledge of Out-WinPrint from here
+                    if (path is not null && path.Contains ($@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
+                    {
+                        path = Path.GetDirectoryName (assemblyLocation);
+                    }
                 }
             }
 
