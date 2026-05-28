@@ -151,13 +151,20 @@ public class NumericUpDown : ContentView
         => ((NumericUpDown)bindable).UpdateText();
 
     private static void OnBoundsChanged(BindableObject bindable, object oldValue, object newValue)
-        => bindable.CoerceValue(ValueProperty); // re-clamp current value against new bounds
+        => ((NumericUpDown)bindable).ReapplyCoercion(); // re-clamp current value against new bounds
 
     private static void OnIsIntegerChanged(BindableObject bindable, object oldValue, object newValue)
+        => ((NumericUpDown)bindable).ReapplyCoercion(); // re-round if switching to integer mode
+
+    /// <summary>
+    /// Forces <see cref="Value"/> back through coercion. Needed when a setting that coercion
+    /// depends on (bounds or <see cref="IsInteger"/>) changes after the value was last set.
+    /// Re-assigning runs the coerce delegate and refreshes the displayed text.
+    /// </summary>
+    private void ReapplyCoercion()
     {
-        var control = (NumericUpDown)bindable;
-        control.CoerceValue(ValueProperty); // re-round if switching to integer mode
-        control.UpdateText();
+        Value = (double)CoerceValue(this, Value);
+        UpdateText();
     }
 
     private void OnEntryCompleted(object? sender, EventArgs e) => CommitText();
