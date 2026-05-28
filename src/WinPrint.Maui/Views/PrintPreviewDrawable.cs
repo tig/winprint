@@ -92,6 +92,16 @@ public sealed class PrintPreviewDrawable : IDrawable
                 dirtyRect.Width - 60, dirtyRect.Height - 24, 56, 20,
                 HorizontalAlignment.Right, VerticalAlignment.Center);
         }
+
+        // Status/error overlay (replaces status bar)
+        if (!string.IsNullOrEmpty (_viewModel.StatusText))
+        {
+            canvas.FontColor = Colors.OrangeRed;
+            canvas.FontSize = 12;
+            canvas.DrawString (_viewModel.StatusText,
+                4, dirtyRect.Height - 24, dirtyRect.Width - 8, 20,
+                HorizontalAlignment.Left, VerticalAlignment.Center);
+        }
     }
 
     private static void DrawPlaceholder (ICanvas canvas, RectF dirtyRect)

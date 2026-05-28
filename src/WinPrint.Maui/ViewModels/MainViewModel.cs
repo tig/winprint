@@ -191,6 +191,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField (ref _landscape, value))
             {
                 SheetViewModel.Landscape = value;
+                _currentPageSetup.Landscape = value;
                 ReflowAsync ().ConfigureAwait (false);
             }
         }
@@ -448,7 +449,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string? SelectedPaperSize
     {
         get => _selectedPaperSize;
-        set => SetField (ref _selectedPaperSize, value);
+        set
+        {
+            if (SetField (ref _selectedPaperSize, value) && value != null)
+            {
+                // Update page setup based on selected paper
+                if (value.StartsWith ("Letter"))
+                {
+                    _currentPageSetup.PaperWidth = 850;
+                    _currentPageSetup.PaperHeight = 1100;
+                }
+                else if (value.StartsWith ("Legal"))
+                {
+                    _currentPageSetup.PaperWidth = 850;
+                    _currentPageSetup.PaperHeight = 1400;
+                }
+                else if (value.StartsWith ("A4"))
+                {
+                    _currentPageSetup.PaperWidth = 827;
+                    _currentPageSetup.PaperHeight = 1169;
+                }
+                ReflowAsync ().ConfigureAwait (false);
+            }
+        }
     }
 
     public string FromPage
@@ -754,8 +777,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged (nameof (SelectedPrinter));
         OnPropertyChanged (nameof (SelectedPaperSize));
 
-        // Reflow with new sheet settings
-        ReflowAsync ().ConfigureAwait (false);
+        // Sync page setup
+        _currentPageSetup.Landscape = sheetSettings.Landscape;
+        _currentPageSetup.MarginTop = sheetSettings.Margins.Top;
+        _currentPageSetup.MarginBottom = sheetSettings.Margins.Bottom;
+        _currentPageSetup.MarginLeft = sheetSettings.Margins.Left;
+        _currentPageSetup.MarginRight = sheetSettings.Margins.Right;
+
+        // Reload file with new sheet settings (SetSheet resets content engine state)
+        if (IsFileLoaded && !string.IsNullOrEmpty (ActiveFile))
+        {
+            LoadFileAsync (ActiveFile).ConfigureAwait (false);
+        }
     }
 
     private void UpdateMargins ()
@@ -766,6 +799,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
             decimal.TryParse (_marginRight, out var right))
         {
             SheetViewModel.Margins = new PrintMargins ((int)(left * 100), (int)(right * 100), (int)(top * 100), (int)(bottom * 100));
+            _currentPageSetup.MarginTop = (int)(top * 100);
+            _currentPageSetup.MarginBottom = (int)(bottom * 100);
+            _currentPageSetup.MarginLeft = (int)(left * 100);
+            _currentPageSetup.MarginRight = (int)(right * 100);
             ReflowAsync ().ConfigureAwait (false);
         }
     }

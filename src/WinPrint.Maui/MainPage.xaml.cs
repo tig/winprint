@@ -210,12 +210,12 @@ public partial class MainPage : ContentPage
 
     private void OnMarginsHeaderTapped (object? sender, TappedEventArgs e)
     {
-        ToggleSection (MarginsContent, MarginsHeader, "Margins");
+        ToggleSection (MarginsContent, MarginsHeader, "Margins (inches)");
     }
 
     private void OnPagesUpHeaderTapped (object? sender, TappedEventArgs e)
     {
-        ToggleSection (PagesUpContent, PagesUpHeader, "Multiple Pages Up");
+        ToggleSection (PagesUpContent, PagesUpHeader, "Pages Up");
     }
 
     private void OnPrinterHeaderTapped (object? sender, TappedEventArgs e)
@@ -227,6 +227,15 @@ public partial class MainPage : ContentPage
     {
         content.IsVisible = !content.IsVisible;
         header.Text = (content.IsVisible ? "▼ " : "▶ ") + title;
+    }
+
+    private bool _leftPanelVisible = true;
+
+    private void OnPanelToggleTapped (object? sender, TappedEventArgs e)
+    {
+        _leftPanelVisible = !_leftPanelVisible;
+        LeftPanel.IsVisible = _leftPanelVisible;
+        PanelToggle.Text = _leftPanelVisible ? "◀" : "▶";
     }
 
 #if WINDOWS
