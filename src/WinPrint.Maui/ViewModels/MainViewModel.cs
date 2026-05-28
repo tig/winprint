@@ -108,13 +108,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public bool IsFileLoaded
     {
         get => _isFileLoaded;
-        private set => SetField (ref _isFileLoaded, value);
+        private set
+        {
+            if (SetField (ref _isFileLoaded, value))
+            {
+                RaiseCommandsCanExecuteChanged ();
+            }
+        }
     }
 
     public bool IsBusy
     {
         get => _isBusy;
-        private set => SetField (ref _isBusy, value);
+        private set
+        {
+            if (SetField (ref _isBusy, value))
+            {
+                RaiseCommandsCanExecuteChanged ();
+            }
+        }
     }
 
     public string StatusText
@@ -133,6 +145,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField (ref _currentPage, value))
             {
                 OnPropertyChanged (nameof (PageIndicator));
+                RaiseCommandsCanExecuteChanged ();
                 InvalidatePreview?.Invoke ();
             }
         }
@@ -146,6 +159,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField (ref _totalPages, value))
             {
                 OnPropertyChanged (nameof (PageIndicator));
+                RaiseCommandsCanExecuteChanged ();
             }
         }
     }
@@ -850,6 +864,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void OnPropertyChanged ([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke (this, new PropertyChangedEventArgs (propertyName));
+    }
+
+    private void RaiseCommandsCanExecuteChanged ()
+    {
+        (PrintCommand as RelayCommand)?.RaiseCanExecuteChanged ();
+        (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged ();
+        (NextPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
+        (PreviousPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
+        (FirstPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
+        (LastPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
     }
 
     /// <summary>
