@@ -279,6 +279,18 @@ public class Settings : ModelBase
     }
 
     /// <summary>
+    ///     Last selected printer name (persisted across sessions).
+    /// </summary>
+    [SafeForTelemetry]
+    public string? LastPrinter { get; set; }
+
+    /// <summary>
+    ///     Last selected paper size name (persisted across sessions).
+    /// </summary>
+    [SafeForTelemetry]
+    public string? LastPaperSize { get; set; }
+
+    /// <summary>
     ///     Creates a default set of settings that can be persisted to create
     ///     the .config.json file.
     /// </summary>

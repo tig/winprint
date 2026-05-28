@@ -174,6 +174,30 @@ public class SettingsPersistenceTests : TestServicesBase
         Assert.True (restored.Sheets[sheetKey].PageSeparator);
     }
 
+    [Fact]
+    public void LastPrinter_PersistsAndRestores ()
+    {
+        var settings = Settings.CreateDefaultSettings ();
+        settings.LastPrinter = "Brother HL-L2350DW";
+
+        Settings? restored = SaveAndReload (settings);
+
+        Assert.NotNull (restored);
+        Assert.Equal ("Brother HL-L2350DW", restored.LastPrinter);
+    }
+
+    [Fact]
+    public void LastPaperSize_PersistsAndRestores ()
+    {
+        var settings = Settings.CreateDefaultSettings ();
+        settings.LastPaperSize = "A4";
+
+        Settings? restored = SaveAndReload (settings);
+
+        Assert.NotNull (restored);
+        Assert.Equal ("A4", restored.LastPaperSize);
+    }
+
     /// <summary>
     ///     Helper: saves settings to a temp file and reloads them.
     /// </summary>

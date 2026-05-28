@@ -1,3 +1,6 @@
+// Copyright Kindel, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -12,60 +15,49 @@ using WinPrint.Core.ViewModels;
 namespace WinPrint.Maui.ViewModels;
 
 /// <summary>
-///     Main view model for the MAUI print preview application.
-///     Mirrors the WinForms MainWindow layout and behavior.
+///     MAUI binding-friendly view model. State and persistence logic live in
+///     <see cref="AppViewModel"/> (in WinPrint.Core) so they are shared between
+///     frontends and unit-testable without any UI dependency.
+///
+///     Everything in this class is platform glue: XAML-shaped properties,
+///     <see cref="ICommand"/> wrappers, font/file/print picker callbacks, zoom,
+///     and the inch/string conversions used by the margin entry controls.
 /// </summary>
 public sealed class MainViewModel : INotifyPropertyChanged
 {
-    private string _activeFile = string.Empty;
-    private int _currentPage;
-    private bool _isBusy;
-    private bool _isFileLoaded;
-    private string _statusText = "Ready";
-    private string _title = "WinPrint";
-    private int _totalPages;
-    private float _zoomFactor = 1.0f;
+    private readonly AppViewModel _app;
 
-    // Current page setup (always applied before reflow)
-    private PrintPageSetup _currentPageSetup = new ()
+    private readonly PrintPageSetup _currentPageSetup = new ()
     {
-        PaperWidth = 850,   // 8.5" in hundredths
-        PaperHeight = 1100, // 11" in hundredths
+        PaperWidth = 850,
+        PaperHeight = 1100,
         DpiX = 96,
         DpiY = 96
     };
 
-    // Sheet settings
-    private int _selectedSheetIndex;
-    private bool _landscape;
+    // UI-only state that has no equivalent in AppViewModel.
+    private string _title = "WinPrint";
+    private float _zoomFactor = 1.0f;
     private string _marginTop = "0.50";
     private string _marginBottom = "0.50";
     private string _marginLeft = "0.50";
     private string _marginRight = "0.50";
-    private int _rows = 1;
-    private int _columns = 1;
-    private string _paddingValue = "0.03";
-    private bool _pageSeparator;
-    private bool _lineNumbers;
-
-    // Header/Footer
-    private bool _headerEnabled = true;
-    private string _headerText = "{FullFileName}";
-    private bool _footerEnabled = true;
-    private string _footerText = "Page {Page} of {NumPages}";
-
-    // Printer
-    private string? _selectedPrinter;
-    private string? _selectedPaperSize;
     private string _fromPage = "";
     private string _toPage = "";
 
     public MainViewModel ()
     {
+        SheetViewModel = new SheetViewModel ();
+        _app = new AppViewModel (SheetViewModel, _currentPageSetup);
+
         OpenFileCommand = new RelayCommand (async () => await OpenFileAsync ());
         PrintCommand = new RelayCommand (async () => await PrintAsync (), () => IsFileLoaded && !IsBusy);
-        NextPageCommand = new RelayCommand (() => CurrentPage = Math.Min (CurrentPage + 1, TotalPages), () => CurrentPage < TotalPages);
-        PreviousPageCommand = new RelayCommand (() => CurrentPage = Math.Max (CurrentPage - 1, 1), () => CurrentPage > 1);
+        NextPageCommand = new RelayCommand (
+            () => CurrentPage = Math.Min (CurrentPage + 1, TotalPages),
+            () => CurrentPage < TotalPages);
+        PreviousPageCommand = new RelayCommand (
+            () => CurrentPage = Math.Max (CurrentPage - 1, 1),
+            () => CurrentPage > 1);
         FirstPageCommand = new RelayCommand (() => CurrentPage = 1, () => CurrentPage > 1);
         LastPageCommand = new RelayCommand (() => CurrentPage = TotalPages, () => CurrentPage < TotalPages);
         RefreshCommand = new RelayCommand (async () => await RefreshAsync (), () => IsFileLoaded && !IsBusy);
@@ -76,11 +68,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ChangeHeaderFooterFontCommand = new RelayCommand (async () => await ChangeHeaderFooterFontAsync ());
         SettingsCommand = new RelayCommand (() => { /* TODO: Open settings dialog */ });
 
-        SheetViewModel = new SheetViewModel ();
-        LoadSettings ();
+        // Forward AppViewModel state changes so XAML bindings update.
+        _app.PropertyChanged += OnAppPropertyChanged;
+        _app.PreviewInvalidated += (_, _) => InvalidatePreview?.Invoke ();
+        _app.SheetApplied += (_, _) => OnSheetApplied ();
+
+        _app.LoadSheets ();
+        SyncMarginsFromCurrentSheet ();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    ///     The shared application view model. Exposed so platform code (CLI options,
+    ///     printer enumeration) can call shared logic directly.
+    /// </summary>
+    public AppViewModel App => _app;
 
     public SheetViewModel SheetViewModel { get; }
 
@@ -92,77 +95,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetField (ref _title, value);
     }
 
-    public string ActiveFile
-    {
-        get => _activeFile;
-        private set
-        {
-            if (SetField (ref _activeFile, value))
-            {
-                Title = string.IsNullOrEmpty (value) ? "WinPrint" : $"WinPrint - {Path.GetFileName (value)}";
-                IsFileLoaded = !string.IsNullOrEmpty (value);
-            }
-        }
-    }
-
-    public bool IsFileLoaded
-    {
-        get => _isFileLoaded;
-        private set
-        {
-            if (SetField (ref _isFileLoaded, value))
-            {
-                RaiseCommandsCanExecuteChanged ();
-            }
-        }
-    }
-
-    public bool IsBusy
-    {
-        get => _isBusy;
-        private set
-        {
-            if (SetField (ref _isBusy, value))
-            {
-                RaiseCommandsCanExecuteChanged ();
-            }
-        }
-    }
-
-    public string StatusText
-    {
-        get => _statusText;
-        private set => SetField (ref _statusText, value);
-    }
+    public string ActiveFile => _app.ActiveFile;
+    public bool IsFileLoaded => _app.IsFileLoaded;
+    public bool IsBusy => _app.IsBusy;
+    public string StatusText => _app.StatusText;
 
     // --- Page navigation ---
 
     public int CurrentPage
     {
-        get => _currentPage;
+        get => _app.CurrentPage;
         set
         {
-            if (SetField (ref _currentPage, value))
+            if (_app.CurrentPage != value)
             {
-                OnPropertyChanged (nameof (PageIndicator));
-                RaiseCommandsCanExecuteChanged ();
+                _app.CurrentPage = value;
                 InvalidatePreview?.Invoke ();
             }
         }
     }
 
-    public int TotalPages
-    {
-        get => _totalPages;
-        private set
-        {
-            if (SetField (ref _totalPages, value))
-            {
-                OnPropertyChanged (nameof (PageIndicator));
-                RaiseCommandsCanExecuteChanged ();
-            }
-        }
-    }
+    public int TotalPages => _app.TotalPages;
 
     public string PageIndicator => TotalPages > 0 ? $"Page {CurrentPage} of {TotalPages}" : "";
 
@@ -180,44 +133,32 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     // --- Sheet selector ---
 
-    public ObservableCollection<string> SheetNames { get; } = new ();
-    private List<string> _sheetKeys = new ();
-    private SheetSettings? _currentSheetSettings;
-
-    /// <summary>
-    ///     Reference to the current sheet's settings object in ModelLocator.Settings.Sheets.
-    ///     Changes made here are persisted when SaveWindowState is called (on close).
-    /// </summary>
-    private SheetSettings? CurrentSheetSettings => _currentSheetSettings;
+    public ObservableCollection<string> SheetNames => _app.SheetNames;
 
     public int SelectedSheetIndex
     {
-        get => _selectedSheetIndex;
+        get => _app.SelectedSheetIndex;
         set
         {
-            if (SetField (ref _selectedSheetIndex, value) && value >= 0 && value < _sheetKeys.Count)
+            if (_app.SelectedSheetIndex != value)
             {
-                ApplySheet (_sheetKeys[value]);
+                _app.SelectSheetByIndex (value);
+                OnPropertyChanged ();
             }
         }
     }
 
-    // --- Sheet settings ---
+    // --- Sheet settings (delegate to AppViewModel) ---
 
     public bool Landscape
     {
-        get => _landscape;
+        get => _app.CurrentSheet?.Landscape ?? false;
         set
         {
-            if (SetField (ref _landscape, value))
+            if (Landscape != value)
             {
-                SheetViewModel.Landscape = value;
-                _currentPageSetup.Landscape = value;
-                if (_currentSheetSettings != null)
-                {
-                    _currentSheetSettings.Landscape = value;
-                }
-                ReflowAsync ().ConfigureAwait (false);
+                _app.SetLandscape (value);
+                OnPropertyChanged ();
             }
         }
     }
@@ -300,77 +241,69 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public int Rows
     {
-        get => _rows;
+        get => _app.CurrentSheet?.Rows ?? 1;
         set
         {
-            if (SetField (ref _rows, value))
+            if (Rows != value)
             {
-                SheetViewModel.Rows = value;
-                if (_currentSheetSettings != null) { _currentSheetSettings.Rows = value; }
-                ReflowAsync ().ConfigureAwait (false);
+                _app.SetRows (value);
+                OnPropertyChanged ();
             }
         }
     }
 
     public int Columns
     {
-        get => _columns;
+        get => _app.CurrentSheet?.Columns ?? 1;
         set
         {
-            if (SetField (ref _columns, value))
+            if (Columns != value)
             {
-                SheetViewModel.Columns = value;
-                if (_currentSheetSettings != null) { _currentSheetSettings.Columns = value; }
-                ReflowAsync ().ConfigureAwait (false);
+                _app.SetColumns (value);
+                OnPropertyChanged ();
             }
         }
     }
 
     public string PaddingValue
     {
-        get => _paddingValue;
+        get => ((_app.CurrentSheet?.Padding ?? 3) / 100.0).ToString ("F2");
         set
         {
-            if (SetField (ref _paddingValue, value) && decimal.TryParse (value, out var d))
+            if (decimal.TryParse (value, out var d))
             {
                 int padding = (int)(d * 100m);
-                SheetViewModel.Padding = padding;
-                if (_currentSheetSettings != null) { _currentSheetSettings.Padding = padding; }
-                ReflowAsync ().ConfigureAwait (false);
+                if ((_app.CurrentSheet?.Padding ?? -1) != padding)
+                {
+                    _app.SetPadding (padding);
+                    OnPropertyChanged ();
+                }
             }
         }
     }
 
     public bool PageSeparator
     {
-        get => _pageSeparator;
+        get => _app.CurrentSheet?.PageSeparator ?? false;
         set
         {
-            if (SetField (ref _pageSeparator, value))
+            if (PageSeparator != value)
             {
-                SheetViewModel.PageSeparator = value;
-                if (_currentSheetSettings != null) { _currentSheetSettings.PageSeparator = value; }
-                InvalidatePreview?.Invoke ();
+                _app.SetPageSeparator (value);
+                OnPropertyChanged ();
             }
         }
     }
 
     public bool LineNumbers
     {
-        get => _lineNumbers;
+        get => _app.CurrentSheet?.ContentSettings?.LineNumbers ?? false;
         set
         {
-            if (SetField (ref _lineNumbers, value))
+            if (LineNumbers != value)
             {
-                if (SheetViewModel.ContentSettings != null)
-                {
-                    SheetViewModel.ContentSettings.LineNumbers = value;
-                }
-                if (_currentSheetSettings?.ContentSettings != null)
-                {
-                    _currentSheetSettings.ContentSettings.LineNumbers = value;
-                }
-                ReflowAsync ().ConfigureAwait (false);
+                _app.SetLineNumbers (value);
+                OnPropertyChanged ();
             }
         }
     }
@@ -407,119 +340,88 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public bool HeaderEnabled
     {
-        get => _headerEnabled;
+        get => _app.CurrentSheet?.Header?.Enabled ?? true;
         set
         {
-            if (SetField (ref _headerEnabled, value))
+            if (HeaderEnabled != value)
             {
-                if (SheetViewModel.Header != null)
-                {
-                    SheetViewModel.Header.Enabled = value;
-                }
-                if (_currentSheetSettings?.Header != null)
-                {
-                    _currentSheetSettings.Header.Enabled = value;
-                }
-                ReflowAsync ().ConfigureAwait (false);
+                _app.SetHeaderEnabled (value);
+                OnPropertyChanged ();
             }
         }
     }
 
     public string HeaderText
     {
-        get => _headerText;
+        get => _app.CurrentSheet?.Header?.Text ?? "";
         set
         {
-            if (SetField (ref _headerText, value))
+            if (HeaderText != value)
             {
-                if (SheetViewModel.Header != null)
-                {
-                    SheetViewModel.Header.Text = value;
-                }
-                if (_currentSheetSettings?.Header != null)
-                {
-                    _currentSheetSettings.Header.Text = value;
-                }
-                InvalidatePreview?.Invoke ();
+                _app.SetHeaderText (value);
+                OnPropertyChanged ();
             }
         }
     }
 
     public bool FooterEnabled
     {
-        get => _footerEnabled;
+        get => _app.CurrentSheet?.Footer?.Enabled ?? true;
         set
         {
-            if (SetField (ref _footerEnabled, value))
+            if (FooterEnabled != value)
             {
-                if (SheetViewModel.Footer != null)
-                {
-                    SheetViewModel.Footer.Enabled = value;
-                }
-                if (_currentSheetSettings?.Footer != null)
-                {
-                    _currentSheetSettings.Footer.Enabled = value;
-                }
-                ReflowAsync ().ConfigureAwait (false);
+                _app.SetFooterEnabled (value);
+                OnPropertyChanged ();
             }
         }
     }
 
     public string FooterText
     {
-        get => _footerText;
+        get => _app.CurrentSheet?.Footer?.Text ?? "";
         set
         {
-            if (SetField (ref _footerText, value))
+            if (FooterText != value)
             {
-                if (SheetViewModel.Footer != null)
-                {
-                    SheetViewModel.Footer.Text = value;
-                }
-                if (_currentSheetSettings?.Footer != null)
-                {
-                    _currentSheetSettings.Footer.Text = value;
-                }
-                InvalidatePreview?.Invoke ();
+                _app.SetFooterText (value);
+                OnPropertyChanged ();
             }
         }
     }
 
-    // --- Printer (stubs for now — MAUI has limited print API) ---
+    // --- Printer ---
 
     public ObservableCollection<string> PrinterNames { get; } = new () { "(Default Printer)" };
     public ObservableCollection<string> PaperSizes { get; } = new () { "Letter (8.5 x 11)", "Legal (8.5 x 14)", "A4 (210 x 297mm)" };
 
     public string? SelectedPrinter
     {
-        get => _selectedPrinter;
-        set => SetField (ref _selectedPrinter, value);
+        get => _app.SelectedPrinter;
+        set
+        {
+            if (_app.SelectedPrinter != value)
+            {
+                _app.SelectedPrinter = value;
+                OnPropertyChanged ();
+            }
+        }
     }
 
     public string? SelectedPaperSize
     {
-        get => _selectedPaperSize;
+        get => _app.SelectedPaperSize;
         set
         {
-            if (SetField (ref _selectedPaperSize, value) && value != null)
+            if (_app.SelectedPaperSize != value)
             {
-                // Update page setup based on selected paper
-                if (value.StartsWith ("Letter"))
+                _app.SelectedPaperSize = value;
+                if (value != null)
                 {
-                    _currentPageSetup.PaperWidth = 850;
-                    _currentPageSetup.PaperHeight = 1100;
+                    UpdatePageSetupForPaper (value);
+                    _ = _app.ReflowAsync ();
                 }
-                else if (value.StartsWith ("Legal"))
-                {
-                    _currentPageSetup.PaperWidth = 850;
-                    _currentPageSetup.PaperHeight = 1400;
-                }
-                else if (value.StartsWith ("A4"))
-                {
-                    _currentPageSetup.PaperWidth = 827;
-                    _currentPageSetup.PaperHeight = 1169;
-                }
-                ReflowAsync ().ConfigureAwait (false);
+                OnPropertyChanged ();
             }
         }
     }
@@ -569,26 +471,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ChangeHeaderFooterFontCommand { get; }
     public ICommand SettingsCommand { get; }
 
-    /// <summary>
-    ///     Callback to invalidate the print preview rendering.
-    /// </summary>
     public Action? InvalidatePreview { get; set; }
-
-    /// <summary>
-    ///     Callback to pick a file (platform-specific file picker).
-    /// </summary>
     public Func<Task<string?>>? PickFileAsync { get; set; }
-
-    /// <summary>
-    ///     Callback to perform platform printing.
-    /// </summary>
     public Func<Task>? PerformPrintAsync { get; set; }
-
-    /// <summary>
-    ///     Callback to pick a font (platform-specific font picker).
-    ///     Parameters: current family, size, style. Returns new font or null if cancelled.
-    /// </summary>
     public Func<string, float, string, Task<(string Family, float Size, string Style)?>>? PickFontAsync { get; set; }
+
+    // --- Actions ---
 
     public async Task OpenFileAsync ()
     {
@@ -599,50 +487,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    public async Task LoadFileAsync (string filePath)
-    {
-        if (!File.Exists (filePath))
-        {
-            StatusText = $"File not found: {filePath}";
-            return;
-        }
-
-        IsBusy = true;
-        StatusText = $"Loading {Path.GetFileName (filePath)}...";
-
-        try
-        {
-            ActiveFile = filePath;
-
-            // Load the file (determines content type, reads content, creates ContentEngine)
-            bool loaded = await SheetViewModel.LoadFileAsync (filePath);
-            if (!loaded)
-            {
-                StatusText = "Failed to load file.";
-                ActiveFile = string.Empty;
-                return;
-            }
-
-            // Apply page settings (sets ContentEngine.PageSize) and reflow
-            SheetViewModel.SetPrinterPageSettings (_currentPageSetup);
-            await SheetViewModel.ReflowAsync ();
-
-            TotalPages = SheetViewModel.NumSheets;
-            CurrentPage = TotalPages > 0 ? 1 : 0;
-
-            StatusText = $"{Path.GetFileName (filePath)} — {TotalPages} sheet{(TotalPages == 1 ? "" : "s")}";
-            InvalidatePreview?.Invoke ();
-        }
-        catch (Exception ex)
-        {
-            StatusText = $"Error: {ex.Message}";
-            ServiceLocator.Current.TelemetryService.TrackException (ex, true);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
+    public Task<bool> LoadFileAsync (string filePath) => _app.LoadFileAsync (filePath);
 
     public async Task PrintAsync ()
     {
@@ -652,22 +497,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>
-    ///     Reloads the current file from disk (F5 refresh).
-    /// </summary>
-    public async Task RefreshAsync ()
-    {
-        if (!IsFileLoaded || string.IsNullOrEmpty (ActiveFile))
-        {
-            return;
-        }
+    public Task RefreshAsync () => _app.RefreshAsync ();
 
-        await LoadFileAsync (ActiveFile);
-    }
-
-    /// <summary>
-    ///     Opens font picker for content font.
-    /// </summary>
     private async Task ChangeContentFontAsync ()
     {
         var cs = SheetViewModel.ContentSettings;
@@ -688,13 +519,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     : WinPrint.Core.Models.FontStyle.Regular
             };
             OnPropertyChanged (nameof (ContentFontDescription));
-            await ReflowAsync ();
+            await _app.ReflowAsync ();
         }
     }
 
-    /// <summary>
-    ///     Opens font picker for header/footer font (shared per spec).
-    /// </summary>
     private async Task ChangeHeaderFooterFontAsync ()
     {
         var header = SheetViewModel.Header;
@@ -714,134 +542,126 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     ? style
                     : WinPrint.Core.Models.FontStyle.Regular
             };
-            // Header and Footer always share the same font (per spec)
             header.Font = newFont;
             if (SheetViewModel.Footer != null)
             {
                 SheetViewModel.Footer.Font = (WinPrint.Core.Models.Font)newFont.Clone ();
             }
             OnPropertyChanged (nameof (HeaderFooterFontDescription));
-            await ReflowAsync ();
+            await _app.ReflowAsync ();
         }
     }
 
-    /// <summary>
-    ///     Paint the current page onto the given graphics context.
-    /// </summary>
     public void PaintCurrentPage (IGraphicsContext context)
     {
         if (!IsFileLoaded || TotalPages == 0)
         {
             return;
         }
-
         SheetViewModel.PrintSheet (context, CurrentPage, true);
     }
 
-    private void LoadSettings ()
+    /// <summary>
+    ///     Persist window state and shared selections on close. Delegates to AppViewModel.
+    /// </summary>
+    public void SaveWindowState (double x, double y, double width, double height, bool isMaximized)
+        => _app.SaveWindowState (x, y, width, height, isMaximized);
+
+    /// <summary>
+    ///     Record the latest "normal" (non-maximized) window bounds. Delegates to AppViewModel.
+    /// </summary>
+    public void SaveNormalBounds (double x, double y, double width, double height)
+        => _app.SaveNormalBounds (x, y, width, height);
+
+    // --- Internals ---
+
+    private void OnAppPropertyChanged (object? sender, PropertyChangedEventArgs e)
     {
-        var settings = ModelLocator.Current.Settings;
-
-        // Populate sheet names
-        _sheetKeys.Clear ();
-        SheetNames.Clear ();
-        foreach (var kvp in settings.Sheets)
+        // Forward state changes so XAML bindings update.
+        switch (e.PropertyName)
         {
-            _sheetKeys.Add (kvp.Key);
-            SheetNames.Add (kvp.Value.Name);
-        }
-
-        // Select the default sheet
-        var defaultKey = settings.DefaultSheet.ToString ();
-        int idx = _sheetKeys.IndexOf (defaultKey);
-        if (idx >= 0)
-        {
-            _selectedSheetIndex = idx;
-            ApplySheet (defaultKey);
-        }
-        else if (_sheetKeys.Count > 0)
-        {
-            _selectedSheetIndex = 0;
-            ApplySheet (_sheetKeys[0]);
+            case nameof (AppViewModel.ActiveFile):
+                OnPropertyChanged (nameof (ActiveFile));
+                Title = string.IsNullOrEmpty (_app.ActiveFile)
+                    ? "WinPrint"
+                    : $"WinPrint - {Path.GetFileName (_app.ActiveFile)}";
+                OnPropertyChanged (nameof (IsFileLoaded));
+                RaiseCommandsCanExecuteChanged ();
+                break;
+            case nameof (AppViewModel.IsBusy):
+                OnPropertyChanged (nameof (IsBusy));
+                RaiseCommandsCanExecuteChanged ();
+                break;
+            case nameof (AppViewModel.StatusText):
+                OnPropertyChanged (nameof (StatusText));
+                break;
+            case nameof (AppViewModel.CurrentPage):
+                OnPropertyChanged (nameof (CurrentPage));
+                OnPropertyChanged (nameof (PageIndicator));
+                RaiseCommandsCanExecuteChanged ();
+                break;
+            case nameof (AppViewModel.TotalPages):
+                OnPropertyChanged (nameof (TotalPages));
+                OnPropertyChanged (nameof (PageIndicator));
+                RaiseCommandsCanExecuteChanged ();
+                break;
+            case nameof (AppViewModel.SelectedPrinter):
+                OnPropertyChanged (nameof (SelectedPrinter));
+                break;
+            case nameof (AppViewModel.SelectedPaperSize):
+                OnPropertyChanged (nameof (SelectedPaperSize));
+                break;
+            case nameof (AppViewModel.SelectedSheetIndex):
+                OnPropertyChanged (nameof (SelectedSheetIndex));
+                break;
         }
     }
 
-    private void ApplySheet (string sheetKey)
+    private void OnSheetApplied ()
     {
-        var settings = ModelLocator.Current.Settings;
-        if (!settings.Sheets.TryGetValue (sheetKey, out var sheetSettings))
-        {
-            return;
-        }
+        // Sync the inch-string display values for the margin controls.
+        SyncMarginsFromCurrentSheet ();
 
-        // Keep a reference to the live settings object for persistence
-        _currentSheetSettings = sheetSettings;
-
-        // Initialize via SetSheet (required for internal state)
-        SheetViewModel.SetSheet (sheetSettings);
-
-        // Sync local properties from the sheet without triggering reflow
-        _landscape = sheetSettings.Landscape;
+        // Notify XAML that every sheet-derived property may have changed.
         OnPropertyChanged (nameof (Landscape));
-
-        _rows = sheetSettings.Rows;
         OnPropertyChanged (nameof (Rows));
-
-        _columns = sheetSettings.Columns;
         OnPropertyChanged (nameof (Columns));
-
-        _paddingValue = (sheetSettings.Padding / 100.0).ToString ("F2");
         OnPropertyChanged (nameof (PaddingValue));
-
-        _pageSeparator = sheetSettings.PageSeparator;
         OnPropertyChanged (nameof (PageSeparator));
-
-        // Margins (stored in hundredths of an inch, display as inches)
-        _marginTop = (sheetSettings.Margins.Top / 100.0).ToString ("F2");
-        _marginBottom = (sheetSettings.Margins.Bottom / 100.0).ToString ("F2");
-        _marginLeft = (sheetSettings.Margins.Left / 100.0).ToString ("F2");
-        _marginRight = (sheetSettings.Margins.Right / 100.0).ToString ("F2");
-        OnPropertyChanged (nameof (MarginTop));
-        OnPropertyChanged (nameof (MarginBottom));
-        OnPropertyChanged (nameof (MarginLeft));
-        OnPropertyChanged (nameof (MarginRight));
-
-        // Header/Footer
-        _headerEnabled = sheetSettings.Header?.Enabled ?? true;
-        _headerText = sheetSettings.Header?.Text ?? "";
-        _footerEnabled = sheetSettings.Footer?.Enabled ?? true;
-        _footerText = sheetSettings.Footer?.Text ?? "";
+        OnPropertyChanged (nameof (LineNumbers));
         OnPropertyChanged (nameof (HeaderEnabled));
         OnPropertyChanged (nameof (HeaderText));
         OnPropertyChanged (nameof (FooterEnabled));
         OnPropertyChanged (nameof (FooterText));
-
-        // Line numbers
-        _lineNumbers = sheetSettings.ContentSettings?.LineNumbers ?? false;
-        OnPropertyChanged (nameof (LineNumbers));
-
-        // Font descriptions
         OnPropertyChanged (nameof (ContentFontDescription));
         OnPropertyChanged (nameof (HeaderFooterFontDescription));
 
-        // Printer selection defaults
-        _selectedPrinter = PrinterNames.FirstOrDefault ();
-        _selectedPaperSize = PaperSizes.FirstOrDefault ();
-        OnPropertyChanged (nameof (SelectedPrinter));
-        OnPropertyChanged (nameof (SelectedPaperSize));
-
-        // Sync page setup
-        _currentPageSetup.Landscape = sheetSettings.Landscape;
-        _currentPageSetup.MarginTop = sheetSettings.Margins.Top;
-        _currentPageSetup.MarginBottom = sheetSettings.Margins.Bottom;
-        _currentPageSetup.MarginLeft = sheetSettings.Margins.Left;
-        _currentPageSetup.MarginRight = sheetSettings.Margins.Right;
-
-        // Reload file with new sheet settings (SetSheet resets content engine state)
-        if (IsFileLoaded && !string.IsNullOrEmpty (ActiveFile))
+        // After a sheet swap, reload the active file with the new sheet so the preview reflects it.
+        if (_app.IsFileLoaded && !string.IsNullOrEmpty (_app.ActiveFile))
         {
-            LoadFileAsync (ActiveFile).ConfigureAwait (false);
+            _ = _app.LoadFileAsync (_app.ActiveFile);
         }
+    }
+
+    private void SyncMarginsFromCurrentSheet ()
+    {
+        var sheet = _app.CurrentSheet;
+        if (sheet == null)
+        {
+            return;
+        }
+        _marginTop = (sheet.Margins.Top / 100.0).ToString ("F2");
+        _marginBottom = (sheet.Margins.Bottom / 100.0).ToString ("F2");
+        _marginLeft = (sheet.Margins.Left / 100.0).ToString ("F2");
+        _marginRight = (sheet.Margins.Right / 100.0).ToString ("F2");
+        OnPropertyChanged (nameof (MarginTop));
+        OnPropertyChanged (nameof (MarginBottom));
+        OnPropertyChanged (nameof (MarginLeft));
+        OnPropertyChanged (nameof (MarginRight));
+        OnPropertyChanged (nameof (MarginTopValue));
+        OnPropertyChanged (nameof (MarginBottomValue));
+        OnPropertyChanged (nameof (MarginLeftValue));
+        OnPropertyChanged (nameof (MarginRightValue));
     }
 
     private void UpdateMargins ()
@@ -851,53 +671,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
             decimal.TryParse (_marginLeft, out var left) &&
             decimal.TryParse (_marginRight, out var right))
         {
-            var margins = new PrintMargins ((int)(left * 100), (int)(right * 100), (int)(top * 100), (int)(bottom * 100));
-            SheetViewModel.Margins = margins;
-            _currentPageSetup.MarginTop = (int)(top * 100);
-            _currentPageSetup.MarginBottom = (int)(bottom * 100);
-            _currentPageSetup.MarginLeft = (int)(left * 100);
-            _currentPageSetup.MarginRight = (int)(right * 100);
-            if (_currentSheetSettings != null)
-            {
-                _currentSheetSettings.Margins = margins;
-            }
-            ReflowAsync ().ConfigureAwait (false);
+            var margins = new PrintMargins (
+                (int)(left * 100),
+                (int)(right * 100),
+                (int)(top * 100),
+                (int)(bottom * 100));
+            _app.SetMargins (margins);
         }
     }
 
-    private async Task ReflowAsync ()
+    private void UpdatePageSetupForPaper (string paperName)
     {
-        if (!IsFileLoaded)
+        if (paperName.StartsWith ("Letter"))
         {
-            return;
+            _currentPageSetup.PaperWidth = 850;
+            _currentPageSetup.PaperHeight = 1100;
         }
-
-        IsBusy = true;
-        try
+        else if (paperName.StartsWith ("Legal"))
         {
-            // Always apply page settings before reflowing to ensure ContentEngine.PageSize is set.
-            // This mirrors WinForms behavior where page settings are always current before reflow.
-            SheetViewModel.SetPrinterPageSettings (_currentPageSetup);
-
-            // Sync sheet-level ContentSettings to the ContentEngine so changes like
-            // LineNumbers are applied without requiring a full file reload.
-            if (SheetViewModel.ContentEngine?.ContentSettings != null)
-            {
-                SheetViewModel.ContentEngine.ContentSettings.CopyPropertiesFrom (SheetViewModel.ContentSettings);
-            }
-
-            await SheetViewModel.ReflowAsync ();
-            TotalPages = SheetViewModel.NumSheets;
-            CurrentPage = Math.Min (CurrentPage, TotalPages);
-            InvalidatePreview?.Invoke ();
+            _currentPageSetup.PaperWidth = 850;
+            _currentPageSetup.PaperHeight = 1400;
         }
-        catch (Exception ex)
+        else if (paperName.StartsWith ("A4"))
         {
-            StatusText = $"Reflow error: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
+            _currentPageSetup.PaperWidth = 827;
+            _currentPageSetup.PaperHeight = 1169;
         }
     }
 
@@ -907,7 +705,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             return false;
         }
-
         field = value;
         OnPropertyChanged (propertyName);
         return true;
@@ -926,43 +723,5 @@ public sealed class MainViewModel : INotifyPropertyChanged
         (PreviousPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
         (FirstPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
         (LastPageCommand as RelayCommand)?.RaiseCanExecuteChanged ();
-    }
-
-    /// <summary>
-    ///     Saves window state and settings on close (per spec).
-    ///     Mirrors WinForms pattern: when maximized, persist the "restore bounds" (last normal size)
-    ///     so that restoring from maximized returns to the correct size.
-    /// </summary>
-    public void SaveWindowState (double x, double y, double width, double height, bool isMaximized)
-    {
-        var settings = ModelLocator.Current.Settings;
-        settings.WindowState = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
-
-        if (!isMaximized)
-        {
-            // Normal: save actual position and size
-            settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
-            settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
-        }
-        // When maximized, keep the previously saved normal size/location (RestoreBounds equivalent)
-
-        // Also persist selected sheet
-        if (_selectedSheetIndex >= 0 && _selectedSheetIndex < _sheetKeys.Count)
-        {
-            settings.DefaultSheet = Guid.Parse (_sheetKeys[_selectedSheetIndex]);
-        }
-
-        ServiceLocator.Current.SettingsService.SaveSettings (settings, saveCTESettings: false);
-    }
-
-    /// <summary>
-    ///     Saves current normal bounds (call when window moves/resizes while not maximized).
-    ///     This ensures we always have the last normal bounds for RestoreBounds equivalent.
-    /// </summary>
-    public void SaveNormalBounds (double x, double y, double width, double height)
-    {
-        var settings = ModelLocator.Current.Settings;
-        settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
-        settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
     }
 }

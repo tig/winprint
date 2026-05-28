@@ -175,76 +175,39 @@ public partial class MainPage : ContentPage
     {
         var printers = _printService.GetAvailablePrinters ();
         _viewModel.PrinterNames.Clear ();
+        string? defaultPrinter = null;
+
         foreach (var printer in printers)
         {
             _viewModel.PrinterNames.Add (printer.Name);
             if (printer.IsDefault)
             {
-                _viewModel.SelectedPrinter = printer.Name;
+                defaultPrinter = printer.Name;
             }
         }
 
-        if (_viewModel.SelectedPrinter == null && _viewModel.PrinterNames.Count > 0)
-        {
-            _viewModel.SelectedPrinter = _viewModel.PrinterNames[0];
-        }
+        // Restore persisted printer/paper-size via shared AppViewModel logic.
+        _viewModel.App.RestorePrinterSelection (_viewModel.PrinterNames, defaultPrinter);
+        _viewModel.App.RestorePaperSize (_viewModel.PaperSizes);
     }
 
     /// <summary>
-    ///     Apply command-line options (same pattern as WinForms Program.cs / MainWindow).
-    ///     Honors --printer, --landscape, --paper-size, --sheet, and file arguments.
+    ///     Apply command-line options. Delegates to the shared <c>AppViewModel</c>
+    ///     so all frontends honor <c>--printer</c>, <c>--landscape</c>,
+    ///     <c>--portrait</c>, <c>--paper-size</c>, <c>--sheet</c>, and file
+    ///     arguments identically.
     /// </summary>
     private void ApplyCommandLineOptions ()
     {
         var options = WinPrint.Core.Models.ModelLocator.Current.Options;
+        string? file = _viewModel.App.ApplyOptions (options, _viewModel.PrinterNames, _viewModel.PaperSizes);
 
-        // --printer: select the specified printer
-        if (!string.IsNullOrEmpty (options.Printer) && _viewModel.PrinterNames.Contains (options.Printer))
+        if (!string.IsNullOrEmpty (file))
         {
-            _viewModel.SelectedPrinter = options.Printer;
-        }
-
-        // --landscape / --portrait
-        if (options.Landscape)
-        {
-            _viewModel.Landscape = true;
-        }
-        else if (options.Portrait)
-        {
-            _viewModel.Landscape = false;
-        }
-
-        // --paper-size
-        if (!string.IsNullOrEmpty (options.PaperSize) && _viewModel.PaperSizes.Contains (options.PaperSize))
-        {
-            _viewModel.SelectedPaperSize = options.PaperSize;
-        }
-
-        // --sheet: select by name or ID
-        if (!string.IsNullOrEmpty (options.Sheet))
-        {
-            for (int i = 0; i < _viewModel.SheetNames.Count; i++)
+            MainThread.BeginInvokeOnMainThread (async () =>
             {
-                if (string.Equals (_viewModel.SheetNames[i], options.Sheet, StringComparison.OrdinalIgnoreCase))
-                {
-                    _viewModel.SelectedSheetIndex = i;
-                    break;
-                }
-            }
-        }
-
-        // Files: open the first file specified on command line
-        if (options.Files != null && options.Files.Any ())
-        {
-            string? file = options.Files.FirstOrDefault ();
-            if (!string.IsNullOrEmpty (file) && File.Exists (file))
-            {
-                // Defer file load until the UI is ready
-                MainThread.BeginInvokeOnMainThread (async () =>
-                {
-                    await _viewModel.LoadFileAsync (file);
-                });
-            }
+                await _viewModel.LoadFileAsync (file);
+            });
         }
     }
 
