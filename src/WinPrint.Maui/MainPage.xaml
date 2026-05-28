@@ -96,8 +96,13 @@
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
 
-                            <!-- Fonts -->
-                            <VerticalStackLayout Spacing="1" Margin="0,2,0,0">
+                            <!-- Fonts (collapsible) -->
+                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="10" Margin="0,2,0,0">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnFontsHeaderTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <VerticalStackLayout x:Name="FontsContent" Spacing="1" Margin="4,0,0,0">
                                 <Label Text="Content font:" FontSize="12" />
                                 <Label Text="{Binding ContentFontDescription}" FontSize="12" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
                                     <Label.GestureRecognizers>

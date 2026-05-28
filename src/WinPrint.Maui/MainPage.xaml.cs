@@ -232,6 +232,11 @@ public partial class MainPage : ContentPage
         ToggleSection (PrinterContent, PrinterHeader, "Printer");
     }
 
+    private void OnFontsHeaderTapped (object? sender, TappedEventArgs e)
+    {
+        ToggleSection (FontsContent, FontsHeader, "Fonts");
+    }
+
     private static void ToggleSection (VisualElement content, Label header, string title)
     {
         content.IsVisible = !content.IsVisible;
