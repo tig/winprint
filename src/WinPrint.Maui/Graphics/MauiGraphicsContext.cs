@@ -187,12 +187,12 @@ public sealed class MauiGraphicsContext : IGraphicsContext
         // the text baseline (text is drawn ABOVE Y) and on WinUI it also drops some
         // punctuation glyphs (e.g. "."). WinPrint.Core's text engine expects top-left
         // semantics for all DrawString calls, so route through the rect-based overload
-        // which gives us a deterministic VerticalAlignment.Top behavior and uses the
-        // platform's normal text layout path.
-        SizeF size = MeasurePreservingWhitespace (text, mFont, mauiFont.Size);
-        float w = Math.Max (size.Width, mauiFont.Size); // ensure non-zero rect for single-char tokens
-        float h = Math.Max (size.Height, mauiFont.Size * 1.5f);
-        _canvas.DrawString (text, x, y, w, h, HorizontalAlignment.Left, VerticalAlignment.Top);
+        // which gives us VerticalAlignment.Top and the platform's normal text layout
+        // path. The rect-based overload clips to width/height, so use a very large
+        // width to avoid truncating the last character (WinUI's GetStringSize tends to
+        // under-measure by a sub-pixel which would otherwise chop e.g. "using" -> "usin").
+        float h = Math.Max (mauiFont.Size * 1.5f, 1f);
+        _canvas.DrawString (text, x, y, 100000f, h, HorizontalAlignment.Left, VerticalAlignment.Top);
     }
 
     public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect,
