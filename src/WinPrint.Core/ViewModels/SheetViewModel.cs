@@ -1028,7 +1028,7 @@ public class SheetViewModel : ViewModelBase
         {
             if (font != null)
             {
-                f = new System.Drawing.Font (new FontFamily (font.Family), font.Size, (System.Drawing.FontStyle)font.Style, GraphicsUnit.Point);
+                f = new System.Drawing.Font (font.Family, font.Size, (System.Drawing.FontStyle)font.Style, GraphicsUnit.Point);
             }
             else
             {
@@ -1339,13 +1339,13 @@ public class SheetViewModel : ViewModelBase
 
         if (g.PageUnit == GraphicsUnit.Display)
         {
-            font = new System.Drawing.Font (new FontFamily (settings.DiagnosticRulesFont.Family), 48, (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style,
+            font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, 48, (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style,
                 GraphicsUnit.Point);
         }
         else
         {
             // Convert font to pixel units if we're in preview
-            font = new System.Drawing.Font (new FontFamily (settings.DiagnosticRulesFont.Family), 48 / 72F * 96F,
+            font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, 48 / 72F * 96F,
                 (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style, GraphicsUnit.Pixel);
         }
 
@@ -1376,13 +1376,13 @@ public class SheetViewModel : ViewModelBase
         System.Drawing.Font font;
         if (g.PageUnit == GraphicsUnit.Display)
         {
-            font = new System.Drawing.Font (new FontFamily (settings.DiagnosticRulesFont.Family), settings.DiagnosticRulesFont.Size,
+            font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family, settings.DiagnosticRulesFont.Size,
                 (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style, GraphicsUnit.Point);
         }
         else
         {
             // Convert font to pixel units if we're in preview
-            font = new System.Drawing.Font (new FontFamily (settings.DiagnosticRulesFont.Family),
+            font = new System.Drawing.Font (settings.DiagnosticRulesFont.Family,
                 settings.DiagnosticRulesFont.Size / 72F * 96F, (System.Drawing.FontStyle)settings.DiagnosticRulesFont.Style, GraphicsUnit.Pixel);
         }
 

@@ -1,8 +1,7 @@
 {
   "profiles": {
     "WinPrint.WinForms": {
-      "commandName": "Project",
-      "workingDirectory": "..\\..\\testfiles"
+      "commandName": "Project"
     }
   }
 }
