@@ -2,7 +2,6 @@
   "profiles": {
     "WinPrint.WinForms": {
       "commandName": "Project",
-      "commandLineArgs": "Program.cs",
       "workingDirectory": "..\\..\\testfiles"
     }
   }
