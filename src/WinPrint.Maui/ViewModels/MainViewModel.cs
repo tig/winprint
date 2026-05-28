@@ -26,6 +26,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private int _totalPages;
     private float _zoomFactor = 1.0f;
 
+    // Current page setup (always applied before reflow)
+    private PrintPageSetup _currentPageSetup = new ()
+    {
+        PaperWidth = 850,   // 8.5" in hundredths
+        PaperHeight = 1100, // 11" in hundredths
+        DpiX = 96,
+        DpiY = 96
+    };
+
     // Sheet settings
     private int _selectedSheetIndex;
     private bool _landscape;
@@ -497,18 +506,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             }
 
-            // Configure page settings AFTER LoadFileAsync (which creates ContentEngine)
-            // so that ContentEngine.PageSize gets set correctly.
-            var pageSetup = new PrintPageSetup
-            {
-                PaperWidth = 850, // 8.5" in hundredths
-                PaperHeight = 1100, // 11" in hundredths
-                DpiX = 96,
-                DpiY = 96
-            };
-            SheetViewModel.SetPrinterPageSettings (pageSetup);
-
-            // Reflow to calculate page count
+            // Apply page settings (sets ContentEngine.PageSize) and reflow
+            SheetViewModel.SetPrinterPageSettings (_currentPageSetup);
             await SheetViewModel.ReflowAsync ();
 
             TotalPages = SheetViewModel.NumSheets;
@@ -661,6 +660,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IsBusy = true;
         try
         {
+            // Always apply page settings before reflowing to ensure ContentEngine.PageSize is set.
+            // This mirrors WinForms behavior where page settings are always current before reflow.
+            SheetViewModel.SetPrinterPageSettings (_currentPageSetup);
             await SheetViewModel.ReflowAsync ();
             TotalPages = SheetViewModel.NumSheets;
             CurrentPage = Math.Min (CurrentPage, TotalPages);

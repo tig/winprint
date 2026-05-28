@@ -1,4 +1,5 @@
 using System.Drawing.Printing;
+using System.Windows.Forms;
 using WinPrint.Core.Abstractions;
 
 namespace WinPrint.Maui.Services;

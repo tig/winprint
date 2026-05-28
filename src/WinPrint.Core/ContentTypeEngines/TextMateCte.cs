@@ -147,7 +147,9 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         _lineHeight = _cachedFont.GetHeight (dpiY);
         if (PageSize.Height < _lineHeight)
         {
-            throw new InvalidOperationException ("The line height is greater than page height.");
+            throw new InvalidOperationException (
+                $"The line height ({_lineHeight:F2}) is greater than page height ({PageSize.Height:F2}). " +
+                $"PageSize={PageSize.Width:F2}x{PageSize.Height:F2}, Font={_cachedFont.Name} {_cachedFont.SizeInPoints}pt, DPI={dpiY}");
         }
 
         _linesPerPage = (int)Math.Floor (PageSize.Height / _lineHeight);

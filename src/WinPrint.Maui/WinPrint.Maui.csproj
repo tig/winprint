@@ -46,9 +46,8 @@
 		<NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
 	</PropertyGroup>
 
-	<!-- Windows-specific: enable WinForms for PrintDialog, define WINDOWS -->
+	<!-- Windows-specific: define WINDOWS -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-		<UseWindowsForms>true</UseWindowsForms>
 		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
 	</PropertyGroup>
 
@@ -80,8 +79,9 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
-	<!-- Windows: System.Drawing.Common for printing via PrintDocument -->
+	<!-- Windows: reference WinForms (for PrintDialog) and System.Drawing.Common (for PrintDocument) -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
 		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
 	</ItemGroup>
 

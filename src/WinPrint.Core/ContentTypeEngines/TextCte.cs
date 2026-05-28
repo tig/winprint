@@ -149,7 +149,9 @@ public class TextCte : ContentTypeEngineBase, IDisposable
 
         if (PageSize.Height < _lineHeight)
         {
-            throw new InvalidOperationException ("The line height is greater than page height.");
+            throw new InvalidOperationException (
+                $"The line height ({_lineHeight:F2}) is greater than page height ({PageSize.Height:F2}). " +
+                $"PageSize={PageSize.Width:F2}x{PageSize.Height:F2}, Font={_cachedFont.Name} {_cachedFont.SizeInPoints}pt, DPI={dpiY}");
         }
 
         // Round down # of lines per page to ensure lines don't clip on bottom
