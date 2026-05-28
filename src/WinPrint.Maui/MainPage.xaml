@@ -1,8 +1,30 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:WinPrint.Maui.Controls"
              x:Class="WinPrint.Maui.MainPage">
-    <Grid />
+    <VerticalStackLayout Padding="20" Spacing="20">
 
+        <!-- Integer example: copies, 1..999 stepping by 1 -->
+        <Label Text="Copies" />
+        <controls:NumericUpDown WidthRequest="120"
+                                HorizontalOptions="Start"
+                                IsInteger="True"
+                                Minimum="1"
+                                Maximum="999"
+                                Increment="1"
+                                Value="1" />
+
+        <!-- Decimal example: margin, 0..10 stepping by 0.25 -->
+        <Label Text="Margin (inches)" />
+        <controls:NumericUpDown WidthRequest="120"
+                                HorizontalOptions="Start"
+                                IsInteger="False"
+                                Minimum="0"
+                                Maximum="10"
+                                Increment="0.25"
+                                Value="0.5" />
+
+    </VerticalStackLayout>
 </ContentPage>
