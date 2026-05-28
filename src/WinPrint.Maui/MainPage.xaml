@@ -45,20 +45,29 @@
                                     <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <Grid x:Name="MarginsContent" ColumnDefinitions="14,50,50,14,50,50,14" RowDefinitions="24,24,24" RowSpacing="1" ColumnSpacing="0" Margin="0,0,0,0">
-                                <!-- Top (centered, row 0) -->
-                                <Label Grid.Row="0" Grid.Column="1" Text="Top:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="0" Grid.Column="2" Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
-                                <!-- Left (left side, row 1) -->
-                                <Label Grid.Row="1" Grid.Column="0" Text="L:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
-                                <!-- Right (right side, row 1) -->
-                                <Label Grid.Row="1" Grid.Column="4" Text="R:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="1" Grid.Column="5" Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
-                                <!-- Bottom (centered, row 2) -->
-                                <Label Grid.Row="2" Grid.Column="1" Text="Bot:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="2" Grid.Column="2" Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
-                            </Grid>
+                            <VerticalStackLayout x:Name="MarginsContent" Spacing="2">
+                                <!-- Top (centered) -->
+                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
+                                    <Label Text="Top:" VerticalOptions="Center" FontSize="10" />
+                                    <Entry Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="54" />
+                                </HorizontalStackLayout>
+                                <!-- Left and Right (side by side) -->
+                                <Grid ColumnDefinitions="*,*" Margin="0">
+                                    <HorizontalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Start">
+                                        <Label Text="Left:" VerticalOptions="Center" FontSize="10" />
+                                        <Entry Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="54" />
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="End">
+                                        <Label Text="Right:" VerticalOptions="Center" FontSize="10" />
+                                        <Entry Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="54" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+                                <!-- Bottom (centered) -->
+                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
+                                    <Label Text="Bot:" VerticalOptions="Center" FontSize="10" />
+                                    <Entry Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="54" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
 
                             <!-- Multiple Pages Up -->
                             <Label x:Name="PagesUpHeader" Text="▼ Pages Up" FontAttributes="Bold" FontSize="10" Margin="0,2,0,0">
@@ -66,19 +75,23 @@
                                     <TapGestureRecognizer Tapped="OnPagesUpHeaderTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <VerticalStackLayout x:Name="PagesUpContent" Spacing="1" Margin="4,0,0,0">
-                                <Grid ColumnDefinitions="44,40,12,44,40" RowDefinitions="24" ColumnSpacing="2">
-                                    <Label Grid.Column="0" Text="Rows:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Column="1" Text="{Binding Rows}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
-                                    <Label Grid.Column="3" Text="Cols:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Column="4" Text="{Binding Columns}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
+                            <VerticalStackLayout x:Name="PagesUpContent" Spacing="2" Margin="4,0,0,0">
+                                <Grid ColumnDefinitions="*,*">
+                                    <HorizontalStackLayout Grid.Column="0" Spacing="4">
+                                        <Label Text="Rows:" VerticalOptions="Center" FontSize="10" />
+                                        <Entry Text="{Binding Rows}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="40" />
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                        <Label Text="Cols:" VerticalOptions="Center" FontSize="10" />
+                                        <Entry Text="{Binding Columns}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="40" />
+                                    </HorizontalStackLayout>
                                 </Grid>
-                                <Grid ColumnDefinitions="44,40,12,Auto,Auto" RowDefinitions="24" ColumnSpacing="2">
-                                    <Label Grid.Column="0" Text="Pad:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Column="1" Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
-                                    <CheckBox Grid.Column="3" IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
-                                    <Label Grid.Column="4" Text="Separator" VerticalOptions="Center" FontSize="9" />
-                                </Grid>
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label Text="Padding:" VerticalOptions="Center" FontSize="10" />
+                                    <Entry Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="10" HeightRequest="24" WidthRequest="54" />
+                                    <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
+                                    <Label Text="Sep" VerticalOptions="Center" FontSize="10" />
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
 
                             <!-- Fonts -->
