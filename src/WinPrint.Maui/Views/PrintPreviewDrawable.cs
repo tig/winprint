@@ -93,8 +93,9 @@ public sealed class PrintPreviewDrawable : IDrawable
                 HorizontalAlignment.Right, VerticalAlignment.Center);
         }
 
-        // Status/error overlay (replaces status bar)
-        if (!string.IsNullOrEmpty (_viewModel.StatusText))
+        // Status/error overlay (only shows errors)
+        if (!string.IsNullOrEmpty (_viewModel.StatusText) &&
+            _viewModel.StatusText.StartsWith ("Error", StringComparison.OrdinalIgnoreCase))
         {
             canvas.FontColor = Colors.OrangeRed;
             canvas.FontSize = 12;

@@ -8,16 +8,16 @@
     <Grid ColumnDefinitions="Auto,Auto,*">
 
         <!-- LEFT PANEL: Settings (collapsible horizontally) -->
-        <ScrollView x:Name="LeftPanel" Grid.Column="0" WidthRequest="220"
+        <ScrollView x:Name="LeftPanel" Grid.Column="0" WidthRequest="210"
                     BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
             <VerticalStackLayout Padding="6,4" Spacing="2">
 
                 <!-- File / Print buttons -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
-                            FontSize="12" Padding="6,2" />
+                            FontSize="11" Padding="4,0" HeightRequest="28" />
                     <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
-                            FontSize="12" Padding="6,2" />
+                            FontSize="11" Padding="4,0" HeightRequest="28" />
                 </Grid>
 
                 <!-- Sheet Definition group (collapsible) -->
@@ -35,25 +35,29 @@
                                     SelectedIndex="{Binding SelectedSheetIndex}"
                                     FontSize="11" />
                             <HorizontalStackLayout Spacing="4">
-                                <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.75" />
+                                <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.7" />
                                 <Label Text="Landscape" VerticalOptions="Center" FontSize="11" />
                             </HorizontalStackLayout>
 
-                            <!-- Margins -->
+                            <!-- Margins (diamond layout like WinForms) -->
                             <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="10" Margin="0,2,0,0">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <Grid x:Name="MarginsContent" ColumnDefinitions="44,60,4,44,60" RowDefinitions="26,26" RowSpacing="2" ColumnSpacing="2" Margin="4,0,0,0">
-                                <Label Grid.Row="0" Grid.Column="0" Text="Top:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="0" Grid.Column="1" Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
-                                <Label Grid.Row="0" Grid.Column="3" Text="Left:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="0" Grid.Column="4" Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
-                                <Label Grid.Row="1" Grid.Column="0" Text="Bot:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
-                                <Label Grid.Row="1" Grid.Column="3" Text="Right:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                <Entry Grid.Row="1" Grid.Column="4" Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
+                            <Grid x:Name="MarginsContent" ColumnDefinitions="14,50,50,14,50,50,14" RowDefinitions="24,24,24" RowSpacing="1" ColumnSpacing="0" Margin="0,0,0,0">
+                                <!-- Top (centered, row 0) -->
+                                <Label Grid.Row="0" Grid.Column="1" Text="Top:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="0" Grid.Column="2" Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
+                                <!-- Left (left side, row 1) -->
+                                <Label Grid.Row="1" Grid.Column="0" Text="L:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
+                                <!-- Right (right side, row 1) -->
+                                <Label Grid.Row="1" Grid.Column="4" Text="R:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="1" Grid.Column="5" Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
+                                <!-- Bottom (centered, row 2) -->
+                                <Label Grid.Row="2" Grid.Column="1" Text="Bot:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="2" Grid.Column="2" Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
                             </Grid>
 
                             <!-- Multiple Pages Up -->
@@ -63,30 +67,30 @@
                                 </Label.GestureRecognizers>
                             </Label>
                             <VerticalStackLayout x:Name="PagesUpContent" Spacing="1" Margin="4,0,0,0">
-                                <Grid ColumnDefinitions="54,44,8,54,44" RowDefinitions="26" ColumnSpacing="2">
-                                    <Label Grid.Column="0" Text="Rows:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Column="1" Text="{Binding Rows}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
-                                    <Label Grid.Column="3" Text="Cols:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Column="4" Text="{Binding Columns}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
+                                <Grid ColumnDefinitions="44,40,12,44,40" RowDefinitions="24" ColumnSpacing="2">
+                                    <Label Grid.Column="0" Text="Rows:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                    <Entry Grid.Column="1" Text="{Binding Rows}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
+                                    <Label Grid.Column="3" Text="Cols:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                    <Entry Grid.Column="4" Text="{Binding Columns}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
                                 </Grid>
-                                <Grid ColumnDefinitions="54,44,8,Auto,Auto" RowDefinitions="26" ColumnSpacing="2">
-                                    <Label Grid.Column="0" Text="Pad:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Column="1" Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="10" HeightRequest="24" />
-                                    <CheckBox Grid.Column="3" IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.7" />
-                                    <Label Grid.Column="4" Text="Separator" VerticalOptions="Center" FontSize="10" />
+                                <Grid ColumnDefinitions="44,40,12,Auto,Auto" RowDefinitions="24" ColumnSpacing="2">
+                                    <Label Grid.Column="0" Text="Pad:" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="End" />
+                                    <Entry Grid.Column="1" Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="9" HeightRequest="22" />
+                                    <CheckBox Grid.Column="3" IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
+                                    <Label Grid.Column="4" Text="Separator" VerticalOptions="Center" FontSize="9" />
                                 </Grid>
                             </VerticalStackLayout>
 
                             <!-- Fonts -->
                             <VerticalStackLayout Spacing="1" Margin="0,2,0,0">
-                                <Label Text="Content font:" FontSize="10" />
-                                <Label Text="{Binding ContentFontDescription}" FontSize="10" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                                <Label Text="Content font:" FontSize="9" />
+                                <Label Text="{Binding ContentFontDescription}" FontSize="9" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding ChangeContentFontCommand}" />
                                     </Label.GestureRecognizers>
                                 </Label>
-                                <Label Text="Header/Footer font:" FontSize="10" />
-                                <Label Text="{Binding HeaderFooterFontDescription}" FontSize="10" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                                <Label Text="Header/Footer font:" FontSize="9" />
+                                <Label Text="{Binding HeaderFooterFontDescription}" FontSize="9" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding ChangeHeaderFooterFontCommand}" />
                                     </Label.GestureRecognizers>
@@ -95,8 +99,8 @@
 
                             <!-- Line Numbers -->
                             <HorizontalStackLayout Spacing="4">
-                                <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.7" />
-                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="10" />
+                                <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.65" />
+                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="9" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
@@ -115,15 +119,15 @@
                             <Picker ItemsSource="{Binding PrinterNames}"
                                     SelectedItem="{Binding SelectedPrinter}"
                                     FontSize="11" />
-                            <Label Text="Paper:" FontSize="10" />
+                            <Label Text="Paper:" FontSize="9" />
                             <Picker ItemsSource="{Binding PaperSizes}"
                                     SelectedItem="{Binding SelectedPaperSize}"
                                     FontSize="11" />
-                            <Grid ColumnDefinitions="40,48,20,48" ColumnSpacing="2">
-                                <Label Grid.Column="0" Text="Pages:" VerticalOptions="Center" FontSize="10" />
-                                <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="10" HeightRequest="24" Placeholder="From" />
-                                <Label Grid.Column="2" Text="to" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="Center" />
-                                <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="10" HeightRequest="24" Placeholder="To" />
+                            <Grid ColumnDefinitions="38,44,18,44" ColumnSpacing="2">
+                                <Label Grid.Column="0" Text="Pages:" VerticalOptions="Center" FontSize="9" />
+                                <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="9" HeightRequest="22" Placeholder="From" />
+                                <Label Grid.Column="2" Text="to" VerticalOptions="Center" FontSize="9" HorizontalTextAlignment="Center" />
+                                <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="9" HeightRequest="22" Placeholder="To" />
                             </Grid>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
@@ -131,19 +135,19 @@
 
                 <!-- Version / Help -->
                 <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
-                    <Label Grid.Column="0" Text="Help &amp; about..." FontSize="10"
+                    <Label Grid.Column="0" Text="Help &amp; about..." FontSize="9"
                            TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline" />
-                    <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="10"
+                    <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="9"
                            HorizontalTextAlignment="End" />
                 </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
         <!-- Panel collapse toggle -->
-        <VerticalStackLayout Grid.Column="1" WidthRequest="16" VerticalOptions="Center"
+        <VerticalStackLayout Grid.Column="1" WidthRequest="14" VerticalOptions="Center"
                              BackgroundColor="{AppThemeBinding Light=#E0E0E0, Dark=#3A3A3A}">
-            <Label x:Name="PanelToggle" Text="◀" FontSize="12" HorizontalTextAlignment="Center"
-                   VerticalTextAlignment="Center" HeightRequest="40">
+            <Label x:Name="PanelToggle" Text="◀" FontSize="10" HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="Center" HeightRequest="36">
                 <Label.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnPanelToggleTapped" />
                 </Label.GestureRecognizers>
@@ -154,10 +158,10 @@
         <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto">
 
             <!-- Header bar -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="2,1"
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="2,0"
                   BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-                <CheckBox Grid.Column="0" IsChecked="{Binding HeaderEnabled}" VerticalOptions="Center" Scale="0.7" />
-                <Entry Grid.Column="1" Text="{Binding HeaderText}" FontSize="11" HeightRequest="26"
+                <CheckBox Grid.Column="0" IsChecked="{Binding HeaderEnabled}" VerticalOptions="Center" Scale="0.65" />
+                <Entry Grid.Column="1" Text="{Binding HeaderText}" FontSize="10" HeightRequest="24"
                        HorizontalTextAlignment="Center" Placeholder="Header Text" />
             </Grid>
 
@@ -171,10 +175,10 @@
             </GraphicsView>
 
             <!-- Footer bar -->
-            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Padding="2,1"
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Padding="2,0"
                   BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-                <CheckBox Grid.Column="0" IsChecked="{Binding FooterEnabled}" VerticalOptions="Center" Scale="0.7" />
-                <Entry Grid.Column="1" Text="{Binding FooterText}" FontSize="11" HeightRequest="26"
+                <CheckBox Grid.Column="0" IsChecked="{Binding FooterEnabled}" VerticalOptions="Center" Scale="0.65" />
+                <Entry Grid.Column="1" Text="{Binding FooterText}" FontSize="10" HeightRequest="24"
                        HorizontalTextAlignment="Center" Placeholder="Footer Text" />
             </Grid>
         </Grid>

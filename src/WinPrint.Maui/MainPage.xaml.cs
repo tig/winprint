@@ -35,6 +35,15 @@ public partial class MainPage : ContentPage
         // Wire up printing
         _viewModel.PerformPrintAsync = PerformPrintAsync;
 
+        // Sync window title with ViewModel title
+        _viewModel.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof (_viewModel.Title) && Window != null)
+            {
+                MainThread.BeginInvokeOnMainThread (() => Window.Title = _viewModel.Title);
+            }
+        };
+
         // Populate printer list from platform service
         PopulatePrinters ();
 
