@@ -22,21 +22,30 @@ public static class PrintOrchestrator
             return;
         }
 
-        // Get current page setup
+        // Build page setup from the ViewModel's current state (user already configured
+        // printer, orientation, margins, and paper in the left panel).
         var pageSetup = printService.GetDefaultPageSetup (viewModel.SelectedPrinter);
         pageSetup.Landscape = viewModel.Landscape;
 
-        // Show print dialog if requested
-        if (showDialog)
+        // Apply user's margins
+        if (decimal.TryParse (viewModel.MarginTop, out var mt))
         {
-            var options = new PrintDialogOptions
-            {
-                AllowSomePages = true,
-                AllowCurrentPage = true,
-                AllowSelection = false,
-                UseAntiAlias = true
-            };
-            pageSetup = printService.ShowPrintDialog (options, pageSetup);
+            pageSetup.MarginTop = (int)(mt * 100);
+        }
+
+        if (decimal.TryParse (viewModel.MarginBottom, out var mb))
+        {
+            pageSetup.MarginBottom = (int)(mb * 100);
+        }
+
+        if (decimal.TryParse (viewModel.MarginLeft, out var ml))
+        {
+            pageSetup.MarginLeft = (int)(ml * 100);
+        }
+
+        if (decimal.TryParse (viewModel.MarginRight, out var mr))
+        {
+            pageSetup.MarginRight = (int)(mr * 100);
         }
 
         // Apply page setup to SheetViewModel for correct reflow
