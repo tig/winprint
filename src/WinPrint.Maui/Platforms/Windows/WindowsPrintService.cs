@@ -56,6 +56,12 @@ public class WindowsPrintService : IPrintService
         var settings = new PrinterSettings { PrinterName = currentSetup.PrinterName };
         var pageSettings = settings.DefaultPageSettings;
 
+        // Apply current setup to dialog so it reflects user's choices
+        pageSettings.Landscape = currentSetup.Landscape;
+        pageSettings.Margins = new System.Drawing.Printing.Margins (
+            currentSetup.MarginLeft, currentSetup.MarginRight,
+            currentSetup.MarginTop, currentSetup.MarginBottom);
+
         var dialog = new PrintDialog
         {
             PrinterSettings = settings,
