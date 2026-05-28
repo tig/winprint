@@ -30,8 +30,8 @@ public class NumericUpDown : ContentView
 
         _downButton = new Button { Text = "▼", HorizontalOptions = LayoutOptions.Fill }; // ▼
         _upButton = new Button { Text = "▲", HorizontalOptions = LayoutOptions.Fill };   // ▲
-        _downButton.Clicked += (_, _) => Decrement();
-        _upButton.Clicked += (_, _) => Increment();
+        _downButton.Clicked += (_, _) => StepDown();
+        _upButton.Clicked += (_, _) => StepUp();
 
         // Two columns of buttons sitting below the entry.
         var buttons = new Grid
@@ -120,9 +120,11 @@ public class NumericUpDown : ContentView
         set => SetValue(IsIntegerProperty, value);
     }
 
-    public void Increment() => Value += Increment;
+    /// <summary>Adds <see cref="Increment"/> to <see cref="Value"/> (same as clicking the up button).</summary>
+    public void StepUp() => Value += Increment;
 
-    public void Decrement() => Value -= Increment;
+    /// <summary>Subtracts <see cref="Increment"/> from <see cref="Value"/> (same as clicking the down button).</summary>
+    public void StepDown() => Value -= Increment;
 
     private static object CoerceValue(BindableObject bindable, object value)
     {
