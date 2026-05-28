@@ -66,9 +66,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         PrintCommand = new RelayCommand (async () => await PrintAsync (), () => IsFileLoaded && !IsBusy);
         NextPageCommand = new RelayCommand (() => CurrentPage = Math.Min (CurrentPage + 1, TotalPages), () => CurrentPage < TotalPages);
         PreviousPageCommand = new RelayCommand (() => CurrentPage = Math.Max (CurrentPage - 1, 1), () => CurrentPage > 1);
+        FirstPageCommand = new RelayCommand (() => CurrentPage = 1, () => CurrentPage > 1);
+        LastPageCommand = new RelayCommand (() => CurrentPage = TotalPages, () => CurrentPage < TotalPages);
+        RefreshCommand = new RelayCommand (async () => await RefreshAsync (), () => IsFileLoaded && !IsBusy);
         ZoomInCommand = new RelayCommand (() => ZoomFactor = Math.Min (ZoomFactor + 0.25f, 4.0f));
         ZoomOutCommand = new RelayCommand (() => ZoomFactor = Math.Max (ZoomFactor - 0.25f, 0.25f));
         ZoomFitCommand = new RelayCommand (() => ZoomFactor = 1.0f);
+        ChangeContentFontCommand = new RelayCommand (async () => await ChangeContentFontAsync ());
+        ChangeHeaderFooterFontCommand = new RelayCommand (async () => await ChangeHeaderFooterFontAsync ());
         SettingsCommand = new RelayCommand (() => { /* TODO: Open settings dialog */ });
 
         SheetViewModel = new SheetViewModel ();
@@ -453,9 +458,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand PrintCommand { get; }
     public ICommand NextPageCommand { get; }
     public ICommand PreviousPageCommand { get; }
+    public ICommand FirstPageCommand { get; }
+    public ICommand LastPageCommand { get; }
+    public ICommand RefreshCommand { get; }
     public ICommand ZoomInCommand { get; }
     public ICommand ZoomOutCommand { get; }
     public ICommand ZoomFitCommand { get; }
+    public ICommand ChangeContentFontCommand { get; }
+    public ICommand ChangeHeaderFooterFontCommand { get; }
     public ICommand SettingsCommand { get; }
 
     /// <summary>
@@ -472,6 +482,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     ///     Callback to perform platform printing.
     /// </summary>
     public Func<Task>? PerformPrintAsync { get; set; }
+
+    /// <summary>
+    ///     Callback to pick a font (platform-specific font picker).
+    ///     Parameters: current family, size, style. Returns new font or null if cancelled.
+    /// </summary>
+    public Func<string, float, string, Task<(string Family, float Size, string Style)?>>? PickFontAsync { get; set; }
 
     public async Task OpenFileAsync ()
     {
@@ -532,6 +548,79 @@ public sealed class MainViewModel : INotifyPropertyChanged
         if (PerformPrintAsync != null)
         {
             await PerformPrintAsync ();
+        }
+    }
+
+    /// <summary>
+    ///     Reloads the current file from disk (F5 refresh).
+    /// </summary>
+    public async Task RefreshAsync ()
+    {
+        if (!IsFileLoaded || string.IsNullOrEmpty (ActiveFile))
+        {
+            return;
+        }
+
+        await LoadFileAsync (ActiveFile);
+    }
+
+    /// <summary>
+    ///     Opens font picker for content font.
+    /// </summary>
+    private async Task ChangeContentFontAsync ()
+    {
+        var cs = SheetViewModel.ContentSettings;
+        if (cs?.Font == null || PickFontAsync == null)
+        {
+            return;
+        }
+
+        var result = await PickFontAsync (cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString ());
+        if (result.HasValue)
+        {
+            cs.Font = new WinPrint.Core.Models.Font
+            {
+                Family = result.Value.Family,
+                Size = result.Value.Size,
+                Style = Enum.TryParse<WinPrint.Core.Models.FontStyle> (result.Value.Style, out var style)
+                    ? style
+                    : WinPrint.Core.Models.FontStyle.Regular
+            };
+            OnPropertyChanged (nameof (ContentFontDescription));
+            await ReflowAsync ();
+        }
+    }
+
+    /// <summary>
+    ///     Opens font picker for header/footer font (shared per spec).
+    /// </summary>
+    private async Task ChangeHeaderFooterFontAsync ()
+    {
+        var header = SheetViewModel.Header;
+        if (header?.Font == null || PickFontAsync == null)
+        {
+            return;
+        }
+
+        var result = await PickFontAsync (header.Font.Family, header.Font.Size, header.Font.Style.ToString ());
+        if (result.HasValue)
+        {
+            var newFont = new WinPrint.Core.Models.Font
+            {
+                Family = result.Value.Family,
+                Size = result.Value.Size,
+                Style = Enum.TryParse<WinPrint.Core.Models.FontStyle> (result.Value.Style, out var style)
+                    ? style
+                    : WinPrint.Core.Models.FontStyle.Regular
+            };
+            // Header and Footer always share the same font (per spec)
+            header.Font = newFont;
+            if (SheetViewModel.Footer != null)
+            {
+                SheetViewModel.Footer.Font = (WinPrint.Core.Models.Font)newFont.Clone ();
+            }
+            OnPropertyChanged (nameof (HeaderFooterFontDescription));
+            await ReflowAsync ();
         }
     }
 
@@ -693,5 +782,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void OnPropertyChanged ([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke (this, new PropertyChangedEventArgs (propertyName));
+    }
+
+    /// <summary>
+    ///     Saves window state and settings on close (per spec).
+    /// </summary>
+    public void SaveWindowState (double x, double y, double width, double height)
+    {
+        var settings = ModelLocator.Current.Settings;
+        settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
+        settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
+        ServiceLocator.Current.SettingsService.SaveSettings (settings, saveCTESettings: false);
     }
 }

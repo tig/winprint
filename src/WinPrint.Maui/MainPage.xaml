@@ -5,6 +5,49 @@
              x:Class="WinPrint.Maui.MainPage"
              Title="{Binding Title}">
 
+    <ContentPage.MenuBarItems>
+        <MenuBarItem Text="File">
+            <MenuFlyoutItem Text="Open..." Command="{Binding OpenFileCommand}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Ctrl" Key="O" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem Text="Print..." Command="{Binding PrintCommand}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Ctrl" Key="P" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+        </MenuBarItem>
+        <MenuBarItem Text="View">
+            <MenuFlyoutItem Text="Refresh" Command="{Binding RefreshCommand}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F5" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem Text="Zoom In" Command="{Binding ZoomInCommand}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Ctrl" Key="OemPlus" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem Text="Zoom Out" Command="{Binding ZoomOutCommand}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Ctrl" Key="OemMinus" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+            <MenuFlyoutItem Text="Zoom to Fit" Command="{Binding ZoomFitCommand}">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Ctrl" Key="D0" />
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+        </MenuBarItem>
+        <MenuBarItem Text="Navigate">
+            <MenuFlyoutItem Text="Next Page" Command="{Binding NextPageCommand}" />
+            <MenuFlyoutItem Text="Previous Page" Command="{Binding PreviousPageCommand}" />
+            <MenuFlyoutItem Text="First Page" Command="{Binding FirstPageCommand}" />
+            <MenuFlyoutItem Text="Last Page" Command="{Binding LastPageCommand}" />
+        </MenuBarItem>
+    </ContentPage.MenuBarItems>
+
     <Grid ColumnDefinitions="250,*">
 
         <!-- LEFT PANEL: Settings -->
@@ -81,9 +124,17 @@
                         <!-- Fonts -->
                         <VerticalStackLayout Spacing="2" Margin="0,4,0,0">
                             <Label Text="Content font:" FontSize="11" />
-                            <Label Text="{Binding ContentFontDescription}" FontSize="11" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline" />
+                            <Label Text="{Binding ContentFontDescription}" FontSize="11" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ChangeContentFontCommand}" />
+                                </Label.GestureRecognizers>
+                            </Label>
                             <Label Text="Header/Footer font:" FontSize="11" />
-                            <Label Text="{Binding HeaderFooterFontDescription}" FontSize="11" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline" />
+                            <Label Text="{Binding HeaderFooterFontDescription}" FontSize="11" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ChangeHeaderFooterFontCommand}" />
+                                </Label.GestureRecognizers>
+                            </Label>
                         </VerticalStackLayout>
 
                         <!-- Line Numbers -->
