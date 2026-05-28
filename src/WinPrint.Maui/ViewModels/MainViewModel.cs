@@ -488,7 +488,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             ActiveFile = filePath;
 
-            // Configure page settings for cross-platform rendering
+            // Load the file (determines content type, reads content, creates ContentEngine)
+            bool loaded = await SheetViewModel.LoadFileAsync (filePath);
+            if (!loaded)
+            {
+                StatusText = "Failed to load file.";
+                ActiveFile = string.Empty;
+                return;
+            }
+
+            // Configure page settings AFTER LoadFileAsync (which creates ContentEngine)
+            // so that ContentEngine.PageSize gets set correctly.
             var pageSetup = new PrintPageSetup
             {
                 PaperWidth = 850, // 8.5" in hundredths
@@ -497,15 +507,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 DpiY = 96
             };
             SheetViewModel.SetPrinterPageSettings (pageSetup);
-
-            // Load the file (determines content type, reads content)
-            bool loaded = await SheetViewModel.LoadFileAsync (filePath);
-            if (!loaded)
-            {
-                StatusText = "Failed to load file.";
-                ActiveFile = string.Empty;
-                return;
-            }
 
             // Reflow to calculate page count
             await SheetViewModel.ReflowAsync ();
