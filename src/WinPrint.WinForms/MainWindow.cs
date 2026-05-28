@@ -329,8 +329,9 @@ public partial class MainWindow : Form
                     bottomMargin.Value = PrintPreview.SheetViewModel.Margins.Bottom / 100M;
 
                     // Keep PrintDocument updated for WinForms.PrintPreview
+                    var m = PrintPreview.SheetViewModel.Margins;
                     printDoc.PrinterSettings.DefaultPageSettings.Margins =
-                        (Margins)PrintPreview.SheetViewModel.Margins.Clone ();
+                        new Margins (m.Left, m.Right, m.Top, m.Bottom);
                     break;
 
                 case "PageSeparator":
