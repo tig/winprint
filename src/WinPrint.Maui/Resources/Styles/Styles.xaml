@@ -36,17 +36,15 @@
         -->
         <Setter Property="FontFamily" Value="OpenSansRegular" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="MinimumHeightRequest" Value="44" />
-        <Setter Property="MinimumWidthRequest" Value="44" />
     </Style>
 
     <Style TargetType="CheckBox">
         <!--
             No Color setter: use the platform's native accent so the checkbox looks
-            like the OS standard (WinUI accent on Windows, NSButton check on macOS).
+            like the OS standard. No MinimumWidth/HeightRequest either: the touch-
+            target sizing makes the checkbox's layout slot huge on a desktop app
+            (~44pt) and leaves a big gap before any adjacent label.
         -->
-        <Setter Property="MinimumHeightRequest" Value="44" />
-        <Setter Property="MinimumWidthRequest" Value="44" />
     </Style>
 
     <Style TargetType="DatePicker">
