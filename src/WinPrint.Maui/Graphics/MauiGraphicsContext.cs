@@ -142,11 +142,21 @@ public sealed class MauiGraphicsContext : IGraphicsContext
     }
 
     /// <summary>
-    ///     MAUI's WinUI <c>GetStringSize</c> trims leading/trailing whitespace before
-    ///     measuring (TextBlock semantics), which collapses any token that is purely
-    ///     whitespace to zero width and makes adjacent tokens run together in the
-    ///     preview. Wrap the text in sentinel characters and subtract the bookends so
-    ///     spaces, tabs, and trailing whitespace round-trip correctly.
+    ///     MAUI's WinUI <c>GetStringSize</c> uses Win2D's tight advance-width
+    ///     measurement and trims leading/trailing whitespace (TextBlock semantics).
+    ///     Two consequences for WinPrint:
+    ///     1. Whitespace-only tokens collapse to zero width, so adjacent tokens
+    ///        run together in the preview ("using System" -> "usingSystem").
+    ///     2. The advance width is tighter than GDI+'s <c>Graphics.MeasureString</c>
+    ///        (which the WinForms preview and the actual print path use). The text
+    ///        engine in <c>TextMateCte</c> uses the measured width to advance xPos
+    ///        for the next token, so a tighter measurement makes tokens visually
+    ///        butt together with no whitespace between them.
+    ///
+    ///     We round-trip whitespace with sentinel bookends (fix #1) and then add
+    ///     the same trailing padding GDI+ reports (~1/6 em per character that
+    ///     GDI+ adds as overhang). This makes the MAUI preview spacing match the
+    ///     WinForms preview and the actual printed output.
     /// </summary>
     private SizeF MeasurePreservingWhitespace (string text, Microsoft.Maui.Graphics.Font mFont, float fontSize)
     {
@@ -155,20 +165,28 @@ public sealed class MauiGraphicsContext : IGraphicsContext
             return new SizeF (0, 0);
         }
 
-        // Fast path: text has no whitespace at either end so trimming is a no-op.
+        SizeF size;
         bool needsSentinels = char.IsWhiteSpace (text[0]) || char.IsWhiteSpace (text[text.Length - 1]);
         if (!needsSentinels)
         {
-            return _canvas.GetStringSize (text, mFont, fontSize);
+            size = _canvas.GetStringSize (text, mFont, fontSize);
+        }
+        else
+        {
+            // Bookend with a non-collapsible sentinel so spaces/tabs round-trip.
+            const string sentinel = "|";
+            var withText = _canvas.GetStringSize (sentinel + text + sentinel, mFont, fontSize);
+            var bookends = _canvas.GetStringSize (sentinel + sentinel, mFont, fontSize);
+            size = new SizeF (Math.Max (0, withText.Width - bookends.Width), withText.Height);
         }
 
-        // Use a narrow but non-zero-width sentinel that the renderer will not collapse.
-        const string sentinel = "|";
-        var withText = _canvas.GetStringSize (sentinel + text + sentinel, mFont, fontSize);
-        var bookends = _canvas.GetStringSize (sentinel + sentinel, mFont, fontSize);
-        float width = Math.Max (0, withText.Width - bookends.Width);
-        // Use the un-trimmed measurement's height so descender/ascender are correct.
-        return new SizeF (width, withText.Height);
+        // Match GDI+ Graphics.MeasureString's overhang padding so the WinPrint text
+        // engine (which uses width-to-advance) reproduces the same token spacing
+        // the WinForms preview and the print path produce. GDI+ adds roughly
+        // 1/6 em on each side of the measured run; one full em is a safe
+        // approximation that matches the WinForms preview visually.
+        size.Width += fontSize / 3f;
+        return size;
     }
 
     public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y,

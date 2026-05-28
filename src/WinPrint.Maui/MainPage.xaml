@@ -17,7 +17,7 @@
                     <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
                             FontSize="12" Padding="4,0" HeightRequest="18" />
                     <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
-                            FontSize="1" Padding="4,0" HeightRequest="18" />
+                            FontSize="12" Padding="4,0" HeightRequest="18" />
                 </Grid>
 
                 <!-- Sheet Definition group (collapsible) -->
