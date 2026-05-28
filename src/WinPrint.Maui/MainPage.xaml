@@ -48,129 +48,141 @@
         </MenuBarItem>
     </ContentPage.MenuBarItems>
 
-    <Grid ColumnDefinitions="250,*">
+    <Grid ColumnDefinitions="240,*">
 
         <!-- LEFT PANEL: Settings -->
         <ScrollView Grid.Column="0"
                     BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-            <VerticalStackLayout Padding="8" Spacing="4">
+            <VerticalStackLayout Padding="6,4" Spacing="2">
 
                 <!-- File / Print / Settings buttons -->
                 <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="4">
-                    <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}" FontSize="13" />
-                    <Button Grid.Column="1" Text="🖶 Print..." Command="{Binding PrintCommand}" FontSize="13" />
-                    <Button Grid.Column="2" Text="⚙" Command="{Binding SettingsCommand}" WidthRequest="36" FontSize="13" />
+                    <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}" FontSize="12" HeightRequest="30" Padding="4,0" />
+                    <Button Grid.Column="1" Text="🖶 Print..." Command="{Binding PrintCommand}" FontSize="12" HeightRequest="30" Padding="4,0" />
+                    <Button Grid.Column="2" Text="⚙" Command="{Binding SettingsCommand}" WidthRequest="30" HeightRequest="30" FontSize="12" Padding="0" />
                 </Grid>
 
-                <!-- Sheet Definition group -->
-                <Border Stroke="Gray" StrokeThickness="1" Padding="8,4" Margin="0,8,0,0"
-                        StrokeShape="RoundRectangle 4">
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Sheet Definition" FontAttributes="Bold" FontSize="12" />
-
-                        <!-- Sheet selector -->
-                        <Picker ItemsSource="{Binding SheetNames}"
-                                SelectedIndex="{Binding SelectedSheetIndex}"
-                                FontSize="12" />
-
-                        <!-- Landscape -->
-                        <HorizontalStackLayout Spacing="6">
-                            <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" />
-                            <Label Text="Landscape" VerticalOptions="Center" FontSize="12" />
-                        </HorizontalStackLayout>
-
-                        <!-- Margins group -->
-                        <Border Stroke="Gray" StrokeThickness="0.5" Padding="6,4"
-                                StrokeShape="RoundRectangle 2">
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="Margins" FontAttributes="Bold" FontSize="11" />
-                                <Grid ColumnDefinitions="50,60,20,50,60" RowDefinitions="Auto,Auto,Auto" RowSpacing="2" ColumnSpacing="2">
-                                    <!-- Top -->
-                                    <Label Grid.Row="0" Grid.Column="0" Text="Top:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="0" Grid.Column="1" Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="11" />
-                                    <!-- Bottom -->
-                                    <Label Grid.Row="1" Grid.Column="0" Text="Bottom:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="1" Grid.Column="1" Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="11" />
-                                    <!-- Left -->
-                                    <Label Grid.Row="0" Grid.Column="3" Text="Left:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="0" Grid.Column="4" Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="11" />
-                                    <!-- Right -->
-                                    <Label Grid.Row="1" Grid.Column="3" Text="Right:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="1" Grid.Column="4" Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="11" />
-                                </Grid>
-                            </VerticalStackLayout>
-                        </Border>
-
-                        <!-- Multiple Pages Up group -->
-                        <Border Stroke="Gray" StrokeThickness="0.5" Padding="6,4"
-                                StrokeShape="RoundRectangle 2">
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="Multiple Pages Up" FontAttributes="Bold" FontSize="11" />
-                                <Grid ColumnDefinitions="70,60" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="2" ColumnSpacing="4">
-                                    <Label Grid.Row="0" Grid.Column="0" Text="Rows:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="0" Grid.Column="1" Text="{Binding Rows}" Keyboard="Numeric" FontSize="11" />
-                                    <Label Grid.Row="1" Grid.Column="0" Text="Columns:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Columns}" Keyboard="Numeric" FontSize="11" />
-                                    <Label Grid.Row="2" Grid.Column="0" Text="Padding:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="End" />
-                                    <Entry Grid.Row="2" Grid.Column="1" Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="11" />
-                                </Grid>
-                                <HorizontalStackLayout Spacing="6">
-                                    <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" />
-                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="11" />
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </Border>
-
-                        <!-- Fonts -->
-                        <VerticalStackLayout Spacing="2" Margin="0,4,0,0">
-                            <Label Text="Content font:" FontSize="11" />
-                            <Label Text="{Binding ContentFontDescription}" FontSize="11" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ChangeContentFontCommand}" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                            <Label Text="Header/Footer font:" FontSize="11" />
-                            <Label Text="{Binding HeaderFooterFontDescription}" FontSize="11" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ChangeHeaderFooterFontCommand}" />
-                                </Label.GestureRecognizers>
-                            </Label>
+                <!-- Sheet Definition group (collapsible) -->
+                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,4,0,0"
+                        StrokeShape="RoundRectangle 3">
+                    <VerticalStackLayout Spacing="2">
+                        <Label x:Name="SheetDefHeader" Text="▼ Sheet Definition" FontAttributes="Bold" FontSize="11">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSheetDefHeaderTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <VerticalStackLayout x:Name="SheetDefContent" Spacing="2">
+                            <Picker ItemsSource="{Binding SheetNames}"
+                                    SelectedIndex="{Binding SelectedSheetIndex}"
+                                    FontSize="11" />
+                            <HorizontalStackLayout Spacing="4">
+                                <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.75" />
+                                <Label Text="Landscape" VerticalOptions="Center" FontSize="11" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
-
-                        <!-- Line Numbers -->
-                        <HorizontalStackLayout Spacing="6">
-                            <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" />
-                            <Label Text="Line Numbers" VerticalOptions="Center" FontSize="12" />
-                        </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- Printer group -->
-                <Border Stroke="Gray" StrokeThickness="1" Padding="8,4" Margin="0,8,0,0"
-                        StrokeShape="RoundRectangle 4">
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Printer" FontAttributes="Bold" FontSize="12" />
-                        <Picker ItemsSource="{Binding PrinterNames}"
-                                SelectedItem="{Binding SelectedPrinter}"
-                                FontSize="12" />
-                        <Label Text="Paper:" FontSize="11" />
-                        <Picker ItemsSource="{Binding PaperSizes}"
-                                SelectedItem="{Binding SelectedPaperSize}"
-                                FontSize="12" />
-                        <Grid ColumnDefinitions="50,50,30,50,50" ColumnSpacing="4">
-                            <Label Grid.Column="0" Text="Pages:" VerticalOptions="Center" FontSize="11" />
-                            <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="11" Placeholder="From" />
-                            <Label Grid.Column="2" Text="To:" VerticalOptions="Center" FontSize="11" HorizontalTextAlignment="Center" />
-                            <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="11" Placeholder="To" />
+                <!-- Margins group (collapsible) -->
+                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,2,0,0"
+                        StrokeShape="RoundRectangle 3">
+                    <VerticalStackLayout Spacing="2">
+                        <Label x:Name="MarginsHeader" Text="▼ Margins" FontAttributes="Bold" FontSize="11">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Grid x:Name="MarginsContent" ColumnDefinitions="48,56,12,42,56" RowDefinitions="28,28" RowSpacing="1" ColumnSpacing="2">
+                            <Label Grid.Row="0" Grid.Column="0" Text="Top:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                            <Entry Grid.Row="0" Grid.Column="1" Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="Bottom:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                            <Entry Grid.Row="1" Grid.Column="1" Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
+                            <Label Grid.Row="0" Grid.Column="3" Text="Left:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                            <Entry Grid.Row="0" Grid.Column="4" Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
+                            <Label Grid.Row="1" Grid.Column="3" Text="Right:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                            <Entry Grid.Row="1" Grid.Column="4" Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Multiple Pages Up group (collapsible) -->
+                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,2,0,0"
+                        StrokeShape="RoundRectangle 3">
+                    <VerticalStackLayout Spacing="2">
+                        <Label x:Name="PagesUpHeader" Text="▼ Multiple Pages Up" FontAttributes="Bold" FontSize="11">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPagesUpHeaderTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <VerticalStackLayout x:Name="PagesUpContent" Spacing="1">
+                            <Grid ColumnDefinitions="62,52" RowDefinitions="28,28,28" RowSpacing="1" ColumnSpacing="4">
+                                <Label Grid.Row="0" Grid.Column="0" Text="Rows:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="0" Grid.Column="1" Text="{Binding Rows}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="Columns:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Columns}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="Padding:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="End" />
+                                <Entry Grid.Row="2" Grid.Column="1" Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="10" HeightRequest="26" />
+                            </Grid>
+                            <HorizontalStackLayout Spacing="4">
+                                <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.75" />
+                                <Label Text="Page Separator" VerticalOptions="Center" FontSize="10" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Fonts & Options -->
+                <VerticalStackLayout Spacing="1" Margin="0,2,0,0">
+                    <Label Text="Content font:" FontSize="10" />
+                    <Label Text="{Binding ContentFontDescription}" FontSize="10" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ChangeContentFontCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Text="Header/Footer font:" FontSize="10" />
+                    <Label Text="{Binding HeaderFooterFontDescription}" FontSize="10" TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ChangeHeaderFooterFontCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <HorizontalStackLayout Spacing="4">
+                        <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.75" />
+                        <Label Text="Line Numbers" VerticalOptions="Center" FontSize="11" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Printer group (collapsible) -->
+                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,4,0,0"
+                        StrokeShape="RoundRectangle 3">
+                    <VerticalStackLayout Spacing="2">
+                        <Label x:Name="PrinterHeader" Text="▼ Printer" FontAttributes="Bold" FontSize="11">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPrinterHeaderTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <VerticalStackLayout x:Name="PrinterContent" Spacing="2">
+                            <Picker ItemsSource="{Binding PrinterNames}"
+                                    SelectedItem="{Binding SelectedPrinter}"
+                                    FontSize="11" />
+                            <Label Text="Paper:" FontSize="10" />
+                            <Picker ItemsSource="{Binding PaperSizes}"
+                                    SelectedItem="{Binding SelectedPaperSize}"
+                                    FontSize="11" />
+                            <Grid ColumnDefinitions="44,50,24,50" ColumnSpacing="2">
+                                <Label Grid.Column="0" Text="Pages:" VerticalOptions="Center" FontSize="10" />
+                                <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="10" HeightRequest="26" Placeholder="From" />
+                                <Label Grid.Column="2" Text="To:" VerticalOptions="Center" FontSize="10" HorizontalTextAlignment="Center" />
+                                <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="10" HeightRequest="26" Placeholder="To" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Version / Help -->
-                <Grid ColumnDefinitions="*,*" Margin="0,8,0,0">
-                    <Label Grid.Column="0" Text="Help &amp; about..." FontSize="11"
+                <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+                    <Label Grid.Column="0" Text="Help &amp; about..." FontSize="10"
                            TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline" />
-                    <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="11"
+                    <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="10"
                            HorizontalTextAlignment="End" />
                 </Grid>
             </VerticalStackLayout>
@@ -180,10 +192,10 @@
         <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto,Auto">
 
             <!-- Header bar -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="4,2"
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Padding="2,1"
                   BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-                <CheckBox Grid.Column="0" IsChecked="{Binding HeaderEnabled}" VerticalOptions="Center" />
-                <Entry Grid.Column="1" Text="{Binding HeaderText}" FontSize="12"
+                <CheckBox Grid.Column="0" IsChecked="{Binding HeaderEnabled}" VerticalOptions="Center" Scale="0.75" />
+                <Entry Grid.Column="1" Text="{Binding HeaderText}" FontSize="11" HeightRequest="28"
                        HorizontalTextAlignment="Center" Placeholder="Header Text" />
             </Grid>
 
@@ -197,18 +209,18 @@
             </GraphicsView>
 
             <!-- Footer bar -->
-            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Padding="4,2"
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Padding="2,1"
                   BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-                <CheckBox Grid.Column="0" IsChecked="{Binding FooterEnabled}" VerticalOptions="Center" />
-                <Entry Grid.Column="1" Text="{Binding FooterText}" FontSize="12"
+                <CheckBox Grid.Column="0" IsChecked="{Binding FooterEnabled}" VerticalOptions="Center" Scale="0.75" />
+                <Entry Grid.Column="1" Text="{Binding FooterText}" FontSize="11" HeightRequest="28"
                        HorizontalTextAlignment="Center" Placeholder="Footer Text" />
             </Grid>
 
             <!-- Status Bar -->
             <Label Grid.Row="3"
                    Text="{Binding StatusText}"
-                   Padding="8,4"
-                   FontSize="12"
+                   Padding="6,2"
+                   FontSize="11"
                    BackgroundColor="{AppThemeBinding Light=WhiteSmoke, Dark=#333}" />
         </Grid>
 

@@ -195,4 +195,32 @@ public partial class MainPage : ContentPage
             await _viewModel.OpenFileAsync ();
         }
     }
+
+    // --- Collapsible section handlers ---
+
+    private void OnSheetDefHeaderTapped (object? sender, TappedEventArgs e)
+    {
+        ToggleSection (SheetDefContent, SheetDefHeader, "Sheet Definition");
+    }
+
+    private void OnMarginsHeaderTapped (object? sender, TappedEventArgs e)
+    {
+        ToggleSection (MarginsContent, MarginsHeader, "Margins");
+    }
+
+    private void OnPagesUpHeaderTapped (object? sender, TappedEventArgs e)
+    {
+        ToggleSection (PagesUpContent, PagesUpHeader, "Multiple Pages Up");
+    }
+
+    private void OnPrinterHeaderTapped (object? sender, TappedEventArgs e)
+    {
+        ToggleSection (PrinterContent, PrinterHeader, "Printer");
+    }
+
+    private static void ToggleSection (VisualElement content, Label header, string title)
+    {
+        content.IsVisible = !content.IsVisible;
+        header.Text = (content.IsVisible ? "▼ " : "▶ ") + title;
+    }
 }
