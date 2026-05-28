@@ -104,6 +104,7 @@ public class Settings : ModelBase
 #if WINDOWS
     public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
     public TextCte TextContentTypeEngineSettings { get; set; } = new ();
+    public MarkdownCte MarkdownContentTypeEngineSettings { get; set; } = new ();
 #endif
     public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
 
@@ -344,6 +345,7 @@ public class Settings : ModelBase
                 //NewPageOnFormFeed = false,
                 //TabSpaces = 4
             },
+            MarkdownContentTypeEngineSettings = new MarkdownCte (),
 #endif
 
             // Html fonts are determined by:
