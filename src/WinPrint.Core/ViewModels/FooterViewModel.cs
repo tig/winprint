@@ -16,11 +16,11 @@ public class FooterViewModel(SheetViewModel svm, HeaderFooter hf) : HeaderFooter
             return new RectangleF(0, 0, 0, 0);
         }
 
-        if (_svm != null)
+        if (Svm != null)
         {
-            return new RectangleF(_svm.Bounds.Left + _svm.Margins.Left,
-                _svm.Bounds.Bottom - _svm.Margins.Bottom - h,
-                _svm.Bounds.Width - _svm.Margins.Left - _svm.Margins.Right,
+            return new RectangleF(Svm.Bounds.Left + Svm.Margins.Left,
+                Svm.Bounds.Bottom - Svm.Margins.Bottom - h,
+                Svm.Bounds.Width - Svm.Margins.Left - Svm.Margins.Right,
                 h);
         }
 

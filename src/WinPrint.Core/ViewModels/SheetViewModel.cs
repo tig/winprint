@@ -1,17 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 #if WINDOWS
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
 #endif
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using Serilog;
 using UtfUnknown;
 using WinPrint.Core.Abstractions;

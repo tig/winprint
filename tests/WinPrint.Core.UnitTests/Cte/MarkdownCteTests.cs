@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Serilog.Formatting.Display;
 using Serilog.Sinks.XUnit;
 using WinPrint.Core.ContentTypeEngines;

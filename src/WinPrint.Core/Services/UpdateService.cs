@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Octokit;
 using Serilog;
 
@@ -18,7 +11,7 @@ namespace WinPrint.Core.Services;
 /// </summary>
 public class UpdateService
 {
-    private static readonly HttpClient _httpClient = new();
+    private static readonly HttpClient s_httpClient = new();
     private string? _tempFilename;
 
     /// <summary>
@@ -161,7 +154,7 @@ public class UpdateService
         }
 
         await File.WriteAllBytesAsync(_tempFilename,
-            await _httpClient.GetByteArrayAsync(InstallerUri).ConfigureAwait(false)).ConfigureAwait(false);
+            await s_httpClient.GetByteArrayAsync(InstallerUri).ConfigureAwait(false)).ConfigureAwait(false);
         OnDownloadComplete(_tempFilename);
         return _tempFilename;
     }

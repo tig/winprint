@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Reflection;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;

@@ -1,8 +1,6 @@
-using System;
 #if WINDOWS
 using System.Drawing.Printing;
 #endif
-using System.Threading.Tasks;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -16,11 +14,11 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class HtmlCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string[] _supportedContentTypes = ["text/html"];
+    private static readonly string[] s_supportedContentTypes = ["text/html"];
 
     private bool _disposed;
 
-    public override string[] SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => s_supportedContentTypes;
 
     public void Dispose()
     {

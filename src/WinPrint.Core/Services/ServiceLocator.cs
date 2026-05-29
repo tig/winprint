@@ -4,7 +4,7 @@ namespace WinPrint.Core.Services;
 
 public class ServiceLocator
 {
-    private static ServiceLocator? _current;
+    private static ServiceLocator? s_current;
 
     private ServiceLocator()
     {
@@ -16,7 +16,7 @@ public class ServiceLocator
         SimpleIoc.Default.Register<PygmentsConverterService>();
     }
 
-    public static ServiceLocator Current => _current ??= new ServiceLocator();
+    public static ServiceLocator Current => s_current ??= new ServiceLocator();
 
     public LogService LogService => SimpleIoc.Default.GetInstance<LogService>();
     public TelemetryService TelemetryService => SimpleIoc.Default.GetInstance<TelemetryService>();
@@ -35,7 +35,7 @@ public class ServiceLocator
 
     public static void Reset()
     {
-        _current = null;
+        s_current = null;
         SimpleIoc.Default.Unregister<SettingsService>();
         SimpleIoc.Default.Unregister<FileTypeMappingService>();
         SimpleIoc.Default.Unregister<LogService>();

@@ -1,8 +1,6 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;

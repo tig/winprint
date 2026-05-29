@@ -1,6 +1,4 @@
-using System;
 using System.Drawing;
-using System.Threading.Tasks;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;

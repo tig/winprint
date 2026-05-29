@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using System.Drawing.Text;
 
@@ -6,12 +5,12 @@ namespace WinPrint.Core.Abstractions;
 
 public sealed class SystemDrawingGraphicsContext : IGraphicsContext
 {
-    private static readonly IGraphicsBrush _blackBrush = new SystemDrawingBrush(Brushes.Black, false);
-    private static readonly IGraphicsBrush _grayBrush = new SystemDrawingBrush(Brushes.Gray, false);
-    private static readonly IGraphicsBrush _darkGrayBrush = new SystemDrawingBrush(Brushes.DarkGray, false);
-    private static readonly IGraphicsPen _blackPen = new SystemDrawingPen(Pens.Black, false);
-    private static readonly IGraphicsPen _grayPen = new SystemDrawingPen(Pens.Gray, false);
-    private static readonly IGraphicsPen _redPen = new SystemDrawingPen(Pens.Red, false);
+    private static readonly IGraphicsBrush s_blackBrush = new SystemDrawingBrush(Brushes.Black, false);
+    private static readonly IGraphicsBrush s_grayBrush = new SystemDrawingBrush(Brushes.Gray, false);
+    private static readonly IGraphicsBrush s_darkGrayBrush = new SystemDrawingBrush(Brushes.DarkGray, false);
+    private static readonly IGraphicsPen s_blackPen = new SystemDrawingPen(Pens.Black, false);
+    private static readonly IGraphicsPen s_grayPen = new SystemDrawingPen(Pens.Gray, false);
+    private static readonly IGraphicsPen s_redPen = new SystemDrawingPen(Pens.Red, false);
 
     public SystemDrawingGraphicsContext(Graphics graphics)
     {
@@ -24,12 +23,12 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
     public float DpiY => Graphics.DpiY;
     public bool IsDisplayUnit => Graphics.PageUnit == GraphicsUnit.Display;
 
-    public IGraphicsBrush BlackBrush => _blackBrush;
-    public IGraphicsBrush GrayBrush => _grayBrush;
-    public IGraphicsBrush DarkGrayBrush => _darkGrayBrush;
-    public IGraphicsPen BlackPen => _blackPen;
-    public IGraphicsPen GrayPen => _grayPen;
-    public IGraphicsPen RedPen => _redPen;
+    public IGraphicsBrush BlackBrush => s_blackBrush;
+    public IGraphicsBrush GrayBrush => s_grayBrush;
+    public IGraphicsBrush DarkGrayBrush => s_darkGrayBrush;
+    public IGraphicsPen BlackPen => s_blackPen;
+    public IGraphicsPen GrayPen => s_grayPen;
+    public IGraphicsPen RedPen => s_redPen;
 
     public IGraphicsState Save()
     {

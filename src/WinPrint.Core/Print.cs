@@ -1,12 +1,9 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Printing;
 using System.Text;
-using System.Threading.Tasks;
 using Serilog;
 using WinPrint.Core.Services;
 

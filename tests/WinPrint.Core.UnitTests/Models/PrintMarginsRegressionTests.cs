@@ -1,5 +1,4 @@
 using System.Drawing.Printing;
-using System.Linq;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;

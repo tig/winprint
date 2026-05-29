@@ -1,5 +1,3 @@
-using System;
-
 namespace WinPrint.Core;
 
 // WinPrint 2 has been assigned the following GUIDs by Microsoft

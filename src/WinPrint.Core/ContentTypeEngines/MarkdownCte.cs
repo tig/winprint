@@ -1,8 +1,6 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System;
-using System.Threading.Tasks;
 using Markdig;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -18,19 +16,19 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class MarkdownCte : TextCte
 {
-    private static readonly string[] _supportedContentTypes = ["text/x-markdown"];
+    private static readonly string[] s_supportedContentTypes = ["text/x-markdown"];
 
     /// <summary>
     ///     The Markdig pipeline used to flatten Markdown to plain text. Enabling advanced
     ///     extensions ensures tables, task lists, etc. are handled gracefully.
     /// </summary>
-    private static readonly MarkdownPipeline _pipeline =
+    private static readonly MarkdownPipeline s_pipeline =
         new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
     /// </summary>
-    public override string[] SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => s_supportedContentTypes;
 
     public new static MarkdownCte Create()
     {
@@ -47,7 +45,7 @@ public class MarkdownCte : TextCte
     public override async Task<bool> SetDocumentAsync(string doc)
     {
         LogService.TraceMessage($"Converting {doc?.Length ?? 0} chars of Markdown to plain text.");
-        string plainText = Markdown.ToPlainText(doc ?? string.Empty, _pipeline);
+        string plainText = Markdown.ToPlainText(doc ?? string.Empty, s_pipeline);
         return await base.SetDocumentAsync(plainText);
     }
 }

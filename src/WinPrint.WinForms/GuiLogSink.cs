@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
 using Serilog.Core;
 using Serilog.Events;
@@ -13,7 +11,7 @@ namespace WinPrint.WinForms;
 
 public class GuiLogSink : ILogEventSink
 {
-    private static readonly Lazy<GuiLogSink> _instance = new(() => new GuiLogSink());
+    private static readonly Lazy<GuiLogSink> s_instance = new(() => new GuiLogSink());
 
     // Set by Program before log events are emitted.
     public Control OutputWindow = null!;
@@ -23,7 +21,7 @@ public class GuiLogSink : ILogEventSink
         TextFormatter = new MessageTemplateTextFormatter("{Message:lj}");
     }
 
-    public static GuiLogSink Instance => _instance.Value;
+    public static GuiLogSink Instance => s_instance.Value;
 
     public ITextFormatter TextFormatter { get; set; }
 
