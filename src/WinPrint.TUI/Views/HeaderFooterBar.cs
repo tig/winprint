@@ -5,11 +5,14 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     Inline bar for enabling/configuring a header or footer.
+///     Thin bar (1 row) with a checkbox to enable/disable + editable text field
+///     for header or footer macros. Positioned above/below the preview panel.
 /// </summary>
 public sealed class HeaderFooterBar : View
 {
-    private readonly HeaderFooter _model;
+    private HeaderFooter _model;
+    private readonly CheckBox _enabledBox;
+    private readonly TextField _textField;
 
     public event EventHandler? Changed;
 
@@ -17,32 +20,46 @@ public sealed class HeaderFooterBar : View
     {
         _model = model;
 
-        var enabledBox = new CheckBox
+        _textField = new TextField
+        {
+            X = title.Length + 5,
+            Y = 0,
+            Width = Dim.Fill(),
+            Text = model.Text ?? string.Empty,
+            Enabled = model.Enabled
+        };
+
+        _enabledBox = new CheckBox
         {
             X = 0,
             Y = 0,
             Text = title,
             Value = model.Enabled ? CheckState.Checked : CheckState.None
         };
-        enabledBox.ValueChanged += (_, _) =>
+        _enabledBox.ValueChanged += (_, _) =>
         {
-            _model.Enabled = enabledBox.Value == CheckState.Checked;
+            _model.Enabled = _enabledBox.Value == CheckState.Checked;
+            _textField.Enabled = _model.Enabled;
             Changed?.Invoke(this, EventArgs.Empty);
         };
 
-        var textField = new TextField
+        _textField.TextChanged += (_, _) =>
         {
-            X = title.Length + 5,
-            Y = 0,
-            Width = Dim.Fill(),
-            Text = model.Text ?? string.Empty
-        };
-        textField.TextChanged += (_, _) =>
-        {
-            _model.Text = textField.Text;
+            _model.Text = _textField.Text;
             Changed?.Invoke(this, EventArgs.Empty);
         };
 
-        Add(enabledBox, textField);
+        Add(_enabledBox, _textField);
+    }
+
+    /// <summary>
+    ///     Updates the backing model (e.g. when the active sheet changes).
+    /// </summary>
+    public void UpdateModel(HeaderFooter newModel)
+    {
+        _model = newModel;
+        _enabledBox.Value = newModel.Enabled ? CheckState.Checked : CheckState.None;
+        _textField.Text = newModel.Text ?? string.Empty;
+        _textField.Enabled = newModel.Enabled;
     }
 }

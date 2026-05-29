@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -8,154 +7,375 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     Left panel with collapsible settings groups for sheet, margins,
-///     header/footer, and content-type options.
+///     Left panel with collapsible settings groups matching the MAUI/WinForms layout:
+///     File/Print, Sheet Definition (Margins, Pages Up, Fonts, Line Numbers), Printer, Help.
 /// </summary>
-public sealed class SettingsPanel : View
+public sealed class SettingsPanel : FrameView
 {
     private readonly Settings _settings;
     private SheetSettings _currentSheet;
 
     public event EventHandler? SettingsChanged;
+    public event EventHandler<SheetSettings>? SheetChanged;
+    public event EventHandler? FileOpenRequested;
+    public event EventHandler? PrintRequested;
 
-    public SettingsPanel(Settings settings)
+    public SettingsPanel(Settings settings, SheetSettings currentSheet)
     {
         _settings = settings;
-        _currentSheet = settings.Sheets.TryGetValue(settings.DefaultSheet.ToString(), out SheetSettings? sheet)
-            ? sheet
-            : settings.Sheets.Values.First();
+        _currentSheet = currentSheet;
 
-        BorderStyle = LineStyle.Single;
         Title = "Settings";
+        BorderStyle = LineStyle.Single;
+        CanFocus = true;
 
-        BuildUi();
-    }
+        var content = new View
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Auto(DimAutoStyle.Content)
+        };
 
-    private void BuildUi()
-    {
         int row = 0;
 
-        // Sheet selector
-        var sheetLabel = new Label { X = 1, Y = row, Text = "Sheet:" };
-        Add(sheetLabel);
+        // ─── File / Print buttons ───
+        var fileBtn = new Button
+        {
+            X = 0,
+            Y = row,
+            Text = "_Open..."
+        };
+        fileBtn.Accepting += (_, _) => FileOpenRequested?.Invoke(this, EventArgs.Empty);
+
+        var printBtn = new Button
+        {
+            X = 14,
+            Y = row,
+            Text = "_Print..."
+        };
+        printBtn.Accepting += (_, _) => PrintRequested?.Invoke(this, EventArgs.Empty);
+        content.Add(fileBtn, printBtn);
+        row += 2;
+
+        // ─── Sheet Definition (collapsible) ───
+        row = BuildSheetDefinitionSection(content, row);
+
+        // ─── Printer (collapsible) ───
+        row = BuildPrinterSection(content, row);
+
+        // ─── Help & Version ───
+        var helpLabel = new Label { X = 0, Y = row, Text = "[Help & About (F1)]" };
+        content.Add(helpLabel);
+        row++;
+        var versionLabel = new Label
+        {
+            X = 0,
+            Y = row,
+            Text = $"v{typeof(SettingsPanel).Assembly.GetName().Version?.ToString(3) ?? "2.5.0"}"
+        };
+        content.Add(versionLabel);
+
+        Add(content);
+    }
+
+    private int BuildSheetDefinitionSection(View parent, int row)
+    {
+        var sectionHeader = new Label { X = 0, Y = row, Text = "▼ Sheet Definition" };
+        parent.Add(sectionHeader);
         row++;
 
+        var sectionBody = new View
+        {
+            X = 0,
+            Y = row,
+            Width = Dim.Fill(),
+            Height = Dim.Auto(DimAutoStyle.Content),
+            Visible = true
+        };
+        int bodyRow = 0;
+
+        // Sheet selector
+        var sheetLabel = new Label { X = 1, Y = bodyRow, Text = "Sheet:" };
+        sectionBody.Add(sheetLabel);
+        bodyRow++;
+
         var sheetNames = new ObservableCollection<string>(
-            settings_Sheets().Select(s => s.Name));
+            _settings.Sheets.Values.Select(s => s.Name));
         var sheetList = new ListView
         {
             X = 1,
-            Y = row,
+            Y = bodyRow,
             Width = Dim.Fill(1),
-            Height = Math.Min(sheetNames.Count, 4)
+            Height = Math.Min(sheetNames.Count, 3)
         };
         sheetList.SetSource(sheetNames);
-        sheetList.ValueChanged += OnSheetSelectionChanged;
-        Add(sheetList);
-        row += Math.Min(sheetNames.Count, 4) + 1;
 
-        // Margins
-        var marginsLabel = new Label { X = 1, Y = row, Text = "── Margins ──" };
-        Add(marginsLabel);
-        row++;
-
-        AddMarginField("Left:", _currentSheet.Margins.Left, row, v => { _currentSheet.Margins.Left = v; RaiseChanged(); });
-        row++;
-        AddMarginField("Right:", _currentSheet.Margins.Right, row, v => { _currentSheet.Margins.Right = v; RaiseChanged(); });
-        row++;
-        AddMarginField("Top:", _currentSheet.Margins.Top, row, v => { _currentSheet.Margins.Top = v; RaiseChanged(); });
-        row++;
-        AddMarginField("Bottom:", _currentSheet.Margins.Bottom, row, v => { _currentSheet.Margins.Bottom = v; RaiseChanged(); });
-        row += 2;
-
-        // Layout
-        var layoutLabel = new Label { X = 1, Y = row, Text = "── Layout ──" };
-        Add(layoutLabel);
-        row++;
-
-        AddIntField("Rows:", _currentSheet.Rows, row, v => { _currentSheet.Rows = v; RaiseChanged(); });
-        row++;
-        AddIntField("Cols:", _currentSheet.Columns, row, v => { _currentSheet.Columns = v; RaiseChanged(); });
-        row++;
-        AddIntField("Padding:", _currentSheet.Padding, row, v => { _currentSheet.Padding = v; RaiseChanged(); });
-        row += 2;
-
-        // Header
-        var headerBar = new HeaderFooterBar("Header", _currentSheet.Header)
+        int selectedIdx = sheetNames.IndexOf(_currentSheet.Name);
+        if (selectedIdx >= 0)
         {
-            X = 1,
-            Y = row,
-            Width = Dim.Fill(1),
-            Height = 2
-        };
-        headerBar.Changed += (_, _) => RaiseChanged();
-        Add(headerBar);
-        row += 3;
+            sheetList.SelectedItem = selectedIdx;
+        }
 
-        // Footer
-        var footerBar = new HeaderFooterBar("Footer", _currentSheet.Footer)
+        sheetList.ValueChanged += (_, args) =>
         {
-            X = 1,
-            Y = row,
-            Width = Dim.Fill(1),
-            Height = 2
-        };
-        footerBar.Changed += (_, _) => RaiseChanged();
-        Add(footerBar);
-    }
-
-    private void AddMarginField(string label, int initialValue, int row, Action<int> setter)
-    {
-        var lbl = new Label { X = 1, Y = row, Text = label };
-        var field = new TextField
-        {
-            X = 10,
-            Y = row,
-            Width = 8,
-            Text = initialValue.ToString()
-        };
-        field.TextChanged += (_, _) =>
-        {
-            if (int.TryParse(field.Text, out int val))
+            SheetSettings[] sheets = [.. _settings.Sheets.Values];
+            int index = args.NewValue ?? -1;
+            if (index >= 0 && index < sheets.Length)
             {
-                setter(val);
+                _currentSheet = sheets[index];
+                SheetChanged?.Invoke(this, _currentSheet);
             }
         };
-        Add(lbl, field);
-    }
+        sectionBody.Add(sheetList);
+        bodyRow += Math.Min(sheetNames.Count, 3) + 1;
 
-    private void AddIntField(string label, int initialValue, int row, Action<int> setter)
-    {
-        var lbl = new Label { X = 1, Y = row, Text = label };
-        var field = new TextField
+        // Landscape
+        var landscapeCheck = new CheckBox
         {
-            X = 10,
-            Y = row,
-            Width = 8,
-            Text = initialValue.ToString()
+            X = 1,
+            Y = bodyRow,
+            Text = "Landscape",
+            Value = _currentSheet.Landscape ? CheckState.Checked : CheckState.None
         };
-        field.TextChanged += (_, _) =>
+        landscapeCheck.ValueChanged += (_, _) =>
         {
-            if (int.TryParse(field.Text, out int val))
-            {
-                setter(val);
-            }
-        };
-        Add(lbl, field);
-    }
-
-    private void OnSheetSelectionChanged(object? sender, ValueChangedEventArgs<int?> e)
-    {
-        SheetSettings[] sheets = [.. _settings.Sheets.Values];
-        int index = e.NewValue ?? -1;
-        if (index >= 0 && index < sheets.Length)
-        {
-            _currentSheet = sheets[index];
+            _currentSheet.Landscape = landscapeCheck.Value == CheckState.Checked;
             RaiseChanged();
+        };
+        sectionBody.Add(landscapeCheck);
+        bodyRow += 2;
+
+        // ─── Margins ───
+        var marginsHeader = new Label { X = 1, Y = bodyRow, Text = "▼ Margins (1/100\")" };
+        sectionBody.Add(marginsHeader);
+        bodyRow++;
+
+        bodyRow = AddNumericRow(sectionBody, "  Top:", _currentSheet.Margins.Top, bodyRow,
+            v => { _currentSheet.Margins.Top = v; RaiseChanged(); });
+        bodyRow = AddNumericRow(sectionBody, "  Left:", _currentSheet.Margins.Left, bodyRow,
+            v => { _currentSheet.Margins.Left = v; RaiseChanged(); });
+        bodyRow = AddNumericRow(sectionBody, "  Right:", _currentSheet.Margins.Right, bodyRow,
+            v => { _currentSheet.Margins.Right = v; RaiseChanged(); });
+        bodyRow = AddNumericRow(sectionBody, "  Bot:", _currentSheet.Margins.Bottom, bodyRow,
+            v => { _currentSheet.Margins.Bottom = v; RaiseChanged(); });
+        bodyRow++;
+
+        // ─── Pages Up ───
+        var pagesHeader = new Label { X = 1, Y = bodyRow, Text = "▼ Pages Up" };
+        sectionBody.Add(pagesHeader);
+        bodyRow++;
+
+        bodyRow = AddNumericRow(sectionBody, "  Rows:", _currentSheet.Rows, bodyRow,
+            v => { _currentSheet.Rows = v; RaiseChanged(); });
+        bodyRow = AddNumericRow(sectionBody, "  Cols:", _currentSheet.Columns, bodyRow,
+            v => { _currentSheet.Columns = v; RaiseChanged(); });
+        bodyRow = AddNumericRow(sectionBody, "  Pad:", _currentSheet.Padding, bodyRow,
+            v => { _currentSheet.Padding = v; RaiseChanged(); });
+
+        var pageSepCheck = new CheckBox
+        {
+            X = 2,
+            Y = bodyRow,
+            Text = "Page Separator",
+            Value = _currentSheet.PageSeparator ? CheckState.Checked : CheckState.None
+        };
+        pageSepCheck.ValueChanged += (_, _) =>
+        {
+            _currentSheet.PageSeparator = pageSepCheck.Value == CheckState.Checked;
+            RaiseChanged();
+        };
+        sectionBody.Add(pageSepCheck);
+        bodyRow += 2;
+
+        // ─── Fonts ───
+        var fontsHeader = new Label { X = 1, Y = bodyRow, Text = "▼ Fonts" };
+        sectionBody.Add(fontsHeader);
+        bodyRow++;
+
+        string contentFontFamily = _currentSheet.ContentSettings?.Font.Family ?? "Consolas";
+        float contentFontSize = _currentSheet.ContentSettings?.Font.Size ?? 8f;
+        string hfFontFamily = _currentSheet.Header.Font?.Family ?? "Calibri";
+        float hfFontSize = _currentSheet.Header.Font?.Size ?? 10f;
+
+        var cfLabel = new Label { X = 2, Y = bodyRow, Text = "Content:" };
+        sectionBody.Add(cfLabel);
+        bodyRow++;
+
+        var cfField = new TextField
+        {
+            X = 2,
+            Y = bodyRow,
+            Width = Dim.Fill(1),
+            Text = $"{contentFontFamily}, {contentFontSize}pt"
+        };
+        cfField.TextChanged += (_, _) =>
+        {
+            if (_currentSheet.ContentSettings is not null)
+            {
+                ParseFontString(cfField.Text, _currentSheet.ContentSettings.Font);
+                RaiseChanged();
+            }
+        };
+        sectionBody.Add(cfField);
+        bodyRow++;
+
+        var hfLabel = new Label { X = 2, Y = bodyRow, Text = "H/F:" };
+        sectionBody.Add(hfLabel);
+        bodyRow++;
+
+        var hfField = new TextField
+        {
+            X = 2,
+            Y = bodyRow,
+            Width = Dim.Fill(1),
+            Text = $"{hfFontFamily}, {hfFontSize}pt"
+        };
+        hfField.TextChanged += (_, _) =>
+        {
+            var font = _currentSheet.Header.Font ?? new Font();
+            ParseFontString(hfField.Text, font);
+            _currentSheet.Header.Font = font;
+            _currentSheet.Footer.Font = (Font)font.Clone();
+            RaiseChanged();
+        };
+        sectionBody.Add(hfField);
+        bodyRow += 2;
+
+        // ─── Line Numbers ───
+        bool hasLineNumbers = _currentSheet.ContentSettings?.LineNumbers ?? false;
+        var lineNumCheck = new CheckBox
+        {
+            X = 1,
+            Y = bodyRow,
+            Text = "Line Numbers",
+            Value = hasLineNumbers ? CheckState.Checked : CheckState.None
+        };
+        lineNumCheck.ValueChanged += (_, _) =>
+        {
+            if (_currentSheet.ContentSettings is not null)
+            {
+                _currentSheet.ContentSettings.LineNumbers = lineNumCheck.Value == CheckState.Checked;
+                RaiseChanged();
+            }
+        };
+        sectionBody.Add(lineNumCheck);
+        bodyRow++;
+
+        // Wire collapsible toggle
+        sectionHeader.Accepting += (_, _) =>
+        {
+            sectionBody.Visible = !sectionBody.Visible;
+            sectionHeader.Text = (sectionBody.Visible ? "▼ " : "▶ ") + "Sheet Definition";
+        };
+
+        parent.Add(sectionBody);
+        row += bodyRow + 1;
+        return row;
+    }
+
+    private int BuildPrinterSection(View parent, int row)
+    {
+        var sectionHeader = new Label { X = 0, Y = row, Text = "▼ Printer" };
+        parent.Add(sectionHeader);
+        row++;
+
+        var sectionBody = new View
+        {
+            X = 0,
+            Y = row,
+            Width = Dim.Fill(),
+            Height = Dim.Auto(DimAutoStyle.Content),
+            Visible = true
+        };
+        int bodyRow = 0;
+
+        // Printer name
+        var printerLabel = new Label { X = 2, Y = bodyRow, Text = "Printer:" };
+        sectionBody.Add(printerLabel);
+        bodyRow++;
+
+        string printerName = _settings.LastPrinter ?? "(Default)";
+        var printerField = new TextField
+        {
+            X = 2,
+            Y = bodyRow,
+            Width = Dim.Fill(1),
+            Text = printerName
+        };
+        printerField.TextChanged += (_, _) => _settings.LastPrinter = printerField.Text;
+        sectionBody.Add(printerField);
+        bodyRow += 2;
+
+        // Paper size
+        var paperLabel = new Label { X = 2, Y = bodyRow, Text = "Paper:" };
+        sectionBody.Add(paperLabel);
+        bodyRow++;
+
+        var paperField = new TextField
+        {
+            X = 2,
+            Y = bodyRow,
+            Width = Dim.Fill(1),
+            Text = _settings.LastPaperSize ?? "Letter"
+        };
+        paperField.TextChanged += (_, _) => _settings.LastPaperSize = paperField.Text;
+        sectionBody.Add(paperField);
+        bodyRow += 2;
+
+        // Page range
+        var pagesLabel = new Label { X = 2, Y = bodyRow, Text = "Pages:" };
+        var fromField = new NumericUpDown<int> { X = 10, Y = bodyRow, Width = 8, Value = 1 };
+        var toLabel = new Label { X = 19, Y = bodyRow, Text = "to" };
+        var toField = new NumericUpDown<int> { X = 22, Y = bodyRow, Width = 8, Value = 999 };
+        sectionBody.Add(pagesLabel, fromField, toLabel, toField);
+        bodyRow++;
+
+        // Wire collapsible toggle
+        sectionHeader.Accepting += (_, _) =>
+        {
+            sectionBody.Visible = !sectionBody.Visible;
+            sectionHeader.Text = (sectionBody.Visible ? "▼ " : "▶ ") + "Printer";
+        };
+
+        parent.Add(sectionBody);
+        row += bodyRow + 1;
+        return row;
+    }
+
+    private int AddNumericRow(View parent, string label, int initialValue, int row, Action<int> setter)
+    {
+        var lbl = new Label { X = 1, Y = row, Text = label };
+        var field = new NumericUpDown<int>
+        {
+            X = 11,
+            Y = row,
+            Width = Dim.Fill(1),
+            Value = initialValue
+        };
+        field.ValueChanged += (_, args) => setter(args.NewValue);
+        parent.Add(lbl, field);
+        return row + 1;
+    }
+
+    private static void ParseFontString(string text, Font font)
+    {
+        // Expected format: "Family, Sizept" e.g. "Consolas, 8pt"
+        string[] parts = text.Split(',', StringSplitOptions.TrimEntries);
+        if (parts.Length >= 1 && !string.IsNullOrWhiteSpace(parts[0]))
+        {
+            font.Family = parts[0];
+        }
+
+        if (parts.Length >= 2)
+        {
+            string sizePart = parts[1].Replace("pt", "", StringComparison.OrdinalIgnoreCase).Trim();
+            if (float.TryParse(sizePart, out float size) && size > 0)
+            {
+                font.Size = size;
+            }
         }
     }
-
-    private SheetSettings[] settings_Sheets() => [.. _settings.Sheets.Values];
 
     private void RaiseChanged()
     {
