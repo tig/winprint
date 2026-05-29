@@ -40,7 +40,7 @@ public sealed class TuiCommand : IViewerCommand
         CancellationToken cancellationToken)
     {
         ServiceLocator.Current.TelemetryService.Start("print");
-        ServiceLocator.Current.LogService.Start("print", null, false, false);
+        ServiceLocator.Current.LogService.Start("print");
 
         Settings? settings = SettingsService.Create();
         if (settings is null)

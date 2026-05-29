@@ -152,13 +152,29 @@ public sealed class SettingsPanel : FrameView
         bodyRow++;
 
         bodyRow = AddNumericRow(sectionBody, "  Top:", _currentSheet.Margins.Top, bodyRow,
-            v => { _currentSheet.Margins.Top = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Margins.Top = v;
+                RaiseChanged();
+            });
         bodyRow = AddNumericRow(sectionBody, "  Left:", _currentSheet.Margins.Left, bodyRow,
-            v => { _currentSheet.Margins.Left = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Margins.Left = v;
+                RaiseChanged();
+            });
         bodyRow = AddNumericRow(sectionBody, "  Right:", _currentSheet.Margins.Right, bodyRow,
-            v => { _currentSheet.Margins.Right = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Margins.Right = v;
+                RaiseChanged();
+            });
         bodyRow = AddNumericRow(sectionBody, "  Bot:", _currentSheet.Margins.Bottom, bodyRow,
-            v => { _currentSheet.Margins.Bottom = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Margins.Bottom = v;
+                RaiseChanged();
+            });
         bodyRow++;
 
         // ─── Pages Up ───
@@ -167,11 +183,23 @@ public sealed class SettingsPanel : FrameView
         bodyRow++;
 
         bodyRow = AddNumericRow(sectionBody, "  Rows:", _currentSheet.Rows, bodyRow,
-            v => { _currentSheet.Rows = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Rows = v;
+                RaiseChanged();
+            });
         bodyRow = AddNumericRow(sectionBody, "  Cols:", _currentSheet.Columns, bodyRow,
-            v => { _currentSheet.Columns = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Columns = v;
+                RaiseChanged();
+            });
         bodyRow = AddNumericRow(sectionBody, "  Pad:", _currentSheet.Padding, bodyRow,
-            v => { _currentSheet.Padding = v; RaiseChanged(); });
+            v =>
+            {
+                _currentSheet.Padding = v;
+                RaiseChanged();
+            });
 
         var pageSepCheck = new CheckBox
         {
@@ -233,7 +261,7 @@ public sealed class SettingsPanel : FrameView
         };
         hfField.TextChanged += (_, _) =>
         {
-            var font = _currentSheet.Header.Font ?? new Font();
+            Font font = _currentSheet.Header.Font ?? new Font();
             ParseFontString(hfField.Text, font);
             _currentSheet.Header.Font = font;
             _currentSheet.Footer.Font = (Font)font.Clone();

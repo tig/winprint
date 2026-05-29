@@ -131,7 +131,10 @@ public sealed class MainView : Window
         RefreshPreview();
     }
 
-    private void OnFileOpenRequested(object? sender, EventArgs e) => OnFileOpenRequested();
+    private void OnFileOpenRequested(object? sender, EventArgs e)
+    {
+        OnFileOpenRequested();
+    }
 
     private void OnFileOpenRequested()
     {
@@ -149,12 +152,16 @@ public sealed class MainView : Window
         }
     }
 
-    private void OnPrintRequested(object? sender, EventArgs e) => OnPrintRequested();
+    private void OnPrintRequested(object? sender, EventArgs e)
+    {
+        OnPrintRequested();
+    }
 
     private void OnPrintRequested()
     {
         // Phase 1: show info message; actual print integration follows
-        MessageBox.Query(_app, "Print", "Printing is not yet implemented in the TUI.\nUse winprint CLI for printing.", "OK");
+        MessageBox.Query(_app, "Print", "Printing is not yet implemented in the TUI.\nUse winprint CLI for printing.",
+            "OK");
     }
 
     private async Task LoadFileAsync(string path)

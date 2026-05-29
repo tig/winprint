@@ -24,7 +24,10 @@ public static class SixelDetector
     }
 
     /// <summary>Resets the cached detection result (for testing).</summary>
-    public static void Reset() => s_cached = null;
+    public static void Reset()
+    {
+        s_cached = null;
+    }
 
     private static bool Detect()
     {
