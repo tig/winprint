@@ -16,6 +16,10 @@ debugging winprint in **VS Code** on Windows, macOS, or Linux.
    ```bash
    dotnet workload install maui
    ```
+   On **macOS** the Mac Catalyst build additionally needs full **Xcode** (not just the
+   Command Line Tools): install Xcode, then
+   `sudo xcode-select -s /Applications/Xcode.app` and accept the license. Without it the
+   `net10.0-maccatalyst` target fails with "A valid Xcode installation was not found".
 3. **libgdiplus** (macOS/Linux only) — the Windows `System.Drawing` measurement and the
    full test suite P/Invoke GDI+, which ships natively on Windows. On other platforms:
    ```bash
@@ -76,9 +80,9 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 | -------------------- | :-----: | ------------------------------------------------ |
 | `WinPrint.Core`      |   ✅    | ✅ (`net10.0`)                                   |
 | `WinPrint.Core.UnitTests` | ✅ | ✅ cross-platform suite; some Windows/GDI+ tests are skipped or env-dependent (see [CLAUDE.md](CLAUDE.md)) |
-| `WinPrint.cli`       |   ✅    | ⛔ Windows-only today (real printing via `System.Drawing.Printing`) — tracked in #64 |
-| `WinPrint.WinForms`  |   ✅    | ⛔ Windows-only by design                        |
-| `WinPrint.Maui`      |   ✅    | 🟡 Mac Catalyst target builds with the MAUI workload; runtime not yet verified (#64) |
+| `WinPrint.cli`       |   ✅    | 🟡 compiles (`net10.0-windows` via `EnableWindowsTargeting`) but won't run — printing is `System.Drawing.Printing`/Windows-only. Tracked in #64 |
+| `WinPrint.WinForms`  |   ✅    | 🟡 compiles via `EnableWindowsTargeting`; Windows-only at runtime by design |
+| `WinPrint.Maui`      |   ✅    | 🟡 `net10.0-maccatalyst` builds with the MAUI workload **+ Xcode**; the Windows head only builds on Windows. Runtime not yet verified (#64) |
 
 ## Before you push
 
