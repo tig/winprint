@@ -74,3 +74,32 @@ double with a deterministic fixed-pitch measurement model — so the full
   `PrintMarginsRegressionTests` (P/Invokes `USER32.dll`), and the Pygments/date-macro
   tests (external tooling / filesystem). The cross-platform `CteRenderingTests` and
   `MarkdownCteTests` pass on Linux.
+
+## Native AOT roadmap (tracked — NOT yet implemented)
+Goal: ship **`WinPrint.cli` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
+`WinPrint.WinForms` and `WinPrint.Maui` are **out of scope** — neither supports Native AOT.
+
+Decisions made (record of intent; revisit when work actually starts):
+- **Status: track only for now.** No AOT code changes yet. When starting, the first step is a
+  *spike*: set `<IsAotCompatible>true</IsAotCompatible>` on Core + `<PublishAot>true</PublishAot>`
+  on the CLI, build, and collect the trim/AOT analyzer warnings into an inventory to size the work.
+- **Target = cross-platform AOT** (Windows/Linux/macOS), not Windows-only. This requires a
+  **non-`System.Drawing` measurement backend** (e.g. SkiaSharp) plugged into the existing
+  `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
+- **DI: drop MvvmLight `SimpleIoc`** (`ModelLocator`/`ServiceLocator`) in favor of **manual
+  construction**. MvvmLight is unmaintained and not trim-annotated.
+- **CLI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
+- **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
+  (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to
+  what's actually used.
+- **JSON: move to source-generated `System.Text.Json`** (`JsonSerializerContext`); also replace
+  the reflection-based `Microsoft.Extensions.Configuration` `.Bind()` path.
+- **Update-check: redesign from the ground up and remove `Octokit`** (reflection/JSON-heavy).
+- **`CommandLineParser`: remove if unused** (verify no real callers, then drop the package).
+
+Other known AOT work (fall out of the spike):
+- `ModelBase.CopyPropertiesFrom` + `TypeDescriptor.GetProperties` / `GetType().GetProperties()` —
+  annotate with `[DynamicallyAccessedMembers]` or replace with generated/explicit copies.
+- CTE discovery (`GetTypes()` + `Activator.CreateInstance` in `ContentTypeEngineBase`) — root the
+  engine types or replace reflection with an explicit registry.
+
