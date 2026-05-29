@@ -101,9 +101,7 @@ public class Settings : ModelBase
     /// </summary>
     public AnsiCte AnsiContentTypeEngineSettings { get; set; } = new ();
 
-#if WINDOWS
     public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
-#endif
     public TextCte TextContentTypeEngineSettings { get; set; } = new ();
     public MarkdownCte MarkdownContentTypeEngineSettings { get; set; } = new ();
     public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
@@ -326,12 +324,10 @@ public class Settings : ModelBase
             DefaultCteClassName = "TextMateCte",
             DefaultSyntaxHighlighterCteNameClassName = "TextMateCte",
             AnsiContentTypeEngineSettings = new AnsiCte { ContentSettings = new ContentSettings { Style = "pastie" } },
-#if WINDOWS
             TextMateContentTypeEngineSettings = new TextMateCte
             {
                 ContentSettings = new ContentSettings { Style = "VisualStudioLight" }
             },
-#endif
             TextContentTypeEngineSettings = new TextCte
             {
                 // This font will be overriddent by Sheet defined fonts (if any)

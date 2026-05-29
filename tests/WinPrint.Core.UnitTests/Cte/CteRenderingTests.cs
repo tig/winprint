@@ -124,6 +124,38 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task TextMateCte_RendersTokenizedText_CrossPlatform ()
+    {
+        var measure = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var cte = new TextMateCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                LineNumbers = false,
+                TabSpaces = 4,
+                Style = "VisualStudioLight"
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF (200, 60)
+        };
+
+        Assert.True (await cte.SetDocumentAsync ("hello\nworld"));
+        int pages = await cte.RenderAsync (Dpi96, null);
+
+        Assert.True (pages >= 1);
+
+        var paint = new RecordingGraphicsContext (CharWidth, LineHeight);
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage (paint, p);
+        }
+
+        Assert.Contains (paint.DrawnStrings, s => s.Text.Contains ("hello"));
+        Assert.Contains (paint.DrawnStrings, s => s.Text.Contains ("world"));
+    }
+
+    [Fact]
     public async Task MarkdownCte_RendersFlattenedText ()
     {
         var measure = new RecordingGraphicsContext (CharWidth, LineHeight);

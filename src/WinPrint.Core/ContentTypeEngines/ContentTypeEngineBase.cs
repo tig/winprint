@@ -175,6 +175,32 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     }
 
     /// <summary>
+    ///     Resolves the <see cref="IGraphicsContext" /> used to measure text during reflow. Returns the
+    ///     injected <see cref="MeasurementContext" /> when set; otherwise creates a platform-default
+    ///     context (System.Drawing on Windows). When a context is created here, <paramref name="owner" />
+    ///     receives the object that must be disposed once reflow completes (null when the caller-supplied
+    ///     context is returned).
+    /// </summary>
+    protected IGraphicsContext ResolveMeasurementContext (int dpiX, int dpiY, out IDisposable? owner)
+    {
+        if (MeasurementContext is not null)
+        {
+            owner = null;
+            return MeasurementContext;
+        }
+
+#if WINDOWS
+        var windowsContext = new WindowsMeasurementContext (dpiX, dpiY);
+        owner = windowsContext;
+        return windowsContext.Context;
+#else
+        owner = null;
+        throw new InvalidOperationException (
+            $"{GetType ().Name}.RenderAsync requires a MeasurementContext to be set on non-Windows platforms.");
+#endif
+    }
+
+    /// <summary>
     ///     Get total count of pages. Set any local page-size related values (e.g. linesPerPage).
     /// </summary>
     /// <param name="e"></param>

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-#if WINDOWS
-using System.Drawing.Printing;
-#endif
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,12 +13,6 @@ using TextMateSharp.Registry;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
-#if WINDOWS
-using DrawingFont = System.Drawing.Font;
-#endif
-#if WINDOWS
-using DrawingFontStyle = System.Drawing.FontStyle;
-#endif
 using TextMateFontStyle = TextMateSharp.Themes.FontStyle;
 
 namespace WinPrint.Core.ContentTypeEngines;
@@ -32,14 +23,11 @@ namespace WinPrint.Core.ContentTypeEngines;
 public class TextMateCte : ContentTypeEngineBase, IDisposable
 {
     private static readonly string[] _supportedContentTypes = ["text/plain"];
-    private DrawingFont? _boldFont;
-    private DrawingFont? _boldItalicFont;
 
-    private DrawingFont? _cachedFont;
+    private IGraphicsFont? _cachedFont;
     private bool _disposed;
     private string? _filePath;
     private IGrammar? _grammar;
-    private DrawingFont? _italicFont;
     private float _lineHeight;
     private float _lineNumberWidth;
     private int _linesPerPage;
@@ -84,9 +72,6 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         if (disposing)
         {
             _cachedFont?.Dispose ();
-            _boldFont?.Dispose ();
-            _italicFont?.Dispose ();
-            _boldItalicFont?.Dispose ();
             _wrappedLines = null;
         }
 
@@ -121,54 +106,50 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             dpiX = dpiY = 96;
         }
 
-        using var bitmap = new Bitmap (1, 1);
-        bitmap.SetResolution (dpiX, dpiY);
-        using var g = Graphics.FromImage (bitmap);
-        g.PageUnit = GraphicsUnit.Display;
-        g.TextRenderingHint = TextRenderingHint;
+        // Obtain a graphics context used for determining glyph metrics. Production uses System.Drawing
+        // (Windows); tests/non-Windows hosts inject a platform-neutral context via MeasurementContext.
+        IDisposable? ownedContext = null;
+        IGraphicsContext g = ResolveMeasurementContext (dpiX, dpiY, out ownedContext);
 
-        _cachedFont?.Dispose ();
-        _boldFont?.Dispose ();
-        _italicFont?.Dispose ();
-        _boldItalicFont?.Dispose ();
-        _boldFont = null;
-        _italicFont = null;
-        _boldItalicFont = null;
-
-        _cachedFont = new DrawingFont (ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96,
-            (DrawingFontStyle)ContentSettings.Font.Style, GraphicsUnit.Pixel);
-        if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))
+        try
         {
-            _cachedFont.Dispose ();
-            _cachedFont = new DrawingFont (ContentSettings.Font.Family, ContentSettings.Font.Size,
-                (DrawingFontStyle)ContentSettings.Font.Style, GraphicsUnit.Point);
-        }
+            g.SetTextRenderingMode (GraphicsTextRenderingMode);
 
-        _lineHeight = _cachedFont.GetHeight (dpiY);
-        if (PageSize.Height < _lineHeight)
+            _cachedFont?.Dispose ();
+            _cachedFont = g.CreateFont (ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96F,
+                (GraphicsFontStyle)ContentSettings.Font.Style, GraphicsFontUnit.Pixel);
+
+            _lineHeight = _cachedFont.GetHeight (dpiY);
+            if (PageSize.Height < _lineHeight)
+            {
+                throw new InvalidOperationException (
+                    $"The line height ({_lineHeight:F2}) is greater than page height ({PageSize.Height:F2}). " +
+                    $"PageSize={PageSize.Width:F2}x{PageSize.Height:F2}, Font={ContentSettings.Font.Family} {ContentSettings.Font.Size}pt, DPI={dpiY}");
+            }
+
+            _linesPerPage = (int)Math.Floor (PageSize.Height / _lineHeight);
+            int logicalLineCount = CountLogicalLines (Document, ContentSettings.NewPageOnFormFeed);
+            int lineNumberDigits = Math.Max (3, logicalLineCount.ToString (CultureInfo.InvariantCulture).Length);
+            _lineNumberWidth = ContentSettings.LineNumbers
+                ? g.MeasureString (new string ('0', lineNumberDigits + 1), _cachedFont).Width
+                : 0;
+
+            float charWidth = Math.Max (1, g.MeasureString ("W", _cachedFont).Width);
+            int maxLineChars = Math.Max (1, (int)Math.Floor ((PageSize.Width - _lineNumberWidth) / charWidth));
+
+            InitializeGrammar ();
+            _wrappedLines = TokenizeAndWrap (Document, maxLineChars);
+
+            int pages = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
+            Log.Debug (
+                "Rendered {pages} TextMate pages of {linesperpage} lines per page, for a total of {lines} lines.",
+                pages, _linesPerPage, _wrappedLines.Count);
+            return await Task.FromResult (pages);
+        }
+        finally
         {
-            throw new InvalidOperationException (
-                $"The line height ({_lineHeight:F2}) is greater than page height ({PageSize.Height:F2}). " +
-                $"PageSize={PageSize.Width:F2}x{PageSize.Height:F2}, Font={_cachedFont.Name} {_cachedFont.SizeInPoints}pt, DPI={dpiY}");
+            ownedContext?.Dispose ();
         }
-
-        _linesPerPage = (int)Math.Floor (PageSize.Height / _lineHeight);
-        int logicalLineCount = CountLogicalLines (Document, ContentSettings.NewPageOnFormFeed);
-        int lineNumberDigits = Math.Max (3, logicalLineCount.ToString (CultureInfo.InvariantCulture).Length);
-        _lineNumberWidth = ContentSettings.LineNumbers
-            ? MeasureString (g, new string ('0', lineNumberDigits + 1)).Width
-            : 0;
-
-        float charWidth = Math.Max (1, MeasureString (g, "W").Width);
-        int maxLineChars = Math.Max (1, (int)Math.Floor ((PageSize.Width - _lineNumberWidth) / charWidth));
-
-        InitializeGrammar ();
-        _wrappedLines = TokenizeAndWrap (Document, maxLineChars);
-
-        int pages = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
-        Log.Debug ("Rendered {pages} TextMate pages of {linesperpage} lines per page, for a total of {lines} lines.",
-            pages, _linesPerPage, _wrappedLines.Count);
-        return await Task.FromResult (pages);
     }
 
     public override void PaintPage (IGraphicsContext graphicsContext, int pageNum)
@@ -465,54 +446,6 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
         string color = colorMap[colorIndex];
         return ColorTranslator.FromHtml (color);
-    }
-
-    private DrawingFont GetFont (TextMateFontStyle textMateStyle)
-    {
-        if (ContentSettings!.DisableFontStyles || textMateStyle is TextMateFontStyle.None or TextMateFontStyle.NotSet)
-        {
-            return _cachedFont!;
-        }
-
-        DrawingFontStyle style = DrawingFontStyle.Regular;
-        if (textMateStyle.HasFlag (TextMateFontStyle.Bold))
-        {
-            style |= DrawingFontStyle.Bold;
-        }
-
-        if (textMateStyle.HasFlag (TextMateFontStyle.Italic))
-        {
-            style |= DrawingFontStyle.Italic;
-        }
-
-        if (style == (DrawingFontStyle.Bold | DrawingFontStyle.Italic))
-        {
-            return _boldItalicFont ??=
-                new DrawingFont (_cachedFont!.FontFamily, _cachedFont.Size, style, _cachedFont.Unit);
-        }
-
-        if (style == DrawingFontStyle.Bold)
-        {
-            return _boldFont ??= new DrawingFont (_cachedFont!.FontFamily, _cachedFont.Size, style, _cachedFont.Unit);
-        }
-
-        if (style == DrawingFontStyle.Italic)
-        {
-            return _italicFont ??= new DrawingFont (_cachedFont!.FontFamily, _cachedFont.Size, style, _cachedFont.Unit);
-        }
-
-        return _cachedFont!;
-    }
-
-    private SizeF MeasureString (Graphics g, string text)
-    {
-        return MeasureString (g, _cachedFont, text);
-    }
-
-    private static SizeF MeasureString (Graphics g, DrawingFont? font, string text)
-    {
-        var proposedSize = new SizeF (10000, font!.GetHeight () + font.GetHeight () / 2);
-        return g.MeasureString (text, font, proposedSize, StringFormat, out _, out _);
     }
 
     private static ThemeName ParseTheme (string? style)

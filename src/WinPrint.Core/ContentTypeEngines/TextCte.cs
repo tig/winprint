@@ -120,7 +120,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         // (Windows); tests/non-Windows hosts inject a platform-neutral context via MeasurementContext so
         // reflow can run cross-platform.
         IDisposable? ownedContext = null;
-        IGraphicsContext g = MeasurementContext ?? CreateMeasurementContext (dpiX, dpiY, out ownedContext);
+        IGraphicsContext g = ResolveMeasurementContext (dpiX, dpiY, out ownedContext);
 
         try
         {
@@ -167,24 +167,6 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         {
             ownedContext?.Dispose ();
         }
-    }
-
-    /// <summary>
-    ///     Creates the default measurement context when none was injected via
-    ///     <see cref="ContentTypeEngineBase.MeasurementContext" />. On Windows this is a System.Drawing
-    ///     context; on other platforms a measurement context must be supplied by the caller.
-    /// </summary>
-    private static IGraphicsContext CreateMeasurementContext (int dpiX, int dpiY, out IDisposable? owner)
-    {
-#if WINDOWS
-        var windowsContext = new WindowsMeasurementContext (dpiX, dpiY);
-        owner = windowsContext;
-        return windowsContext.Context;
-#else
-        owner = null;
-        throw new InvalidOperationException (
-            "TextCte.RenderAsync requires a MeasurementContext to be set on non-Windows platforms.");
-#endif
     }
 
     /// <summary>
