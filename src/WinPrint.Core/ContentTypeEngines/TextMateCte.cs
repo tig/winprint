@@ -131,10 +131,10 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             int logicalLineCount = CountLogicalLines (Document, ContentSettings.NewPageOnFormFeed);
             int lineNumberDigits = Math.Max (3, logicalLineCount.ToString (CultureInfo.InvariantCulture).Length);
             _lineNumberWidth = ContentSettings.LineNumbers
-                ? g.MeasureString (new string ('0', lineNumberDigits + 1), _cachedFont).Width
+                ? MeasureRun (g, new string ('0', lineNumberDigits + 1), _cachedFont).Width
                 : 0;
 
-            float charWidth = Math.Max (1, g.MeasureString ("W", _cachedFont).Width);
+            float charWidth = Math.Max (1, MeasureRun (g, "W", _cachedFont).Width);
             int maxLineChars = Math.Max (1, (int)Math.Floor ((PageSize.Width - _lineNumberWidth) / charWidth));
 
             InitializeGrammar ();
@@ -183,7 +183,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
                 if (line.NonWrappedLineNumber > 0)
                 {
                     string lineNumber = line.NonWrappedLineNumber.ToString (CultureInfo.InvariantCulture);
-                    float measuredWidth = graphicsContext.MeasureString (lineNumber, baseFont).Width;
+                    float measuredWidth = MeasureRun (graphicsContext, lineNumber, baseFont).Width;
                     float x = ContentSettings.LineNumberSeparator
                         ? _lineNumberWidth - 6 - measuredWidth
                         : 0;
@@ -219,7 +219,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
                 using IGraphicsBrush brush = graphicsContext.CreateSolidBrush (
                     GraphicsColor.FromArgb (run.Foreground.A, run.Foreground.R, run.Foreground.G, run.Foreground.B));
                 graphicsContext.DrawString (text, runFont, brush, xPos, yPos, GraphicsStringFormat);
-                GraphicsSizeF measuredSize = graphicsContext.MeasureString (text, runFont);
+                GraphicsSizeF measuredSize = MeasureRun (graphicsContext, text, runFont);
 
                 if (ContentSettings.Diagnostics)
                 {
@@ -233,6 +233,19 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         }
 
         Log.Debug ("Painted {lineOnPage} TextMate lines.", i - 1);
+    }
+
+    /// <summary>
+    ///     Measures <paramref name="text" /> using the same typographic <see cref="GraphicsStringFormat" />
+    ///     that <see cref="PaintPage" /> draws with. Measuring with the no-format overload uses GDI+'s
+    ///     default format, which pads ~1/6 em on each side; when used to advance the pen between per-token
+    ///     runs that padding accumulates into a visible gap before every token (and inflates the gutter
+    ///     width and wrap column). Keeping measure and draw on the same format avoids that drift.
+    /// </summary>
+    private GraphicsSizeF MeasureRun (IGraphicsContext g, string text, IGraphicsFont font)
+    {
+        var proposedSize = new GraphicsSizeF (PageSize.Width, _lineHeight + _lineHeight / 2);
+        return g.MeasureString (text, font, proposedSize, GraphicsStringFormat, out _, out _);
     }
 
     private static GraphicsFontStyle GetGraphicsFontStyle (TextMateFontStyle textMateStyle)

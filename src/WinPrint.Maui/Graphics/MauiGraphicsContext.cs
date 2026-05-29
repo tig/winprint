@@ -180,12 +180,11 @@ public sealed class MauiGraphicsContext : IGraphicsContext
             size = new SizeF (Math.Max (0, withText.Width - bookends.Width), withText.Height);
         }
 
-        // Match GDI+ Graphics.MeasureString's overhang padding so the WinPrint text
-        // engine (which uses width-to-advance) reproduces the same token spacing
-        // the WinForms preview and the print path produce. GDI+ adds roughly
-        // 1/6 em on each side of the measured run; one full em is a safe
-        // approximation that matches the WinForms preview visually.
-        size.Width += fontSize / 3f;
+        // Return the tight advance width (whitespace preserved via the sentinels above). The text engine
+        // advances xPos by this width between per-token runs, so it must equal the width DrawString actually
+        // paints — adding extra overhang here would leave a visible gap before every token. (This previously
+        // padded ~1/3 em to mimic GDI+'s padded MeasureString; that GDI+ padding was itself the bug and has
+        // been removed from the System.Drawing path, so MAUI matches by measuring tight here too.)
         return size;
     }
 
