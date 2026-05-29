@@ -36,19 +36,25 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
 
 #if WINDOWS
     /// <summary>
-    ///     These are the global StringFormat settings; set here to ensure all rendering and measuring uses same settings
+    ///     These are the global StringFormat settings; set here to ensure all rendering and measuring uses same settings.
+    ///     Constructing a <see cref="System.Drawing.StringFormat" /> calls into GDI+, so it is lazily initialized:
+    ///     this lets the type be loaded on a host without GDI+ (e.g. Linux CI running the Windows-targeted test
+    ///     assembly) as long as this member is not actually used.
     /// </summary>
-    public static readonly StringFormat StringFormat = new (StringFormat.GenericTypographic)
-    {
-        FormatFlags = StringFormatFlags.NoClip |
-                      StringFormatFlags.LineLimit |
-                      //StringFormatFlags.FitBlackBox |
-                      StringFormatFlags.MeasureTrailingSpaces |
-                      StringFormatFlags.DisplayFormatControl,
-        Alignment = StringAlignment.Near,
-        LineAlignment = StringAlignment.Near,
-        Trimming = StringTrimming.None
-    };
+    private static readonly Lazy<StringFormat> _stringFormat = new (() =>
+        new StringFormat (StringFormat.GenericTypographic)
+        {
+            FormatFlags = StringFormatFlags.NoClip |
+                          StringFormatFlags.LineLimit |
+                          //StringFormatFlags.FitBlackBox |
+                          StringFormatFlags.MeasureTrailingSpaces |
+                          StringFormatFlags.DisplayFormatControl,
+            Alignment = StringAlignment.Near,
+            LineAlignment = StringAlignment.Near,
+            Trimming = StringTrimming.None
+        });
+
+    public static StringFormat StringFormat => _stringFormat.Value;
 #endif
 
     public static readonly GraphicsStringFormat GraphicsStringFormat = new ()
@@ -77,6 +83,15 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     ///     Calculated page size. Set by Sheet view model.
     /// </summary>
     public SizeF PageSize { get; set; }
+
+    /// <summary>
+    ///     Optional graphics context used to measure text during <see cref="RenderAsync" /> (reflow).
+    ///     When null, <see cref="RenderAsync" /> creates a platform-default context (System.Drawing on
+    ///     Windows). Tests inject a platform-neutral context (e.g. a recording/fake) so that rendering
+    ///     can be exercised and verified cross-platform.
+    /// </summary>
+    [JsonIgnore]
+    public IGraphicsContext? MeasurementContext { get; set; }
 
     /// <summary>
     ///     ContentType identifier (shorthand for class name).

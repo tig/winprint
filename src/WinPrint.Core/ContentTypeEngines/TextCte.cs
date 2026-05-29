@@ -3,10 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-#if WINDOWS
-using System.Drawing.Printing;
-#endif
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,9 +11,6 @@ using Serilog;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
-#if WINDOWS
-using Font = System.Drawing.Font;
-#endif
 
 namespace WinPrint.Core.ContentTypeEngines;
 
@@ -28,7 +21,7 @@ namespace WinPrint.Core.ContentTypeEngines;
 public class TextCte : ContentTypeEngineBase, IDisposable
 {
     private static readonly string[] _supportedContentTypes = { "text/plain" };
-    private Font? _cachedFont;
+    private IGraphicsFont? _cachedFont;
 
     // Protected implementation of Dispose pattern.
     // Flag: Has Dispose already been called?
@@ -116,66 +109,82 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         int dpiX = printerResolution.X;
         int dpiY = printerResolution.Y;
 
-        // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we 
+        // BUGBUG: On Windows we can use the printer's resolution to be more accurate. But on Linux we
         // have to use 96dpi. See https://github.com/mono/libgdiplus/issues/623, etc...
         if (!RuntimeInformation.IsOSPlatform (OSPlatform.Windows) || dpiX < 0 || dpiY < 0)
         {
             dpiX = dpiY = 96;
         }
 
-        // Create a representative Graphcis used for determining glyph metrics.      
-        using var bitmap = new Bitmap (1, 1);
-        bitmap.SetResolution (dpiX, dpiY);
-        var g = Graphics.FromImage (bitmap);
-        g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
+        // Obtain a graphics context used for determining glyph metrics. Production uses System.Drawing
+        // (Windows); tests/non-Windows hosts inject a platform-neutral context via MeasurementContext so
+        // reflow can run cross-platform.
+        IDisposable? ownedContext = null;
+        IGraphicsContext g = MeasurementContext ?? CreateMeasurementContext (dpiX, dpiY, out ownedContext);
 
-        // Calculate the number of lines per page; first we need our font. Keep it around.
-        _cachedFont = new Font (new FontFamily (ContentSettings!.Font.Family), ContentSettings.Font.Size / 72F * 96,
-            (System.Drawing.FontStyle)ContentSettings.Font.Style, GraphicsUnit.Pixel); // World?
-        Log.Debug ("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints,
-            _cachedFont.Style);
-
-        if (RuntimeInformation.IsOSPlatform (OSPlatform.Linux))
+        try
         {
-            _cachedFont.Dispose ();
-            _cachedFont = new Font (new FontFamily (ContentSettings.Font.Family), ContentSettings.Font.Size, (System.Drawing.FontStyle)ContentSettings.Font.Style,
-                GraphicsUnit.Point);
-            Log.Debug ("Font: {f}, {s} ({p}), {st}", _cachedFont.Name, _cachedFont.Size, _cachedFont.SizeInPoints,
-                _cachedFont.Style);
-            g.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
+            // Calculate the number of lines per page; first we need our font. Keep it around.
+            _cachedFont?.Dispose ();
+            _cachedFont = g.CreateFont (ContentSettings!.Font.Family, ContentSettings.Font.Size / 72F * 96F,
+                (GraphicsFontStyle)ContentSettings.Font.Style, GraphicsFontUnit.Pixel);
+
+            _lineHeight = _cachedFont.GetHeight (dpiY);
+
+            if (PageSize.Height < _lineHeight)
+            {
+                throw new InvalidOperationException (
+                    $"The line height ({_lineHeight:F2}) is greater than page height ({PageSize.Height:F2}). " +
+                    $"PageSize={PageSize.Width:F2}x{PageSize.Height:F2}, Font={ContentSettings.Font.Family} {ContentSettings.Font.Size}pt, DPI={dpiY}");
+            }
+
+            // Round down # of lines per page to ensure lines don't clip on bottom
+            _linesPerPage = (int)Math.Floor (PageSize.Height / _lineHeight);
+
+            // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
+            // TODO: Make line number width dynamic
+            // Note, MeasureString is actually dependent on lineNumberWidth!
+            _lineNumberWidth = ContentSettings.LineNumbers
+                ? MeasureString (g, new string ('0', 4), _cachedFont).Width
+                : 0;
+
+            // This is the shortest line length (in chars) that we think we'll see.
+            // This is used as a performance optimization (probably premature) and
+            // could be 0 with no functional change.
+            _minLineLen = (int)((PageSize.Width - _lineNumberWidth) / MeasureString (g, "W", _cachedFont).Width);
+
+            // Note, MeasureLines may increment numPages due to form feeds and line wrapping
+            _wrappedLines = LineWrapDocument (g, Document); // new List<string>();
+
+            int n = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
+
+            Log.Debug ("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n,
+                _linesPerPage, _wrappedLines.Count);
+
+            return await Task.FromResult (n);
         }
-
-        _lineHeight = _cachedFont.GetHeight (dpiY);
-
-        if (PageSize.Height < _lineHeight)
+        finally
         {
-            throw new InvalidOperationException (
-                $"The line height ({_lineHeight:F2}) is greater than page height ({PageSize.Height:F2}). " +
-                $"PageSize={PageSize.Width:F2}x{PageSize.Height:F2}, Font={_cachedFont.Name} {_cachedFont.SizeInPoints}pt, DPI={dpiY}");
+            ownedContext?.Dispose ();
         }
+    }
 
-        // Round down # of lines per page to ensure lines don't clip on bottom
-        _linesPerPage = (int)Math.Floor (PageSize.Height / _lineHeight);
-
-        // 3 digits + 1 wide - Will support 999 lines before line numbers start to not fit
-        // TODO: Make line number width dynamic
-        // Note, MeasureString is actually dependent on lineNumberWidth!
-        _lineNumberWidth = ContentSettings.LineNumbers ? MeasureString (g, new string ('0', 4)).Width : 0;
-
-        // This is the shortest line length (in chars) that we think we'll see. 
-        // This is used as a performance optimization (probably premature) and
-        // could be 0 with no functional change.
-        _minLineLen = (int)((PageSize.Width - _lineNumberWidth) / MeasureString (g, "W").Width);
-
-        // Note, MeasureLines may increment numPages due to form feeds and line wrapping
-        _wrappedLines = LineWrapDocument (g, Document); // new List<string>();
-
-        int n = (int)Math.Ceiling (_wrappedLines.Count / (double)_linesPerPage);
-
-        Log.Debug ("Rendered {pages} pages of {linesperpage} lines per page, for a total of {lines} lines.", n,
-            _linesPerPage, _wrappedLines.Count);
-
-        return await Task.FromResult (n);
+    /// <summary>
+    ///     Creates the default measurement context when none was injected via
+    ///     <see cref="ContentTypeEngineBase.MeasurementContext" />. On Windows this is a System.Drawing
+    ///     context; on other platforms a measurement context must be supplied by the caller.
+    /// </summary>
+    private static IGraphicsContext CreateMeasurementContext (int dpiX, int dpiY, out IDisposable? owner)
+    {
+#if WINDOWS
+        var windowsContext = new WindowsMeasurementContext (dpiX, dpiY);
+        owner = windowsContext;
+        return windowsContext.Context;
+#else
+        owner = null;
+        throw new InvalidOperationException (
+            "TextCte.RenderAsync requires a MeasurementContext to be set on non-Windows platforms.");
+#endif
     }
 
     /// <summary>
@@ -186,7 +195,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <param name="g"></param>
     /// <param name="document"></param>
     /// <returns></returns>
-    private List<WrappedLine> LineWrapDocument (Graphics g, string document)
+    private List<WrappedLine> LineWrapDocument (IGraphicsContext g, string document)
     {
         // TODO: Profile for performance
         // LogService.TraceMessage();
@@ -235,7 +244,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <param name="line"></param>
     /// <param name="lineCount"></param>
     /// <returns></returns>
-    private int ExpandFormFeeds (Graphics g, List<WrappedLine> list, string line, int lineCount)
+    private int ExpandFormFeeds (IGraphicsContext g, List<WrappedLine> list, string line, int lineCount)
     {
         string lineToAdd = "";
 
@@ -292,10 +301,10 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <param name="lineToAdd">The, potentially, too-long line to wrap.</param>
     /// <param name="lineCount"></param>
     /// <returns></returns>
-    private int AddLine (Graphics g, List<WrappedLine> wrappedList, string lineToAdd, int lineCount)
+    private int AddLine (IGraphicsContext g, List<WrappedLine> wrappedList, string lineToAdd, int lineCount)
     {
         // TODO: Profile AddLine for performance
-        MeasureString (g, lineToAdd, out int numCharsThatFit, out int l1);
+        MeasureString (g, lineToAdd, _cachedFont!, out int numCharsThatFit, out int l1);
         //Log.Debug("   AddLine: {lineToAdd} - this line should {not}wrap", lineToAdd, lineToAdd.Length <= numCharsThatFit ? "not " : "");
         if (lineToAdd.Length > numCharsThatFit)
         {
@@ -309,7 +318,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
             for (int i = _minLineLen; i <= lineToAdd.Length; i++)
             {
                 string truncatedLine = lineToAdd[start..end++];
-                MeasureString (g, truncatedLine, out int numCharsThatFitTruncated, out int l2);
+                MeasureString (g, truncatedLine, _cachedFont!, out int numCharsThatFitTruncated, out int l2);
                 if (truncatedLine.Length > numCharsThatFitTruncated)
                 {
                     // The truncated line now too big, so shorten it by one char and add it
@@ -340,44 +349,6 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         }
 
         return lineCount;
-    }
-
-    private SizeF MeasureString (Graphics g, string text)
-    {
-        return MeasureString (g, text, out int charsFitted, out int linesFilled);
-    }
-
-    /// <summary>
-    ///     Measures how much width a string will take, given current page settings (including line numbers)
-    /// </summary>
-    /// <param name="g"></param>
-    /// <param name="text"></param>
-    /// <param name="charsFitted"></param>
-    /// <param name="linesFilled"></param>
-    /// <returns></returns>
-    private SizeF MeasureString (Graphics? g, string text, out int charsFitted, out int linesFilled)
-    {
-        if (g is null)
-        {
-            // define context used for determining glyph metrics.        
-            using var bitmap = new Bitmap (1, 1);
-            g = Graphics.FromImage (bitmap);
-            //g = Graphics.FromHwnd(PrintPreview.Instance.Handle);
-            g.PageUnit = GraphicsUnit.Display;
-        }
-
-        g.TextRenderingHint = TextRenderingHint;
-
-        // determine width     
-        float fontHeight = _lineHeight;
-        // Use page settings including lineNumberWidth
-        var proposedSize = new SizeF (PageSize.Width - _lineNumberWidth, _lineHeight + _lineHeight / 2);
-        SizeF size = g.MeasureString (text, _cachedFont!, proposedSize, StringFormat, out charsFitted, out linesFilled);
-
-        // TODO: HACK to work around MeasureString not working right on Linux
-        //if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        //    linesFilled = 1;
-        return size;
     }
 
     /// <summary>

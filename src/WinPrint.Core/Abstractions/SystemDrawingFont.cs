@@ -15,6 +15,11 @@ internal sealed class SystemDrawingFont : IGraphicsFont
 
     public Font Font { get; }
 
+    public float GetHeight (float dpi)
+    {
+        return Font.GetHeight (dpi);
+    }
+
     public void Dispose ()
     {
         if (_ownsNative)

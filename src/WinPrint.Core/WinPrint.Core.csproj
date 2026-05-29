@@ -39,8 +39,7 @@
         <Compile Remove="Abstractions\SystemDrawingGraphicsContext.cs" />
         <Compile Remove="Abstractions\SystemDrawingPen.cs" />
         <Compile Remove="Abstractions\SystemDrawingState.cs" />
-        <Compile Remove="ContentTypeEngines\TextCte.cs" />
-        <Compile Remove="ContentTypeEngines\MarkdownCte.cs" />
+        <Compile Remove="ContentTypeEngines\WindowsMeasurementContext.cs" />
         <Compile Remove="ContentTypeEngines\TextMateCte.cs" />
         <Compile Remove="ContentTypeEngines\TextMateWrappedLine.cs" />
         <Compile Remove="ContentTypeEngines\TextMateWrappedRun.cs" />

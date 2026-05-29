@@ -103,9 +103,9 @@ public class Settings : ModelBase
 
 #if WINDOWS
     public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
+#endif
     public TextCte TextContentTypeEngineSettings { get; set; } = new ();
     public MarkdownCte MarkdownContentTypeEngineSettings { get; set; } = new ();
-#endif
     public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
 
     /// <summary>
@@ -331,6 +331,7 @@ public class Settings : ModelBase
             {
                 ContentSettings = new ContentSettings { Style = "VisualStudioLight" }
             },
+#endif
             TextContentTypeEngineSettings = new TextCte
             {
                 // This font will be overriddent by Sheet defined fonts (if any)
@@ -346,7 +347,6 @@ public class Settings : ModelBase
                 //TabSpaces = 4
             },
             MarkdownContentTypeEngineSettings = new MarkdownCte (),
-#endif
 
             // Html fonts are determined by:
             // 1) Sheet (all HTML & CSS ignored)
