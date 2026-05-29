@@ -13,7 +13,7 @@ internal class WinPrintPageRenderer : UIPrintPageRenderer
     private readonly List<(int pageNumber, Action<IGraphicsContext, int> render)> _pages;
     private readonly PrintPageSetup _pageSetup;
 
-    public WinPrintPageRenderer (
+    public WinPrintPageRenderer(
         List<(int pageNumber, Action<IGraphicsContext, int> render)> pages,
         PrintPageSetup pageSetup)
     {
@@ -23,24 +23,24 @@ internal class WinPrintPageRenderer : UIPrintPageRenderer
 
     public override nint NumberOfPages => _pages.Count;
 
-    public override void DrawPage (nint index, CGRect pageRect)
+    public override void DrawPage(nint index, CGRect pageRect)
     {
-        base.DrawPage (index, pageRect);
+        base.DrawPage(index, pageRect);
 
         if (index < 0 || index >= _pages.Count)
         {
             return;
         }
 
-        var (pageNumber, render) = _pages[(int)index];
+        (int pageNumber, Action<IGraphicsContext, int> render) = _pages[(int)index];
 
-        var context = UIGraphics.GetCurrentContext ();
+        CGContext? context = UIGraphics.GetCurrentContext();
         if (context == null)
         {
             return;
         }
 
-        var canvas = new CoreGraphicsPrintContext (context, _pageSetup, pageRect);
-        render (canvas, pageNumber);
+        var canvas = new CoreGraphicsPrintContext(context, _pageSetup, pageRect);
+        render(canvas, pageNumber);
     }
 }

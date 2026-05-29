@@ -2,14 +2,14 @@ namespace WinPrint.Maui;
 
 public partial class App : Application
 {
-    public App ()
+    public App()
     {
-        InitializeComponent ();
+        InitializeComponent();
     }
 
-    protected override Window CreateWindow (IActivationState? activationState)
+    protected override Window CreateWindow(IActivationState? activationState)
     {
-        var window = new Window (new AppShell ());
+        var window = new Window(new AppShell());
         window.Title = "WinPrint";
         return window;
     }

@@ -6,11 +6,11 @@ namespace WinPrint.Core.Models;
 
 public class WindowSize
 {
-    public WindowSize ()
+    public WindowSize()
     {
     }
 
-    public WindowSize (int width, int height)
+    public WindowSize(int width, int height)
     {
         Width = width;
         Height = height;

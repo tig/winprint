@@ -9,27 +9,27 @@ namespace WinPrint.Maui.Services;
 /// </summary>
 public class WindowsPrintService : IPrintService
 {
-    public IReadOnlyList<PrinterInfo> GetAvailablePrinters ()
+    public IReadOnlyList<PrinterInfo> GetAvailablePrinters()
     {
-        var printers = new List<PrinterInfo> ();
-        string defaultPrinter = new PrinterSettings ().PrinterName;
+        var printers = new List<PrinterInfo>();
+        string defaultPrinter = new PrinterSettings().PrinterName;
 
         foreach (string name in PrinterSettings.InstalledPrinters)
         {
-            printers.Add (new PrinterInfo
+            printers.Add(new PrinterInfo
             {
                 Name = name,
-                IsDefault = string.Equals (name, defaultPrinter, StringComparison.OrdinalIgnoreCase)
+                IsDefault = string.Equals(name, defaultPrinter, StringComparison.OrdinalIgnoreCase)
             });
         }
 
         return printers;
     }
 
-    public PrintPageSetup GetDefaultPageSetup (string? printerName = null)
+    public PrintPageSetup GetDefaultPageSetup(string? printerName = null)
     {
-        var settings = new PrinterSettings ();
-        if (!string.IsNullOrEmpty (printerName))
+        var settings = new PrinterSettings();
+        if (!string.IsNullOrEmpty(printerName))
         {
             settings.PrinterName = printerName;
         }
@@ -51,14 +51,14 @@ public class WindowsPrintService : IPrintService
         };
     }
 
-    public PrintPageSetup ShowPrintDialog (PrintDialogOptions options, PrintPageSetup currentSetup)
+    public PrintPageSetup ShowPrintDialog(PrintDialogOptions options, PrintPageSetup currentSetup)
     {
         var settings = new PrinterSettings { PrinterName = currentSetup.PrinterName };
-        var pageSettings = settings.DefaultPageSettings;
+        PageSettings pageSettings = settings.DefaultPageSettings;
 
         // Apply current setup to dialog so it reflects user's choices
         pageSettings.Landscape = currentSetup.Landscape;
-        pageSettings.Margins = new System.Drawing.Printing.Margins (
+        pageSettings.Margins = new Margins(
             currentSetup.MarginLeft, currentSetup.MarginRight,
             currentSetup.MarginTop, currentSetup.MarginBottom);
 
@@ -71,7 +71,7 @@ public class WindowsPrintService : IPrintService
             UseEXDialog = true
         };
 
-        if (dialog.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+        if (dialog.ShowDialog() == DialogResult.OK)
         {
             pageSettings = dialog.PrinterSettings.DefaultPageSettings;
             return new PrintPageSetup
@@ -94,8 +94,8 @@ public class WindowsPrintService : IPrintService
         return currentSetup;
     }
 
-    public IPrintJob CreateJob (PrintPageSetup pageSetup, string documentName)
+    public IPrintJob CreateJob(PrintPageSetup pageSetup, string documentName)
     {
-        return new WindowsPrintJob (pageSetup, documentName);
+        return new WindowsPrintJob(pageSetup, documentName);
     }
 }

@@ -6,40 +6,40 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly:
-    SuppressMessage ("Globalization", "CA1303:Do not pass literals as localized parameters",
+    SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters",
         Justification = "<Pending>", Scope = "member", Target = "~M:WinPrint.Preview.PageSettingsChanged")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Preview.Preview_Layout(System.Object,System.Windows.Forms.LayoutEventArgs)")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1303:Do not pass literals as localized parameters",
+    SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters",
         Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Preview.pd_PrintPage(System.Object,System.Drawing.Printing.PrintPageEventArgs)")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1303:Do not pass literals as localized parameters",
+    SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters",
         Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.HeaderFooter.Paint(System.Drawing.Graphics)")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1303:Do not pass literals as localized parameters",
+    SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters",
         Justification = "<Pending>", Scope = "member", Target = "~M:WinPrint.HeaderFooter.#ctor(WinPrint.Document)")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.MainWindow.MainWindow_Layout(System.Object,System.Windows.Forms.LayoutEventArgs)")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1303:Do not pass literals as localized parameters",
+    SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters",
         Justification = "<Pending>", Scope = "member", Target = "~M:WinPrint.MainWindow.ShowFilesDialog")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Winforms.MainWindow.landscapeCheckbox_CheckedChanged(System.Object,System.EventArgs)")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Winforms.PrintPreview.PageDown")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Winforms.PrintPreview.PageUp")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Winforms.PrintPreview.ZoomIn")]
 [assembly:
-    SuppressMessage ("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
+    SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member",
         Target = "~M:WinPrint.Winforms.PrintPreview.ZoomOut")]

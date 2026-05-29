@@ -8,15 +8,15 @@ namespace WinPrint.Core.UnitTests.Models;
 
 public class SheetSettingsTests : TestModelsBase
 {
-    public SheetSettingsTests (ITestOutputHelper output) : base (output)
+    public SheetSettingsTests(ITestOutputHelper output) : base(output)
     {
     }
 
     [Fact]
-    public void TestNew ()
+    public void TestNew()
     {
-        var doc = new SheetSettings ();
-        Assert.NotNull (doc);
+        var doc = new SheetSettings();
+        Assert.NotNull(doc);
 
         //Assert.AreEqual("sansserif", doc.DiagnosticRulesFont.Family);
 
@@ -25,70 +25,70 @@ public class SheetSettingsTests : TestModelsBase
     }
 
     [Fact]
-    public void TestPersist ()
+    public void TestPersist()
     {
-        var doc = new SheetSettings ();
+        var doc = new SheetSettings();
 
-        string json = JsonSerializer.Serialize (doc, jsonOptions);
-        Assert.NotNull (json);
+        string json = JsonSerializer.Serialize(doc, jsonOptions);
+        Assert.NotNull(json);
 
-        Assert.True (json.Length > 0);
+        Assert.True(json.Length > 0);
 
-        SheetSettings? doc2 = JsonSerializer.Deserialize<SheetSettings> (json);
-        Assert.NotNull (doc2);
+        SheetSettings? doc2 = JsonSerializer.Deserialize<SheetSettings>(json);
+        Assert.NotNull(doc2);
     }
 
     [Fact]
-    public void TestSerializeToFile ()
+    public void TestSerializeToFile()
     {
-        var doc = new SheetSettings ();
+        var doc = new SheetSettings();
 
         // Use the name of the test file as the Document.File property
         string file = "WinPrint.Test.New.json";
-        Assert.Equal ("WinPrint.Test.New.json", file);
+        Assert.Equal("WinPrint.Test.New.json", file);
 
-        string jsonString = JsonSerializer.Serialize (doc, jsonOptions);
+        string jsonString = JsonSerializer.Serialize(doc, jsonOptions);
         ;
 
         var writerOptions = new JsonWriterOptions { Indented = true };
         var documentOptions = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
 
         // Use the name of the test file as the Document.File property
-        using (FileStream fs = File.Create (file))
+        using (FileStream fs = File.Create(file))
 
-        using (var writer = new Utf8JsonWriter (fs, writerOptions))
-        using (var document = JsonDocument.Parse (jsonString, documentOptions))
+        using (var writer = new Utf8JsonWriter(fs, writerOptions))
+        using (var document = JsonDocument.Parse(jsonString, documentOptions))
         {
             JsonElement root = document.RootElement;
 
             if (root.ValueKind == JsonValueKind.Object)
             {
-                writer.WriteStartObject ();
+                writer.WriteStartObject();
             }
             else
             {
                 return;
             }
 
-            foreach (JsonProperty property in root.EnumerateObject ())
+            foreach (JsonProperty property in root.EnumerateObject())
             {
-                property.WriteTo (writer);
+                property.WriteTo(writer);
             }
 
-            writer.WriteEndObject ();
+            writer.WriteEndObject();
 
-            writer.Flush ();
+            writer.Flush();
         }
 
-        SheetSettings docCopy = DeserializeFromFile (file);
-        string jsonCopy = JsonSerializer.Serialize (docCopy, jsonOptions);
-        Assert.NotNull (jsonCopy);
+        SheetSettings docCopy = DeserializeFromFile(file);
+        string jsonCopy = JsonSerializer.Serialize(docCopy, jsonOptions);
+        Assert.NotNull(jsonCopy);
 
-        Assert.Equal (jsonCopy, jsonString);
+        Assert.Equal(jsonCopy, jsonString);
     }
 
     [Fact]
-    public void TestDeserializeDefaults ()
+    public void TestDeserializeDefaults()
     {
         //tring file = "TestFiles\\WinPrint.Test.json";
         // Test with a default file
@@ -97,7 +97,7 @@ public class SheetSettingsTests : TestModelsBase
     }
 
     [Fact]
-    public void TestDeserializeAllPropertiesSet ()
+    public void TestDeserializeAllPropertiesSet()
     {
         //string file = "TestFiles\\WinPrint.EveryPropertySet.json";
         // Test with a file with all properties cahnged
@@ -105,13 +105,13 @@ public class SheetSettingsTests : TestModelsBase
         //Assert.AreEqual("Test.txt", doc., $"File property of {file} should have been {file}");
     }
 
-    public SheetSettings DeserializeFromFile (string file)
+    public SheetSettings DeserializeFromFile(string file)
     {
-        string jsonString = File.ReadAllText (file);
-        Assert.NotNull (jsonString);
+        string jsonString = File.ReadAllText(file);
+        Assert.NotNull(jsonString);
 
-        return JsonSerializer.Deserialize<SheetSettings> (jsonString, jsonOptions) ??
-               throw new JsonException ("SheetSettings deserialized to null.");
+        return JsonSerializer.Deserialize<SheetSettings>(jsonString, jsonOptions) ??
+               throw new JsonException("SheetSettings deserialized to null.");
     }
 
     //public void TestHeaderFooter(Core.Models.SheetSettings doc) {

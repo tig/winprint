@@ -1,7 +1,13 @@
+#if WINDOWS
+using Microsoft.UI.Input;
+using Microsoft.UI.Windowing;
+#endif
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Models;
 using WinPrint.Maui.Services;
 using WinPrint.Maui.ViewModels;
 using WinPrint.Maui.Views;
+using TappedEventArgs = Microsoft.Maui.Controls.TappedEventArgs;
 
 namespace WinPrint.Maui;
 
@@ -11,20 +17,20 @@ public partial class MainPage : ContentPage
     private readonly PrintPreviewDrawable _drawable;
     private readonly IPrintService _printService;
 
-    public MainPage ()
+    public MainPage()
     {
-        _viewModel = new MainViewModel ();
-        _drawable = new PrintPreviewDrawable (_viewModel);
-        _printService = CreatePlatformPrintService ();
+        _viewModel = new MainViewModel();
+        _drawable = new PrintPreviewDrawable(_viewModel);
+        _printService = CreatePlatformPrintService();
 
-        InitializeComponent ();
+        InitializeComponent();
 
         BindingContext = _viewModel;
         PreviewGraphicsView.Drawable = _drawable;
 
         // Wire up invalidation callback
         _viewModel.InvalidatePreview = () =>
-            MainThread.BeginInvokeOnMainThread (() => PreviewGraphicsView.Invalidate ());
+            MainThread.BeginInvokeOnMainThread(() => PreviewGraphicsView.Invalidate());
 
         // Wire up file picker
         _viewModel.PickFileAsync = PickFileAsync;
@@ -38,28 +44,28 @@ public partial class MainPage : ContentPage
         // Sync window title with ViewModel title
         _viewModel.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof (_viewModel.Title) && Window != null)
+            if (e.PropertyName == nameof(_viewModel.Title) && Window != null)
             {
-                MainThread.BeginInvokeOnMainThread (() => Window.Title = _viewModel.Title);
+                MainThread.BeginInvokeOnMainThread(() => Window.Title = _viewModel.Title);
             }
         };
 
         // Populate printer list from platform service
-        PopulatePrinters ();
+        PopulatePrinters();
 
         // Apply command-line options (same pattern as WinForms)
-        ApplyCommandLineOptions ();
+        ApplyCommandLineOptions();
 
         // Subscribe to window lifecycle for state save
         Unloaded += OnPageUnloaded;
     }
 
-    protected override void OnHandlerChanged ()
+    protected override void OnHandlerChanged()
     {
-        base.OnHandlerChanged ();
+        base.OnHandlerChanged();
 
         // Restore saved window size and state (mirrors WinForms pattern)
-        var settings = WinPrint.Core.Models.ModelLocator.Current.Settings;
+        Settings settings = ModelLocator.Current.Settings;
 
         // First set the normal size/location (this is the "restore bounds" if maximized)
         if (settings.Size is { Width: > 0, Height: > 0 } && Window != null)
@@ -67,6 +73,7 @@ public partial class MainPage : ContentPage
             Window.Width = settings.Size.Width;
             Window.Height = settings.Size.Height;
         }
+
         if (settings.Location != null && Window != null)
         {
             Window.X = settings.Location.X;
@@ -75,79 +82,82 @@ public partial class MainPage : ContentPage
 
 #if WINDOWS
         // Then apply maximized state if saved
-        if (settings.WindowState == WinPrint.Core.Models.FormWindowState.Maximized)
+        if (settings.WindowState == Core.Models.FormWindowState.Maximized)
         {
             // Defer maximization until the native window is ready
-            MainThread.BeginInvokeOnMainThread (() =>
+            MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (Window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
                 {
-                    var appWindow = nativeWindow.AppWindow;
+                    AppWindow? appWindow = nativeWindow.AppWindow;
                     if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
                     {
-                        presenter.Maximize ();
+                        presenter.Maximize();
                     }
                 }
             });
         }
 
         // Hook native WinUI keyboard and pointer wheel events
-        HookNativeWindowEvents ();
+        HookNativeWindowEvents();
 
         // Track window size changes to capture normal bounds
-        HookWindowStateTracking ();
+        HookWindowStateTracking();
 #endif
     }
 
     /// <summary>
     ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, +, -).
     /// </summary>
-    public void HandleKeyDown (string key, bool ctrl, bool shift)
+    public void HandleKeyDown(string key, bool ctrl, bool shift)
     {
         switch (key)
         {
             case "F5":
-                _viewModel.RefreshCommand.Execute (null);
+                _viewModel.RefreshCommand.Execute(null);
                 break;
             case "PageDown":
             case "Next":
-                _viewModel.NextPageCommand.Execute (null);
+                _viewModel.NextPageCommand.Execute(null);
                 break;
             case "PageUp":
             case "Prior":
-                _viewModel.PreviousPageCommand.Execute (null);
+                _viewModel.PreviousPageCommand.Execute(null);
                 break;
             case "Home":
-                _viewModel.FirstPageCommand.Execute (null);
+                _viewModel.FirstPageCommand.Execute(null);
                 break;
             case "End":
-                _viewModel.LastPageCommand.Execute (null);
+                _viewModel.LastPageCommand.Execute(null);
                 break;
             case "OemPlus":
             case "Add":
                 if (ctrl)
                 {
-                    _viewModel.ZoomInCommand.Execute (null);
+                    _viewModel.ZoomInCommand.Execute(null);
                 }
+
                 break;
             case "OemMinus":
             case "Subtract":
                 if (ctrl)
                 {
-                    _viewModel.ZoomOutCommand.Execute (null);
+                    _viewModel.ZoomOutCommand.Execute(null);
                 }
+
                 break;
             case "D0":
             case "NumPad0":
                 if (ctrl)
                 {
-                    _viewModel.ZoomFitCommand.Execute (null);
+                    _viewModel.ZoomFitCommand.Execute(null);
                 }
+
                 break;
         }
     }
 
-    private void OnPageUnloaded (object? sender, EventArgs e)
+    private void OnPageUnloaded(object? sender, EventArgs e)
     {
         if (Window != null)
         {
@@ -155,31 +165,31 @@ public partial class MainPage : ContentPage
 #if WINDOWS
             if (Window.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
             {
-                var appWindow = nativeWindow.AppWindow;
+                AppWindow? appWindow = nativeWindow.AppWindow;
                 if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
                 {
                     isMaximized = presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized;
                 }
             }
 #endif
-            _viewModel.SaveWindowState (Window.X, Window.Y, Window.Width, Window.Height, isMaximized);
+            _viewModel.SaveWindowState(Window.X, Window.Y, Window.Width, Window.Height, isMaximized);
         }
     }
 
-    private async Task PerformPrintAsync ()
+    private async Task PerformPrintAsync()
     {
-        await PrintOrchestrator.PrintAsync (_printService, _viewModel, showDialog: true);
+        await PrintOrchestrator.PrintAsync(_printService, _viewModel);
     }
 
-    private void PopulatePrinters ()
+    private void PopulatePrinters()
     {
-        var printers = _printService.GetAvailablePrinters ();
-        _viewModel.PrinterNames.Clear ();
+        IReadOnlyList<PrinterInfo> printers = _printService.GetAvailablePrinters();
+        _viewModel.PrinterNames.Clear();
         string? defaultPrinter = null;
 
-        foreach (var printer in printers)
+        foreach (PrinterInfo printer in printers)
         {
-            _viewModel.PrinterNames.Add (printer.Name);
+            _viewModel.PrinterNames.Add(printer.Name);
             if (printer.IsDefault)
             {
                 defaultPrinter = printer.Name;
@@ -187,8 +197,8 @@ public partial class MainPage : ContentPage
         }
 
         // Restore persisted printer/paper-size via shared AppViewModel logic.
-        _viewModel.App.RestorePrinterSelection (_viewModel.PrinterNames, defaultPrinter);
-        _viewModel.App.RestorePaperSize (_viewModel.PaperSizes);
+        _viewModel.App.RestorePrinterSelection(_viewModel.PrinterNames, defaultPrinter);
+        _viewModel.App.RestorePaperSize(_viewModel.PaperSizes);
     }
 
     /// <summary>
@@ -197,83 +207,80 @@ public partial class MainPage : ContentPage
     ///     <c>--portrait</c>, <c>--paper-size</c>, <c>--sheet</c>, and file
     ///     arguments identically.
     /// </summary>
-    private void ApplyCommandLineOptions ()
+    private void ApplyCommandLineOptions()
     {
-        var options = WinPrint.Core.Models.ModelLocator.Current.Options;
-        string? file = _viewModel.App.ApplyOptions (options, _viewModel.PrinterNames, _viewModel.PaperSizes);
+        Options options = ModelLocator.Current.Options;
+        string? file = _viewModel.App.ApplyOptions(options, _viewModel.PrinterNames, _viewModel.PaperSizes);
 
-        if (!string.IsNullOrEmpty (file))
+        if (!string.IsNullOrEmpty(file))
         {
-            MainThread.BeginInvokeOnMainThread (async () =>
-            {
-                await _viewModel.LoadFileAsync (file);
-            });
+            MainThread.BeginInvokeOnMainThread(async () => { await _viewModel.LoadFileAsync(file); });
         }
     }
 
-    private static IPrintService CreatePlatformPrintService ()
+    private static IPrintService CreatePlatformPrintService()
     {
 #if WINDOWS
-        return new WindowsPrintService ();
+        return new WindowsPrintService();
 #elif MACCATALYST
-        return new MacPrintService ();
+        return new MacPrintService();
 #else
         throw new PlatformNotSupportedException ("Printing is not supported on this platform.");
 #endif
     }
 
-    private async Task<string?> PickFileAsync ()
+    private async Task<string?> PickFileAsync()
     {
-        var result = await FilePicker.Default.PickAsync (new PickOptions
+        FileResult? result = await FilePicker.Default.PickAsync(new PickOptions
         {
             PickerTitle = "Select a file to print"
         });
         return result?.FullPath;
     }
 
-    private async Task<(string Family, float Size, string Style)?> PickFontAsync (
+    private async Task<(string Family, float Size, string Style)?> PickFontAsync(
         string currentFamily, float currentSize, string currentStyle)
     {
         // MAUI doesn't have a built-in font picker dialog.
         // Use a simple prompt as a placeholder — platform-specific dialogs
         // can be added later via dependency injection.
-        string? input = await DisplayPromptAsync (
+        string? input = await DisplayPromptAsync(
             "Font",
             $"Current: {currentFamily}, {currentSize}pt, {currentStyle}\nEnter: Family, Size",
             initialValue: $"{currentFamily}, {currentSize}");
 
-        if (string.IsNullOrWhiteSpace (input))
+        if (string.IsNullOrWhiteSpace(input))
         {
             return null;
         }
 
-        var parts = input.Split (',', StringSplitOptions.TrimEntries);
+        string[] parts = input.Split(',', StringSplitOptions.TrimEntries);
         string family = parts.Length > 0 ? parts[0] : currentFamily;
-        float size = parts.Length > 1 && float.TryParse (parts[1], out var s) ? s : currentSize;
+        float size = parts.Length > 1 && float.TryParse(parts[1], out float s) ? s : currentSize;
         return (family, size, currentStyle);
     }
 
     /// <summary>
     ///     When preview is tapped and no file is loaded, open file dialog (per spec).
     /// </summary>
-    private async void OnPreviewTapped (object? sender, TappedEventArgs e)
+    private async void OnPreviewTapped(object? sender, TappedEventArgs e)
     {
         if (!_viewModel.IsFileLoaded)
         {
-            await _viewModel.OpenFileAsync ();
+            await _viewModel.OpenFileAsync();
         }
     }
 
     // --- Collapsible section handlers ---
 
-    private void OnSheetDefHeaderTapped (object? sender, TappedEventArgs e)
+    private void OnSheetDefHeaderTapped(object? sender, TappedEventArgs e)
     {
-        ToggleSection (SheetDefContent, SheetDefHeader, "Sheet Definition");
+        ToggleSection(SheetDefContent, SheetDefHeader, "Sheet Definition");
     }
 
-    private void OnMarginsHeaderTapped (object? sender, TappedEventArgs e)
+    private void OnMarginsHeaderTapped(object? sender, TappedEventArgs e)
     {
-        ToggleSection (MarginsContent, MarginsHeader, "Margins (inches)");
+        ToggleSection(MarginsContent, MarginsHeader, "Margins (inches)");
     }
 
     /// <summary>
@@ -283,7 +290,7 @@ public partial class MainPage : ContentPage
     ///     the label toggles the sibling CheckBox -- the behavior users (rightly)
     ///     expect on every other platform.
     /// </summary>
-    private void OnCheckBoxLabelTapped (object? sender, TappedEventArgs e)
+    private void OnCheckBoxLabelTapped(object? sender, TappedEventArgs e)
     {
         if (sender is not Label label || label.Parent is not Layout layout)
         {
@@ -291,7 +298,7 @@ public partial class MainPage : ContentPage
         }
 
         // Find the first CheckBox sibling in the same layout and toggle it.
-        foreach (var child in layout.Children)
+        foreach (IView? child in layout.Children)
         {
             if (child is CheckBox cb)
             {
@@ -299,27 +306,28 @@ public partial class MainPage : ContentPage
                 {
                     cb.IsChecked = !cb.IsChecked;
                 }
+
                 return;
             }
         }
     }
 
-    private void OnPagesUpHeaderTapped (object? sender, TappedEventArgs e)
+    private void OnPagesUpHeaderTapped(object? sender, TappedEventArgs e)
     {
-        ToggleSection (PagesUpContent, PagesUpHeader, "Pages Up");
+        ToggleSection(PagesUpContent, PagesUpHeader, "Pages Up");
     }
 
-    private void OnPrinterHeaderTapped (object? sender, TappedEventArgs e)
+    private void OnPrinterHeaderTapped(object? sender, TappedEventArgs e)
     {
-        ToggleSection (PrinterContent, PrinterHeader, "Printer");
+        ToggleSection(PrinterContent, PrinterHeader, "Printer");
     }
 
-    private void OnFontsHeaderTapped (object? sender, TappedEventArgs e)
+    private void OnFontsHeaderTapped(object? sender, TappedEventArgs e)
     {
-        ToggleSection (FontsContent, FontsHeader, "Fonts");
+        ToggleSection(FontsContent, FontsHeader, "Fonts");
     }
 
-    private static void ToggleSection (VisualElement content, Label header, string title)
+    private static void ToggleSection(VisualElement content, Label header, string title)
     {
         content.IsVisible = !content.IsVisible;
         header.Text = (content.IsVisible ? "▼ " : "▶ ") + title;
@@ -327,12 +335,12 @@ public partial class MainPage : ContentPage
 
     private bool _leftPanelVisible = true;
 
-    private async void OnHelpTapped (object? sender, TappedEventArgs e)
+    private async void OnHelpTapped(object? sender, TappedEventArgs e)
     {
         await Launcher.OpenAsync("https://tig.github.io/winprint");
     }
 
-    private void OnPanelToggleTapped (object? sender, TappedEventArgs e)
+    private void OnPanelToggleTapped(object? sender, TappedEventArgs e)
     {
         _leftPanelVisible = !_leftPanelVisible;
         LeftPanel.IsVisible = _leftPanelVisible;
@@ -340,15 +348,15 @@ public partial class MainPage : ContentPage
     }
 
 #if WINDOWS
-    private void HookNativeWindowEvents ()
+    private void HookNativeWindowEvents()
     {
-        var mauiWindow = Window;
+        Window? mauiWindow = Window;
         if (mauiWindow?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
         {
             return;
         }
 
-        var content = nativeWindow.Content as Microsoft.UI.Xaml.UIElement;
+        var content = nativeWindow.Content;
         if (content == null)
         {
             return;
@@ -358,36 +366,39 @@ public partial class MainPage : ContentPage
         content.PointerWheelChanged += OnNativePointerWheel;
     }
 
-    private void OnNativeKeyDown (object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
         var window = sender as Microsoft.UI.Xaml.UIElement;
-        bool ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread (Windows.System.VirtualKey.Control)
-            .HasFlag (Windows.UI.Core.CoreVirtualKeyStates.Down);
-        bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread (Windows.System.VirtualKey.Shift)
-            .HasFlag (Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool ctrl = Microsoft.UI.Input.InputKeyboardSource
+            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
-        string key = e.Key.ToString ();
-        HandleKeyDown (key, ctrl, shift);
+        string key = e.Key.ToString();
+        HandleKeyDown(key, ctrl, shift);
     }
 
-    private void OnNativePointerWheel (object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void OnNativePointerWheel(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        var point = e.GetCurrentPoint (sender as Microsoft.UI.Xaml.UIElement);
+        PointerPoint? point = e.GetCurrentPoint(sender as Microsoft.UI.Xaml.UIElement);
         int delta = point.Properties.MouseWheelDelta;
-        bool ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread (Windows.System.VirtualKey.Control)
-            .HasFlag (Windows.UI.Core.CoreVirtualKeyStates.Down);
+        bool ctrl = Microsoft.UI.Input.InputKeyboardSource
+            .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
         if (ctrl)
         {
             // Ctrl+Wheel = zoom
             if (delta > 0)
             {
-                _viewModel.ZoomInCommand.Execute (null);
+                _viewModel.ZoomInCommand.Execute(null);
             }
             else if (delta < 0)
             {
-                _viewModel.ZoomOutCommand.Execute (null);
+                _viewModel.ZoomOutCommand.Execute(null);
             }
+
             e.Handled = true;
         }
         else
@@ -395,12 +406,13 @@ public partial class MainPage : ContentPage
             // Plain wheel = page navigation
             if (delta > 0)
             {
-                _viewModel.PreviousPageCommand.Execute (null);
+                _viewModel.PreviousPageCommand.Execute(null);
             }
             else if (delta < 0)
             {
-                _viewModel.NextPageCommand.Execute (null);
+                _viewModel.NextPageCommand.Execute(null);
             }
+
             e.Handled = true;
         }
     }
@@ -409,14 +421,14 @@ public partial class MainPage : ContentPage
     ///     Track window position/size changes while in normal (non-maximized) state.
     ///     This gives us the "RestoreBounds" equivalent for persisting.
     /// </summary>
-    private void HookWindowStateTracking ()
+    private void HookWindowStateTracking()
     {
         if (Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
         {
             return;
         }
 
-        var appWindow = nativeWindow.AppWindow;
+        AppWindow? appWindow = nativeWindow.AppWindow;
         appWindow.Changed += (s, args) =>
         {
             if (!args.DidPositionChange && !args.DidSizeChange)
@@ -428,7 +440,7 @@ public partial class MainPage : ContentPage
             if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter &&
                 presenter.State != Microsoft.UI.Windowing.OverlappedPresenterState.Maximized)
             {
-                _viewModel.SaveNormalBounds (Window.X, Window.Y, Window.Width, Window.Height);
+                _viewModel.SaveNormalBounds(Window.X, Window.Y, Window.Width, Window.Height);
             }
         };
     }

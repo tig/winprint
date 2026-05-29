@@ -8,29 +8,29 @@ namespace WinPrint.WinForms;
 
 public partial class UpdateDialog : Form
 {
-    public UpdateDialog ()
+    public UpdateDialog()
     {
-        InitializeComponent ();
+        InitializeComponent();
         StartPosition = FormStartPosition.CenterParent;
         labelNewVersion.Text = $"A newer version ({ServiceLocator.Current.UpdateService.LatestVersion}) is available.";
         LinkLabel.Link releaseLink = linkReleasePage.Links[0] ??
-                                     throw new InvalidOperationException ("Release link was not initialized.");
+                                     throw new InvalidOperationException("Release link was not initialized.");
         releaseLink.LinkData = ServiceLocator.Current.UpdateService.ReleasePageUri?.AbsoluteUri ??
-                               throw new InvalidOperationException ("Release page URI was not initialized.");
+                               throw new InvalidOperationException("Release page URI was not initialized.");
     }
 
-    private void downloadButton_Click (object? sender, EventArgs args)
+    private void downloadButton_Click(object? sender, EventArgs args)
     {
-        ServiceLocator.Current.UpdateService.StartUpgradeAsync ().ConfigureAwait (false);
+        ServiceLocator.Current.UpdateService.StartUpgradeAsync().ConfigureAwait(false);
     }
 
-    private void linkReleasePage_LinkClicked (object? sender, LinkLabelLinkClickedEventArgs args)
+    private void linkReleasePage_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs args)
     {
         string releasePage = linkReleasePage.Links[0]?.LinkData as string ??
-                             throw new InvalidOperationException ("Release link data was not initialized.");
-        Log.Debug ($"Browsing to release page: {releasePage}");
+                             throw new InvalidOperationException("Release link data was not initialized.");
+        Log.Debug($"Browsing to release page: {releasePage}");
 
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Release Page Click");
+        ServiceLocator.Current.TelemetryService.TrackEvent("Release Page Click");
 
         Process? proc = null;
         try
@@ -40,18 +40,18 @@ public partial class UpdateDialog : Form
                 UseShellExecute = true, // This is important
                 FileName = releasePage
             };
-            proc = Process.Start (psi);
+            proc = Process.Start(psi);
         }
         catch (Exception e)
         {
             // TODO: Better error message (output of stderr?)
-            ServiceLocator.Current.TelemetryService.TrackException (e);
+            ServiceLocator.Current.TelemetryService.TrackException(e);
 
-            Log.Error (e, $"Couldn't browse to {releasePage}.");
+            Log.Error(e, $"Couldn't browse to {releasePage}.");
         }
         finally
         {
-            proc?.Dispose ();
+            proc?.Dispose();
         }
     }
 }

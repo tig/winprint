@@ -16,13 +16,13 @@ namespace WinPrint.Analyzers;
 ///     <c>.g.cs</c>, or <c>.g.i.cs</c>, any file under an <c>obj/</c> or <c>bin/</c>
 ///     directory, or any file containing an <c>&lt;auto-generated&gt;</c> header) are exempt.
 /// </summary>
-[DiagnosticAnalyzer (LanguageNames.CSharp)]
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class WinPrintAnalyzers : DiagnosticAnalyzer
 {
     public const string OneTypePerFileId = "WPA0001";
     public const string NoNestedTypesId = "WPA0002";
 
-    private static readonly DiagnosticDescriptor OneTypePerFileRule = new (
+    private static readonly DiagnosticDescriptor OneTypePerFileRule = new(
         OneTypePerFileId,
         "One type per file",
         "File '{0}' declares more than one top-level type ('{1}'); split each type into its own file",
@@ -31,7 +31,7 @@ public sealed class WinPrintAnalyzers : DiagnosticAnalyzer
         true,
         "Each source file must declare exactly one top-level type.");
 
-    private static readonly DiagnosticDescriptor NoNestedTypesRule = new (
+    private static readonly DiagnosticDescriptor NoNestedTypesRule = new(
         NoNestedTypesId,
         "No nested types",
         "Type '{0}' is nested inside '{1}'; promote it to a top-level type in its own file",
@@ -41,63 +41,65 @@ public sealed class WinPrintAnalyzers : DiagnosticAnalyzer
         "Nested type declarations are not allowed. Promote nested types to top-level types in their own files.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create (OneTypePerFileRule, NoNestedTypesRule);
+        [OneTypePerFileRule, NoNestedTypesRule];
 
-    public override void Initialize (AnalysisContext context)
+    public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis (GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution ();
-        context.RegisterSyntaxTreeAction (AnalyzeSyntaxTree);
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+        context.RegisterSyntaxTreeAction(AnalyzeSyntaxTree);
     }
 
-    private static void AnalyzeSyntaxTree (SyntaxTreeAnalysisContext context)
+    private static void AnalyzeSyntaxTree(SyntaxTreeAnalysisContext context)
     {
         SyntaxTree tree = context.Tree;
-        if (IsGenerated (tree))
+        if (IsGenerated(tree))
         {
             return;
         }
 
-        SyntaxNode root = tree.GetRoot (context.CancellationToken);
+        SyntaxNode root = tree.GetRoot(context.CancellationToken);
 
         // WPA0001 - collect every top-level type declaration in the file.
-        BaseTypeDeclarationSyntax[] topLevelTypes = root
-            .DescendantNodes (node => node is CompilationUnitSyntax or BaseNamespaceDeclarationSyntax)
-            .OfType<BaseTypeDeclarationSyntax> ()
-            .Where (t => t.Parent is CompilationUnitSyntax or BaseNamespaceDeclarationSyntax)
-            .ToArray ();
+        BaseTypeDeclarationSyntax[] topLevelTypes =
+        [
+            .. root
+                .DescendantNodes(node => node is CompilationUnitSyntax or BaseNamespaceDeclarationSyntax)
+                .OfType<BaseTypeDeclarationSyntax>()
+                .Where(t => t.Parent is CompilationUnitSyntax or BaseNamespaceDeclarationSyntax)
+        ];
 
         if (topLevelTypes.Length > 1)
         {
-            string fileName = Path.GetFileName (tree.FilePath);
-            string names = string.Join (", ", topLevelTypes.Select (t => t.Identifier.ValueText));
+            string fileName = Path.GetFileName(tree.FilePath);
+            string names = string.Join(", ", topLevelTypes.Select(t => t.Identifier.ValueText));
             // Report on the second-and-subsequent declarations so the first type
             // (the conventional primary type) stays clean.
             for (int i = 1; i < topLevelTypes.Length; i++)
             {
-                context.ReportDiagnostic (Diagnostic.Create (
+                context.ReportDiagnostic(Diagnostic.Create(
                     OneTypePerFileRule,
-                    topLevelTypes[i].Identifier.GetLocation (),
+                    topLevelTypes[i].Identifier.GetLocation(),
                     fileName,
                     names));
             }
         }
 
         // WPA0002 - flag every type declared inside another type.
-        foreach (BaseTypeDeclarationSyntax nested in root.DescendantNodes ().OfType<BaseTypeDeclarationSyntax> ())
+        foreach (BaseTypeDeclarationSyntax nested in root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>())
         {
             if (nested.Parent is BaseTypeDeclarationSyntax outer)
             {
-                context.ReportDiagnostic (Diagnostic.Create (
+                context.ReportDiagnostic(Diagnostic.Create(
                     NoNestedTypesRule,
-                    nested.Identifier.GetLocation (),
+                    nested.Identifier.GetLocation(),
                     nested.Identifier.ValueText,
                     outer.Identifier.ValueText));
             }
         }
     }
 
-    private static bool IsGenerated (SyntaxTree tree)
+    private static bool IsGenerated(SyntaxTree tree)
     {
         string path = tree.FilePath ?? string.Empty;
         if (path.Length == 0)
@@ -105,28 +107,28 @@ public sealed class WinPrintAnalyzers : DiagnosticAnalyzer
             return false;
         }
 
-        string fileName = Path.GetFileName (path);
-        if (fileName.EndsWith (".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
-            fileName.EndsWith (".Generated.cs", StringComparison.OrdinalIgnoreCase) ||
-            fileName.EndsWith (".g.cs", StringComparison.OrdinalIgnoreCase) ||
-            fileName.EndsWith (".g.i.cs", StringComparison.OrdinalIgnoreCase))
+        string fileName = Path.GetFileName(path);
+        if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".Generated.cs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase) ||
+            fileName.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        string normalized = path.Replace ('\\', '/');
-        if (normalized.Contains ("/obj/") || normalized.Contains ("/bin/"))
+        string normalized = path.Replace('\\', '/');
+        if (normalized.Contains("/obj/") || normalized.Contains("/bin/"))
         {
             return true;
         }
 
         // Check for an <auto-generated> header in the leading trivia.
-        SyntaxNode root = tree.GetRoot ();
-        SyntaxTriviaList leading = root.GetLeadingTrivia ();
+        SyntaxNode root = tree.GetRoot();
+        SyntaxTriviaList leading = root.GetLeadingTrivia();
         foreach (SyntaxTrivia trivia in leading)
         {
-            string text = trivia.ToString ();
-            if (text.IndexOf ("<auto-generated", StringComparison.OrdinalIgnoreCase) >= 0)
+            string text = trivia.ToString();
+            if (text.IndexOf("<auto-generated", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return true;
             }

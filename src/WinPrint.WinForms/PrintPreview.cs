@@ -17,7 +17,7 @@ public partial class PrintPreview : Control
 {
     private const int _messageHorizMargin = 20;
 
-    private readonly StringFormat _messageStringFormat = new ()
+    private readonly StringFormat _messageStringFormat = new()
     {
         LineAlignment = StringAlignment.Center,
         Alignment = StringAlignment.Center
@@ -28,45 +28,45 @@ public partial class PrintPreview : Control
 
     // Assigned by MainWindow after designer initialization.
 
-    public PrintPreview ()
+    public PrintPreview()
     {
         //DoubleBuffered = true;
-        InitializeComponent ();
+        InitializeComponent();
         CurrentSheet = 1;
         Zoom = 100;
         MouseWheel += _MouseWheel;
         BackColor = SystemColors.AppWorkspace;
     }
 
-    [Browsable (false)]
-    [DesignerSerializationVisibility (DesignerSerializationVisibility.Hidden)]
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public SheetViewModel SheetViewModel { get; set; } = null!;
 
-    [Category ("Data")]
-    [Description ("Specifies the page number of the current sheet.")]
-    [Bindable (true)]
-    [DesignerSerializationVisibility (DesignerSerializationVisibility.Hidden)]
+    [Category("Data")]
+    [Description("Specifies the page number of the current sheet.")]
+    [Bindable(true)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public int CurrentSheet { get; set; }
 
-    [Category ("Data")]
-    [Description ("Specifies zoom level.")]
-    [Bindable (true)]
-    [DefaultValue (100)]
+    [Category("Data")]
+    [Description("Specifies zoom level.")]
+    [Bindable(true)]
+    [DefaultValue(100)]
     public int Zoom { get; set; }
 
-    private void _MouseWheel (object? sender, MouseEventArgs e)
+    private void _MouseWheel(object? sender, MouseEventArgs e)
     {
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Mouse Wheel",
-            new Dictionary<string, string?> { ["ModifierKeys"] = ModifierKeys.ToString () });
-        if (ModifierKeys.HasFlag (Keys.Control))
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Mouse Wheel",
+            new Dictionary<string, string?> { ["ModifierKeys"] = ModifierKeys.ToString() });
+        if (ModifierKeys.HasFlag(Keys.Control))
         {
             if (e.Delta < 0)
             {
-                ZoomOut ();
+                ZoomOut();
             }
             else
             {
-                ZoomIn ();
+                ZoomIn();
             }
         }
         else
@@ -74,16 +74,16 @@ public partial class PrintPreview : Control
             // LogService.TraceMessage($"_MouseWheel page {e.Delta}");
             if (e.Delta < 0)
             {
-                PageDown ();
+                PageDown();
             }
             else
             {
-                PageUp ();
+                PageUp();
             }
         }
     }
 
-    private void ZoomIn ()
+    private void ZoomIn()
     {
         int multiplier = 10;
         if (Zoom >= 200)
@@ -92,12 +92,12 @@ public partial class PrintPreview : Control
         }
 
         Zoom += multiplier;
-        Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Zoom In",
-            new Dictionary<string, string?> { ["Zoom"] = Zoom.ToString () });
+        Invalidate();
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Zoom In",
+            new Dictionary<string, string?> { ["Zoom"] = Zoom.ToString() });
     }
 
-    private void ZoomOut ()
+    private void ZoomOut()
     {
         int multiplier = 10;
         if (Zoom >= 200)
@@ -112,41 +112,41 @@ public partial class PrintPreview : Control
             Zoom = 10;
         }
 
-        Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Zoom Out",
-            new Dictionary<string, string?> { ["Zoom"] = Zoom.ToString () });
+        Invalidate();
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Zoom Out",
+            new Dictionary<string, string?> { ["Zoom"] = Zoom.ToString() });
     }
 
-    protected override void OnResize (EventArgs e)
+    protected override void OnResize(EventArgs e)
     {
-        Invalidate ();
+        Invalidate();
         //base.OnResize(e);
     }
 
-    protected override void OnClick (EventArgs e)
+    protected override void OnClick(EventArgs e)
     {
-        base.OnClick (e);
-        Select ();
+        base.OnClick(e);
+        Select();
         //Invalidate();
     }
 
-    protected override void OnLostFocus (EventArgs e)
+    protected override void OnLostFocus(EventArgs e)
     {
-        base.OnLostFocus (e);
+        base.OnLostFocus(e);
         //Invalidate();
     }
 
-    protected override void OnKeyUp (KeyEventArgs e)
+    protected override void OnKeyUp(KeyEventArgs e)
     {
         if (e is null)
         {
-            throw new ArgumentNullException (nameof (e));
+            throw new ArgumentNullException(nameof(e));
         }
 
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Key Up",
-            new Dictionary<string, string?> { ["KeyCode"] = e.KeyCode.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Key Up",
+            new Dictionary<string, string?> { ["KeyCode"] = e.KeyCode.ToString() });
 
-        base.OnKeyUp (e);
+        base.OnKeyUp(e);
 
 #if TERMINAL
         var pygCte = SheetViewModel.ContentEngine as PygmentsCte;
@@ -154,19 +154,19 @@ public partial class PrintPreview : Control
         switch (e.KeyCode)
         {
             case Keys.PageDown:
-                PageDown ();
+                PageDown();
                 break;
 
             case Keys.PageUp:
-                PageUp ();
+                PageUp();
                 break;
 
             case Keys.Oemplus:
-                ZoomIn ();
+                ZoomIn();
                 break;
 
             case Keys.OemMinus:
-                ZoomOut ();
+                ZoomOut();
                 break;
 
             case Keys.Down:
@@ -174,7 +174,7 @@ public partial class PrintPreview : Control
                 pygCte.DecoderClient.MoveCursor(null, libvt100.Direction.Down, 1);
                 Invalidate();
 #else
-                PageDown ();
+                PageDown();
 #endif
                 break;
             case Keys.Up:
@@ -182,16 +182,16 @@ public partial class PrintPreview : Control
                 pygCte?.DecoderClient.MoveCursor(null, libvt100.Direction.Up, 1);
                 Invalidate();
 #else
-                PageUp ();
+                PageUp();
 #endif
                 break;
 
             case Keys.Home:
-                Home ();
+                Home();
                 break;
 
             case Keys.End:
-                End ();
+                End();
                 break;
 
 #if TERMINAL
@@ -211,82 +211,82 @@ public partial class PrintPreview : Control
         }
     }
 
-    private void PageUp ()
+    private void PageUp()
     {
         if (CurrentSheet > 1)
         {
             CurrentSheet--;
-            Invalidate ();
+            Invalidate();
         }
 
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Page Up",
-            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Page Up",
+            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString() });
     }
 
-    private void PageDown ()
+    private void PageDown()
     {
-        LogService.TraceMessage ("Preview:PageDown");
+        LogService.TraceMessage("Preview:PageDown");
         if (CurrentSheet < SheetViewModel.NumSheets)
         {
             CurrentSheet++;
-            Invalidate ();
+            Invalidate();
         }
 
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Page Down",
-            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Page Down",
+            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString() });
     }
 
-    private void Home ()
+    private void Home()
     {
         CurrentSheet = 1;
-        Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview Home",
-            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
+        Invalidate();
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview Home",
+            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString() });
     }
 
-    private void End ()
+    private void End()
     {
         CurrentSheet = SheetViewModel.NumSheets;
-        Invalidate ();
-        ServiceLocator.Current.TelemetryService.TrackEvent ("Print Preview End",
-            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString () });
+        Invalidate();
+        ServiceLocator.Current.TelemetryService.TrackEvent("Print Preview End",
+            new Dictionary<string, string?> { ["Page"] = CurrentSheet.ToString() });
     }
 
-    protected override void OnTextChanged (EventArgs e)
+    protected override void OnTextChanged(EventArgs e)
     {
         // Invalidate previous
-        Invalidate (_messageRect);
+        Invalidate(_messageRect);
 
         // Invalidate new
-        Invalidate (GetTextRect (Graphics.FromHwnd (Handle)));
+        Invalidate(GetTextRect(Graphics.FromHwnd(Handle)));
     }
 
-    protected override void OnPaint (PaintEventArgs e)
+    protected override void OnPaint(PaintEventArgs e)
     {
         if (e is null)
         {
-            throw new ArgumentNullException (nameof (e));
+            throw new ArgumentNullException(nameof(e));
         }
 
-        LogService.TraceMessage ($"PrintPreview.Text: {Text} - clip: {e.ClipRectangle}");
+        LogService.TraceMessage($"PrintPreview.Text: {Text} - clip: {e.ClipRectangle}");
 
         if (SheetViewModel != null && SheetViewModel.Ready)
         {
-            GraphicsState state = e.Graphics.Save ();
+            GraphicsState state = e.Graphics.Save();
 
             // Calculate scale and location
-            var paperSize = new Size (ClientSize.Width - Padding.Horizontal, ClientSize.Height - Padding.Vertical);
+            var paperSize = new Size(ClientSize.Width - Padding.Horizontal, ClientSize.Height - Padding.Vertical);
             double w = SheetViewModel.Bounds.Width;
             double h = SheetViewModel.Bounds.Height;
             double scalingX = paperSize.Width / w;
             double scalingY = paperSize.Height / h;
 
             // Now, we have two scaling ratios, which one produces the smaller image? The one that has the smallest scaling factor.
-            double scale = Math.Min (scalingY, scalingX) * (Zoom / 100F);
-            LogService.TraceMessage ($"Scale {scale}");
+            double scale = Math.Min(scalingY, scalingX) * (Zoom / 100F);
+            LogService.TraceMessage($"Scale {scale}");
 
-            var previewSize = new Size ((int)(w * scale), (int)(h * scale));
-            LogService.TraceMessage ($"previewSize {previewSize.Width}, {previewSize.Height}");
+            var previewSize = new Size((int)(w * scale), (int)(h * scale));
+            LogService.TraceMessage($"previewSize {previewSize.Width}, {previewSize.Height}");
 
             // Don't do anything if the windows been shrunk too far or GDI+ will crash
             if (previewSize.Width > 10 && previewSize.Height > 10)
@@ -295,58 +295,58 @@ public partial class PrintPreview : Control
                 if (Zoom <= 100)
                 {
                     // Center
-                    e.Graphics.TranslateTransform (ClientSize.Width / 2 - previewSize.Width / 2,
+                    e.Graphics.TranslateTransform(ClientSize.Width / 2 - previewSize.Width / 2,
                         ClientSize.Height / 2 - previewSize.Height / 2);
                 }
                 else
                 {
                     // Top centered
-                    e.Graphics.TranslateTransform (ClientSize.Width / 2 - previewSize.Width / 2, Padding.Top);
+                    e.Graphics.TranslateTransform(ClientSize.Width / 2 - previewSize.Width / 2, Padding.Top);
                 }
 
                 // Scale for client size & zoom
-                e.Graphics.ScaleTransform ((float)scale, (float)scale);
+                e.Graphics.ScaleTransform((float)scale, (float)scale);
 
                 // Paint the background white
-                e.Graphics.FillRectangle (Brushes.White, SheetViewModel.Bounds);
+                e.Graphics.FillRectangle(Brushes.White, SheetViewModel.Bounds);
 
-                SheetViewModel.PrintSheet (e.Graphics, CurrentSheet);
+                SheetViewModel.PrintSheet(e.Graphics, CurrentSheet);
             }
 
-            e.Graphics.Restore (state);
+            e.Graphics.Restore(state);
         }
 
         // If we're zoomed, paint zoom factor
         if (Zoom != 100)
         {
-            using var font = new Font (Font.FontFamily, 36F, FontStyle.Regular, GraphicsUnit.Point);
+            using var font = new Font(Font.FontFamily, 36F, FontStyle.Regular, GraphicsUnit.Point);
             string zText = $"{Zoom}%";
-            SizeF s = e.Graphics.MeasureString (zText, font);
-            e.Graphics.DrawString (zText, font, SystemBrushes.ControlLight, ClientSize.Width / 2 - s.Width / 2,
+            SizeF s = e.Graphics.MeasureString(zText, font);
+            e.Graphics.DrawString(zText, font, SystemBrushes.ControlLight, ClientSize.Width / 2 - s.Width / 2,
                 ClientSize.Height / 2 - s.Height / 2);
         }
 
-        PaintMessage (e);
+        PaintMessage(e);
     }
 
-    private void PaintMessage (PaintEventArgs e)
+    private void PaintMessage(PaintEventArgs e)
     {
         // While in error or loading & reflowing show Text 
-        Rectangle rect = GetTextRect (e.Graphics);
+        Rectangle rect = GetTextRect(e.Graphics);
         //e.Graphics.FillRectangle(SystemBrushes.Control, _messageRect);
-        e.Graphics.DrawString (Text, new Font (Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point),
+        e.Graphics.DrawString(Text, new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point),
             SystemBrushes.ControlText, rect, _messageStringFormat);
         //e.Graphics.DrawRectangle(Pens.Red, rect);
         _messageRect = rect;
     }
 
-    private Rectangle GetTextRect (Graphics g)
+    private Rectangle GetTextRect(Graphics g)
     {
         //var g = Graphics.FromHwnd(Handle);
-        SizeF size = g.MeasureString (Text, new Font (Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point),
+        SizeF size = g.MeasureString(Text, new Font(Font.FontFamily, 14F, FontStyle.Regular, GraphicsUnit.Point),
             ClientRectangle.Width - _messageHorizMargin * 2, _messageStringFormat);
-        return new Rectangle ((int)Math.Ceiling (ClientRectangle.Width / 2 - size.Width / 2),
-            (int)Math.Ceiling (ClientRectangle.Height / 2 - size.Height / 2), (int)Math.Ceiling (size.Width),
-            (int)Math.Ceiling (size.Height));
+        return new Rectangle((int)Math.Ceiling(ClientRectangle.Width / 2 - size.Width / 2),
+            (int)Math.Ceiling(ClientRectangle.Height / 2 - size.Height / 2), (int)Math.Ceiling(size.Width),
+            (int)Math.Ceiling(size.Height));
     }
 }

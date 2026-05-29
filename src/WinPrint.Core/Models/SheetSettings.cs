@@ -11,13 +11,13 @@ public class SheetSettings : ModelBase
 
     private ContentSettings? _contentSettings;
     private int _darkness;
-    private Footer _footer = new ();
+    private Footer _footer = new();
     private bool _grayscale;
 
-    private Header _header = new ();
+    private Header _header = new();
 
     private bool _landscape;
-    private PrintMargins _margins = new (0, 0, 0, 0);
+    private PrintMargins _margins = new(0, 0, 0, 0);
 
     //private Guid id;
     private string _name = "";
@@ -33,7 +33,7 @@ public class SheetSettings : ModelBase
     public string Name
     {
         get => _name;
-        set => SetField (ref _name, value);
+        set => SetField(ref _name, value);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public class SheetSettings : ModelBase
     public bool Landscape
     {
         get => _landscape;
-        set => SetField (ref _landscape, value);
+        set => SetField(ref _landscape, value);
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class SheetSettings : ModelBase
     public int Rows
     {
         get => _rows;
-        set => SetField (ref _rows, value);
+        set => SetField(ref _rows, value);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class SheetSettings : ModelBase
     public int Columns
     {
         get => _columns;
-        set => SetField (ref _columns, value);
+        set => SetField(ref _columns, value);
     }
 
     /// <summary>
@@ -73,14 +73,14 @@ public class SheetSettings : ModelBase
     public int Padding
     {
         get => _padding;
-        set => SetField (ref _padding, value);
+        set => SetField(ref _padding, value);
     }
 
     [SafeForTelemetry]
     public bool PageSeparator
     {
         get => _pageSeparator;
-        set => SetField (ref _pageSeparator, value);
+        set => SetField(ref _pageSeparator, value);
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ public class SheetSettings : ModelBase
     public PrintMargins Margins
     {
         get => _margins;
-        set => SetField (ref _margins, value);
+        set => SetField(ref _margins, value);
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public class SheetSettings : ModelBase
             //if (contentSettings is null)
             //    contentSettings = new ContentSettings();
             _contentSettings;
-        set => SetField (ref _contentSettings, value);
+        set => SetField(ref _contentSettings, value);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public class SheetSettings : ModelBase
     public Header Header
     {
         get => _header;
-        set => SetField (ref _header, value);
+        set => SetField(ref _header, value);
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public class SheetSettings : ModelBase
     public Footer Footer
     {
         get => _footer;
-        set => SetField (ref _footer, value);
+        set => SetField(ref _footer, value);
     }
 
     // The following members are runtime-only and do NOT get persisted, hence "internal"
@@ -133,7 +133,7 @@ public class SheetSettings : ModelBase
     internal bool PrintBackground
     {
         get => _printBackground;
-        set => SetField (ref _printBackground, value);
+        set => SetField(ref _printBackground, value);
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public class SheetSettings : ModelBase
     internal bool Grayscale
     {
         get => _grayscale;
-        set => SetField (ref _grayscale, value);
+        set => SetField(ref _grayscale, value);
     }
 
     /// <summary>
@@ -152,6 +152,6 @@ public class SheetSettings : ModelBase
     internal int Darkness
     {
         get => _darkness;
-        set => SetField (ref _darkness, value);
+        set => SetField(ref _darkness, value);
     }
 }

@@ -12,13 +12,13 @@ public partial class App : MauiWinUIApplication
     ///     Initializes the singleton application object.  This is the first line of authored code
     ///     executed, and as such is the logical equivalent of main() or WinMain().
     /// </summary>
-    public App ()
+    public App()
     {
-        InitializeComponent ();
+        InitializeComponent();
     }
 
-    protected override MauiApp CreateMauiApp ()
+    protected override MauiApp CreateMauiApp()
     {
-        return MauiProgram.CreateMauiApp ();
+        return MauiProgram.CreateMauiApp();
     }
 }

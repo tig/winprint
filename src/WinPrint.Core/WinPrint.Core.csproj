@@ -39,10 +39,7 @@
         <Compile Remove="Abstractions\SystemDrawingGraphicsContext.cs" />
         <Compile Remove="Abstractions\SystemDrawingPen.cs" />
         <Compile Remove="Abstractions\SystemDrawingState.cs" />
-        <Compile Remove="ContentTypeEngines\TextCte.cs" />
-        <Compile Remove="ContentTypeEngines\TextMateCte.cs" />
-        <Compile Remove="ContentTypeEngines\TextMateWrappedLine.cs" />
-        <Compile Remove="ContentTypeEngines\TextMateWrappedRun.cs" />
+        <Compile Remove="ContentTypeEngines\WindowsMeasurementContext.cs" />
         <Compile Remove="Print.cs" />
     </ItemGroup>
 
@@ -70,6 +67,7 @@
 
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
+        <PackageReference Include="Markdig" Version="1.2.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />

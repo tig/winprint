@@ -22,20 +22,20 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
 
     public override string[] SupportedContentTypes => _supportedContentTypes;
 
-    public void Dispose ()
+    public void Dispose()
     {
-        Dispose (true);
-        GC.SuppressFinalize (this);
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
-    public static HtmlCte Create ()
+    public static HtmlCte Create()
     {
-        var content = new HtmlCte ();
-        content.CopyPropertiesFrom (ModelLocator.Current.Settings.HtmlContentTypeEngineSettings);
+        var content = new HtmlCte();
+        content.CopyPropertiesFrom(ModelLocator.Current.Settings.HtmlContentTypeEngineSettings);
         return content;
     }
 
-    private void Dispose (bool disposing)
+    private void Dispose(bool disposing)
     {
         if (_disposed)
         {
@@ -45,20 +45,20 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         _disposed = true;
     }
 
-    public override async Task<bool> SetDocumentAsync (string doc)
+    public override async Task<bool> SetDocumentAsync(string doc)
     {
         Document = doc;
-        return await Task.FromResult (true);
+        return await Task.FromResult(true);
     }
 
-    public override async Task<int> RenderAsync (PrintResolution? printerResolution,
+    public override async Task<int> RenderAsync(PrintResolution? printerResolution,
         EventHandler<string>? reflowProgress)
     {
-        LogService.TraceMessage ("HtmlCte is a stub - LiteHtmlSharp dependency removed.");
-        return await Task.FromResult (0);
+        LogService.TraceMessage("HtmlCte is a stub - LiteHtmlSharp dependency removed.");
+        return await Task.FromResult(0);
     }
 
-    public override void PaintPage (IGraphicsContext g, int pageNum)
+    public override void PaintPage(IGraphicsContext g, int pageNum)
     {
         // Stub: LiteHtmlSharp dependency removed
     }

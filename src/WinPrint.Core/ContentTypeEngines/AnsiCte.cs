@@ -26,20 +26,20 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable
 
     public override string[] SupportedContentTypes => _supportedContentTypes;
 
-    public void Dispose ()
+    public void Dispose()
     {
-        Dispose (true);
-        GC.SuppressFinalize (this);
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
-    public static AnsiCte Create ()
+    public static AnsiCte Create()
     {
-        var engine = new AnsiCte ();
-        engine.CopyPropertiesFrom (ModelLocator.Current.Settings.AnsiContentTypeEngineSettings);
+        var engine = new AnsiCte();
+        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.AnsiContentTypeEngineSettings);
         return engine;
     }
 
-    private void Dispose (bool disposing)
+    private void Dispose(bool disposing)
     {
         if (_disposed)
         {
@@ -49,20 +49,20 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable
         _disposed = true;
     }
 
-    public override async Task<bool> SetDocumentAsync (string doc)
+    public override async Task<bool> SetDocumentAsync(string doc)
     {
         Document = doc;
-        return await Task.FromResult (true);
+        return await Task.FromResult(true);
     }
 
-    public override async Task<int> RenderAsync (PrintResolution? printerResolution,
+    public override async Task<int> RenderAsync(PrintResolution? printerResolution,
         EventHandler<string>? reflowProgress)
     {
-        LogService.TraceMessage ("AnsiCte is a stub - libvt100 submodule removed.");
-        return await Task.FromResult (0);
+        LogService.TraceMessage("AnsiCte is a stub - libvt100 submodule removed.");
+        return await Task.FromResult(0);
     }
 
-    public override void PaintPage (IGraphicsContext g, int pageNum)
+    public override void PaintPage(IGraphicsContext g, int pageNum)
     {
         // Stub: libvt100 submodule removed
     }

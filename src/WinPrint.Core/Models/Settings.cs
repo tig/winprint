@@ -8,7 +8,7 @@ namespace WinPrint.Core.Models;
 
 public class Settings : ModelBase
 {
-    private Font _diagnosticRulesFont = new () { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
+    private Font _diagnosticRulesFont = new() { Family = "sansserif", Size = 8F, Style = FontStyle.Regular };
     private bool _previewBounds;
     private bool _previewContentBounds;
     private bool _previewHardMargins;
@@ -38,7 +38,7 @@ public class Settings : ModelBase
     public WindowLocation? Location
     {
         get => location;
-        set => SetField (ref location, value);
+        set => SetField(ref location, value);
     }
 
     /// <summary>
@@ -48,14 +48,14 @@ public class Settings : ModelBase
     public WindowSize? Size
     {
         get => size;
-        set => SetField (ref size, value);
+        set => SetField(ref size, value);
     }
 
     [SafeForTelemetry]
     public FormWindowState WindowState
     {
         get => windowState;
-        set => SetField (ref windowState, value);
+        set => SetField(ref windowState, value);
     }
 
     /// <summary>
@@ -65,13 +65,13 @@ public class Settings : ModelBase
     public Guid DefaultSheet
     {
         get => defaultSheet;
-        set => SetField (ref defaultSheet, value);
+        set => SetField(ref defaultSheet, value);
     }
 
     /// <summary>
     ///     Sheet definitons
     /// </summary>
-    public Dictionary<string, SheetSettings> Sheets { get; set; } = new ();
+    public Dictionary<string, SheetSettings> Sheets { get; set; } = [];
 
     [JsonIgnore]
     [SafeForTelemetry]
@@ -99,18 +99,17 @@ public class Settings : ModelBase
     /// <summary>
     ///     Content type handlers
     /// </summary>
-    public AnsiCte AnsiContentTypeEngineSettings { get; set; } = new ();
+    public AnsiCte AnsiContentTypeEngineSettings { get; set; } = new();
 
-#if WINDOWS
-    public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new ();
-    public TextCte TextContentTypeEngineSettings { get; set; } = new ();
-#endif
-    public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new ();
+    public TextMateCte TextMateContentTypeEngineSettings { get; set; } = new();
+    public TextCte TextContentTypeEngineSettings { get; set; } = new();
+    public MarkdownCte MarkdownContentTypeEngineSettings { get; set; } = new();
+    public HtmlCte HtmlContentTypeEngineSettings { get; set; } = new();
 
     /// <summary>
     ///     File Type Mappings.
     /// </summary>
-    public FileTypeMapping FileTypeMapping { get; set; } = new ();
+    public FileTypeMapping FileTypeMapping { get; set; } = new();
 
     [JsonIgnore]
     [SafeForTelemetry]
@@ -153,119 +152,119 @@ public class Settings : ModelBase
     public Font DiagnosticRulesFont
     {
         get => _diagnosticRulesFont;
-        set => SetField (ref _diagnosticRulesFont, value);
+        set => SetField(ref _diagnosticRulesFont, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewPrintableArea
     {
         get => _previewPrintableArea;
-        set => SetField (ref _previewPrintableArea, value);
+        set => SetField(ref _previewPrintableArea, value);
     }
 
     [SafeForTelemetry]
     public bool PrintPrintableArea
     {
         get => _printPrintableArea;
-        set => SetField (ref _printPrintableArea, value);
+        set => SetField(ref _printPrintableArea, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewPaperSize
     {
         get => _previewPageSize;
-        set => SetField (ref _previewPageSize, value);
+        set => SetField(ref _previewPageSize, value);
     }
 
     [SafeForTelemetry]
     public bool PrintPaperSize
     {
         get => _printPageSize;
-        set => SetField (ref _printPageSize, value);
+        set => SetField(ref _printPageSize, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewMargins
     {
         get => _previewMargins;
-        set => SetField (ref _previewMargins, value);
+        set => SetField(ref _previewMargins, value);
     }
 
     [SafeForTelemetry]
     public bool PrintMargins
     {
         get => _printMargins;
-        set => SetField (ref _printMargins, value);
+        set => SetField(ref _printMargins, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewHardMargins
     {
         get => _previewHardMargins;
-        set => SetField (ref _previewHardMargins, value);
+        set => SetField(ref _previewHardMargins, value);
     }
 
     [SafeForTelemetry]
     public bool PrintHardMargins
     {
         get => _printHardMargins;
-        set => SetField (ref _printHardMargins, value);
+        set => SetField(ref _printHardMargins, value);
     }
 
     [SafeForTelemetry]
     public bool PrintBounds
     {
         get => _printBounds;
-        set => SetField (ref _printBounds, value);
+        set => SetField(ref _printBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewBounds
     {
         get => _previewBounds;
-        set => SetField (ref _previewBounds, value);
+        set => SetField(ref _previewBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PrintContentBounds
     {
         get => _printContentBounds;
-        set => SetField (ref _printContentBounds, value);
+        set => SetField(ref _printContentBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewContentBounds
     {
         get => _previewContentBounds;
-        set => SetField (ref _previewContentBounds, value);
+        set => SetField(ref _previewContentBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PrintHeaderFooterBounds
     {
         get => _printHeaderFooterBounds;
-        set => SetField (ref _printHeaderFooterBounds, value);
+        set => SetField(ref _printHeaderFooterBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewHeaderFooterBounds
     {
         get => _previewHeaderFooterBounds;
-        set => SetField (ref _previewHeaderFooterBounds, value);
+        set => SetField(ref _previewHeaderFooterBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PreviewPageBounds
     {
         get => _previewPageBounds;
-        set => SetField (ref _previewPageBounds, value);
+        set => SetField(ref _previewPageBounds, value);
     }
 
     [SafeForTelemetry]
     public bool PrintPageBounds
     {
         get => _printPageBounds;
-        set => SetField (ref _printPageBounds, value);
+        set => SetField(ref _printPageBounds, value);
     }
 
     /// <summary>
@@ -275,7 +274,7 @@ public class Settings : ModelBase
     public bool ShowPrintDialog
     {
         get => _printDialog;
-        set => SetField (ref _printDialog, value);
+        set => SetField(ref _printDialog, value);
     }
 
     /// <summary>
@@ -295,11 +294,11 @@ public class Settings : ModelBase
     ///     the .config.json file.
     /// </summary>
     /// <returns>A Settings object with default settings.</returns>
-    public static Settings CreateDefaultSettings ()
+    public static Settings CreateDefaultSettings()
     {
         string monoSpaceFamily = "monospace";
         string sansSerifFamily = "sansserif";
-        if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             monoSpaceFamily = "Consolas";
             sansSerifFamily = "Calibri";
@@ -325,7 +324,6 @@ public class Settings : ModelBase
             DefaultCteClassName = "TextMateCte",
             DefaultSyntaxHighlighterCteNameClassName = "TextMateCte",
             AnsiContentTypeEngineSettings = new AnsiCte { ContentSettings = new ContentSettings { Style = "pastie" } },
-#if WINDOWS
             TextMateContentTypeEngineSettings = new TextMateCte
             {
                 ContentSettings = new ContentSettings { Style = "VisualStudioLight" }
@@ -344,7 +342,7 @@ public class Settings : ModelBase
                 //NewPageOnFormFeed = false,
                 //TabSpaces = 4
             },
-#endif
+            MarkdownContentTypeEngineSettings = new MarkdownCte(),
 
             // Html fonts are determined by:
             // 1) Sheet (all HTML & CSS ignored)
@@ -360,7 +358,7 @@ public class Settings : ModelBase
                 //},
             },
             DefaultSheet = Uuid.DefaultSheet,
-            Sheets = new Dictionary<string, SheetSettings> ()
+            Sheets = []
         };
 
         // Create default 2 Up sheet
@@ -409,7 +407,7 @@ public class Settings : ModelBase
         sheet.Footer.VerticalPadding = 1;
 
         sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
-        settings.Sheets.Add (Uuid.DefaultSheet.ToString (), sheet);
+        settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
 
         // Create default 1 Up sheet
         sheet = new SheetSettings
@@ -460,7 +458,7 @@ public class Settings : ModelBase
         sheet.Footer.VerticalPadding = 1;
 
         sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
-        settings.Sheets.Add (Uuid.DefaultSheet1Up.ToString (), sheet);
+        settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
 
         settings.FileTypeMapping = new FileTypeMapping
         {
@@ -477,21 +475,21 @@ public class Settings : ModelBase
             // text/plain - because it is not defined by Pygments
             // text/ansi - because it is not defined by Pygments
             // icon - Icon is so esoteric it makes a good test
-            ContentTypes = new List<ContentType>
-            {
-                new ()
+            ContentTypes =
+            [
+                new()
                 {
                     Id = "text/plain",
                     Title = "Plain Text",
-                    Extensions = new List<string> { "*.txt" },
-                    Aliases = new List<string> { "text" }
+                    Extensions = ["*.txt"],
+                    Aliases = ["text"]
                 },
-                new ()
+                new()
                 {
                     Id = "text/ansi",
                     Title = "ANSI Text",
-                    Extensions = new List<string> { "*.an", "*.ans", "*.ansi" },
-                    Aliases = new List<string> { "ansi" }
+                    Extensions = ["*.an", "*.ans", "*.ansi"],
+                    Aliases = ["ansi"]
                 }
                 //new ContentType() {
                 //    Id = "text/x-icon",
@@ -503,7 +501,7 @@ public class Settings : ModelBase
                 //        "Unicon"
                 //    }
                 //}
-            }
+            ]
         };
 
         return settings;

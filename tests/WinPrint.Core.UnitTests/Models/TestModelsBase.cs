@@ -11,10 +11,10 @@ public class TestModelsBase
 {
     public JsonSerializerOptions jsonOptions;
 
-    public TestModelsBase (ITestOutputHelper output)
+    public TestModelsBase(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start (GetType ().Name,
-            new TestOutputSink (output, new MessageTemplateTextFormatter ("{Message:lj}")), true, true);
+        ServiceLocator.Current.LogService.Start(GetType().Name,
+            new TestOutputSink(output, new MessageTemplateTextFormatter("{Message:lj}")), true, true);
 
         jsonOptions = new JsonSerializerOptions
         {
@@ -24,6 +24,6 @@ public class TestModelsBase
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             ReadCommentHandling = JsonCommentHandling.Skip
         };
-        jsonOptions.Converters.Add (new JsonStringEnumConverter (JsonNamingPolicy.CamelCase));
+        jsonOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
     }
 }

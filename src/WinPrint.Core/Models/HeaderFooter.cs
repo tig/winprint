@@ -57,7 +57,7 @@ public abstract class HeaderFooter : ModelBase
     public string? Text
     {
         get => _text;
-        set => SetField (ref _text, value);
+        set => SetField(ref _text, value);
     }
 
     /// <summary>
@@ -70,11 +70,11 @@ public abstract class HeaderFooter : ModelBase
     {
         get
         {
-            var matches = Regex.Matches (Text ?? string.Empty,
+            var matches = Regex.Matches(Text ?? string.Empty,
                     @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+")
-                .Select (match => match.Value)
-                .ToList ();
-            return string.Join (", ", from macro in matches select macro);
+                .Select(match => match.Value)
+                .ToList();
+            return string.Join(", ", from macro in matches select macro);
         }
     }
 
@@ -85,7 +85,7 @@ public abstract class HeaderFooter : ModelBase
     public Font? Font
     {
         get => _font;
-        set => SetField (ref _font, value);
+        set => SetField(ref _font, value);
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ public abstract class HeaderFooter : ModelBase
     public bool LeftBorder
     {
         get => _leftBorder;
-        set => SetField (ref _leftBorder, value);
+        set => SetField(ref _leftBorder, value);
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public abstract class HeaderFooter : ModelBase
     public bool TopBorder
     {
         get => _topBorder;
-        set => SetField (ref _topBorder, value);
+        set => SetField(ref _topBorder, value);
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ public abstract class HeaderFooter : ModelBase
     public bool RightBorder
     {
         get => _rightBorder;
-        set => SetField (ref _rightBorder, value);
+        set => SetField(ref _rightBorder, value);
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public abstract class HeaderFooter : ModelBase
     public bool BottomBorder
     {
         get => _bottomBorder;
-        set => SetField (ref _bottomBorder, value);
+        set => SetField(ref _bottomBorder, value);
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public abstract class HeaderFooter : ModelBase
     public bool Enabled
     {
         get => _enabled;
-        set => SetField (ref _enabled, value);
+        set => SetField(ref _enabled, value);
     }
 
     /// <summary>
@@ -145,6 +145,6 @@ public abstract class HeaderFooter : ModelBase
     public int VerticalPadding
     {
         get => _verticalPadding;
-        set => SetField (ref _verticalPadding, value);
+        set => SetField(ref _verticalPadding, value);
     }
 }

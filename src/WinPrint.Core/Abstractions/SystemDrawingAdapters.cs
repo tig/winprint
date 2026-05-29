@@ -5,7 +5,7 @@ namespace WinPrint.Core.Abstractions;
 
 public static class SystemDrawingAdapters
 {
-    public static GraphicsFontStyle ToGraphicsFontStyle (ModelFontStyle style)
+    public static GraphicsFontStyle ToGraphicsFontStyle(ModelFontStyle style)
     {
         GraphicsFontStyle result = GraphicsFontStyle.Regular;
         if ((style & ModelFontStyle.Bold) == ModelFontStyle.Bold)
@@ -31,8 +31,8 @@ public static class SystemDrawingAdapters
         return result;
     }
 
-    public static GraphicsColor ToGraphicsColor (Color color)
+    public static GraphicsColor ToGraphicsColor(Color color)
     {
-        return GraphicsColor.FromArgb (color.A, color.R, color.G, color.B);
+        return GraphicsColor.FromArgb(color.A, color.R, color.G, color.B);
     }
 }

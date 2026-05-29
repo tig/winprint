@@ -2,11 +2,11 @@ using Foundation;
 
 namespace WinPrint.Maui;
 
-[Register ("AppDelegate")]
+[Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {
-    protected override MauiApp CreateMauiApp ()
+    protected override MauiApp CreateMauiApp()
     {
-        return MauiProgram.CreateMauiApp ();
+        return MauiProgram.CreateMauiApp();
     }
 }

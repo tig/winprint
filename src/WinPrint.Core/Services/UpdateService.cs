@@ -18,7 +18,7 @@ namespace WinPrint.Core.Services;
 /// </summary>
 public class UpdateService
 {
-    private static readonly HttpClient _httpClient = new ();
+    private static readonly HttpClient _httpClient = new();
     private string? _tempFilename;
 
     /// <summary>
@@ -30,12 +30,12 @@ public class UpdateService
     ///     Provides the current version number
     /// </summary>
     public static Version CurrentVersion =>
-        new (FileVersionInfo.GetVersionInfo (Assembly.GetAssembly (typeof (UpdateService))!.Location).FileVersion!);
+        new(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService))!.Location).FileVersion!);
 
     /// <summary>
     ///     Contains the version number of the latest version found online (only valid after GotLatestVersion)
     /// </summary>
-    public Version LatestVersion { get; private set; } = new (0, 0);
+    public Version LatestVersion { get; private set; } = new(0, 0);
 
 
     /// <summary>
@@ -53,9 +53,9 @@ public class UpdateService
     /// </summary>
     public event EventHandler<Version>? GotLatestVersion;
 
-    protected void OnGotLatestVersion (Version latestVersion)
+    protected void OnGotLatestVersion(Version latestVersion)
     {
-        GotLatestVersion?.Invoke (this, latestVersion);
+        GotLatestVersion?.Invoke(this, latestVersion);
     }
 
     /// <summary>
@@ -63,16 +63,16 @@ public class UpdateService
     /// </summary>
     public event EventHandler<string>? DownloadComplete;
 
-    protected void OnDownloadComplete (string path)
+    protected void OnDownloadComplete(string path)
     {
-        DownloadComplete?.Invoke (this, path);
+        DownloadComplete?.Invoke(this, path);
     }
 
     public event EventHandler<DownloadProgressChangedEventArgs>? DownloadProgressChanged;
 
-    protected void OnDownloadProgressChanged (DownloadProgressChangedEventArgs e)
+    protected void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e)
     {
-        DownloadProgressChanged?.Invoke (this, e);
+        DownloadProgressChanged?.Invoke(this, e);
     }
 
     /// <summary>
@@ -82,36 +82,38 @@ public class UpdateService
     ///     < 0 - A newer version available
     /// </summary>
     /// <returns></returns>
-    public int CompareVersions ()
+    public int CompareVersions()
     {
-        return CurrentVersion.CompareTo (LatestVersion);
+        return CurrentVersion.CompareTo(LatestVersion);
     }
 
     /// <summary>
     ///     Checks for updated version online.
     /// </summary>
     /// <returns></returns>
-    public async Task<Version> GetLatestVersionAsync (CancellationToken token)
+    public async Task<Version> GetLatestVersionAsync(CancellationToken token)
     {
-        LogService.TraceMessage ();
-        InstallerUri = new Uri ("https://github.com/tig/winprint/releases");
+        LogService.TraceMessage();
+        InstallerUri = new Uri("https://github.com/tig/winprint/releases");
         try
         {
-            var github = new GitHubClient (new ProductHeaderValue ("tig-winprint"));
+            var github = new GitHubClient(new ProductHeaderValue("tig-winprint"));
             IReadOnlyList<Release>? allReleases =
-                await github.Repository.Release.GetAll ("tig", "winprint").ConfigureAwait (false);
+                await github.Repository.Release.GetAll("tig", "winprint").ConfigureAwait(false);
 
             //#if DEBUG
             //                Debug.WriteLine("Pausing 2s to simulate version check taking a long time...");
             //                Thread.Sleep(2000);
             //                Debug.WriteLine("Done pausing.");
             //#endif
-            token.ThrowIfCancellationRequested ();
+            token.ThrowIfCancellationRequested();
 
             // Get all releases and pre-releases
 #if DEBUG
-            Release[] releases = allReleases.Where (r => r.Prerelease)
-                .OrderByDescending (r => new Version (r.TagName.Replace ('v', ' '))).ToArray ();
+            Release[] releases =
+            [
+                .. allReleases.Where(r => r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' ')))
+            ];
 #else
                 var releases =
  allReleases.Where(r => !r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' '))).ToArray();
@@ -119,13 +121,13 @@ public class UpdateService
             //Log.Debug("Releases {releases}", JsonSerializer.Serialize(releases, options: new JsonSerializerOptions() { WriteIndented = true }));
             if (releases.Length > 0)
             {
-                Log.Debug (
+                Log.Debug(
                     "The latest release is tagged at {TagName} and is named {Name}. Download Url: {BrowserDownloadUrl}",
                     releases[0].TagName, releases[0].Name, releases[0].Assets[0].BrowserDownloadUrl);
 
-                LatestVersion = new Version (releases[0].TagName.Replace ('v', ' '));
-                ReleasePageUri = new Uri (releases[0].HtmlUrl);
-                InstallerUri = new Uri (releases[0].Assets[0].BrowserDownloadUrl);
+                LatestVersion = new Version(releases[0].TagName.Replace('v', ' '));
+                ReleasePageUri = new Uri(releases[0].HtmlUrl);
+                InstallerUri = new Uri(releases[0].Assets[0].BrowserDownloadUrl);
             }
             else
             {
@@ -135,45 +137,45 @@ public class UpdateService
         catch (Exception e)
         {
             ErrorMessage = $"({ReleasePageUri}) {e.Message}";
-            Log.Warning ("Update: {msg}", ErrorMessage);
-            ServiceLocator.Current.TelemetryService.TrackException (e);
+            Log.Warning("Update: {msg}", ErrorMessage);
+            ServiceLocator.Current.TelemetryService.TrackException(e);
         }
 
-        OnGotLatestVersion (LatestVersion);
+        OnGotLatestVersion(LatestVersion);
         return LatestVersion;
     }
 
     /// <summary>
     ///     Starts an upgrade. Must be called after GotLatestVersion has been fired.
     /// </summary>
-    public async Task<string> StartUpgradeAsync ()
+    public async Task<string> StartUpgradeAsync()
     {
-        Debug.WriteLine ("StartUpgradeAsync");
+        Debug.WriteLine("StartUpgradeAsync");
         // Download file
-        _tempFilename = Path.GetTempFileName () + ".msi";
+        _tempFilename = Path.GetTempFileName() + ".msi";
         //Log.Information($"{this.GetType().Name}: Downloading {InstallerUri.AbsoluteUri} to {_tempFilename}...");
 
         if (InstallerUri is null)
         {
-            throw new InvalidOperationException ("Installer URI is not available.");
+            throw new InvalidOperationException("Installer URI is not available.");
         }
 
-        await File.WriteAllBytesAsync (_tempFilename,
-            await _httpClient.GetByteArrayAsync (InstallerUri).ConfigureAwait (false)).ConfigureAwait (false);
-        OnDownloadComplete (_tempFilename);
+        await File.WriteAllBytesAsync(_tempFilename,
+            await _httpClient.GetByteArrayAsync(InstallerUri).ConfigureAwait(false)).ConfigureAwait(false);
+        OnDownloadComplete(_tempFilename);
         return _tempFilename;
     }
 
-    private void Client_DownloadProgressChanged (object? sender, DownloadProgressChangedEventArgs e)
+    private void Client_DownloadProgressChanged(object? sender, DownloadProgressChangedEventArgs e)
     {
         //Log.Debug($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
         //if (e.ProgressPercentage % 33 == 0) {
         //    Log.Information($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
         //}
-        OnDownloadProgressChanged (e);
+        OnDownloadProgressChanged(e);
     }
 
-    private void Client_DownloadDataCompleted (object? sender, DownloadDataCompletedEventArgs e)
+    private void Client_DownloadDataCompleted(object? sender, DownloadDataCompletedEventArgs e)
     {
         //try {
         //    // If the request was not canceled and did not throw
@@ -189,6 +191,6 @@ public class UpdateService
         ////Log.Information($"{this.GetType().Name}: Exiting and running installer ({_tempFilename})...");
 
 
-        OnDownloadComplete (_tempFilename!);
+        OnDownloadComplete(_tempFilename!);
     }
 }

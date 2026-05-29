@@ -30,7 +30,7 @@ public class FileSystemSafeWatcher
     /// <summary>
     ///     Lock order is _enterThread, _events.SyncRoot
     /// </summary>
-    private readonly object? _enterThread = new (); // Only one timer event is processed at any given moment
+    private readonly object? _enterThread = new(); // Only one timer event is processed at any given moment
 
     private readonly FileSystemWatcher? _fileSystemWatcher;
     private int _consolidationInterval = 1000; // milliseconds
@@ -41,22 +41,22 @@ public class FileSystemSafeWatcher
 
     #region Delegate to FileSystemWatcher
 
-    public FileSystemSafeWatcher ()
+    public FileSystemSafeWatcher()
     {
-        _fileSystemWatcher = new FileSystemWatcher ();
-        Initialize ();
+        _fileSystemWatcher = new FileSystemWatcher();
+        Initialize();
     }
 
-    public FileSystemSafeWatcher (string path)
+    public FileSystemSafeWatcher(string path)
     {
-        _fileSystemWatcher = new FileSystemWatcher (path);
-        Initialize ();
+        _fileSystemWatcher = new FileSystemWatcher(path);
+        Initialize();
     }
 
-    public FileSystemSafeWatcher (string path, string filter)
+    public FileSystemSafeWatcher(string path, string filter)
     {
-        _fileSystemWatcher = new FileSystemWatcher (path, filter);
-        Initialize ();
+        _fileSystemWatcher = new FileSystemWatcher(path, filter);
+        Initialize();
     }
 
     /// <summary>
@@ -74,12 +74,12 @@ public class FileSystemSafeWatcher
             _fileSystemWatcher!.EnableRaisingEvents = value;
             if (value)
             {
-                _serverTimer!.Start ();
+                _serverTimer!.Start();
             }
             else
             {
-                _serverTimer!.Stop ();
-                _events!.Clear ();
+                _serverTimer!.Stop();
+                _events!.Clear();
             }
         }
     }
@@ -187,72 +187,72 @@ public class FileSystemSafeWatcher
     ///     Begins the initialization of a System.IO.FileSystemWatcher used on a form or used by another component. The
     ///     initialization occurs at run time.
     /// </summary>
-    public void BeginInit ()
+    public void BeginInit()
     {
-        _fileSystemWatcher!.BeginInit ();
+        _fileSystemWatcher!.BeginInit();
     }
 
     /// <summary>
     ///     Releases the unmanaged resources used by the System.IO.FileSystemWatcher and optionally releases the managed
     ///     resources.
     /// </summary>
-    public void Dispose ()
+    public void Dispose()
     {
-        Uninitialize ();
+        Uninitialize();
     }
 
     /// <summary>
     ///     Ends the initialization of a System.IO.FileSystemWatcher used on a form or used by another component. The
     ///     initialization occurs at run time.
     /// </summary>
-    public void EndInit ()
+    public void EndInit()
     {
-        _fileSystemWatcher!.EndInit ();
+        _fileSystemWatcher!.EndInit();
     }
 
     /// <summary>
     ///     Raises the System.IO.FileSystemWatcher.Changed event.
     /// </summary>
     /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
-    protected void OnChanged (FileSystemEventArgs e)
+    protected void OnChanged(FileSystemEventArgs e)
     {
-        Changed?.Invoke (this, e);
+        Changed?.Invoke(this, e);
     }
 
     /// <summary>
     ///     Raises the System.IO.FileSystemWatcher.Created event.
     /// </summary>
     /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
-    protected void OnCreated (FileSystemEventArgs e)
+    protected void OnCreated(FileSystemEventArgs e)
     {
-        Created?.Invoke (this, e);
+        Created?.Invoke(this, e);
     }
 
     /// <summary>
     ///     Raises the System.IO.FileSystemWatcher.Deleted event.
     /// </summary>
     /// <param name="e">A System.IO.FileSystemEventArgs that contains the event data.</param>
-    protected void OnDeleted (FileSystemEventArgs e)
+    protected void OnDeleted(FileSystemEventArgs e)
     {
-        Deleted?.Invoke (this, e);
+        Deleted?.Invoke(this, e);
     }
 
     /// <summary>
     ///     Raises the System.IO.FileSystemWatcher.Error event.
     /// </summary>
     /// <param name="e">An System.IO.ErrorEventArgs that contains the event data.</param>
-    protected void OnError (ErrorEventArgs e)
+    protected void OnError(ErrorEventArgs e)
     {
-        Error?.Invoke (this, e);
+        Error?.Invoke(this, e);
     }
 
     /// <summary>
     ///     Raises the System.IO.FileSystemWatcher.Renamed event.
     /// </summary>
     /// <param name="e">A System.IO.RenamedEventArgs that contains the event data.</param>
-    protected void OnRenamed (RenamedEventArgs e)
+    protected void OnRenamed(RenamedEventArgs e)
     {
-        Renamed?.Invoke (this, e);
+        Renamed?.Invoke(this, e);
     }
 
     /// <summary>
@@ -261,10 +261,10 @@ public class FileSystemSafeWatcher
     /// </summary>
     /// <param name="changeType">The System.IO.WatcherChangeTypes to watch for.</param>
     /// <returns>A System.IO.WaitForChangedResult that contains specific information on the change that occurred.</returns>
-    public WaitForChangedResult WaitForChanged (WatcherChangeTypes changeType)
+    public WaitForChangedResult WaitForChanged(WatcherChangeTypes changeType)
     {
         //TODO
-        throw new NotImplementedException ();
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -275,63 +275,63 @@ public class FileSystemSafeWatcher
     /// <param name="changeType">The System.IO.WatcherChangeTypes to watch for.</param>
     /// <param name="timeout">The time (in milliseconds) to wait before timing out.</param>
     /// <returns>A System.IO.WaitForChangedResult that contains specific information on the change that occurred.</returns>
-    public WaitForChangedResult WaitForChanged (WatcherChangeTypes changeType, int timeout)
+    public WaitForChangedResult WaitForChanged(WatcherChangeTypes changeType, int timeout)
     {
         //TODO
-        throw new NotImplementedException ();
+        throw new NotImplementedException();
     }
 
     #endregion
 
     #region Implementation
 
-    private void Initialize ()
+    private void Initialize()
     {
-        _events = ArrayList.Synchronized (new ArrayList (32));
+        _events = ArrayList.Synchronized(new ArrayList(32));
         _fileSystemWatcher!.Changed += FileSystemEventHandler;
         _fileSystemWatcher.Created += FileSystemEventHandler;
         _fileSystemWatcher.Deleted += FileSystemEventHandler;
         _fileSystemWatcher.Error += ErrorEventHandler;
         _fileSystemWatcher.Renamed += RenamedEventHandler;
-        _serverTimer = new Timer (_consolidationInterval);
+        _serverTimer = new Timer(_consolidationInterval);
         _serverTimer.Elapsed += ElapsedEventHandler;
         _serverTimer.AutoReset = true;
         _serverTimer.Enabled = _fileSystemWatcher.EnableRaisingEvents;
     }
 
-    private void Uninitialize ()
+    private void Uninitialize()
     {
-        _fileSystemWatcher?.Dispose ();
+        _fileSystemWatcher?.Dispose();
 
-        _serverTimer?.Dispose ();
+        _serverTimer?.Dispose();
     }
 
-    private void FileSystemEventHandler (object? sender, FileSystemEventArgs e)
+    private void FileSystemEventHandler(object? sender, FileSystemEventArgs e)
     {
-        _events!.Add (new DelayedEvent (e));
+        _events!.Add(new DelayedEvent(e));
     }
 
-    private void ErrorEventHandler (object? sender, ErrorEventArgs e)
+    private void ErrorEventHandler(object? sender, ErrorEventArgs e)
     {
-        OnError (e);
+        OnError(e);
     }
 
-    private void RenamedEventHandler (object? sender, RenamedEventArgs e)
+    private void RenamedEventHandler(object? sender, RenamedEventArgs e)
     {
-        _events!.Add (new DelayedEvent (e));
+        _events!.Add(new DelayedEvent(e));
     }
 
-    private void ElapsedEventHandler (object? sender, ElapsedEventArgs e)
+    private void ElapsedEventHandler(object? sender, ElapsedEventArgs e)
     {
         // We don't fire the events inside the lock. We will queue them here until
         // the code exits the locks.
         Queue? eventsToBeFired = null;
-        if (Monitor.TryEnter (_enterThread!))
+        if (Monitor.TryEnter(_enterThread!))
         {
             // Only one thread at a time is processing the events                
             try
             {
-                eventsToBeFired = new Queue (32);
+                eventsToBeFired = new Queue(32);
                 // Lock the collection while processing the events
                 lock (_events!.SyncRoot)
                 {
@@ -344,10 +344,10 @@ public class FileSystemSafeWatcher
                             // We just need to remove any duplicates
                             for (int j = i + 1; j < _events.Count; j++)
                             {
-                                if (current.IsDuplicate (_events[j]))
+                                if (current.IsDuplicate(_events[j]))
                                 {
                                     // Removing later duplicates
-                                    _events.RemoveAt (j);
+                                    _events.RemoveAt(j);
                                     j--; // Don't skip next event
                                 }
                             }
@@ -360,7 +360,7 @@ public class FileSystemSafeWatcher
                                 FileStream? stream = null;
                                 try
                                 {
-                                    stream = File.Open (current.Args.FullPath, FileMode.Open, FileAccess.Read,
+                                    stream = File.Open(current.Args.FullPath, FileMode.Open, FileAccess.Read,
                                         FileShare.None);
                                     // If this succeeds, the file is finished
                                 }
@@ -372,7 +372,7 @@ public class FileSystemSafeWatcher
                                 {
                                     if (stream != null)
                                     {
-                                        stream.Close ();
+                                        stream.Close();
                                     }
                                 }
                             }
@@ -380,9 +380,9 @@ public class FileSystemSafeWatcher
                             if (raiseEvent)
                             {
                                 // Add the event to the list of events to be fired
-                                eventsToBeFired.Enqueue (current);
+                                eventsToBeFired.Enqueue(current);
                                 // Remove it from the current list
-                                _events.RemoveAt (i);
+                                _events.RemoveAt(i);
                                 i--; // Don't skip next event
                             }
                         }
@@ -397,13 +397,13 @@ public class FileSystemSafeWatcher
             }
             finally
             {
-                Monitor.Exit (_enterThread!);
+                Monitor.Exit(_enterThread!);
             }
         }
         // else - this timer event was skipped, processing will happen during the next timer event
 
         // Now fire all the events if any events are in eventsToBeFired
-        RaiseEvents (eventsToBeFired!);
+        RaiseEvents(eventsToBeFired!);
     }
 
     public int ConsolidationInterval
@@ -417,29 +417,29 @@ public class FileSystemSafeWatcher
     }
 
 #pragma warning disable CA1030 // Use events where appropriate
-    protected void RaiseEvents (Queue? deQueue)
+    protected void RaiseEvents(Queue? deQueue)
     {
 #pragma warning restore CA1030 // Use events where appropriate
         if (deQueue is { Count: > 0 })
         {
             while (deQueue.Count > 0)
             {
-                var de = (DelayedEvent)deQueue.Dequeue ()!;
+                var de = (DelayedEvent)deQueue.Dequeue()!;
                 switch (de.Args!.ChangeType)
                 {
                     case WatcherChangeTypes.Changed:
-                        OnChanged (de.Args);
+                        OnChanged(de.Args);
                         break;
                     case WatcherChangeTypes.Created:
-                        OnCreated (de.Args);
+                        OnCreated(de.Args);
                         break;
                     case WatcherChangeTypes.Deleted:
-                        OnDeleted (de.Args);
+                        OnDeleted(de.Args);
                         break;
                     case WatcherChangeTypes.Renamed:
                         if (de.Args is RenamedEventArgs renamedEventArgs)
                         {
-                            OnRenamed (renamedEventArgs);
+                            OnRenamed(renamedEventArgs);
                         }
 
                         break;

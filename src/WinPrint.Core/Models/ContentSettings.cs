@@ -9,7 +9,7 @@ public class ContentSettings : ModelBase
     private int _darkness;
     private bool _diagnostics;
     private bool _disableFontStyles;
-    private Font _font = new ();
+    private Font _font = new();
     private bool _grayscale;
     private bool _lineNumberSeparator = true;
     private bool _lineNumbers = true;
@@ -25,7 +25,7 @@ public class ContentSettings : ModelBase
     public Font Font
     {
         get => _font;
-        set => SetField (ref _font, value);
+        set => SetField(ref _font, value);
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class ContentSettings : ModelBase
     public bool PrintBackground
     {
         get => _printBackground;
-        set => SetField (ref _printBackground, value);
+        set => SetField(ref _printBackground, value);
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public class ContentSettings : ModelBase
     public bool Grayscale
     {
         get => _grayscale;
-        set => SetField (ref _grayscale, value);
+        set => SetField(ref _grayscale, value);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public class ContentSettings : ModelBase
     public int Darkness
     {
         get => _darkness;
-        set => SetField (ref _darkness, value);
+        set => SetField(ref _darkness, value);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class ContentSettings : ModelBase
     public string Style
     {
         get => _style;
-        set => SetField (ref _style, value);
+        set => SetField(ref _style, value);
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class ContentSettings : ModelBase
     public bool DisableFontStyles
     {
         get => _disableFontStyles;
-        set => SetField (ref _disableFontStyles, value);
+        set => SetField(ref _disableFontStyles, value);
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class ContentSettings : ModelBase
     public bool LineNumbers
     {
         get => _lineNumbers;
-        set => SetField (ref _lineNumbers, value);
+        set => SetField(ref _lineNumbers, value);
     }
 
     /// <summary>
@@ -96,7 +96,7 @@ public class ContentSettings : ModelBase
     public bool LineNumberSeparator
     {
         get => _lineNumberSeparator;
-        set => SetField (ref _lineNumberSeparator, value);
+        set => SetField(ref _lineNumberSeparator, value);
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public class ContentSettings : ModelBase
     public int TabSpaces
     {
         get => _tabSpaces;
-        set => SetField (ref _tabSpaces, value);
+        set => SetField(ref _tabSpaces, value);
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public class ContentSettings : ModelBase
     public bool NewPageOnFormFeed
     {
         get => _newPageOnFormFeed;
-        set => SetField (ref _newPageOnFormFeed, value);
+        set => SetField(ref _newPageOnFormFeed, value);
     }
 
     /// <summary>
@@ -126,6 +126,6 @@ public class ContentSettings : ModelBase
     public bool Diagnostics
     {
         get => _diagnostics;
-        set => SetField (ref _diagnostics, value);
+        set => SetField(ref _diagnostics, value);
     }
 }
