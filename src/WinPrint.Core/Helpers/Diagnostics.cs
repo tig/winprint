@@ -4,8 +4,8 @@ namespace WinPrint.Core.Helpers;
 
 internal class Diagnostics
 {
-    [DllImport ("libgdiplus", ExactSpelling = true)]
-    internal static extern string GetLibgdiplusVersion ();
+    [DllImport("libgdiplus", ExactSpelling = true)]
+    internal static extern string GetLibgdiplusVersion();
 
     ///// <summary>
     ///// Gets the version of libgdiplus. 

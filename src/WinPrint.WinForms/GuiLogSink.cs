@@ -13,34 +13,34 @@ namespace WinPrint.WinForms;
 
 public class GuiLogSink : ILogEventSink
 {
-    private static readonly Lazy<GuiLogSink> _instance = new (() => new GuiLogSink ());
+    private static readonly Lazy<GuiLogSink> _instance = new(() => new GuiLogSink());
 
     // Set by Program before log events are emitted.
     public Control OutputWindow = null!;
 
-    public GuiLogSink ()
+    public GuiLogSink()
     {
-        TextFormatter = new MessageTemplateTextFormatter ("{Message:lj}");
+        TextFormatter = new MessageTemplateTextFormatter("{Message:lj}");
     }
 
     public static GuiLogSink Instance => _instance.Value;
 
     public ITextFormatter TextFormatter { get; set; }
 
-    public void Emit (LogEvent logEvent)
+    public void Emit(LogEvent logEvent)
     {
         if (logEvent == null)
         {
-            throw new ArgumentNullException (nameof (logEvent));
+            throw new ArgumentNullException(nameof(logEvent));
         }
 
         if (OutputWindow == null)
         {
-            throw new ArgumentNullException ("GuiLogSink: Output not set");
+            throw new ArgumentNullException("GuiLogSink: Output not set");
         }
 
-        using var strWriter = new StringWriter ();
-        TextFormatter.Format (logEvent, strWriter);
+        using var strWriter = new StringWriter();
+        TextFormatter.Format(logEvent, strWriter);
         try
         {
             string msg = $"{strWriter}";
@@ -67,7 +67,7 @@ public class GuiLogSink : ILogEventSink
                     Exception? ex = logEvent.Exception;
                     if (logEvent.Exception == null)
                     {
-                        ex = new Exception ();
+                        ex = new Exception();
                     }
 
                     OutputWindow.Text = msg;
@@ -83,7 +83,7 @@ public class GuiLogSink : ILogEventSink
         }
         catch (Exception e)
         {
-            Debug.WriteLine (e.Message);
+            Debug.WriteLine(e.Message);
         }
     }
 }

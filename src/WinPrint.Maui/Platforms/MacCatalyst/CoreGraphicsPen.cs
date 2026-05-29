@@ -10,10 +10,16 @@ internal sealed class CoreGraphicsPen : IGraphicsPen
     public float A { get; }
     public float Width { get; }
 
-    public CoreGraphicsPen (float r, float g, float b, float a, float width)
+    public CoreGraphicsPen(float r, float g, float b, float a, float width)
     {
-        R = r; G = g; B = b; A = a; Width = width;
+        R = r;
+        G = g;
+        B = b;
+        A = a;
+        Width = width;
     }
 
-    public void Dispose () { }
+    public void Dispose()
+    {
+    }
 }

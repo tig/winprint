@@ -27,28 +27,28 @@ public class TelemetryService
     public bool TelemetryEnabled { get; set; }
 
 #if WINDOWS
-    public TelemetryClient GetTelemetryClient ()
+    public TelemetryClient GetTelemetryClient()
     {
         return telemetry;
     }
 #endif
 
-    public void Start (string appName, IDictionary<string, string?>? startProperties = null)
+    public void Start(string appName, IDictionary<string, string?>? startProperties = null)
     {
-        runtime = Stopwatch.StartNew ();
+        runtime = Stopwatch.StartNew();
 
 #if WINDOWS
-        object? val = Registry.GetValue (@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
-        TelemetryEnabled = val != null && val.ToString () == "1" ? true : false;
+        object? val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
+        TelemetryEnabled = val != null && val.ToString() == "1" ? true : false;
 
         // Setup telemetry via Azure Application Insights.
-        var config = TelemetryConfiguration.CreateDefault ();
+        var config = TelemetryConfiguration.CreateDefault();
 
         // Get key from UserSecrets in a way that never puts the key in source
 #if CI_BUILD
         config.InstrumentationKey = string.Empty;
 #else
-        config.InstrumentationKey = GetInstrumentationKey ();
+        config.InstrumentationKey = GetInstrumentationKey();
 #endif
 
         // Turn off Debug spew
@@ -59,101 +59,101 @@ public class TelemetryService
         config.TelemetryChannel.DeveloperMode = Debugger.IsAttached;
 #endif
 
-        telemetry = new TelemetryClient (config);
+        telemetry = new TelemetryClient(config);
         telemetry.Context.Component.Version = FileVersionInfo
-            .GetVersionInfo (Assembly.GetAssembly (typeof (TelemetryService))!.Location).FileVersion;
-        telemetry.Context.Session.Id = Guid.NewGuid ().ToString ();
-        telemetry.Context.Device.OperatingSystem = Environment.OSVersion.ToString ();
+            .GetVersionInfo(Assembly.GetAssembly(typeof(TelemetryService))!.Location).FileVersion;
+        telemetry.Context.Session.Id = Guid.NewGuid().ToString();
+        telemetry.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
         // Anonymyize user ID
-        using var h = SHA256.Create ();
-        h.Initialize ();
-        byte[] userHash = h.ComputeHash (Encoding.UTF8.GetBytes ($"{Environment.UserName}/{Environment.MachineName}"));
-        telemetry.Context.User.Id = Convert.ToBase64String (userHash);
+        using var h = SHA256.Create();
+        h.Initialize();
+        byte[] userHash = h.ComputeHash(Encoding.UTF8.GetBytes($"{Environment.UserName}/{Environment.MachineName}"));
+        telemetry.Context.User.Id = Convert.ToBase64String(userHash);
         // See: https://stackoverflow.com/questions/42861344/how-to-overwrite-or-ignore-cloud-roleinstance-with-application-insights
         telemetry.Context.Cloud.RoleInstance = telemetry.Context.User.Id;
 
 
         if (startProperties == null)
         {
-            startProperties = new Dictionary<string, string?> ();
+            startProperties = new Dictionary<string, string?>();
         }
 
         // Merged passed in properites
-        _ = startProperties.Concat (new Dictionary<string, string?>
+        _ = startProperties.Concat(new Dictionary<string, string?>
         {
             ["app"] = appName,
             ["version"] = telemetry.Context.Component.Version,
-            ["os"] = Environment.OSVersion.ToString (),
+            ["os"] = Environment.OSVersion.ToString(),
             ["arch"] = Environment.Is64BitProcess ? "x64" : "x86",
-            ["dotNetVersion"] = Environment.Version.ToString ()
-        }).ToDictionary (kvp => kvp.Key, kvp => kvp.Value);
-        TrackEvent ("Application Started", startProperties);
+            ["dotNetVersion"] = Environment.Version.ToString()
+        }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        TrackEvent("Application Started", startProperties);
 #else
         TelemetryEnabled = false;
 #endif
     }
 
-    public void Stop ()
+    public void Stop()
     {
 #if WINDOWS
-        TrackEvent ("Application Stopped", metrics: new Dictionary<string, double>
+        TrackEvent("Application Stopped", metrics: new Dictionary<string, double>
             { { "runTime", runtime.Elapsed.TotalMilliseconds } });
 
         // before exit, flush the remaining data
-        Flush ();
+        Flush();
         // Flush is not blocking so wait a bit
-        Task.Delay (1000).Wait ();
+        Task.Delay(1000).Wait();
 #endif
     }
 
-    public void SetUser (string user)
+    public void SetUser(string user)
     {
 #if WINDOWS
         telemetry.Context.User.AuthenticatedUserId = user;
 #endif
     }
 
-    public void TrackEvent (string key, IDictionary<string, string?>? properties = null,
+    public void TrackEvent(string key, IDictionary<string, string?>? properties = null,
         IDictionary<string, double>? metrics = null)
     {
 #if WINDOWS
         if (TelemetryEnabled && telemetry != null)
         {
-            telemetry.TrackEvent (key, properties, metrics);
+            telemetry.TrackEvent(key, properties, metrics);
         }
 #endif
     }
 
-    public void TrackException (Exception ex, bool log = false)
+    public void TrackException(Exception ex, bool log = false)
     {
         if (ex != null && log is true)
         {
-            Log.Error (ex, "{msg}", ex.Message);
+            Log.Error(ex, "{msg}", ex.Message);
         }
 
 #if WINDOWS
         if (telemetry != null && ex != null && TelemetryEnabled)
         {
-            var telex = new ExceptionTelemetry (ex);
-            telemetry.TrackException (telex);
-            Flush ();
+            var telex = new ExceptionTelemetry(ex);
+            telemetry.TrackException(telex);
+            Flush();
         }
 #endif
     }
 
-    internal void Flush ()
+    internal void Flush()
     {
 #if WINDOWS
         if (telemetry != null)
         {
-            telemetry.Flush ();
+            telemetry.Flush();
         }
 #endif
     }
 
-    internal static string GetInstrumentationKey ()
+    internal static string GetInstrumentationKey()
     {
-        return Environment.GetEnvironmentVariable ("winprint_telemetryId") ?? string.Empty;
+        return Environment.GetEnvironmentVariable("winprint_telemetryId") ?? string.Empty;
     }
 
     //private class CustomConverter : TraceTelemetryConverter {

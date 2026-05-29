@@ -10,7 +10,7 @@ internal sealed class RecordingGraphicsFont : IGraphicsFont
 {
     private readonly float _lineHeight;
 
-    public RecordingGraphicsFont (string family, float size, GraphicsFontStyle style, GraphicsFontUnit unit,
+    public RecordingGraphicsFont(string family, float size, GraphicsFontStyle style, GraphicsFontUnit unit,
         float charWidth, float lineHeight)
     {
         Family = family;
@@ -27,10 +27,12 @@ internal sealed class RecordingGraphicsFont : IGraphicsFont
     public GraphicsFontUnit Unit { get; }
     public float CharWidth { get; }
 
-    public float GetHeight (float dpi)
+    public float GetHeight(float dpi)
     {
         return _lineHeight;
     }
 
-    public void Dispose () { }
+    public void Dispose()
+    {
+    }
 }

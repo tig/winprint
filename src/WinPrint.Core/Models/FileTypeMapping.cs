@@ -18,7 +18,7 @@ public class FileTypeMapping : ModelBase
     //    "aliases": [ "Java", "java" ]
     //}]
 
-    public Dictionary<string, string> FilesAssociations { get; set; } = new ();
+    public Dictionary<string, string> FilesAssociations { get; set; } = [];
 
     public IList<ContentType> ContentTypes { get; set; } = [];
 }

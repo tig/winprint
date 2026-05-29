@@ -4,7 +4,7 @@ namespace WinPrint.Core.Abstractions;
 
 internal sealed class SystemDrawingState : IGraphicsState
 {
-    public SystemDrawingState (GraphicsState state)
+    public SystemDrawingState(GraphicsState state)
     {
         State = state;
     }

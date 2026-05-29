@@ -2,6 +2,7 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using WinPrint.Core.Abstractions;
@@ -21,17 +22,18 @@ namespace WinPrint.Core.UnitTests.ViewModels;
 /// </summary>
 public class AppViewModelTests : TestServicesBase
 {
-    public AppViewModelTests (ITestOutputHelper output) : base (output)
+    public AppViewModelTests(ITestOutputHelper output) : base(output)
     {
         // Reset the singleton Settings to a known baseline. ModelLocator.Settings is
         // read-only (IoC), so mutate the existing instance in place.
-        var fresh = Settings.CreateDefaultSettings ();
-        var live = ModelLocator.Current.Settings;
-        live.Sheets.Clear ();
-        foreach (var kvp in fresh.Sheets)
+        var fresh = Settings.CreateDefaultSettings();
+        Settings live = ModelLocator.Current.Settings;
+        live.Sheets.Clear();
+        foreach (KeyValuePair<string, SheetSettings> kvp in fresh.Sheets)
         {
             live.Sheets[kvp.Key] = kvp.Value;
         }
+
         live.DefaultSheet = fresh.DefaultSheet;
         live.LastPrinter = null;
         live.LastPaperSize = null;
@@ -40,9 +42,9 @@ public class AppViewModelTests : TestServicesBase
         live.Location = null;
     }
 
-    private static AppViewModel CreateVm ()
+    private static AppViewModel CreateVm()
     {
-        var sheetVM = new SheetViewModel ();
+        var sheetVM = new SheetViewModel();
         var pageSetup = new PrintPageSetup
         {
             PaperWidth = 850,
@@ -50,155 +52,155 @@ public class AppViewModelTests : TestServicesBase
             DpiX = 96,
             DpiY = 96
         };
-        return new AppViewModel (sheetVM, pageSetup);
+        return new AppViewModel(sheetVM, pageSetup);
     }
 
     [Fact]
-    public void LoadSheets_PopulatesNamesAndSelectsDefaultSheet ()
+    public void LoadSheets_PopulatesNamesAndSelectsDefaultSheet()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
-        Assert.NotEmpty (vm.SheetNames);
-        Assert.True (vm.SelectedSheetIndex >= 0);
-        Assert.NotNull (vm.CurrentSheet);
-        Assert.Equal (
-            ModelLocator.Current.Settings.DefaultSheet.ToString (),
+        Assert.NotEmpty(vm.SheetNames);
+        Assert.True(vm.SelectedSheetIndex >= 0);
+        Assert.NotNull(vm.CurrentSheet);
+        Assert.Equal(
+            ModelLocator.Current.Settings.DefaultSheet.ToString(),
             vm.SheetKeys[vm.SelectedSheetIndex]);
     }
 
     [Fact]
-    public void SelectSheetByIndex_HooksLiveSettingsReference ()
+    public void SelectSheetByIndex_HooksLiveSettingsReference()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
         // Mutating CurrentSheet must mutate the live Settings.Sheets entry.
-        var key = vm.SheetKeys[vm.SelectedSheetIndex];
+        string key = vm.SheetKeys[vm.SelectedSheetIndex];
         bool original = ModelLocator.Current.Settings.Sheets[key].Landscape;
         vm.CurrentSheet!.Landscape = !original;
-        Assert.Equal (!original, ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.Equal(!original, ModelLocator.Current.Settings.Sheets[key].Landscape);
     }
 
     [Fact]
-    public void SetLandscape_PersistsToCurrentSheet ()
+    public void SetLandscape_PersistsToCurrentSheet()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        var key = vm.SheetKeys[vm.SelectedSheetIndex];
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        string key = vm.SheetKeys[vm.SelectedSheetIndex];
 
-        vm.SetLandscape (true);
-        Assert.True (ModelLocator.Current.Settings.Sheets[key].Landscape);
-        Assert.True (vm.CurrentPageSetup.Landscape);
+        vm.SetLandscape(true);
+        Assert.True(ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.True(vm.CurrentPageSetup.Landscape);
 
-        vm.SetLandscape (false);
-        Assert.False (ModelLocator.Current.Settings.Sheets[key].Landscape);
-        Assert.False (vm.CurrentPageSetup.Landscape);
+        vm.SetLandscape(false);
+        Assert.False(ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.False(vm.CurrentPageSetup.Landscape);
     }
 
     [Fact]
-    public void SetRowsColumnsPadding_PersistToCurrentSheet ()
+    public void SetRowsColumnsPadding_PersistToCurrentSheet()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        var key = vm.SheetKeys[vm.SelectedSheetIndex];
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        string key = vm.SheetKeys[vm.SelectedSheetIndex];
 
-        vm.SetRows (3);
-        vm.SetColumns (4);
-        vm.SetPadding (250);
+        vm.SetRows(3);
+        vm.SetColumns(4);
+        vm.SetPadding(250);
 
-        Assert.Equal (3, ModelLocator.Current.Settings.Sheets[key].Rows);
-        Assert.Equal (4, ModelLocator.Current.Settings.Sheets[key].Columns);
-        Assert.Equal (250, ModelLocator.Current.Settings.Sheets[key].Padding);
+        Assert.Equal(3, ModelLocator.Current.Settings.Sheets[key].Rows);
+        Assert.Equal(4, ModelLocator.Current.Settings.Sheets[key].Columns);
+        Assert.Equal(250, ModelLocator.Current.Settings.Sheets[key].Padding);
     }
 
     [Fact]
-    public void SetMargins_PersistsAndUpdatesPageSetup ()
+    public void SetMargins_PersistsAndUpdatesPageSetup()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        var key = vm.SheetKeys[vm.SelectedSheetIndex];
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        string key = vm.SheetKeys[vm.SelectedSheetIndex];
 
-        var margins = new PrintMargins (10, 20, 30, 40);
-        vm.SetMargins (margins);
+        var margins = new PrintMargins(10, 20, 30, 40);
+        vm.SetMargins(margins);
 
-        var saved = ModelLocator.Current.Settings.Sheets[key].Margins;
-        Assert.Equal (10, saved.Left);
-        Assert.Equal (20, saved.Right);
-        Assert.Equal (30, saved.Top);
-        Assert.Equal (40, saved.Bottom);
+        PrintMargins saved = ModelLocator.Current.Settings.Sheets[key].Margins;
+        Assert.Equal(10, saved.Left);
+        Assert.Equal(20, saved.Right);
+        Assert.Equal(30, saved.Top);
+        Assert.Equal(40, saved.Bottom);
 
-        Assert.Equal (30, vm.CurrentPageSetup.MarginTop);
-        Assert.Equal (40, vm.CurrentPageSetup.MarginBottom);
-        Assert.Equal (10, vm.CurrentPageSetup.MarginLeft);
-        Assert.Equal (20, vm.CurrentPageSetup.MarginRight);
+        Assert.Equal(30, vm.CurrentPageSetup.MarginTop);
+        Assert.Equal(40, vm.CurrentPageSetup.MarginBottom);
+        Assert.Equal(10, vm.CurrentPageSetup.MarginLeft);
+        Assert.Equal(20, vm.CurrentPageSetup.MarginRight);
     }
 
     [Fact]
-    public void SetHeaderFooter_PersistToCurrentSheet ()
+    public void SetHeaderFooter_PersistToCurrentSheet()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        var key = vm.SheetKeys[vm.SelectedSheetIndex];
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        string key = vm.SheetKeys[vm.SelectedSheetIndex];
 
-        vm.SetHeaderEnabled (false);
-        vm.SetHeaderText ("CUSTOM-H");
-        vm.SetFooterEnabled (true);
-        vm.SetFooterText ("CUSTOM-F");
+        vm.SetHeaderEnabled(false);
+        vm.SetHeaderText("CUSTOM-H");
+        vm.SetFooterEnabled(true);
+        vm.SetFooterText("CUSTOM-F");
 
-        var s = ModelLocator.Current.Settings.Sheets[key];
-        Assert.False (s.Header.Enabled);
-        Assert.Equal ("CUSTOM-H", s.Header.Text);
-        Assert.True (s.Footer.Enabled);
-        Assert.Equal ("CUSTOM-F", s.Footer.Text);
+        SheetSettings s = ModelLocator.Current.Settings.Sheets[key];
+        Assert.False(s.Header.Enabled);
+        Assert.Equal("CUSTOM-H", s.Header.Text);
+        Assert.True(s.Footer.Enabled);
+        Assert.Equal("CUSTOM-F", s.Footer.Text);
     }
 
     [Fact]
-    public void SelectSheetByNameOrId_FindsByFriendlyName ()
+    public void SelectSheetByNameOrId_FindsByFriendlyName()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        Assert.True (vm.SheetNames.Count > 1);
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetNames.Count > 1);
 
         // Switch to a different sheet by friendly name.
         string targetName = vm.SheetNames[vm.SelectedSheetIndex == 0 ? 1 : 0];
-        bool ok = vm.SelectSheetByNameOrId (targetName);
-        Assert.True (ok);
-        Assert.Equal (targetName, vm.SheetNames[vm.SelectedSheetIndex]);
+        bool ok = vm.SelectSheetByNameOrId(targetName);
+        Assert.True(ok);
+        Assert.Equal(targetName, vm.SheetNames[vm.SelectedSheetIndex]);
     }
 
     [Fact]
-    public async Task LoadFileAsync_MissingFile_SetsErrorPrefixedStatus ()
+    public async Task LoadFileAsync_MissingFile_SetsErrorPrefixedStatus()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
-        bool ok = await vm.LoadFileAsync (@"C:\nope\does-not-exist-xyz123.txt");
+        bool ok = await vm.LoadFileAsync(@"C:\nope\does-not-exist-xyz123.txt");
 
-        Assert.False (ok);
-        Assert.StartsWith ("Error:", vm.StatusText);
-        Assert.False (vm.IsFileLoaded);
+        Assert.False(ok);
+        Assert.StartsWith("Error:", vm.StatusText);
+        Assert.False(vm.IsFileLoaded);
     }
 
     [Fact]
-    public async Task LoadFileAsync_EmptyPath_SetsErrorPrefixedStatus ()
+    public async Task LoadFileAsync_EmptyPath_SetsErrorPrefixedStatus()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
-        bool ok = await vm.LoadFileAsync ("");
+        bool ok = await vm.LoadFileAsync("");
 
-        Assert.False (ok);
-        Assert.StartsWith ("Error:", vm.StatusText);
+        Assert.False(ok);
+        Assert.StartsWith("Error:", vm.StatusText);
     }
 
     [Fact]
-    public void ApplyOptions_AppliesLandscapeSheetPrinterAndPaper ()
+    public void ApplyOptions_AppliesLandscapeSheetPrinterAndPaper()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
-        Assert.True (vm.SheetNames.Count > 1);
+        Assert.True(vm.SheetNames.Count > 1);
         string targetSheet = vm.SheetNames[vm.SelectedSheetIndex == 0 ? 1 : 0];
 
         var options = new Options
@@ -209,187 +211,196 @@ public class AppViewModelTests : TestServicesBase
             PaperSize = "Letter"
         };
 
-        string? file = vm.ApplyOptions (
+        string? file = vm.ApplyOptions(
             options,
-            availablePrinters: new[] { "FakePrinter", "OtherPrinter" },
-            availablePaperSizes: new[] { "Letter", "A4" });
+            new[] { "FakePrinter", "OtherPrinter" },
+            new[] { "Letter", "A4" });
 
-        Assert.Null (file);
-        Assert.Equal (targetSheet, vm.SheetNames[vm.SelectedSheetIndex]);
-        Assert.True (vm.CurrentSheet!.Landscape);
-        Assert.Equal ("FakePrinter", vm.SelectedPrinter);
-        Assert.Equal ("Letter", vm.SelectedPaperSize);
+        Assert.Null(file);
+        Assert.Equal(targetSheet, vm.SheetNames[vm.SelectedSheetIndex]);
+        Assert.True(vm.CurrentSheet!.Landscape);
+        Assert.Equal("FakePrinter", vm.SelectedPrinter);
+        Assert.Equal("Letter", vm.SelectedPaperSize);
     }
 
     [Fact]
-    public void ApplyOptions_PortraitFlagForcesPortrait ()
+    public void ApplyOptions_PortraitFlagForcesPortrait()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        vm.SetLandscape (true);
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SetLandscape(true);
 
-        vm.ApplyOptions (new Options { Portrait = true });
+        vm.ApplyOptions(new Options { Portrait = true });
 
-        Assert.False (vm.CurrentSheet!.Landscape);
+        Assert.False(vm.CurrentSheet!.Landscape);
     }
 
     [Fact]
-    public void ApplyOptions_ReturnsFirstFile ()
+    public void ApplyOptions_ReturnsFirstFile()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
-        string? f = vm.ApplyOptions (new Options
+        string? f = vm.ApplyOptions(new Options
         {
             Files = new[] { "a.txt", "b.txt" }
         });
 
-        Assert.Equal ("a.txt", f);
+        Assert.Equal("a.txt", f);
     }
 
     [Fact]
-    public void ApplyOptions_IgnoresUnknownPrinter ()
+    public void ApplyOptions_IgnoresUnknownPrinter()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
         vm.SelectedPrinter = "Existing";
 
-        vm.ApplyOptions (
+        vm.ApplyOptions(
             new Options { Printer = "NotInList" },
-            availablePrinters: new[] { "Existing" });
+            new[] { "Existing" });
 
-        Assert.Equal ("Existing", vm.SelectedPrinter);
+        Assert.Equal("Existing", vm.SelectedPrinter);
     }
 
     [Fact]
-    public void RestorePrinterSelection_PrefersSavedThenDefaultThenFirst ()
+    public void RestorePrinterSelection_PrefersSavedThenDefaultThenFirst()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        var printers = new[] { "Brother", "Canon", "HP" };
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        string[] printers = ["Brother", "Canon", "HP"];
 
         // No saved, no default → first.
         ModelLocator.Current.Settings.LastPrinter = null;
-        vm.RestorePrinterSelection (printers, null);
-        Assert.Equal ("Brother", vm.SelectedPrinter);
+        vm.RestorePrinterSelection(printers, null);
+        Assert.Equal("Brother", vm.SelectedPrinter);
 
         // Default available → default.
-        vm.RestorePrinterSelection (printers, "Canon");
-        Assert.Equal ("Canon", vm.SelectedPrinter);
+        vm.RestorePrinterSelection(printers, "Canon");
+        Assert.Equal("Canon", vm.SelectedPrinter);
 
         // Saved available → saved (wins over default).
         ModelLocator.Current.Settings.LastPrinter = "HP";
-        vm.RestorePrinterSelection (printers, "Canon");
-        Assert.Equal ("HP", vm.SelectedPrinter);
+        vm.RestorePrinterSelection(printers, "Canon");
+        Assert.Equal("HP", vm.SelectedPrinter);
 
         // Saved unavailable → default.
         ModelLocator.Current.Settings.LastPrinter = "Epson";
-        vm.RestorePrinterSelection (printers, "Canon");
-        Assert.Equal ("Canon", vm.SelectedPrinter);
+        vm.RestorePrinterSelection(printers, "Canon");
+        Assert.Equal("Canon", vm.SelectedPrinter);
     }
 
     [Fact]
-    public void RestorePaperSize_AppliesOnlyWhenSavedAvailable ()
+    public void RestorePaperSize_AppliesOnlyWhenSavedAvailable()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
         vm.SelectedPaperSize = "Initial";
 
         ModelLocator.Current.Settings.LastPaperSize = "A4";
-        vm.RestorePaperSize (new[] { "Letter", "A4" });
-        Assert.Equal ("A4", vm.SelectedPaperSize);
+        vm.RestorePaperSize(new[] { "Letter", "A4" });
+        Assert.Equal("A4", vm.SelectedPaperSize);
 
         ModelLocator.Current.Settings.LastPaperSize = "Foolscap";
-        vm.RestorePaperSize (new[] { "Letter", "A4" });
-        Assert.Equal ("A4", vm.SelectedPaperSize); // unchanged
+        vm.RestorePaperSize(new[] { "Letter", "A4" });
+        Assert.Equal("A4", vm.SelectedPaperSize); // unchanged
     }
 
     [Fact]
-    public void SaveWindowState_Normal_StoresBoundsAndState ()
+    public void SaveWindowState_Normal_StoresBoundsAndState()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
         vm.SelectedPrinter = "MyPrinter";
         vm.SelectedPaperSize = "Letter";
 
-        string fileName = $"WinPrint.{nameof (AppViewModelTests)}.{Guid.NewGuid ():N}.json";
-        var prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
         try
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
-            vm.SaveWindowState (100, 200, 1024, 768, isMaximized: false);
+            vm.SaveWindowState(100, 200, 1024, 768, false);
 
-            var s = ModelLocator.Current.Settings;
-            Assert.Equal (FormWindowState.Normal, s.WindowState);
-            Assert.Equal (100, s.Location!.X);
-            Assert.Equal (200, s.Location.Y);
-            Assert.Equal (1024, s.Size!.Width);
-            Assert.Equal (768, s.Size.Height);
-            Assert.Equal ("MyPrinter", s.LastPrinter);
-            Assert.Equal ("Letter", s.LastPaperSize);
+            Settings s = ModelLocator.Current.Settings;
+            Assert.Equal(FormWindowState.Normal, s.WindowState);
+            Assert.Equal(100, s.Location!.X);
+            Assert.Equal(200, s.Location.Y);
+            Assert.Equal(1024, s.Size!.Width);
+            Assert.Equal(768, s.Size.Height);
+            Assert.Equal("MyPrinter", s.LastPrinter);
+            Assert.Equal("Letter", s.LastPaperSize);
         }
         finally
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
-            if (File.Exists (fileName)) { File.Delete (fileName); }
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
         }
     }
 
     [Fact]
-    public void SaveWindowState_Maximized_PreservesPreviousNormalBounds ()
+    public void SaveWindowState_Maximized_PreservesPreviousNormalBounds()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
 
-        string fileName = $"WinPrint.{nameof (AppViewModelTests)}.{Guid.NewGuid ():N}.json";
-        var prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
         try
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
 
             // First record normal bounds, then close while maximized.
-            vm.SaveNormalBounds (50, 60, 1280, 720);
-            vm.SaveWindowState (0, 0, 1920, 1080, isMaximized: true);
+            vm.SaveNormalBounds(50, 60, 1280, 720);
+            vm.SaveWindowState(0, 0, 1920, 1080, true);
 
-            var s = ModelLocator.Current.Settings;
-            Assert.Equal (FormWindowState.Maximized, s.WindowState);
+            Settings s = ModelLocator.Current.Settings;
+            Assert.Equal(FormWindowState.Maximized, s.WindowState);
             // Crucially: maximized save MUST NOT overwrite the normal bounds.
-            Assert.Equal (50, s.Location!.X);
-            Assert.Equal (60, s.Location.Y);
-            Assert.Equal (1280, s.Size!.Width);
-            Assert.Equal (720, s.Size.Height);
+            Assert.Equal(50, s.Location!.X);
+            Assert.Equal(60, s.Location.Y);
+            Assert.Equal(1280, s.Size!.Width);
+            Assert.Equal(720, s.Size.Height);
         }
         finally
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
-            if (File.Exists (fileName)) { File.Delete (fileName); }
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
         }
     }
 
     [Fact]
-    public void SaveWindowState_PersistsDefaultSheetSelection ()
+    public void SaveWindowState_PersistsDefaultSheetSelection()
     {
-        var vm = CreateVm ();
-        vm.LoadSheets ();
-        Assert.True (vm.SheetNames.Count > 1);
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetNames.Count > 1);
 
         int targetIdx = vm.SelectedSheetIndex == 0 ? 1 : 0;
-        vm.SelectSheetByIndex (targetIdx);
-        var expectedKey = vm.SheetKeys[targetIdx];
+        vm.SelectSheetByIndex(targetIdx);
+        string expectedKey = vm.SheetKeys[targetIdx];
 
-        string fileName = $"WinPrint.{nameof (AppViewModelTests)}.{Guid.NewGuid ():N}.json";
-        var prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
         try
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
-            vm.SaveWindowState (0, 0, 800, 600, isMaximized: false);
+            vm.SaveWindowState(0, 0, 800, 600, false);
 
-            Assert.Equal (Guid.Parse (expectedKey), ModelLocator.Current.Settings.DefaultSheet);
+            Assert.Equal(Guid.Parse(expectedKey), ModelLocator.Current.Settings.DefaultSheet);
         }
         finally
         {
             ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
-            if (File.Exists (fileName)) { File.Delete (fileName); }
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ public class CteRenderingTests
     private const float CharWidth = 10f;
     private const float LineHeight = 20f;
 
-    private static TextCte MakeTextCte (IGraphicsContext measure, float pageWidth, float pageHeight,
+    private static TextCte MakeTextCte(IGraphicsContext measure, float pageWidth, float pageHeight,
         bool lineNumbers = false)
     {
         var cte = new TextCte
@@ -35,98 +35,98 @@ public class CteRenderingTests
                 TabSpaces = 4
             },
             MeasurementContext = measure,
-            PageSize = new System.Drawing.SizeF (pageWidth, pageHeight)
+            PageSize = new System.Drawing.SizeF(pageWidth, pageHeight)
         };
         return cte;
     }
 
-    private static PrintResolution Dpi96 => new () { X = 96, Y = 96 };
+    private static PrintResolution Dpi96 => new() { X = 96, Y = 96 };
 
     [Fact]
-    public async Task TextCte_CountsPages_FromLinesPerPage ()
+    public async Task TextCte_CountsPages_FromLinesPerPage()
     {
-        var g = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var g = new RecordingGraphicsContext();
         // Page fits 3 lines (60 / 20). Four short lines => 2 pages.
-        var cte = MakeTextCte (g, pageWidth: 100, pageHeight: 60);
+        TextCte cte = MakeTextCte(g, 100, 60);
 
-        Assert.True (await cte.SetDocumentAsync ("aaaa\nbbbb\ncccc\ndddd"));
-        int pages = await cte.RenderAsync (Dpi96, null);
+        Assert.True(await cte.SetDocumentAsync("aaaa\nbbbb\ncccc\ndddd"));
+        int pages = await cte.RenderAsync(Dpi96, null);
 
-        Assert.Equal (2, pages);
+        Assert.Equal(2, pages);
     }
 
     [Fact]
-    public async Task TextCte_PaintPage_DrawsLinesAtExpectedPositions ()
+    public async Task TextCte_PaintPage_DrawsLinesAtExpectedPositions()
     {
-        var measure = new RecordingGraphicsContext (CharWidth, LineHeight);
-        var cte = MakeTextCte (measure, pageWidth: 100, pageHeight: 60);
+        var measure = new RecordingGraphicsContext();
+        TextCte cte = MakeTextCte(measure, 100, 60);
 
-        Assert.True (await cte.SetDocumentAsync ("aaaa\nbbbb\ncccc\ndddd"));
-        await cte.RenderAsync (Dpi96, null);
+        Assert.True(await cte.SetDocumentAsync("aaaa\nbbbb\ncccc\ndddd"));
+        await cte.RenderAsync(Dpi96, null);
 
         // Page 1: first three lines at y = 0, 20, 40 (x = 0 because line numbers are off).
-        var paint = new RecordingGraphicsContext (CharWidth, LineHeight);
-        cte.PaintPage (paint, 1);
+        var paint = new RecordingGraphicsContext();
+        cte.PaintPage(paint, 1);
 
-        Assert.Equal (3, paint.DrawnStrings.Count);
-        Assert.Equal (new RecordedString ("aaaa", 0, 0), paint.DrawnStrings[0]);
-        Assert.Equal (new RecordedString ("bbbb", 0, 20), paint.DrawnStrings[1]);
-        Assert.Equal (new RecordedString ("cccc", 0, 40), paint.DrawnStrings[2]);
+        Assert.Equal(3, paint.DrawnStrings.Count);
+        Assert.Equal(new RecordedString("aaaa", 0, 0), paint.DrawnStrings[0]);
+        Assert.Equal(new RecordedString("bbbb", 0, 20), paint.DrawnStrings[1]);
+        Assert.Equal(new RecordedString("cccc", 0, 40), paint.DrawnStrings[2]);
 
         // Page 2: the remaining line at the top.
-        var paint2 = new RecordingGraphicsContext (CharWidth, LineHeight);
-        cte.PaintPage (paint2, 2);
+        var paint2 = new RecordingGraphicsContext();
+        cte.PaintPage(paint2, 2);
 
-        Assert.Equal (new RecordedString ("dddd", 0, 0), Assert.Single (paint2.DrawnStrings));
+        Assert.Equal(new RecordedString("dddd", 0, 0), Assert.Single(paint2.DrawnStrings));
     }
 
     [Fact]
-    public async Task TextCte_WrapsLongLine_ToPageWidth ()
+    public async Task TextCte_WrapsLongLine_ToPageWidth()
     {
-        var measure = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var measure = new RecordingGraphicsContext();
         // 100pt-wide page fits exactly 10 chars.
-        var cte = MakeTextCte (measure, pageWidth: 100, pageHeight: 200);
+        TextCte cte = MakeTextCte(measure, 100, 200);
 
-        Assert.True (await cte.SetDocumentAsync (new string ('a', 12)));
-        int pages = await cte.RenderAsync (Dpi96, null);
+        Assert.True(await cte.SetDocumentAsync(new string('a', 12)));
+        int pages = await cte.RenderAsync(Dpi96, null);
 
-        Assert.Equal (1, pages);
+        Assert.Equal(1, pages);
 
-        var paint = new RecordingGraphicsContext (CharWidth, LineHeight);
-        cte.PaintPage (paint, 1);
+        var paint = new RecordingGraphicsContext();
+        cte.PaintPage(paint, 1);
 
         // The 12-char line wraps into a 10-char line and a 2-char remainder.
-        Assert.Equal (2, paint.DrawnStrings.Count);
-        Assert.Equal (new string ('a', 10), paint.DrawnStrings[0].Text);
-        Assert.Equal (new string ('a', 2), paint.DrawnStrings[1].Text);
-        Assert.Equal (0, paint.DrawnStrings[1].X);
-        Assert.Equal (LineHeight, paint.DrawnStrings[1].Y);
+        Assert.Equal(2, paint.DrawnStrings.Count);
+        Assert.Equal(new string('a', 10), paint.DrawnStrings[0].Text);
+        Assert.Equal(new string('a', 2), paint.DrawnStrings[1].Text);
+        Assert.Equal(0, paint.DrawnStrings[1].X);
+        Assert.Equal(LineHeight, paint.DrawnStrings[1].Y);
     }
 
     [Fact]
-    public async Task TextCte_WithLineNumbers_DrawsNumberAndIndentsText ()
+    public async Task TextCte_WithLineNumbers_DrawsNumberAndIndentsText()
     {
-        var measure = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var measure = new RecordingGraphicsContext();
         // Line number width = 4 chars * 10 = 40; text area = 100.
-        var cte = MakeTextCte (measure, pageWidth: 140, pageHeight: 60, lineNumbers: true);
+        TextCte cte = MakeTextCte(measure, 140, 60, true);
 
-        Assert.True (await cte.SetDocumentAsync ("abc"));
-        await cte.RenderAsync (Dpi96, null);
+        Assert.True(await cte.SetDocumentAsync("abc"));
+        await cte.RenderAsync(Dpi96, null);
 
-        var paint = new RecordingGraphicsContext (CharWidth, LineHeight);
-        cte.PaintPage (paint, 1);
+        var paint = new RecordingGraphicsContext();
+        cte.PaintPage(paint, 1);
 
         // The line number "1" is drawn in the gutter and the text is indented past it (x = gutter width = 40).
-        Assert.Contains (paint.DrawnStrings, s => s.Text == "1" && s.Y == 0);
-        Assert.Contains (new RecordedString ("abc", 40, 0), paint.DrawnStrings);
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "1" && s.Y == 0);
+        Assert.Contains(new RecordedString("abc", 40, 0), paint.DrawnStrings);
         // The line-number separator is drawn as a vertical line in the gutter.
-        Assert.NotEmpty (paint.DrawnLines);
+        Assert.NotEmpty(paint.DrawnLines);
     }
 
     [Fact]
-    public async Task TextMateCte_RendersTokenizedText_CrossPlatform ()
+    public async Task TextMateCte_RendersTokenizedText_CrossPlatform()
     {
-        var measure = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var measure = new RecordingGraphicsContext();
         var cte = new TextMateCte
         {
             ContentSettings = new ContentSettings
@@ -137,28 +137,28 @@ public class CteRenderingTests
                 Style = "VisualStudioLight"
             },
             MeasurementContext = measure,
-            PageSize = new System.Drawing.SizeF (200, 60)
+            PageSize = new System.Drawing.SizeF(200, 60)
         };
 
-        Assert.True (await cte.SetDocumentAsync ("hello\nworld"));
-        int pages = await cte.RenderAsync (Dpi96, null);
+        Assert.True(await cte.SetDocumentAsync("hello\nworld"));
+        int pages = await cte.RenderAsync(Dpi96, null);
 
-        Assert.True (pages >= 1);
+        Assert.True(pages >= 1);
 
-        var paint = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var paint = new RecordingGraphicsContext();
         for (int p = 1; p <= pages; p++)
         {
-            cte.PaintPage (paint, p);
+            cte.PaintPage(paint, p);
         }
 
-        Assert.Contains (paint.DrawnStrings, s => s.Text.Contains ("hello"));
-        Assert.Contains (paint.DrawnStrings, s => s.Text.Contains ("world"));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("hello"));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("world"));
     }
 
     [Fact]
-    public async Task MarkdownCte_RendersFlattenedText ()
+    public async Task MarkdownCte_RendersFlattenedText()
     {
-        var measure = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var measure = new RecordingGraphicsContext();
         var cte = new MarkdownCte
         {
             ContentSettings = new ContentSettings
@@ -168,23 +168,23 @@ public class CteRenderingTests
                 TabSpaces = 4
             },
             MeasurementContext = measure,
-            PageSize = new System.Drawing.SizeF (200, 200)
+            PageSize = new System.Drawing.SizeF(200, 200)
         };
 
-        Assert.True (await cte.SetDocumentAsync ("# Title\n\nHello world"));
-        int pages = await cte.RenderAsync (Dpi96, null);
+        Assert.True(await cte.SetDocumentAsync("# Title\n\nHello world"));
+        int pages = await cte.RenderAsync(Dpi96, null);
 
-        Assert.True (pages >= 1);
+        Assert.True(pages >= 1);
 
-        var paint = new RecordingGraphicsContext (CharWidth, LineHeight);
+        var paint = new RecordingGraphicsContext();
         for (int p = 1; p <= pages; p++)
         {
-            cte.PaintPage (paint, p);
+            cte.PaintPage(paint, p);
         }
 
         // Markdown markers are gone; the prose is rendered.
-        Assert.Contains (paint.DrawnStrings, s => s.Text.Contains ("Title"));
-        Assert.Contains (paint.DrawnStrings, s => s.Text.Contains ("Hello world"));
-        Assert.DoesNotContain (paint.DrawnStrings, s => s.Text.Contains ("#"));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("Title"));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("Hello world"));
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("#"));
     }
 }

@@ -8,9 +8,11 @@ namespace WinPrint.Core.Abstractions;
 /// </summary>
 public class PrintMargins : ICloneable
 {
-    public PrintMargins () : this (0, 0, 0, 0) { }
+    public PrintMargins() : this(0, 0, 0, 0)
+    {
+    }
 
-    public PrintMargins (int left, int right, int top, int bottom)
+    public PrintMargins(int left, int right, int top, int bottom)
     {
         Left = left;
         Right = right;
@@ -23,9 +25,12 @@ public class PrintMargins : ICloneable
     public int Top { get; set; }
     public int Bottom { get; set; }
 
-    public object Clone () => new PrintMargins (Left, Right, Top, Bottom);
+    public object Clone()
+    {
+        return new PrintMargins(Left, Right, Top, Bottom);
+    }
 
-    public override bool Equals (object? obj)
+    public override bool Equals(object? obj)
     {
         if (obj is PrintMargins other)
         {
@@ -35,7 +40,13 @@ public class PrintMargins : ICloneable
         return false;
     }
 
-    public override int GetHashCode () => HashCode.Combine (Left, Right, Top, Bottom);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Left, Right, Top, Bottom);
+    }
 
-    public override string ToString () => $"[PrintMargins Left={Left} Right={Right} Top={Top} Bottom={Bottom}]";
+    public override string ToString()
+    {
+        return $"[PrintMargins Left={Left} Right={Right} Top={Top} Bottom={Bottom}]";
+    }
 }

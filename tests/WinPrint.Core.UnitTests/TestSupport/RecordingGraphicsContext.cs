@@ -15,10 +15,10 @@ namespace WinPrint.Core.UnitTests.TestSupport;
 /// </summary>
 public sealed class RecordingGraphicsContext : IGraphicsContext
 {
-    private readonly IGraphicsBrush _brush = new RecordingResource ();
-    private readonly IGraphicsPen _pen = new RecordingResource ();
+    private readonly IGraphicsBrush _brush = new RecordingResource();
+    private readonly IGraphicsPen _pen = new RecordingResource();
 
-    public RecordingGraphicsContext (float charWidth = 10f, float lineHeight = 20f, float dpi = 96f)
+    public RecordingGraphicsContext(float charWidth = 10f, float lineHeight = 20f, float dpi = 96f)
     {
         CharWidth = charWidth;
         LineHeight = lineHeight;
@@ -30,11 +30,11 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
     public float LineHeight { get; }
 
     /// <summary>Every <see cref="DrawString" /> call, in order, for assertions.</summary>
-    public List<RecordedString> DrawnStrings { get; } = new ();
+    public List<RecordedString> DrawnStrings { get; } = [];
 
-    public List<RecordedLine> DrawnLines { get; } = new ();
-    public List<RecordedRect> DrawnRectangles { get; } = new ();
-    public List<RecordedRect> FilledRectangles { get; } = new ();
+    public List<RecordedLine> DrawnLines { get; } = [];
+    public List<RecordedRect> DrawnRectangles { get; } = [];
+    public List<RecordedRect> FilledRectangles { get; } = [];
 
     public float DpiX { get; }
     public float DpiY { get; }
@@ -47,51 +47,65 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
     public IGraphicsPen GrayPen => _pen;
     public IGraphicsPen RedPen => _pen;
 
-    public IGraphicsState Save ()
+    public IGraphicsState Save()
     {
-        return new RecordingState ();
+        return new RecordingState();
     }
 
-    public void Restore (IGraphicsState state) { }
-
-    public void TranslateTransform (float dx, float dy) { }
-
-    public void ScaleTransform (float sx, float sy) { }
-
-    public void SetClip (GraphicsRectF rect) { }
-
-    public void ExcludeClip (GraphicsRectF rect) { }
-
-    public void ResetClip () { }
-
-    public void SetTextRenderingMode (GraphicsTextRenderingMode mode) { }
-
-    public IGraphicsFont CreateFont (string family, float size, GraphicsFontStyle style, GraphicsFontUnit unit)
+    public void Restore(IGraphicsState state)
     {
-        return new RecordingGraphicsFont (family, size, style, unit, CharWidth, LineHeight);
     }
 
-    public IGraphicsBrush CreateSolidBrush (GraphicsColor color)
+    public void TranslateTransform(float dx, float dy)
+    {
+    }
+
+    public void ScaleTransform(float sx, float sy)
+    {
+    }
+
+    public void SetClip(GraphicsRectF rect)
+    {
+    }
+
+    public void ExcludeClip(GraphicsRectF rect)
+    {
+    }
+
+    public void ResetClip()
+    {
+    }
+
+    public void SetTextRenderingMode(GraphicsTextRenderingMode mode)
+    {
+    }
+
+    public IGraphicsFont CreateFont(string family, float size, GraphicsFontStyle style, GraphicsFontUnit unit)
+    {
+        return new RecordingGraphicsFont(family, size, style, unit, CharWidth, LineHeight);
+    }
+
+    public IGraphicsBrush CreateSolidBrush(GraphicsColor color)
     {
         return _brush;
     }
 
-    public IGraphicsPen CreatePen (GraphicsColor color, float width = 1f)
+    public IGraphicsPen CreatePen(GraphicsColor color, float width = 1f)
     {
         return _pen;
     }
 
-    public GraphicsSizeF MeasureString (string text, IGraphicsFont font)
+    public GraphicsSizeF MeasureString(string text, IGraphicsFont font)
     {
-        return new GraphicsSizeF (text.Length * CharWidth, LineHeight);
+        return new GraphicsSizeF(text.Length * CharWidth, LineHeight);
     }
 
-    public GraphicsSizeF MeasureString (string text, IGraphicsFont font, int width, GraphicsStringFormat format)
+    public GraphicsSizeF MeasureString(string text, IGraphicsFont font, int width, GraphicsStringFormat format)
     {
-        return new GraphicsSizeF (text.Length * CharWidth, LineHeight);
+        return new GraphicsSizeF(text.Length * CharWidth, LineHeight);
     }
 
-    public GraphicsSizeF MeasureString (string text, IGraphicsFont font, GraphicsSizeF proposedSize,
+    public GraphicsSizeF MeasureString(string text, IGraphicsFont font, GraphicsSizeF proposedSize,
         GraphicsStringFormat format, out int charsFitted, out int linesFilled)
     {
         int maxChars = CharWidth <= 0 ? text.Length : (int)(proposedSize.Width / CharWidth);
@@ -102,43 +116,43 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
         }
 
         linesFilled = text.Length == 0 ? 0 : 1;
-        return new GraphicsSizeF (text.Length * CharWidth, LineHeight);
+        return new GraphicsSizeF(text.Length * CharWidth, LineHeight);
     }
 
-    public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y,
+    public void DrawString(string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y,
         GraphicsStringFormat? format = null)
     {
-        DrawnStrings.Add (new RecordedString (text, x, y));
+        DrawnStrings.Add(new RecordedString(text, x, y));
     }
 
-    public void DrawString (string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect,
+    public void DrawString(string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect,
         GraphicsStringFormat? format = null)
     {
-        DrawnStrings.Add (new RecordedString (text, rect.X, rect.Y));
+        DrawnStrings.Add(new RecordedString(text, rect.X, rect.Y));
     }
 
-    public void DrawLine (IGraphicsPen pen, float x1, float y1, float x2, float y2)
+    public void DrawLine(IGraphicsPen pen, float x1, float y1, float x2, float y2)
     {
-        DrawnLines.Add (new RecordedLine (x1, y1, x2, y2));
+        DrawnLines.Add(new RecordedLine(x1, y1, x2, y2));
     }
 
-    public void DrawLine (IGraphicsPen pen, GraphicsPointF start, GraphicsPointF end)
+    public void DrawLine(IGraphicsPen pen, GraphicsPointF start, GraphicsPointF end)
     {
-        DrawnLines.Add (new RecordedLine (start.X, start.Y, end.X, end.Y));
+        DrawnLines.Add(new RecordedLine(start.X, start.Y, end.X, end.Y));
     }
 
-    public void DrawRectangle (IGraphicsPen pen, float x, float y, float width, float height)
+    public void DrawRectangle(IGraphicsPen pen, float x, float y, float width, float height)
     {
-        DrawnRectangles.Add (new RecordedRect (x, y, width, height));
+        DrawnRectangles.Add(new RecordedRect(x, y, width, height));
     }
 
-    public void FillRectangle (IGraphicsBrush brush, GraphicsRectF rect)
+    public void FillRectangle(IGraphicsBrush brush, GraphicsRectF rect)
     {
-        FilledRectangles.Add (new RecordedRect (rect.X, rect.Y, rect.Width, rect.Height));
+        FilledRectangles.Add(new RecordedRect(rect.X, rect.Y, rect.Width, rect.Height));
     }
 
-    public void FillRectangle (IGraphicsBrush brush, float x, float y, float width, float height)
+    public void FillRectangle(IGraphicsBrush brush, float x, float y, float width, float height)
     {
-        FilledRectangles.Add (new RecordedRect (x, y, width, height));
+        FilledRectangles.Add(new RecordedRect(x, y, width, height));
     }
 }

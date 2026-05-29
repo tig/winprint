@@ -5,7 +5,7 @@ namespace WinPrint.Maui.Graphics;
 
 internal sealed class MauiPen : IGraphicsPen
 {
-    public MauiPen (Color color, float width)
+    public MauiPen(Color color, float width)
     {
         Color = color;
         Width = width;
@@ -14,5 +14,7 @@ internal sealed class MauiPen : IGraphicsPen
     public Color Color { get; }
     public float Width { get; }
 
-    public void Dispose () { }
+    public void Dispose()
+    {
+    }
 }

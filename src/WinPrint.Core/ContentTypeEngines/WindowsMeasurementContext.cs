@@ -18,21 +18,21 @@ internal sealed class WindowsMeasurementContext : IDisposable
     private readonly Bitmap _bitmap;
     private readonly Graphics _graphics;
 
-    public WindowsMeasurementContext (int dpiX, int dpiY)
+    public WindowsMeasurementContext(int dpiX, int dpiY)
     {
         // A representative 1x1 surface is enough for glyph metrics.
-        _bitmap = new Bitmap (1, 1);
-        _bitmap.SetResolution (dpiX, dpiY);
-        _graphics = Graphics.FromImage (_bitmap);
+        _bitmap = new Bitmap(1, 1);
+        _bitmap.SetResolution(dpiX, dpiY);
+        _graphics = Graphics.FromImage(_bitmap);
         _graphics.PageUnit = GraphicsUnit.Display; // Display is 1/100th"
-        Context = new SystemDrawingGraphicsContext (_graphics);
+        Context = new SystemDrawingGraphicsContext(_graphics);
     }
 
     public IGraphicsContext Context { get; }
 
-    public void Dispose ()
+    public void Dispose()
     {
-        _graphics.Dispose ();
-        _bitmap.Dispose ();
+        _graphics.Dispose();
+        _bitmap.Dispose();
     }
 }

@@ -4,7 +4,7 @@ namespace WinPrint.Maui.Graphics;
 
 internal sealed class MauiGraphicsState : IGraphicsState
 {
-    public MauiGraphicsState (float translateX, float translateY)
+    public MauiGraphicsState(float translateX, float translateY)
     {
         TranslateX = translateX;
         TranslateY = translateY;

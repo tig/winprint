@@ -5,7 +5,7 @@ public struct GraphicsSizeF
     public float Width { get; }
     public float Height { get; }
 
-    public GraphicsSizeF (float width, float height)
+    public GraphicsSizeF(float width, float height)
     {
         Width = width;
         Height = height;

@@ -8,7 +8,7 @@ namespace WinPrint.Core.Helpers;
 /// <summary>
 ///     This class wraps FileSystemEventArgs and RenamedEventArgs objects and detection of duplicate events.
 /// </summary>
-public class DelayedEvent (FileSystemEventArgs args)
+public class DelayedEvent(FileSystemEventArgs args)
 {
     public FileSystemEventArgs Args { get; } = args;
 
@@ -18,11 +18,10 @@ public class DelayedEvent (FileSystemEventArgs args)
     public bool Delayed { get; set; }
 
 #pragma warning disable CA1720 // Identifier contains type name
-    public virtual bool IsDuplicate (object? obj)
+    public virtual bool IsDuplicate(object? obj)
     {
 #pragma warning restore CA1720 // Identifier contains type name
-        var delayedEvent = obj as DelayedEvent;
-        if (delayedEvent == null)
+        if (obj is not DelayedEvent delayedEvent)
         {
             return false; // this is not null so they are different
         }

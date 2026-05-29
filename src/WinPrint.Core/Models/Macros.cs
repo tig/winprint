@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace WinPrint.Core.Models;
 
-public sealed class Macros (SheetViewModel svm)
+public sealed class Macros(SheetViewModel svm)
 {
     /// <summary>
     ///     The SheetModel the Macros will pull data from.
@@ -23,12 +23,12 @@ public sealed class Macros (SheetViewModel svm)
     ///     The extension (including the period ".").
     /// </summary>
     public string FileExtension =>
-        string.IsNullOrEmpty (SheetViewModel.File) ? "" : Path.GetExtension (SheetViewModel.File);
+        string.IsNullOrEmpty(SheetViewModel.File) ? "" : Path.GetExtension(SheetViewModel.File);
 
     /// <summary>
     ///     The file name and extension. If FileName was not provided, Title will be used.
     /// </summary>
-    public string FileName => GetFileNameOrTitle ();
+    public string FileName => GetFileNameOrTitle();
 
     /// <summary>
     ///     The Title of the print request.
@@ -39,19 +39,19 @@ public sealed class Macros (SheetViewModel svm)
     ///     The file name of the file without the extension and period ".".
     /// </summary>
     public string FileNameWithoutExtension =>
-        string.IsNullOrEmpty (SheetViewModel.File) ? "" : Path.GetFileNameWithoutExtension (SheetViewModel.File);
+        string.IsNullOrEmpty(SheetViewModel.File) ? "" : Path.GetFileNameWithoutExtension(SheetViewModel.File);
 
     /// <summary>
     ///     The directory for the specified string without the filename or extension.
     /// </summary>
     public string FileDirectoryName =>
-        (string.IsNullOrEmpty (SheetViewModel.File) ? "" : Path.GetDirectoryName (FullPath)) ?? string.Empty;
+        (string.IsNullOrEmpty(SheetViewModel.File) ? "" : Path.GetDirectoryName(FullPath)) ?? string.Empty;
 
     /// <summary>
     ///     The absolute path for the file.
     /// </summary>
-    public string FullPath => IsValidFilename (SheetViewModel.File) ? Path.GetFullPath (SheetViewModel.File) :
-        string.IsNullOrEmpty (SheetViewModel.File) ? "" : SheetViewModel.File;
+    public string FullPath => IsValidFilename(SheetViewModel.File) ? Path.GetFullPath(SheetViewModel.File) :
+        string.IsNullOrEmpty(SheetViewModel.File) ? "" : SheetViewModel.File;
 
     /// <summary>
     ///     The time and date when printed.
@@ -61,32 +61,32 @@ public sealed class Macros (SheetViewModel svm)
     /// <summary>
     ///     The time and date the file was last revised.
     /// </summary>
-    public DateTime DateRevised => IsValidFilename (SheetViewModel.File)
-        ? File.GetLastWriteTime (SheetViewModel.File)
+    public DateTime DateRevised => IsValidFilename(SheetViewModel.File)
+        ? File.GetLastWriteTime(SheetViewModel.File)
         : DateTime.MinValue;
 
     /// <summary>
     ///     The time and date the file was created.
     /// </summary>
-    public DateTime DateCreated => IsValidFilename (SheetViewModel.File)
-        ? File.GetCreationTime (SheetViewModel.File)
+    public DateTime DateCreated => IsValidFilename(SheetViewModel.File)
+        ? File.GetCreationTime(SheetViewModel.File)
         : DateTime.MinValue;
 
     /// <summary>
     ///     The language (e.g. "C#" or "java").
     /// </summary>
-    public string Language => string.IsNullOrEmpty (SheetViewModel.Language) ? string.Empty : SheetViewModel.Language;
+    public string Language => string.IsNullOrEmpty(SheetViewModel.Language) ? string.Empty : SheetViewModel.Language;
 
     /// <summary>
     ///     The Contetn Type (e.g. "text/x-csharp")
     /// </summary>
     public string? ContentType =>
-        string.IsNullOrEmpty (SheetViewModel.ContentType) ? string.Empty : SheetViewModel.ContentType;
+        string.IsNullOrEmpty(SheetViewModel.ContentType) ? string.Empty : SheetViewModel.ContentType;
 
     /// <summary>
     ///     The file content type engine name (e.g. "TextCte", "AnsiCte").
     /// </summary>
-    public string CteName => SheetViewModel.ContentEngine?.GetType ().Name ?? string.Empty;
+    public string CteName => SheetViewModel.ContentEngine?.GetType().Name ?? string.Empty;
 
     /// <summary>
     ///     The style used for formatting (e.g. "default" or "colorful"; from Pygments.org).
@@ -100,16 +100,16 @@ public sealed class Macros (SheetViewModel svm)
     public int Page { get; set; }
 
     // https://stackoverflow.com/questions/62771/how-do-i-check-if-a-given-string-is-a-legal-valid-file-name-under-windows#62855
-    private bool IsValidFilename (string testName)
+    private bool IsValidFilename(string testName)
     {
-        if (string.IsNullOrEmpty (testName))
+        if (string.IsNullOrEmpty(testName))
         {
             return false;
         }
 
-        var containsABadCharacter = new Regex ("["
-                                               + Regex.Escape (new string (Path.GetInvalidPathChars ())) + "]");
-        if (containsABadCharacter.IsMatch (testName))
+        var containsABadCharacter = new Regex("["
+                                              + Regex.Escape(new string(Path.GetInvalidPathChars())) + "]");
+        if (containsABadCharacter.IsMatch(testName))
         {
             return false;
         }
@@ -118,7 +118,7 @@ public sealed class Macros (SheetViewModel svm)
 
         // other checks for UNC, drive-path format, etc
 
-        if (!File.Exists (testName))
+        if (!File.Exists(testName))
         {
             return false;
         }
@@ -127,18 +127,18 @@ public sealed class Macros (SheetViewModel svm)
     }
 
     // Title and FileName are synomous. 
-    private string GetFileNameOrTitle ()
+    private string GetFileNameOrTitle()
     {
         string retval = "";
 
-        if (string.IsNullOrEmpty (SheetViewModel.File))
+        if (string.IsNullOrEmpty(SheetViewModel.File))
         {
             return retval;
         }
 
         try
         {
-            retval = Path.GetFileName (SheetViewModel.File);
+            retval = Path.GetFileName(SheetViewModel.File);
         }
         catch (ArgumentException)
         {
@@ -160,11 +160,11 @@ public sealed class Macros (SheetViewModel svm)
     /// <param name="sheetNum">
     ///     <Page #/ param>
     ///         <returns></returns>
-    public string ReplaceMacros (string? value)
+    public string ReplaceMacros(string? value)
     {
-        return Regex.Replace (value!, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match =>
+        return Regex.Replace(value!, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match =>
         {
-            ParameterExpression p = Expression.Parameter (typeof (Macros), "Macros");
+            ParameterExpression p = Expression.Parameter(typeof(Macros), "Macros");
 
             Group startGroup = match.Groups["start"];
             Group propertyGroup = match.Groups["property"];
@@ -174,17 +174,17 @@ public sealed class Macros (SheetViewModel svm)
             try
             {
                 // Generate and parse a LambdaExpression
-                LambdaExpression e = DynamicExpressionParser.ParseLambda (new[] { p }, null, propertyGroup.Value);
-                object? computedValue = e.Compile ().DynamicInvoke (this);
+                LambdaExpression e = DynamicExpressionParser.ParseLambda([p], null, propertyGroup.Value);
+                object? computedValue = e.Compile().DynamicInvoke(this);
                 if (formatGroup.Success)
                 {
                     // There's a format specifier
                     // The following does: string.Format("{0:formatGroup.Value}", computedValue)
-                    return string.Format (CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", computedValue);
+                    return string.Format(CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", computedValue);
                 }
 
                 // Get here when there is no format specifier.
-                return (computedValue ?? "").ToString ()!;
+                return (computedValue ?? "").ToString()!;
             }
             catch
             {

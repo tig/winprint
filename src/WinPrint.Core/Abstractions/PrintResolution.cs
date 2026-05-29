@@ -6,9 +6,11 @@ namespace WinPrint.Core.Abstractions;
 /// </summary>
 public sealed class PrintResolution
 {
-    public PrintResolution () : this (300, 300) { }
+    public PrintResolution() : this(300, 300)
+    {
+    }
 
-    public PrintResolution (int x, int y)
+    public PrintResolution(int x, int y)
     {
         X = x;
         Y = y;
@@ -17,5 +19,8 @@ public sealed class PrintResolution
     public int X { get; set; }
     public int Y { get; set; }
 
-    public override string ToString () => $"{X}x{Y} DPI";
+    public override string ToString()
+    {
+        return $"{X}x{Y} DPI";
+    }
 }

@@ -27,7 +27,7 @@ public class Font : ICloneable
         get => _style;
         set
         {
-            if (!Enum.IsDefined (typeof (FontStyle), value))
+            if (!Enum.IsDefined(typeof(FontStyle), value))
             {
                 value = FontStyle.Bold | FontStyle.Italic;
             }
@@ -48,19 +48,19 @@ public class Font : ICloneable
         //SetField(ref size, value);
     } = 8F;
 
-    public object Clone ()
+    public object Clone()
     {
-        return MemberwiseClone ();
+        return MemberwiseClone();
     }
 
-    public override int GetHashCode ()
+    public override int GetHashCode()
     {
-        return HashCode.Combine (Family, Size, Style);
+        return HashCode.Combine(Family, Size, Style);
     }
 
-    public override bool Equals (object? obj)
+    public override bool Equals(object? obj)
     {
-        if (!(obj is Font font))
+        if (obj is not Font font)
         {
             return false;
         }
@@ -70,7 +70,7 @@ public class Font : ICloneable
                && font.Style == Style;
     }
 
-    public static bool operator == (Font? m1, Font? m2)
+    public static bool operator ==(Font? m1, Font? m2)
     {
         if (m1 is null)
         {
@@ -82,13 +82,13 @@ public class Font : ICloneable
             return false;
         }
 
-        return m1.Equals (m2);
+        return m1.Equals(m2);
     }
 
     /// <summary>
     ///     Tests whether two <see cref='Font' /> objects are different.
     /// </summary>
-    public static bool operator != (Font? m1, Font? m2)
+    public static bool operator !=(Font? m1, Font? m2)
     {
         return !(m1 == m2);
     }
@@ -96,9 +96,9 @@ public class Font : ICloneable
     /// <summary>
     ///     Provides some interesting information for the Font in String form.
     /// </summary>
-    public override string ToString ()
+    public override string ToString()
     {
-        return $"{Family}, {Size.ToString (CultureInfo.InvariantCulture)}pt, {Style.ToString ()}";
+        return $"{Family}, {Size.ToString(CultureInfo.InvariantCulture)}pt, {Style.ToString()}";
     }
 
     //public Font() {

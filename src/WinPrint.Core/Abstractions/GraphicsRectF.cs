@@ -12,7 +12,7 @@ public struct GraphicsRectF
     public float Right => X + Width;
     public float Bottom => Y + Height;
 
-    public GraphicsRectF (float x, float y, float width, float height)
+    public GraphicsRectF(float x, float y, float width, float height)
     {
         X = x;
         Y = y;

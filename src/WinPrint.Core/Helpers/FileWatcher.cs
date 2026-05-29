@@ -10,9 +10,9 @@ public class FileWatcher : IDisposable
     private FileSystemSafeWatcher? _fileWatcher;
 #pragma warning restore IDE0052 // Remove unread private members
 
-    public FileWatcher (string file)
+    public FileWatcher(string file)
     {
-        _fileWatcher = CreateFileWatcher (file);
+        _fileWatcher = CreateFileWatcher(file);
     }
 
     public event EventHandler? ChangedEvent;
@@ -21,7 +21,7 @@ public class FileWatcher : IDisposable
     ///     OnChangeEvent is raised whenever the CommandTable is updated due to
     ///     user commands file changes
     /// </summary>
-    protected virtual void OnChangedEvent ()
+    protected virtual void OnChangedEvent()
     {
         // Make a temporary copy of the event to avoid possibility of
         // a race condition if the last subscriber unsubscribes
@@ -29,19 +29,19 @@ public class FileWatcher : IDisposable
         EventHandler? handler = ChangedEvent;
 
         // Event will be null if there are no subscribers
-        handler?.Invoke (this, EventArgs.Empty);
+        handler?.Invoke(this, EventArgs.Empty);
     }
 
-    private FileSystemSafeWatcher CreateFileWatcher (string path)
+    private FileSystemSafeWatcher CreateFileWatcher(string path)
     {
         // Create a new FileSystemSafeWatcher and set its properties.
         var watcher = new FileSystemSafeWatcher
         {
-            Path = Path.GetDirectoryName (path) ?? string.Empty,
+            Path = Path.GetDirectoryName(path) ?? string.Empty,
             /* Watch for changes in LastAccess and LastWrite times, and
                the renaming of files or directories. */
             NotifyFilter = NotifyFilters.LastWrite,
-            Filter = Path.GetFileName (path)
+            Filter = Path.GetFileName(path)
         };
 
         // Add event handlers.
@@ -52,27 +52,27 @@ public class FileWatcher : IDisposable
 
         // Begin watching.
         watcher.EnableRaisingEvents = true;
-        LogService.TraceMessage ($"FileSystemSafeWatcher: Watching {watcher.Path}\\{watcher.Filter} for changes.");
+        LogService.TraceMessage($"FileSystemSafeWatcher: Watching {watcher.Path}\\{watcher.Filter} for changes.");
         return watcher;
     }
 
-    private void OnChanged (object? source, FileSystemEventArgs e)
+    private void OnChanged(object? source, FileSystemEventArgs e)
     {
         //Logger.Instance.Log4.Info($"Commands:{e.FullPath} changed.");
-        OnChangedEvent ();
+        OnChangedEvent();
     }
 
-    private void OnRenamed (object? source, RenamedEventArgs e)
+    private void OnRenamed(object? source, RenamedEventArgs e)
     {
         // Specify what is done when a file is renamed.
-        LogService.TraceMessage ($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");
+        LogService.TraceMessage($"FileSystemSafeWatcher:{e.OldFullPath} renamed to {e.FullPath}");
     }
 
     #region IDisposable Support
 
     private bool _disposedValue; // To detect redundant calls
 
-    protected virtual void Dispose (bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
         {
@@ -92,11 +92,11 @@ public class FileWatcher : IDisposable
         }
     }
 
-    public void Dispose ()
+    public void Dispose()
     {
         // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        Dispose (true);
-        GC.SuppressFinalize (this);
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     #endregion

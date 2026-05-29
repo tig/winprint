@@ -4,8 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace WinPrint.WinForms;
 
 [Flags]
-[SuppressMessage ("Naming", "CA1714:Flags enums should have plural names", Justification = "<Pending>")]
-[SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>")]
+[SuppressMessage("Naming", "CA1714:Flags enums should have plural names", Justification = "<Pending>")]
+[SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>")]
 public enum AssocF
 {
     Init_NoRemapCLSID = 0x1,

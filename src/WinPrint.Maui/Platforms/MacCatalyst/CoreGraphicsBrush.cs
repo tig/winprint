@@ -9,10 +9,15 @@ internal sealed class CoreGraphicsBrush : IGraphicsBrush
     public float B { get; }
     public float A { get; }
 
-    public CoreGraphicsBrush (float r, float g, float b, float a)
+    public CoreGraphicsBrush(float r, float g, float b, float a)
     {
-        R = r; G = g; B = b; A = a;
+        R = r;
+        G = g;
+        B = b;
+        A = a;
     }
 
-    public void Dispose () { }
+    public void Dispose()
+    {
+    }
 }

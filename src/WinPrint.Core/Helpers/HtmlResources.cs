@@ -4,45 +4,45 @@ using WinPrint.Core.Services;
 
 namespace WinPrint.LiteHtml;
 
-public class HtmlResources (string filePath)
+public class HtmlResources(string filePath)
 {
-    public byte[] GetResourceBytes (string resource)
+    public byte[] GetResourceBytes(string resource)
     {
-        LogService.TraceMessage ($"{resource}");
-        byte[] data = Array.Empty<byte> ();
-        if (string.IsNullOrWhiteSpace (resource))
+        LogService.TraceMessage($"{resource}");
+        byte[] data = [];
+        if (string.IsNullOrWhiteSpace(resource))
         {
             return data;
         }
 
         try
         {
-            data = File.ReadAllBytes ($"{Path.GetDirectoryName (filePath)}\\{resource}");
+            data = File.ReadAllBytes($"{Path.GetDirectoryName(filePath)}\\{resource}");
         }
         catch (Exception e)
         {
-            LogService.TraceMessage ($"GetResourceBytes({resource}) - {e.Message}");
+            LogService.TraceMessage($"GetResourceBytes({resource}) - {e.Message}");
         }
 
         return data;
     }
 
-    public string GetResourceString (string resource)
+    public string GetResourceString(string resource)
     {
-        LogService.TraceMessage ($"{resource}");
+        LogService.TraceMessage($"{resource}");
         string data = string.Empty;
-        if (string.IsNullOrWhiteSpace (resource))
+        if (string.IsNullOrWhiteSpace(resource))
         {
             return data;
         }
 
         try
         {
-            if (resource.StartsWith ("file:"))
+            if (resource.StartsWith("file:"))
             {
-                var urlBuilder = new UriBuilder (resource);
-                using var reader = new StreamReader (urlBuilder.Path);
-                data = reader.ReadToEnd ();
+                var urlBuilder = new UriBuilder(resource);
+                using var reader = new StreamReader(urlBuilder.Path);
+                data = reader.ReadToEnd();
             }
 
             // TODO: Implement loading external html resources
@@ -52,7 +52,7 @@ public class HtmlResources (string filePath)
         }
         catch (Exception e)
         {
-            LogService.TraceMessage ($"GetResourceString({resource}) - {e.Message}");
+            LogService.TraceMessage($"GetResourceString({resource}) - {e.Message}");
             return data;
         }
     }

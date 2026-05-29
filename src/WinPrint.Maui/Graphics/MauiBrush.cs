@@ -5,12 +5,14 @@ namespace WinPrint.Maui.Graphics;
 
 internal sealed class MauiBrush : IGraphicsBrush
 {
-    public MauiBrush (Color color)
+    public MauiBrush(Color color)
     {
         Color = color;
     }
 
     public Color Color { get; }
 
-    public void Dispose () { }
+    public void Dispose()
+    {
+    }
 }

@@ -25,18 +25,18 @@ public class MarkdownCte : TextCte
     ///     extensions ensures tables, task lists, etc. are handled gracefully.
     /// </summary>
     private static readonly MarkdownPipeline _pipeline =
-        new MarkdownPipelineBuilder ().UseAdvancedExtensions ().Build ();
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
     /// </summary>
     public override string[] SupportedContentTypes => _supportedContentTypes;
 
-    public static new MarkdownCte Create ()
+    public new static MarkdownCte Create()
     {
-        var engine = new MarkdownCte ();
+        var engine = new MarkdownCte();
         // Populate it with the common settings
-        engine.CopyPropertiesFrom (ModelLocator.Current.Settings.MarkdownContentTypeEngineSettings);
+        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.MarkdownContentTypeEngineSettings);
         return engine;
     }
 
@@ -44,10 +44,10 @@ public class MarkdownCte : TextCte
     ///     Converts the Markdown <paramref name="doc" /> to plain text before handing it to the
     ///     text rendering pipeline.
     /// </summary>
-    public override async Task<bool> SetDocumentAsync (string doc)
+    public override async Task<bool> SetDocumentAsync(string doc)
     {
-        LogService.TraceMessage ($"Converting {doc?.Length ?? 0} chars of Markdown to plain text.");
-        string plainText = Markdown.ToPlainText (doc ?? string.Empty, _pipeline);
-        return await base.SetDocumentAsync (plainText);
+        LogService.TraceMessage($"Converting {doc?.Length ?? 0} chars of Markdown to plain text.");
+        string plainText = Markdown.ToPlainText(doc ?? string.Empty, _pipeline);
+        return await base.SetDocumentAsync(plainText);
     }
 }

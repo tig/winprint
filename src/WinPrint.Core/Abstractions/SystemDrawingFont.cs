@@ -7,24 +7,24 @@ internal sealed class SystemDrawingFont : IGraphicsFont
 {
     private readonly bool _ownsNative;
 
-    public SystemDrawingFont (Font font, bool ownsNative = true)
+    public SystemDrawingFont(Font font, bool ownsNative = true)
     {
-        Font = font ?? throw new ArgumentNullException (nameof (font));
+        Font = font ?? throw new ArgumentNullException(nameof(font));
         _ownsNative = ownsNative;
     }
 
     public Font Font { get; }
 
-    public float GetHeight (float dpi)
+    public float GetHeight(float dpi)
     {
-        return Font.GetHeight (dpi);
+        return Font.GetHeight(dpi);
     }
 
-    public void Dispose ()
+    public void Dispose()
     {
         if (_ownsNative)
         {
-            Font.Dispose ();
+            Font.Dispose();
         }
     }
 }

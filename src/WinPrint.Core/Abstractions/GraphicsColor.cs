@@ -7,7 +7,7 @@ public struct GraphicsColor
     public byte G { get; }
     public byte B { get; }
 
-    public GraphicsColor (byte a, byte r, byte g, byte b)
+    public GraphicsColor(byte a, byte r, byte g, byte b)
     {
         A = a;
         R = r;
@@ -15,13 +15,13 @@ public struct GraphicsColor
         B = b;
     }
 
-    public static GraphicsColor FromArgb (byte a, byte r, byte g, byte b)
+    public static GraphicsColor FromArgb(byte a, byte r, byte g, byte b)
     {
-        return new GraphicsColor (a, r, g, b);
+        return new GraphicsColor(a, r, g, b);
     }
 
-    public static GraphicsColor FromRgb (byte r, byte g, byte b)
+    public static GraphicsColor FromRgb(byte r, byte g, byte b)
     {
-        return new GraphicsColor (255, r, g, b);
+        return new GraphicsColor(255, r, g, b);
     }
 }

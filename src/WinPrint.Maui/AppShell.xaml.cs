@@ -2,8 +2,8 @@ namespace WinPrint.Maui;
 
 public partial class AppShell : Shell
 {
-    public AppShell ()
+    public AppShell()
     {
-        InitializeComponent ();
+        InitializeComponent();
     }
 }

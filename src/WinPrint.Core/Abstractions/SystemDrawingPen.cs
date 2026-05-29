@@ -7,19 +7,19 @@ internal sealed class SystemDrawingPen : IGraphicsPen
 {
     private readonly bool _ownsNative;
 
-    public SystemDrawingPen (Pen pen, bool ownsNative = true)
+    public SystemDrawingPen(Pen pen, bool ownsNative = true)
     {
-        Pen = pen ?? throw new ArgumentNullException (nameof (pen));
+        Pen = pen ?? throw new ArgumentNullException(nameof(pen));
         _ownsNative = ownsNative;
     }
 
     public Pen Pen { get; }
 
-    public void Dispose ()
+    public void Dispose()
     {
         if (_ownsNative)
         {
-            Pen.Dispose ();
+            Pen.Dispose();
         }
     }
 }

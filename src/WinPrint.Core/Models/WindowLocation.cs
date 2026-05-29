@@ -2,11 +2,11 @@ namespace WinPrint.Core.Models;
 
 public class WindowLocation
 {
-    public WindowLocation ()
+    public WindowLocation()
     {
     }
 
-    public WindowLocation (int x, int y)
+    public WindowLocation(int x, int y)
     {
         X = x;
         Y = y;
