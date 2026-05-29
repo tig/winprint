@@ -12,9 +12,10 @@ debugging winprint in **VS Code** on Windows, macOS, or Linux.
 
 1. **.NET 10 SDK** — the version is pinned by [`global.json`](global.json). Get it from
    <https://dotnet.microsoft.com/download/dotnet/10.0>. Verify with `dotnet --version`.
-2. **MAUI workload** (only needed to build/run the `WinPrint.Maui` app):
+2. **MAUI workload** (only needed to build/run the `WinPrint.Maui` app). From the
+   repo root, restore the workloads required by the MAUI project:
    ```bash
-   dotnet workload install maui
+   dotnet workload restore src/WinPrint.Maui/WinPrint.Maui.csproj
    ```
    On **macOS** the Mac Catalyst build additionally needs full **Xcode** (not just the
    Command Line Tools), and the version must match what the workload pins — currently
@@ -25,6 +26,11 @@ debugging winprint in **VS Code** on Windows, macOS, or Linux.
    ```
    A mismatched Xcode fails with "requires the MacCatalyst 26.5 SDK"; Command Line Tools
    alone fail with "A valid Xcode installation was not found".
+   You can also run the VS Code task **restore-maui-workloads**. A fresh .NET 10 SDK
+   may report `NETSDK1147` for a specific MAUI workload such as `maui-tizen`; that means
+   the MAUI workload set has not been restored yet.
+   On Windows, restart VS Code after installing the SDK or workload so the integrated
+   terminal and extensions pick up the updated `PATH`.
 3. **libgdiplus** (macOS/Linux only) — the Windows `System.Drawing` measurement and the
    full test suite P/Invoke GDI+, which ships natively on Windows. On other platforms:
    ```bash
@@ -51,6 +57,14 @@ VS Code will prompt to install the recommended extensions
 The solution is loaded automatically from `src/WinPrint.slnx`
 (`dotnet.defaultSolution` in [`.vscode/settings.json`](.vscode/settings.json)).
 
+If starting **WinPrint.Maui (Windows)** shows
+`Couldn't find a debug adapter descriptor for debug type 'maui'`, the .NET MAUI extension
+did not activate. In VS Code or VS Code Insiders, verify that **C# Dev Kit**, **C#**, and
+**.NET MAUI** are installed and enabled, then run **Developer: Reload Window**. If it still
+fails, check **Output → C# Dev Kit** and **Output → .NET MAUI**; the usual causes are
+`dotnet` not being on VS Code's `PATH`, a missing `maui` workload, or C# Dev Kit not being
+signed in/activated.
+
 ## Build, test, debug
 
 ### Tasks (Command Palette → **Tasks: Run Task**, or Ctrl/Cmd+Shift+B for the default)
@@ -60,6 +74,9 @@ The solution is loaded automatically from `src/WinPrint.slnx`
 | `build` *(default)* | **Windows:** full solution. **macOS/Linux:** `WinPrint.Core` only.     |
 | `build-cli`      | Builds `WinPrint.cli` (`winprint`).                                        |
 | `build-solution` | Builds the whole `src/WinPrint.slnx` (needs the MAUI workload).           |
+| `build-winforms` | Builds the WinForms GUI directly for debugging; does not require MAUI.    |
+| `build-maui-windows` | Builds `WinPrint.Maui` for Windows (needs the MAUI workload).        |
+| `restore-maui-workloads` | Restores the MAUI workloads required by `WinPrint.Maui`.        |
 | `test`           | Runs the `WinPrint.Core.UnitTests` suite.                                 |
 | `publish-cli`    | `dotnet publish -c Release` of the CLI.                                   |
 
@@ -76,7 +93,7 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 | ------------------------------- | -------------------------------------------------- |
 | **WinPrint.cli**                | Put CLI args (a file, `--what-if`) in `"args"`.    |
 | **WinPrint.WinForms (Windows)** | The GUI (`winprintgui`). Windows only.             |
-| **WinPrint.Maui (Windows)**     | MAUI app on Windows. Needs the MAUI workload.      |
+| **WinPrint.Maui (Windows)**     | Directly launches the unpackaged Windows MAUI EXE. Needs the MAUI workload. |
 | **WinPrint.Maui (Mac Catalyst)**| MAUI app on macOS. Needs the MAUI workload.        |
 
 ### What builds/runs where today
