@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using Xunit;

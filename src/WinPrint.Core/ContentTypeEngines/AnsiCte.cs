@@ -1,11 +1,9 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System;
 #if WINDOWS
 using System.Drawing.Printing;
 #endif
-using System.Threading.Tasks;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -20,11 +18,11 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class AnsiCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string[] _supportedContentTypes = ["text/plain", "text/ansi"];
+    private static readonly string[] s_supportedContentTypes = ["text/plain", "text/ansi"];
 
     private bool _disposed;
 
-    public override string[] SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => s_supportedContentTypes;
 
     public void Dispose()
     {

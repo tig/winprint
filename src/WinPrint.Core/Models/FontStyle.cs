@@ -1,5 +1,3 @@
-using System;
-
 namespace WinPrint.Core.Models;
 
 /// <summary>

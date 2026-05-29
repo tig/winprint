@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.Json;
 using WinPrint.Core.Models;
 using WinPrint.Core.Properties;

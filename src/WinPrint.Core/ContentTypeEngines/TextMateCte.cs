@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Serilog;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Grammars;
@@ -22,7 +17,7 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class TextMateCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string[] _supportedContentTypes = ["text/plain"];
+    private static readonly string[] s_supportedContentTypes = ["text/plain"];
 
     private IGraphicsFont? _cachedFont;
     private bool _disposed;
@@ -38,7 +33,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     public string? ContentType { get; private set; }
     public string? Language { get; private set; }
 
-    public override string[] SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => s_supportedContentTypes;
 
     public void Dispose()
     {

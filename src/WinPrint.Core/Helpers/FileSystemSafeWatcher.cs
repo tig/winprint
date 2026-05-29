@@ -1,11 +1,8 @@
 // DISCLAIMER: Use this code at your own risk. 
 // No support is provided and this code has NOT been tested.
 
-using System;
 using System.Collections;
 using System.ComponentModel;
-using System.IO;
-using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
 

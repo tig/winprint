@@ -10,10 +10,10 @@ namespace WinPrint.Core.ContentTypeEngines;
 #pragma warning disable CS0649 // Fields are assigned via direct struct field access
 internal struct WrappedLine
 {
-    internal int _nonWrappedLineNumber; // 0 if wrapped
-    internal string _text; // contents of this part of the line
+    internal int NonWrappedLineNumber; // 0 if wrapped
+    internal string Text; // contents of this part of the line
 #if DEBUG
-    internal string _textNonWrapped;
+    internal string TextNonWrapped;
 #endif
 }
 #pragma warning restore CS0649

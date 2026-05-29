@@ -1,8 +1,6 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,12 +9,9 @@ using System.Drawing.Printing;
 using System.Drawing.Text;
 #endif
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -32,7 +27,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     //public static string DefaultContentType = "text/plain";
     public static string DefaultCteClassName = "AnsiCte";
     public static string DefaultSyntaxHighlighterCteNameClassName = "TextMateCte";
-    private static readonly string[] _supportedContentTypes = [];
+    private static readonly string[] s_supportedContentTypes = [];
 
 #if WINDOWS
     /// <summary>
@@ -41,7 +36,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     ///     this lets the type be loaded on a host without GDI+ (e.g. Linux CI running the Windows-targeted test
     ///     assembly) as long as this member is not actually used.
     /// </summary>
-    private static readonly Lazy<StringFormat> _stringFormat = new(() =>
+    private static readonly Lazy<StringFormat> s_stringFormat = new(() =>
         new StringFormat(StringFormat.GenericTypographic)
         {
             FormatFlags = StringFormatFlags.NoClip |
@@ -54,7 +49,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             Trimming = StringTrimming.None
         });
 
-    public static StringFormat StringFormat => _stringFormat.Value;
+    public static StringFormat StringFormat => s_stringFormat.Value;
 #endif
 
     public static readonly GraphicsStringFormat GraphicsStringFormat = new()
@@ -76,7 +71,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         GraphicsTextRenderingMode.ClearTypeGridFit;
 
     private ContentSettings? _contentSettings;
-    internal string? _document;
+    private string? _document;
     private Encoding? _encoding = Encoding.Default;
 
     /// <summary>
@@ -96,7 +91,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
     /// </summary>
-    public virtual string[] SupportedContentTypes => _supportedContentTypes;
+    public virtual string[] SupportedContentTypes => s_supportedContentTypes;
 
     /// <summary>
     ///     Holds content settings for the CTE. These are used as defaults when a Sheet does not

@@ -1,9 +1,6 @@
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using Serilog;
 
 namespace WinPrint.Core.Services;
@@ -14,8 +11,8 @@ namespace WinPrint.Core.Services;
 /// </summary>
 public class PygmentsConverterService
 {
-    private static bool _pygmentsInstalled;
-    private static string? _scriptsPath = string.Empty;
+    private static bool s_pygmentsInstalled;
+    private static string? s_scriptsPath = string.Empty;
     private TaskCompletionSource<bool>? _eventHandled;
 
     private Process? _proc;
@@ -32,7 +29,7 @@ public class PygmentsConverterService
     /// <returns>true if pygmentize.exe is working, false otherwise + message</returns>
     public (bool installed, string message) CheckInstall()
     {
-        if (_pygmentsInstalled)
+        if (s_pygmentsInstalled)
         {
             return (true, "Pygments is is functional.");
         }
@@ -88,7 +85,7 @@ public class PygmentsConverterService
             message =
                 $"Python 3.x must be installed (and on the PATH) for source code formatting to work.\n\nType `winget install python` at a command prompt to install Python.\n\n{message}";
             Log.Debug("Pygments: {message}", message);
-            return (_pygmentsInstalled, message);
+            return (s_pygmentsInstalled, message);
         }
 
         // Get python scripts folder
@@ -105,19 +102,19 @@ public class PygmentsConverterService
 
             if (proc.WaitForExit(5000))
             {
-                _scriptsPath = proc.StandardOutput.ReadLine();
-                if (!string.IsNullOrEmpty(_scriptsPath) && _scriptsPath.ToLowerInvariant().EndsWith("scripts"))
+                s_scriptsPath = proc.StandardOutput.ReadLine();
+                if (!string.IsNullOrEmpty(s_scriptsPath) && s_scriptsPath.ToLowerInvariant().EndsWith("scripts"))
                 {
-                    Log.Debug("Pygments: Python scripts folder: {scriptsPath}", _scriptsPath);
-                    message = _scriptsPath;
+                    Log.Debug("Pygments: Python scripts folder: {scriptsPath}", s_scriptsPath);
+                    message = s_scriptsPath;
                 }
                 else
                 {
-                    _scriptsPath = proc.StandardError.ReadToEnd();
+                    s_scriptsPath = proc.StandardError.ReadToEnd();
 
-                    Log.Debug("Pygments: Python error: {scriptsPath}", _scriptsPath);
+                    Log.Debug("Pygments: Python error: {scriptsPath}", s_scriptsPath);
                     message =
-                        $"Could not find the Python scripts folder.\n{proc.StartInfo.FileName} failed to start: {_scriptsPath}";
+                        $"Could not find the Python scripts folder.\n{proc.StartInfo.FileName} failed to start: {s_scriptsPath}";
                 }
             }
             else
@@ -131,18 +128,18 @@ public class PygmentsConverterService
             message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{ex.Message}";
         }
 
-        if (string.IsNullOrEmpty(_scriptsPath))
+        if (string.IsNullOrEmpty(s_scriptsPath))
         {
             message = $"Could not find Pygments. Source code formatting will not work.\n\n{message}";
             Log.Debug("Pygments: {message}", message);
-            return (_pygmentsInstalled, message);
+            return (s_pygmentsInstalled, message);
         }
 
         // Test pygmentize.exe - Which is installed in the app's Program File dir
         try
         {
             Log.Information("Source code formatting: Verifying Pygments is installed");
-            proc.StartInfo.FileName = @$"{_scriptsPath}\pygmentize.exe";
+            proc.StartInfo.FileName = @$"{s_scriptsPath}\pygmentize.exe";
             proc.StartInfo.Arguments = "-V";
             Log.Debug("Pygments: Starting process {proc} {args}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
             proc.Start();
@@ -152,16 +149,16 @@ public class PygmentsConverterService
                 string? output = proc.StandardOutput.ReadLine();
                 if (output != null && output.StartsWith("Pygments version "))
                 {
-                    _pygmentsInstalled = true;
+                    s_pygmentsInstalled = true;
                     message = $"Pygments is functional: {output}";
                     Log.Debug("Pygments: {output}", message);
-                    return (_pygmentsInstalled, message);
+                    return (s_pygmentsInstalled, message);
                 }
 
                 message =
                     $"Pygments is not installed. {proc.StartInfo.FileName} failed to start: {(output == null ? "no output" : output)}";
                 // Try to install it
-                (_pygmentsInstalled, message) = InstallPygments();
+                (s_pygmentsInstalled, message) = InstallPygments();
             }
             else
             {
@@ -174,16 +171,16 @@ public class PygmentsConverterService
             message = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments} failed:\n{ex.Message}";
             Log.Debug("Pygments: {message}", message);
             // Try to install it
-            (_pygmentsInstalled, message) = InstallPygments();
+            (s_pygmentsInstalled, message) = InstallPygments();
         }
 
-        if (!_pygmentsInstalled)
+        if (!s_pygmentsInstalled)
         {
             message = $"Pygments error. Source code formatting will not function.\n\n{message}";
         }
 
         Log.Debug("Pygments: {message}", message);
-        return (_pygmentsInstalled, message);
+        return (s_pygmentsInstalled, message);
     }
 
     ///// <summary>
@@ -322,7 +319,7 @@ public class PygmentsConverterService
             throw new InvalidOperationException("Pygments: ConvertAsync already in progress.");
         }
 
-        if (string.IsNullOrEmpty(_scriptsPath))
+        if (string.IsNullOrEmpty(s_scriptsPath))
         {
             (bool installed, string message) = CheckInstall();
             if (!installed)
@@ -333,7 +330,7 @@ public class PygmentsConverterService
 
         string file = Path.GetTempFileName();
         _proc = new Process();
-        _proc.StartInfo.FileName = @$"{_scriptsPath}\pygmentize.exe";
+        _proc.StartInfo.FileName = @$"{s_scriptsPath}\pygmentize.exe";
         _proc.StartInfo.Arguments =
             $"-P outencoding=utf-8 -f 16m -O style=\"{(string.IsNullOrEmpty(style) ? "default" : style)}\" -l \"{language}\" -o \"{file}.an\" \"{file}\"";
         _proc.StartInfo.RedirectStandardInput = true;

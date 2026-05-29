@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using WinPrint.Core.Services;
 
 namespace WinPrint.LiteHtml;

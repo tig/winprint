@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using Serilog;
 using WinPrint.Core.Abstractions;
@@ -24,7 +23,7 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
     private bool _leftBorder;
     private bool _rightBorder;
 
-    internal SheetViewModel _svm;
+    internal SheetViewModel Svm;
 
     private string? _text;
 
@@ -41,7 +40,7 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
             throw new ArgumentNullException(nameof(hf));
         }
 
-        _svm = svm ?? throw new ArgumentNullException(nameof(svm));
+        Svm = svm ?? throw new ArgumentNullException(nameof(svm));
 
         Text = hf.Text;
         LeftBorder = hf.LeftBorder;
@@ -231,7 +230,7 @@ public abstract class HeaderFooterViewModel : ViewModelBase, IDisposable
         }
 
         Log.Debug($"{GetType().Name}: Expanding Macros - {Text}");
-        var macros = new Macros(_svm) { Page = sheetNum };
+        var macros = new Macros(Svm) { Page = sheetNum };
         string[] parts = macros.ReplaceMacros(Text ?? string.Empty).Split('\t', '|');
 
         // Left\tCenter\tRight

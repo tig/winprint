@@ -1,7 +1,6 @@
 // DISCLAIMER: Use this code at your own risk. 
 // No support is provided and this code has NOT been tested.
 
-using System.IO;
 
 namespace WinPrint.Core.Helpers;
 

@@ -1,12 +1,8 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using Serilog;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
@@ -20,7 +16,7 @@ namespace WinPrint.Core.ContentTypeEngines;
 /// </summary>
 public class TextCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string[] _supportedContentTypes = ["text/plain"];
+    private static readonly string[] s_supportedContentTypes = ["text/plain"];
     private IGraphicsFont? _cachedFont;
 
     // Protected implementation of Dispose pattern.
@@ -39,7 +35,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     /// <summary>
     ///     ContentType identifier (shorthand for class name).
     /// </summary>
-    public override string[] SupportedContentTypes => _supportedContentTypes;
+    public override string[] SupportedContentTypes => s_supportedContentTypes;
 
     public void Dispose()
     {
@@ -248,9 +244,9 @@ public class TextCte : ContentTypeEngineBase, IDisposable
                 // Add blank lines to get to next page
                 while (list.Count % _linesPerPage != 0)
                 {
-                    var newLine = new WrappedLine { _text = "", _nonWrappedLineNumber = 0 };
+                    var newLine = new WrappedLine { Text = "", NonWrappedLineNumber = 0 };
 #if DEBUG
-                    newLine._textNonWrapped = line;
+                    newLine.TextNonWrapped = line;
 #endif
                     list.Add(newLine);
                 }
@@ -305,9 +301,9 @@ public class TextCte : ContentTypeEngineBase, IDisposable
                 {
                     // The truncated line now too big, so shorten it by one char and add it
                     truncatedLine = truncatedLine[..^1];
-                    var wl = new WrappedLine { _text = truncatedLine, _nonWrappedLineNumber = lineCount };
+                    var wl = new WrappedLine { Text = truncatedLine, NonWrappedLineNumber = lineCount };
 #if DEBUG
-                    wl._textNonWrapped = lineToAdd;
+                    wl.TextNonWrapped = lineToAdd;
                     //Log.Debug("   Adding shorter line to list: {truncatedLine}, {nonWrappedLineNumber}, {textNonWrapped}", wl.text, wl.nonWrappedLineNumber, wl.textNonWrapped);
 #endif
                     wrappedList.Add(wl);
@@ -322,9 +318,9 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         }
         else
         {
-            var wl = new WrappedLine { _text = lineToAdd, _nonWrappedLineNumber = lineCount };
+            var wl = new WrappedLine { Text = lineToAdd, NonWrappedLineNumber = lineCount };
 #if DEBUG
-            wl._textNonWrapped = lineToAdd;
+            wl.TextNonWrapped = lineToAdd;
             //Log.Debug("   Adding passed to list: {truncatedLine}, {nonWrappedLineNumber}, {textNonWrapped}", wl.text, wl.nonWrappedLineNumber, wl.textNonWrapped);
 #endif
             wrappedList.Add(wl);
@@ -362,17 +358,17 @@ public class TextCte : ContentTypeEngineBase, IDisposable
             // Right justify line number
             int x = ContentSettings!.LineNumberSeparator
                 ? (int)(_lineNumberWidth - 6 -
-                        MeasureString(g, $"{_wrappedLines[i]._nonWrappedLineNumber}", paintFont).Width)
+                        MeasureString(g, $"{_wrappedLines[i].NonWrappedLineNumber}", paintFont).Width)
                 : 0;
 
             // Line #s
-            if (_wrappedLines[i]._nonWrappedLineNumber > 0)
+            if (_wrappedLines[i].NonWrappedLineNumber > 0)
             {
                 if (ContentSettings.LineNumbers && _lineNumberWidth != 0)
                 {
                     // TOOD: Figure out how to make the spacing around separator more dynamic
                     // TODO: Allow a different (non-monospace) font for line numbers
-                    g.DrawString($"{_wrappedLines[i]._nonWrappedLineNumber}", paintFont, g.GrayBrush, x, yPos,
+                    g.DrawString($"{_wrappedLines[i].NonWrappedLineNumber}", paintFont, g.GrayBrush, x, yPos,
                         GraphicsStringFormat);
                 }
             }
@@ -385,7 +381,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
             }
 
             // Text
-            g.DrawString(_wrappedLines[i]._text, paintFont, g.BlackBrush, _lineNumberWidth, yPos,
+            g.DrawString(_wrappedLines[i].Text, paintFont, g.BlackBrush, _lineNumberWidth, yPos,
                 GraphicsStringFormat);
             if (ContentSettings.Diagnostics)
             {

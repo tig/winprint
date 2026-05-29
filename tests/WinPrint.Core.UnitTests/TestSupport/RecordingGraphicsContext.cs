@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using WinPrint.Core.Abstractions;
 
 namespace WinPrint.Core.UnitTests.TestSupport;

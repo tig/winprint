@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using Serilog.Formatting.Display;
 using Serilog.Sinks.XUnit;
 using WinPrint.Core.ContentTypeEngines;

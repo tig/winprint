@@ -8,7 +8,7 @@ namespace WinPrint.Core.Models;
 
 public class ModelLocator
 {
-    private static ModelLocator? _current;
+    private static ModelLocator? s_current;
 
     private ModelLocator()
     {
@@ -18,7 +18,7 @@ public class ModelLocator
         SimpleIoc.Default.Register<Options>();
     }
 
-    public static ModelLocator Current => _current ??= new ModelLocator();
+    public static ModelLocator Current => s_current ??= new ModelLocator();
 
     public Settings Settings => SimpleIoc.Default.GetInstance<Settings>();
 
@@ -33,7 +33,7 @@ public class ModelLocator
 
     public static void Reset()
     {
-        _current = null;
+        s_current = null;
         SimpleIoc.Default.Unregister<Settings>();
         SimpleIoc.Default.Unregister<FileTypeMapping>();
         SimpleIoc.Default.Unregister<Options>();

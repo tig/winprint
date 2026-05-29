@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace WinPrint.Core.ContentTypeEngines;
 
 internal sealed class TextMateWrappedLine

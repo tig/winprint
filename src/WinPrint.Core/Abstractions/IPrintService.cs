@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace WinPrint.Core.Abstractions;
 
 public interface IPrintService

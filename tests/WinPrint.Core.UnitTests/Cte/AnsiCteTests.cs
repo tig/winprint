@@ -1,6 +1,5 @@
 using System.Drawing;
 using System.Drawing.Printing;
-using System.Threading.Tasks;
 using Serilog.Formatting.Display;
 using Serilog.Sinks.XUnit;
 using WinPrint.Core.Abstractions;
