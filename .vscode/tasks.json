@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // Default build (Ctrl/Cmd+Shift+B).
+            // Windows: build the whole solution (the everyday Windows experience).
+            // macOS/Linux: build Core only — the WinForms/MAUI-Windows TFMs can't build there,
+            // and the base args below keep the default safe and fast cross-platform.
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/WinPrint.Core/WinPrint.Core.csproj"
+            ],
+            "windows": {
+                "args": [
+                    "build",
+                    "${workspaceFolder}/src/WinPrint.slnx",
+                    "/p:Platform=x64"
+                ]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            // CLI app. net10.0-windows today (see CONTRIBUTING.md) — builds on Windows.
+            "label": "build-cli",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/WinPrint.cli/WinPrint.cli.csproj"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            // Full solution. Needs the MAUI workload installed (`dotnet workload install maui`);
+            // the WinForms/MAUI-Windows targets only build on Windows.
+            "label": "build-solution",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/WinPrint.slnx",
+                "/p:Platform=x64"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish-cli",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/src/WinPrint.cli/WinPrint.cli.csproj",
+                "-c",
+                "Release"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
