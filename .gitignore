@@ -27,7 +27,14 @@ bld/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
-.vscode/
+
+# VS Code: ignore per-user state, but commit the shared workspace configs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/*.code-snippets
 
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/

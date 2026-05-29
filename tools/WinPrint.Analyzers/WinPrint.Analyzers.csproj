@@ -5,6 +5,11 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
+    <!-- A Roslyn analyzer is loaded by the compiler host, not run as an app, so it needs
+         no .deps.json. Skipping it also removes the GenerateDepsFile write that multiple
+         consuming projects/TFMs otherwise race on during a parallel solution build. -->
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+
     <!-- Analyzer assemblies run inside Roslyn / OmniSharp hosts that may load older
          versions of these packages. Suppress the build warning. -->
     <NoWarn>$(NoWarn);RS1036;RS2008</NoWarn>
