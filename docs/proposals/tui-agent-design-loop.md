@@ -130,12 +130,13 @@ end of each. That is the loop working.
 Three small pieces, all built on existing Terminal.Gui APIs. They are reproduced verbatim from the
 winprint repo.
 
-### 1. Headless render harness (`AppFixture`)
+### 1. Headless render path (`HeadlessRenderer` + `AppFixture`)
 
-Boots a per-test `Application.Create()` instance (thread-local — no process-global
-`Application.Init()`), inits the **ANSI driver**, sets a fixed screen size, hosts the view in a
-`Window`, runs the loop, and captures the **full grid** via `IDriver.ToString()` on the `Iteration`
-event.
+The core is a single static helper that boots a `Application.Create()` instance (thread-local — no
+process-global `Application.Init()`), inits the **ANSI driver**, sets a fixed screen size, hosts the
+view in a `Window`, runs the loop, and captures the **full grid** via `IDriver.ToString()` on the
+`Iteration` event. It lives in the `WinPrint.TUI` assembly so the binary (`wp dump`), the scratch
+host, and the tests all share **one** render path:
 
 ```csharp
 using Terminal.Gui.App;
@@ -143,85 +144,66 @@ using Terminal.Gui.Drivers;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
-namespace WinPrint.TUI.UnitTests.Testing;
+namespace WinPrint.TUI;
 
-/// <summary>
-///     Renders a content <see cref="View" /> headlessly on the Terminal.Gui ANSI driver and captures a
-///     deterministic snapshot of the full screen as a character grid (<see cref="Screen" />).
-/// </summary>
-/// <remarks>
-///     <para>
-///         The capture happens inside the application run loop (via <see cref="IApplication.Iteration" />),
-///         because the view is laid out and drawn by that loop. We read <see cref="IDriver.ToString" />,
-///         which always returns the <em>complete</em> cell grid for the current frame (unlike
-///         <see cref="IDriver.ToAnsi" />, which emits incremental diffs), then request stop once the
-///         frame is stable. This yields a stable, diffable plain-text snapshot.
-///     </para>
-///     <para>
-///         Each fixture uses its own <see cref="Application.Create" /> instance (thread-local isolated)
-///         and never touches the process-global <c>Application.Init()</c> state.
-///     </para>
-/// </remarks>
-public sealed class AppFixture : IDisposable
+public static class HeadlessRenderer
 {
-    private readonly IApplication _app;
-
-    /// <summary>Renders <paramref name="content" /> and captures a stable full-grid snapshot.</summary>
-    /// <param name="content">The view under test.</param>
-    /// <param name="width">Test viewport width in cells.</param>
-    /// <param name="height">Test viewport height in cells.</param>
-    public AppFixture(View content, int width = 40, int height = 12)
+    /// <summary>Renders <paramref name="content" /> at the given size and returns the LF-normalized grid.</summary>
+    public static string RenderToGrid(View content, int width, int height)
     {
-        _app = Application.Create();
-        _app.AppModel = AppModel.FullScreen;
-        _app.Init(DriverRegistry.Names.ANSI);
-        _app.Driver!.SetScreenSize(width, height);
+        ArgumentNullException.ThrowIfNull(content);
 
-        var window = new Window
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
+        using IApplication app = Application.Create();
+        app.AppModel = AppModel.FullScreen;
+        app.Init(DriverRegistry.Names.ANSI);
+        app.Driver!.SetScreenSize(width, height);
+
+        var window = new Window { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
         window.Add(content);
 
         var iterations = 0;
         const int stableFrame = 4;
+        var grid = string.Empty;
 
-        _app.Iteration += OnIteration;
-        _app.Run(window);
-        _app.Iteration -= OnIteration;
+        app.Iteration += OnIteration;
+        app.Run(window);
+        app.Iteration -= OnIteration;
 
-        return;
+        return grid;
 
         void OnIteration(object? sender, EventArgs<IApplication?> e)
         {
             iterations++;
-
-            // ToString() returns the full character grid for the current frame.
-            Screen = Canonicalize(_app.Driver?.ToString());
-
+            // ToString() returns the COMPLETE cell grid for the frame; ToAnsi() would be a partial diff.
+            grid = Canonicalize(app.Driver?.ToString());
             if (iterations >= stableFrame)
             {
-                _app.RequestStop();
+                app.RequestStop();
             }
         }
     }
 
+    public static string Canonicalize(string? text) =>
+        (text ?? string.Empty).Replace("\r\n", "\n").Replace("\r", "\n");
+}
+```
+
+The test fixture is then a thin wrapper — it just calls the shared helper, so the binary's `dump`
+output is byte-identical to what the tests assert:
+
+```csharp
+using Terminal.Gui.ViewBase;
+using WinPrint.TUI;
+
+namespace WinPrint.TUI.UnitTests.Testing;
+
+public sealed class AppFixture
+{
+    public AppFixture(View content, int width = 40, int height = 12) =>
+        Screen = HeadlessRenderer.RenderToGrid(content, width, height);
+
     /// <summary>The captured full-screen render as a newline-separated character grid.</summary>
-    public string Screen { get; private set; } = string.Empty;
-
-    private static string Canonicalize(string? text)
-    {
-        return (text ?? string.Empty).Replace("\r\n", "\n").Replace("\r", "\n");
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _app.Dispose();
-    }
+    public string Screen { get; }
 }
 ```
 
@@ -344,7 +326,7 @@ A test then reads as plainly as:
 public void InitialRender_MatchesGolden()
 {
     var editor = new MarginEditor { Value = new PrintMargins(75, 100, 50, 25) };
-    using var fixture = new AppFixture(editor, width: 32, height: 7);
+    var fixture = new AppFixture(editor, width: 32, height: 7);
     GridSnapshot.Verify(fixture.Screen, "margin-editor");
 }
 ```
@@ -435,42 +417,56 @@ if __name__ == "__main__":
 
 ### 4. The "scratch render host" — iterate outside the test runner
 
-For fast iteration, the agent keeps a throwaway console app that boots the *same* harness and dumps a
-live render to stdout, so it can see a change in one command without invoking the test runner. The
-entire project is a single `ProjectReference` `.csproj` plus this:
+For fast iteration the agent renders one view to stdout in a single command. The same capability ships
+in the `wp` binary as `wp dump <view> [w] [h]`, and a throwaway console app can call the identical
+shared render path so the scratch host, the binary, and the tests never diverge:
 
 ```csharp
-// Renders a named winprint subview headlessly on the ANSI driver and writes the
-// full character grid to stdout. Usage: render <view> [width] [height]
-using Terminal.Gui.App;
-using Terminal.Gui.Drivers;
-using Terminal.Gui.ViewBase;
-using Terminal.Gui.Views;
-using WinPrint.Core.Abstractions;
-using WinPrint.TUI.Views.Editors;
+// Scratch render host. Delegates to the shared HeadlessRenderer + ViewCatalog so it
+// stays in lockstep with `wp dump` and the golden tests. Usage: render <view> [w] [h]
+using WinPrint.TUI;
 
 string view = args.Length > 0 ? args[0] : "margin";
 int w = args.Length > 1 ? int.Parse(args[1]) : 44;
 int h = args.Length > 2 ? int.Parse(args[2]) : 8;
-
-View content = view switch
-{
-    "margin" => new MarginEditor { Value = new PrintMargins(75, 100, 50, 25) },
-    _ => throw new ArgumentException($"unknown view '{view}'")
-};
-
-var app = Application.Create();
-app.AppModel = AppModel.FullScreen;
-app.Init(DriverRegistry.Names.ANSI);
-app.Driver!.SetScreenSize(w, h);
-var win = new Window { Width = Dim.Fill(), Height = Dim.Fill() };
-win.Add(content);
-int n = 0;
-app.Iteration += (_, _) => { if (++n >= 4) { Console.Out.Write(app.Driver!.ToString()); app.RequestStop(); } };
-app.Run(win);
+Console.Out.Write(HeadlessRenderer.RenderToGrid(ViewCatalog.Create(view), w, h));
 ```
 
-`dotnet run -- margin 44 8 | python3 grid2png.py /dev/stdin out.png` → an image in seconds.
+where `HeadlessRenderer.RenderToGrid` is the create/init-ANSI/host/run/capture-`ToString` helper (the
+same one `AppFixture` uses), and `ViewCatalog` names each view + its sample value in one place.
+
+```
+wp dump margin 44 8 | python3 grid2png.py /dev/stdin out.png   # an image in seconds
+```
+
+The fact that `HeadlessRenderer` must be hand-rolled — and shared by hand across the binary and the
+tests — is itself the argument for Terminal.Gui shipping it as `Application.RenderToString(...)`.
+
+## Two fidelity layers (and where tuirec fits)
+
+The plain-text grid above is deliberately **fidelity-blind**: it captures glyphs and layout, but not
+color, underline, or hotkey styling. That is a feature for the fast inner loop (it makes goldens tiny
+and diffable) but a gap for appearance review — e.g. setting the editor title to `_Margins` adds a
+hotkey underline on the **M** that the text grid cannot show at all (the `_` marker is consumed and
+the grid text is byte-identical before and after).
+
+So the loop wants **two layers**, kept side by side:
+
+| Layer | Source | Captures | Role |
+|---|---|---|---|
+| **Plain-text grid** | in-process `IDriver.ToString()` → `.txt` | glyphs + layout | fast, diffable CI regression check (every run) |
+| **Full-fidelity image** | [tuirec](https://github.com/gui-cs/tuirec) `.cast` → image | color, underline, hotkey, attrs | human review + appearance regressions |
+
+The full-fidelity layer is **tuirec's** job, not a bespoke rasterizer's. tuirec already drives a real
+binary through a PTY and records an asciinema `.cast` — which *is* the full-fidelity capture (ANSI
+with all attributes). winprint's `wp render <view>` command exists precisely so tuirec can drive a
+single view headlessly and snapshot it. tuirec today renders `.cast → animated GIF` (via `agg`); a
+**still-image `snapshot` mode** would close the loop. That feature is specced separately in
+`docs/proposals/tuirec-snapshot.md` — and notably it drops into tuirec's existing `Renderer`
+interface seam, so it reuses the whole record pipeline.
+
+This is the "keep both" decision in practice: the cheap text grid guards layout on every CI run; the
+rich tuirec image guards appearance and feeds the human's eyes.
 
 ## What Terminal.Gui could do to make this first-class
 
@@ -484,9 +480,10 @@ ergonomic:
    single highest-value addition.
 2. **A sanctioned snapshot-test helper** (or at least a documented recipe) so projects don't each
    reinvent `GridSnapshot`. Snapshot/golden testing of views would become a one-liner.
-3. **Optional built-in grid → image export.** A `ToImage()` / CLI that does what `grid2png.py` does,
-   so the visual-review step needs no Python. (Color/attribute-aware would be a bonus, but the plain
-   grid already covers the design loop.)
+3. **A documented headless-capture recipe** for the plain grid, and a clear hand-off to **tuirec**
+   for full-fidelity images (see `docs/proposals/tuirec-snapshot.md`). The plain grid → image step is
+   intentionally trivial (one monospace `draw.text` per row); the *fidelity* story belongs in tuirec,
+   which already owns the `.cast` capture and the `agg` render engine.
 4. **Document the `ToAnsi` vs `ToString` distinction** prominently for headless capture. We lost real
    time to capturing the incremental `ToAnsi` stream mid-loop; a note saying "for a full-frame
    snapshot use `ToString()`" would save others the same bug.
