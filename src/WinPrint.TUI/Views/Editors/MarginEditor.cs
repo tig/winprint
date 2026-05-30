@@ -33,7 +33,7 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
-        Title = "Margins";
+        Title = "_Margins";
 
         _top = new SizeEditor("Top:", Constraint);
         _left = new SizeEditor("Left:", Constraint);
