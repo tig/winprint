@@ -1,5 +1,6 @@
 using Terminal.Gui.ViewBase;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Models;
 using WinPrint.TUI.Views.Editors;
 
 namespace WinPrint.TUI;
@@ -13,7 +14,7 @@ namespace WinPrint.TUI;
 public static class ViewCatalog
 {
     /// <summary>The names of every catalogued view, for help text and discovery.</summary>
-    public static IReadOnlyList<string> Names { get; } = ["margin"];
+    public static IReadOnlyList<string> Names { get; } = ["margin", "header", "footer"];
 
     /// <summary>Creates the named view populated with a representative sample value.</summary>
     /// <param name="name">A name from <see cref="Names" />.</param>
@@ -24,6 +25,14 @@ public static class ViewCatalog
         return name switch
         {
             "margin" => new MarginEditor { Value = new PrintMargins(75, 100, 50, 25) },
+            "header" => new HeaderFooterEditor("_Header")
+            {
+                Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
+            },
+            "footer" => new HeaderFooterEditor("_Footer")
+            {
+                Value = new Footer { Enabled = true, Text = "{FilePath}||{DatePrinted}" }
+            },
             _ => throw new ArgumentException(
                 $"Unknown view '{name}'. Known views: {string.Join(", ", Names)}.", nameof(name))
         };
