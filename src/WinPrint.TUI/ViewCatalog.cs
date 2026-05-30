@@ -14,7 +14,7 @@ namespace WinPrint.TUI;
 public static class ViewCatalog
 {
     /// <summary>The names of every catalogued view, for help text and discovery.</summary>
-    public static IReadOnlyList<string> Names { get; } = ["margin", "header", "footer"];
+    public static IReadOnlyList<string> Names { get; } = ["margin", "header", "footer", "font"];
 
     /// <summary>Creates the named view populated with a representative sample value.</summary>
     /// <param name="name">A name from <see cref="Names" />.</param>
@@ -32,6 +32,10 @@ public static class ViewCatalog
             "footer" => new HeaderFooterEditor("_Footer")
             {
                 Value = new Footer { Enabled = true, Text = "{FilePath}||{DatePrinted}" }
+            },
+            "font" => new FontEditor("_Font")
+            {
+                Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
             },
             _ => throw new ArgumentException(
                 $"Unknown view '{name}'. Known views: {string.Join(", ", Names)}.", nameof(name))
