@@ -25,7 +25,7 @@ public sealed class SizeEditor : EditorBase<decimal>
     {
         _constraint = constraint;
 
-        Width = Dim.Fill();
+        Width = Dim.Auto(DimAutoStyle.Content);
         Height = Dim.Auto(DimAutoStyle.Content);
 
         var caption = new Label

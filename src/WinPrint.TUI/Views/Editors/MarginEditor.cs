@@ -7,13 +7,16 @@ using WinPrint.Core.Measurement;
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Edits a <see cref="PrintMargins" /> as four stacked <see cref="SizeEditor" /> children
-///     (Top/Left/Right/Bottom). The model stores hundredths of an inch; the children show decimal
-///     inches (e.g. <c>0.75</c>), matching the original WinForms margin editor. Assigning
-///     <see cref="EditorBase{TValue}.Value" /> rebinds all four children; editing any child raises
-///     <see cref="EditorBase{TValue}.ValueChanged" /> with a fresh <see cref="PrintMargins" />. Layout
-///     is fully relative (each row positioned below the previous). Incoming values are clamped to
-///     <see cref="SizeConstraint.Margin" /> so the stored value stays within bounds.
+///     Edits a <see cref="PrintMargins" /> using four <see cref="SizeEditor" /> children arranged in a
+///     diamond/cross — Top centered along the top, Left and Right facing each other on the middle row,
+///     and Bottom centered along the bottom — mirroring the original WinForms margins group box and
+///     Terminal.Gui's adornment/thickness editor. The model stores hundredths of an inch; the children
+///     show decimal inches (e.g. <c>0.75</c>).
+///     <para>
+///         Assigning <see cref="EditorBase{TValue}.Value" /> rebinds all four children; editing any
+///         child raises <see cref="EditorBase{TValue}.ValueChanged" /> with a fresh
+///         <see cref="PrintMargins" />. Incoming values are clamped to <see cref="SizeConstraint.Margin" />.
+///     </para>
 /// </summary>
 public sealed class MarginEditor : EditorBase<PrintMargins>
 {
@@ -29,18 +32,27 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
     {
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
+        BorderStyle = LineStyle.Single;
+        Title = "Margins";
 
-        var header = new Label
-        {
-            X = 0,
-            Y = 0,
-            Text = "Margins (inches)"
-        };
+        _top = new SizeEditor("Top:", Constraint);
+        _left = new SizeEditor("Left:", Constraint);
+        _right = new SizeEditor("Right:", Constraint);
+        _bottom = new SizeEditor("Bottom:", Constraint);
 
-        _top = new SizeEditor("Top:   ", Constraint) { X = 0, Y = Pos.Bottom(header) };
-        _left = new SizeEditor("Left:  ", Constraint) { X = 0, Y = Pos.Bottom(_top) };
-        _right = new SizeEditor("Right: ", Constraint) { X = 0, Y = Pos.Bottom(_left) };
-        _bottom = new SizeEditor("Bottom:", Constraint) { X = 0, Y = Pos.Bottom(_right) };
+        // Diamond arrangement: Top centered on row 0, Left/Right facing each other on row 1,
+        // Bottom centered on row 2.
+        _top.X = Pos.Center();
+        _top.Y = 0;
+
+        _left.X = 0;
+        _left.Y = Pos.Bottom(_top);
+
+        _right.X = Pos.AnchorEnd();
+        _right.Y = Pos.Top(_left);
+
+        _bottom.X = Pos.Center();
+        _bottom.Y = Pos.Bottom(_left);
 
         ValueChanging += (_, args) =>
         {
@@ -55,7 +67,7 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
         _right.ValueChanged += (_, _) => PushFromChildren();
         _bottom.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(header, _top, _left, _right, _bottom);
+        Add(_top, _left, _right, _bottom);
     }
 
     /// <inheritdoc />
