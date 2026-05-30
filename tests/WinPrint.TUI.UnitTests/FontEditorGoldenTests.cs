@@ -6,8 +6,8 @@ using Xunit;
 namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
-///     Golden + behavior tests for <see cref="FontEditor" />: it renders family, point size, and the
-///     style flags, and edits flow back into the bound mutable <see cref="Font" />.
+///     Golden + behavior tests for <see cref="FontEditor" />: two side-by-side dropdowns (family and
+///     point size, no style), and edits flow back into the bound mutable <see cref="Font" />.
 /// </summary>
 public class FontEditorGoldenTests
 {
@@ -18,36 +18,35 @@ public class FontEditorGoldenTests
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 54, height: 10);
+        var fixture = new AppFixture(editor, width: 54, height: 5);
 
         GridSnapshot.Verify(fixture.Screen, "font-editor");
     }
 
     [Fact]
-    public void Render_ShowsFamilySizeAndStyleFlags()
+    public void Render_ShowsFamilyAndSize_NotStyle()
     {
         var editor = new FontEditor("_Font")
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 54, height: 10);
+        var fixture = new AppFixture(editor, width: 54, height: 5);
 
         DriverAssert.ContainsText(fixture.Screen, "Source Code Pro");
-        DriverAssert.ContainsText(fixture.Screen, "Bold");
-        DriverAssert.ContainsText(fixture.Screen, "Italic");
+        DriverAssert.ContainsText(fixture.Screen, "10");
+        DriverAssert.DoesNotContainText(fixture.Screen, "Bold"); // style is intentionally omitted
     }
 
     [Fact]
-    public void Value_Reassigned_RebindsChildrenToNewFont()
+    public void OnValueChanged_AddsUnlistedFamilySoItDisplays()
     {
+        // A family not in FontChoices is still shown (model family is free-form).
         var editor = new FontEditor("_Font")
         {
-            Value = new Font { Family = "Courier New", Size = 8f, Style = FontStyle.Regular }
+            Value = new Font { Family = "Wingdings Deluxe", Size = 10f, Style = FontStyle.Regular }
         };
-        editor.Value = new Font { Family = "Cascadia Mono", Size = 12f, Style = FontStyle.Regular };
-        var fixture = new AppFixture(editor, width: 54, height: 10);
+        var fixture = new AppFixture(editor, width: 54, height: 5);
 
-        DriverAssert.ContainsText(fixture.Screen, "Cascadia Mono");
-        DriverAssert.DoesNotContainText(fixture.Screen, "Courier New");
+        DriverAssert.ContainsText(fixture.Screen, "Wingdings Deluxe");
     }
 }

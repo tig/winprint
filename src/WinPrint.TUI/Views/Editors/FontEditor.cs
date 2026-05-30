@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
@@ -7,24 +8,22 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Edits a <see cref="Font" /> — family, point size, and style flags — replacing the native
-///     WinForms <c>FontDialog</c> (which has no cross-platform TUI equivalent) with composed
-///     Terminal.Gui widgets: a family <see cref="TextField" />, a size <see cref="NumericUpDown{T}" />
-///     (points), and a <see cref="FlagSelector{TFlagsEnum}" /> over <see cref="FontStyle" />.
+///     Edits a <see cref="Font" /> as two side-by-side dropdowns — family and point size — replacing
+///     the native WinForms <c>FontDialog</c> (which has no cross-platform TUI equivalent). Style flags
+///     are intentionally omitted; document/source printing doesn't need them.
 ///     <para>
-///         <see cref="Font" /> is mutable; editing a child mutates the bound instance in place.
-///         Assigning a new <see cref="EditorBase{TValue}.Value" /> rebinds the children.
+///         Choices come from <see cref="FontChoices" />. If the bound font's family or size isn't in
+///         the list (it's a free-form string/float at the model level) the value is added so the
+///         dropdown can display it. <see cref="Font" /> is mutable; editing a child mutates the bound
+///         instance in place, and reassigning <see cref="EditorBase{TValue}.Value" /> rebinds.
 ///     </para>
 /// </summary>
 public sealed class FontEditor : EditorBase<Font>
 {
-    // Point-size bounds for the size spinner (matches the WinForms font picker's practical range).
-    private const float MinSize = 4f;
-    private const float MaxSize = 72f;
-
-    private readonly TextField _family;
-    private readonly NumericUpDown<float> _size;
-    private readonly FlagSelector<FontStyle> _style;
+    private readonly DropDownList _family;
+    private readonly ObservableCollection<string> _families;
+    private readonly DropDownList _size;
+    private readonly ObservableCollection<string> _sizes;
 
     /// <summary>Creates a font editor.</summary>
     /// <param name="title">Bordered title; the underscore marks the hotkey (e.g. <c>_Font</c>).</param>
@@ -35,46 +34,36 @@ public sealed class FontEditor : EditorBase<Font>
         BorderStyle = LineStyle.Single;
         Title = title;
 
-        var familyLabel = new Label { X = 0, Y = 0, Text = "Family:" };
-        _family = new TextField
+        _families = new ObservableCollection<string>(FontChoices.Families);
+        _family = new DropDownList
         {
-            X = Pos.Right(familyLabel) + 1,
+            X = 0,
             Y = 0,
-            Width = Dim.Fill()
+            Width = Dim.Fill(8),
+            Source = new ListWrapper<string>(_families)
         };
 
-        var sizeLabel = new Label { X = 0, Y = Pos.Bottom(familyLabel), Text = "Size:  " };
-        _size = new NumericUpDown<float>
+        _sizes = new ObservableCollection<string>(FontChoices.Sizes.Select(FormatSize));
+        _size = new DropDownList
         {
-            X = Pos.Right(sizeLabel) + 1,
-            Y = Pos.Top(sizeLabel),
-            Increment = 1f,
-            Format = "{0:0.#}",
-            Value = MinSize
-        };
-        _size.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinSize, MaxSize);
-
-        var styleLabel = new Label { X = 0, Y = Pos.Bottom(sizeLabel), Text = "Style: " };
-        _style = new FlagSelector<FontStyle>
-        {
-            X = Pos.Right(styleLabel) + 1,
-            Y = Pos.Top(styleLabel)
+            X = Pos.Right(_family) + 1,
+            Y = 0,
+            Width = Dim.Fill(),
+            Source = new ListWrapper<string>(_sizes)
         };
 
         _family.ValueChanged += (_, _) => PushFromChildren();
         _size.ValueChanged += (_, _) => PushFromChildren();
-        _style.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(familyLabel, _family, sizeLabel, _size, styleLabel, _style);
+        Add(_family, _size);
     }
 
     /// <inheritdoc />
     protected override void OnValueChanged(Font? newValue)
     {
         Font font = newValue ?? new Font();
-        _family.Value = font.Family;
-        _size.Value = Math.Clamp(font.Size, MinSize, MaxSize);
-        _style.Value = font.Style;
+        _family.Value = Ensure(_families, font.Family);
+        _size.Value = Ensure(_sizes, FormatSize(font.Size));
     }
 
     private void PushFromChildren()
@@ -85,8 +74,31 @@ public sealed class FontEditor : EditorBase<Font>
         }
 
         // Font is mutable; mutate the bound instance directly.
-        Value.Family = _family.Value ?? string.Empty;
-        Value.Size = Math.Clamp(_size.Value, MinSize, MaxSize);
-        Value.Style = _style.Value ?? FontStyle.Regular;
+        if (!string.IsNullOrEmpty(_family.Value))
+        {
+            Value.Family = _family.Value;
+        }
+
+        if (float.TryParse(_size.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float size))
+        {
+            Value.Size = size;
+        }
+    }
+
+    // The model's family/size are free-form, so a bound value may not be in the curated list; add it
+    // so the dropdown can show it as the current selection.
+    private static string Ensure(ObservableCollection<string> items, string value)
+    {
+        if (!items.Contains(value))
+        {
+            items.Insert(0, value);
+        }
+
+        return value;
+    }
+
+    private static string FormatSize(float size)
+    {
+        return size.ToString("0.#", CultureInfo.InvariantCulture);
     }
 }
