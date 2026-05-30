@@ -35,18 +35,20 @@ public sealed class FontEditor : EditorBase<Font>
         Title = title;
 
         _families = new ObservableCollection<string>(FontChoices.Families);
+        var familyLabel = new Label { X = 0, Y = 0, Text = "Family:" };
         _family = new DropDownList
         {
-            X = 0,
+            X = Pos.Right(familyLabel) + 1,
             Y = 0,
-            Width = Dim.Fill(8),
+            Width = Dim.Fill(20),
             Source = new ListWrapper<string>(_families)
         };
 
         _sizes = new ObservableCollection<string>(FontChoices.Sizes.Select(FormatSize));
+        var sizeLabel = new Label { X = Pos.Right(_family) + 1, Y = 0, Text = "Size (pt):" };
         _size = new DropDownList
         {
-            X = Pos.Right(_family) + 1,
+            X = Pos.Right(sizeLabel) + 1,
             Y = 0,
             Width = Dim.Fill(),
             Source = new ListWrapper<string>(_sizes)
@@ -55,7 +57,7 @@ public sealed class FontEditor : EditorBase<Font>
         _family.ValueChanged += (_, _) => PushFromChildren();
         _size.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(_family, _size);
+        Add(familyLabel, _family, sizeLabel, _size);
     }
 
     /// <inheritdoc />
