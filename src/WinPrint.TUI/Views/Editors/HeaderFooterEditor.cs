@@ -33,28 +33,20 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         _enabled = new CheckBox
         {
             X = 0,
-            Y = 0,
-            Text = "_Enabled"
-        };
-
-        var textLabel = new Label
-        {
-            X = 0,
-            Y = Pos.Bottom(_enabled),
-            Text = "Text:"
+            Y = 0
         };
 
         _text = new TextField
         {
-            X = Pos.Right(textLabel) + 1,
-            Y = Pos.Top(textLabel),
+            X = Pos.Right(_enabled) + 1,
+            Y = 0,
             Width = Dim.Fill()
         };
 
         _enabled.ValueChanged += (_, _) => PushFromChildren();
         _text.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(_enabled, textLabel, _text);
+        Add(_enabled, _text);
     }
 
     /// <inheritdoc />

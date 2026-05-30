@@ -24,7 +24,7 @@ public class HeaderFooterEditorGoldenTests
     }
 
     [Fact]
-    public void Render_ShowsEnabledAndFormatText()
+    public void Render_ShowsCheckedToggleAndFormatText()
     {
         var editor = new HeaderFooterEditor("_Header")
         {
@@ -32,8 +32,8 @@ public class HeaderFooterEditorGoldenTests
         };
         var fixture = new AppFixture(editor, width: 50, height: 6);
 
-        DriverAssert.ContainsText(fixture.Screen, "Enabled");
-        DriverAssert.ContainsText(fixture.Screen, "{FileName}");
+        DriverAssert.ContainsText(fixture.Screen, "☒"); // checked toggle glyph
+        DriverAssert.ContainsText(fixture.Screen, "{FileName}"); // macro format text
     }
 
     [Fact]
