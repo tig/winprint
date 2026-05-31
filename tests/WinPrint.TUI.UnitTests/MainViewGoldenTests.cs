@@ -14,7 +14,7 @@ public class MainViewGoldenTests
     public void InitialRender_MatchesGolden()
     {
         var view = new MainView(version: "2.5.0");
-        var fixture = new AppFixture(view, width: 92, height: 30);
+        var fixture = new AppFixture(view, width: 92, height: 32);
 
         GridSnapshot.Verify(fixture.Screen, "main-view");
     }
@@ -23,7 +23,7 @@ public class MainViewGoldenTests
     public void Render_ShowsBothPanesAndPreview()
     {
         var view = new MainView(version: "2.5.0");
-        var fixture = new AppFixture(view, width: 92, height: 30);
+        var fixture = new AppFixture(view, width: 92, height: 32);
 
         string screen = fixture.Screen;
         DriverAssert.ContainsText(screen, "Sheet"); // left settings column

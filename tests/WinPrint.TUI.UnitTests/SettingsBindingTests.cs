@@ -66,7 +66,7 @@ public class SettingsBindingTests
     {
         var context = SettingsContext.Create();
         var view = new MainView(version: "2.5.0", context: context);
-        var fixture = new AppFixture(view, width: 96, height: 30);
+        var fixture = new AppFixture(view, width: 96, height: 32);
 
         // Real content font + sheet from the default settings (not the sample placeholders).
         DriverAssert.ContainsText(fixture.Screen, "monospace"); // default content font

@@ -65,23 +65,24 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
             Source = new ListWrapper<string>(_papers)
         };
 
-        // "Pages" (printer-driver terminology): the From/To range the driver is told to print.
-        var pagesLabel = new Label { X = 0, Y = 2, Width = LabelWidth, Text = "Pages:" };
-        var fromLabel = new Label { X = LabelWidth, Y = 2, Text = "From" };
+        // "Pages" (printer-driver terminology): the From/To range the driver is told to print. The
+        // label is on its own row with From/To beneath it, keeping the editor (and the panel) narrow.
+        var pagesLabel = new Label { X = 0, Y = 2, Text = "Pages:" };
+        var fromLabel = new Label { X = 0, Y = 3, Text = "From" };
         _from = new NumericUpDown<int>
         {
             X = Pos.Right(fromLabel) + 1,
-            Y = 2,
+            Y = 3,
             Increment = 1,
             Value = MinFrom
         };
         _from.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinFrom, MaxPage);
 
-        var toLabel = new Label { X = Pos.Right(_from) + 2, Y = 2, Text = "To" };
+        var toLabel = new Label { X = Pos.Right(_from) + 2, Y = 3, Text = "To" };
         _to = new NumericUpDown<int>
         {
             X = Pos.Right(toLabel) + 1,
-            Y = 2,
+            Y = 3,
             Increment = 1,
             Value = 0
         };
