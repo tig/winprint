@@ -17,8 +17,10 @@
              header/footer format fields use the gui-cs Editor view, which needs Terminal.Gui >= 2.4.0. -->
         <PackageReference Include="Terminal.Gui" Version="2.4.3" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
-        <!-- Cross-platform, pure-managed PNG decode for the sixel preview (no System.Drawing). -->
+        <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
+        <PackageReference Include="SixLabors.Fonts" Version="2.1.3" />
     </ItemGroup>
 
     <ItemGroup>
@@ -27,6 +29,7 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\preview-sample.png" />
+        <EmbeddedResource Include="Resources\CaskaydiaCoveNFM-Regular.ttf" />
     </ItemGroup>
 
 </Project>

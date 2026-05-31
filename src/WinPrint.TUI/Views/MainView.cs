@@ -94,6 +94,16 @@ public sealed class MainView : View
 
         // Re-seed when the selected sheet changes.
         app.SheetApplied += (_, _) => SeedHeaderFooter(context);
+
+        // Wire the live preview: re-render when reflow completes or preview is invalidated.
+        app.ReflowCompleted += (_, _) =>
+        {
+            Preview.Bind(context.SheetVM, app.TotalPages, context.Renderer.Dpi);
+        };
+        app.PreviewInvalidated += (_, _) =>
+        {
+            Preview.Refresh();
+        };
     }
 
     private void SeedHeaderFooter(SettingsContext context)
