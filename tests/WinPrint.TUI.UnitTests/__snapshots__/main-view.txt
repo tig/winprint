@@ -1,30 +1,30 @@
-┌┤Sheet├──────────────────────────┐┌┤Header├───────────────────────────────────────────────┐
-│          Default 1-Up          ▼││☒  {FileName}|{Title}|Page {Page}                      │
-├┼Margins┼────────────────────────┤└───────────────────────────────────────────────────────┘
-│           Top: ▼0.50▲           │                                                         
-│Left: ▼0.75▲        Right: ▼1.00▲│           ┌┤Preview├───────────────────────┐            
-│         Bottom: ▼0.25▲          │           │ {FileName}|{Title}|Page {Page} │            
-├┼Multiple Pages Up┼──────────────┤           │────────────────────────────────│            
-│Columns: ▼2▲  Rows: ▼1▲          │           │                                │            
-│Padding: ▼0.03▲  ☐ Page Separator│           │   1  using System;             │            
-├┼Header/Footer Font┼─────────────┤           │   2                            │            
-│Family:   Source Code Pro       ▼│           │   3  class Program {           │            
-│Size (pt):8    ▼                 │           │   4    static void Main() {    │            
-├┼Content Font┼───────────────────┤           │   5      // ...                │            
-│Family:   Source Code Pro       ▼│           │   6    }                       │            
-│Size (pt):10   ▼                 │           │   7  }                         │            
-├┼Printer┼────────────────────────┤           │                                │            
-│Printer:  Microsoft Print to PDF▼│           │                                │            
-│Paper:    Letter                ▼│           │                                │            
-│Pages:    From ▼1▲  To ▼0▲       │           │                                │            
-└─────────────────────────────────┘           │                                │            
-                                              │                                │            
-                                              │                                │            
-                                              │────────────────────────────────│            
-                                              │   {FilePath}||{DatePrinted}    │            
-                                              └────────────────────────────────┘            
-                                                                                            
-                                                                                            
-┌┤About├──────────────────────────┐┌┤Footer├───────────────────────────────────────────────┐
-│Help & about…   v2.5.0           ││☒  {FilePath}||{DatePrinted}                           │
-└─────────────────────────────────┘└───────────────────────────────────────────────────────┘
+┌┤Sheet├──────────────────────────┌────────────────────────────────────────────────────────┐
+│          Default 1-Up          ▼│☒  {FileName}|{Title}|Page {Page}                       │
+├┼Margins┼────────────────────────├────────────────────────────────────────────────────────┤
+│           Top: ▼0.50▲           │                                                        │
+│Left: ▼0.75▲        Right: ▼1.00▲│                                                        │
+│         Bottom: ▼0.25▲          │                                                        │
+├┼Multiple Pages Up┼──────────────│                                                        │
+│Columns: ▼2▲  Rows: ▼1▲          │                                                        │
+│Padding: ▼0.03▲  ☐ Page Separator│                                                        │
+├┼Header/Footer Font┼─────────────│                                                        │
+│Family:   Source Code Pro       ▼│                                                        │
+│Size (pt):8    ▼                 │                                                        │
+├┼Content Font┼───────────────────│                                                        │
+│Family:   Source Code Pro       ▼│                                                        │
+│Size (pt):10   ▼                 │                                                        │
+├┼Printer┼────────────────────────│                                                        │
+│Printer:  Microsoft Print to PDF▼│                                                        │
+│Paper:    Letter                ▼│                                                        │
+│Pages:    From ▼1▲  To ▼0▲       │                                                        │
+└─────────────────────────────────│                                                        │
+                                  │                                                        │
+                                  │                                                        │
+                                  │                                                        │
+                                  │                                                        │
+                                  │                                                        │
+                                  │                                                        │
+                                  │                                                        │
+┌┤About├──────────────────────────├────────────────────────────────────────────────────────┤
+│Help & about…   v2.5.0           │☒  {FilePath}||{DatePrinted}                            │
+└─────────────────────────────────└────────────────────────────────────────────────────────┘

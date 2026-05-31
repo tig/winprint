@@ -13,6 +13,7 @@
 // file/glob printing, --tui, --gui) is built in a later step.
 
 using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -92,11 +93,12 @@ static int RunInteractive(string viewName, int width, int height)
         app.Driver!.SetScreenSize(width, height);
     }
 
+    // Borderless host so the composed views fill edge-to-edge; each view carries its own border.
     var window = new Window
     {
-        Title = $"wp — {viewName} (Esc/Ctrl+Q to quit)",
         Width = Dim.Fill(),
-        Height = Dim.Fill()
+        Height = Dim.Fill(),
+        BorderStyle = LineStyle.None
     };
     window.Add(content);
     app.Run(window);

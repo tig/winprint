@@ -27,20 +27,8 @@ public class MainViewGoldenTests
 
         string screen = fixture.Screen;
         DriverAssert.ContainsText(screen, "Sheet"); // left settings column
-        DriverAssert.ContainsText(screen, "Header"); // top-right
-        DriverAssert.ContainsText(screen, "Footer"); // bottom-right
-        DriverAssert.ContainsText(screen, "Preview"); // middle preview
-        DriverAssert.ContainsText(screen, "using System;"); // preview placeholder content
-    }
-
-    [Fact]
-    public void PreviewBands_MirrorHeaderAndFooterText()
-    {
-        var view = new MainView(version: "2.5.0");
-        _ = new AppFixture(view, width: 92, height: 30);
-
-        // The preview's header/footer bands are seeded from the editor text.
-        Assert.Equal(view.Header.Value!.Text, view.Preview.HeaderText);
-        Assert.Equal(view.Footer.Value!.Text, view.Preview.FooterText);
+        DriverAssert.ContainsText(screen, "Multiple Pages Up"); // left settings section
+        DriverAssert.ContainsText(screen, "{FileName}"); // header editor text (top-right)
+        DriverAssert.ContainsText(screen, "{DatePrinted}"); // footer editor text (bottom-right)
     }
 }

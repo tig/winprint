@@ -22,10 +22,11 @@ public sealed class MainView : View
         // Left column fills the full height; its content sets the natural width.
         Settings = new SettingsPanel(version, fillHeight: true) { X = 0, Y = 0 };
 
-        // The right pane sits to the right of the settings column.
-        Pos seam = Pos.Right(Settings);
+        // Overlap the right pane's left border onto the settings column's right border column (-1) so
+        // the shared LineCanvas joins them into one continuous seam instead of two adjacent verticals.
+        Pos seam = Pos.Right(Settings) - 1;
 
-        Header = new HeaderFooterEditor("_Header")
+        Header = new HeaderFooterEditor(title: string.Empty)
         {
             X = seam,
             Y = 0,
@@ -33,7 +34,7 @@ public sealed class MainView : View
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
 
-        Footer = new HeaderFooterEditor("_Footer")
+        Footer = new HeaderFooterEditor(title: string.Empty)
         {
             X = seam,
             Y = Pos.AnchorEnd(),
@@ -41,19 +42,16 @@ public sealed class MainView : View
             Value = new Footer { Enabled = true, Text = "{FilePath}||{DatePrinted}" }
         };
 
+        // Overlap Header's bottom border (Y -1) and Footer's top border (+1 offsets the one-row
+        // Header overlap) so the preview's border joins both via the shared LineCanvas without
+        // overdrawing the footer's content row.
         Preview = new PreviewPane
         {
             X = seam,
-            Y = Pos.Bottom(Header),
+            Y = Pos.Bottom(Header) - 1,
             Width = Dim.Fill(),
-            Height = Dim.Fill() - Dim.Height(Footer),
-            HeaderText = Header.Value!.Text ?? string.Empty,
-            FooterText = Footer.Value!.Text ?? string.Empty
+            Height = Dim.Fill() - Dim.Height(Footer) + 1
         };
-
-        // Keep the preview's bands in sync as the header/footer text is edited.
-        Header.ValueChanged += (_, _) => Preview.HeaderText = Header.Value?.Text ?? string.Empty;
-        Footer.ValueChanged += (_, _) => Preview.FooterText = Footer.Value?.Text ?? string.Empty;
 
         Add(Settings, Header, Preview, Footer);
     }

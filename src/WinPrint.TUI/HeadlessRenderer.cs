@@ -51,7 +51,9 @@ public static class HeadlessRenderer
         window.Add(content);
 
         var iterations = 0;
-        const int stableFrame = 4;
+        // Capture after several iterations so cross-dependent layouts (e.g. Pos.AnchorEnd combined with
+        // Dim expressions referencing sibling sizes) fully settle before the grid is read.
+        const int stableFrame = 8;
         var grid = string.Empty;
 
         app.Iteration += OnIteration;
