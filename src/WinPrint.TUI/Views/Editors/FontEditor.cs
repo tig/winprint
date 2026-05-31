@@ -32,6 +32,7 @@ public sealed class FontEditor : EditorBase<Font>
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
+        SuperViewRendersLineCanvas = true;
         Title = title;
 
         _families = new ObservableCollection<string>(FontChoices.Families);
