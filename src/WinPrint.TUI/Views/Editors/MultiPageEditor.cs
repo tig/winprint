@@ -70,8 +70,8 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
 
         _pageSeparator = new CheckBox
         {
-            X = 0,
-            Y = Pos.Bottom(paddingLabel),
+            X = Pos.Right(_padding) + 2,
+            Y = Pos.Top(paddingLabel),
             Text = "Page Separat_or"
         };
 
