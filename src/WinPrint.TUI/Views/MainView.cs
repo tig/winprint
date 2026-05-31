@@ -104,6 +104,17 @@ public sealed class MainView : View
         {
             Preview.Refresh();
         };
+
+        // Load the file (if one was specified on the command line) once the view is ready.
+        // This triggers the full reflow → ReflowCompleted → Preview.Bind pipeline.
+        if (!string.IsNullOrEmpty(context.File))
+        {
+            string file = context.File;
+            Initialized += async (_, _) =>
+            {
+                await app.LoadFileAsync(file).ConfigureAwait(false);
+            };
+        }
     }
 
     private void SeedHeaderFooter(SettingsContext context)
