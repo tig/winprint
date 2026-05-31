@@ -11,22 +11,22 @@ using WinPrint.TUI.Views;
 namespace WinPrint.TUI;
 
 /// <summary>
-///     The winprint Terminal.Gui viewer command. Opens the interactive TUI for a file (or, with
+///     The <c>tui</c> command: opens the interactive Terminal.Gui viewer for a file (or, with
 ///     <c>--view</c>, a single catalogued editor view), and — via <c>--cat</c> — renders a view
 ///     headlessly to a character grid on stdout. The <c>--cat</c> path is the design-loop / golden
-///     capture entry point (it replaced the old <c>dump</c>/<c>render</c> proof-of-concept subcommands);
-///     <c>--view</c> without <c>--cat</c> is what tuirec drives for full-fidelity image capture.
+///     capture entry point; <c>--view</c> without <c>--cat</c> is what tuirec drives for full-fidelity
+///     image capture.
 /// </summary>
-public sealed class WinPrintCommand : IViewerCommand
+public sealed class TuiCommand : IViewerCommand
 {
     /// <inheritdoc />
-    public string PrimaryAlias => "winprint";
+    public string PrimaryAlias => "tui";
 
     /// <inheritdoc />
-    public IReadOnlyList<string> Aliases { get; } = ["winprint"];
+    public IReadOnlyList<string> Aliases { get; } = ["tui"];
 
     /// <inheritdoc />
-    public string Description => "Open the winprint TUI for a file (or a named view with --view).";
+    public string Description => "Open the winprint interactive TUI for a file (or a named view with --view).";
 
     /// <inheritdoc />
     public CommandKind Kind => CommandKind.Viewer;

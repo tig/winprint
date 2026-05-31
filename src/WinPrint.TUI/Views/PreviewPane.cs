@@ -128,7 +128,8 @@ public sealed class PreviewPane : View
         _totalPages = totalPages;
         _currentPage = 0;
         _renderer = new PageRenderer(dpi);
-        RequestRender();
+        // Render immediately (we're already on the UI thread from GetApp().Invoke)
+        RenderCurrentPage();
     }
 
     /// <summary>Forces an immediate re-render of the current page.</summary>

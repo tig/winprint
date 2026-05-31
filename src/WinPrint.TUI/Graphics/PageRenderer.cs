@@ -120,7 +120,7 @@ public sealed class PageRenderer
             graphicsContext.ScaleTransform(printScale, printScale);
         }
 
-        sheetVM.PrintSheet(graphicsContext, sheetNumber);
+        sheetVM.PrintSheet(graphicsContext, sheetNumber + 1);
 
         // Extract pixels into TgColor array
         return ExtractPixels(image);
