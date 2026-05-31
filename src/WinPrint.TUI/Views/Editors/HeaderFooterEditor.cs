@@ -57,9 +57,8 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         _text.Value = newValue?.Text ?? string.Empty;
 
         // After binding, the insertion point sits at the end and the field scrolls to show the tail;
-        // reset it so the field displays from the start of the format string.
+        // move it to the start so the field displays from the beginning of the format string.
         _text.InsertionPoint = 0;
-        _text.ScrollOffset = 0;
     }
 
     private void PushFromChildren()
