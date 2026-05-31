@@ -164,8 +164,50 @@ public sealed class PreviewPane : View
             return true;
         }
 
+        // Zoom: Ctrl+Plus / Ctrl+Minus / Ctrl+0 (reset)
+        if (key == ((Key)'+').WithCtrl || key == ((Key)'=').WithCtrl)
+        {
+            ZoomIn();
+            return true;
+        }
+
+        if (key == ((Key)'-').WithCtrl)
+        {
+            ZoomOut();
+            return true;
+        }
+
+        if (key == Key.D0.WithCtrl)
+        {
+            ZoomReset();
+            return true;
+        }
+
         return base.OnKeyDown(key);
     }
+
+    /// <summary>Current zoom factor (1.0 = 100%).</summary>
+    public float Zoom
+    {
+        get => _renderer?.Zoom ?? 1.0f;
+        set
+        {
+            if (_renderer is not null)
+            {
+                _renderer.Zoom = Math.Clamp(value, 0.25f, 4.0f);
+                RequestRender();
+            }
+        }
+    }
+
+    /// <summary>Zoom in by 25%.</summary>
+    public void ZoomIn() => Zoom = Math.Min(4.0f, (Zoom) + 0.25f);
+
+    /// <summary>Zoom out by 25%.</summary>
+    public void ZoomOut() => Zoom = Math.Max(0.25f, (Zoom) - 0.25f);
+
+    /// <summary>Reset zoom to 100%.</summary>
+    public void ZoomReset() => Zoom = 1.0f;
 
     private void RequestRender()
     {
@@ -212,8 +254,9 @@ public sealed class PreviewPane : View
 
     private void UpdatePageLabel()
     {
+        int zoomPct = (int)(Zoom * 100);
         PageLabel.Text = _totalPages > 0
-            ? $"Page {_currentPage + 1} / {_totalPages}"
+            ? $"Page {_currentPage + 1} / {_totalPages}  [{zoomPct}%]"
             : "";
     }
 
