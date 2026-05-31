@@ -14,7 +14,10 @@ public sealed class MainView : View
 {
     /// <summary>Creates the main view with sample-populated editors and preview.</summary>
     /// <param name="version">Version for the About footer; pass a fixed value for deterministic tests.</param>
-    public MainView(string? version = null)
+    /// <summary>Creates the main view, binding to real settings when <paramref name="context" /> is given.</summary>
+    /// <param name="version">Version for the About footer; pass a fixed value for deterministic tests.</param>
+    /// <param name="context">Real settings to bind to; <see langword="null" /> uses sample data.</param>
+    public MainView(string? version = null, SettingsContext? context = null)
     {
         Width = Dim.Fill();
         Height = Dim.Fill();
@@ -54,6 +57,49 @@ public sealed class MainView : View
         };
 
         Add(Settings, Header, Preview, Footer);
+
+        if (context is not null)
+        {
+            Bind(context);
+        }
+    }
+
+    private void Bind(SettingsContext context)
+    {
+        Settings.Bind(context);
+        WinPrint.Core.ViewModels.AppViewModel app = context.App;
+
+        // Seed header/footer editors from the current sheet and route edits through the VM mutators.
+        SeedHeaderFooter(context);
+
+        Header.ValueChanged += (_, _) =>
+        {
+            if (Header.Value is { } h)
+            {
+                app.SetHeaderEnabled(h.Enabled);
+                app.SetHeaderText(h.Text ?? string.Empty);
+            }
+        };
+        Footer.ValueChanged += (_, _) =>
+        {
+            if (Footer.Value is { } f)
+            {
+                app.SetFooterEnabled(f.Enabled);
+                app.SetFooterText(f.Text ?? string.Empty);
+            }
+        };
+
+        // Re-seed when the selected sheet changes.
+        app.SheetApplied += (_, _) => SeedHeaderFooter(context);
+    }
+
+    private void SeedHeaderFooter(SettingsContext context)
+    {
+        if (context.CurrentSheet is { } sheet)
+        {
+            Header.Value = sheet.Header;
+            Footer.Value = sheet.Footer;
+        }
     }
 
     /// <summary>The left settings column.</summary>

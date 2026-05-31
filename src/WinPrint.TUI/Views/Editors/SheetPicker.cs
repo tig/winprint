@@ -20,13 +20,13 @@ namespace WinPrint.TUI.Views.Editors;
 public sealed class SheetPicker : EditorBase<SheetSettings>
 {
     private readonly DropDownList _sheet;
-    private readonly IReadOnlyList<SheetSettings> _sheets;
+    private List<SheetSettings> _sheets;
 
     /// <summary>Creates a sheet picker over the given predefined sheets.</summary>
     /// <param name="sheets">The available sheets (e.g. <c>Settings.Sheets.Values</c>).</param>
     public SheetPicker(IEnumerable<SheetSettings> sheets)
     {
-        _sheets = sheets.ToList();
+        _sheets = [.. sheets];
 
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
@@ -52,6 +52,14 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
         };
 
         Add(_sheet);
+    }
+
+    /// <summary>Replaces the available sheets (e.g. when binding to real settings).</summary>
+    public void SetSheets(IEnumerable<SheetSettings> sheets)
+    {
+        _sheets = [.. sheets];
+        _sheet.Source = new ListWrapper<string>(
+            new ObservableCollection<string>(_sheets.Select(s => s.Name ?? string.Empty)));
     }
 
     /// <inheritdoc />

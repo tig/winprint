@@ -1,6 +1,7 @@
 using Terminal.Gui.ViewBase;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.ViewModels;
 using WinPrint.TUI.Views.Editors;
 
 namespace WinPrint.TUI.Views;
@@ -68,6 +69,88 @@ public sealed class SettingsPanel : View
         About.X = 0;
         About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
         Add(About);
+    }
+
+    /// <summary>
+    ///     Two-way-binds the editors to the shared <see cref="AppViewModel" /> (real settings data),
+    ///     the same orchestrator WinForms/MAUI use. Seeds the editors from the current sheet, routes
+    ///     edits through the VM's mutators, and re-seeds when the selected sheet changes.
+    /// </summary>
+    public void Bind(SettingsContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        _context = context;
+        AppViewModel app = context.App;
+
+        // Populate the sheet picker from the real sheets and route selection to the VM.
+        Sheet.SetSheets(app.Settings.Sheets.Values);
+        Sheet.ValueChanged += (_, _) =>
+        {
+            if (!_seeding && Sheet.Value?.Name is { } name)
+            {
+                app.SelectSheetByNameOrId(name);
+            }
+        };
+
+        // Editor edits → VM mutators (which write the live CurrentSheet model + raise events).
+        Margins.ValueChanged += (_, _) =>
+        {
+            if (!_seeding && Margins.Value is { } m)
+            {
+                app.SetMargins(m);
+            }
+        };
+        Pages.ValueChanged += (_, _) =>
+        {
+            if (_seeding || Pages.Value is not { } p)
+            {
+                return;
+            }
+
+            app.SetColumns(p.Columns);
+            app.SetRows(p.Rows);
+            app.SetPadding(p.Padding);
+            app.SetPageSeparator(p.PageSeparator);
+        };
+        HeaderFooterFont.ValueChanged += (_, _) => { /* font persists via the bound model */ };
+        ContentFont.ValueChanged += (_, _) => { /* font persists via the bound model */ };
+
+        // Sheet switch (VM) → re-seed every editor.
+        app.SheetApplied += (_, _) => SeedFromCurrentSheet();
+
+        SeedFromCurrentSheet();
+    }
+
+    private SettingsContext? _context;
+    private bool _seeding;
+
+    private void SeedFromCurrentSheet()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        SheetSettings? sheet = _context.CurrentSheet;
+        if (sheet is null)
+        {
+            return;
+        }
+
+        _seeding = true;
+        try
+        {
+            Sheet.Value = sheet;
+            Margins.Value = sheet.Margins;
+            Pages.Value = sheet;
+            HeaderFooterFont.Value = sheet.Header.Font ?? new Font();
+            ContentFont.Value = (sheet.ContentSettings ??= new ContentSettings()).Font;
+            Printer.Value = _context.App.CurrentPageSetup;
+        }
+        finally
+        {
+            _seeding = false;
+        }
     }
 
     /// <summary>The predefined-sheet picker.</summary>

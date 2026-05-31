@@ -35,7 +35,7 @@ namespace WinPrint.Core.ViewModels;
 /// </summary>
 public sealed class AppViewModel : INotifyPropertyChanged
 {
-    private readonly SheetViewModel _sheetVM;
+    private readonly SheetViewModel? _sheetVM;
     private readonly PrintPageSetup _pageSetup;
 
     private readonly List<string> _sheetKeys = [];
@@ -52,10 +52,25 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private string? _selectedPrinter;
     private string? _selectedPaperSize;
 
+    /// <summary>
+    ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the GDI-backed
+    ///     preview/reflow engine used by WinForms/MAUI for live preview).
+    /// </summary>
     public AppViewModel(SheetViewModel sheetVM, PrintPageSetup pageSetup)
+        : this(pageSetup, sheetVM ?? throw new ArgumentNullException(nameof(sheetVM)))
     {
-        _sheetVM = sheetVM ?? throw new ArgumentNullException(nameof(sheetVM));
+    }
+
+    /// <summary>
+    ///     Creates an app view model with <em>no</em> preview engine — for cross-platform front ends
+    ///     (e.g. the TUI) that edit settings but have no <see cref="SheetViewModel" />. Sheet selection
+    ///     and the settings mutators still update the live <see cref="CurrentSheet" /> model (so changes
+    ///     persist on save); file load / reflow / preview are no-ops.
+    /// </summary>
+    public AppViewModel(PrintPageSetup pageSetup, SheetViewModel? sheetVM = null)
+    {
         _pageSetup = pageSetup ?? throw new ArgumentNullException(nameof(pageSetup));
+        _sheetVM = sheetVM;
         SheetNames = [];
     }
 
@@ -77,7 +92,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public event EventHandler? ReflowCompleted;
 
-    public SheetViewModel SheetViewModel => _sheetVM;
+    /// <summary>The preview/reflow engine, or <see langword="null" /> for preview-less front ends.</summary>
+    public SheetViewModel? SheetViewModel => _sheetVM;
     public PrintPageSetup CurrentPageSetup => _pageSetup;
     public Settings Settings => ModelLocator.Current.Settings;
 
@@ -189,7 +205,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         _currentSheet = sheetSettings;
 
         // Initialize the sheet VM (this resets ContentEngine, header/footer state, etc).
-        _sheetVM.SetSheet(sheetSettings);
+        _sheetVM?.SetSheet(sheetSettings);
 
         // Sync page setup so the next reflow uses the new orientation/margins.
         _pageSetup.Landscape = sheetSettings.Landscape;
@@ -264,6 +280,14 @@ public sealed class AppViewModel : INotifyPropertyChanged
             return false;
         }
 
+        if (_sheetVM is null)
+        {
+            // No preview/reflow engine (e.g. the TUI): record the file but don't load/reflow.
+            ActiveFile = filePath;
+            OnPropertyChanged(nameof(IsFileLoaded));
+            return true;
+        }
+
         IsBusy = true;
         StatusText = $"Loading {Path.GetFileName(filePath)}...";
 
@@ -272,7 +296,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
             ActiveFile = filePath;
             OnPropertyChanged(nameof(IsFileLoaded));
 
-            bool loaded = await _sheetVM.LoadFileAsync(filePath).ConfigureAwait(false);
+            bool loaded = await _sheetVM!.LoadFileAsync(filePath).ConfigureAwait(false);
             if (!loaded)
             {
                 StatusText = $"Error: Failed to load file: {filePath}";
@@ -321,7 +345,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public async Task ReflowAsync()
     {
-        if (!IsFileLoaded || _suppressReflow)
+        if (_sheetVM is not { } sheetVM || !IsFileLoaded || _suppressReflow)
         {
             return;
         }
@@ -329,17 +353,17 @@ public sealed class AppViewModel : INotifyPropertyChanged
         IsBusy = true;
         try
         {
-            _sheetVM.SetPrinterPageSettings(_pageSetup);
+            sheetVM.SetPrinterPageSettings(_pageSetup);
 
             // Sync sheet-level ContentSettings to the ContentEngine so changes like
             // LineNumbers are applied without requiring a full file reload.
-            if (_sheetVM.ContentEngine?.ContentSettings != null && _sheetVM.ContentSettings != null)
+            if (sheetVM.ContentEngine?.ContentSettings != null && sheetVM.ContentSettings != null)
             {
-                _sheetVM.ContentEngine.ContentSettings.CopyPropertiesFrom(_sheetVM.ContentSettings);
+                sheetVM.ContentEngine.ContentSettings.CopyPropertiesFrom(sheetVM.ContentSettings);
             }
 
-            await _sheetVM.ReflowAsync().ConfigureAwait(false);
-            TotalPages = _sheetVM.NumSheets;
+            await sheetVM.ReflowAsync().ConfigureAwait(false);
+            TotalPages = sheetVM.NumSheets;
             if (_currentPage > TotalPages)
             {
                 CurrentPage = TotalPages;
@@ -367,7 +391,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetLandscape(bool value)
     {
-        _sheetVM.Landscape = value;
+        if (_sheetVM != null) { _sheetVM.Landscape = value; }
         _pageSetup.Landscape = value;
         if (_currentSheet != null)
         {
@@ -379,7 +403,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetRows(int value)
     {
-        _sheetVM.Rows = value;
+        if (_sheetVM != null) { _sheetVM.Rows = value; }
         if (_currentSheet != null)
         {
             _currentSheet.Rows = value;
@@ -390,7 +414,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetColumns(int value)
     {
-        _sheetVM.Columns = value;
+        if (_sheetVM != null) { _sheetVM.Columns = value; }
         if (_currentSheet != null)
         {
             _currentSheet.Columns = value;
@@ -401,7 +425,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetPadding(int paddingHundredths)
     {
-        _sheetVM.Padding = paddingHundredths;
+        if (_sheetVM != null) { _sheetVM.Padding = paddingHundredths; }
         if (_currentSheet != null)
         {
             _currentSheet.Padding = paddingHundredths;
@@ -412,7 +436,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetPageSeparator(bool value)
     {
-        _sheetVM.PageSeparator = value;
+        if (_sheetVM != null) { _sheetVM.PageSeparator = value; }
         if (_currentSheet != null)
         {
             _currentSheet.PageSeparator = value;
@@ -423,9 +447,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetLineNumbers(bool value)
     {
-        if (_sheetVM.ContentSettings != null)
+        if (_sheetVM?.ContentSettings != null)
         {
-            _sheetVM.ContentSettings.LineNumbers = value;
+            _sheetVM!.ContentSettings!.LineNumbers = value;
         }
 
         if (_currentSheet?.ContentSettings != null)
@@ -438,7 +462,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetMargins(PrintMargins margins)
     {
-        _sheetVM.Margins = margins;
+        if (_sheetVM != null) { _sheetVM.Margins = margins; }
         _pageSetup.MarginTop = margins.Top;
         _pageSetup.MarginBottom = margins.Bottom;
         _pageSetup.MarginLeft = margins.Left;
@@ -453,9 +477,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetHeaderEnabled(bool value)
     {
-        if (_sheetVM.Header != null)
+        if (_sheetVM?.Header != null)
         {
-            _sheetVM.Header.Enabled = value;
+            _sheetVM!.Header!.Enabled = value;
         }
 
         if (_currentSheet?.Header != null)
@@ -468,9 +492,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetHeaderText(string value)
     {
-        if (_sheetVM.Header != null)
+        if (_sheetVM?.Header != null)
         {
-            _sheetVM.Header.Text = value;
+            _sheetVM!.Header!.Text = value;
         }
 
         if (_currentSheet?.Header != null)
@@ -483,9 +507,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetFooterEnabled(bool value)
     {
-        if (_sheetVM.Footer != null)
+        if (_sheetVM?.Footer != null)
         {
-            _sheetVM.Footer.Enabled = value;
+            _sheetVM!.Footer!.Enabled = value;
         }
 
         if (_currentSheet?.Footer != null)
@@ -498,9 +522,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetFooterText(string value)
     {
-        if (_sheetVM.Footer != null)
+        if (_sheetVM?.Footer != null)
         {
-            _sheetVM.Footer.Text = value;
+            _sheetVM!.Footer!.Text = value;
         }
 
         if (_currentSheet?.Footer != null)

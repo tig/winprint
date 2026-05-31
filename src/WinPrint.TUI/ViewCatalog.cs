@@ -47,11 +47,18 @@ public static class ViewCatalog
             },
             "printer" => CreatePrinterEditor(),
             "about" => new AboutView(),
-            "settings" => new SettingsPanel(),
-            "main" => new MainView(),
+            "settings" => CreateBoundSettingsPanel(),
+            "main" => new MainView(context: SettingsContext.Create()),
             _ => throw new ArgumentException(
                 $"Unknown view '{name}'. Known views: {string.Join(", ", Names)}.", nameof(name))
         };
+    }
+
+    private static SettingsPanel CreateBoundSettingsPanel()
+    {
+        var panel = new SettingsPanel();
+        panel.Bind(SettingsContext.Create());
+        return panel;
     }
 
     private static SheetPicker CreateSheetPicker()
