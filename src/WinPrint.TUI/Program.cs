@@ -93,6 +93,27 @@ static int RunInteractive(string viewName, int width, int height)
         app.Driver!.SetScreenSize(width, height);
     }
 
+    // The headless/PTY driver never runs the sixel-support handshake, so ImageView falls back to
+    // cell rendering. When WP_FORCE_SIXEL is set, force support on so ImageView emits the sixel DCS
+    // stream (useful for verifying the encode path against a real sixel terminal/recorder). The
+    // setter lives on the internal DriverImpl, so reach it via reflection.
+    if (Environment.GetEnvironmentVariable("WP_FORCE_SIXEL") is "1" or "true" && app.Driver is { } driver)
+    {
+        var support = new SixelSupportResult
+        {
+            IsSupported = true,
+            MaxPaletteColors = 256,
+            SupportsTransparency = true
+        };
+        driver.GetType()
+            .GetMethod(
+                "SetSixelSupport",
+                System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.Instance)
+            ?.Invoke(driver, [support]);
+    }
+
     // Borderless host so the composed views fill edge-to-edge; each view carries its own border.
     var window = new Window
     {
