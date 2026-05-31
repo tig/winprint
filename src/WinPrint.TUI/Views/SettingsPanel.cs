@@ -18,6 +18,10 @@ namespace WinPrint.TUI.Views;
 /// </summary>
 public sealed class SettingsPanel : View
 {
+    // Minimum content width: fits the widest editor row (Printer's "Pages: From ▼1▲ To ▼0▲" and the
+    // Margins diamond) plus the editor's own border, so nothing clips while the pane stays compact.
+    private const int MinContentWidth = 33;
+
     /// <summary>Creates the composed settings panel with sample-populated editors.</summary>
     /// <param name="version">
     ///     Version text for the About footer (without the leading <c>v</c>). Defaults to the runtime
@@ -28,7 +32,10 @@ public sealed class SettingsPanel : View
         // Auto width: the panel hugs its natural width, anchored by the widest editor (MultiPageEditor's
         // Padding + Page Separator row); the other editors Dim.Fill to match. Height is Auto when shown
         // alone (hugs its content), or Fill when it's the left column of MainView (spans full height).
-        Width = Dim.Auto(DimAutoStyle.Content);
+        // Auto width with a minimum that fits the widest real editor row (the Printer "Pages: From ▼ To
+        // ▼" row and the Margins diamond) so the pane stays compact without clipping. The minimum, not
+        // a single anchor editor, drives the width — robust to any one editor's content shrinking.
+        Width = Dim.Auto(DimAutoStyle.Content, Dim.Absolute(MinContentWidth));
         Height = fillHeight ? Dim.Fill() : Dim.Auto(DimAutoStyle.Content);
 
         SheetSettings[] sheets =
