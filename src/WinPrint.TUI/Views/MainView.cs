@@ -1,3 +1,4 @@
+using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views.Editors;
@@ -21,6 +22,9 @@ public sealed class MainView : View
     {
         Width = Dim.Fill();
         Height = Dim.Fill();
+        BorderStyle = LineStyle.Single;
+        Border!.Thickness = new Thickness(0, 1, 0, 0);
+        Title = "<no file>";
         // Focusable container: a non-focusable View has its whole subtree skipped by Terminal.Gui's
         // focus navigation, which would leave every editor (settings rail, header/footer) unreachable.
         CanFocus = true;
@@ -96,13 +100,24 @@ public sealed class MainView : View
         app.SheetApplied += (_, _) => SeedHeaderFooter(context);
 
         // Wire the live preview: re-render when reflow completes or preview is invalidated.
+        // These events may fire from background threads (ConfigureAwait(false) in AppViewModel),
+        // so marshal back to the UI thread via GetApp().Invoke.
         app.ReflowCompleted += (_, _) =>
         {
-            Preview.Bind(context.SheetVM, app.TotalPages, context.Renderer.Dpi);
+            GetApp()?.Invoke(() =>
+            {
+                Preview.Bind(context.SheetVM, app.TotalPages, context.Renderer.Dpi);
+                Title = string.IsNullOrEmpty(app.ActiveFile)
+                    ? "<no file>"
+                    : System.IO.Path.GetFileName(app.ActiveFile);
+            });
         };
         app.PreviewInvalidated += (_, _) =>
         {
-            Preview.Refresh();
+            GetApp()?.Invoke(() =>
+            {
+                Preview.Refresh();
+            });
         };
 
         // Load the file (if one was specified on the command line) once the view is ready.
@@ -110,9 +125,10 @@ public sealed class MainView : View
         if (!string.IsNullOrEmpty(context.File))
         {
             string file = context.File;
-            Initialized += async (_, _) =>
+            Initialized += (_, _) =>
             {
-                await app.LoadFileAsync(file).ConfigureAwait(false);
+                // Fire-and-forget with explicit exception handling; events can't be async
+                _ = LoadFileOnInitAsync(app, file);
             };
         }
     }
@@ -123,6 +139,21 @@ public sealed class MainView : View
         {
             Header.Value = sheet.Header;
             Footer.Value = sheet.Footer;
+        }
+    }
+
+    private async Task LoadFileOnInitAsync(WinPrint.Core.ViewModels.AppViewModel app, string file)
+    {
+        try
+        {
+            await app.LoadFileAsync(file).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            GetApp()?.Invoke(() =>
+            {
+                Title = $"Error: {ex.Message}";
+            });
         }
     }
 
