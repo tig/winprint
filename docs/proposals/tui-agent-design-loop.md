@@ -135,7 +135,7 @@ winprint repo.
 The core is a single static helper that boots a `Application.Create()` instance (thread-local — no
 process-global `Application.Init()`), inits the **ANSI driver**, sets a fixed screen size, hosts the
 view in a `Window`, runs the loop, and captures the **full grid** via `IDriver.ToString()` on the
-`Iteration` event. It lives in the `WinPrint.TUI` assembly so the binary (`wp dump`), the scratch
+`Iteration` event. It lives in the `WinPrint.TUI` assembly so the binary (`wp --view <name> --cat`), the scratch
 host, and the tests all share **one** render path:
 
 ```csharp
@@ -418,12 +418,12 @@ if __name__ == "__main__":
 ### 4. The "scratch render host" — iterate outside the test runner
 
 For fast iteration the agent renders one view to stdout in a single command. The same capability ships
-in the `wp` binary as `wp dump <view> [w] [h]`, and a throwaway console app can call the identical
+in the `wp` binary as `wp --view <view> --cat [--width W --height H]`, and a throwaway console app can call the identical
 shared render path so the scratch host, the binary, and the tests never diverge:
 
 ```csharp
 // Scratch render host. Delegates to the shared HeadlessRenderer + ViewCatalog so it
-// stays in lockstep with `wp dump` and the golden tests. Usage: render <view> [w] [h]
+// stays in lockstep with `wp --view <view> --cat` and the golden tests. Usage: render <view> [w] [h]
 using WinPrint.TUI;
 
 string view = args.Length > 0 ? args[0] : "margin";
@@ -436,7 +436,7 @@ where `HeadlessRenderer.RenderToGrid` is the create/init-ANSI/host/run/capture-`
 same one `AppFixture` uses), and `ViewCatalog` names each view + its sample value in one place.
 
 ```
-wp dump margin 44 8 | python3 grid2png.py /dev/stdin out.png   # an image in seconds
+wp --view margin --cat --width 44 --height 8 | python3 grid2png.py /dev/stdin out.png   # an image in seconds
 ```
 
 The fact that `HeadlessRenderer` must be hand-rolled — and shared by hand across the binary and the
@@ -459,7 +459,7 @@ So the loop wants **two layers**, kept side by side:
 
 The full-fidelity layer is **tuirec's** job, not a bespoke rasterizer's. tuirec already drives a real
 binary through a PTY and records an asciinema `.cast` — which *is* the full-fidelity capture (ANSI
-with all attributes). winprint's `wp render <view>` command exists precisely so tuirec can drive a
+with all attributes). winprint's `wp --view <view>` command exists precisely so tuirec can drive a
 single view headlessly and snapshot it. tuirec today renders `.cast → animated GIF` (via `agg`); a
 **still-image `snapshot` mode** would close the loop. That feature is specced separately in
 `docs/proposals/tuirec-snapshot.md` — and notably it drops into tuirec's existing `Renderer`

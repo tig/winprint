@@ -55,7 +55,7 @@ So **a still-image snapshot is a drop-in second `Renderer`** — no surgery to t
 ```
 tuirec snapshot \
   --binary ./wp \
-  --args "render margin 44 8" \
+  --args "--view margin --width 44 --height 8" \
   --name margin-editor \
   --keystrokes "wait:1500"        # optional: drive to a state, then capture
   [--frame last|<index>|at:<ms>]  # which frame to grab (default: last)
@@ -82,7 +82,7 @@ Recommendation: ship **(b)** so stills work even without an agg still-frame feat
 winprint's `wp` binary is already built to be driven this way (`docs/proposals/tui-agent-design-loop.md`):
 
 ```
-tuirec snapshot --binary ./wp --args "render margin 44 8" --name margin-editor --keystrokes "wait:1500"
+tuirec snapshot --binary ./wp --args "--view margin --width 44 --height 8" --name margin-editor --keystrokes "wait:1500"
 ```
 
 would yield a **full-fidelity** `margin-editor.png` — showing the `_Margins` hotkey underline and any color — to sit **alongside** winprint's fast plain-text grid golden:

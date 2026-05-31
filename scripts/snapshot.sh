@@ -5,7 +5,7 @@
 # This is the "rich" layer of the agent/human TUI design loop (see
 # docs/proposals/tui-agent-design-loop.md): tuirec drives the real `wp` binary through
 # a PTY, records an asciinema .cast, and agg renders one frame to PNG with true terminal
-# colors, font, and glyphs. (The fast "plain grid" layer is `wp dump <view>`.)
+# colors, font, and glyphs. (The fast "plain grid" layer is `wp --view <view> --cat`.)
 #
 # Usage:
 #   scripts/snapshot.sh <view> [cols] [rows] [out.png]
@@ -41,13 +41,14 @@ dotnet build "${repo_root}/src/WinPrint.TUI/WinPrint.TUI.csproj" -c Release -tl:
 wp="${repo_root}/src/WinPrint.TUI/bin/Release/net10.0/wp"
 
 # Render one view at a fixed size; the panel is Dim.Auto so give it a slightly larger
-# terminal than the content. --args is comma-separated.
+# terminal than the content. --args is comma-separated. `wp --view <name> --width W --height H`
+# opens that catalogued view interactively at the pinned size for tuirec to record.
 agg_args=()
 [[ -n "${AGG:-}" ]] && agg_args=(--agg-path "${AGG}")
 
 "${tuirec}" snapshot \
     --binary "${wp}" \
-    --args "render,${view},$((cols - 2)),$((rows - 2))" \
+    --args "--view,${view},--width,$((cols - 2)),--height,$((rows - 2))" \
     --output "${out}" \
     --cols "$((cols + 4))" --rows "$((rows + 2))" \
     --startup-delay 3500 --drain 1500 --frame last \
