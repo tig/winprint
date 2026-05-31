@@ -41,7 +41,7 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         {
             X = Pos.Right(_enabled) + 1,
             Y = 0,
-            Width = EditorMetrics.FieldWidth
+            Width = Dim.Fill()
         };
 
         _enabled.ValueChanged += (_, _) => PushFromChildren();
@@ -56,10 +56,9 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         _enabled.Value = newValue?.Enabled == true ? CheckState.Checked : CheckState.UnChecked;
         _text.Value = newValue?.Text ?? string.Empty;
 
-        // After binding, the insertion point sits at the end and the field scrolls to show the tail;
-        // reset it so the field displays from the start of the format string.
+        // After binding, the insertion point sits at the end; move it home so the field shows the start
+        // of the format string rather than scrolling to the tail.
         _text.InsertionPoint = 0;
-        _text.ScrollOffset = 0;
     }
 
     private void PushFromChildren()
