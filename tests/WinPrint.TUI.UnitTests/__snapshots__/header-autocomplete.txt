@@ -1,0 +1,12 @@
+┌┤Header├────────────────────────────────────────┐
+│☑  file                                         │
+└────{FileName}                  ────────────────┘
+     {FileNameWithoutExtension}                   
+     {FileExtension}                              
+     {FileDirectoryName}                          
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
+                                                  
