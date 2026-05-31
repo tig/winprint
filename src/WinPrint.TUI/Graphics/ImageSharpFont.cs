@@ -18,11 +18,13 @@ public sealed class ImageSharpFont : IGraphicsFont
     public float GetHeight(float dpi)
     {
         // SixLabors.Fonts: font size is in points. Line spacing = ascender + descender + line gap
-        // scaled to the requested DPI.
+        // scaled to the requested DPI. Return in hundredths of inch (matching System.Drawing
+        // with GraphicsUnit.Display / PageUnit=Display = 1/100").
         float emHeight = Font.Size * dpi / 72f;
         FontMetrics metrics = Font.FontMetrics;
-        float lineHeight = emHeight * (metrics.HorizontalMetrics.LineHeight / (float)metrics.UnitsPerEm);
-        return lineHeight;
+        float lineHeightPixels = emHeight * (metrics.HorizontalMetrics.LineHeight / (float)metrics.UnitsPerEm);
+        // Convert pixels → hundredths of inch
+        return lineHeightPixels * 100f / dpi;
     }
 
     public void Dispose()

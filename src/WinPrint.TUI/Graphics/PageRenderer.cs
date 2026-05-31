@@ -113,12 +113,10 @@ public sealed class PageRenderer
         // Translate so PrintSheet draws at the page origin within the canvas
         graphicsContext.TranslateTransform(padding, padding);
 
-        // Scale the print output to fit the page pixel dimensions
-        float printScale = pagePixelWidth / (pageWidthInches * Dpi);
-        if (Math.Abs(printScale - 1f) > 0.001f)
-        {
-            graphicsContext.ScaleTransform(printScale, printScale);
-        }
+        // PrintSheet draws in hundredths-of-inch coordinates (e.g., 850×1100 for US Letter).
+        // Convert to pixels: scale = pagePixelWidth / paperWidthInHundredths = Dpi * Zoom / 100.
+        float printScale = Dpi * Zoom * scale / 100f;
+        graphicsContext.ScaleTransform(printScale, printScale);
 
         sheetVM.PrintSheet(graphicsContext, sheetNumber + 1);
 

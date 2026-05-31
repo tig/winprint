@@ -155,42 +155,55 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         Font nativeFont = GetFont(font);
         TextOptions options = CreateTextOptions(nativeFont);
         FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
-        return new GraphicsSizeF(bounds.Width, bounds.Height);
+        // Convert from pixels to hundredths of inch (matching System.Drawing PageUnit=Display)
+        float scale = 100f / DpiX;
+        return new GraphicsSizeF(bounds.Width * scale, bounds.Height * scale);
     }
 
     public GraphicsSizeF MeasureString(string text, IGraphicsFont font, int width, GraphicsStringFormat format)
     {
         Font nativeFont = GetFont(font);
-        TextOptions options = CreateTextOptions(nativeFont, width, format);
+        // width is in hundredths — convert to pixels for TextMeasurer
+        int widthPixels = (int)(width * DpiX / 100f);
+        TextOptions options = CreateTextOptions(nativeFont, widthPixels, format);
         FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
-        return new GraphicsSizeF(bounds.Width, bounds.Height);
+        float scale = 100f / DpiX;
+        return new GraphicsSizeF(bounds.Width * scale, bounds.Height * scale);
     }
 
     public GraphicsSizeF MeasureString(string text, IGraphicsFont font, GraphicsSizeF proposedSize,
         GraphicsStringFormat format, out int charsFitted, out int linesFilled)
     {
         Font nativeFont = GetFont(font);
-        TextOptions options = CreateTextOptions(nativeFont, (int)proposedSize.Width, format);
+        // proposedSize is in hundredths — convert to pixels
+        float pixelScale = DpiX / 100f;
+        int widthPixels = (int)(proposedSize.Width * pixelScale);
+        TextOptions options = CreateTextOptions(nativeFont, widthPixels, format);
 
         FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
 
-        // Approximate charsFitted and linesFilled from the measured bounds
+        // Approximate linesFilled from the measured bounds (in pixels)
         float lineHeight = nativeFont.Size * DpiY / 72f *
                            (nativeFont.FontMetrics.HorizontalMetrics.LineHeight / (float)nativeFont.FontMetrics.UnitsPerEm);
         linesFilled = Math.Max(1, (int)(bounds.Height / lineHeight));
 
-        // charsFitted: approximate based on how much text fits in proposedSize
-        if (bounds.Width <= proposedSize.Width && bounds.Height <= proposedSize.Height)
+        // charsFitted: approximate based on how much text fits
+        float proposedWidthPx = proposedSize.Width * pixelScale;
+        float proposedHeightPx = proposedSize.Height * pixelScale;
+        if (bounds.Width <= proposedWidthPx && bounds.Height <= proposedHeightPx)
         {
             charsFitted = text.Length;
         }
         else
         {
-            // Binary search for charsFitted
-            charsFitted = EstimateCharsFitted(text, nativeFont, proposedSize, format);
+            // Binary search for charsFitted (using pixel-space proposed size)
+            charsFitted = EstimateCharsFitted(text, nativeFont,
+                new GraphicsSizeF(proposedWidthPx, proposedHeightPx), format);
         }
 
-        return new GraphicsSizeF(bounds.Width, bounds.Height);
+        // Return in hundredths
+        float outScale = 100f / DpiX;
+        return new GraphicsSizeF(bounds.Width * outScale, bounds.Height * outScale);
     }
 
     public void DrawString(string text, IGraphicsFont font, IGraphicsBrush brush, float x, float y,
