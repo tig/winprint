@@ -14,7 +14,8 @@ namespace WinPrint.TUI;
 public static class ViewCatalog
 {
     /// <summary>The names of every catalogued view, for help text and discovery.</summary>
-    public static IReadOnlyList<string> Names { get; } = ["margin", "header", "footer", "font", "fonts"];
+    public static IReadOnlyList<string> Names { get; } =
+        ["margin", "header", "footer", "font", "fonts", "sheet"];
 
     /// <summary>Creates the named view populated with a representative sample value.</summary>
     /// <param name="name">A name from <see cref="Names" />.</param>
@@ -38,8 +39,21 @@ public static class ViewCatalog
                 Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
             },
             "fonts" => new FontsEditor(),
+            "sheet" => CreateSheetPicker(),
             _ => throw new ArgumentException(
                 $"Unknown view '{name}'. Known views: {string.Join(", ", Names)}.", nameof(name))
         };
+    }
+
+    private static SheetPicker CreateSheetPicker()
+    {
+        // Sample predefined sheets mirroring the defaults in Settings.CreateDefaultSettings.
+        SheetSettings[] sheets =
+        [
+            new() { Name = "Default 1-Up", Columns = 1, Rows = 1, Landscape = false },
+            new() { Name = "Default 2-Up", Columns = 2, Rows = 1, Landscape = true }
+        ];
+
+        return new SheetPicker(sheets) { Value = sheets[0] };
     }
 }
