@@ -31,7 +31,9 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
     /// <summary>Creates a multiple-pages-up editor.</summary>
     public MultiPageEditor()
     {
-        Width = Dim.Fill();
+        // Auto width: this editor's widest row (Padding + Page Separator) is the broadest content in
+        // the settings panel, so it anchors the panel's Dim.Auto width; the other editors Dim.Fill to it.
+        Width = Dim.Auto(DimAutoStyle.Content);
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
         SuperViewRendersLineCanvas = true;

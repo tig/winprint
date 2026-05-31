@@ -24,8 +24,9 @@ public sealed class SettingsPanel : View
     /// </param>
     public SettingsPanel(string? version = null)
     {
-        // Auto width: the panel sizes to its widest editor; each editor is itself auto-width.
-        Width = Dim.Fill();
+        // Auto width: the panel hugs its natural width, anchored by the widest editor (MultiPageEditor's
+        // Padding + Page Separator row); the other editors Dim.Fill to match.
+        Width = Dim.Auto(DimAutoStyle.Content);
         Height = Dim.Auto(DimAutoStyle.Content);
 
         SheetSettings[] sheets =
