@@ -25,7 +25,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
     private const int MaxPage = 9999;
 
     // Width of the left-hand label column, so Printer/Paper/From/To align like the other editors.
-    private const int LabelWidth = 9;
+    private const int LabelWidth = EditorMetrics.LabelWidth;
 
     private readonly DropDownList _printer;
     private readonly ObservableCollection<string> _printers;
@@ -51,7 +51,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             X = LabelWidth,
             Y = 0,
-            Width = Dim.Fill(),
+            Width = EditorMetrics.FieldWidth,
             Source = new ListWrapper<string>(_printers)
         };
 
@@ -61,7 +61,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             X = LabelWidth,
             Y = 1,
-            Width = Dim.Fill(),
+            Width = EditorMetrics.FieldWidth,
             Source = new ListWrapper<string>(_papers)
         };
 

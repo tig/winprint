@@ -41,7 +41,7 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         {
             X = Pos.Right(_enabled) + 1,
             Y = 0,
-            Width = Dim.Fill()
+            Width = EditorMetrics.FieldWidth
         };
 
         _enabled.ValueChanged += (_, _) => PushFromChildren();

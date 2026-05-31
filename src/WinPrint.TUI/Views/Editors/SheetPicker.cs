@@ -36,9 +36,9 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
 
         _sheet = new DropDownList
         {
-            X = 0,
+            X = EditorMetrics.LabelWidth,
             Y = 0,
-            Width = Dim.Fill(),
+            Width = EditorMetrics.FieldWidth,
             Source = new ListWrapper<string>(
                 new ObservableCollection<string>(_sheets.Select(s => s.Name ?? string.Empty)))
         };

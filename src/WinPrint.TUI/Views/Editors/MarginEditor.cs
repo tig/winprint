@@ -30,6 +30,8 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
     /// <summary>Creates a margins editor.</summary>
     public MarginEditor()
     {
+        // The diamond layout uses Pos.Center/Pos.AnchorEnd, which need a definite width; use the shared
+        // content width so this editor lines up with the auto-sized ones when stacked.
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
@@ -41,15 +43,18 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
         _right = new SizeEditor("Right:", Constraint);
         _bottom = new SizeEditor("Bottom:", Constraint);
 
-        // Diamond arrangement: Top centered on row 0, Left/Right facing each other on row 1,
-        // Bottom centered on row 2.
+        // Diamond arrangement: Top centered on row 0, Left/Right on row 1, Bottom centered on row 2.
+        // Left/Right share a Pos.Align group with Alignment.Fill, which places the first item at the
+        // start and the last at the end and tracks the width — so they spread to the two edges and grow
+        // with the editor instead of being pinned by an absolute X/AnchorEnd.
         _top.X = Pos.Center();
         _top.Y = 0;
 
-        _left.X = 0;
+        const int leftRightGroup = 1;
+        _left.X = Pos.Align(Alignment.Fill, AlignmentModes.StartToEnd, leftRightGroup);
         _left.Y = Pos.Bottom(_top);
 
-        _right.X = Pos.AnchorEnd();
+        _right.X = Pos.Align(Alignment.Fill, AlignmentModes.StartToEnd, leftRightGroup);
         _right.Y = Pos.Top(_left);
 
         _bottom.X = Pos.Center();

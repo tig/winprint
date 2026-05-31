@@ -29,6 +29,7 @@ public sealed class FontEditor : EditorBase<Font>
     /// <param name="title">Bordered title; the underscore marks the hotkey (e.g. <c>_Font</c>).</param>
     public FontEditor(string title = "_Font")
     {
+        // Auto width so the editor sizes to its content; the panel picks the widest editor.
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
@@ -39,19 +40,20 @@ public sealed class FontEditor : EditorBase<Font>
         var familyLabel = new Label { X = 0, Y = 0, Text = "Family:" };
         _family = new DropDownList
         {
-            X = Pos.Right(familyLabel) + 1,
+            X = EditorMetrics.LabelWidth,
             Y = 0,
-            Width = Dim.Fill(20),
+            Width = EditorMetrics.FieldWidth,
             Source = new ListWrapper<string>(_families)
         };
 
+        // Family and size on their own rows so the editor stays narrow.
         _sizes = new ObservableCollection<string>(FontChoices.Sizes.Select(FormatSize));
-        var sizeLabel = new Label { X = Pos.Right(_family) + 1, Y = 0, Text = "Size (pt):" };
+        var sizeLabel = new Label { X = 0, Y = 1, Text = "Size (pt):" };
         _size = new DropDownList
         {
-            X = Pos.Right(sizeLabel) + 1,
-            Y = 0,
-            Width = Dim.Fill(),
+            X = EditorMetrics.LabelWidth,
+            Y = 1,
+            Width = EditorMetrics.SizeFieldWidth,
             Source = new ListWrapper<string>(_sizes)
         };
 

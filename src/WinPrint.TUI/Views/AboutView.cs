@@ -39,7 +39,7 @@ public sealed class AboutView : View
 
         var versionLabel = new Label
         {
-            X = Pos.AnchorEnd(),
+            X = Pos.Right(help) + 3,
             Y = 0,
             Text = $"v{version ?? ProductVersion()}"
         };

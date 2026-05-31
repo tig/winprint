@@ -24,6 +24,7 @@ public sealed class SettingsPanel : View
     /// </param>
     public SettingsPanel(string? version = null)
     {
+        // Auto width: the panel sizes to its widest editor; each editor is itself auto-width.
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
 
