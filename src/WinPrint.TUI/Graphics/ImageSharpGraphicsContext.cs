@@ -241,14 +241,44 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         Color color = GetColor(brush);
         RectangleF transformed = TransformRect(rect.X, rect.Y, rect.Width, rect.Height);
 
-        RichTextOptions options = CreateTextOptions(nativeFont, (int)transformed.Width, format);
-        options.Origin = new PointF(transformed.X, transformed.Y);
+        // Don't pass wrapping width for NoWrap
+        int? wrapWidth = null;
+        if (format is null || (format.FormatFlags & GraphicsStringFormatFlags.NoWrap) == 0)
+        {
+            wrapWidth = (int)transformed.Width;
+        }
+
+        RichTextOptions options = CreateTextOptions(nativeFont, wrapWidth, format);
+
+        // ImageSharp alignment is relative to Origin, not within a bounding box.
+        // We must adjust the origin so that alignment works as System.Drawing does with a rect:
+        //   Near  → left/top edge of rect
+        //   Center → center of rect
+        //   Far   → right/bottom edge of rect
+        float originX = transformed.X;
+        float originY = transformed.Y;
 
         if (format is not null)
         {
             options.HorizontalAlignment = ToHorizontalAlignment(format.Alignment);
             options.VerticalAlignment = ToVerticalAlignment(format.LineAlignment);
+
+            originX = format.Alignment switch
+            {
+                GraphicsTextAlignment.Center => transformed.X + transformed.Width / 2f,
+                GraphicsTextAlignment.Far => transformed.X + transformed.Width,
+                _ => transformed.X
+            };
+
+            originY = format.LineAlignment switch
+            {
+                GraphicsTextAlignment.Center => transformed.Y + transformed.Height / 2f,
+                GraphicsTextAlignment.Far => transformed.Y + transformed.Height,
+                _ => transformed.Y
+            };
         }
+
+        options.Origin = new PointF(originX, originY);
 
         _image.Mutate(ctx => ctx.DrawText(options, text, color));
     }

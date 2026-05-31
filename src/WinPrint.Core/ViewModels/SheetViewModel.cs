@@ -1036,7 +1036,11 @@ public class SheetViewModel : ViewModelBase
 
         return h;
 #else
-        return font?.Size ?? 8F;
+        // Cross-platform approximation: convert point size to hundredths of inch at 100 DPI
+        // matching System.Drawing.Font.GetHeight(100) behavior.
+        // Formula: pointSize * 100 / 72 * lineSpacingRatio (≈1.2 for most fonts)
+        float pointSize = font?.Size ?? 8F;
+        return pointSize * 100f / 72f * 1.2f;
 #endif
     }
 
