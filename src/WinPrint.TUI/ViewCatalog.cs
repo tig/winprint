@@ -45,10 +45,7 @@ public static class ViewCatalog
             {
                 Value = new SheetSettings { Columns = 2, Rows = 1, Padding = 3, PageSeparator = false }
             },
-            "printer" => new PrinterEditor
-            {
-                Value = new PrintPageSetup { PrinterName = "Microsoft Print to PDF", PaperSizeName = "Letter" }
-            },
+            "printer" => CreatePrinterEditor(),
             "about" => new AboutView(),
             _ => throw new ArgumentException(
                 $"Unknown view '{name}'. Known views: {string.Join(", ", Names)}.", nameof(name))
@@ -65,5 +62,15 @@ public static class ViewCatalog
         ];
 
         return new SheetPicker(sheets) { Value = sheets[0] };
+    }
+
+    private static PrinterEditor CreatePrinterEditor()
+    {
+        var editor = new PrinterEditor
+        {
+            Value = new PrintPageSetup { PrinterName = "Microsoft Print to PDF", PaperSizeName = "Letter" }
+        };
+        editor.SetRange(new PageRange { From = 1, To = 0 });
+        return editor;
     }
 }
