@@ -82,6 +82,9 @@ static int RunInteractive(string viewName, int width, int height)
     View content = ViewCatalog.Create(viewName);
 
     using IApplication app = Application.Create();
+    // FullScreen + ANSI driver mirrors the headless dump path (which lays the panel out correctly);
+    // without FullScreen the app uses inline mode and the Dim.Auto panel collapses.
+    app.AppModel = AppModel.FullScreen;
     app.Init(DriverRegistry.Names.ANSI);
 
     if (width > 0 && height > 0)
