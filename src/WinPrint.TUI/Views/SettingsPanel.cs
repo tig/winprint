@@ -152,7 +152,9 @@ public sealed class SettingsPanel : View
             Pages.Value = sheet;
             HeaderFooterFont.Value = sheet.Header.Font ?? new Font();
             ContentFont.Value = (sheet.ContentSettings ??= new ContentSettings()).Font;
-            Printer.Value = _context.App.CurrentPageSetup;
+            PrintPageSetup setup = _context.App.CurrentPageSetup;
+            Printer.Value = setup;
+            Printer.SetRange(new PageRange { From = setup.FromSheet > 0 ? setup.FromSheet : 1, To = setup.ToSheet });
         }
         finally
         {

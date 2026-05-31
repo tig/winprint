@@ -27,12 +27,32 @@ public sealed class SettingsContext
     /// <summary>The currently selected sheet model.</summary>
     public SheetSettings? CurrentSheet => App.CurrentSheet;
 
+    /// <summary>The file argument from the command line, if any (set when created with options).</summary>
+    public string? File { get; private set; }
+
     /// <summary>Creates a context over the real loaded settings (falling back to defaults).</summary>
     public static SettingsContext Create()
     {
+        return Create(null);
+    }
+
+    /// <summary>
+    ///     Creates a context over the real loaded settings and applies command-line
+    ///     <paramref name="options" /> (sheet, orientation, printer, paper size, print range, file)
+    ///     through the same <see cref="AppViewModel.ApplyOptions" /> path WinForms/MAUI use.
+    /// </summary>
+    public static SettingsContext Create(Options? options)
+    {
         var app = new AppViewModel(new PrintPageSetup());
         app.LoadSheets();
-        return new SettingsContext(app);
+
+        var context = new SettingsContext(app);
+        if (options is not null)
+        {
+            context.File = app.ApplyOptions(options);
+        }
+
+        return context;
     }
 
     /// <summary>Selects a sheet by its settings key/name (drives the SheetPicker).</summary>

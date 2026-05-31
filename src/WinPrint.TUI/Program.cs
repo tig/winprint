@@ -12,12 +12,15 @@
 // and capture a full-fidelity .cast/GIF. The full command line (bare-args => help,
 // file/glob printing, --tui, --gui) is built in a later step.
 
+using CommandLine;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using WinPrint.Core.Models;
 using WinPrint.TUI;
+using WinPrint.TUI.Views;
 
 if (args.Length == 0)
 {
@@ -51,15 +54,43 @@ try
         }
 
         default:
-            Console.Error.WriteLine($"Unknown command '{args[0]}'.");
-            PrintUsage();
-            return 2;
+            // Anything else is a real winprint command line (options + file). Parse it and open the
+            // TUI with those settings applied — the same Options the WinForms/CLI front ends use.
+            return RunFromOptions(args);
     }
 }
 catch (ArgumentException ex)
 {
     Console.Error.WriteLine(ex.Message);
     return 2;
+}
+
+// Parses winprint Options from the command line, builds a settings context with them applied, and
+// launches the main view so every specified setting (sheet, orientation, printer, paper size, print
+// range, file) flows through to the TUI.
+static int RunFromOptions(string[] args)
+{
+    Options? parsed = null;
+    var parseFailed = false;
+
+    using var parser = new Parser(settings =>
+    {
+        settings.AutoHelp = true;
+        settings.AutoVersion = false;
+        settings.HelpWriter = Console.Error;
+    });
+
+    parser.ParseArguments<Options>(args)
+        .WithParsed(o => parsed = o)
+        .WithNotParsed(_ => parseFailed = true);
+
+    if (parseFailed || parsed is null)
+    {
+        return 2;
+    }
+
+    var context = SettingsContext.Create(parsed);
+    return RunView(new MainView(context: context));
 }
 
 static (string view, int width, int height) ParseViewArgs(string[] args, int defaultWidth, int defaultHeight)
@@ -80,8 +111,13 @@ static (string view, int width, int height) ParseViewArgs(string[] args, int def
 // given, the screen is fixed (useful for a deterministic recording size).
 static int RunInteractive(string viewName, int width, int height)
 {
-    View content = ViewCatalog.Create(viewName);
+    return RunView(ViewCatalog.Create(viewName), width, height);
+}
 
+// Hosts a view in the real Terminal.Gui run loop. When width/height are 0 the driver uses the actual
+// terminal size; when given, the screen is fixed (a deterministic recording size for tuirec).
+static int RunView(View content, int width = 0, int height = 0)
+{
     using IApplication app = Application.Create();
     // FullScreen + ANSI driver mirrors the headless dump path (which lays the panel out correctly);
     // without FullScreen the app uses inline mode and the Dim.Auto panel collapses.

@@ -21,4 +21,10 @@ public sealed class PrintPageSetup
 
     /// <summary>Vertical DPI.</summary>
     public int DpiY { get; set; } = 300;
+
+    /// <summary>First sheet to print (1-based); <c>0</c> means "from the first".</summary>
+    public int FromSheet { get; set; }
+
+    /// <summary>Last sheet to print; <c>0</c> means "through the last".</summary>
+    public int ToSheet { get; set; }
 }

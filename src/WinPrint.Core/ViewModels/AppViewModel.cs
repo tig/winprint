@@ -621,12 +621,25 @@ public sealed class AppViewModel : INotifyPropertyChanged
                 (availablePrinters == null || availablePrinters.Contains(options.Printer)))
             {
                 SelectedPrinter = options.Printer;
+                _pageSetup.PrinterName = options.Printer;
             }
 
             if (!string.IsNullOrEmpty(options.PaperSize) &&
                 (availablePaperSizes == null || availablePaperSizes.Contains(options.PaperSize)))
             {
                 SelectedPaperSize = options.PaperSize;
+                _pageSetup.PaperSizeName = options.PaperSize;
+            }
+
+            // --from-sheet / --to-sheet print range (0 = default/all).
+            if (options.FromPage > 0)
+            {
+                _pageSetup.FromSheet = options.FromPage;
+            }
+
+            if (options.ToPage > 0)
+            {
+                _pageSetup.ToSheet = options.ToPage;
             }
         }
         finally
