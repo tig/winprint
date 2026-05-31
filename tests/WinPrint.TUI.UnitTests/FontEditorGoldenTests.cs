@@ -18,7 +18,7 @@ public class FontEditorGoldenTests
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 60, height: 5);
+        var fixture = new AppFixture(editor, width: 60, height: 6);
 
         GridSnapshot.Verify(fixture.Screen, "font-editor");
     }
@@ -30,7 +30,7 @@ public class FontEditorGoldenTests
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 60, height: 5);
+        var fixture = new AppFixture(editor, width: 60, height: 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Source Code Pro");
         DriverAssert.ContainsText(fixture.Screen, "10");
@@ -45,7 +45,7 @@ public class FontEditorGoldenTests
         {
             Value = new Font { Family = "Wingdings Deluxe", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 60, height: 5);
+        var fixture = new AppFixture(editor, width: 60, height: 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Wingdings Deluxe");
     }
