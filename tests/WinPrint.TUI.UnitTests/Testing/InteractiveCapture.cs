@@ -86,18 +86,13 @@ public static class InteractiveCapture
                 return;
             }
 
-            // Focus the editor first; let that settle a frame before typing. Container views (e.g. the
-            // bordered HeaderFooterEditor group) default to CanFocus=false, which makes focus navigation
-            // skip their subviews — so enable focus up the chain from the editor to the host.
+            // Focus the editor first; let that settle a frame before typing. (The editor's container
+            // must be a focusable View for this to take — see EditorBase; if that regresses, SetFocus
+            // fails, the popup never opens, and the autocomplete golden test catches it.)
             if (target is null)
             {
                 target = FindEditor(content)
                          ?? throw new InvalidOperationException("No Editor found in the view tree to capture.");
-
-                for (View? v = target; v is not null && v != window; v = v.SuperView)
-                {
-                    v.CanFocus = true;
-                }
 
                 target.SetFocus();
                 return;

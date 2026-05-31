@@ -17,6 +17,9 @@ public sealed class FontsEditor : View
     {
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
+        // Focusable container so focus descends into the two child FontEditors (a non-focusable View
+        // would have its subviews skipped by Terminal.Gui's focus navigation).
+        CanFocus = true;
 
         HeaderFooterFont = new FontEditor("Header/Footer")
         {

@@ -20,6 +20,16 @@ public abstract class EditorBase<TValue> : View, IValue<TValue>
 {
     private TValue? _value;
 
+    /// <summary>Initializes the editor as a focusable container so its child controls are keyboard-reachable.</summary>
+    protected EditorBase()
+    {
+        // A View defaults to CanFocus=false, and Terminal.Gui's focus navigation skips a
+        // non-focusable container *and all of its subviews* — so the inner controls (spinners, text
+        // fields, the header/footer format editor with its macro autocomplete) would be unreachable
+        // by keyboard. Mark the container focusable so Tab/focus descends into the child controls.
+        CanFocus = true;
+    }
+
     /// <inheritdoc />
     public TValue? Value
     {
