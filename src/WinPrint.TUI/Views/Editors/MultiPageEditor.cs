@@ -47,17 +47,17 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
         };
         _columns.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinCount, MaxCount);
 
-        var rowsLabel = new Label { X = 0, Y = Pos.Bottom(columnsLabel), Text = "Rows:   " };
+        var rowsLabel = new Label { X = Pos.Right(_columns) + 2, Y = 0, Text = "Rows:" };
         _rows = new NumericUpDown<int>
         {
             X = Pos.Right(rowsLabel) + 1,
-            Y = Pos.Top(rowsLabel),
+            Y = 0,
             Increment = 1,
             Value = MinCount
         };
         _rows.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinCount, MaxCount);
 
-        var paddingLabel = new Label { X = 0, Y = Pos.Bottom(rowsLabel), Text = "Padding:" };
+        var paddingLabel = new Label { X = 0, Y = Pos.Bottom(columnsLabel), Text = "Padding:" };
         _padding = new NumericUpDown<decimal>
         {
             X = Pos.Right(paddingLabel) + 1,
