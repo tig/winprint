@@ -16,7 +16,7 @@ public static class ViewCatalog
 {
     /// <summary>The names of every catalogued view, for help text and discovery.</summary>
     public static IReadOnlyList<string> Names { get; } =
-        ["margin", "header", "footer", "font", "fonts", "sheet", "pages", "printer", "about"];
+        ["margin", "header", "footer", "font", "fonts", "sheet", "pages", "printer", "about", "settings"];
 
     /// <summary>Creates the named view populated with a representative sample value.</summary>
     /// <param name="name">A name from <see cref="Names" />.</param>
@@ -47,6 +47,7 @@ public static class ViewCatalog
             },
             "printer" => CreatePrinterEditor(),
             "about" => new AboutView(),
+            "settings" => new SettingsPanel(),
             _ => throw new ArgumentException(
                 $"Unknown view '{name}'. Known views: {string.Join(", ", Names)}.", nameof(name))
         };

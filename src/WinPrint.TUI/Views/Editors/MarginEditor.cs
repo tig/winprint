@@ -33,6 +33,7 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
+        SuperViewRendersLineCanvas = true;
         Title = "_Margins";
 
         _top = new SizeEditor("Top:", Constraint);

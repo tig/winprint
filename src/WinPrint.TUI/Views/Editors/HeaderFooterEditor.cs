@@ -28,6 +28,7 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
         BorderStyle = LineStyle.Single;
+        SuperViewRendersLineCanvas = true;
         Title = title;
 
         _enabled = new CheckBox
