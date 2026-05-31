@@ -21,6 +21,9 @@ public sealed class MainView : View
     {
         Width = Dim.Fill();
         Height = Dim.Fill();
+        // Focusable container: a non-focusable View has its whole subtree skipped by Terminal.Gui's
+        // focus navigation, which would leave every editor (settings rail, header/footer) unreachable.
+        CanFocus = true;
 
         // Left column fills the full height; its content sets the natural width.
         Settings = new SettingsPanel(version, fillHeight: true) { X = 0, Y = 0 };

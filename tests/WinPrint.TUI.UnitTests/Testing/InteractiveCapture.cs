@@ -122,6 +122,58 @@ public static class InteractiveCapture
         }
     }
 
+    /// <summary>
+    ///     Hosts <paramref name="content" /> in the run loop and reports whether the inner
+    ///     <see cref="Editor" /> can take keyboard focus — i.e. every container on the path from the host
+    ///     down to the editor is focusable. Terminal.Gui skips a non-focusable container and its whole
+    ///     subtree, so this fails if any link in the chain has <c>CanFocus = false</c>.
+    /// </summary>
+    public static bool CanFocusInnerEditor(View content, int width, int height)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+
+        using IApplication app = Application.Create();
+        app.AppModel = AppModel.FullScreen;
+        app.Init(DriverRegistry.Names.ANSI);
+        app.Driver!.SetScreenSize(width, height);
+
+        var window = new Window
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            BorderStyle = LineStyle.None
+        };
+        window.Add(content);
+
+        var iterations = 0;
+        var focused = false;
+
+        app.Iteration += OnIteration;
+        app.Run(window);
+        app.Iteration -= OnIteration;
+
+        return focused;
+
+        void OnIteration(object? sender, EventArgs<IApplication?> e)
+        {
+            iterations++;
+            if (iterations < 3)
+            {
+                return;
+            }
+
+            if (FindEditor(content) is { } editor)
+            {
+                editor.SetFocus();
+                focused = editor.HasFocus;
+            }
+
+            app.RequestStop();
+        }
+    }
+
     // Depth-first search for the first Editor in the view tree (the format field, here).
     private static Editor? FindEditor(View view)
     {

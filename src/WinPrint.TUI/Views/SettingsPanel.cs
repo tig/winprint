@@ -37,6 +37,9 @@ public sealed class SettingsPanel : View
         // a single anchor editor, drives the width — robust to any one editor's content shrinking.
         Width = Dim.Auto(DimAutoStyle.Content, Dim.Absolute(MinContentWidth));
         Height = fillHeight ? Dim.Fill() : Dim.Auto(DimAutoStyle.Content);
+        // Focusable container so focus descends into the stacked editors (a non-focusable View has its
+        // whole subtree skipped by Terminal.Gui's focus navigation).
+        CanFocus = true;
 
         SheetSettings[] sheets =
         [
