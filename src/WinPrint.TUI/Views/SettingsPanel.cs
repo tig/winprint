@@ -22,12 +22,13 @@ public sealed class SettingsPanel : View
     ///     Version text for the About footer (without the leading <c>v</c>). Defaults to the runtime
     ///     product version; pass a fixed value for deterministic rendering (e.g. golden tests).
     /// </param>
-    public SettingsPanel(string? version = null)
+    public SettingsPanel(string? version = null, bool fillHeight = false)
     {
         // Auto width: the panel hugs its natural width, anchored by the widest editor (MultiPageEditor's
-        // Padding + Page Separator row); the other editors Dim.Fill to match.
+        // Padding + Page Separator row); the other editors Dim.Fill to match. Height is Auto when shown
+        // alone (hugs its content), or Fill when it's the left column of MainView (spans full height).
         Width = Dim.Auto(DimAutoStyle.Content);
-        Height = Dim.Auto(DimAutoStyle.Content);
+        Height = fillHeight ? Dim.Fill() : Dim.Auto(DimAutoStyle.Content);
 
         SheetSettings[] sheets =
         [
@@ -60,7 +61,13 @@ public sealed class SettingsPanel : View
 
         About = new AboutView(version);
 
-        StackJoined(Sheet, Margins, Pages, HeaderFooterFont, ContentFont, Printer, About);
+        // Stack Sheet…Printer from the top; when the panel fills extra height, anchor About to the
+        // bottom (matching the WinForms left column, where the About footer docks to the bottom).
+        StackJoined(Sheet, Margins, Pages, HeaderFooterFont, ContentFont, Printer);
+
+        About.X = 0;
+        About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
+        Add(About);
     }
 
     /// <summary>The predefined-sheet picker.</summary>

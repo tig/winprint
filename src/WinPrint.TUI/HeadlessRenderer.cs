@@ -1,4 +1,5 @@
 using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -38,12 +39,14 @@ public static class HeadlessRenderer
         app.Init(DriverRegistry.Names.ANSI);
         app.Driver!.SetScreenSize(width, height);
 
+        // Host content edge-to-edge with no outer chrome — the editor views carry their own borders.
         var window = new Window
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill()
+            Height = Dim.Fill(),
+            BorderStyle = LineStyle.None
         };
         window.Add(content);
 
