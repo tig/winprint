@@ -42,7 +42,7 @@ public sealed class FontEditor : EditorBase<Font>
         {
             X = EditorMetrics.LabelWidth,
             Y = 0,
-            Width = EditorMetrics.FieldWidth,
+            Width = Dim.Fill(),
             Source = new ListWrapper<string>(_families)
         };
 

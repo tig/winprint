@@ -1,6 +1,6 @@
 ┌──────────────────────────────────────────────────┐
 │┌┤Sheet├──────────────────────────┐               │
-││          Default 1-Up           │               │
+││          Default 1-Up          ▼│               │
 │├┼Margins┼────────────────────────┤               │
 ││           Top: ▼0.50▲           │               │
 ││Left: ▼0.75▲        Right: ▼1.00▲│               │
@@ -9,14 +9,14 @@
 ││Columns: ▼2▲  Rows: ▼1▲          │               │
 ││Padding: ▼0.03▲  ☐ Page Separator│               │
 │├┼Header/Footer Font┼─────────────┤               │
-││Family:   Source Code Pro        │               │
+││Family:   Source Code Pro       ▼│               │
 ││Size (pt):8    ▼                 │               │
 │├┼Content Font┼───────────────────┤               │
-││Family:   Source Code Pro        │               │
+││Family:   Source Code Pro       ▼│               │
 ││Size (pt):10   ▼                 │               │
 │├┼Printer┼────────────────────────┤               │
-││Printer:  Microsoft Print to PDF │               │
-││Paper:    Letter                 │               │
+││Printer:  Microsoft Print to PDF▼│               │
+││Paper:    Letter                ▼│               │
 ││Pages:    From ▼1▲  To ▼0▲       │               │
 │├┼About┼──────────────────────────┤               │
 ││Help & about…   v2.5.0           │               │

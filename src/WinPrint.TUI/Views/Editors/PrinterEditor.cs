@@ -51,7 +51,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             X = LabelWidth,
             Y = 0,
-            Width = EditorMetrics.FieldWidth,
+            Width = Dim.Fill(),
             Source = new ListWrapper<string>(_printers)
         };
 
@@ -61,7 +61,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             X = LabelWidth,
             Y = 1,
-            Width = EditorMetrics.FieldWidth,
+            Width = Dim.Fill(),
             Source = new ListWrapper<string>(_papers)
         };
 
