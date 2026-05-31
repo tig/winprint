@@ -65,23 +65,23 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
             Source = new ListWrapper<string>(_papers)
         };
 
-        var fromLabel = new Label { X = 0, Y = 2, Width = LabelWidth, Text = "From:" };
+        // "Pages" (printer-driver terminology): the From/To range the driver is told to print.
+        var pagesLabel = new Label { X = 0, Y = 2, Width = LabelWidth, Text = "Pages:" };
+        var fromLabel = new Label { X = LabelWidth, Y = 2, Text = "From" };
         _from = new NumericUpDown<int>
         {
-            X = LabelWidth,
+            X = Pos.Right(fromLabel) + 1,
             Y = 2,
-            Width = Dim.Fill(),
             Increment = 1,
             Value = MinFrom
         };
         _from.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinFrom, MaxPage);
 
-        var toLabel = new Label { X = 0, Y = 3, Width = LabelWidth, Text = "To:" };
+        var toLabel = new Label { X = Pos.Right(_from) + 2, Y = 2, Text = "To" };
         _to = new NumericUpDown<int>
         {
-            X = LabelWidth,
-            Y = 3,
-            Width = Dim.Fill(),
+            X = Pos.Right(toLabel) + 1,
+            Y = 2,
             Increment = 1,
             Value = 0
         };
@@ -93,7 +93,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         _from.ValueChanged += (_, _) => PushFromChildren();
         _to.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(printerLabel, _printer, paperLabel, _paper, fromLabel, _from, toLabel, _to);
+        Add(printerLabel, _printer, paperLabel, _paper, pagesLabel, fromLabel, _from, toLabel, _to);
     }
 
     /// <summary>The sheet range (From/To) being edited. Editing From/To mutates this instance.</summary>
