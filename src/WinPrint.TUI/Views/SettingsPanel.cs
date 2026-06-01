@@ -142,11 +142,24 @@ public sealed class SettingsPanel : View
         };
         HeaderFooterFont.ValueChanged += (_, _) =>
         {
-            /* font persists via the bound model */
+            if (!_seeding && HeaderFooterFont.Value is { } font && _context?.CurrentSheet?.Header != null)
+            {
+                _context.CurrentSheet.Header.Font = font;
+                if (_context.CurrentSheet.Footer != null)
+                {
+                    _context.CurrentSheet.Footer.Font = font;
+                }
+
+                _ = app.ReflowAsync();
+            }
         };
         ContentFont.ValueChanged += (_, _) =>
         {
-            /* font persists via the bound model */
+            if (!_seeding && ContentFont.Value is { } font && _context?.CurrentSheet?.ContentSettings != null)
+            {
+                _context.CurrentSheet.ContentSettings.Font = font;
+                _ = app.ReflowAsync();
+            }
         };
 
         // File button → open-file dialog → load into the AppViewModel.

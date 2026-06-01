@@ -51,7 +51,24 @@ public sealed class PreviewPane : View
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            UseSixel = true
+            UseSixel = true,
+            CanFocus = true
+        };
+        // Route mouse and key events from the image to our handlers (ImageView fills the
+        // pane and holds focus, so PreviewPane's own overrides wouldn't fire otherwise).
+        Image.MouseEvent += (_, e) =>
+        {
+            if (OnMouseEvent(e))
+            {
+                e.Handled = true;
+            }
+        };
+        Image.KeyDown += (_, e) =>
+        {
+            if (OnKeyDown(e))
+            {
+                e.Handled = true;
+            }
         };
         Add(Image);
 

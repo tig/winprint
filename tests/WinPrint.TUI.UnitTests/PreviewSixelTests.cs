@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Reflection;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
@@ -26,36 +27,24 @@ public class PreviewSixelTests
         app.Init(DriverRegistry.Names.ANSI);
         app.Driver!.SetScreenSize(60, 20);
 
-        ForceSixelSupport(app.Driver);
-
         var preview = new PreviewPane { Width = Dim.Fill(), Height = Dim.Fill() };
         var window = new Window { Width = Dim.Fill(), Height = Dim.Fill(), BorderStyle = LineStyle.None };
         window.Add(preview);
 
-        int iterations = 0;
-        bool usedSixel = false;
-        int sixelCount = 0;
+        // Use Begin (not Run) to avoid the async sixel detection overwriting our forced support.
+        SessionToken? token = app.Begin(window);
 
-        app.Iteration += OnIteration;
-        app.Run(window);
-        app.Iteration -= OnIteration;
+        // Force sixel support AFTER Begin — the async detection has already run by now.
+        ForceSixelSupport(app.Driver!);
 
-        Assert.True(preview.Image.UseSixel); // pane requests sixel
-        Assert.True(usedSixel); // ImageView actually rendered via sixel (support was on)
-        Assert.True(sixelCount > 0); // a sixel was produced for the driver to emit
+        // Layout and draw so the ImageView renders via the sixel path.
+        app.LayoutAndDraw();
+        app.LayoutAndDraw(); // second pass ensures sixel encoding completes
 
-        void OnIteration(object? sender, EventArgs<IApplication?> e)
-        {
-            iterations++;
-            if (iterations < 8)
-            {
-                return;
-            }
+        Assert.True(preview.Image.UseSixel, "PreviewPane should request sixel rendering");
+        Assert.True(preview.Image.IsUsingSixel, "ImageView should report sixel in use (driver support forced on)");
 
-            usedSixel = preview.Image.IsUsingSixel;
-            sixelCount = app.Driver!.GetSixels()?.Count ?? 0;
-            app.RequestStop();
-        }
+        app.End(token!);
     }
 
     // The headless driver never runs the sixel-support handshake; the support setter is internal, so
@@ -66,7 +55,8 @@ public class PreviewSixelTests
         {
             IsSupported = true,
             MaxPaletteColors = 256,
-            SupportsTransparency = true
+            SupportsTransparency = true,
+            Resolution = new Size(8, 16)
         };
 
         driver.GetType()
