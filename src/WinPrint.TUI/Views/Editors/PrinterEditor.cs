@@ -114,6 +114,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
     {
         Range = range ?? new PageRange();
         RebindRange();
+        SyncRangeToValue();
     }
 
     private void RebindRange()
@@ -126,6 +127,16 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         _from.Value = Range.From;
         _to.Value = Range.To;
         SuppressChildEcho = wasSuppressing;
+    }
+
+    /// <summary>Propagates the current <see cref="Range"/> back to the bound <see cref="Value"/>.</summary>
+    private void SyncRangeToValue()
+    {
+        if (Value is not null)
+        {
+            Value.FromSheet = Range.From;
+            Value.ToSheet = Range.To;
+        }
     }
 
     // The range fields can change independently of Value, so guard their echo separately from the
@@ -148,6 +159,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
 
         Range.From = _from.Value;
         Range.To = _to.Value;
+        SyncRangeToValue();
     }
 
     // A bound printer/paper may not be in the offered list (e.g. set from a saved profile); add it so
