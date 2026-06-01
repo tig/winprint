@@ -27,24 +27,24 @@ public class SettingsPanelGoldenTests
         var fixture = new AppFixture(panel, width: 52, height: 24);
 
         string screen = fixture.Screen;
+        int file = screen.IndexOf("File", StringComparison.Ordinal);
         int sheet = screen.IndexOf("Sheet", StringComparison.Ordinal);
         int margins = screen.IndexOf("Margins", StringComparison.Ordinal);
         int pages = screen.IndexOf("Multiple Pages Up", StringComparison.Ordinal);
         int headerFooter = screen.IndexOf("Header/Footer Font", StringComparison.Ordinal);
         int content = screen.IndexOf("Content Font", StringComparison.Ordinal);
         int printer = screen.IndexOf("Printer", StringComparison.Ordinal);
-        int about = screen.IndexOf("About", StringComparison.Ordinal);
 
-        Assert.All(new[] { sheet, margins, pages, headerFooter, content, printer, about },
+        Assert.All(new[] { file, sheet, margins, pages, headerFooter, content, printer },
             index => Assert.True(index >= 0));
 
         // Sections appear top-to-bottom in the WinForms left-column order.
+        Assert.True(file < sheet);
         Assert.True(sheet < margins);
         Assert.True(margins < pages);
         Assert.True(pages < headerFooter);
         Assert.True(headerFooter < content);
         Assert.True(content < printer);
-        Assert.True(printer < about);
     }
 
     [Fact]

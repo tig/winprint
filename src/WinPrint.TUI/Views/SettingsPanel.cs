@@ -1,4 +1,5 @@
 using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.ViewModels;
@@ -72,9 +73,26 @@ public sealed class SettingsPanel : View
 
         About = new AboutView(version);
 
-        // Stack Sheet…Printer from the top; when the panel fills extra height, anchor About to the
-        // bottom (matching the WinForms left column, where the About footer docks to the bottom).
-        StackJoined(Sheet, Margins, Pages, HeaderFooterFont, ContentFont, Printer);
+        // File and Print action buttons above the editors (mirrors MAUI/WinForms toolbar).
+        FileButton = new Button { Text = "_File...", Width = Dim.Percent(50) };
+        PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton), Width = Dim.Percent(50) };
+        var buttonRow = new View
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Auto(DimAutoStyle.Content)
+        };
+        buttonRow.Add(FileButton, PrintButton);
+
+        Add(buttonRow);
+
+        // Stack Sheet…Printer from the top below the button row; editors overlap by -1 for border
+        // merging but the first editor starts flush below the buttons (no border overlap needed).
+        Sheet.X = 0;
+        Sheet.Y = Pos.Bottom(buttonRow);
+        Add(Sheet);
+        StackJoinedAfter(Sheet, Margins, Pages, HeaderFooterFont, ContentFont, Printer);
 
         About.X = 0;
         About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
@@ -124,6 +142,33 @@ public sealed class SettingsPanel : View
         };
         HeaderFooterFont.ValueChanged += (_, _) => { /* font persists via the bound model */ };
         ContentFont.ValueChanged += (_, _) => { /* font persists via the bound model */ };
+
+        // File button → open-file dialog → load into the AppViewModel.
+        FileButton.Accepting += (_, _) =>
+        {
+            var dlg = new OpenDialog
+            {
+                Title = "Open File",
+                AllowsMultipleSelection = false
+            };
+            GetApp()!.Run(dlg);
+            if (!dlg.Canceled && dlg.FilePaths.Count > 0)
+            {
+                string file = dlg.FilePaths[0];
+                _ = app.LoadFileAsync(file);
+            }
+        };
+
+        // Print button → print the current document (mirrors WinForms DoPrint flow).
+        PrintButton.Accepting += (_, _) =>
+        {
+            if (string.IsNullOrEmpty(app.ActiveFile))
+            {
+                return;
+            }
+
+            // TODO: wire to a cross-platform print service once available
+        };
 
         // Sheet switch (VM) → re-seed every editor.
         app.SheetApplied += (_, _) => SeedFromCurrentSheet();
@@ -186,6 +231,12 @@ public sealed class SettingsPanel : View
     /// <summary>The about footer.</summary>
     public AboutView About { get; }
 
+    /// <summary>The File button (opens an open-file dialog).</summary>
+    public Button FileButton { get; }
+
+    /// <summary>The Print button (initiates print).</summary>
+    public Button PrintButton { get; }
+
     // Stack views top-to-bottom, overlapping each by one row so their borders merge via the shared
     // LineCanvas into one continuous frame.
     private void StackJoined(params View[] sections)
@@ -195,6 +246,20 @@ public sealed class SettingsPanel : View
         {
             section.X = 0;
             section.Y = previous is null ? 0 : Pos.Bottom(previous) - 1;
+            Add(section);
+            previous = section;
+        }
+    }
+
+    // Like StackJoined but the first item in the array is already positioned and added; subsequent
+    // items stack below it with the -1 border overlap.
+    private void StackJoinedAfter(View anchor, params View[] sections)
+    {
+        View previous = anchor;
+        foreach (View section in sections)
+        {
+            section.X = 0;
+            section.Y = Pos.Bottom(previous) - 1;
             Add(section);
             previous = section;
         }

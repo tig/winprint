@@ -25,9 +25,7 @@ public sealed class AboutView : View
     {
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
-        BorderStyle = LineStyle.Single;
         SuperViewRendersLineCanvas = true;
-        Title = "_About";
 
         var help = new Link
         {
