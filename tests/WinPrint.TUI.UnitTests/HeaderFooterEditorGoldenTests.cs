@@ -15,7 +15,7 @@ public class HeaderFooterEditorGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var editor = new HeaderFooterEditor()
+        var editor = new HeaderFooterEditor
         {
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
@@ -27,7 +27,7 @@ public class HeaderFooterEditorGoldenTests
     [Fact]
     public void Render_ShowsFormatText()
     {
-        var editor = new HeaderFooterEditor()
+        var editor = new HeaderFooterEditor
         {
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
@@ -41,7 +41,7 @@ public class HeaderFooterEditorGoldenTests
     public void PushFromChildren_WritesTextBackToModel()
     {
         var header = new Header { Enabled = true, Text = "{FileName}" };
-        var editor = new HeaderFooterEditor() { Value = header };
+        var editor = new HeaderFooterEditor { Value = header };
         _ = new AppFixture(editor, 50, 4);
 
         // The bound model is mutable and carries the edited text.

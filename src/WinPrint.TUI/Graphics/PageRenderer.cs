@@ -108,7 +108,7 @@ public sealed class PageRenderer
 
         // Create graphics context targeting the page region within the canvas
         var graphicsContext = new ImageSharpGraphicsContext(
-            image, Dpi, Dpi, _fontCollection, false);
+            image, Dpi, Dpi, _fontCollection);
 
         // Translate so PrintSheet draws at the page origin within the canvas
         graphicsContext.TranslateTransform(padding, padding);

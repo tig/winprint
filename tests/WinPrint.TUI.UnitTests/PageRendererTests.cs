@@ -238,8 +238,8 @@ public class PageRendererTests
         Assert.NotNull(measureCtx);
         // Should be able to create a font without throwing
         IGraphicsFont font = measureCtx.CreateFont("monospace", 10,
-            Core.Abstractions.GraphicsFontStyle.Regular,
-            Core.Abstractions.GraphicsFontUnit.Point);
+            GraphicsFontStyle.Regular,
+            GraphicsFontUnit.Point);
         Assert.NotNull(font);
     }
 }

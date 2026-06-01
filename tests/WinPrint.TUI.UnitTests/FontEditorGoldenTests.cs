@@ -14,7 +14,7 @@ public class FontEditorGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var editor = new FontEditor()
+        var editor = new FontEditor
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
@@ -26,7 +26,7 @@ public class FontEditorGoldenTests
     [Fact]
     public void Render_ShowsFamilyAndSize_NotStyle()
     {
-        var editor = new FontEditor()
+        var editor = new FontEditor
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
@@ -41,7 +41,7 @@ public class FontEditorGoldenTests
     public void OnValueChanged_AddsUnlistedFamilySoItDisplays()
     {
         // A family not in FontChoices is still shown (model family is free-form).
-        var editor = new FontEditor()
+        var editor = new FontEditor
         {
             Value = new Font { Family = "Wingdings Deluxe", Size = 10f, Style = FontStyle.Regular }
         };

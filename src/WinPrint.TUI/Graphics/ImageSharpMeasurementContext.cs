@@ -20,8 +20,7 @@ public sealed class ImageSharpMeasurementContext : IGraphicsContext, IDisposable
         _image = new Image<Rgba32>(1, 1);
         _inner = new ImageSharpGraphicsContext(
             _image, dpiX, dpiY,
-            fontCollection ?? FontCollectionFactory.GetCollection(),
-            false);
+            fontCollection ?? FontCollectionFactory.GetCollection());
     }
 
     public float DpiX => _inner.DpiX;

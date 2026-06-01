@@ -19,7 +19,7 @@ public class HeaderFooterAutocompleteGoldenTests
     [Fact]
     public void TypingMacroPrefix_OpensPopup_MatchesGolden()
     {
-        var editor = new HeaderFooterEditor()
+        var editor = new HeaderFooterEditor
         {
             Value = new Header { Enabled = true, Text = string.Empty }
         };
