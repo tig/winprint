@@ -12,7 +12,7 @@ public sealed class MacroSuggestionGeneratorTests
     private static AutocompleteContext CreateContext(string text, int cursorPos)
     {
         List<Cell> cells = [.. text.Select(c => new Cell { Grapheme = c.ToString() })];
-        return new AutocompleteContext(cells, cursorPos, false);
+        return new AutocompleteContext(cells, cursorPos);
     }
 
     [Fact]
