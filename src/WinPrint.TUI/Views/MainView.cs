@@ -76,6 +76,10 @@ public sealed class MainView : View
         Settings.Bind(context);
         WinPrint.Core.ViewModels.AppViewModel app = context.App;
 
+        // Suspend sixel rendering while any dialog is open (TG limitation: sixel overwrites the UI).
+        Settings.RunnableOpening += (_, _) => Preview.SuspendSixel();
+        Settings.RunnableClosed += (_, _) => Preview.ResumeSixel();
+
         // Seed header/footer editors from the current sheet and route edits through the VM mutators.
         SeedHeaderFooter(context);
 

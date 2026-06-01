@@ -146,12 +146,14 @@ public sealed class SettingsPanel : View
         // File button → open-file dialog → load into the AppViewModel.
         FileButton.Accepting += (_, _) =>
         {
+            RunnableOpening?.Invoke(this, EventArgs.Empty);
             var dlg = new OpenDialog
             {
                 Title = "Open File",
                 AllowsMultipleSelection = false
             };
             GetApp()!.Run(dlg);
+            RunnableClosed?.Invoke(this, EventArgs.Empty);
             if (!dlg.Canceled && dlg.FilePaths.Count > 0)
             {
                 string file = dlg.FilePaths[0];
@@ -167,7 +169,9 @@ public sealed class SettingsPanel : View
                 return;
             }
 
+            RunnableOpening?.Invoke(this, EventArgs.Empty);
             // TODO: wire to a cross-platform print service once available
+            RunnableClosed?.Invoke(this, EventArgs.Empty);
         };
 
         // Sheet switch (VM) → re-seed every editor.
@@ -236,6 +240,12 @@ public sealed class SettingsPanel : View
 
     /// <summary>The Print button (initiates print).</summary>
     public Button PrintButton { get; }
+
+    /// <summary>Raised before a dialog/runnable opens (suspend sixel rendering).</summary>
+    public event EventHandler? RunnableOpening;
+
+    /// <summary>Raised after a dialog/runnable closes (resume sixel rendering).</summary>
+    public event EventHandler? RunnableClosed;
 
     // Stack views top-to-bottom, overlapping each by one row so their borders merge via the shared
     // LineCanvas into one continuous frame.

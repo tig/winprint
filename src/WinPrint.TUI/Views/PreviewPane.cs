@@ -210,6 +210,22 @@ public sealed class PreviewPane : View
     /// <summary>Reset zoom to 100%.</summary>
     public void ZoomReset() => Zoom = 1.0f;
 
+    /// <summary>
+    ///     Suppresses sixel output. Call before running a dialog or any nested runnable to prevent
+    ///     sixel rendering from overwriting the UI. Pair with <see cref="ResumeSixel"/>.
+    /// </summary>
+    public void SuspendSixel()
+    {
+        Image.Visible = false;
+    }
+
+    /// <summary>Resumes sixel output after a dialog/runnable closes.</summary>
+    public void ResumeSixel()
+    {
+        Image.Visible = true;
+        SetNeedsLayout();
+    }
+
     private void RequestRender()
     {
         // Debounce: cancel any pending render and schedule a new one
