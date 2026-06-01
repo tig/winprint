@@ -1154,11 +1154,15 @@ public class SheetViewModel : ViewModelBase
                 }
             }
 
+            // Clip content to page boundaries (prevents text overflow in multi-column layouts)
+            g.SetClip(new GraphicsRectF(0, 0, w, h));
+
             if (ContentEngine != null)
             {
                 ContentEngine.PaintPage(g, pageOnSheet);
             }
 
+            g.ResetClip();
             g.TranslateTransform(-xPos, -yPos);
         }
     }

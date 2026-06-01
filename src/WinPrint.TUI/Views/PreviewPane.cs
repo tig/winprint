@@ -179,20 +179,20 @@ public sealed class PreviewPane : View
             return true;
         }
 
-        // Zoom: Ctrl+Plus / Ctrl+Minus / Ctrl+0 (reset)
-        if (key == ((Key)'+').WithCtrl || key == ((Key)'=').WithCtrl)
+        // Zoom: + / - / 0 (reset) — no modifier needed (terminal intercepts Ctrl+/-) 
+        if (key == (Key)'+' || key == (Key)'=')
         {
             ZoomIn();
             return true;
         }
 
-        if (key == ((Key)'-').WithCtrl)
+        if (key == (Key)'-')
         {
             ZoomOut();
             return true;
         }
 
-        if (key == Key.D0.WithCtrl)
+        if (key == Key.D0)
         {
             ZoomReset();
             return true;

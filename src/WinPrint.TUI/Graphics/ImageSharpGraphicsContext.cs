@@ -224,10 +224,27 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
             return;
         }
 
+        // If clipping is active, truncate text that would overflow the clip boundary
+        string textToRender = text;
+        if (_clip is not null)
+        {
+            float availableWidth = _clip.Value.Right - point.X;
+            if (availableWidth <= 0)
+            {
+                return;
+            }
+
+            textToRender = TruncateToWidth(text, nativeFont, availableWidth, format);
+            if (string.IsNullOrEmpty(textToRender))
+            {
+                return;
+            }
+        }
+
         RichTextOptions options = CreateTextOptions(nativeFont, format: format);
         options.Origin = point;
 
-        _image.Mutate(ctx => ctx.DrawText(options, text, color));
+        _image.Mutate(ctx => ctx.DrawText(options, textToRender, color));
     }
 
     public void DrawString(string text, IGraphicsFont font, IGraphicsBrush brush, GraphicsRectF rect,
@@ -345,6 +362,41 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         }
 
         return _clip.Value.Contains(point);
+    }
+
+    /// <summary>
+    ///     Truncates text to fit within the specified pixel width. Returns the longest prefix
+    ///     of <paramref name="text"/> that fits, or the full text if it already fits.
+    /// </summary>
+    private string TruncateToWidth(string text, Font font, float availableWidth, GraphicsStringFormat? format)
+    {
+        TextOptions options = CreateTextOptions(font, format: format);
+        FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
+        if (bounds.Width <= availableWidth)
+        {
+            return text;
+        }
+
+        // Binary search for the longest prefix that fits
+        int lo = 0;
+        int hi = text.Length;
+        int result = 0;
+        while (lo <= hi)
+        {
+            int mid = (lo + hi) / 2;
+            bounds = TextMeasurer.MeasureSize(text[..mid], options);
+            if (bounds.Width <= availableWidth)
+            {
+                result = mid;
+                lo = mid + 1;
+            }
+            else
+            {
+                hi = mid - 1;
+            }
+        }
+
+        return result > 0 ? text[..result] : "";
     }
 
     private static Font GetFont(IGraphicsFont font)
