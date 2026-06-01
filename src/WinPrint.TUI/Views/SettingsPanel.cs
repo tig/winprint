@@ -12,6 +12,19 @@ namespace WinPrint.TUI.Views;
 /// </summary>
 public sealed class SettingsPanel : FrameView
 {
+    /// <summary>Common monospace/print font families for the dropdown.</summary>
+    internal static readonly string[] FontFamilies =
+    [
+        "Consolas", "Courier New", "Cascadia Code", "Cascadia Mono",
+        "DejaVu Sans Mono", "Fira Code", "Inconsolata", "JetBrains Mono",
+        "Liberation Mono", "Lucida Console", "Menlo", "Monaco",
+        "SF Mono", "Source Code Pro", "Ubuntu Mono",
+        "Arial", "Calibri", "Cambria", "Segoe UI", "Times New Roman", "Verdana"
+    ];
+
+    /// <summary>Common font sizes for the dropdown.</summary>
+    internal static readonly float[] FontSizes = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24];
+
     private readonly Settings _settings;
     private SheetSettings _currentSheet;
 
@@ -226,48 +239,103 @@ public sealed class SettingsPanel : FrameView
         string hfFontFamily = _currentSheet.Header.Font?.Family ?? "Calibri";
         float hfFontSize = _currentSheet.Header.Font?.Size ?? 10f;
 
+        // Content font: family dropdown + size dropdown
         var cfLabel = new Label { X = 2, Y = bodyRow, Text = "Content:" };
         sectionBody.Add(cfLabel);
         bodyRow++;
 
-        var cfField = new TextField
+        var cfFamilyDrop = new DropDownList
         {
             X = 2,
             Y = bodyRow,
             Width = Dim.Fill(1),
-            Text = $"{contentFontFamily}, {contentFontSize}pt"
+            ReadOnly = true,
+            Source = new ListWrapper<string>(new ObservableCollection<string>(FontFamilies)),
+            Text = contentFontFamily
         };
-        cfField.TextChanged += (_, _) =>
+        cfFamilyDrop.Accepted += (_, _) =>
         {
-            if (_currentSheet.ContentSettings is not null)
+            if (_currentSheet.ContentSettings is not null && !string.IsNullOrEmpty(cfFamilyDrop.Text))
             {
-                ParseFontString(cfField.Text, _currentSheet.ContentSettings.Font);
+                _currentSheet.ContentSettings.Font.Family = cfFamilyDrop.Text;
                 RaiseChanged();
             }
         };
-        sectionBody.Add(cfField);
+        sectionBody.Add(cfFamilyDrop);
         bodyRow++;
 
+        string[] fontSizeLabels = [.. FontSizes.Select(s => $"{s}pt")];
+        var cfSizeDrop = new DropDownList
+        {
+            X = 2,
+            Y = bodyRow,
+            Width = 12,
+            ReadOnly = true,
+            Source = new ListWrapper<string>(new ObservableCollection<string>(fontSizeLabels)),
+            Text = $"{contentFontSize}pt"
+        };
+        cfSizeDrop.Accepted += (_, _) =>
+        {
+            int idx = Array.IndexOf(fontSizeLabels, cfSizeDrop.Text);
+            if (idx >= 0 && idx < FontSizes.Length && _currentSheet.ContentSettings is not null)
+            {
+                _currentSheet.ContentSettings.Font.Size = FontSizes[idx];
+                RaiseChanged();
+            }
+        };
+        sectionBody.Add(cfSizeDrop);
+        bodyRow += 2;
+
+        // Header/Footer font: family dropdown + size dropdown
         var hfLabel = new Label { X = 2, Y = bodyRow, Text = "H/F:" };
         sectionBody.Add(hfLabel);
         bodyRow++;
 
-        var hfField = new TextField
+        var hfFamilyDrop = new DropDownList
         {
             X = 2,
             Y = bodyRow,
             Width = Dim.Fill(1),
-            Text = $"{hfFontFamily}, {hfFontSize}pt"
+            ReadOnly = true,
+            Source = new ListWrapper<string>(new ObservableCollection<string>(FontFamilies)),
+            Text = hfFontFamily
         };
-        hfField.TextChanged += (_, _) =>
+        hfFamilyDrop.Accepted += (_, _) =>
         {
-            Font font = _currentSheet.Header.Font ?? new Font();
-            ParseFontString(hfField.Text, font);
-            _currentSheet.Header.Font = font;
-            _currentSheet.Footer.Font = (Font)font.Clone();
-            RaiseChanged();
+            if (!string.IsNullOrEmpty(hfFamilyDrop.Text))
+            {
+                Font font = _currentSheet.Header.Font ?? new Font();
+                font.Family = hfFamilyDrop.Text;
+                _currentSheet.Header.Font = font;
+                _currentSheet.Footer.Font = (Font)font.Clone();
+                RaiseChanged();
+            }
         };
-        sectionBody.Add(hfField);
+        sectionBody.Add(hfFamilyDrop);
+        bodyRow++;
+
+        var hfSizeDrop = new DropDownList
+        {
+            X = 2,
+            Y = bodyRow,
+            Width = 12,
+            ReadOnly = true,
+            Source = new ListWrapper<string>(new ObservableCollection<string>(fontSizeLabels)),
+            Text = $"{hfFontSize}pt"
+        };
+        hfSizeDrop.Accepted += (_, _) =>
+        {
+            int idx = Array.IndexOf(fontSizeLabels, hfSizeDrop.Text);
+            if (idx >= 0 && idx < FontSizes.Length)
+            {
+                Font font = _currentSheet.Header.Font ?? new Font();
+                font.Size = FontSizes[idx];
+                _currentSheet.Header.Font = font;
+                _currentSheet.Footer.Font = (Font)font.Clone();
+                RaiseChanged();
+            }
+        };
+        sectionBody.Add(hfSizeDrop);
         bodyRow += 2;
 
         // ─── Line Numbers ───
@@ -384,25 +452,6 @@ public sealed class SettingsPanel : FrameView
         field.ValueChanged += (_, args) => setter(args.NewValue);
         parent.Add(lbl, field);
         return row + 1;
-    }
-
-    private static void ParseFontString(string text, Font font)
-    {
-        // Expected format: "Family, Sizept" e.g. "Consolas, 8pt"
-        string[] parts = text.Split(',', StringSplitOptions.TrimEntries);
-        if (parts.Length >= 1 && !string.IsNullOrWhiteSpace(parts[0]))
-        {
-            font.Family = parts[0];
-        }
-
-        if (parts.Length >= 2)
-        {
-            string sizePart = parts[1].Replace("pt", "", StringComparison.OrdinalIgnoreCase).Trim();
-            if (float.TryParse(sizePart, out float size) && size > 0)
-            {
-                font.Size = size;
-            }
-        }
     }
 
     private void RaiseChanged()

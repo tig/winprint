@@ -65,7 +65,8 @@ This is the initial implementation (issue #68, phase 1):
   in phase 1.
 - **Printer/paper enumeration**: Uses text fields rather than dynamic enumeration
   (platform-specific printer discovery is a follow-up).
-- **Font selection**: Uses "Family, Sizept" text entry rather than a font picker dialog.
+- **Font selection**: Uses DropDownList controls for font family and size from a curated
+  list of common monospace and print fonts.
 
 ## Future work
 

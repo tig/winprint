@@ -5,11 +5,22 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     Thin bar (1 row) with a checkbox to enable/disable + editable text field
-///     for header or footer macros. Positioned above/below the preview panel.
+///     Thin bar (1 row) with a checkbox to enable/disable + editable TextField
+///     with autocomplete for header/footer macros.
+///     Positioned above/below the preview panel.
 /// </summary>
 public sealed class HeaderFooterBar : View
 {
+    /// <summary>Known macro names for autocomplete suggestions.</summary>
+    public static readonly string[] MacroNames =
+    [
+        "{FileName}", "{Title}", "{FileNameWithoutExtension}", "{FileExtension}",
+        "{FileDirectoryName}", "{FullPath}",
+        "{DatePrinted}", "{DateRevised}", "{DateCreated}",
+        "{Page}", "{NumPages}",
+        "{Language}", "{ContentType}", "{CteName}", "{Style}"
+    ];
+
     private HeaderFooter _model;
     private readonly CheckBox _enabledBox;
     private readonly TextField _textField;
@@ -28,6 +39,12 @@ public sealed class HeaderFooterBar : View
             Text = model.Text ?? string.Empty,
             Enabled = model.Enabled
         };
+
+        // Configure autocomplete for macros
+        if (_textField.Autocomplete is { } autocomplete)
+        {
+            autocomplete.SuggestionGenerator = new MacroSuggestionGenerator();
+        }
 
         _enabledBox = new CheckBox
         {

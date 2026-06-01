@@ -16,6 +16,7 @@
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Platforms>AnyCPU;x64</Platforms>
+    <InternalsVisibleTo>WinPrint.TUI.UnitTests</InternalsVisibleTo>
     <!-- <ApplicationIcon>print.ico</ApplicationIcon> -->
   </PropertyGroup>
 
