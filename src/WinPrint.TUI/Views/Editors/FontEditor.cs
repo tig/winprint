@@ -8,15 +8,7 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Edits a <see cref="Font" /> as two side-by-side dropdowns — family and point size — replacing
-///     the native WinForms <c>FontDialog</c> (which has no cross-platform TUI equivalent). Style flags
-///     are intentionally omitted; document/source printing doesn't need them.
-///     <para>
-///         Choices come from <see cref="FontChoices" />. If the bound font's family or size isn't in
-///         the list (it's a free-form string/float at the model level) the value is added so the
-///         dropdown can display it. <see cref="Font" /> is mutable; editing a child mutates the bound
-///         instance in place, and reassigning <see cref="EditorBase{TValue}.Value" /> rebinds.
-///     </para>
+///     Edits a <see cref="Font" /> (family and point size) via two dropdowns.
 /// </summary>
 public sealed class FontEditor : EditorBase<Font>
 {
@@ -26,22 +18,20 @@ public sealed class FontEditor : EditorBase<Font>
     private readonly ObservableCollection<string> _sizes;
 
     /// <summary>Creates a font editor.</summary>
-    /// <param name="title">Bordered title; the underscore marks the hotkey (e.g. <c>_Font</c>).</param>
-    public FontEditor(string title = "_Font")
+    /// <param name="title">Title text; the underscore marks the hotkey.</param>
+    public FontEditor(string title = "Font")
     {
-        // Auto width so the editor sizes to its content; the panel picks the widest editor.
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
-        BorderStyle = LineStyle.Single;
+        BorderStyle = LineStyle.Dotted;
+        Border.Thickness = new Thickness(0, 1, 0, 0);
+        Padding.Thickness = new Thickness(0, 0, 0, 1);
         SuperViewRendersLineCanvas = true;
         Title = title;
 
         _families = new ObservableCollection<string>(FontChoices.Families);
-        var familyLabel = new Label { X = 0, Y = 0, Text = "Family:" };
         _family = new DropDownList
         {
-            X = EditorMetrics.LabelWidth,
-            Y = 0,
             Width = Dim.Fill(),
             Source = new ListWrapper<string>(_families)
         };
@@ -51,8 +41,7 @@ public sealed class FontEditor : EditorBase<Font>
         var sizeLabel = new Label { X = 0, Y = 1, Text = "Size (pt):" };
         _size = new DropDownList
         {
-            X = EditorMetrics.LabelWidth,
-            Y = 1,
+            Y = Pos.Bottom(_family),
             Width = EditorMetrics.SizeFieldWidth,
             Source = new ListWrapper<string>(_sizes)
         };
@@ -60,7 +49,7 @@ public sealed class FontEditor : EditorBase<Font>
         _family.ValueChanged += (_, _) => PushFromChildren();
         _size.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(familyLabel, _family, sizeLabel, _size);
+        Add(_family, sizeLabel, _size);
     }
 
     /// <inheritdoc />

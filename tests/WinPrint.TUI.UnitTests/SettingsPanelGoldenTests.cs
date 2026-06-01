@@ -42,9 +42,9 @@ public class SettingsPanelGoldenTests
         Assert.True(file < sheet);
         Assert.True(sheet < margins);
         Assert.True(margins < pages);
-        Assert.True(pages < headerFooter);
-        Assert.True(headerFooter < content);
-        Assert.True(content < printer);
+        Assert.True(pages < content);
+        Assert.True(content < headerFooter);
+        Assert.True(headerFooter < printer);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class SettingsPanelGoldenTests
         var panel = new SettingsPanel("2.5.0");
         var fixture = new AppFixture(panel, 52, 24);
 
-        // A joined left tee marks where adjacent section borders merge via the shared LineCanvas.
-        DriverAssert.ContainsText(fixture.Screen, "├");
+        // A right-tee marks where section title borders join via the shared LineCanvas.
+        DriverAssert.ContainsText(fixture.Screen, "┤");
     }
 }

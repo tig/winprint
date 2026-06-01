@@ -9,13 +9,7 @@ namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
 ///     Edits the "multiple pages up" layout fields of a <see cref="SheetSettings" /> — Columns, Rows,
-///     Padding, and the Page Separator toggle — mirroring the original WinForms <c>groupPages</c>
-///     ("Multiple Pages Up") group box. Columns/Rows are integer counts; Padding is shown in decimal
-///     inches but stored as hundredths of an inch (the same convention as <see cref="MarginEditor" />).
-///     <para>
-///         <see cref="SheetSettings" /> is mutable; editing a child mutates the bound instance in
-///         place. Assigning a new <see cref="EditorBase{TValue}.Value" /> rebinds the children.
-///     </para>
+///     Padding, and the Page Separator toggle.
 /// </summary>
 public sealed class MultiPageEditor : EditorBase<SheetSettings>
 {
@@ -33,11 +27,13 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
     {
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
-        BorderStyle = LineStyle.Single;
+        BorderStyle = LineStyle.Dotted;
+        Border.Thickness = new Thickness(0, 1, 0, 0);
+        Padding.Thickness = new Thickness(0, 0, 0, 1);
         SuperViewRendersLineCanvas = true;
-        Title = "Multiple Pages _Up";
+        Title = "Multiple Pages Up";
 
-        var columnsLabel = new Label { X = 0, Y = 0, Text = "Columns:" };
+        var columnsLabel = new Label { X = 0, Y = 0, Text = "_Columns:" };
         _columns = new NumericUpDown<int>
         {
             X = Pos.Right(columnsLabel) + 1,
@@ -47,7 +43,7 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
         };
         _columns.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinCount, MaxCount);
 
-        var rowsLabel = new Label { X = Pos.Right(_columns) + 2, Y = 0, Text = "Rows:" };
+        var rowsLabel = new Label { X = Pos.Right(_columns) + 2, Y = 0, Text = "Ro_ws:" };
         _rows = new NumericUpDown<int>
         {
             X = Pos.Right(rowsLabel) + 1,
@@ -57,7 +53,7 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
         };
         _rows.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinCount, MaxCount);
 
-        var paddingLabel = new Label { X = 0, Y = Pos.Bottom(columnsLabel), Text = "Padding:" };
+        var paddingLabel = new Label { X = 0, Y = Pos.Bottom(columnsLabel), Text = "P_adding:" };
         _padding = new NumericUpDown<decimal>
         {
             X = Pos.Right(paddingLabel) + 1,
@@ -72,7 +68,7 @@ public sealed class MultiPageEditor : EditorBase<SheetSettings>
         {
             X = 0,
             Y = Pos.Bottom(paddingLabel),
-            Text = "Page Separat_or"
+            Text = "Pa_ge Separator"
         };
 
         _columns.ValueChanged += (_, _) => PushFromChildren();

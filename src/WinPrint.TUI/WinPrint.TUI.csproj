@@ -13,9 +13,6 @@
 
     <ItemGroup>
         <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
-        <!-- Pin the core lib to the latest release (Cli only pulls it transitively); the
-             header/footer format fields use the gui-cs Editor view, which needs Terminal.Gui >= 2.4.0. -->
-        <PackageReference Include="Terminal.Gui" Version="2.4.3" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
         <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
@@ -24,11 +21,16 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- Local Terminal.Gui from the tig/sixel-integration-plan branch (PR #5460) for
+             integrated raster output — eliminates bespoke sixel workarounds. -->
+        <ProjectReference Include="$(TerminalGuiRoot)Terminal.Gui\Terminal.Gui.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Resources\preview-sample.png" />
         <EmbeddedResource Include="Resources\CaskaydiaCoveNFM-Regular.ttf" />
     </ItemGroup>
 

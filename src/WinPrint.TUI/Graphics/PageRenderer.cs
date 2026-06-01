@@ -13,6 +13,10 @@ namespace WinPrint.TUI.Graphics;
 ///     <c>ImageView.Image</c>. Rasterizes the full <c>PrintSheet</c> paint path through
 ///     <see cref="ImageSharpGraphicsContext" /> — no file round-trip, no PNG encoding.
 ///     The output includes a canvas background with drop shadow, matching the WinForms/MAUI preview.
+///     <para>
+///         ImageView handles scaling to fit the viewport natively (TG PR #5460) — the renderer
+///         produces a full-resolution image and lets the view handle display scaling.
+///     </para>
 /// </summary>
 public sealed class PageRenderer
 {
@@ -30,9 +34,6 @@ public sealed class PageRenderer
     /// <summary>The DPI at which pages are rasterized.</summary>
     public float Dpi { get; set; }
 
-    /// <summary>Zoom factor (1.0 = 100%). Affects the rendered page size within the canvas.</summary>
-    public float Zoom { get; set; } = 1.0f;
-
     /// <summary>Canvas padding around the page in pixels.</summary>
     public int CanvasPadding { get; set; } = 12;
 
@@ -44,12 +45,6 @@ public sealed class PageRenderer
 
     /// <summary>Drop shadow color.</summary>
     public Color ShadowColor { get; set; } = Color.FromRgba(0, 0, 0, 76); // ~30% opacity black
-
-    /// <summary>Pan offset in pixels (X axis). Positive = page shifts right.</summary>
-    public float PanX { get; set; }
-
-    /// <summary>Pan offset in pixels (Y axis). Positive = page shifts down.</summary>
-    public float PanY { get; set; }
 
     /// <summary>
     ///     Renders the specified sheet page to a pixel array with canvas background and drop shadow.
@@ -64,12 +59,12 @@ public sealed class PageRenderer
     {
         ArgumentNullException.ThrowIfNull(sheetVM);
 
-        // Compute pixel dimensions from the sheet's physical paper size at our DPI, scaled by zoom
+        // Compute pixel dimensions from the sheet's physical paper size at our DPI
         float pageWidthInches = sheetVM.PaperSize.Width / 100f; // PaperSize is in hundredths of an inch
         float pageHeightInches = sheetVM.PaperSize.Height / 100f;
 
-        int pagePixelWidth = (int)(pageWidthInches * Dpi * Zoom);
-        int pagePixelHeight = (int)(pageHeightInches * Dpi * Zoom);
+        int pagePixelWidth = (int)(pageWidthInches * Dpi);
+        int pagePixelHeight = (int)(pageHeightInches * Dpi);
 
         // Canvas is page + padding + shadow
         int canvasWidth = pagePixelWidth + CanvasPadding * 2 + ShadowOffset;
@@ -116,12 +111,12 @@ public sealed class PageRenderer
         var graphicsContext = new ImageSharpGraphicsContext(
             image, Dpi, Dpi, _fontCollection);
 
-        // Translate so PrintSheet draws at the page origin within the canvas, applying pan offset
-        graphicsContext.TranslateTransform(padding + PanX * scale, padding + PanY * scale);
+        // Translate so PrintSheet draws at the page origin within the canvas
+        graphicsContext.TranslateTransform(padding, padding);
 
         // PrintSheet draws in hundredths-of-inch coordinates (e.g., 850×1100 for US Letter).
-        // Convert to pixels: scale = pagePixelWidth / paperWidthInHundredths = Dpi * Zoom / 100.
-        float printScale = Dpi * Zoom * scale / 100f;
+        // Convert to pixels: scale = Dpi / 100.
+        float printScale = Dpi * scale / 100f;
         graphicsContext.ScaleTransform(printScale, printScale);
 
         sheetVM.PrintSheet(graphicsContext, sheetNumber + 1);

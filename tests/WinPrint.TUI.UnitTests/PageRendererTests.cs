@@ -167,28 +167,6 @@ public class PageRendererTests
         Assert.True(hasShadowPixels, "Bottom-right region should contain shadow pixels");
     }
 
-    [Fact]
-    public async Task RenderPage_ZoomChangesOutputSize()
-    {
-        SettingsContext ctx = await CreateContextWithDocumentAsync();
-        PageRenderer renderer = ctx.Renderer;
-
-        // Render at 1x zoom
-        renderer.Zoom = 1.0f;
-        TgColor[,] pixels1x = renderer.RenderPage(ctx.SheetVM, 0);
-        int width1x = pixels1x.GetLength(0);
-        int height1x = pixels1x.GetLength(1);
-
-        // Render at 2x zoom
-        renderer.Zoom = 2.0f;
-        TgColor[,] pixels2x = renderer.RenderPage(ctx.SheetVM, 0);
-        int width2x = pixels2x.GetLength(0);
-        int height2x = pixels2x.GetLength(1);
-
-        // 2x should be roughly double (minus padding which is constant)
-        Assert.True(width2x > width1x, "2x zoom should produce wider output");
-        Assert.True(height2x > height1x, "2x zoom should produce taller output");
-    }
 
     [Fact]
     public async Task RenderPage_HasNonCanvasContent()

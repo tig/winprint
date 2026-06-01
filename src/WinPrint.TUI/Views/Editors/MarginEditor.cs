@@ -8,15 +8,7 @@ namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
 ///     Edits a <see cref="PrintMargins" /> using four <see cref="SizeEditor" /> children arranged in a
-///     diamond/cross — Top centered along the top, Left and Right facing each other on the middle row,
-///     and Bottom centered along the bottom — mirroring the original WinForms margins group box and
-///     Terminal.Gui's adornment/thickness editor. The model stores hundredths of an inch; the children
-///     show decimal inches (e.g. <c>0.75</c>).
-///     <para>
-///         Assigning <see cref="EditorBase{TValue}.Value" /> rebinds all four children; editing any
-///         child raises <see cref="EditorBase{TValue}.ValueChanged" /> with a fresh
-///         <see cref="PrintMargins" />. Incoming values are clamped to <see cref="SizeConstraint.Margin" />.
-///     </para>
+///     diamond/cross pattern. The model stores hundredths of an inch; the children show decimal inches.
 /// </summary>
 public sealed class MarginEditor : EditorBase<PrintMargins>
 {
@@ -30,18 +22,18 @@ public sealed class MarginEditor : EditorBase<PrintMargins>
     /// <summary>Creates a margins editor.</summary>
     public MarginEditor()
     {
-        // The diamond layout uses Pos.Center/Pos.AnchorEnd, which need a definite width; use the shared
-        // content width so this editor lines up with the auto-sized ones when stacked.
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
-        BorderStyle = LineStyle.Single;
+        BorderStyle = LineStyle.Dotted;
+        Border.Thickness = new Thickness(0, 1, 0, 0);
+        Padding.Thickness = new Thickness(0, 0, 0, 1);
         SuperViewRendersLineCanvas = true;
-        Title = "_Margins";
+        Title = "Margins";
 
-        _top = new SizeEditor("Top:", Constraint);
-        _left = new SizeEditor("Left:", Constraint);
-        _right = new SizeEditor("Right:", Constraint);
-        _bottom = new SizeEditor("Bottom:", Constraint);
+        _top = new SizeEditor("_Top:", Constraint);
+        _left = new SizeEditor("_Left:", Constraint);
+        _right = new SizeEditor("_Right:", Constraint);
+        _bottom = new SizeEditor("_Bottom:", Constraint);
 
         // Diamond arrangement: Top centered on row 0, Left/Right on row 1, Bottom centered on row 2.
         // Left/Right share a Pos.Align group with Alignment.Fill, which places the first item at the

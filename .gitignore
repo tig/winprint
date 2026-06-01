@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Local Terminal.Gui checkout (CI checks out here; local devs may symlink or clone)
+gui-cs/
+
 
 # User-specific files
 *.suo

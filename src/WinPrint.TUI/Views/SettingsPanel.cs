@@ -1,3 +1,4 @@
+using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core.Abstractions;
@@ -8,19 +9,10 @@ using WinPrint.TUI.Views.Editors;
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     Composes the winprint left settings column as a single vertical stack of bordered editors —
-///     Sheet, Margins, Multiple Pages Up, Fonts, Printer, and the About footer — mirroring the WinForms
-///     left panel order (Sheet → Margins → Multiple Pages Up → Fonts → Printer → About).
-///     <para>
-///         Each child editor sets <see cref="View.SuperViewRendersLineCanvas" /> and overlaps the one
-///         above it by a row, so Terminal.Gui's shared <c>LineCanvas</c> joins all the borders into one
-///         continuous panel (the same technique <see cref="FontsEditor" /> uses for its two sections).
-///     </para>
+///     Composes the winprint left settings column: Sheet Settings, Printer, and About.
 /// </summary>
 public sealed class SettingsPanel : View
 {
-    // Minimum content width: fits the widest editor row (Printer's "Pages: From ▼1▲ To ▼0▲" and the
-    // Margins diamond) plus the editor's own border, so nothing clips while the pane stays compact.
     private const int MinContentWidth = 33;
 
     /// <summary>Creates the composed settings panel with sample-populated editors.</summary>
@@ -30,16 +22,9 @@ public sealed class SettingsPanel : View
     /// </param>
     public SettingsPanel(string? version = null, bool fillHeight = false)
     {
-        // Auto width: the panel hugs its natural width, anchored by the widest editor (MultiPageEditor's
-        // Padding + Page Separator row); the other editors Dim.Fill to match. Height is Auto when shown
-        // alone (hugs its content), or Fill when it's the left column of MainView (spans full height).
-        // Auto width with a minimum that fits the widest real editor row (the Printer "Pages: From ▼ To
-        // ▼" row and the Margins diamond) so the pane stays compact without clipping. The minimum, not
-        // a single anchor editor, drives the width — robust to any one editor's content shrinking.
         Width = Dim.Auto(DimAutoStyle.Content, Dim.Absolute(MinContentWidth));
         Height = fillHeight ? Dim.Fill() : Dim.Auto(DimAutoStyle.Content);
-        // Focusable container so focus descends into the stacked editors (a non-focusable View has its
-        // whole subtree skipped by Terminal.Gui's focus navigation).
+        Padding.Thickness = new Thickness(0, 0, 1, 0);
         CanFocus = true;
 
         SheetSettings[] sheets =
@@ -56,13 +41,14 @@ public sealed class SettingsPanel : View
             Value = new SheetSettings { Columns = 2, Rows = 1, Padding = 3, PageSeparator = false }
         };
 
-        HeaderFooterFont = new FontEditor("Header/Footer Font")
-        {
-            Value = new Font { Family = "Source Code Pro", Size = 8f, Style = FontStyle.Regular }
-        };
-        ContentFont = new FontEditor("Content Font")
+        ContentFont = new FontEditor("Co_ntent Font")
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
+        };
+
+        HeaderFooterFont = new FontEditor("Hea_der/Footer Font")
+        {
+            Value = new Font { Family = "Source Code Pro", Size = 8f, Style = FontStyle.Regular }
         };
 
         Printer = new PrinterEditor
@@ -73,13 +59,11 @@ public sealed class SettingsPanel : View
 
         About = new AboutView(version);
 
-        // File and Print action buttons above the editors (mirrors MAUI/WinForms toolbar).
-        FileButton = new Button { Text = "_File...", Width = Dim.Percent(50) };
-        PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton), Width = Dim.Percent(50) };
+        FileButton = new Button { Text = "_File..." };
+        PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
         var buttonRow = new View
         {
-            X = 0,
-            Y = 0,
+            CanFocus = true,
             Width = Dim.Fill(),
             Height = Dim.Auto(DimAutoStyle.Content)
         };
@@ -87,12 +71,14 @@ public sealed class SettingsPanel : View
 
         Add(buttonRow);
 
-        // Stack Sheet…Printer from the top below the button row; editors overlap by -1 for border
-        // merging but the first editor starts flush below the buttons (no border overlap needed).
         Sheet.X = 0;
         Sheet.Y = Pos.Bottom(buttonRow);
         Add(Sheet);
-        StackJoinedAfter(Sheet, Margins, Pages, HeaderFooterFont, ContentFont, Printer);
+        StackJoinedAfter(Sheet, Margins, Pages, ContentFont, HeaderFooterFont);
+
+        Printer.X = 0;
+        Printer.Y = Pos.Bottom(HeaderFooterFont);
+        Add(Printer);
 
         About.X = 0;
         About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
@@ -100,9 +86,7 @@ public sealed class SettingsPanel : View
     }
 
     /// <summary>
-    ///     Two-way-binds the editors to the shared <see cref="AppViewModel" /> (real settings data),
-    ///     the same orchestrator WinForms/MAUI use. Seeds the editors from the current sheet, routes
-    ///     edits through the VM's mutators, and re-seeds when the selected sheet changes.
+    ///     Two-way-binds the editors to the shared <see cref="AppViewModel" /> (real settings data).
     /// </summary>
     public void Bind(SettingsContext context)
     {
@@ -110,7 +94,6 @@ public sealed class SettingsPanel : View
         _context = context;
         AppViewModel app = context.App;
 
-        // Populate the sheet picker from the real sheets and route selection to the VM.
         Sheet.SetSheets(app.Settings.Sheets.Values);
         Sheet.ValueChanged += (_, _) =>
         {
@@ -120,7 +103,6 @@ public sealed class SettingsPanel : View
             }
         };
 
-        // Editor edits → VM mutators (which write the live CurrentSheet model + raise events).
         Margins.ValueChanged += (_, _) =>
         {
             if (!_seeding && Margins.Value is { } m)
@@ -162,7 +144,6 @@ public sealed class SettingsPanel : View
             }
         };
 
-        // File button → open-file dialog → load into the AppViewModel.
         FileButton.Accepting += (_, _) =>
         {
             RunnableOpening?.Invoke(this, EventArgs.Empty);
@@ -180,7 +161,6 @@ public sealed class SettingsPanel : View
             }
         };
 
-        // Print button → print the current document (mirrors WinForms DoPrint flow).
         PrintButton.Accepting += (_, _) =>
         {
             if (string.IsNullOrEmpty(app.ActiveFile))
@@ -193,7 +173,6 @@ public sealed class SettingsPanel : View
             RunnableClosed?.Invoke(this, EventArgs.Empty);
         };
 
-        // Sheet switch (VM) → re-seed every editor.
         app.SheetApplied += (_, _) => SeedFromCurrentSheet();
 
         SeedFromCurrentSheet();
@@ -266,29 +245,25 @@ public sealed class SettingsPanel : View
     /// <summary>Raised after a dialog/runnable closes (resume sixel rendering).</summary>
     public event EventHandler? RunnableClosed;
 
-    // Stack views top-to-bottom, overlapping each by one row so their borders merge via the shared
-    // LineCanvas into one continuous frame.
     private void StackJoined(params View[] sections)
     {
         View? previous = null;
         foreach (View section in sections)
         {
             section.X = 0;
-            section.Y = previous is null ? 0 : Pos.Bottom(previous) - 1;
+            section.Y = previous is null ? 0 : Pos.Bottom(previous);
             Add(section);
             previous = section;
         }
     }
 
-    // Like StackJoined but the first item in the array is already positioned and added; subsequent
-    // items stack below it with the -1 border overlap.
     private void StackJoinedAfter(View anchor, params View[] sections)
     {
         View previous = anchor;
         foreach (View section in sections)
         {
             section.X = 0;
-            section.Y = Pos.Bottom(previous) - 1;
+            section.Y = Pos.Bottom(previous);
             Add(section);
             previous = section;
         }

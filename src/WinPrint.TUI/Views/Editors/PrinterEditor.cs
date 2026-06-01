@@ -7,24 +7,15 @@ using WinPrint.Core.Abstractions;
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Picks the target printer, paper size, and sheet range (From/To), mirroring the original WinForms
-///     <c>printerGroup</c> — which stacks the printer combo, paper combo, and the From/To inputs under a
-///     single "Printer" group box. The bound value is a <see cref="PrintPageSetup" />; an optional
+///     Edits the target printer, paper size, and sheet range (From/To).
+///     The bound value is a <see cref="PrintPageSetup" />; an optional
 ///     <see cref="PageRange" /> carries From/To.
-///     <para>
-///         Printer/paper choice lists are injectable because the real lists are Windows-only
-///         (<c>PrinterSettings.InstalledPrinters</c> / <c>.PaperSizes</c>); they default to
-///         <see cref="PrinterChoices" /> so the editor renders cross-platform and in tests. A bound
-///         value not in its list is added so the dropdown can display it. Both bound models are mutable;
-///         editing a child mutates them in place.
-///     </para>
 /// </summary>
 public sealed class PrinterEditor : EditorBase<PrintPageSetup>
 {
     private const int MinFrom = 1;
     private const int MaxPage = 9999;
 
-    // Width of the left-hand label column, so Printer/Paper/From/To align like the other editors.
     private const int LabelWidth = EditorMetrics.LabelWidth;
 
     private readonly DropDownList _printer;
@@ -41,52 +32,46 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
     {
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
-        BorderStyle = LineStyle.Single;
+        BorderStyle = LineStyle.Rounded;
+        Border.Thickness = new Thickness(0, 2, 0, 0);
         SuperViewRendersLineCanvas = true;
-        Title = "_Printer";
+        Title = "Printer";
 
         _printers = new ObservableCollection<string>(printers ?? PrinterChoices.DefaultPrinters);
-        var printerLabel = new Label { X = 0, Y = 0, Width = LabelWidth, Text = "Printer:" };
         _printer = new DropDownList
         {
-            X = LabelWidth,
-            Y = 0,
             Width = Dim.Fill(),
             Source = new ListWrapper<string>(_printers)
         };
 
         _papers = new ObservableCollection<string>(paperSizes ?? PrinterChoices.DefaultPaperSizes);
-        var paperLabel = new Label { X = 0, Y = 1, Width = LabelWidth, Text = "Paper:" };
+        var paperLabel = new Label {Y = Pos.Bottom(_printer), Text = "Paper:" };
         _paper = new DropDownList
         {
-            X = LabelWidth,
-            Y = 1,
+            X = Pos.Right(paperLabel) + 1,
+            Y = Pos.Top(paperLabel),
             Width = Dim.Fill(),
             Source = new ListWrapper<string>(_papers)
         };
 
-        // "Pages" (printer-driver terminology): the From/To range the driver is told to print. The
-        // label is on its own row with From/To beneath it, keeping the editor (and the panel) narrow.
-        var pagesLabel = new Label { X = 0, Y = 2, Text = "Pages:" };
-        var fromLabel = new Label { X = 0, Y = 3, Text = "From" };
+        var pagesLabel = new Label {Y = Pos.Bottom(_paper), Text = "Pages From:" };
         _from = new NumericUpDown<int>
         {
-            X = Pos.Right(fromLabel) + 1,
-            Y = 3,
+            X = Pos.Right(pagesLabel) + 1,
+            Y = Pos.Top(pagesLabel),
             Increment = 1,
             Value = MinFrom
         };
         _from.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, MinFrom, MaxPage);
 
-        var toLabel = new Label { X = Pos.Right(_from) + 2, Y = 3, Text = "To" };
+        var toLabel = new Label { X = Pos.Right(_from) + 2, Y = Pos.Top(pagesLabel), Text = "To" };
         _to = new NumericUpDown<int>
         {
             X = Pos.Right(toLabel) + 1,
-            Y = 3,
+            Y = Pos.Top(pagesLabel),
             Increment = 1,
             Value = 0
         };
-        // 0 means "to the end".
         _to.ValueChanging += (_, args) => args.NewValue = Math.Clamp(args.NewValue, 0, MaxPage);
 
         _printer.ValueChanged += (_, _) => PushFromChildren();
@@ -94,7 +79,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         _from.ValueChanged += (_, _) => PushFromChildren();
         _to.ValueChanged += (_, _) => PushFromChildren();
 
-        Add(printerLabel, _printer, paperLabel, _paper, pagesLabel, fromLabel, _from, toLabel, _to);
+        Add(_printer, paperLabel, _paper, pagesLabel, _from, toLabel, _to);
     }
 
     /// <summary>The sheet range (From/To) being edited. Editing From/To mutates this instance.</summary>

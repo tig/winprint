@@ -7,15 +7,8 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Picks one of the predefined page layouts (winprint "sheets", e.g. <c>Default 1-Up</c> /
-///     <c>Default 2-Up</c>) by name, mirroring the original WinForms <c>comboBoxSheet</c> — a single
-///     bare dropdown of sheet names. The bound value is the selected <see cref="SheetSettings" />.
-///     <para>
-///         Construct with the available sheets (typically <c>Settings.Sheets.Values</c>); selecting a
-///         name sets <see cref="EditorBase{TValue}.Value" /> to that sheet and raises
-///         <see cref="EditorBase{TValue}.ValueChanged" />. Assigning <see cref="EditorBase{TValue}.Value" />
-///         selects the matching name.
-///     </para>
+///     Picks one of the predefined page layouts (winprint "sheets") by name.
+///     The bound value is the selected <see cref="SheetSettings" />.
 /// </summary>
 public sealed class SheetPicker : EditorBase<SheetSettings>
 {
@@ -30,13 +23,16 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
 
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
-        BorderStyle = LineStyle.Single;
+        BorderStyle = LineStyle.Rounded;
+        Border.Thickness = new Thickness(0, 2, 0, 0);
+        Padding.Thickness = new Thickness(0, 0, 0, 1);
         SuperViewRendersLineCanvas = true;
-        Title = "_Sheet";
+        Title = "Sheet Settings";
 
+        var savedLabel = new Label { X = 0, Y = 0, Text = "_Saved:" };
         _sheet = new DropDownList
         {
-            X = EditorMetrics.LabelWidth,
+            X = Pos.Right(savedLabel) + 1,
             Y = 0,
             Width = Dim.Fill(),
             Source = new ListWrapper<string>(
@@ -51,7 +47,7 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
             }
         };
 
-        Add(_sheet);
+        Add(savedLabel, _sheet);
     }
 
     /// <summary>Replaces the available sheets (e.g. when binding to real settings).</summary>

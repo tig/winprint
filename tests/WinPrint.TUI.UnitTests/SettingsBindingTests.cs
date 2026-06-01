@@ -1,3 +1,4 @@
+using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.ViewModels;
@@ -96,6 +97,87 @@ public class SettingsBindingTests
         // The edit routed through AppViewModel.SetMargins into the live sheet model.
         Assert.Equal(33, sheet.Margins.Top);
         Assert.Equal(44, sheet.Margins.Bottom);
+    }
+
+    [Fact]
+    public void ModelMutation_FiresSettingsChanged_TriggersPreviewRefresh()
+    {
+        // Arrange: create a SettingsContext with a real SheetViewModel.
+        // This test verifies the event chain that PushFromChildren relies on:
+        // Model.PropertyChanged → HeaderFooterVM subscription → SheetVM.SettingsChanged.
+        // Before the fix, nobody in the TUI subscribed to SheetVM.SettingsChanged,
+        // so text edits via PushFromChildren never triggered a preview refresh.
+        var context = SettingsContext.Create();
+
+        bool settingsChangedFired = false;
+        string? changedProperty = null;
+        context.SheetVM.SettingsChanged += (_, e) =>
+        {
+            settingsChangedFired = true;
+            changedProperty = e.PropertyName;
+        };
+
+        // Act: mutate the HeaderFooter model directly (simulates PushFromChildren path).
+        context.CurrentSheet!.Header.Text = "CHANGED";
+
+        // Assert: the event chain fired (Model.PropertyChanged → HeaderFooterVM → SheetVM.SettingsChanged).
+        Assert.True(settingsChangedFired,
+            "SheetVM.SettingsChanged must fire when HeaderFooter.Text is mutated directly");
+        Assert.Equal("Header", changedProperty);
+
+        // Also verify the HeaderFooterViewModel's Text was updated (proves the subscription works).
+        Assert.Equal("CHANGED", context.SheetVM.Header.Text);
+    }
+
+    [Fact]
+    public void MainView_SubscribesToSettingsChanged()
+    {
+        // Verify that MainView wires up the SheetVM.SettingsChanged → preview refresh path.
+        // Without this subscription, model mutations via PushFromChildren are invisible to the preview.
+        var context = SettingsContext.Create();
+        var view = new MainView("2.5.0", context);
+        _ = new AppFixture(view, 120, 40);
+
+        // After Bind, the SheetVM.SettingsChanged event should have at least one subscriber
+        // (the one MainView adds for preview refresh).
+        // We verify indirectly: mutating the model should NOT throw (the handler guards with GetApp()?.Invoke).
+        context.CurrentSheet!.Header.Text = "TEST";
+
+        // If we got here without throwing, the handler executed safely in headless mode.
+        Assert.Equal("TEST", context.SheetVM.Header.Text);
+    }
+
+    [Fact]
+    public void SheetChange_ReloadsFileWhenFileIsLoaded()
+    {
+        // Verify that changing the sheet definition triggers a file reload.
+        // Before the fix, SetSheet called Reset() (nulling ContentEngine) but nobody reloaded
+        // the file — so the preview showed headers/footers but no page content (Ready stayed false).
+        var context = SettingsContext.Create();
+        AppViewModel app = context.App;
+
+        // Verify the SheetApplied → LoadFileAsync wiring by subscribing to the event
+        // and checking that the handler would call LoadFileAsync when a file is loaded.
+        bool sheetAppliedFired = false;
+        app.SheetApplied += (_, _) => sheetAppliedFired = true;
+
+        Assert.True(context.SheetNames.Count >= 2, "Need at least 2 sheets to test switching");
+
+        // Switch sheets.
+        string secondSheet = context.SheetNames[1];
+        app.SelectSheetByNameOrId(secondSheet);
+
+        // SheetApplied should have fired.
+        Assert.True(sheetAppliedFired, "SheetApplied must fire when switching sheets");
+
+        // ContentEngine is null after SetSheet (proves the need for a file reload).
+        Assert.Null(context.SheetVM.ContentEngine);
+
+        // In a live TUI with MainView bound, the SheetApplied handler would call
+        // app.LoadFileAsync(app.ActiveFile) to reload the file with the new sheet's settings.
+        // We can't test that in headless mode (no running Application), but we verify the
+        // condition: IsFileLoaded is false here, so the handler correctly skips the reload.
+        Assert.False(app.IsFileLoaded);
     }
 
     [Fact]

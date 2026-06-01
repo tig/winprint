@@ -1,3 +1,4 @@
+using Terminal.Gui.Configuration;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using WinPrint.Core.Models;
@@ -6,15 +7,11 @@ using WinPrint.TUI.Views.Editors;
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     The winprint main view: the composed <see cref="SettingsPanel" /> on the left (its natural
-///     Dim.Auto width) and, on the right, the header editor docked to the top, the footer editor docked
-///     to the bottom, and the <see cref="PreviewPane" /> filling the middle — mirroring the WinForms
-///     <c>panelRight</c> (header Top, footer Bottom, preview fills).
+///     The winprint main view: <see cref="SettingsPanel" /> on the left and the header editor,
+///     <see cref="PreviewPane" />, and footer editor on the right.
 /// </summary>
 public sealed class MainView : View
 {
-    /// <summary>Creates the main view with sample-populated editors and preview.</summary>
-    /// <param name="version">Version for the About footer; pass a fixed value for deterministic tests.</param>
     /// <summary>Creates the main view, binding to real settings when <paramref name="context" /> is given.</summary>
     /// <param name="version">Version for the About footer; pass a fixed value for deterministic tests.</param>
     /// <param name="context">Real settings to bind to; <see langword="null" /> uses sample data.</param>
@@ -23,45 +20,41 @@ public sealed class MainView : View
         Width = Dim.Fill();
         Height = Dim.Fill();
         BorderStyle = LineStyle.Single;
-        Border!.Thickness = new Thickness(0, 1, 0, 0);
+        Border.Thickness = new Thickness(0, 1, 0, 0);
         Title = "<no file>";
-        // Focusable container: a non-focusable View has its whole subtree skipped by Terminal.Gui's
-        // focus navigation, which would leave every editor (settings rail, header/footer) unreachable.
         CanFocus = true;
 
-        // Left column fills the full height; its content sets the natural width.
         Settings = new SettingsPanel(version, true) { X = 0, Y = 0 };
 
-        // Overlap the right pane's left border onto the settings column's right border column (-1) so
-        // the shared LineCanvas joins them into one continuous seam instead of two adjacent verticals.
-        Pos seam = Pos.Right(Settings) - 1;
+        Pos seam = Pos.Right(Settings);
 
-        Header = new HeaderFooterEditor(string.Empty)
+        Header = new HeaderFooterEditor("H_eader:")
         {
             X = seam,
             Y = 0,
             Width = Dim.Fill(),
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
+        Header.Border.Thickness = new Thickness(0);
 
-        Footer = new HeaderFooterEditor(string.Empty)
+        Footer = new HeaderFooterEditor("F_ooter:")
         {
             X = seam,
             Y = Pos.AnchorEnd(),
             Width = Dim.Fill(),
             Value = new Footer { Enabled = true, Text = "{FilePath}||{DatePrinted}" }
         };
+        Footer.Border.Thickness = new Thickness(0);
 
-        // Overlap Header's bottom border (Y -1) and Footer's top border (+1 offsets the one-row
-        // Header overlap) so the preview's border joins both via the shared LineCanvas without
-        // overdrawing the footer's content row.
         Preview = new PreviewPane
         {
             X = seam,
-            Y = Pos.Bottom(Header) - 1,
+            Y = Pos.Bottom(Header),
             Width = Dim.Fill(),
-            Height = Dim.Fill() - Dim.Height(Footer) + 1
+            Height = Dim.Fill() - Dim.Height(Footer)
         };
+        Preview.Border.Thickness = new Thickness(0);
+        Preview.SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Dialog);
 
         Add(Settings, Header, Preview, Footer);
 
@@ -76,11 +69,6 @@ public sealed class MainView : View
         Settings.Bind(context);
         Core.ViewModels.AppViewModel app = context.App;
 
-        // Suspend sixel rendering while any dialog is open (TG limitation: sixel overwrites the UI).
-        Settings.RunnableOpening += (_, _) => Preview.SuspendSixel();
-        Settings.RunnableClosed += (_, _) => Preview.ResumeSixel();
-
-        // Seed header/footer editors from the current sheet and route edits through the VM mutators.
         SeedHeaderFooter(context);
 
         Header.ValueChanged += (_, _) =>
@@ -100,12 +88,17 @@ public sealed class MainView : View
             }
         };
 
-        // Re-seed when the selected sheet changes.
-        app.SheetApplied += (_, _) => SeedHeaderFooter(context);
+        app.SheetApplied += (_, _) =>
+        {
+            SeedHeaderFooter(context);
+            // SetSheet resets ContentEngine — must reload the file to recreate it.
+            if (app.IsFileLoaded)
+            {
+                _ = app.LoadFileAsync(app.ActiveFile);
+            }
+        };
 
-        // Wire the live preview: re-render when reflow completes or preview is invalidated.
-        // These events may fire from background threads (ConfigureAwait(false) in AppViewModel),
-        // so marshal back to the UI thread via GetApp().Invoke.
+        // ReflowCompleted/PreviewInvalidated may fire from background threads; marshal to UI.
         app.ReflowCompleted += (_, _) =>
         {
             GetApp()?.Invoke(() =>
@@ -118,14 +111,41 @@ public sealed class MainView : View
         };
         app.PreviewInvalidated += (_, _) => { GetApp()?.Invoke(() => { Preview.Refresh(); }); };
 
-        // Load the file (if one was specified on the command line) once the view is ready.
-        // This triggers the full reflow → ReflowCompleted → Preview.Bind pipeline.
+        // The HeaderFooterEditor mutates the model directly (via PushFromChildren) rather than
+        // raising ValueChanged. Changes propagate through Model.PropertyChanged → HeaderFooterVM →
+        // SheetVM.SettingsChanged. Subscribe here to trigger preview updates for that path.
+        context.SheetVM.SettingsChanged += (_, e) =>
+        {
+            try
+            {
+                if (GetApp() is not { } application)
+                {
+                    return;
+                }
+
+                application.Invoke(() =>
+                {
+                    if (e.Reflow)
+                    {
+                        _ = app.ReflowAsync();
+                    }
+                    else
+                    {
+                        Preview.Refresh();
+                    }
+                });
+            }
+            catch (InvalidOperationException)
+            {
+                // Application not running (e.g., headless tests or after shutdown) — ignore.
+            }
+        };
+
         if (!string.IsNullOrEmpty(context.File))
         {
             string file = context.File;
             Initialized += (_, _) =>
             {
-                // Fire-and-forget with explicit exception handling; events can't be async
                 _ = LoadFileOnInitAsync(app, file);
             };
         }

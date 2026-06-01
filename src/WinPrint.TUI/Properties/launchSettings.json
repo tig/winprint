@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "WinPrint.TUI": {
+      "commandName": "Project",
+      "commandLineArgs": "Program.cs",
+      "workingDirectory": "../../testfiles"
+    }
+  }
+}
