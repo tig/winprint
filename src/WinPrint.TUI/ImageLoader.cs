@@ -16,17 +16,17 @@ public static class ImageLoader
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        using Image<Rgba32> image = Image.Load<Rgba32>(stream);
+        using var image = Image.Load<Rgba32>(stream);
         int width = image.Width;
         int height = image.Height;
 
         var pixels = new TgColor[width, height];
         image.ProcessPixelRows(accessor =>
         {
-            for (var y = 0; y < accessor.Height; y++)
+            for (int y = 0; y < accessor.Height; y++)
             {
                 Span<Rgba32> row = accessor.GetRowSpan(y);
-                for (var x = 0; x < row.Length; x++)
+                for (int x = 0; x < row.Length; x++)
                 {
                     Rgba32 p = row[x];
                     pixels[x, y] = new TgColor(p.R, p.G, p.B, p.A);

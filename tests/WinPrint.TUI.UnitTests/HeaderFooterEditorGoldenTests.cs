@@ -15,11 +15,11 @@ public class HeaderFooterEditorGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var editor = new HeaderFooterEditor("_Header")
+        var editor = new HeaderFooterEditor()
         {
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
-        var fixture = new AppFixture(editor, width: 50, height: 4);
+        var fixture = new AppFixture(editor, 50, 4);
 
         GridSnapshot.Verify(fixture.Screen, "header-editor");
     }
@@ -27,11 +27,11 @@ public class HeaderFooterEditorGoldenTests
     [Fact]
     public void Render_ShowsFormatText()
     {
-        var editor = new HeaderFooterEditor("_Header")
+        var editor = new HeaderFooterEditor()
         {
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
-        var fixture = new AppFixture(editor, width: 50, height: 4);
+        var fixture = new AppFixture(editor, 50, 4);
 
         DriverAssert.ContainsText(fixture.Screen, "{FileName}");
         DriverAssert.ContainsText(fixture.Screen, "{Title}");
@@ -41,8 +41,8 @@ public class HeaderFooterEditorGoldenTests
     public void PushFromChildren_WritesTextBackToModel()
     {
         var header = new Header { Enabled = true, Text = "{FileName}" };
-        var editor = new HeaderFooterEditor("_Header") { Value = header };
-        _ = new AppFixture(editor, width: 50, height: 4);
+        var editor = new HeaderFooterEditor() { Value = header };
+        _ = new AppFixture(editor, 50, 4);
 
         // The bound model is mutable and carries the edited text.
         Assert.Equal("{FileName}", editor.Value!.Text);

@@ -184,7 +184,8 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
 
         // Approximate linesFilled from the measured bounds (in pixels)
         float lineHeight = nativeFont.Size * DpiY / 72f *
-                           (nativeFont.FontMetrics.HorizontalMetrics.LineHeight / (float)nativeFont.FontMetrics.UnitsPerEm);
+                           (nativeFont.FontMetrics.HorizontalMetrics.LineHeight /
+                            (float)nativeFont.FontMetrics.UnitsPerEm);
         linesFilled = Math.Max(1, (int)(bounds.Height / lineHeight));
 
         // charsFitted: approximate based on how much text fits

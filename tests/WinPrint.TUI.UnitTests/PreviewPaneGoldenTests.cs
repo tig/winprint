@@ -14,7 +14,7 @@ public class PreviewPaneGoldenTests
     public void InitialRender_MatchesGolden()
     {
         var preview = new PreviewPane();
-        var fixture = new AppFixture(preview, width: 44, height: 22);
+        var fixture = new AppFixture(preview, 44, 22);
 
         GridSnapshot.Verify(fixture.Screen, "preview-pane");
     }
@@ -24,7 +24,7 @@ public class PreviewPaneGoldenTests
     {
         // The headless driver reports no sixel support, so the file-link fallback is added.
         var preview = new PreviewPane();
-        var fixture = new AppFixture(preview, width: 44, height: 22);
+        var fixture = new AppFixture(preview, 44, 22);
 
         DriverAssert.ContainsText(fixture.Screen, "Open preview image");
     }

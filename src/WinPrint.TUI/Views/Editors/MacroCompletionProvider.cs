@@ -40,5 +40,8 @@ internal sealed class MacroCompletionProvider : IEditorCompletionProvider
     /// <inheritdoc />
     // Ctrl+Space force-opens the popup (e.g. on an empty field); ordinary typing opens and filters
     // it automatically through the editor's filter-as-you-type path.
-    public bool ShouldTrigger(Key key) => key == Key.Space.WithCtrl;
+    public bool ShouldTrigger(Key key)
+    {
+        return key == Key.Space.WithCtrl;
+    }
 }

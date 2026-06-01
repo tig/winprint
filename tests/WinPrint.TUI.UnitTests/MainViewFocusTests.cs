@@ -16,9 +16,9 @@ public class MainViewFocusTests
     [Fact]
     public void HeaderFooterFormatField_IsKeyboardFocusable_InComposedMainView()
     {
-        var main = new MainView(version: "1.0.0");
+        var main = new MainView("1.0.0");
 
-        bool focusable = InteractiveCapture.CanFocusInnerEditor(main, width: 120, height: 40);
+        bool focusable = InteractiveCapture.CanFocusInnerEditor(main, 120, 40);
 
         Assert.True(
             focusable,

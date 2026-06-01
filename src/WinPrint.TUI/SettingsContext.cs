@@ -85,5 +85,3 @@ public sealed class SettingsContext
         return App.SelectSheetByNameOrId(nameOrId);
     }
 }
-
-

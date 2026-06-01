@@ -14,8 +14,8 @@ public class SettingsPanelGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var panel = new SettingsPanel(version: "2.5.0");
-        var fixture = new AppFixture(panel, width: 52, height: 24);
+        var panel = new SettingsPanel("2.5.0");
+        var fixture = new AppFixture(panel, 52, 24);
 
         GridSnapshot.Verify(fixture.Screen, "settings-panel");
     }
@@ -23,8 +23,8 @@ public class SettingsPanelGoldenTests
     [Fact]
     public void Render_ShowsEverySectionInWinFormsOrder()
     {
-        var panel = new SettingsPanel(version: "2.5.0");
-        var fixture = new AppFixture(panel, width: 52, height: 24);
+        var panel = new SettingsPanel("2.5.0");
+        var fixture = new AppFixture(panel, 52, 24);
 
         string screen = fixture.Screen;
         int file = screen.IndexOf("File", StringComparison.Ordinal);
@@ -50,8 +50,8 @@ public class SettingsPanelGoldenTests
     [Fact]
     public void BordersAutoJoin_IntoOneFrame()
     {
-        var panel = new SettingsPanel(version: "2.5.0");
-        var fixture = new AppFixture(panel, width: 52, height: 24);
+        var panel = new SettingsPanel("2.5.0");
+        var fixture = new AppFixture(panel, 52, 24);
 
         // A joined left tee marks where adjacent section borders merge via the shared LineCanvas.
         DriverAssert.ContainsText(fixture.Screen, "├");

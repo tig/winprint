@@ -15,16 +15,19 @@ namespace WinPrint.TUI.UnitTests;
 /// </summary>
 public class CommandLineFlowTests
 {
-    private static Options SampleOptions() => new()
+    private static Options SampleOptions()
     {
-        Files = ["report.cs"],
-        Landscape = true,
-        Sheet = "Default 1-Up",
-        FromPage = 2,
-        ToPage = 5,
-        Printer = "Acme LaserMax",
-        PaperSize = "A4"
-    };
+        return new Options
+        {
+            Files = ["report.cs"],
+            Landscape = true,
+            Sheet = "Default 1-Up",
+            FromPage = 2,
+            ToPage = 5,
+            Printer = "Acme LaserMax",
+            PaperSize = "A4"
+        };
+    }
 
     [Fact]
     public void SettingsContext_AppliesEveryOption()
@@ -35,7 +38,7 @@ public class CommandLineFlowTests
         bool landscape = def.Landscape;
         try
         {
-            SettingsContext context = SettingsContext.Create(SampleOptions());
+            var context = SettingsContext.Create(SampleOptions());
             AppViewModel app = context.App;
 
             Assert.Equal("report.cs", context.File);
@@ -63,7 +66,7 @@ public class CommandLineFlowTests
         bool landscape = def.Landscape;
         try
         {
-            SettingsContext context = SettingsContext.Create(new Options { Files = ["x.cs"], Portrait = true });
+            var context = SettingsContext.Create(new Options { Files = ["x.cs"], Portrait = true });
             Assert.False(context.App.CurrentSheet!.Landscape);
         }
         finally
@@ -80,12 +83,15 @@ public class CommandLineFlowTests
         bool landscape = def.Landscape;
         try
         {
-            SettingsContext context = SettingsContext.Create(new Options
+            var context = SettingsContext.Create(new Options
             {
-                Files = ["x.cs"], Sheet = "Default 1-Up", FromPage = 3, ToPage = 7
+                Files = ["x.cs"],
+                Sheet = "Default 1-Up",
+                FromPage = 3,
+                ToPage = 7
             });
             var view = new MainView(context: context);
-            var fixture = new AppFixture(view, width: 96, height: 32);
+            var fixture = new AppFixture(view, 96, 32);
 
             // The chosen sheet name is shown in the picker.
             DriverAssert.ContainsText(fixture.Screen, "Default 1-Up");

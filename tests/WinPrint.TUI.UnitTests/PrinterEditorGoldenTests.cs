@@ -19,7 +19,7 @@ public class PrinterEditorGoldenTests
         {
             Value = new PrintPageSetup { PrinterName = "Microsoft Print to PDF", PaperSizeName = "Letter" }
         };
-        var fixture = new AppFixture(editor, width: 44, height: 6);
+        var fixture = new AppFixture(editor, 44, 6);
 
         GridSnapshot.Verify(fixture.Screen, "printer-editor");
     }
@@ -31,7 +31,7 @@ public class PrinterEditorGoldenTests
         {
             Value = new PrintPageSetup { PrinterName = "Microsoft Print to PDF", PaperSizeName = "A4" }
         };
-        var fixture = new AppFixture(editor, width: 44, height: 6);
+        var fixture = new AppFixture(editor, 44, 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Microsoft Print to PDF");
         DriverAssert.ContainsText(fixture.Screen, "A4");
@@ -45,7 +45,7 @@ public class PrinterEditorGoldenTests
         {
             Value = new PrintPageSetup { PrinterName = "Acme LaserJet 9000", PaperSizeName = "Custom 5x7" }
         };
-        var fixture = new AppFixture(editor, width: 44, height: 6);
+        var fixture = new AppFixture(editor, 44, 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Acme LaserJet 9000");
         DriverAssert.ContainsText(fixture.Screen, "Custom 5x7");

@@ -14,11 +14,11 @@ public class FontEditorGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var editor = new FontEditor("_Font")
+        var editor = new FontEditor()
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 60, height: 6);
+        var fixture = new AppFixture(editor, 60, 6);
 
         GridSnapshot.Verify(fixture.Screen, "font-editor");
     }
@@ -26,11 +26,11 @@ public class FontEditorGoldenTests
     [Fact]
     public void Render_ShowsFamilyAndSize_NotStyle()
     {
-        var editor = new FontEditor("_Font")
+        var editor = new FontEditor()
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 60, height: 6);
+        var fixture = new AppFixture(editor, 60, 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Source Code Pro");
         DriverAssert.ContainsText(fixture.Screen, "10");
@@ -41,11 +41,11 @@ public class FontEditorGoldenTests
     public void OnValueChanged_AddsUnlistedFamilySoItDisplays()
     {
         // A family not in FontChoices is still shown (model family is free-form).
-        var editor = new FontEditor("_Font")
+        var editor = new FontEditor()
         {
             Value = new Font { Family = "Wingdings Deluxe", Size = 10f, Style = FontStyle.Regular }
         };
-        var fixture = new AppFixture(editor, width: 60, height: 6);
+        var fixture = new AppFixture(editor, 60, 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Wingdings Deluxe");
     }

@@ -86,7 +86,7 @@ public sealed class TuiCommand : IViewerCommand
         };
         window.Add(content);
 
-        await app.RunAsync((IRunnable)window, cancellationToken, null).ConfigureAwait(false);
+        await app.RunAsync(window, cancellationToken).ConfigureAwait(false);
         return new CommandResult(CommandStatus.Ok, null, null, null);
     }
 

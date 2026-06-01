@@ -1,3 +1,4 @@
+using WinPrint.Core.Abstractions;
 using WinPrint.TUI.Graphics;
 using Xunit;
 using TgColor = Terminal.Gui.Drawing.Color;
@@ -16,7 +17,8 @@ public class PageRendererTests
     ///     Creates a SettingsContext and loads a small text document so that
     ///     SheetVM has at least one page to render.
     /// </summary>
-    private static async Task<SettingsContext> CreateContextWithDocumentAsync(string content = "Hello, World!\nLine 2\nLine 3")
+    private static async Task<SettingsContext> CreateContextWithDocumentAsync(
+        string content = "Hello, World!\nLine 2\nLine 3")
     {
         // Write a temp file with known content
         string tempFile = Path.Combine(Path.GetTempPath(), $"wp_test_{Guid.NewGuid():N}.txt");
@@ -24,8 +26,8 @@ public class PageRendererTests
 
         try
         {
-            var options = new WinPrint.Core.Models.Options { Files = new[] { tempFile } };
-            SettingsContext ctx = SettingsContext.Create(options);
+            var options = new Core.Models.Options { Files = new[] { tempFile } };
+            var ctx = SettingsContext.Create(options);
 
             // Load the file and render (reflow)
             await ctx.App.LoadFileAsync(tempFile);
@@ -47,7 +49,7 @@ public class PageRendererTests
         SettingsContext ctx = await CreateContextWithDocumentAsync();
         PageRenderer renderer = ctx.Renderer;
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: 400, maxHeight: 500);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, 400, 500);
 
         Assert.True(pixels.GetLength(0) > 0, "Width should be > 0");
         Assert.True(pixels.GetLength(1) > 0, "Height should be > 0");
@@ -60,7 +62,7 @@ public class PageRendererTests
         PageRenderer renderer = ctx.Renderer;
         const int maxWidth = 200;
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: maxWidth, maxHeight: 1000);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth, 1000);
 
         Assert.True(pixels.GetLength(0) <= maxWidth, $"Width {pixels.GetLength(0)} should be <= {maxWidth}");
     }
@@ -72,7 +74,7 @@ public class PageRendererTests
         PageRenderer renderer = ctx.Renderer;
         const int maxHeight = 250;
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: 1000, maxHeight: maxHeight);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, 1000, maxHeight);
 
         Assert.True(pixels.GetLength(1) <= maxHeight, $"Height {pixels.GetLength(1)} should be <= {maxHeight}");
     }
@@ -84,7 +86,7 @@ public class PageRendererTests
         PageRenderer renderer = ctx.Renderer;
         renderer.CanvasPadding = 20; // ensure corners are canvas, not page
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: 400, maxHeight: 500);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, 400, 500);
 
         // Top-left corner should be the canvas background color (#E0E0E0)
         TgColor topLeft = pixels[0, 0];
@@ -100,7 +102,7 @@ public class PageRendererTests
         PageRenderer renderer = ctx.Renderer;
         renderer.CanvasPadding = 20;
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: 400, maxHeight: 500);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, 400, 500);
 
         // The page interior starts at (padding, padding). Sample a point inside the page
         // that should be white (page background) unless text is drawn there.
@@ -139,7 +141,7 @@ public class PageRendererTests
         renderer.CanvasPadding = 20;
         renderer.ShadowOffset = 6;
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: 400, maxHeight: 500);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, 400, 500);
 
         int width = pixels.GetLength(0);
         int height = pixels.GetLength(1);
@@ -196,7 +198,7 @@ public class PageRendererTests
             "// This is a test file\nint x = 42;\nConsole.WriteLine(x);");
         PageRenderer renderer = ctx.Renderer;
 
-        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, maxWidth: 400, maxHeight: 500);
+        TgColor[,] pixels = renderer.RenderPage(ctx.SheetVM, 0, 400, 500);
         int width = pixels.GetLength(0);
         int height = pixels.GetLength(1);
 
@@ -235,9 +237,9 @@ public class PageRendererTests
 
         Assert.NotNull(measureCtx);
         // Should be able to create a font without throwing
-        var font = measureCtx.CreateFont("monospace", 10,
-            WinPrint.Core.Abstractions.GraphicsFontStyle.Regular,
-            WinPrint.Core.Abstractions.GraphicsFontUnit.Point);
+        IGraphicsFont font = measureCtx.CreateFont("monospace", 10,
+            Core.Abstractions.GraphicsFontStyle.Regular,
+            Core.Abstractions.GraphicsFontUnit.Point);
         Assert.NotNull(font);
     }
 }

@@ -11,18 +11,21 @@ namespace WinPrint.TUI.UnitTests;
 /// </summary>
 public class SheetPickerGoldenTests
 {
-    private static SheetSettings[] Sheets() =>
-    [
-        new() { Name = "Default 1-Up", Columns = 1, Rows = 1, Landscape = false },
-        new() { Name = "Default 2-Up", Columns = 2, Rows = 1, Landscape = true }
-    ];
+    private static SheetSettings[] Sheets()
+    {
+        return
+        [
+            new() { Name = "Default 1-Up", Columns = 1, Rows = 1, Landscape = false },
+            new() { Name = "Default 2-Up", Columns = 2, Rows = 1, Landscape = true }
+        ];
+    }
 
     [Fact]
     public void InitialRender_MatchesGolden()
     {
         SheetSettings[] sheets = Sheets();
         var picker = new SheetPicker(sheets) { Value = sheets[0] };
-        var fixture = new AppFixture(picker, width: 40, height: 5);
+        var fixture = new AppFixture(picker, 40, 5);
 
         GridSnapshot.Verify(fixture.Screen, "sheet-picker");
     }
@@ -32,7 +35,7 @@ public class SheetPickerGoldenTests
     {
         SheetSettings[] sheets = Sheets();
         var picker = new SheetPicker(sheets) { Value = sheets[1] };
-        var fixture = new AppFixture(picker, width: 40, height: 5);
+        var fixture = new AppFixture(picker, 40, 5);
 
         DriverAssert.ContainsText(fixture.Screen, "Default 2-Up");
     }
@@ -43,7 +46,7 @@ public class SheetPickerGoldenTests
         SheetSettings[] sheets = Sheets();
         var picker = new SheetPicker(sheets) { Value = sheets[0] };
         picker.Value = sheets[1];
-        var fixture = new AppFixture(picker, width: 40, height: 5);
+        var fixture = new AppFixture(picker, 40, 5);
 
         DriverAssert.ContainsText(fixture.Screen, "Default 2-Up");
         DriverAssert.DoesNotContainText(fixture.Screen, "Default 1-Up");

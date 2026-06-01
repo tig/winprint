@@ -30,13 +30,13 @@ public sealed class MainView : View
         CanFocus = true;
 
         // Left column fills the full height; its content sets the natural width.
-        Settings = new SettingsPanel(version, fillHeight: true) { X = 0, Y = 0 };
+        Settings = new SettingsPanel(version, true) { X = 0, Y = 0 };
 
         // Overlap the right pane's left border onto the settings column's right border column (-1) so
         // the shared LineCanvas joins them into one continuous seam instead of two adjacent verticals.
         Pos seam = Pos.Right(Settings) - 1;
 
-        Header = new HeaderFooterEditor(title: string.Empty)
+        Header = new HeaderFooterEditor(string.Empty)
         {
             X = seam,
             Y = 0,
@@ -44,7 +44,7 @@ public sealed class MainView : View
             Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
         };
 
-        Footer = new HeaderFooterEditor(title: string.Empty)
+        Footer = new HeaderFooterEditor(string.Empty)
         {
             X = seam,
             Y = Pos.AnchorEnd(),
@@ -74,7 +74,7 @@ public sealed class MainView : View
     private void Bind(SettingsContext context)
     {
         Settings.Bind(context);
-        WinPrint.Core.ViewModels.AppViewModel app = context.App;
+        Core.ViewModels.AppViewModel app = context.App;
 
         // Suspend sixel rendering while any dialog is open (TG limitation: sixel overwrites the UI).
         Settings.RunnableOpening += (_, _) => Preview.SuspendSixel();
@@ -113,16 +113,10 @@ public sealed class MainView : View
                 Preview.Bind(context.SheetVM, app.TotalPages, context.Renderer.Dpi);
                 Title = string.IsNullOrEmpty(app.ActiveFile)
                     ? "<no file>"
-                    : System.IO.Path.GetFileName(app.ActiveFile);
+                    : Path.GetFileName(app.ActiveFile);
             });
         };
-        app.PreviewInvalidated += (_, _) =>
-        {
-            GetApp()?.Invoke(() =>
-            {
-                Preview.Refresh();
-            });
-        };
+        app.PreviewInvalidated += (_, _) => { GetApp()?.Invoke(() => { Preview.Refresh(); }); };
 
         // Load the file (if one was specified on the command line) once the view is ready.
         // This triggers the full reflow → ReflowCompleted → Preview.Bind pipeline.
@@ -146,7 +140,7 @@ public sealed class MainView : View
         }
     }
 
-    private async Task LoadFileOnInitAsync(WinPrint.Core.ViewModels.AppViewModel app, string file)
+    private async Task LoadFileOnInitAsync(Core.ViewModels.AppViewModel app, string file)
     {
         try
         {
@@ -154,10 +148,7 @@ public sealed class MainView : View
         }
         catch (Exception ex)
         {
-            GetApp()?.Invoke(() =>
-            {
-                Title = $"Error: {ex.Message}";
-            });
+            GetApp()?.Invoke(() => { Title = $"Error: {ex.Message}"; });
         }
     }
 

@@ -66,8 +66,8 @@ public sealed class PageRenderer
         int pagePixelHeight = (int)(pageHeightInches * Dpi * Zoom);
 
         // Canvas is page + padding + shadow
-        int canvasWidth = pagePixelWidth + (CanvasPadding * 2) + ShadowOffset;
-        int canvasHeight = pagePixelHeight + (CanvasPadding * 2) + ShadowOffset;
+        int canvasWidth = pagePixelWidth + CanvasPadding * 2 + ShadowOffset;
+        int canvasHeight = pagePixelHeight + CanvasPadding * 2 + ShadowOffset;
 
         // Scale the entire canvas to fit constraints
         float scale = 1f;
@@ -108,7 +108,7 @@ public sealed class PageRenderer
 
         // Create graphics context targeting the page region within the canvas
         var graphicsContext = new ImageSharpGraphicsContext(
-            image, Dpi, Dpi, _fontCollection, isDisplayUnit: false);
+            image, Dpi, Dpi, _fontCollection, false);
 
         // Translate so PrintSheet draws at the page origin within the canvas
         graphicsContext.TranslateTransform(padding, padding);
@@ -141,10 +141,10 @@ public sealed class PageRenderer
 
         image.ProcessPixelRows(accessor =>
         {
-            for (var y = 0; y < accessor.Height; y++)
+            for (int y = 0; y < accessor.Height; y++)
             {
                 Span<Rgba32> row = accessor.GetRowSpan(y);
-                for (var x = 0; x < row.Length; x++)
+                for (int x = 0; x < row.Length; x++)
                 {
                     Rgba32 p = row[x];
                     pixels[x, y] = new TgColor(p.R, p.G, p.B, p.A);
@@ -155,4 +155,3 @@ public sealed class PageRenderer
         return pixels;
     }
 }
-

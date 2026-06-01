@@ -19,7 +19,7 @@ public class HeaderFooterAutocompleteGoldenTests
     [Fact]
     public void TypingMacroPrefix_OpensPopup_MatchesGolden()
     {
-        var editor = new HeaderFooterEditor("_Header")
+        var editor = new HeaderFooterEditor()
         {
             Value = new Header { Enabled = true, Text = string.Empty }
         };
@@ -27,9 +27,9 @@ public class HeaderFooterAutocompleteGoldenTests
         string screen = InteractiveCapture.CaptureWithKeys(
             editor,
             TypeFile,
-            width: 50,
-            height: 12,
-            captureWhen: e => e.IsCompletionActive);
+            50,
+            12,
+            e => e.IsCompletionActive);
 
         // The popup lists the matching macros (filtered to the File* family by the "file" prefix).
         DriverAssert.ContainsText(screen, "{FileName}");

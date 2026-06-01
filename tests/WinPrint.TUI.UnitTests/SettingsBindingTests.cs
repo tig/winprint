@@ -27,7 +27,7 @@ public class SettingsBindingTests
         // Snapshot to restore — Settings is a process-global singleton (ModelLocator), so leaving it
         // mutated would bleed into other tests/runs.
         SheetSettings sheet = app.CurrentSheet!;
-        (int cols, int rows, PrintMargins margins, string? header) =
+        (int cols, int rows, var margins, string? header) =
             (sheet.Columns, sheet.Rows, (PrintMargins)sheet.Margins.Clone(), sheet.Header.Text);
         try
         {
@@ -66,13 +66,15 @@ public class SettingsBindingTests
     public void BoundMainView_RendersRealDefaultSheetData()
     {
         var context = SettingsContext.Create();
-        var view = new MainView(version: "2.5.0", context: context);
-        var fixture = new AppFixture(view, width: 96, height: 32);
+        var view = new MainView("2.5.0", context);
+        var fixture = new AppFixture(view, 96, 32);
 
         // Real content font + sheet from the default settings (not the sample placeholders).
         // Default content font varies by OS: "Consolas" on Windows, "monospace" elsewhere.
         string expectedFont = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows) ? "Consolas" : "monospace";
+            System.Runtime.InteropServices.OSPlatform.Windows)
+            ? "Consolas"
+            : "monospace";
         DriverAssert.ContainsText(fixture.Screen, expectedFont); // default content font
         DriverAssert.ContainsText(fixture.Screen, "Up"); // default sheet name ("Default 2-Up")
         // The header/footer editors are bound to the current sheet's real models.
@@ -86,7 +88,7 @@ public class SettingsBindingTests
         var context = SettingsContext.Create();
         var panel = new SettingsPanel();
         panel.Bind(context);
-        _ = new AppFixture(panel, width: 40, height: 26);
+        _ = new AppFixture(panel, 40, 26);
 
         SheetSettings sheet = context.CurrentSheet!;
         panel.Margins.Value = new PrintMargins(11, 22, 33, 44);
@@ -102,7 +104,7 @@ public class SettingsBindingTests
         // Arrange: create a PrinterEditor bound to a PrintPageSetup with a page range
         var setup = new PrintPageSetup { PrinterName = "Test Printer", PaperSizeName = "Letter" };
         var editor = new PrinterEditor();
-        _ = new AppFixture(editor, width: 40, height: 8);
+        _ = new AppFixture(editor, 40, 8);
 
         editor.Value = setup;
         editor.SetRange(new PageRange { From = 1, To = 0 });

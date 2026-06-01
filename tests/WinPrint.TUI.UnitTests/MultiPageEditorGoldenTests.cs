@@ -19,7 +19,7 @@ public class MultiPageEditorGoldenTests
         {
             Value = new SheetSettings { Columns = 2, Rows = 1, Padding = 3, PageSeparator = false }
         };
-        var fixture = new AppFixture(editor, width: 40, height: 8);
+        var fixture = new AppFixture(editor, 40, 8);
 
         GridSnapshot.Verify(fixture.Screen, "multipage-editor");
     }
@@ -32,7 +32,7 @@ public class MultiPageEditorGoldenTests
         {
             Value = new SheetSettings { Columns = 2, Rows = 1, Padding = 3, PageSeparator = false }
         };
-        var fixture = new AppFixture(editor, width: 40, height: 8);
+        var fixture = new AppFixture(editor, 40, 8);
 
         DriverAssert.ContainsText(fixture.Screen, "0.03");
         DriverAssert.ContainsText(fixture.Screen, "Page Separator");

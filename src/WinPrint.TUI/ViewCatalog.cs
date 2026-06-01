@@ -27,7 +27,7 @@ public static class ViewCatalog
         return name switch
         {
             "margin" => new MarginEditor { Value = new PrintMargins(75, 100, 50, 25) },
-            "header" => new HeaderFooterEditor("_Header")
+            "header" => new HeaderFooterEditor()
             {
                 Value = new Header { Enabled = true, Text = "{FileName}|{Title}|Page {Page}" }
             },
@@ -35,7 +35,7 @@ public static class ViewCatalog
             {
                 Value = new Footer { Enabled = true, Text = "{FilePath}||{DatePrinted}" }
             },
-            "font" => new FontEditor("_Font")
+            "font" => new FontEditor()
             {
                 Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
             },

@@ -94,6 +94,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     /// <summary>The preview/reflow engine, or <see langword="null" /> for preview-less front ends.</summary>
     public SheetViewModel? SheetViewModel => _sheetVM;
+
     public PrintPageSetup CurrentPageSetup => _pageSetup;
     public Settings Settings => ModelLocator.Current.Settings;
 
@@ -391,7 +392,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetLandscape(bool value)
     {
-        if (_sheetVM != null) { _sheetVM.Landscape = value; }
+        if (_sheetVM != null)
+        {
+            _sheetVM.Landscape = value;
+        }
+
         _pageSetup.Landscape = value;
         if (_currentSheet != null)
         {
@@ -403,7 +408,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetRows(int value)
     {
-        if (_sheetVM != null) { _sheetVM.Rows = value; }
+        if (_sheetVM != null)
+        {
+            _sheetVM.Rows = value;
+        }
+
         if (_currentSheet != null)
         {
             _currentSheet.Rows = value;
@@ -414,7 +423,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetColumns(int value)
     {
-        if (_sheetVM != null) { _sheetVM.Columns = value; }
+        if (_sheetVM != null)
+        {
+            _sheetVM.Columns = value;
+        }
+
         if (_currentSheet != null)
         {
             _currentSheet.Columns = value;
@@ -425,7 +438,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetPadding(int paddingHundredths)
     {
-        if (_sheetVM != null) { _sheetVM.Padding = paddingHundredths; }
+        if (_sheetVM != null)
+        {
+            _sheetVM.Padding = paddingHundredths;
+        }
+
         if (_currentSheet != null)
         {
             _currentSheet.Padding = paddingHundredths;
@@ -436,7 +453,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetPageSeparator(bool value)
     {
-        if (_sheetVM != null) { _sheetVM.PageSeparator = value; }
+        if (_sheetVM != null)
+        {
+            _sheetVM.PageSeparator = value;
+        }
+
         if (_currentSheet != null)
         {
             _currentSheet.PageSeparator = value;
@@ -462,7 +483,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     public void SetMargins(PrintMargins margins)
     {
-        if (_sheetVM != null) { _sheetVM.Margins = margins; }
+        if (_sheetVM != null)
+        {
+            _sheetVM.Margins = margins;
+        }
+
         _pageSetup.MarginTop = margins.Top;
         _pageSetup.MarginBottom = margins.Bottom;
         _pageSetup.MarginLeft = margins.Left;

@@ -202,13 +202,22 @@ public sealed class PreviewPane : View
     }
 
     /// <summary>Zoom in by 25%.</summary>
-    public void ZoomIn() => Zoom = Math.Min(4.0f, (Zoom) + 0.25f);
+    public void ZoomIn()
+    {
+        Zoom = Math.Min(4.0f, Zoom + 0.25f);
+    }
 
     /// <summary>Zoom out by 25%.</summary>
-    public void ZoomOut() => Zoom = Math.Max(0.25f, (Zoom) - 0.25f);
+    public void ZoomOut()
+    {
+        Zoom = Math.Max(0.25f, Zoom - 0.25f);
+    }
 
     /// <summary>Reset zoom to 100%.</summary>
-    public void ZoomReset() => Zoom = 1.0f;
+    public void ZoomReset()
+    {
+        Zoom = 1.0f;
+    }
 
     /// <summary>
     ///     Suppresses sixel output. Call before running a dialog or any nested runnable to prevent
@@ -253,8 +262,8 @@ public sealed class PreviewPane : View
         try
         {
             // Determine available pixel budget from our current frame size
-            int availableWidth = Math.Max(80, (int)Frame.Width * 8); // rough: 8 pixels per cell
-            int availableHeight = Math.Max(60, (int)Frame.Height * 16); // rough: 16 pixels per cell
+            int availableWidth = Math.Max(80, Frame.Width * 8); // rough: 8 pixels per cell
+            int availableHeight = Math.Max(60, Frame.Height * 16); // rough: 16 pixels per cell
 
             TgColor[,] pixels = _renderer.RenderPage(
                 _sheetVM, _currentPage, availableWidth, availableHeight);
@@ -291,4 +300,3 @@ public sealed class PreviewPane : View
         return path;
     }
 }
-

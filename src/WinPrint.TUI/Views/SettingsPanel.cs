@@ -140,8 +140,14 @@ public sealed class SettingsPanel : View
             app.SetPadding(p.Padding);
             app.SetPageSeparator(p.PageSeparator);
         };
-        HeaderFooterFont.ValueChanged += (_, _) => { /* font persists via the bound model */ };
-        ContentFont.ValueChanged += (_, _) => { /* font persists via the bound model */ };
+        HeaderFooterFont.ValueChanged += (_, _) =>
+        {
+            /* font persists via the bound model */
+        };
+        ContentFont.ValueChanged += (_, _) =>
+        {
+            /* font persists via the bound model */
+        };
 
         // File button → open-file dialog → load into the AppViewModel.
         FileButton.Accepting += (_, _) =>

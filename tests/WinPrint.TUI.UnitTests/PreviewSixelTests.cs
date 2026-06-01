@@ -32,9 +32,9 @@ public class PreviewSixelTests
         var window = new Window { Width = Dim.Fill(), Height = Dim.Fill(), BorderStyle = LineStyle.None };
         window.Add(preview);
 
-        var iterations = 0;
-        var usedSixel = false;
-        var sixelCount = 0;
+        int iterations = 0;
+        bool usedSixel = false;
+        int sixelCount = 0;
 
         app.Iteration += OnIteration;
         app.Run(window);

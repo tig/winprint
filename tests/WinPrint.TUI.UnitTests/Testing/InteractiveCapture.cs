@@ -59,10 +59,10 @@ public static class InteractiveCapture
         };
         window.Add(content);
 
-        var iterations = 0;
-        var keyIndex = 0;
-        var settleFrames = 0;
-        var grid = string.Empty;
+        int iterations = 0;
+        int keyIndex = 0;
+        int settleFrames = 0;
+        string grid = string.Empty;
         Editor? target = null;
         // Generous ceiling: one frame to focus, one per key, then a handful to draw the popup.
         const int maxIterations = 80;
@@ -147,8 +147,8 @@ public static class InteractiveCapture
         };
         window.Add(content);
 
-        var iterations = 0;
-        var focused = false;
+        int iterations = 0;
+        bool focused = false;
 
         app.Iteration += OnIteration;
         app.Run(window);
