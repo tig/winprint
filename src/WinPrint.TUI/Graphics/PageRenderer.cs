@@ -45,6 +45,12 @@ public sealed class PageRenderer
     /// <summary>Drop shadow color.</summary>
     public Color ShadowColor { get; set; } = Color.FromRgba(0, 0, 0, 76); // ~30% opacity black
 
+    /// <summary>Pan offset in pixels (X axis). Positive = page shifts right.</summary>
+    public float PanX { get; set; }
+
+    /// <summary>Pan offset in pixels (Y axis). Positive = page shifts down.</summary>
+    public float PanY { get; set; }
+
     /// <summary>
     ///     Renders the specified sheet page to a pixel array with canvas background and drop shadow.
     /// </summary>
@@ -110,8 +116,8 @@ public sealed class PageRenderer
         var graphicsContext = new ImageSharpGraphicsContext(
             image, Dpi, Dpi, _fontCollection);
 
-        // Translate so PrintSheet draws at the page origin within the canvas
-        graphicsContext.TranslateTransform(padding, padding);
+        // Translate so PrintSheet draws at the page origin within the canvas, applying pan offset
+        graphicsContext.TranslateTransform(padding + PanX * scale, padding + PanY * scale);
 
         // PrintSheet draws in hundredths-of-inch coordinates (e.g., 850×1100 for US Letter).
         // Convert to pixels: scale = pagePixelWidth / paperWidthInHundredths = Dpi * Zoom / 100.

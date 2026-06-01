@@ -29,6 +29,13 @@ public sealed class PreviewPane : View
     private int _totalPages;
     private CancellationTokenSource? _debounceCts;
 
+    // Mouse drag-to-pan state
+    private bool _isDragging;
+    private int _dragStartX;
+    private int _dragStartY;
+    private float _panStartX;
+    private float _panStartY;
+
     /// <summary>Creates the preview pane.</summary>
     public PreviewPane()
     {
@@ -96,6 +103,13 @@ public sealed class PreviewPane : View
             if (clamped != _currentPage)
             {
                 _currentPage = clamped;
+                // Reset pan when navigating to a different page
+                if (_renderer is not null)
+                {
+                    _renderer.PanX = 0f;
+                    _renderer.PanY = 0f;
+                }
+
                 RequestRender();
             }
         }
@@ -187,6 +201,65 @@ public sealed class PreviewPane : View
         return base.OnKeyDown(key);
     }
 
+    /// <inheritdoc />
+    protected override bool OnMouseEvent(Mouse mouse)
+    {
+        // Scroll wheel → zoom
+        if (mouse.Flags.HasFlag(MouseFlags.WheeledDown))
+        {
+            ZoomOut();
+            return true;
+        }
+
+        if (mouse.Flags.HasFlag(MouseFlags.WheeledUp))
+        {
+            ZoomIn();
+            return true;
+        }
+
+        // Left button pressed → start drag, grab mouse for position reports
+        if (mouse.Flags.HasFlag(MouseFlags.LeftButtonPressed) && mouse.Position is { } pressPos)
+        {
+            _isDragging = true;
+            _dragStartX = pressPos.X;
+            _dragStartY = pressPos.Y;
+            _panStartX = _renderer?.PanX ?? 0f;
+            _panStartY = _renderer?.PanY ?? 0f;
+            GetApp()?.Mouse.GrabMouse(this);
+            return true;
+        }
+
+        // Dragging (position report while button held)
+        if (_isDragging && mouse.Flags.HasFlag(MouseFlags.PositionReport) && mouse.Position is { } dragPos)
+        {
+            if (_renderer is not null)
+            {
+                // Each cell is roughly 8px wide and 16px tall in sixel mode
+                float dx = (dragPos.X - _dragStartX) * 8f;
+                float dy = (dragPos.Y - _dragStartY) * 16f;
+                _renderer.PanX = _panStartX + dx;
+                _renderer.PanY = _panStartY + dy;
+                RequestRender();
+            }
+
+            return true;
+        }
+
+        // Button released → stop drag, ungrab mouse
+        if (mouse.Flags.HasFlag(MouseFlags.LeftButtonReleased))
+        {
+            if (_isDragging)
+            {
+                _isDragging = false;
+                GetApp()?.Mouse.UngrabMouse();
+            }
+
+            return true;
+        }
+
+        return base.OnMouseEvent(mouse);
+    }
+
     /// <summary>Current zoom factor (1.0 = 100%).</summary>
     public float Zoom
     {
@@ -213,9 +286,15 @@ public sealed class PreviewPane : View
         Zoom = Math.Max(0.25f, Zoom - 0.25f);
     }
 
-    /// <summary>Reset zoom to 100%.</summary>
+    /// <summary>Reset zoom to 100% and clear pan offset.</summary>
     public void ZoomReset()
     {
+        if (_renderer is not null)
+        {
+            _renderer.PanX = 0f;
+            _renderer.PanY = 0f;
+        }
+
         Zoom = 1.0f;
     }
 
@@ -281,8 +360,11 @@ public sealed class PreviewPane : View
     private void UpdatePageLabel()
     {
         int zoomPct = (int)(Zoom * 100);
+        string panInfo = _renderer is not null && (_renderer.PanX != 0f || _renderer.PanY != 0f)
+            ? " ↔"
+            : "";
         PageLabel.Text = _totalPages > 0
-            ? $"Page {_currentPage + 1} / {_totalPages}  [{zoomPct}%]"
+            ? $"Page {_currentPage + 1} / {_totalPages}  [{zoomPct}%{panInfo}]"
             : "";
     }
 
