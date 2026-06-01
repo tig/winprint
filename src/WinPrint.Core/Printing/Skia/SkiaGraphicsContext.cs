@@ -88,7 +88,7 @@ public sealed class SkiaGraphicsContext : IGraphicsContext
 
     public void SetClip(GraphicsRectF rect)
     {
-        _canvas?.ClipRect(ToSkRect(rect), SKClipOperation.Intersect);
+        _canvas?.ClipRect(ToSkRect(rect));
     }
 
     public void ExcludeClip(GraphicsRectF rect)

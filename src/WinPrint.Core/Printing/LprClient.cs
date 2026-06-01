@@ -110,7 +110,9 @@ public sealed class LprClient : ILprClient
 
             if (process.ExitCode != 0)
             {
-                string detail = string.IsNullOrWhiteSpace(stderr) ? $"lpr exited with code {process.ExitCode}." : stderr.Trim();
+                string detail = string.IsNullOrWhiteSpace(stderr)
+                    ? $"lpr exited with code {process.ExitCode}."
+                    : stderr.Trim();
                 return PrintJobResult.Failed(detail);
             }
 

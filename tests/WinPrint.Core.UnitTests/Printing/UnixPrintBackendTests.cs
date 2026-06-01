@@ -7,15 +7,18 @@ namespace WinPrint.Core.UnitTests.Printing;
 
 public class UnixPrintBackendTests
 {
-    private static PrintPageSetup LetterSetup(string printer = "PDF") => new()
+    private static PrintPageSetup LetterSetup(string printer = "PDF")
     {
-        PrinterName = printer,
-        PaperSizeName = "Letter",
-        PaperWidth = 850,
-        PaperHeight = 1100,
-        DpiX = 300,
-        DpiY = 300,
-    };
+        return new PrintPageSetup
+        {
+            PrinterName = printer,
+            PaperSizeName = "Letter",
+            PaperWidth = 850,
+            PaperHeight = 1100,
+            DpiX = 300,
+            DpiY = 300,
+        };
+    }
 
     [Fact]
     public async Task UnixPrintJob_RendersPdfAndSubmitsViaLpr()

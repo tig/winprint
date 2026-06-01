@@ -14,7 +14,7 @@ public class SkiaGraphicsContextTests
     [Fact]
     public void Measurement_ProducesPositiveExtents()
     {
-        SkiaGraphicsContext context = SkiaGraphicsContext.CreateMeasurementContext(96f, 96f);
+        var context = SkiaGraphicsContext.CreateMeasurementContext();
         using IGraphicsFont font = context.CreateFont("Courier New", 10f, GraphicsFontStyle.Regular,
             GraphicsFontUnit.Point);
 
@@ -30,7 +30,7 @@ public class SkiaGraphicsContextTests
     {
         // A 72pt font is exactly 1 inch tall, i.e. ~100 hundredths of line height (give or take the
         // font's internal leading). This anchors the unit contract used by the reflow engines.
-        SkiaGraphicsContext context = SkiaGraphicsContext.CreateMeasurementContext(96f, 96f);
+        var context = SkiaGraphicsContext.CreateMeasurementContext();
         using IGraphicsFont font = context.CreateFont("Courier New", 72f, GraphicsFontStyle.Regular,
             GraphicsFontUnit.Point);
 
@@ -42,7 +42,7 @@ public class SkiaGraphicsContextTests
     [Fact]
     public void BreakText_ReportsCharactersThatFit()
     {
-        SkiaGraphicsContext context = SkiaGraphicsContext.CreateMeasurementContext(96f, 96f);
+        var context = SkiaGraphicsContext.CreateMeasurementContext();
         using IGraphicsFont font = context.CreateFont("Courier New", 10f, GraphicsFontStyle.Regular,
             GraphicsFontUnit.Point);
 
@@ -64,13 +64,13 @@ public class SkiaGraphicsContextTests
     public void Draw_ToPdfDocument_ProducesValidPdf()
     {
         using var stream = new SKDynamicMemoryWStream();
-        using (SKDocument document = SKDocument.CreatePdf(stream))
+        using (var document = SKDocument.CreatePdf(stream))
         {
             // PDF page in points; pre-scale so user space is hundredths-of-an-inch.
             SKCanvas canvas = document.BeginPage(612f, 792f);
             canvas.Scale(72f / 100f);
 
-            var context = new SkiaGraphicsContext(canvas, 96f, 96f);
+            var context = new SkiaGraphicsContext(canvas);
             using IGraphicsFont font = context.CreateFont("Courier New", 10f, GraphicsFontStyle.Regular,
                 GraphicsFontUnit.Point);
 

@@ -35,7 +35,7 @@ public static class SkiaPdfRenderer
         float pageHeightPts = heightHundredths * HundredthsToPoints;
 
         using var stream = new SKDynamicMemoryWStream();
-        using (SKDocument document = SKDocument.CreatePdf(stream))
+        using (var document = SKDocument.CreatePdf(stream))
         {
             foreach ((int pageNumber, Action<IGraphicsContext, int> render) in pages)
             {

@@ -19,9 +19,15 @@ public sealed class FakeLprClient : ILprClient
     public string? DefaultPrinter { get; set; }
     public PrintJobResult Result { get; set; } = PrintJobResult.Succeeded(1);
 
-    public IReadOnlyList<PrinterInfo> GetPrinters() => Printers;
+    public IReadOnlyList<PrinterInfo> GetPrinters()
+    {
+        return Printers;
+    }
 
-    public string? GetDefaultPrinter() => DefaultPrinter;
+    public string? GetDefaultPrinter()
+    {
+        return DefaultPrinter;
+    }
 
     public Task<PrintJobResult> SubmitAsync(byte[] pdf, string? printerName, string documentName,
         int sheetCount, CancellationToken cancellationToken = default)

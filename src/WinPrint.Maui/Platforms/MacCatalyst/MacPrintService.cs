@@ -1,25 +1,28 @@
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Printing.Skia;
 
 namespace WinPrint.Maui.Services;
 
 /// <summary>
-///     macOS (Mac Catalyst) implementation of IPrintService using UIKit UIPrintInteractionController.
+///     macOS (Mac Catalyst) implementation of <see cref="IPrintService" />. Reflow and rendering both
+///     use SkiaSharp (one engine measures and draws), and jobs are submitted through the native
+///     <see cref="UIKit.UIPrintInteractionController" /> via <see cref="MacPrintJob" />.
 /// </summary>
-public class MacPrintService : IPrintService
+public sealed class MacPrintService : IPrintService
 {
     public IReadOnlyList<PrinterInfo> GetAvailablePrinters()
     {
-        // Mac Catalyst / UIKit does not provide a list of printers programmatically.
-        // The system print dialog handles printer selection.
+        // Mac Catalyst / UIKit does not enumerate printers programmatically; the system print dialog
+        // handles printer selection.
         return new List<PrinterInfo>
         {
-            new() { Name = "(System Default)", IsDefault = true }
+            new() { Name = "(System Default)", IsDefault = true },
         };
     }
 
     public PrintPageSetup GetDefaultPageSetup(string? printerName = null)
     {
-        // Return US Letter defaults — the print dialog allows the user to change these.
+        // US Letter defaults — the native print dialog allows the user to change these.
         return new PrintPageSetup
         {
             PrinterName = printerName ?? "(System Default)",
@@ -32,19 +35,23 @@ public class MacPrintService : IPrintService
             MarginRight = 50,
             MarginBottom = 50,
             DpiX = 72,
-            DpiY = 72
+            DpiY = 72,
         };
     }
 
+    /// <summary>On Mac the native dialog is presented during job submission, so this is a passthrough.</summary>
     public PrintPageSetup ShowPrintDialog(PrintDialogOptions options, PrintPageSetup currentSetup)
     {
-        // On Mac Catalyst, the print dialog is shown as part of the print job submission.
-        // We return the current setup and the dialog is presented during CreateJob/Begin.
         return currentSetup;
     }
 
     public IPrintJob CreateJob(PrintPageSetup pageSetup, string documentName)
     {
         return new MacPrintJob(pageSetup, documentName);
+    }
+
+    public IGraphicsContext CreateMeasurementContext()
+    {
+        return SkiaGraphicsContext.CreateMeasurementContext();
     }
 }

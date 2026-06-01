@@ -1,19 +1,23 @@
+using Foundation;
 using UIKit;
-using CoreGraphics;
 using WinPrint.Core.Abstractions;
-using WinPrint.Maui.Graphics;
+using WinPrint.Core.Printing;
 
 namespace WinPrint.Maui.Services;
 
 /// <summary>
-///     macOS (Mac Catalyst) implementation of IPrintJob using UIPrintInteractionController.
-///     Renders pages via the MAUI graphics context adapter.
+///     macOS (Mac Catalyst) implementation of <see cref="IPrintJob" />. Pages are rendered to a vector
+///     PDF with the shared <see cref="SkiaPdfRenderer" /> — the same engine that measured the document
+///     during reflow — and handed to the native <see cref="UIPrintInteractionController" /> as the
+///     printing item, so the system print dialog is preserved while measurement and rendering stay
+///     consistent.
 /// </summary>
-public class MacPrintJob : IPrintJob, IDisposable
+public sealed class MacPrintJob : IPrintJob, IDisposable
 {
     private readonly PrintPageSetup _pageSetup;
     private readonly string _documentName;
-    private readonly List<(int pageNumber, Action<IGraphicsContext, int> render)> _pages = [];
+    private readonly List<(int PageNumber, Action<IGraphicsContext, int> Render)> _pages = [];
+    private NSData? _pdfData;
     private bool _disposed;
 
     public MacPrintJob(PrintPageSetup pageSetup, string documentName)
@@ -32,10 +36,75 @@ public class MacPrintJob : IPrintJob, IDisposable
         _pages.Add((pageNumber, renderPage));
     }
 
-    public void End()
+    public Task<PrintJobResult> EndAsync(CancellationToken cancellationToken = default)
     {
-        // Present the print interaction controller with our rendered pages
-        MainThread.BeginInvokeOnMainThread(() => PresentPrintController());
+        if (_pages.Count == 0)
+        {
+            return Task.FromResult(PrintJobResult.Succeeded(0));
+        }
+
+        byte[] pdfBytes;
+        try
+        {
+            pdfBytes = SkiaPdfRenderer.Render(_pages, _pageSetup);
+        }
+        catch (Exception ex)
+        {
+            return Task.FromResult(PrintJobResult.Failed($"Failed to render document to PDF: {ex.Message}"));
+        }
+
+        int sheetCount = _pages.Count;
+        var tcs = new TaskCompletionSource<PrintJobResult>();
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            try
+            {
+                UIPrintInteractionController? controller = UIPrintInteractionController.SharedPrintController;
+                if (controller == null)
+                {
+                    tcs.TrySetResult(PrintJobResult.Failed("The system print controller is unavailable."));
+                    return;
+                }
+
+                // Keep the NSData alive for the lifetime of the print interaction (held in a field).
+                _pdfData = NSData.FromArray(pdfBytes);
+
+                UIPrintInfo printInfo = UIPrintInfo.PrintInfo;
+                printInfo.JobName = _documentName;
+                printInfo.OutputType = UIPrintInfoOutputType.General;
+                printInfo.Orientation = _pageSetup.Landscape
+                    ? UIPrintInfoOrientation.Landscape
+                    : UIPrintInfoOrientation.Portrait;
+                controller.PrintInfo = printInfo;
+                controller.PrintingItem = _pdfData;
+
+                bool presented = controller.Present(true, (_, completed, error) =>
+                {
+                    if (error != null)
+                    {
+                        tcs.TrySetResult(PrintJobResult.Failed(error.LocalizedDescription));
+                    }
+                    else
+                    {
+                        tcs.TrySetResult(PrintJobResult.Succeeded(completed ? sheetCount : 0));
+                    }
+                });
+
+                if (!presented)
+                {
+                    // Present returns false (and never invokes the handler) if printing is unavailable
+                    // or another interaction is already showing — complete the task so callers don't hang.
+                    tcs.TrySetResult(PrintJobResult.Failed("Unable to present the system print dialog."));
+                }
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetResult(PrintJobResult.Failed(ex.Message));
+            }
+        });
+
+        return tcs.Task;
     }
 
     public void Dispose()
@@ -43,37 +112,11 @@ public class MacPrintJob : IPrintJob, IDisposable
         if (!_disposed)
         {
             _pages.Clear();
+            _pdfData?.Dispose();
+            _pdfData = null;
             _disposed = true;
         }
 
         GC.SuppressFinalize(this);
-    }
-
-    private void PresentPrintController()
-    {
-        UIPrintInteractionController? controller = UIPrintInteractionController.SharedPrintController;
-        if (controller == null)
-        {
-            return;
-        }
-
-        UIPrintInfo printInfo = UIPrintInfo.PrintInfo;
-        printInfo.JobName = _documentName;
-        printInfo.OutputType = UIPrintInfoOutputType.General;
-        printInfo.Orientation = _pageSetup.Landscape
-            ? UIPrintInfoOrientation.Landscape
-            : UIPrintInfoOrientation.Portrait;
-        controller.PrintInfo = printInfo;
-
-        // Use a page renderer to draw each page
-        controller.PrintPageRenderer = new WinPrintPageRenderer(_pages, _pageSetup);
-
-        controller.Present(true, (_, completed, error) =>
-        {
-            if (error != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"Print error: {error.LocalizedDescription}");
-            }
-        });
     }
 }
