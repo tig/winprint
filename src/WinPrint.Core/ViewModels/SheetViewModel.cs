@@ -509,12 +509,10 @@ public class SheetViewModel : ViewModelBase
                 throw new InvalidOperationException($"Content type engine not found for '{contentType}'.");
             }
 
-#if WINDOWS
             if (ContentEngine is TextMateCte textMateCte)
             {
                 textMateCte.Configure(ContentType, Language, File);
             }
-#endif
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null)
