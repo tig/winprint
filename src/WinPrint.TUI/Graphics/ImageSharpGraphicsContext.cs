@@ -241,7 +241,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
             }
         }
 
-        RichTextOptions options = CreateTextOptions(nativeFont, format: format);
+        RichTextOptions options = CreateTextOptions(nativeFont, format: format, forDrawing: true);
         options.Origin = point;
 
         _image.Mutate(ctx => ctx.DrawText(options, textToRender, color));
@@ -266,7 +266,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
             wrapWidth = (int)transformed.Width;
         }
 
-        RichTextOptions options = CreateTextOptions(nativeFont, wrapWidth, format);
+        RichTextOptions options = CreateTextOptions(nativeFont, wrapWidth, format, forDrawing: true);
 
         // ImageSharp alignment is relative to Origin, not within a bounding box.
         // We must adjust the origin so that alignment works as System.Drawing does with a rect:
@@ -370,7 +370,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
     /// </summary>
     private string TruncateToWidth(string text, Font font, float availableWidth, GraphicsStringFormat? format)
     {
-        TextOptions options = CreateTextOptions(font, format: format);
+        TextOptions options = CreateTextOptions(font, format: format, forDrawing: true);
         FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
         if (bounds.Width <= availableWidth)
         {
@@ -439,9 +439,15 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         return isPen.Width;
     }
 
-    private RichTextOptions CreateTextOptions(Font font, int? wrappingWidth = null, GraphicsStringFormat? format = null)
+    private RichTextOptions CreateTextOptions(Font font, int? wrappingWidth = null,
+        GraphicsStringFormat? format = null, bool forDrawing = false)
     {
-        var options = new RichTextOptions(font) { Dpi = DpiX };
+        // When drawing, scale the effective DPI so rendered text size matches the scaled
+        // coordinate system. Without this, positions get compressed by the transform but text
+        // stays full-size, causing overlap. Formula: effectiveDpi = 100 * _scaleX ensures
+        // that rendered pixel width equals position-spacing in pixels.
+        float effectiveDpi = forDrawing ? 100f * Math.Abs(_scaleX) : DpiX;
+        var options = new RichTextOptions(font) { Dpi = effectiveDpi };
 
         if (wrappingWidth is > 0)
         {
