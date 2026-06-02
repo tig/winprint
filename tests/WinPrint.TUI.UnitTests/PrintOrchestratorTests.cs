@@ -16,7 +16,7 @@ public class PrintOrchestratorTests
 
         Settings settings = ModelLocator.Current.Settings;
         SheetSettings sheet = settings.Sheets[settings.DefaultSheet.ToString()];
-        PrintMargins originalMargins = (PrintMargins)sheet.Margins.Clone();
+        var originalMargins = (PrintMargins)sheet.Margins.Clone();
         try
         {
             var service = new FakePrintService();

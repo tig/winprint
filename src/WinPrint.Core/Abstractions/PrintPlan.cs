@@ -28,5 +28,6 @@ public sealed class PrintPlan
     public int ToSheet { get; }
 
     /// <summary>Number of sheets selected to print.</summary>
-    public int SelectedSheets => TotalSheets == 0 || FromSheet <= 0 || ToSheet <= 0 ? 0 : Math.Max(0, ToSheet - FromSheet + 1);
+    public int SelectedSheets =>
+        TotalSheets == 0 || FromSheet <= 0 || ToSheet <= 0 ? 0 : Math.Max(0, ToSheet - FromSheet + 1);
 }
