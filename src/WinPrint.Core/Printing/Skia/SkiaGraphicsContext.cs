@@ -88,6 +88,9 @@ public sealed class SkiaGraphicsContext : IGraphicsContext
 
     public void SetClip(GraphicsRectF rect)
     {
+        // Skia clips are cumulative and can only be widened by restoring a saved state.
+        // Save before clipping so ResetClip can undo it.
+        _canvas?.Save();
         _canvas?.ClipRect(ToSkRect(rect));
     }
 
@@ -98,9 +101,8 @@ public sealed class SkiaGraphicsContext : IGraphicsContext
 
     public void ResetClip()
     {
-        // SkiaSharp cannot widen an existing clip without unwinding the save stack. In the
-        // cross-platform paint path clips are only set within Save/Restore scopes, so a reset is a
-        // no-op here. Callers that need to clear a clip should bracket it with Save/Restore.
+        // Undo the Save from SetClip to remove the clip region.
+        _canvas?.Restore();
     }
 
     public void SetTextRenderingMode(GraphicsTextRenderingMode mode)
