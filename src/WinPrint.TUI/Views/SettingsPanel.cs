@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Printing;
 using WinPrint.Core.ViewModels;
 using WinPrint.TUI.Views.Editors;
 
@@ -94,6 +96,13 @@ public sealed class SettingsPanel : View
         _context = context;
         AppViewModel app = context.App;
 
+        // Populate real printer names from the platform print service
+        IReadOnlyList<PrinterInfo> printers = context.PrintService.GetAvailablePrinters();
+        if (printers.Count > 0)
+        {
+            Printer.SetPrinters(printers.Select(p => p.Name));
+        }
+
         Sheet.SetSheets(app.Settings.Sheets.Values);
         Sheet.ValueChanged += (_, _) =>
         {
@@ -163,14 +172,20 @@ public sealed class SettingsPanel : View
 
         PrintButton.Accepting += (_, _) =>
         {
-            if (string.IsNullOrEmpty(app.ActiveFile))
+            if (_context is null || string.IsNullOrEmpty(app.ActiveFile))
             {
                 return;
             }
 
-            RunnableOpening?.Invoke(this, EventArgs.Empty);
-            // TODO: wire to a cross-platform print service once available
-            RunnableClosed?.Invoke(this, EventArgs.Empty);
+            // When running the cross-platform (net10.0) build, printing requires CUPS/lpr.
+            if (_context.PrintService is UnixPrintService &&
+                _context.PrintService.GetAvailablePrinters().Count == 0)
+            {
+                ShowPrintUnavailableDialog();
+                return;
+            }
+
+            _ = PrintCurrentAsync();
         };
 
         app.SheetApplied += (_, _) => SeedFromCurrentSheet();
@@ -180,6 +195,85 @@ public sealed class SettingsPanel : View
 
     private SettingsContext? _context;
     private bool _seeding;
+    private bool _printing;
+
+    private async Task PrintCurrentAsync()
+    {
+        if (_context is null || _printing)
+        {
+            return;
+        }
+
+        _printing = true;
+        AppViewModel app = _context.App;
+
+        app.StatusText = $"Printing {Path.GetFileName(app.ActiveFile)}...";
+        try
+        {
+            PrintJobResult result = await PrintOrchestrator
+                .PrintAsync(_context.PrintService, _context)
+                .ConfigureAwait(false);
+
+            UpdatePrintStatus(result.Success
+                ? $"Printed {result.SheetsPrinted} sheet{(result.SheetsPrinted == 1 ? "" : "s")}."
+                : $"Print failed: {result.Error ?? "Unknown error."}");
+        }
+        catch (Exception ex)
+        {
+            UpdatePrintStatus($"Print failed: {ex.Message}");
+        }
+        finally
+        {
+            _printing = false;
+        }
+    }
+
+    private void ShowPrintUnavailableDialog()
+    {
+        string os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" : "this system";
+        string msg =
+            $"No printers found. This build uses lpr/CUPS which is not available on {os}. " +
+            "Use the net10.0-windows build on Windows for native printing.";
+
+        var dlg = new Dialog
+        {
+            Title = "Print Not Available",
+            Width = Dim.Auto(minimumContentDim: 60),
+            Height = Dim.Auto(minimumContentDim: 5),
+        };
+        dlg.Add(new Label { Text = msg, Width = Dim.Fill(), Height = Dim.Auto() });
+        var ok = new Button { Text = "OK", IsDefault = true };
+        ok.Accepting += (_, _) => { GetApp()?.RequestStop(); };
+        dlg.AddButton(ok);
+        GetApp()?.Run(dlg);
+    }
+
+    private void UpdatePrintStatus(string message)
+    {
+        void Update()
+        {
+            if (_context is not null)
+            {
+                _context.App.StatusText = message;
+            }
+        }
+
+        try
+        {
+            if (GetApp() is { } application)
+            {
+                application.Invoke(Update);
+            }
+            else
+            {
+                Update();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            Update();
+        }
+    }
 
     private void SeedFromCurrentSheet()
     {

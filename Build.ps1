@@ -8,7 +8,7 @@ $targetFramework = "net10.0-windows"
 echo "Building"
 $env:winprint_telemetryId="put Kindel Systems key here"
 texttransform .\src\WinPrint.Core\Services\TelemetryService.tt
-msbuild /p:Configuration=$configuration /p:Platform=$platform src/WinPrint.slnx
+msbuild /p:Configuration=$configuration /p:Platform=$platform WinPrint.slnx
 
 $cliPath = ".\src\WinPrint.cli\bin\$platform\$configuration\$targetFramework\winprint.exe"
 $guiPath = ".\src\WinPrint.WinForms\bin\$platform\$configuration\$targetFramework\winprintgui.exe"

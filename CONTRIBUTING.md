@@ -54,7 +54,7 @@ VS Code will prompt to install the recommended extensions
 - **.NET MAUI** (`ms-dotnettools.dotnet-maui`) — MAUI build/debug targets.
 - **EditorConfig** (`editorconfig.editorconfig`) — applies [`.editorconfig`](.editorconfig).
 
-The solution is loaded automatically from `src/WinPrint.slnx`
+The solution is loaded automatically from `WinPrint.slnx`
 (`dotnet.defaultSolution` in [`.vscode/settings.json`](.vscode/settings.json)).
 
 If starting **WinPrint.Maui (Windows)** shows
@@ -73,7 +73,7 @@ signed in/activated.
 | ---------------- | ------------------------------------------------------------------------- |
 | `build` *(default)* | **Windows:** full solution. **macOS/Linux:** `WinPrint.Core` only.     |
 | `build-cli`      | Builds `WinPrint.cli` (`winprint`).                                        |
-| `build-solution` | Builds the whole `src/WinPrint.slnx` (needs the MAUI workload).           |
+| `build-solution` | Builds the whole `WinPrint.slnx` (needs the MAUI workload).           |
 | `build-winforms` | Builds the WinForms GUI directly for debugging; does not require MAUI.    |
 | `build-maui-windows` | Builds `WinPrint.Maui` for Windows (needs the MAUI workload).        |
 | `restore-maui-workloads` | Restores the MAUI workloads required by `WinPrint.Maui`.        |
@@ -113,8 +113,8 @@ fails the build on any diff. Match it locally:
 
 ```bash
 dotnet tool restore
-dotnet jb cleanupcode src/WinPrint.slnx --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs"
-dotnet format src/WinPrint.slnx
+dotnet jb cleanupcode WinPrint.slnx --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs"
+dotnet format WinPrint.slnx
 git diff --exit-code
 ```
 

@@ -1,26 +1,25 @@
-using System.Drawing;
+#if WINDOWS
 using System.Drawing.Printing;
 using WinPrint.Core.Abstractions;
 
-namespace WinPrint.Maui.Services;
+namespace WinPrint.Core.Printing;
 
 /// <summary>
-///     Windows implementation of IPrintJob using PrintDocument.
+///     Windows implementation of <see cref="IPrintJob" /> using <see cref="PrintDocument" />. Pages are
+///     queued and rendered on the printer device context via <see cref="SystemDrawingGraphicsContext" />
+///     so reflow (System.Drawing measurement) and rendering use the same engine.
 /// </summary>
-public class WindowsPrintJob : IPrintJob, IDisposable
+public sealed class WindowsPrintJob : IPrintJob
 {
     private readonly PrintDocument _printDocument;
-    private readonly PrintPageSetup _pageSetup;
     private readonly List<(int PageNum, Action<IGraphicsContext, int> Render)> _pages = [];
     private int _pageIndex;
     private bool _disposed;
 
     public WindowsPrintJob(PrintPageSetup pageSetup, string documentName)
     {
-        _pageSetup = pageSetup;
         _printDocument = new PrintDocument { DocumentName = documentName };
 
-        // Configure printer
         if (!string.IsNullOrEmpty(pageSetup.PrinterName))
         {
             _printDocument.PrinterSettings.PrinterName = pageSetup.PrinterName;
@@ -28,7 +27,6 @@ public class WindowsPrintJob : IPrintJob, IDisposable
 
         _printDocument.DefaultPageSettings.Landscape = pageSetup.Landscape;
 
-        // Find matching paper size
         foreach (PaperSize ps in _printDocument.PrinterSettings.PaperSizes)
         {
             if (string.Equals(ps.PaperName, pageSetup.PaperSizeName, StringComparison.OrdinalIgnoreCase))
@@ -52,11 +50,23 @@ public class WindowsPrintJob : IPrintJob, IDisposable
         _pages.Add((pageNumber, renderPage));
     }
 
-    public void End()
+    public Task<PrintJobResult> EndAsync(CancellationToken cancellationToken = default)
     {
-        if (_pages.Count > 0)
+        if (_pages.Count == 0)
         {
+            return Task.FromResult(PrintJobResult.Succeeded(0));
+        }
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             _printDocument.Print();
+            return Task.FromResult(PrintJobResult.Succeeded(_pages.Count));
+        }
+        catch (Exception ex) when (ex is InvalidPrinterException or System.ComponentModel.Win32Exception
+                                       or InvalidOperationException)
+        {
+            return Task.FromResult(PrintJobResult.Failed(ex.Message));
         }
     }
 
@@ -85,3 +95,4 @@ public class WindowsPrintJob : IPrintJob, IDisposable
         e.HasMorePages = _pageIndex < _pages.Count;
     }
 }
+#endif
