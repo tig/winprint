@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Printing;
 using WinPrint.Core.ViewModels;
 using WinPrint.TUI.Views.Editors;
 
@@ -196,6 +198,20 @@ public sealed class SettingsPanel : View
 
         _printing = true;
         AppViewModel app = _context.App;
+
+        // When running the cross-platform (net10.0) build, printing requires CUPS/lpr.
+        // If no printers are available, explain why instead of failing silently.
+        if (_context.PrintService is UnixPrintService &&
+            _context.PrintService.GetAvailablePrinters().Count == 0)
+        {
+            string os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" : "this system";
+            UpdatePrintStatus(
+                $"No printers found. This build uses lpr/CUPS which is not available on {os}. " +
+                "Use the net10.0-windows build on Windows for native printing.");
+            _printing = false;
+            return;
+        }
+
         app.StatusText = $"Printing {Path.GetFileName(app.ActiveFile)}...";
         try
         {
