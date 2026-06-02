@@ -43,6 +43,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private int _selectedSheetIndex = -1;
     private bool _suppressReflow;
 
+    private SheetDefinitionChangeTracker? _changeTracker;
+
     private string _activeFile = string.Empty;
     private string _statusText = "Ready";
     private bool _isBusy;
@@ -160,6 +162,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void LoadSheets()
     {
+        // Capture a baseline of every sheet before the user edits anything, so the change tracker
+        // (used to prompt for saving a changed sheet definition on exit) can detect/revert edits.
+        _changeTracker ??= new SheetDefinitionChangeTracker(Settings);
+        _changeTracker.CaptureBaselines();
+
         _sheetKeys.Clear();
         SheetNames.Clear();
         foreach (KeyValuePair<string, SheetSettings> kvp in Settings.Sheets)
@@ -204,6 +211,10 @@ public sealed class AppViewModel : INotifyPropertyChanged
         bool changed = _selectedSheetIndex != index;
         _selectedSheetIndex = index;
         _currentSheet = sheetSettings;
+        if (_changeTracker is not null)
+        {
+            _changeTracker.CurrentKey = _sheetKeys[index];
+        }
 
         // Initialize the sheet VM (this resets ContentEngine, header/footer state, etc).
         _sheetVM?.SetSheet(sheetSettings);
@@ -251,6 +262,97 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
 
         return false;
+    }
+
+    // ----- Sheet definition save / create (exit prompt) -----
+
+    /// <summary>
+    ///     True when the currently selected sheet definition has unsaved edits relative to the
+    ///     last-loaded/saved state. Front ends use this to decide whether to prompt on exit.
+    /// </summary>
+    public bool HasUnsavedSheetChanges => _changeTracker?.HasChanges ?? false;
+
+    /// <summary>
+    ///     True when <em>any</em> sheet definition has unsaved edits — not just the current one. Front ends
+    ///     use this on exit so edits made to a sheet the user later switched away from are still caught.
+    /// </summary>
+    public bool HasAnyUnsavedSheetChanges => (_changeTracker?.DirtyKeys.Count ?? 0) > 0;
+
+    /// <summary>The dictionary keys of every sheet definition with unsaved edits.</summary>
+    public IReadOnlyList<string> DirtySheetDefinitionKeys => _changeTracker?.DirtyKeys ?? [];
+
+    /// <summary>True when the definition identified by <paramref name="key" /> has unsaved edits.</summary>
+    public bool IsSheetDefinitionDirty(string key)
+    {
+        return _changeTracker?.HasChangesFor(key) ?? false;
+    }
+
+    /// <summary>
+    ///     Points the change tracker at the definition identified by <paramref name="key" /> so the
+    ///     <see cref="HasUnsavedSheetChanges" /> / save APIs operate on it. Used by exit prompts that
+    ///     iterate <see cref="DirtySheetDefinitionKeys" />.
+    /// </summary>
+    public void SetCurrentSheetDefinition(string key)
+    {
+        if (_changeTracker is not null)
+        {
+            _changeTracker.CurrentKey = key;
+        }
+    }
+
+    /// <summary>The available sheet definitions (key + name), in settings order.</summary>
+    public IReadOnlyList<SheetDefinitionInfo> SheetDefinitions => _changeTracker?.Definitions ?? [];
+
+    /// <summary>Index of the current sheet definition within <see cref="SheetDefinitions" />.</summary>
+    public int CurrentSheetDefinitionIndex =>
+        _changeTracker?.IndexOfCurrent ?? _selectedSheetIndex;
+
+    /// <summary>
+    ///     Persists the edited current sheet to an existing definition identified by its dictionary key.
+    ///     Choosing a key other than the current one reverts the current definition and updates the chosen one.
+    /// </summary>
+    public void SaveSheetChangesToKey(string definitionKey)
+    {
+        _changeTracker?.SaveTo(definitionKey);
+    }
+
+    /// <summary>
+    ///     Persists the edited current sheet to the existing definition at <paramref name="index" /> in
+    ///     <see cref="SheetDefinitions" />.
+    /// </summary>
+    public void SaveSheetChangesToIndex(int index)
+    {
+        IReadOnlyList<SheetDefinitionInfo> defs = SheetDefinitions;
+        if (index >= 0 && index < defs.Count)
+        {
+            SaveSheetChangesToKey(defs[index].Key);
+        }
+    }
+
+    /// <summary>
+    ///     Creates a new sheet definition named <paramref name="name" /> from the edited current sheet,
+    ///     leaving the original definition unchanged. Returns the new definition's key (or null if no tracker).
+    /// </summary>
+    public string? CreateSheetDefinition(string name)
+    {
+        return _changeTracker?.CreateNew(name);
+    }
+
+    /// <summary>Reverts the current sheet's edits to the last-loaded/saved state (no persistence).</summary>
+    public void DiscardSheetChanges()
+    {
+        _changeTracker?.Discard();
+    }
+
+    /// <summary>
+    ///     Re-captures the baseline of every sheet definition from their current state, so subsequent
+    ///     change detection compares against "now". Front ends call this after applying command-line
+    ///     <see cref="Options" /> (e.g. <c>--landscape</c>/<c>--sheet</c>) so those startup overrides are
+    ///     not mistaken for user edits that should be prompted to save on exit.
+    /// </summary>
+    public void RecaptureSheetBaselines()
+    {
+        _changeTracker?.CaptureBaselines();
     }
 
     // ----- File loading -----

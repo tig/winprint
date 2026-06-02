@@ -90,6 +90,10 @@ public sealed class SettingsContext
             context.File = app.ApplyOptions(options);
         }
 
+        // Treat any startup overrides (e.g. --sheet/--landscape) as the baseline so they aren't
+        // mistaken for user edits when prompting to save sheet-definition changes on exit.
+        app.RecaptureSheetBaselines();
+
         return context;
     }
 

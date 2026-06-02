@@ -615,6 +615,53 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _app.SaveNormalBounds(x, y, width, height);
     }
 
+    /// <summary>
+    ///     True when any sheet definition has unsaved edits. The window-close handler checks this before
+    ///     prompting.
+    /// </summary>
+    public bool HasUnsavedSheetChanges => _app.HasAnyUnsavedSheetChanges;
+
+    /// <summary>
+    ///     Shows the "save sheet definition" prompt for each definition with unsaved edits and applies the
+    ///     user's choice. Returns <c>true</c> if the app may close (everything saved/created or nothing to
+    ///     save) or <c>false</c> if the user cancelled and wants to keep editing.
+    /// </summary>
+    public async Task<bool> PromptSaveSheetOnExitAsync(Page host)
+    {
+        foreach (string key in _app.DirtySheetDefinitionKeys)
+        {
+            // A prior Save-to-other may have resolved this definition as a side effect.
+            if (!_app.IsSheetDefinitionDirty(key))
+            {
+                continue;
+            }
+
+            _app.SetCurrentSheetDefinition(key);
+
+            Views.SaveSheetDialogPage dialog =
+                new(_app.SheetDefinitions, _app.CurrentSheetDefinitionIndex);
+            await host.Navigation.PushModalAsync(dialog);
+            SaveSheetChoice choice = await dialog.Completion;
+            await host.Navigation.PopModalAsync();
+
+            switch (choice)
+            {
+                case SaveSheetChoice.Save:
+                    _app.SaveSheetChangesToIndex(dialog.SelectedIndex);
+                    break;
+
+                case SaveSheetChoice.Create:
+                    _app.CreateSheetDefinition(dialog.NewName);
+                    break;
+
+                default:
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     // --- Internals ---
 
     private void OnAppPropertyChanged(object? sender, PropertyChangedEventArgs e)

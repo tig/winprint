@@ -3,6 +3,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.Cli;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core.Models;
@@ -86,8 +87,50 @@ public sealed class TuiCommand : IViewerCommand
         };
         window.Add(content);
 
+        // Intercept the quit key so a changed sheet definition can be saved on exit.
+        InstallSaveOnExitGuard(app, content);
+
         await app.RunAsync(window, cancellationToken).ConfigureAwait(false);
         return new CommandResult(CommandStatus.Ok, null, null, null);
+    }
+
+    private bool _saving;
+
+    // When the user presses the quit key with unsaved sheet-definition edits, show the save prompt
+    // first. Cancel aborts the quit; Save/Create persist and then stop the app.
+    private void InstallSaveOnExitGuard(IApplication app, View content)
+    {
+        if (content is not MainView { AppViewModel: { } vm })
+        {
+            return;
+        }
+
+        app.Keyboard.KeyDown += (_, key) =>
+        {
+            if (_saving || !vm.HasAnyUnsavedSheetChanges)
+            {
+                return;
+            }
+
+            if (!app.Keyboard.KeyBindings.GetCommands(key).Contains(Command.Quit))
+            {
+                return;
+            }
+
+            key.Handled = true;
+            _saving = true;
+            try
+            {
+                if (SaveSheetDialog.ShowAndApply(app, vm))
+                {
+                    app.RequestStop();
+                }
+            }
+            finally
+            {
+                _saving = false;
+            }
+        };
     }
 
     /// <inheritdoc />

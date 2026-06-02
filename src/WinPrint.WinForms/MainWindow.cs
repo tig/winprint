@@ -13,6 +13,7 @@ using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+using WinPrint.Core.ViewModels;
 using WinPrint.WinForms;
 using Font = WinPrint.Core.Models.Font;
 using FormWindowState = System.Windows.Forms.FormWindowState;
@@ -31,6 +32,9 @@ public partial class MainWindow : Form
 
     // The active file
     private string activeFile = string.Empty;
+
+    // Tracks sheet-definition edits so the user can be prompted to save them on exit.
+    private SheetDefinitionChangeTracker? _changeTracker;
 
     // Flag: Has Dispose already been called?
     private bool disposed;
@@ -593,6 +597,11 @@ public partial class MainWindow : Form
             }
         }
 
+        // Capture a baseline of all sheet definitions (after CLI options applied) so we can detect
+        // and prompt to save any edits the user makes before exiting.
+        _changeTracker = new SheetDefinitionChangeTracker(ModelLocator.Current.Settings);
+        _changeTracker.CaptureBaselines();
+
         // By running this on a different thread, we enable the main window to show
         // as quickly as possible; making startup seem faster.
         //Task.Run(() => Start());
@@ -828,6 +837,43 @@ public partial class MainWindow : Form
         if (ModelLocator.Current.Settings is null)
         {
             return;
+        }
+
+        // Prompt to save any sheet-definition edits before exiting. Iterate every changed definition
+        // (not just the current one) so edits to a sheet the user switched away from are still caught.
+        if (_changeTracker is { } tracker)
+        {
+            foreach (string key in tracker.DirtyKeys)
+            {
+                // A prior Save-to-other may have resolved this definition as a side effect.
+                if (!tracker.HasChangesFor(key))
+                {
+                    continue;
+                }
+
+                tracker.CurrentKey = key;
+                using SaveSheetForm dlg = new(tracker.Definitions, tracker.IndexOfCurrent);
+                dlg.ShowDialog(this);
+                switch (dlg.Choice)
+                {
+                    case SaveSheetChoice.Save:
+                        if (dlg.SelectedIndex >= 0 && dlg.SelectedIndex < tracker.Definitions.Count)
+                        {
+                            tracker.SaveTo(tracker.Definitions[dlg.SelectedIndex].Key);
+                        }
+
+                        break;
+
+                    case SaveSheetChoice.Create:
+                        tracker.CreateNew(dlg.NewName);
+                        break;
+
+                    default:
+                        // Cancel: abort the exit so the user can keep editing.
+                        e.Cancel = true;
+                        return;
+                }
+            }
         }
 
         ServiceLocator.Current.UpdateService.GotLatestVersion -= UpdateService_GotLatestVersion;

@@ -166,6 +166,64 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
+    public void HasUnsavedSheetChanges_DetectsEditAndClearsAfterRecapture()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+
+        Assert.True(vm.HasUnsavedSheetChanges);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        // Re-baselining (as front ends do after applying CLI options) clears the dirty state.
+        vm.RecaptureSheetBaselines();
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+    }
+
+    [Fact]
+    public void HasAnyUnsavedSheetChanges_CatchesEditsToSwitchedAwaySheet()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetNames.Count > 1);
+
+        int first = vm.SelectedSheetIndex;
+        int other = first == 0 ? 1 : 0;
+
+        // Edit the first sheet, then switch away to another sheet without saving.
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+        string editedKey = vm.SheetKeys[first];
+        vm.SelectSheetByIndex(other);
+
+        // The current sheet is clean, but the switched-away sheet is still dirty.
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+        Assert.Contains(editedKey, vm.DirtySheetDefinitionKeys);
+        Assert.True(vm.IsSheetDefinitionDirty(editedKey));
+    }
+
+    [Fact]
+    public void DiscardSheetChanges_RevertsCurrentEdit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        int originalColumns = vm.CurrentSheet!.Columns;
+
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasUnsavedSheetChanges);
+
+        vm.DiscardSheetChanges();
+
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
+    }
+
+    [Fact]
     public async Task LoadFileAsync_MissingFile_SetsErrorPrefixedStatus()
     {
         AppViewModel vm = CreateVm();
