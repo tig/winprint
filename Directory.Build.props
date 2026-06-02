@@ -10,6 +10,7 @@
     <!-- Suppress NuGet package pruning advisories. Some legacy transitive deps require
          explicit package references for runtime resolution and cannot be pruned. -->
     <NoWarn>$(NoWarn);NU1510</NoWarn>
+
   </PropertyGroup>
 
   <!-- House-style analyzers (one type per file, no nested types). Excluded from the

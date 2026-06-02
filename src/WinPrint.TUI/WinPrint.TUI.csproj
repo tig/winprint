@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>wp</AssemblyName>
+        <RootNamespace>WinPrint.TUI</RootNamespace>
+        <Description>winprint Terminal.Gui full-screen TUI front end (wp)</Description>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Terminal.Gui" Version="2.4.4" />
+        <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
+        <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
+        <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
+        <PackageReference Include="SixLabors.Fonts" Version="2.1.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\CaskaydiaCoveNFM-Regular.ttf" />
+    </ItemGroup>
+
+</Project>

@@ -20,10 +20,17 @@
   <Project Path="../tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="../tests/WinPrint.TUI.UnitTests/WinPrint.TUI.UnitTests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="WinPrint.cli/WinPrint.cli.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="WinPrint.Core/WinPrint.Core.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="WinPrint.TUI/WinPrint.TUI.csproj">
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
