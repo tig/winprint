@@ -1,6 +1,7 @@
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Printing;
 using WinPrint.Core.ViewModels;
 using WinPrint.TUI.Graphics;
 
@@ -14,11 +15,18 @@ namespace WinPrint.TUI;
 /// </summary>
 public sealed class SettingsContext
 {
-    private SettingsContext(AppViewModel app, SheetViewModel sheetVM, PageRenderer renderer)
+    private readonly Lazy<IPrintService> _printService;
+
+    private SettingsContext(
+        AppViewModel app,
+        SheetViewModel sheetVM,
+        PageRenderer renderer,
+        Func<IPrintService>? printServiceFactory)
     {
         App = app;
         SheetVM = sheetVM;
         Renderer = renderer;
+        _printService = new Lazy<IPrintService>(printServiceFactory ?? PrintServiceFactory.Create);
 
         // Inject the ImageSharp measurement context whenever a new ContentEngine is assigned
         sheetVM.PropertyChanged += (_, e) =>
@@ -38,6 +46,9 @@ public sealed class SettingsContext
 
     /// <summary>The page renderer for rasterizing preview images.</summary>
     public PageRenderer Renderer { get; }
+
+    /// <summary>The print backend used when the user invokes Print from the TUI.</summary>
+    public IPrintService PrintService => _printService.Value;
 
     /// <summary>Sheet display names, in the same order as <see cref="AppViewModel.SheetKeys" />.</summary>
     public IReadOnlyList<string> SheetNames => App.SheetNames;
@@ -59,7 +70,7 @@ public sealed class SettingsContext
     ///     <paramref name="options" /> (sheet, orientation, printer, paper size, print range, file)
     ///     through the same <see cref="AppViewModel.ApplyOptions" /> path WinForms/MAUI use.
     /// </summary>
-    public static SettingsContext Create(Options? options)
+    public static SettingsContext Create(Options? options, IPrintService? printService = null)
     {
         var renderer = new PageRenderer();
 
@@ -70,7 +81,8 @@ public sealed class SettingsContext
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();
 
-        var context = new SettingsContext(app, sheetVM, renderer);
+        var context = new SettingsContext(app, sheetVM, renderer,
+            printService is null ? null : () => printService);
         if (options is not null)
         {
             context.File = app.ApplyOptions(options);

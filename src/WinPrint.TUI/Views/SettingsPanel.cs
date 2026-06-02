@@ -163,14 +163,12 @@ public sealed class SettingsPanel : View
 
         PrintButton.Accepting += (_, _) =>
         {
-            if (string.IsNullOrEmpty(app.ActiveFile))
+            if (_context is null || string.IsNullOrEmpty(app.ActiveFile))
             {
                 return;
             }
 
-            RunnableOpening?.Invoke(this, EventArgs.Empty);
-            // TODO: wire to a cross-platform print service once available
-            RunnableClosed?.Invoke(this, EventArgs.Empty);
+            _ = PrintCurrentAsync();
         };
 
         app.SheetApplied += (_, _) => SeedFromCurrentSheet();
@@ -180,6 +178,64 @@ public sealed class SettingsPanel : View
 
     private SettingsContext? _context;
     private bool _seeding;
+    private bool _printing;
+
+    private async Task PrintCurrentAsync()
+    {
+        if (_context is null || _printing)
+        {
+            return;
+        }
+
+        _printing = true;
+        AppViewModel app = _context.App;
+        app.StatusText = $"Printing {Path.GetFileName(app.ActiveFile)}...";
+        try
+        {
+            PrintJobResult result = await PrintOrchestrator
+                .PrintAsync(_context.PrintService, _context)
+                .ConfigureAwait(false);
+
+            UpdatePrintStatus(result.Success
+                ? $"Printed {result.SheetsPrinted} sheet{(result.SheetsPrinted == 1 ? "" : "s")}."
+                : $"Print failed: {result.Error ?? "Unknown error."}");
+        }
+        catch (Exception ex)
+        {
+            UpdatePrintStatus($"Print failed: {ex.Message}");
+        }
+        finally
+        {
+            _printing = false;
+        }
+    }
+
+    private void UpdatePrintStatus(string message)
+    {
+        void Update()
+        {
+            if (_context is not null)
+            {
+                _context.App.StatusText = message;
+            }
+        }
+
+        try
+        {
+            if (GetApp() is { } application)
+            {
+                application.Invoke(Update);
+            }
+            else
+            {
+                Update();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            Update();
+        }
+    }
 
     private void SeedFromCurrentSheet()
     {
