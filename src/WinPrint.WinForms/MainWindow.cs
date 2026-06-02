@@ -483,16 +483,31 @@ public partial class MainWindow : Form
         LogService.TraceMessage(
             $"{ModelLocator.Current.FileTypeMapping.ContentTypes.Count} languages, {ModelLocator.Current.FileTypeMapping.FilesAssociations.Count} file assocations");
 
-        ModelLocator.Current.Settings.PropertyChanged += (s, e) => BeginInvoke((Action)(() =>
+        ModelLocator.Current.Settings.PropertyChanged += (s, e) =>
         {
-            LogService.TraceMessage($"Settings.PropertyChanged: {e.PropertyName}");
-            switch (e.PropertyName)
+            // DefaultSheet can change at exit (e.g. creating a new definition in the save prompt); don't
+            // post a preview reflow to a window that is closing/disposed.
+            if (IsDisposed || Disposing || !IsHandleCreated)
             {
-                case "DefaultSheet":
-                    SheetChanged();
-                    break;
+                return;
             }
-        }));
+
+            BeginInvoke((Action)(() =>
+            {
+                if (IsDisposed || Disposing)
+                {
+                    return;
+                }
+
+                LogService.TraceMessage($"Settings.PropertyChanged: {e.PropertyName}");
+                switch (e.PropertyName)
+                {
+                    case "DefaultSheet":
+                        SheetChanged();
+                        break;
+                }
+            }));
+        };
 
         comboBoxSheet.DisplayMember = "Value";
         comboBoxSheet.ValueMember = "Key";

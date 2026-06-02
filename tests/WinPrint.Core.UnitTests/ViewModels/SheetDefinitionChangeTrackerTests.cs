@@ -132,6 +132,20 @@ public class SheetDefinitionChangeTrackerTests
     }
 
     [Fact]
+    public void CreateNew_MakesNewDefinitionTheDefault()
+    {
+        (Settings settings, string keyA, _) = NewSettings();
+        SheetDefinitionChangeTracker tracker = NewTracker(settings);
+        tracker.CurrentKey = keyA;
+
+        settings.Sheets[keyA].Columns = 9;
+        string newKey = tracker.CreateNew("Quattro");
+
+        // The newly created definition becomes the default so it is selected on next launch.
+        Assert.Equal(Guid.Parse(newKey), settings.DefaultSheet);
+    }
+
+    [Fact]
     public void Definitions_AndIndexOfCurrent_ReflectSettings()
     {
         (Settings settings, string keyA, string keyB) = NewSettings();

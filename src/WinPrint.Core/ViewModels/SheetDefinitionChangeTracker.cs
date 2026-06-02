@@ -130,7 +130,8 @@ public sealed class SheetDefinitionChangeTracker
     /// <summary>
     ///     Creates a new sheet definition (new Guid key) holding the edited current sheet's values under
     ///     <paramref name="name" />, reverts the current definition to its baseline (so the original is
-    ///     left unchanged), persists, and returns the new key.
+    ///     left unchanged), makes the new definition the <see cref="Settings.DefaultSheet" /> (so it is
+    ///     selected on next launch), persists, and returns the new key.
     /// </summary>
     public string CreateNew(string name)
     {
@@ -143,6 +144,9 @@ public sealed class SheetDefinitionChangeTracker
 
             RevertToBaseline(CurrentKey, live);
             _baselines[key] = Serialize(created);
+
+            // The newly created definition becomes the active default so it is selected on next launch.
+            _settings.DefaultSheet = Guid.Parse(key);
         }
 
         _save(_settings);

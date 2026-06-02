@@ -608,6 +608,27 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
+    public void CreateSheetDefinition_MakesNewDefinitionSelectedDefault()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        // Simulate an edit to the current sheet so creating a new definition is meaningful.
+        string currentKey = vm.SheetKeys[vm.SelectedSheetIndex];
+        ModelLocator.Current.Settings.Sheets[currentKey].Columns += 1;
+
+        string? key = vm.CreateSheetDefinition("Quattro");
+
+        Assert.NotNull(key);
+        // The new definition is the persisted default and the active selection, so exiting (which
+        // remembers the selected sheet) keeps it as the default rather than reverting to the original.
+        Assert.Equal(Guid.Parse(key!), ModelLocator.Current.Settings.DefaultSheet);
+        Assert.False(vm.SelectedSheetDiffersFromDefault);
+        Assert.Equal(key, vm.SheetKeys[vm.SelectedSheetIndex]);
+        Assert.Equal("Quattro", vm.SheetNames[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
     public void SaveWindowState_PersistsDefaultSheetSelection()
     {
         AppViewModel vm = CreateVm();

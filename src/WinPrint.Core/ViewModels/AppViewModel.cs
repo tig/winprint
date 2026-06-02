@@ -331,11 +331,44 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     /// <summary>
     ///     Creates a new sheet definition named <paramref name="name" /> from the edited current sheet,
-    ///     leaving the original definition unchanged. Returns the new definition's key (or null if no tracker).
+    ///     leaving the original definition unchanged, and makes the new definition the selected default so
+    ///     it is remembered on exit. Returns the new definition's key (or null if no tracker).
     /// </summary>
     public string? CreateSheetDefinition(string name)
     {
-        return _changeTracker?.CreateNew(name);
+        string? key = _changeTracker?.CreateNew(name);
+        if (key is not null)
+        {
+            // The tracker made the new definition the default; keep the cached selection in step so exit
+            // persistence records it (rather than overwriting DefaultSheet with the prior selection).
+            SyncSelectionToDefinition(key);
+        }
+
+        return key;
+    }
+
+    // Point the cached sheet selection at a (possibly newly created) definition without re-capturing
+    // baselines, so TryGetSelectedSheetGuid resolves to it and exit persistence keeps it as the default.
+    private void SyncSelectionToDefinition(string key)
+    {
+        int idx = _sheetKeys.IndexOf(key);
+        if (idx < 0 && Settings.Sheets.TryGetValue(key, out SheetSettings? sheet))
+        {
+            _sheetKeys.Add(key);
+            SheetNames.Add(sheet.Name);
+            idx = _sheetKeys.Count - 1;
+        }
+
+        if (idx < 0)
+        {
+            return;
+        }
+
+        _selectedSheetIndex = idx;
+        if (_changeTracker is not null)
+        {
+            _changeTracker.CurrentKey = key;
+        }
     }
 
     /// <summary>Reverts the current sheet's edits to the last-loaded/saved state (no persistence).</summary>
