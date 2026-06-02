@@ -87,4 +87,32 @@ public class SkiaGraphicsContextTests
         string header = System.Text.Encoding.ASCII.GetString(bytes, 0, 5);
         Assert.Equal("%PDF-", header);
     }
+
+    [Fact]
+    public void ResetClip_RestoresFullClipRegion_AfterSetClip()
+    {
+        // Regression test: ResetClip was previously a no-op which caused subsequent pages
+        // to be clipped to the first page's region, resulting in blank/partial output.
+        using var stream = new SKDynamicMemoryWStream();
+        using var document = SKDocument.CreatePdf(stream);
+        SKCanvas canvas = document.BeginPage(612f, 792f);
+        canvas.Scale(72f / 100f);
+
+        var context = new SkiaGraphicsContext(canvas);
+
+        // Clip to a small region (simulates page 1 content area)
+        context.SetClip(new GraphicsRectF(0, 0, 100, 100));
+
+        // After ResetClip, drawing outside the original clip should succeed
+        context.ResetClip();
+
+        // Verify the canvas clip bounds are restored to the full page, not the 100x100 region.
+        // Under the old no-op ResetClip, this would remain clipped to (0,0,100,100).
+        SKRect clipBounds = canvas.LocalClipBounds;
+        Assert.True(clipBounds.Width > 100, $"Clip width should be restored to full page, was {clipBounds.Width}");
+        Assert.True(clipBounds.Height > 100, $"Clip height should be restored to full page, was {clipBounds.Height}");
+
+        document.EndPage();
+        document.Close();
+    }
 }
