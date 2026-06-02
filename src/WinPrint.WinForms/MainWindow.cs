@@ -761,11 +761,22 @@ public partial class MainWindow : Form
                     // Set Loading to false in case of an error
                     //printPreview.SheetViewModel.Loading = false;
                     //printPreview.SheetViewModel.Ready = false;
-                    PrintPreview.Select();
-                    PrintPreview.Focus();
+                    FocusPrintPreviewOnUiThread();
                 }
             });
         }
+    }
+
+    internal void FocusPrintPreviewOnUiThread()
+    {
+        if (InvokeRequired)
+        {
+            BeginInvoke((Action)FocusPrintPreviewOnUiThread);
+            return;
+        }
+
+        PrintPreview.Select();
+        PrintPreview.Focus();
     }
 
     private void ShowMessage(string message)

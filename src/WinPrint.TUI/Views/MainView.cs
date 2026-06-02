@@ -1,5 +1,6 @@
 using Terminal.Gui.Configuration;
 using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views.Editors;
@@ -54,7 +55,14 @@ public sealed class MainView : View
             Height = Dim.Fill() - Dim.Height(Footer)
         };
         Preview.Border.Thickness = new Thickness(0);
-        Preview.SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Dialog);
+        Preview.OpenFileRequested += (_, _) => Settings.OpenFile();
+        Preview.BindNavigationKeys(this);
+        KeyBindings.AddApp(Key.PageDown, Preview, Command.PageDown);
+        KeyBindings.AddApp(Key.PageUp, Preview, Command.PageUp);
+        KeyBindings.AddApp(Key.Home, Preview, Command.Home);
+        KeyBindings.AddApp(Key.PageUp.WithCtrl, Preview, Command.ZoomIn);
+        KeyBindings.AddApp(Key.PageDown.WithCtrl, Preview, Command.ZoomOut);
+        KeyBindings.AddApp(Key.Home.WithCtrl, Preview, Command.Start);
 
         Add(Settings, Header, Preview, Footer);
 
