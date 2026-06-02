@@ -45,7 +45,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         };
 
         _papers = new ObservableCollection<string>(paperSizes ?? PrinterChoices.DefaultPaperSizes);
-        var paperLabel = new Label {Y = Pos.Bottom(_printer), Text = "Paper:" };
+        var paperLabel = new Label { Y = Pos.Bottom(_printer), Text = "Paper:" };
         _paper = new DropDownList
         {
             X = Pos.Right(paperLabel) + 1,
@@ -54,7 +54,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
             Source = new ListWrapper<string>(_papers)
         };
 
-        var pagesLabel = new Label {Y = Pos.Bottom(_paper), Text = "Pages From:" };
+        var pagesLabel = new Label { Y = Pos.Bottom(_paper), Text = "Pages From:" };
         _from = new NumericUpDown<int>
         {
             X = Pos.Right(pagesLabel) + 1,

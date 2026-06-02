@@ -11,11 +11,6 @@
          explicit package references for runtime resolution and cannot be pruned. -->
     <NoWarn>$(NoWarn);NU1510</NoWarn>
 
-    <!-- Path to a local Terminal.Gui checkout (tig/sixel-integration-plan branch, PR gui-cs#5460).
-         CI sets this via /p:TerminalGuiRoot. For local dev, set TERMINAL_GUI_ROOT env var
-         or pass -p:TerminalGuiRoot=<path> to dotnet build. -->
-    <TerminalGuiRoot Condition="'$(TerminalGuiRoot)' == '' AND '$(TERMINAL_GUI_ROOT)' != ''">$(TERMINAL_GUI_ROOT)\</TerminalGuiRoot>
-    <TerminalGuiRoot Condition="'$(TerminalGuiRoot)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..', 'gui-cs', 'Terminal.Gui'))\</TerminalGuiRoot>
   </PropertyGroup>
 
   <!-- House-style analyzers (one type per file, no nested types). Excluded from the

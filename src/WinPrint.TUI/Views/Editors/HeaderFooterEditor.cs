@@ -49,7 +49,9 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
         {
             _text.KeyBindings.Remove(tabKey);
         }
-        Terminal.Gui.Input.Key? backTabKey = _text.KeyBindings.GetFirstFromCommands(Terminal.Gui.Input.Command.Unindent);
+
+        Terminal.Gui.Input.Key? backTabKey =
+            _text.KeyBindings.GetFirstFromCommands(Terminal.Gui.Input.Command.Unindent);
         if (backTabKey is { })
         {
             _text.KeyBindings.Remove(backTabKey);

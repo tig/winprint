@@ -12,18 +12,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Terminal.Gui" Version="2.4.4" />
         <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
         <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
         <PackageReference Include="SixLabors.Fonts" Version="2.1.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <!-- Local Terminal.Gui from the tig/sixel-integration-plan branch (PR #5460) for
-             integrated raster output — eliminates bespoke sixel workarounds. -->
-        <ProjectReference Include="$(TerminalGuiRoot)Terminal.Gui\Terminal.Gui.csproj" />
     </ItemGroup>
 
     <ItemGroup>

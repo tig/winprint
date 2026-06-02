@@ -266,7 +266,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
             wrapWidth = (int)transformed.Width;
         }
 
-        RichTextOptions options = CreateTextOptions(nativeFont, wrapWidth, format, forDrawing: true);
+        RichTextOptions options = CreateTextOptions(nativeFont, wrapWidth, format, true);
 
         // ImageSharp alignment is relative to Origin, not within a bounding box.
         // We must adjust the origin so that alignment works as System.Drawing does with a rect:

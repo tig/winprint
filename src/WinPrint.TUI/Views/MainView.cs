@@ -26,7 +26,7 @@ public sealed class MainView : View
 
         Settings = new SettingsPanel(version, true) { X = 0, Y = 0 };
 
-        Pos seam = Pos.Right(Settings);
+        var seam = Pos.Right(Settings);
 
         Header = new HeaderFooterEditor("H_eader:")
         {
@@ -144,10 +144,7 @@ public sealed class MainView : View
         if (!string.IsNullOrEmpty(context.File))
         {
             string file = context.File;
-            Initialized += (_, _) =>
-            {
-                _ = LoadFileOnInitAsync(app, file);
-            };
+            Initialized += (_, _) => { _ = LoadFileOnInitAsync(app, file); };
         }
     }
 
