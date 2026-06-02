@@ -21,12 +21,12 @@ public sealed class PrintPlan
     /// <summary>Total sheets the document reflows to.</summary>
     public int TotalSheets { get; }
 
-    /// <summary>First sheet that will print (1-based, clamped to <see cref="TotalSheets" />).</summary>
+    /// <summary>First sheet that will print (1-based, clamped to <see cref="TotalSheets" />; 0 means no sheets).</summary>
     public int FromSheet { get; }
 
-    /// <summary>Last sheet that will print (1-based, inclusive, clamped to <see cref="TotalSheets" />).</summary>
+    /// <summary>Last sheet that will print (1-based, inclusive, clamped to <see cref="TotalSheets" />; 0 means no sheets).</summary>
     public int ToSheet { get; }
 
     /// <summary>Number of sheets selected to print.</summary>
-    public int SelectedSheets => TotalSheets == 0 ? 0 : Math.Max(0, ToSheet - FromSheet + 1);
+    public int SelectedSheets => TotalSheets == 0 || FromSheet <= 0 || ToSheet <= 0 ? 0 : Math.Max(0, ToSheet - FromSheet + 1);
 }

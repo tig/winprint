@@ -34,7 +34,12 @@ public static class PrintPlanner
             return new PrintPlan(request.PageSetup, 0, 0, 0);
         }
 
-        int from = request.FromSheet > 0 ? Math.Min(request.FromSheet, total) : 1;
+        if (request.FromSheet > total)
+        {
+            return new PrintPlan(request.PageSetup, total, 0, 0);
+        }
+
+        int from = request.FromSheet > 0 ? request.FromSheet : 1;
         int to = request.ToSheet > 0 ? Math.Min(request.ToSheet, total) : total;
         if (to < from)
         {
