@@ -36,15 +36,14 @@ public sealed class FontEditor : EditorBase<Font>
             Source = new ListWrapper<string>(_families)
         };
 
-        // Family and size on their own rows so the editor stays narrow.
         _sizes = new ObservableCollection<string>(FontChoices.Sizes.Select(FormatSize));
-        var sizeLabel = new Label { X = 0, Y = 1, Text = "Size (pt):" };
         _size = new DropDownList
         {
             Y = Pos.Bottom(_family),
-            Width = EditorMetrics.SizeFieldWidth,
+            Width = EditorMetrics.SizeFieldWidth - 1,
             Source = new ListWrapper<string>(_sizes)
         };
+        var sizeLabel = new Label { X = Pos.Right(_size) + 1, Y = Pos.Top(_size), Text = "pt" };
 
         _family.ValueChanged += (_, _) => PushFromChildren();
         _size.ValueChanged += (_, _) => PushFromChildren();
