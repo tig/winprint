@@ -31,14 +31,24 @@ public sealed class SaveSheetDialog : Dialog
     {
         ArgumentNullException.ThrowIfNull(definitions);
 
-        Title = "Sheet Definition has changed. Select definition to update.";
+        Title = "Save Sheet Definition?";
         Width = Dim.Auto(minimumContentDim: 56);
-        Height = Dim.Auto(minimumContentDim: 12);
+        Height = Dim.Auto(minimumContentDim: 14);
+
+        var prompt = new Label
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = 2,
+            Text = "Sheet Definition has changed. Select definition to update."
+        };
+        prompt.TextFormatter.WordWrap = true;
 
         _list = new ListView
         {
             X = 0,
-            Y = 0,
+            Y = Pos.Bottom(prompt),
             Width = Dim.Fill(),
             Height = Dim.Fill(3),
             Source = new ListWrapper<string>(
@@ -79,13 +89,21 @@ public sealed class SaveSheetDialog : Dialog
             RequestStop();
         };
 
-        Add(_list, newNameLabel, _newName, createButton);
+        Add(prompt, _list, newNameLabel, _newName, createButton);
 
         var cancel = new Button { Text = "_Cancel", IsDefault = false };
         cancel.Accepting += (_, e) =>
         {
             e.Handled = true;
             Choice = SaveSheetChoice.Cancel;
+            RequestStop();
+        };
+
+        var dontSave = new Button { Text = "_Don't Save", IsDefault = false };
+        dontSave.Accepting += (_, e) =>
+        {
+            e.Handled = true;
+            Choice = SaveSheetChoice.DontSave;
             RequestStop();
         };
 
@@ -98,6 +116,7 @@ public sealed class SaveSheetDialog : Dialog
         };
 
         AddButton(cancel);
+        AddButton(dontSave);
         AddButton(save);
     }
 
@@ -138,6 +157,10 @@ public sealed class SaveSheetDialog : Dialog
                     break;
                 case SaveSheetChoice.Create:
                     vm.CreateSheetDefinition(dialog.NewName);
+                    break;
+                case SaveSheetChoice.DontSave:
+                    // Discard this definition's edits but let the exit proceed.
+                    vm.DiscardSheetChanges();
                     break;
                 default:
                     return false;

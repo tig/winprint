@@ -484,6 +484,48 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
+    public void PersistSelectedSheetIfChanged_SavesWhenSelectionDiffersFromDefault()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetNames.Count > 1);
+
+        int targetIdx = vm.SelectedSheetIndex == 0 ? 1 : 0;
+        vm.SelectSheetByIndex(targetIdx);
+        var expected = Guid.Parse(vm.SheetKeys[targetIdx]);
+
+        int saves = 0;
+        Settings? saved = null;
+        bool changed = vm.PersistSelectedSheetIfChanged(s =>
+        {
+            saves++;
+            saved = s;
+        });
+
+        Assert.True(changed);
+        Assert.True(!vm.SelectedSheetDiffersFromDefault);
+        Assert.Equal(1, saves);
+        Assert.Same(ModelLocator.Current.Settings, saved);
+        Assert.Equal(expected, ModelLocator.Current.Settings.DefaultSheet);
+    }
+
+    [Fact]
+    public void PersistSelectedSheetIfChanged_DoesNotSaveWhenSelectionMatchesDefault()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        // LoadSheets selects DefaultSheet, so the selection already matches the persisted default.
+        Assert.False(vm.SelectedSheetDiffersFromDefault);
+
+        int saves = 0;
+        bool changed = vm.PersistSelectedSheetIfChanged(_ => saves++);
+
+        Assert.False(changed);
+        Assert.Equal(0, saves);
+    }
+
+    [Fact]
     public void SaveWindowState_PersistsDefaultSheetSelection()
     {
         AppViewModel vm = CreateVm();

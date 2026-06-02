@@ -132,6 +132,9 @@ public sealed class TuiCommand : IViewerCommand
                 PrintPageSetup setup = vm.CurrentPageSetup;
                 vm.PersistPrinterAndPaperIfChanged(setup.PrinterName, setup.PaperSizeName);
 
+                // Persist the selected sheet definition (writes only if it changed).
+                vm.PersistSelectedSheetIfChanged();
+
                 app.RequestStop();
             }
             finally

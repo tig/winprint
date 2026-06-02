@@ -12,6 +12,9 @@ public enum SaveSheetChoice
     /// <summary>Save the edits to the selected existing definition.</summary>
     Save,
 
+    /// <summary>Discard the edits (revert to baseline) but still allow the exit to proceed.</summary>
+    DontSave,
+
     /// <summary>Create a new definition from the edits using the typed name.</summary>
     Create
 }

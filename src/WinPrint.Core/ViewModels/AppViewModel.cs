@@ -729,6 +729,52 @@ public sealed class AppViewModel : INotifyPropertyChanged
         return true;
     }
 
+    /// <summary>
+    ///     Persists the currently selected sheet definition to <see cref="Settings.DefaultSheet"/>,
+    ///     saving <em>only</em> when the selection differs from the stored default. Mirrors the
+    ///     printer/paper "remember-last" persistence in <see cref="PersistPrinterAndPaperIfChanged"/>
+    ///     so frontends (notably the TUI) can remember which sheet definition was last in use.
+    /// </summary>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SettingsService.SaveSettings"/> (without CTE settings).
+    /// </param>
+    /// <returns><see langword="true"/> if the default changed and settings were saved; otherwise <see langword="false"/>.</returns>
+    public bool PersistSelectedSheetIfChanged(Action<Settings>? save = null)
+    {
+        if (!TryGetSelectedSheetGuid(out Guid selected))
+        {
+            return false;
+        }
+
+        Settings settings = Settings;
+        if (settings.DefaultSheet == selected)
+        {
+            return false;
+        }
+
+        settings.DefaultSheet = selected;
+        Action<Settings> persist = save ?? (s => ServiceLocator.Current.SettingsService.SaveSettings(s, false));
+        persist(settings);
+        return true;
+    }
+
+    /// <summary>
+    ///     <see langword="true"/> when the selected sheet definition differs from the persisted
+    ///     <see cref="Settings.DefaultSheet"/> (i.e. exiting would change the remembered default).
+    /// </summary>
+    public bool SelectedSheetDiffersFromDefault =>
+        TryGetSelectedSheetGuid(out Guid selected) && Settings.DefaultSheet != selected;
+
+    // Resolve the selected sheet key to a Guid, returning false when nothing is selected or the
+    // key is not a Guid (sheet keys are normally the definition's Guid in string form).
+    private bool TryGetSelectedSheetGuid(out Guid guid)
+    {
+        guid = Guid.Empty;
+        return _selectedSheetIndex >= 0
+               && _selectedSheetIndex < _sheetKeys.Count
+               && Guid.TryParse(_sheetKeys[_selectedSheetIndex], out guid);
+    }
+
     // ----- Command-line options -----
 
     /// <summary>
