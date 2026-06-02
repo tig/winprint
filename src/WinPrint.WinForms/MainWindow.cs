@@ -931,8 +931,8 @@ public partial class MainWindow : Form
         Settings settings = ModelLocator.Current.Settings;
         bool changed = ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
             settings,
-            lastPrinter: printersCB.Text,
-            lastPaperSize: paperSizesCB.Text,
+            printersCB.Text,
+            paperSizesCB.Text,
             size: size,
             location: location,
             windowState: (Core.Models.FormWindowState)WindowState,
@@ -943,7 +943,7 @@ public partial class MainWindow : Form
         // ensure it's persisted even when nothing else changed (still at most one write).
         if (!changed && settings.DefaultSheet != _initialDefaultSheet)
         {
-            ServiceLocator.Current.SettingsService.SaveSettings(settings, true);
+            ServiceLocator.Current.SettingsService.SaveSettings(settings);
         }
     }
 

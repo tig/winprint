@@ -128,7 +128,10 @@ public class SettingsServiceTests : TestServicesBase
 
     // ----- PersistExitStateIfChanged: shared "save on exit" logic for every front end -----
 
-    private static SettingsService NewService() => new() { SettingsFileName = $"WinPrint.{Guid.NewGuid():N}.json" };
+    private static SettingsService NewService()
+    {
+        return new SettingsService { SettingsFileName = $"WinPrint.{Guid.NewGuid():N}.json" };
+    }
 
     [Fact]
     public void PersistExitStateIfChanged_DefaultSheetAlone_SavesOnce()
@@ -167,12 +170,12 @@ public class SettingsServiceTests : TestServicesBase
         int saves = 0;
         bool changed = svc.PersistExitStateIfChanged(
             settings,
-            lastPrinter: "P",
-            lastPaperSize: "Letter",
-            defaultSheet: sheet,
-            size: new WindowSize(100, 200),
-            location: new WindowLocation(10, 20),
-            windowState: FormWindowState.Normal,
+            "P",
+            "Letter",
+            sheet,
+            new WindowSize(100, 200),
+            new WindowLocation(10, 20),
+            FormWindowState.Normal,
             save: _ => saves++);
 
         Assert.False(changed);
@@ -187,7 +190,7 @@ public class SettingsServiceTests : TestServicesBase
 
         int saves = 0;
         bool changed = svc.PersistExitStateIfChanged(
-            settings, lastPrinter: null, lastPaperSize: "", save: _ => saves++);
+            settings, null, "", save: _ => saves++);
 
         Assert.False(changed);
         Assert.Equal(0, saves);

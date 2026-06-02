@@ -704,7 +704,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     public bool PersistPrinterAndPaperIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
     {
         return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
-            Settings, lastPrinter: printer, lastPaperSize: paperSize, save: save);
+            Settings, printer, paperSize, save: save);
     }
 
     /// <summary>
@@ -722,7 +722,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     {
         Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
         return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
-            Settings, lastPrinter: printer, lastPaperSize: paperSize, defaultSheet: sheet, save: save);
+            Settings, printer, paperSize, sheet, save: save);
     }
 
     /// <summary>
@@ -855,12 +855,12 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
         ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
             Settings,
-            lastPrinter: _selectedPrinter,
-            lastPaperSize: _selectedPaperSize,
-            defaultSheet: sheet,
-            size: size,
-            location: location,
-            windowState: state);
+            _selectedPrinter,
+            _selectedPaperSize,
+            sheet,
+            size,
+            location,
+            state);
     }
 
     /// <summary>

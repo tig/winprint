@@ -342,11 +342,15 @@ public class SettingsService
         return true;
     }
 
-    private static bool SameSize(WindowSize? current, WindowSize candidate) =>
-        current is not null && current.Width == candidate.Width && current.Height == candidate.Height;
+    private static bool SameSize(WindowSize? current, WindowSize candidate)
+    {
+        return current is not null && current.Width == candidate.Width && current.Height == candidate.Height;
+    }
 
-    private static bool SameLocation(WindowLocation? current, WindowLocation candidate) =>
-        current is not null && current.X == candidate.X && current.Y == candidate.Y;
+    private static bool SameLocation(WindowLocation? current, WindowLocation candidate)
+    {
+        return current is not null && current.X == candidate.X && current.Y == candidate.Y;
+    }
 
     // Factory - creates 
     public static Settings? Create()
