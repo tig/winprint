@@ -16,7 +16,7 @@
             "windows": {
                 "args": [
                     "build",
-                    "${workspaceFolder}/src/WinPrint.slnx",
+                    "${workspaceFolder}/WinPrint.slnx",
                     "/p:Platform=x64"
                 ]
             },
@@ -46,7 +46,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/WinPrint.slnx",
+                "${workspaceFolder}/WinPrint.slnx",
                 "/p:Platform=x64"
             ],
             "group": "build",

@@ -1,6 +1,6 @@
 {
     // Load the solution explicitly so the C# Dev Kit doesn't have to guess.
-    "dotnet.defaultSolution": "src/WinPrint.slnx",
+    "dotnet.defaultSolution": "WinPrint.slnx",
 
     // Use the C# Dev Kit / Roslyn language service (not OmniSharp).
     // NOTE: the legacy "omnisharp.useGlobalMono" setting is obsolete and intentionally

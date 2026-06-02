@@ -26,7 +26,7 @@ jobs:
         run: dotnet workload install maui
 
       - name: Restore
-        run: dotnet restore src/WinPrint.slnx /p:Configuration=Debug /p:Platform=x64
+        run: dotnet restore WinPrint.slnx /p:Configuration=Debug /p:Platform=x64
 
       - name: Build analyzer
         # Pre-build the WinPrint.Analyzers project so the solution build doesn't
@@ -34,7 +34,7 @@ jobs:
         run: dotnet build tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj --no-restore /p:Configuration=Debug
 
       - name: Build
-        run: dotnet build src/WinPrint.slnx --no-restore /p:Configuration=Debug /p:Platform=x64 /p:DefineConstants="CI_BUILD"
+        run: dotnet build WinPrint.slnx --no-restore /p:Configuration=Debug /p:Platform=x64 /p:DefineConstants="CI_BUILD"
 
       - name: Restore .NET tools
         run: dotnet tool restore
@@ -47,8 +47,8 @@ jobs:
           # multi-TFM #if WINDOWS conditional usings (hoisting them out of #if and breaking the other
           # TFM). MainPage.xaml.cs is excluded because jb's var->explicit on its #if WINDOWS WinUI code
           # keeps pulling Microsoft.UI usings to the top; dotnet format still applies spacing there.
-          dotnet jb cleanupcode src/WinPrint.slnx --no-build --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs" --verbosity=WARN
-          dotnet format src/WinPrint.slnx --no-restore
+          dotnet jb cleanupcode WinPrint.slnx --no-build --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs" --verbosity=WARN
+          dotnet format WinPrint.slnx --no-restore
           git diff --exit-code
 
       - name: Test

@@ -7,35 +7,35 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Solution Items/">
-    <File Path="../.editorconfig" />
-    <File Path="../.gitignore" />
-    <File Path="../Directory.Build.props" />
-    <File Path="../Directory.Build.targets" />
-    <File Path="../README.md" />
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
     <File Path="README.md" />
+    <File Path="src/README.md" />
   </Folder>
   <Folder Name="/tools/">
-    <Project Path="../tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj" />
+    <Project Path="tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj" />
   </Folder>
-  <Project Path="../tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj">
+  <Project Path="tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="../tests/WinPrint.TUI.UnitTests/WinPrint.TUI.UnitTests.csproj">
+  <Project Path="tests/WinPrint.TUI.UnitTests/WinPrint.TUI.UnitTests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="WinPrint.cli/WinPrint.cli.csproj">
+  <Project Path="src/WinPrint.cli/WinPrint.cli.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="WinPrint.Core/WinPrint.Core.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x86" />
-  </Project>
-  <Project Path="WinPrint.TUI/WinPrint.TUI.csproj">
+  <Project Path="src/WinPrint.Core/WinPrint.Core.csproj">
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
-  <Project Path="WinPrint.WinForms/WinPrint.WinForms.csproj">
+  <Project Path="src/WinPrint.TUI/WinPrint.TUI.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="src/WinPrint.WinForms/WinPrint.WinForms.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="WinPrint.Maui/WinPrint.Maui.csproj" />
+  <Project Path="src/WinPrint.Maui/WinPrint.Maui.csproj" />
 </Solution>
