@@ -29,15 +29,16 @@
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
 		<!-- Display name -->
-		<ApplicationTitle>WinPrint.Maui</ApplicationTitle>
+		<ApplicationTitle>WinPrint</ApplicationTitle>
+		<AssemblyName>winprint</AssemblyName>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.winprint.maui</ApplicationId>
+		<ApplicationId>com.kindel.winprint</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>2.5.0</ApplicationDisplayVersion>
-		<ApplicationVersion>2500</ApplicationVersion>
-		<Version>2.5.0.0</Version>
+		<ApplicationDisplayVersion>$(GitVersion_MajorMinorPatch)</ApplicationDisplayVersion>
+		<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' != ''">$(GitVersion_CommitsSinceVersionSource)</ApplicationVersion>
+		<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' == ''">1</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -81,6 +82,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Velopack" Version="1.1.1" />
 	</ItemGroup>
 
 	<!-- Windows: reference WinForms (for PrintDialog) and System.Drawing.Common (for PrintDocument) -->

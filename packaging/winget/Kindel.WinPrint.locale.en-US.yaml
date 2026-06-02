@@ -1,0 +1,12 @@
+PackageIdentifier: Kindel.WinPrint
+PackageVersion: "{{version}}"
+PackageLocale: en-US
+Publisher: Kindel
+PackageName: WinPrint
+License: MIT
+ShortDescription: Advanced source code and text file printing.
+Description: WinPrint is a modern source code and text printing app with a cross-platform terminal UI and Windows/macOS GUI.
+PackageUrl: https://github.com/tig/winprint
+PublisherUrl: https://github.com/tig
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

@@ -91,7 +91,7 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 
 | Profile                         | Notes                                              |
 | ------------------------------- | -------------------------------------------------- |
-| **WinPrint.cli**                | Put CLI args (a file, `--what-if`) in `"args"`.    |
+| **WinPrint.cli**                | Legacy CLI debugging profile.                      |
 | **WinPrint.WinForms (Windows)** | The GUI (`winprintgui`). Windows only.             |
 | **WinPrint.Maui (Windows)**     | Directly launches the unpackaged Windows MAUI EXE. Needs the MAUI workload. |
 | **WinPrint.Maui (Mac Catalyst)**| MAUI app on macOS. Needs the MAUI workload.        |
@@ -133,17 +133,17 @@ WinPrint uses [GitVersion](https://gitversion.net/) for automatic semantic versi
 
 Releases are fully automated via CI:
 
-1. Merge your changes to `main`.
+1. Merge your changes to the release branch.
 2. Create and push a version tag:
    ```bash
-   git tag v2.1.0
-   git push origin v2.1.0
+   git tag v2.6.0
+   git push origin v2.6.0
    ```
 3. CI automatically:
    - Builds for Windows, macOS, and Linux
    - Signs the binaries (using configured secrets)
    - Creates a GitHub Release with all assets
-   - Publishes to winget and Homebrew
+   - Produces winget and Homebrew-ready artifacts/templates
 
 ### Signing secrets (for forks)
 
@@ -151,9 +151,17 @@ If you fork this repository and want to produce signed builds, configure the fol
 
 | Secret | Description |
 |--------|-------------|
-| `SIGN_CERTIFICATE` | Base64-encoded code signing certificate (.pfx) |
-| `SIGN_CERTIFICATE_PASSWORD` | Password for the signing certificate |
-| `APPLE_DEVELOPER_ID` | Apple Developer ID for macOS signing (optional) |
-| `APPLE_APP_PASSWORD` | App-specific password for macOS notarization (optional) |
+| `AZURE_CLIENT_ID` | Azure app registration client ID for Trusted Signing OIDC |
+| `AZURE_TENANT_ID` | Azure tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription containing the signing account |
+| `AZURE_SIGNING_ACCOUNT` | Azure Trusted Signing account name |
+| `AZURE_SIGNING_PROFILE` | Azure Trusted Signing certificate profile |
+| `AZURE_SIGNING_ENDPOINT` | Azure Trusted Signing endpoint |
+| `APPLE_CERTIFICATE_BASE64` | Base64-encoded Apple Developer ID `.p12` certificate |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for the `.p12` certificate |
+| `APPLE_ID` | Apple Developer account email |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization |
+| `APPLE_TEAM_ID` | Apple Developer team ID |
+| `APPLE_SIGNING_IDENTITY` | Developer ID Application signing identity |
 
 Without these secrets, CI will still build successfully but binaries will be unsigned.

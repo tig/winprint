@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
+using Velopack;
 #if WINDOWS
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -12,6 +13,8 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        VelopackApp.Build().Run();
+
 #if WINDOWS
         // Capture the *invocation* CWD before we change it below, so relative file
         // arguments passed on the command line can be resolved against the directory

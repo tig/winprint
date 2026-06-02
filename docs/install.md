@@ -18,7 +18,7 @@ No additional prerequisites are required on Windows. WinPrint is a self-containe
 
 ### Upgrade
 
-WinPrint includes automatic updates via Velopack. When a new version is available, you'll be prompted to update on launch.
+WinPrint packages are built with Velopack. Installed builds can use Velopack-managed updates, and winget can also upgrade the installed package:
 
 You can also upgrade manually:
 
@@ -50,7 +50,7 @@ No additional prerequisites are required for basic operation. For printing, macO
 
 ### Upgrade
 
-WinPrint includes automatic updates via Velopack. You can also upgrade manually:
+WinPrint packages are built with Velopack. Installed builds can use Velopack-managed updates, and Homebrew can also upgrade the cask:
 
 ```bash
 brew upgrade --cask winprint
@@ -89,7 +89,7 @@ lpstat -p
 
 ### Upgrade
 
-WinPrint includes automatic updates via Velopack. You can also upgrade manually:
+Linux installs are upgraded with Homebrew:
 
 ```bash
 brew upgrade winprint
@@ -116,7 +116,7 @@ wp --version
 | Mode | Command | Description |
 |------|---------|-------------|
 | TUI  | `wp`    | Terminal user interface |
-| GUI  | `wp gui` | Graphical user interface |
+| GUI  | `wp gui` | Graphical user interface on Windows/macOS |
 | Start Menu / Spotlight | Search "WinPrint" | Launch the GUI from your OS app launcher |
 
 ## Troubleshooting
