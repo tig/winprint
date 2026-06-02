@@ -120,3 +120,40 @@ git diff --exit-code
 
 The repo also enforces **one top-level type per file** (WPA0001) and **no nested types**
 (WPA0002) via analyzers. There's a `Build.ps1` helper at the repo root for scripted builds.
+
+## Versioning
+
+WinPrint uses [GitVersion](https://gitversion.net/) for automatic semantic versioning. You do **not** need to manually bump version numbers.
+
+- Version is derived from Git history (tags and branch names).
+- Just tag on `main` — GitVersion handles the rest.
+- Feature branches automatically get pre-release version suffixes.
+
+## Release process
+
+Releases are fully automated via CI:
+
+1. Merge your changes to `main`.
+2. Create and push a version tag:
+   ```bash
+   git tag v2.1.0
+   git push origin v2.1.0
+   ```
+3. CI automatically:
+   - Builds for Windows, macOS, and Linux
+   - Signs the binaries (using configured secrets)
+   - Creates a GitHub Release with all assets
+   - Publishes to winget and Homebrew
+
+### Signing secrets (for forks)
+
+If you fork this repository and want to produce signed builds, configure the following repository secrets:
+
+| Secret | Description |
+|--------|-------------|
+| `SIGN_CERTIFICATE` | Base64-encoded code signing certificate (.pfx) |
+| `SIGN_CERTIFICATE_PASSWORD` | Password for the signing certificate |
+| `APPLE_DEVELOPER_ID` | Apple Developer ID for macOS signing (optional) |
+| `APPLE_APP_PASSWORD` | App-specific password for macOS notarization (optional) |
+
+Without these secrets, CI will still build successfully but binaries will be unsigned.

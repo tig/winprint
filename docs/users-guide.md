@@ -5,185 +5,119 @@
 * Prints source code with syntax highlighting and line numbering using bundled TextMate grammars.
 * Prints HTML files.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
-* Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
+* Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview.
-* `winprint` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
-* The legacy PowerShell `out-winprint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `winprint.exe`.
+* `wp` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* The legacy PowerShell `Out-WinPrint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `wp`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
+* Cross-platform: Windows, macOS, and Linux.
 
-## Command Line Interfaces
+## Command Line Interface
 
-**winprint** has two command line surfaces:
+The primary command for WinPrint is `wp`. It provides a Terminal.Gui.Cli-based interface with JSON output and OpenCLI metadata support.
 
-* **`winprint`** - a Terminal.Gui.Cli-based executable intended for scripts, automation, and agents. It can return a JSON envelope and exposes OpenCLI metadata.
-* **`out-winprint`** - a deprecated PowerShell CmdLet designed as a stand-in for PowerShell's built-in `out-printer`.
+```bash
+wp [options] [file...]
+```
 
-### `winprint`
+### Launching Modes
 
-Use `winprint` to print files or redirected text without importing a PowerShell module.
+| Command | Description |
+|---------|-------------|
+| `wp file.cs` | Print a file directly |
+| `wp` | Launch the TUI (terminal user interface) |
+| `wp gui` | Launch the graphical user interface |
+
+### Examples
+
+Check the installed version:
+
+```bash
+wp --version
+```
 
 Count sheets without printing:
 
-```powershell
-winprint Program.cs --what-if
+```bash
+wp Program.cs --what-if
 ```
 
 Return a JSON envelope:
 
-```powershell
-winprint Program.cs --what-if --json
+```bash
+wp Program.cs --what-if --json
 ```
 
-Print to a named printer and override the detected language:
+Print to a named printer with language override:
 
-```powershell
-winprint Program.cs --printer "Microsoft Print to PDF" --language csharp --title "Program.cs"
+```bash
+wp Program.cs --printer "Microsoft Print to PDF" --language csharp --title "Program.cs"
 ```
 
 Pipe text through stdin:
 
-```powershell
-Get-Content $profile.CurrentUserAllHosts | winprint --language powershell --title "PowerShell profile"
+```bash
+cat profile.ps1 | wp --language powershell --title "PowerShell profile"
 ```
 
-Open the GUI preview for a file:
+Get machine-readable command metadata:
 
-```powershell
-winprint Program.cs --gui
+```bash
+wp --opencli
 ```
 
-Expose machine-readable command metadata:
+### CLI Options
 
-```powershell
-winprint --opencli
-```
-
-Common `winprint` options include `--printer`, `--paper-size`, `--sheet`, `--language`, `--content-type`, `--orientation`, `--line-numbers`, `--from-sheet`, `--to-sheet`, `--what-if`, `--gui`, and `--config`. The Terminal.Gui.Cli framework also provides `--help`, `--version`, `--json`, `--output`, `--initial`, `--timeout`, and `--opencli`.
+Common options include `--printer`, `--paper-size`, `--sheet`, `--language`, `--content-type`, `--orientation`, `--line-numbers`, `--from-sheet`, `--to-sheet`, `--what-if`, and `--config`. The Terminal.Gui.Cli framework also provides `--help`, `--version`, `--json`, `--output`, `--initial`, `--timeout`, and `--opencli`.
 
 ### Deprecated PowerShell CmdLet
 
-The PowerShell CmdLet (`out-winprint`) is deprecated. Prefer the `winprint` executable for new scripts and automation.
+The PowerShell CmdLet (`Out-WinPrint`) is deprecated. Prefer `wp` for new scripts and automation.
 
-**`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet built into PowerShell.
-
-If you still need the deprecated CmdLet, import it into PowerShell by adding an `import-module` statement in the Powershell profile:
+If you still need the deprecated CmdLet, import it into PowerShell:
 
 ```powershell
-import-module '.\src\WinPrint.PowerShell\bin\x64\Debug\net10.0-windows\WinPrint.PowerShell.dll'
-```
-
-There is no installer in this branch; import the module from the build output folder if you still need the deprecated CmdLet.
-
-Invoke the deprecated CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
-
-Specify the `-Verbose` parameter switch to have **winprint** show progress. Otherwise, **winprint** is pretty darn quiet, respecting the norms of PowerShell.
-
-#### Examples
-
-See what version is installed:
-
-```powershell
-PS > out-winprint -verbose
-VERBOSE: Out-WinPrint 2.0.4.1 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-PS >
-```
-
-Print `Program.cs` using the default sheet definition and default printer:
-
-```powershell
-get-content Program.cs | out-winprint
-```
-
-Or, more tersely:
-
-```powershell
-cat program.cs | wp
-```
-
-```powershell
-cat $profile.CurrentUserAllHosts | wp -Language powershell
-```
-
-Or, using more features:
-
-```powershell
-PS > cat Program.cs | wp -PrinterName PDF -Orientation Portrait -Verbose -Title Program.cs
-VERBOSE: Out-WinPrint 2.0.0.3912 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-VERBOSE:     Printer:          PDF
-VERBOSE:     Paper Size:       Letter
-VERBOSE:     Orientation:      Portrait
-VERBOSE:     Sheet Definition: Default 2-Up (0002a500-0000-0000-c000-000000000046)
-VERBOSE: Printing sheet 1
-VERBOSE: Printing sheet 2
-VERBOSE: Printed a total of 2 sheets.
-PS >
-```
-
-The following all do the same thing:
-
-```powershell
-out-winprint -FileName program.cs
-wp program.cs
-winprint program.cs
-cat program.cs | wp -Title "program.cs"
-```
-
-Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
-
-```powershell
-ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winPrint -p "HP LaserJet" -title $_.FullName -verbose}
-```
-
-Some **`out-winprint`** parameters support *Intellisense*, meaning that you can use `tab` on the command line to automatically cycle through possible options instead of typing. These paramters support *Intellisense*:
-
-* **`-PrinterName`** - *Intellisense* values are the names of all currently installed printers.
-
-* **`-PaperSize`** - *Intellisense* values are the names of all papers sizes supported by whatever printer has been specified by `-PrinterName`.
-
-* **`-SheetDefinition`** - *Intellisense* values are the names of all current Sheet Definitions defined in the `WinPrint.config.json` file. E.g. `"Default 2-Up"`.
-
-* **`-ContentTypeEngine`** - *Intellisense* values are the names of all current Content Type Engines **winprint** supports (`text/plain`, `text/html`, and `text/ansi`).
-
-* **`-Language`** - *Intellisense* values are the names of languages supported for syntax highlighting.
-
-#### CmdLet Help
-
-Access the built-in help by typing `get-help out-winprint` or `get-help out-winprint -full`.
-
-To create a nice PDF version of the help, do this:
-
-```powershell
-get-help out-winprint -full | out-winprint -p 'Microsoft Print to PDF' -s 'Default 1-Up' -Title 'winprint Help' -LineNumbers No
-```
-
-```powershell
-
-NAME
-    Out-WinPrint
-
-SYNTAX
-    Out-WinPrint [<CommonParameters>]
-
-    Out-WinPrint [[-FileName] <string>] [-PrinterName <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-Language <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefinition {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/html | text/ansi | text/plain}] [<CommonParameters>]
-
-    Out-WinPrint [-InstallUpdate] [-Force] [<CommonParameters>]
-
-    Out-WinPrint [-Config] [<CommonParameters>]
-
+Import-Module '<install-path>\WinPrint.PowerShell.dll'
 ```
 
 ## Graphical User Interface
 
-When run as a Windows app (`winprintgui.exe`), **winprint** provides an easy to use GUI for previewing how a file will be printed and changing many settings. Start **winprint** from the Windows Start Menu like any other app.
+Launch the GUI with:
 
-The **File button** opens a File Open Dialog for choosing the file to preview and/or print. The GUI app can print a single file at a time. Use the `winprint` command line to print multiple files at once.
+```bash
+wp gui
+```
 
-The **Print button** prints the currently selected file.
+Or find **WinPrint** in the Start Menu (Windows) or via Spotlight (macOS).
 
-The **Settings (⚙) button** will open `WinPrint.config.json` in your favorite text editor. Changes made to the file will be reflected in the GUI automatically.
+The GUI provides an easy-to-use interface for previewing how a file will be printed and changing settings.
+
+* **File button** — Opens a File Open Dialog for choosing the file to preview and/or print.
+* **Print button** — Prints the currently selected file.
+* **Settings (⚙) button** — Opens `WinPrint.config.json` in your text editor. Changes are reflected automatically.
+
+## Auto-Update
+
+WinPrint includes automatic update support via Velopack. When a new version is available:
+
+1. On launch, WinPrint checks for updates in the background.
+2. If an update is found, you'll be prompted to install it.
+3. The update is downloaded and applied automatically — no manual download required.
+
+You can also update manually using your package manager:
+
+```bash
+# Windows
+winget upgrade Kindel.WinPrint
+
+# macOS
+brew upgrade --cask winprint
+
+# Linux
+brew upgrade winprint
+```
 
 ## Sheet Definitions
 
