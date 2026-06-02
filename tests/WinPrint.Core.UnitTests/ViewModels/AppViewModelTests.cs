@@ -224,6 +224,88 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
+    public void SaveSheetChangesToKey_TargetIsDisplayedSheet_DoesNotThrowAndCopies()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetKeys.Count > 1);
+
+        // Sheet 0 is the displayed sheet, so the SheetViewModel is subscribed to its
+        // PropertyChanged. Saving another definition's edits *onto* it copies every
+        // property (including Name) via ModelBase.CopyPropertiesFrom, which must not crash.
+        vm.SelectSheetByIndex(0);
+        string displayedKey = vm.SheetKeys[0];
+        string otherKey = vm.SheetKeys[1];
+        string displayedName = ModelLocator.Current.Settings.Sheets[displayedKey].Name;
+
+        Assert.NotEqual(displayedName, ModelLocator.Current.Settings.Sheets[otherKey].Name);
+
+        int newRows = ModelLocator.Current.Settings.Sheets[otherKey].Rows + 3;
+        ModelLocator.Current.Settings.Sheets[otherKey].Rows = newRows;
+        vm.SetCurrentSheetDefinition(otherKey);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        try
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+
+            vm.SaveSheetChangesToKey(displayedKey);
+
+            SheetSettings displayed = ModelLocator.Current.Settings.Sheets[displayedKey];
+            Assert.Equal(newRows, displayed.Rows); // edits were copied across
+            Assert.Equal(displayedName, displayed.Name); // target keeps its own name
+        }
+        finally
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+    [Fact]
+    public void CreateSheetDefinition_FromDisplayedSheet_PersistsNewAndRevertsOriginal()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SelectSheetByIndex(0);
+        string originalKey = vm.SheetKeys[0];
+        int originalColumns = vm.CurrentSheet!.Columns;
+
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasUnsavedSheetChanges);
+        vm.SetCurrentSheetDefinition(originalKey);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        try
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+
+            string? newKey = vm.CreateSheetDefinition("My New Definition");
+
+            Assert.False(string.IsNullOrEmpty(newKey));
+            SheetSettings created = ModelLocator.Current.Settings.Sheets[newKey!];
+            Assert.Equal(originalColumns + 2, created.Columns); // the edits live in the new definition
+            Assert.Equal("My New Definition", created.Name);
+
+            // The original definition is reverted so the edits don't leak into it.
+            Assert.Equal(originalColumns, ModelLocator.Current.Settings.Sheets[originalKey].Columns);
+        }
+        finally
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+    [Fact]
     public async Task LoadFileAsync_MissingFile_SetsErrorPrefixedStatus()
     {
         AppViewModel vm = CreateVm();
