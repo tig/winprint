@@ -24,7 +24,7 @@ internal sealed class SaveSheetDialogPage : ContentPage
         _names = [.. definitions.Select(d => d.Name)];
         SelectedIndex = currentIndex;
 
-        Title = "Save Sheet Definition";
+        Title = "Save Sheet Definition?";
 
         _list = new CollectionView
         {
@@ -57,6 +57,9 @@ internal sealed class SaveSheetDialogPage : ContentPage
         Button cancelButton = new() { Text = "Cancel" };
         cancelButton.Clicked += (_, _) => Complete(SaveSheetChoice.Cancel);
 
+        Button dontSaveButton = new() { Text = "Don't Save" };
+        dontSaveButton.Clicked += (_, _) => Complete(SaveSheetChoice.DontSave);
+
         _saveButton = new Button { Text = "Save" };
         _saveButton.Clicked += (_, _) => Complete(SaveSheetChoice.Save);
 
@@ -78,13 +81,15 @@ internal sealed class SaveSheetDialogPage : ContentPage
             {
                 new ColumnDefinition { Width = GridLength.Star },
                 new ColumnDefinition { Width = GridLength.Auto },
+                new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = GridLength.Auto }
             },
             ColumnSpacing = 8
         };
         buttonRow.Add(new BoxView { Color = Colors.Transparent });
         buttonRow.Add(cancelButton, 1);
-        buttonRow.Add(_saveButton, 2);
+        buttonRow.Add(dontSaveButton, 2);
+        buttonRow.Add(_saveButton, 3);
 
         Label titleLabel = new()
         {

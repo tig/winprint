@@ -20,18 +20,26 @@ internal sealed class SaveSheetForm : Form
 
     public SaveSheetForm(IReadOnlyList<SheetDefinitionInfo> definitions, int currentIndex)
     {
-        Text = "Sheet Definition has changed. Select definition to update.";
+        Text = "Save Sheet Definition?";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterParent;
         MinimizeBox = false;
         MaximizeBox = false;
         ShowInTaskbar = false;
-        ClientSize = new Size(440, 320);
+        ClientSize = new Size(440, 340);
+
+        Label prompt = new()
+        {
+            Text = "Sheet Definition has changed. Select definition to update.",
+            Location = new Point(12, 12),
+            Size = new Size(416, 34),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+        };
 
         _list = new ListBox
         {
-            Location = new Point(12, 12),
-            Size = new Size(416, 200),
+            Location = new Point(12, 50),
+            Size = new Size(416, 174),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
             IntegralHeight = false
         };
@@ -81,7 +89,7 @@ internal sealed class SaveSheetForm : Form
         Button cancelButton = new()
         {
             Text = "&Cancel",
-            Location = new Point(180, 270),
+            Location = new Point(148, 290),
             Size = new Size(84, 27),
             Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
             DialogResult = DialogResult.Cancel
@@ -92,10 +100,24 @@ internal sealed class SaveSheetForm : Form
             Close();
         };
 
+        Button dontSaveButton = new()
+        {
+            Text = "&Don't Save",
+            Location = new Point(246, 290),
+            Size = new Size(84, 27),
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Right
+        };
+        dontSaveButton.Click += (_, _) =>
+        {
+            Choice = SaveSheetChoice.DontSave;
+            DialogResult = DialogResult.OK;
+            Close();
+        };
+
         _saveButton = new Button
         {
             Text = "&Save",
-            Location = new Point(344, 270),
+            Location = new Point(344, 290),
             Size = new Size(84, 27),
             Anchor = AnchorStyles.Bottom | AnchorStyles.Right
         };
@@ -106,11 +128,13 @@ internal sealed class SaveSheetForm : Form
             Close();
         };
 
+        Controls.Add(prompt);
         Controls.Add(_list);
         Controls.Add(newNameLabel);
         Controls.Add(_newName);
         Controls.Add(_createButton);
         Controls.Add(cancelButton);
+        Controls.Add(dontSaveButton);
         Controls.Add(_saveButton);
 
         AcceptButton = _saveButton;

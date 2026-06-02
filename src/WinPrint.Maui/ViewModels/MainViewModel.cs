@@ -654,6 +654,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     _app.CreateSheetDefinition(dialog.NewName);
                     break;
 
+                case SaveSheetChoice.DontSave:
+                    // Discard this definition's edits but let the exit proceed.
+                    _app.DiscardSheetChanges();
+                    break;
+
                 default:
                     return false;
             }

@@ -878,6 +878,11 @@ public partial class MainWindow : Form
                         tracker.CreateNew(dlg.NewName);
                         break;
 
+                    case SaveSheetChoice.DontSave:
+                        // Discard this definition's edits but let the exit proceed.
+                        tracker.Discard();
+                        break;
+
                     default:
                         // Cancel: abort the exit so the user can keep editing.
                         e.Cancel = true;
