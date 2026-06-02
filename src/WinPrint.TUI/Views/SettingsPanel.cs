@@ -177,6 +177,14 @@ public sealed class SettingsPanel : View
                 return;
             }
 
+            // When running the cross-platform (net10.0) build, printing requires CUPS/lpr.
+            if (_context.PrintService is UnixPrintService &&
+                _context.PrintService.GetAvailablePrinters().Count == 0)
+            {
+                ShowPrintUnavailableDialog();
+                return;
+            }
+
             _ = PrintCurrentAsync();
         };
 
@@ -199,19 +207,6 @@ public sealed class SettingsPanel : View
         _printing = true;
         AppViewModel app = _context.App;
 
-        // When running the cross-platform (net10.0) build, printing requires CUPS/lpr.
-        // If no printers are available, explain why instead of failing silently.
-        if (_context.PrintService is UnixPrintService &&
-            _context.PrintService.GetAvailablePrinters().Count == 0)
-        {
-            string os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" : "this system";
-            UpdatePrintStatus(
-                $"No printers found. This build uses lpr/CUPS which is not available on {os}. " +
-                "Use the net10.0-windows build on Windows for native printing.");
-            _printing = false;
-            return;
-        }
-
         app.StatusText = $"Printing {Path.GetFileName(app.ActiveFile)}...";
         try
         {
@@ -231,6 +226,26 @@ public sealed class SettingsPanel : View
         {
             _printing = false;
         }
+    }
+
+    private void ShowPrintUnavailableDialog()
+    {
+        string os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" : "this system";
+        string msg =
+            $"No printers found. This build uses lpr/CUPS which is not available on {os}. " +
+            "Use the net10.0-windows build on Windows for native printing.";
+
+        var dlg = new Dialog
+        {
+            Title = "Print Not Available",
+            Width = Dim.Auto(minimumContentDim: 60),
+            Height = Dim.Auto(minimumContentDim: 5),
+        };
+        dlg.Add(new Label { Text = msg, Width = Dim.Fill(), Height = Dim.Auto() });
+        var ok = new Button { Text = "OK", IsDefault = true };
+        ok.Accepting += (_, _) => { GetApp()?.RequestStop(); };
+        dlg.AddButton(ok);
+        GetApp()?.Run(dlg);
     }
 
     private void UpdatePrintStatus(string message)
