@@ -10,7 +10,7 @@ namespace WinPrint.TUI.Views;
 /// <summary>
 ///     Prompt shown when the user exits the TUI with unsaved sheet-definition edits. Lets the user
 ///     update an existing definition (the current one is preselected), create a new one with a typed
-///     name, or cancel (which aborts the exit).
+///     name, discard the edits (Don't Save), or cancel (which aborts the exit).
 /// </summary>
 public sealed class SaveSheetDialog : Dialog
 {
@@ -20,8 +20,11 @@ public sealed class SaveSheetDialog : Dialog
     /// <summary>The action chosen by the user. Defaults to <see cref="SaveSheetChoice.Cancel" />.</summary>
     public SaveSheetChoice Choice { get; private set; } = SaveSheetChoice.Cancel;
 
-    /// <summary>The index of the selected existing definition (for <see cref="SaveSheetChoice.Save" />).</summary>
-    public int SelectedIndex => _list.SelectedItem ?? 0;
+    /// <summary>
+    ///     The index of the selected existing definition (for <see cref="SaveSheetChoice.Save" />), or
+    ///     -1 when nothing is selected so the Save path can validate the selection.
+    /// </summary>
+    public int SelectedIndex => _list.SelectedItem ?? -1;
 
     /// <summary>The name typed for a new definition (for <see cref="SaveSheetChoice.Create" />).</summary>
     public string NewName => _newName.Text?.Trim() ?? string.Empty;
@@ -111,6 +114,14 @@ public sealed class SaveSheetDialog : Dialog
         save.Accepting += (_, e) =>
         {
             e.Handled = true;
+
+            // Save targets the selected definition; with no selection it would be a silent no-op (and
+            // exit with edits unsaved), so require a selection — matching WinForms/MAUI disabling Save.
+            if (SelectedIndex < 0)
+            {
+                return;
+            }
+
             Choice = SaveSheetChoice.Save;
             RequestStop();
         };
