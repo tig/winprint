@@ -607,17 +607,6 @@ public partial class MainWindow : Form
             activeFile = ModelLocator.Current.Options.Files.ToList()[0];
         }
 
-        if (ModelLocator.Current.Settings.DefaultSyntaxHighlighterCteNameClassName.Equals(nameof(AnsiCte),
-                StringComparison.OrdinalIgnoreCase))
-        {
-            // Verify Pygments is installed when the legacy Pygments-backed CTE is configured.
-            (bool installed, string message) = ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-            if (!installed)
-            {
-                MessageBox.Show(message, "Warning");
-            }
-        }
-
         // Capture a baseline of all sheet definitions (after CLI options applied) so we can detect
         // and prompt to save any edits the user makes before exiting.
         _changeTracker = new SheetDefinitionChangeTracker(ModelLocator.Current.Settings);

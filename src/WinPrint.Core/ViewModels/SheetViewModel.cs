@@ -523,25 +523,6 @@ public class SheetViewModel : ViewModelBase
 
             ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
-            if (ContentEngine.SupportedContentTypes.Contains("text/ansi") &&
-                !ContentEngine.SupportedContentTypes.Contains(ContentType))
-            {
-                (bool pygmentsInstalled, string message) =
-                    ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-                if (pygmentsInstalled)
-                {
-                    // Convert the document to ANSI using Pygments
-                    // TODO: Spin up a thread
-                    Log.Information("Applying source code formatting.");
-                    document = await ServiceLocator.Current.PygmentsConverterService
-                        .ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
-                }
-                else
-                {
-                    Log.Information("Treating file as plain text.");
-                }
-            }
-
             ContentEngine.Encoding = Encoding;
             retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
         }
