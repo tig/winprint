@@ -12,7 +12,7 @@
 │                                                                                                                      │
 │                                                                                                                      │
 │                                                                                                                      │
-│                                                                                                                      │
+│                                         Hello. Click here to open a file...                                          │
 │                                                                                                                      │
 │                                                                                                                      │
 │                                                                                                                      │

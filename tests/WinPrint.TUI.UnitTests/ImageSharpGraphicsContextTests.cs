@@ -106,6 +106,37 @@ public class ImageSharpGraphicsContextTests
             $"Text overlap at natural scale! Extent={totalExtent}px, expected ≤ {expectedMaxExtent * 1.5f:F0}px.");
     }
 
+    [Fact]
+    public void DrawString_PixelFontScalesWithHigherOutputDpi()
+    {
+        FontCollection fonts = FontCollectionFactory.GetCollection();
+
+        int baseHeight = MeasureRenderedPixelFontHeight(fonts, Dpi, Dpi / 100f);
+        int highDpiHeight = MeasureRenderedPixelFontHeight(fonts, Dpi * 2f, Dpi * 2f / 100f);
+
+        float ratio = (float)highDpiHeight / baseHeight;
+        Assert.True(ratio > 1.7f && ratio < 2.3f,
+            $"Expected pixel font rendering to scale with output DPI. Base={baseHeight}px, " +
+            $"HighDpi={highDpiHeight}px, ratio={ratio:F2}.");
+    }
+
+    [Fact]
+    public void MeasureString_UsesAdvanceWidthForPunctuation()
+    {
+        FontCollection fonts = FontCollectionFactory.GetCollection();
+        using var image = new Image<Rgba32>(400, 200);
+        var ctx = new ImageSharpGraphicsContext(image, Dpi, Dpi, fonts);
+
+        using IGraphicsFont font = ctx.CreateFont(
+            FontCollectionFactory.FallbackFamilyName, 16f,
+            GraphicsFontStyle.Regular, GraphicsFontUnit.Pixel);
+
+        float dotWidth = ctx.MeasureString(".", font).Width;
+        float letterWidth = ctx.MeasureString("W", font).Width;
+
+        Assert.InRange(dotWidth / letterWidth, 0.85f, 1.15f);
+    }
+
     private static int MeasureRenderedTextHeight(FontCollection fonts, float scale)
     {
         using var image = new Image<Rgba32>(400, 200);
@@ -115,6 +146,20 @@ public class ImageSharpGraphicsContextTests
         using IGraphicsFont font = ctx.CreateFont(
             FontCollectionFactory.FallbackFamilyName, 12f,
             GraphicsFontStyle.Regular, GraphicsFontUnit.Point);
+        ctx.DrawString("AaBbCcDdEeFf", font, ctx.BlackBrush, 0f, 0f);
+
+        return MeasureVerticalExtent(image);
+    }
+
+    private static int MeasureRenderedPixelFontHeight(FontCollection fonts, float outputDpi, float scale)
+    {
+        using var image = new Image<Rgba32>(800, 400);
+        var ctx = new ImageSharpGraphicsContext(image, outputDpi, outputDpi, fonts, fontDpiY: Dpi);
+        ctx.ScaleTransform(scale, scale);
+
+        using IGraphicsFont font = ctx.CreateFont(
+            FontCollectionFactory.FallbackFamilyName, 16f,
+            GraphicsFontStyle.Regular, GraphicsFontUnit.Pixel);
         ctx.DrawString("AaBbCcDdEeFf", font, ctx.BlackBrush, 0f, 0f);
 
         return MeasureVerticalExtent(image);

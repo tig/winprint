@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
@@ -5,17 +7,18 @@ using Terminal.Gui.Views;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Printing;
+using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
 using WinPrint.TUI.Views.Editors;
 
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     Composes the winprint left settings column: Sheet Settings, Printer, and About.
+///     Composes the winprint left settings column: Sheet Definition, Printer, and About.
 /// </summary>
 public sealed class SettingsPanel : View
 {
-    private const int MinContentWidth = 33;
+    private const int MinContentWidth = 42;
 
     /// <summary>Creates the composed settings panel with sample-populated editors.</summary>
     /// <param name="version">
@@ -36,6 +39,12 @@ public sealed class SettingsPanel : View
         ];
         Sheet = new SheetPicker(sheets) { Value = sheets[0] };
 
+        Landscape = new CheckBox
+        {
+            Text = "_Landscape",
+            Value = CheckState.UnChecked
+        };
+
         Margins = new MarginEditor { Value = new PrintMargins(75, 100, 50, 25) };
 
         Pages = new MultiPageEditor
@@ -53,6 +62,12 @@ public sealed class SettingsPanel : View
             Value = new Font { Family = "Source Code Pro", Size = 8f, Style = FontStyle.Regular }
         };
 
+        LineNumbers = new CheckBox
+        {
+            Text = "Li_ne Numbers",
+            Value = CheckState.Checked
+        };
+
         Printer = new PrinterEditor
         {
             Value = new PrintPageSetup { PrinterName = "Microsoft Print to PDF", PaperSizeName = "Letter" }
@@ -63,23 +78,31 @@ public sealed class SettingsPanel : View
 
         FileButton = new Button { Text = "_File..." };
         PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
+        ConfigButton = new Button { Text = "_Config...", X = Pos.Right(PrintButton) };
         var buttonRow = new View
         {
             CanFocus = true,
             Width = Dim.Fill(),
             Height = Dim.Auto(DimAutoStyle.Content)
         };
-        buttonRow.Add(FileButton, PrintButton);
+        buttonRow.Add(FileButton, PrintButton, ConfigButton);
 
         Add(buttonRow);
 
         Sheet.X = 0;
         Sheet.Y = Pos.Bottom(buttonRow);
         Add(Sheet);
-        StackJoinedAfter(Sheet, Margins, Pages, ContentFont, HeaderFooterFont);
+        Landscape.X = 0;
+        Landscape.Y = Pos.Bottom(Sheet);
+        Add(Landscape);
+        StackJoinedAfter(Landscape, Margins, Pages, ContentFont, HeaderFooterFont);
+
+        LineNumbers.X = 0;
+        LineNumbers.Y = Pos.Bottom(HeaderFooterFont);
+        Add(LineNumbers);
 
         Printer.X = 0;
-        Printer.Y = Pos.Bottom(HeaderFooterFont);
+        Printer.Y = Pos.Bottom(LineNumbers);
         Add(Printer);
 
         About.X = 0;
@@ -109,6 +132,13 @@ public sealed class SettingsPanel : View
             if (!_seeding && Sheet.Value?.Name is { } name)
             {
                 app.SelectSheetByNameOrId(name);
+            }
+        };
+        Landscape.ValueChanged += (_, _) =>
+        {
+            if (!_seeding)
+            {
+                app.SetLandscape(Landscape.Value == CheckState.Checked);
             }
         };
 
@@ -152,23 +182,15 @@ public sealed class SettingsPanel : View
                 _ = app.ReflowAsync();
             }
         };
-
-        FileButton.Accepting += (_, _) =>
+        LineNumbers.ValueChanged += (_, _) =>
         {
-            RunnableOpening?.Invoke(this, EventArgs.Empty);
-            var dlg = new OpenDialog
+            if (!_seeding)
             {
-                Title = "Open File",
-                AllowsMultipleSelection = false
-            };
-            GetApp()!.Run(dlg);
-            RunnableClosed?.Invoke(this, EventArgs.Empty);
-            if (!dlg.Canceled && dlg.FilePaths.Count > 0)
-            {
-                string file = dlg.FilePaths[0];
-                _ = app.LoadFileAsync(file);
+                app.SetLineNumbers(LineNumbers.Value == CheckState.Checked);
             }
         };
+
+        FileButton.Accepting += (_, _) => OpenFile();
 
         PrintButton.Accepting += (_, _) =>
         {
@@ -187,6 +209,7 @@ public sealed class SettingsPanel : View
 
             _ = PrintCurrentAsync();
         };
+        ConfigButton.Accepting += (_, _) => OpenConfigFile();
 
         app.SheetApplied += (_, _) => SeedFromCurrentSheet();
 
@@ -292,10 +315,12 @@ public sealed class SettingsPanel : View
         try
         {
             Sheet.Value = sheet;
+            Landscape.Value = sheet.Landscape ? CheckState.Checked : CheckState.UnChecked;
             Margins.Value = sheet.Margins;
             Pages.Value = sheet;
             HeaderFooterFont.Value = sheet.Header.Font ?? new Font();
             ContentFont.Value = (sheet.ContentSettings ??= new ContentSettings()).Font;
+            LineNumbers.Value = sheet.ContentSettings.LineNumbers ? CheckState.Checked : CheckState.UnChecked;
             PrintPageSetup setup = _context.App.CurrentPageSetup;
             Printer.Value = setup;
             Printer.SetRange(new PageRange { From = setup.FromSheet > 0 ? setup.FromSheet : 1, To = setup.ToSheet });
@@ -309,6 +334,9 @@ public sealed class SettingsPanel : View
     /// <summary>The predefined-sheet picker.</summary>
     public SheetPicker Sheet { get; }
 
+    /// <summary>The landscape orientation toggle.</summary>
+    public CheckBox Landscape { get; }
+
     /// <summary>The page margins editor.</summary>
     public MarginEditor Margins { get; }
 
@@ -321,6 +349,9 @@ public sealed class SettingsPanel : View
     /// <summary>The content font editor.</summary>
     public FontEditor ContentFont { get; }
 
+    /// <summary>The line-number rendering toggle.</summary>
+    public CheckBox LineNumbers { get; }
+
     /// <summary>The printer / paper / pages editor.</summary>
     public PrinterEditor Printer { get; }
 
@@ -332,6 +363,9 @@ public sealed class SettingsPanel : View
 
     /// <summary>The Print button (initiates print).</summary>
     public Button PrintButton { get; }
+
+    /// <summary>The Config button (opens the JSON config file in the default editor).</summary>
+    public Button ConfigButton { get; }
 
     /// <summary>Raised before a dialog/runnable opens (suspend sixel rendering).</summary>
     public event EventHandler? RunnableOpening;
@@ -361,5 +395,67 @@ public sealed class SettingsPanel : View
             Add(section);
             previous = section;
         }
+    }
+
+    /// <summary>Shows the open-file dialog and loads the selected file.</summary>
+    public void OpenFile()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        RunnableOpening?.Invoke(this, EventArgs.Empty);
+        var dlg = new OpenDialog
+        {
+            Title = "Open File",
+            AllowsMultipleSelection = false
+        };
+        GetApp()!.Run(dlg);
+        RunnableClosed?.Invoke(this, EventArgs.Empty);
+        if (!dlg.Canceled && dlg.FilePaths.Count > 0)
+        {
+            string file = dlg.FilePaths[0];
+            _ = _context.App.LoadFileAsync(file);
+        }
+    }
+
+    private void OpenConfigFile()
+    {
+        string configFile = ServiceLocator.Current.SettingsService.SettingsFileName;
+        try
+        {
+            Process.Start(CreateConfigOpenStartInfo(configFile))?.Dispose();
+        }
+        catch (Win32Exception ex)
+        {
+            ShowConfigError(configFile, ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ShowConfigError(configFile, ex.Message);
+        }
+    }
+
+    private static ProcessStartInfo CreateConfigOpenStartInfo(string configFile)
+    {
+        return new ProcessStartInfo
+        {
+            FileName = configFile,
+            UseShellExecute = true
+        };
+    }
+
+    private void ShowConfigError(string configFile, string message)
+    {
+        var dlg = new Dialog
+        {
+            Title = "Config Error",
+            Width = Dim.Auto(DimAutoStyle.Content),
+            Height = Dim.Auto(DimAutoStyle.Content)
+        };
+        dlg.Add(new Label { Text = $"Couldn't open {configFile}: {message}" });
+        dlg.AddButton(new Button { Text = "OK", IsDefault = true });
+        GetApp()!.Run(dlg);
     }
 }
