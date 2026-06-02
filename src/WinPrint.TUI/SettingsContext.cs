@@ -84,6 +84,10 @@ public sealed class SettingsContext
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();
 
+        // Restore the remembered ("sticky") printer / paper size into the page setup BEFORE applying
+        // command-line options, so an explicit --printer / --paper-size still overrides the saved value.
+        RestoreStickyPrinterPaper(app, svc, pageSetup);
+
         var context = new SettingsContext(app, sheetVM, renderer, () => svc);
         if (options is not null)
         {
@@ -95,6 +99,27 @@ public sealed class SettingsContext
         app.RecaptureSheetBaselines();
 
         return context;
+    }
+
+    // Applies Settings.LastPrinter / LastPaperSize to the page setup using the shared resolve chain
+    // (saved -> system default -> first). A saved paper name is allowed through even when it isn't in
+    // the generic paper list, because the TUI has no per-printer paper enumeration.
+    private static void RestoreStickyPrinterPaper(AppViewModel app, IPrintService svc, PrintPageSetup pageSetup)
+    {
+        Settings settings = app.Settings;
+
+        IReadOnlyList<string> printerNames = svc.GetAvailablePrinters().Select(p => p.Name).ToList();
+        string? chosenPrinter =
+            PrinterSelection.ResolvePrinter(settings.LastPrinter, pageSetup.PrinterName, printerNames);
+        if (!string.IsNullOrEmpty(chosenPrinter))
+        {
+            pageSetup.PrinterName = chosenPrinter;
+        }
+
+        if (!string.IsNullOrEmpty(settings.LastPaperSize))
+        {
+            pageSetup.PaperSizeName = settings.LastPaperSize;
+        }
     }
 
     /// <summary>Selects a sheet by its settings key/name (drives the SheetPicker).</summary>

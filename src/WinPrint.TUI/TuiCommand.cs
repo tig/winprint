@@ -6,6 +6,7 @@ using Terminal.Gui.Drivers;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views;
 
@@ -96,8 +97,8 @@ public sealed class TuiCommand : IViewerCommand
 
     private bool _saving;
 
-    // When the user presses the quit key with unsaved sheet-definition edits, show the save prompt
-    // first. Cancel aborts the quit; Save/Create persist and then stop the app.
+    // Intercept the quit key on every exit so that (a) changed sheet definitions can be saved via the
+    // prompt (Cancel aborts the quit) and (b) the remembered printer / paper selection is persisted.
     private void InstallSaveOnExitGuard(IApplication app, View content)
     {
         if (content is not MainView { AppViewModel: { } vm })
@@ -107,7 +108,7 @@ public sealed class TuiCommand : IViewerCommand
 
         app.Keyboard.KeyDown += (_, key) =>
         {
-            if (_saving || !vm.HasAnyUnsavedSheetChanges)
+            if (_saving)
             {
                 return;
             }
@@ -121,10 +122,17 @@ public sealed class TuiCommand : IViewerCommand
             _saving = true;
             try
             {
-                if (SaveSheetDialog.ShowAndApply(app, vm))
+                if (vm.HasAnyUnsavedSheetChanges && !SaveSheetDialog.ShowAndApply(app, vm))
                 {
-                    app.RequestStop();
+                    // User cancelled the save prompt: abort the quit so they can keep editing.
+                    return;
                 }
+
+                // Persist the remembered printer / paper selection (writes only if it changed).
+                PrintPageSetup setup = vm.CurrentPageSetup;
+                vm.PersistPrinterAndPaperIfChanged(setup.PrinterName, setup.PaperSizeName);
+
+                app.RequestStop();
             }
             finally
             {

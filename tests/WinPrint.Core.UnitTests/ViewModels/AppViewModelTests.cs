@@ -361,6 +361,61 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
+    public void PersistPrinterAndPaperIfChanged_SavesOnceWhenChanged()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        ModelLocator.Current.Settings.LastPrinter = "Old";
+        ModelLocator.Current.Settings.LastPaperSize = "Letter";
+
+        int saves = 0;
+        Settings? saved = null;
+        bool changed = vm.PersistPrinterAndPaperIfChanged("New", "A4", s =>
+        {
+            saves++;
+            saved = s;
+        });
+
+        Assert.True(changed);
+        Assert.Equal(1, saves);
+        Assert.Same(ModelLocator.Current.Settings, saved);
+        Assert.Equal("New", ModelLocator.Current.Settings.LastPrinter);
+        Assert.Equal("A4", ModelLocator.Current.Settings.LastPaperSize);
+    }
+
+    [Fact]
+    public void PersistPrinterAndPaperIfChanged_DoesNotSaveWhenUnchanged()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        ModelLocator.Current.Settings.LastPrinter = "Same";
+        ModelLocator.Current.Settings.LastPaperSize = "Letter";
+
+        int saves = 0;
+        bool changed = vm.PersistPrinterAndPaperIfChanged("Same", "Letter", _ => saves++);
+
+        Assert.False(changed);
+        Assert.Equal(0, saves);
+    }
+
+    [Fact]
+    public void PersistPrinterAndPaperIfChanged_IgnoresNullOrEmptySelection()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        ModelLocator.Current.Settings.LastPrinter = "Keep";
+        ModelLocator.Current.Settings.LastPaperSize = "Letter";
+
+        int saves = 0;
+        bool changed = vm.PersistPrinterAndPaperIfChanged(null, "", _ => saves++);
+
+        Assert.False(changed);
+        Assert.Equal(0, saves);
+        Assert.Equal("Keep", ModelLocator.Current.Settings.LastPrinter);
+        Assert.Equal("Letter", ModelLocator.Current.Settings.LastPaperSize);
+    }
+
+    [Fact]
     public void SaveWindowState_Normal_StoresBoundsAndState()
     {
         AppViewModel vm = CreateVm();

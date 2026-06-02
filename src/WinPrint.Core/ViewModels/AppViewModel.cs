@@ -670,25 +670,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void RestorePrinterSelection(IList<string> availablePrinters, string? systemDefault)
     {
-        if (availablePrinters == null || availablePrinters.Count == 0)
-        {
-            SelectedPrinter = null;
-            return;
-        }
-
-        string? saved = Settings.LastPrinter;
-        if (!string.IsNullOrEmpty(saved) && availablePrinters.Contains(saved))
-        {
-            SelectedPrinter = saved;
-        }
-        else if (!string.IsNullOrEmpty(systemDefault) && availablePrinters.Contains(systemDefault))
-        {
-            SelectedPrinter = systemDefault;
-        }
-        else
-        {
-            SelectedPrinter = availablePrinters[0];
-        }
+        SelectedPrinter = PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
+            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList());
     }
 
     /// <summary>
@@ -703,6 +686,47 @@ public sealed class AppViewModel : INotifyPropertyChanged
         {
             SelectedPaperSize = saved;
         }
+    }
+
+    /// <summary>
+    ///     Persists the given printer / paper-size selection to <see cref="Settings.LastPrinter"/> /
+    ///     <see cref="Settings.LastPaperSize"/>, saving <em>only</em> when at least one value changed.
+    ///     The selection is passed explicitly (rather than read from a single representation) because
+    ///     front ends track it differently (MAUI: <see cref="SelectedPrinter"/>; TUI:
+    ///     <see cref="CurrentPageSetup"/>).
+    /// </summary>
+    /// <param name="printer">The printer name to persist (ignored when null/empty).</param>
+    /// <param name="paperSize">The paper-size name to persist (ignored when null/empty).</param>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SettingsService.SaveSettings"/> (without CTE settings).
+    /// </param>
+    /// <returns><see langword="true"/> if a value changed and settings were saved; otherwise <see langword="false"/>.</returns>
+    public bool PersistPrinterAndPaperIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
+    {
+        Settings settings = Settings;
+        bool changed = false;
+
+        if (!string.IsNullOrEmpty(printer) && !string.Equals(settings.LastPrinter, printer, StringComparison.Ordinal))
+        {
+            settings.LastPrinter = printer;
+            changed = true;
+        }
+
+        if (!string.IsNullOrEmpty(paperSize) &&
+            !string.Equals(settings.LastPaperSize, paperSize, StringComparison.Ordinal))
+        {
+            settings.LastPaperSize = paperSize;
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        Action<Settings> persist = save ?? (s => ServiceLocator.Current.SettingsService.SaveSettings(s, false));
+        persist(settings);
+        return true;
     }
 
     // ----- Command-line options -----

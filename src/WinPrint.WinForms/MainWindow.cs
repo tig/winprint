@@ -496,35 +496,56 @@ public partial class MainWindow : Form
             comboBoxSheet.Items.Add(new KeyValuePair<string, string>(s.Key, s.Value.Name));
         }
 
-        // Select default printer and paper size
+        // Select the printer: persisted (sticky) choice, else the system default, else the first
+        // installed. The OS default is the PrintDocument's initial PrinterName.
+        string osDefaultPrinter = printDoc.PrinterSettings.PrinterName;
+        List<string> installedPrinters = [];
         foreach (string printer in PrinterSettings.InstalledPrinters)
         {
             printersCB.Items.Add(printer);
-            if (printDoc.PrinterSettings.IsDefaultPrinter && printer == printDoc.PrinterSettings.PrinterName)
-            {
-                printersCB.Text = printDoc.PrinterSettings.PrinterName;
-            }
+            installedPrinters.Add(printer);
         }
 
-        // --p
-        if (!string.IsNullOrEmpty(ModelLocator.Current.Options.Printer))
+        // --p (CLI override) wins over the remembered/default printer.
+        string? cliPrinter = ModelLocator.Current.Options.Printer;
+        string? effectivePrinter = !string.IsNullOrEmpty(cliPrinter)
+            ? cliPrinter
+            : PrinterSelection.ResolvePrinter(
+                ModelLocator.Current.Settings.LastPrinter, osDefaultPrinter, installedPrinters);
+        if (!string.IsNullOrEmpty(effectivePrinter))
         {
-            printDoc.PrinterSettings.PrinterName = printersCB.Text = ModelLocator.Current.Options.Printer;
+            printDoc.PrinterSettings.PrinterName = printersCB.Text = effectivePrinter;
         }
 
+        // Paper sizes must be enumerated for the *effective* printer (set above).
+        List<string> paperNames = [];
         foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
         {
             paperSizesCB.Items.Add(ps.PaperName);
+            paperNames.Add(ps.PaperName);
         }
 
-        // --z
-        if (!string.IsNullOrEmpty(ModelLocator.Current.Options.PaperSize))
+        // --z (CLI override) wins; otherwise persisted (sticky) paper, else the printer's default.
+        string? cliPaper = ModelLocator.Current.Options.PaperSize;
+        string? effectivePaper = !string.IsNullOrEmpty(cliPaper)
+            ? cliPaper
+            : PrinterSelection.ResolvePaperSize(
+                ModelLocator.Current.Settings.LastPaperSize,
+                printDoc.DefaultPageSettings.PaperSize.PaperName,
+                paperNames);
+        if (!string.IsNullOrEmpty(effectivePaper))
         {
-            paperSizesCB.Text = ModelLocator.Current.Options.PaperSize;
-        }
-        else
-        {
-            paperSizesCB.Text = printDoc.DefaultPageSettings.PaperSize.PaperName;
+            paperSizesCB.Text = effectivePaper;
+
+            // Keep printDoc in sync so previews/printing use the restored paper, not just the combo text.
+            foreach (PaperSize ps in printDoc.PrinterSettings.PaperSizes)
+            {
+                if (string.Equals(ps.PaperName, effectivePaper, StringComparison.Ordinal))
+                {
+                    printDoc.DefaultPageSettings.PaperSize = ps;
+                    break;
+                }
+            }
         }
 
         // We kept these disabled during load
@@ -893,6 +914,17 @@ public partial class MainWindow : Form
         }
 
         ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
+
+        // Persist the remembered printer / paper selection (sticky across sessions).
+        if (!string.IsNullOrEmpty(printersCB.Text))
+        {
+            ModelLocator.Current.Settings.LastPrinter = printersCB.Text;
+        }
+
+        if (!string.IsNullOrEmpty(paperSizesCB.Text))
+        {
+            ModelLocator.Current.Settings.LastPaperSize = paperSizesCB.Text;
+        }
 
         ServiceLocator.Current.TelemetryService.TrackEvent("Form Closing",
             new Dictionary<string, string?>
