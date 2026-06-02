@@ -74,16 +74,15 @@ public sealed class SheetDefinitionChangeTracker
 
     /// <summary>
     ///     Captures a JSON baseline of every sheet definition's current (saved) state. Call once after
-    ///     settings are loaded and before the user edits anything. Also normalizes each sheet's
-    ///     <see cref="SheetSettings.ContentSettings" /> (<c>??= new()</c>) so later lazy initialization
-    ///     does not register as a spurious change.
+    ///     settings are loaded and before the user edits anything. The snapshot normalizes each sheet's
+    ///     lazily-initialized <see cref="SheetSettings.ContentSettings" /> so later lazy initialization
+    ///     does not register as a spurious change — without mutating the live settings.
     /// </summary>
     public void CaptureBaselines()
     {
         _baselines.Clear();
         foreach (KeyValuePair<string, SheetSettings> kvp in _settings.Sheets)
         {
-            kvp.Value.ContentSettings ??= new ContentSettings();
             _baselines[kvp.Key] = Serialize(kvp.Value);
         }
     }
@@ -182,7 +181,17 @@ public sealed class SheetDefinitionChangeTracker
 
     private static string Serialize(SheetSettings sheet)
     {
-        return JsonSerializer.Serialize(sheet, CloneOptions);
+        if (sheet.ContentSettings is not null)
+        {
+            return JsonSerializer.Serialize(sheet, CloneOptions);
+        }
+
+        // Normalize a lazily-initialized ContentSettings in the snapshot only (never mutating the live
+        // sheet) so later lazy init of ContentSettings to its defaults does not register as a change.
+        SheetSettings snapshot = JsonSerializer.Deserialize<SheetSettings>(
+            JsonSerializer.Serialize(sheet, CloneOptions), CloneOptions)!;
+        snapshot.ContentSettings = new ContentSettings();
+        return JsonSerializer.Serialize(snapshot, CloneOptions);
     }
 
     private static SheetSettings Clone(SheetSettings sheet)

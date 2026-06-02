@@ -58,4 +58,22 @@ public static class PrinterSelection
 
         return available[0];
     }
+
+    /// <summary>
+    ///     Like <see cref="ResolvePaperSize" /> but honoring a CLI override (e.g. <c>--paper-size</c>): the
+    ///     <paramref name="cliOverride" /> wins only when it names an <paramref name="available" /> size.
+    ///     When the override is empty or names a paper the printer can't produce, the normal
+    ///     <c>saved → fallback → first</c> chain is used so the UI never shows (and printing never uses) a
+    ///     paper that isn't actually available.
+    /// </summary>
+    public static string? ResolvePaperSizeWithOverride(
+        string? cliOverride, string? saved, string? fallback, IReadOnlyList<string>? available)
+    {
+        if (!string.IsNullOrEmpty(cliOverride) && available is not null && available.Contains(cliOverride))
+        {
+            return cliOverride;
+        }
+
+        return ResolvePaperSize(saved, fallback, available);
+    }
 }

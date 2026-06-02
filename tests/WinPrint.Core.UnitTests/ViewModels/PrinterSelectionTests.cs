@@ -57,4 +57,26 @@ public class PrinterSelectionTests
         Assert.Null(PrinterSelection.ResolvePaperSize("A4", "Letter", []));
         Assert.Null(PrinterSelection.ResolvePaperSize("A4", "Letter", null));
     }
+
+    [Fact]
+    public void ResolvePaperSizeWithOverride_UsesCliOverrideWhenAvailable()
+    {
+        Assert.Equal("A4", PrinterSelection.ResolvePaperSizeWithOverride("A4", "Letter", "Legal", Papers));
+    }
+
+    [Fact]
+    public void ResolvePaperSizeWithOverride_FallsBackToResolveChainWhenOverrideUnavailable()
+    {
+        // A CLI override naming a paper the printer can't produce must not be used verbatim; fall back to
+        // the sticky/default chain so the UI and the print document stay in sync.
+        Assert.Equal("Letter", PrinterSelection.ResolvePaperSizeWithOverride("Tabloid", "Letter", "Legal", Papers));
+        Assert.Equal("Legal", PrinterSelection.ResolvePaperSizeWithOverride("Tabloid", "Gone", "Legal", Papers));
+    }
+
+    [Fact]
+    public void ResolvePaperSizeWithOverride_IgnoresEmptyOverride()
+    {
+        Assert.Equal("A4", PrinterSelection.ResolvePaperSizeWithOverride(null, "A4", "Letter", Papers));
+        Assert.Equal("A4", PrinterSelection.ResolvePaperSizeWithOverride("", "A4", "Letter", Papers));
+    }
 }

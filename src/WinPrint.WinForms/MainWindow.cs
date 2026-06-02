@@ -545,14 +545,15 @@ public partial class MainWindow : Form
             paperNames.Add(ps.PaperName);
         }
 
-        // --z (CLI override) wins; otherwise persisted (sticky) paper, else the printer's default.
+        // --z (CLI override) wins when it names a paper this printer can produce; otherwise persisted
+        // (sticky) paper, else the printer's default. An unavailable CLI paper is not used verbatim so
+        // the combo text and printDoc never disagree.
         string? cliPaper = ModelLocator.Current.Options.PaperSize;
-        string? effectivePaper = !string.IsNullOrEmpty(cliPaper)
-            ? cliPaper
-            : PrinterSelection.ResolvePaperSize(
-                ModelLocator.Current.Settings.LastPaperSize,
-                printDoc.DefaultPageSettings.PaperSize.PaperName,
-                paperNames);
+        string? effectivePaper = PrinterSelection.ResolvePaperSizeWithOverride(
+            cliPaper,
+            ModelLocator.Current.Settings.LastPaperSize,
+            printDoc.DefaultPageSettings.PaperSize.PaperName,
+            paperNames);
         if (!string.IsNullOrEmpty(effectivePaper))
         {
             paperSizesCB.Text = effectivePaper;

@@ -79,7 +79,7 @@ public class SheetDefinitionChangeTrackerTests
     }
 
     [Fact]
-    public void CaptureBaselines_NormalizesContentSettings()
+    public void CaptureBaselines_NormalizesContentSettingsInSnapshotOnly()
     {
         (Settings settings, string keyA, _) = NewSettings();
         settings.Sheets[keyA].ContentSettings = null;
@@ -87,8 +87,9 @@ public class SheetDefinitionChangeTrackerTests
         SheetDefinitionChangeTracker tracker = NewTracker(settings);
         tracker.CurrentKey = keyA;
 
-        // ContentSettings was lazily initialized during baseline capture, so it is not a change.
-        Assert.NotNull(settings.Sheets[keyA].ContentSettings);
+        // Baseline capture normalizes ContentSettings in its snapshot (not on the live object), so the
+        // live sheet is left untouched and later lazy init to defaults is still not a change.
+        Assert.Null(settings.Sheets[keyA].ContentSettings);
         Assert.False(tracker.HasChanges);
     }
 
@@ -129,6 +130,20 @@ public class SheetDefinitionChangeTrackerTests
         Assert.Equal(1, settings.Sheets[keyA].Columns);
         Assert.Equal("Sheet A", settings.Sheets[keyA].Name);
         Assert.False(tracker.HasChanges);
+    }
+
+    [Fact]
+    public void HasChangesFor_TreatsLazyContentSettingsInitAsUnchanged()
+    {
+        (Settings settings, string keyA, _) = NewSettings();
+        var tracker = new SheetDefinitionChangeTracker(settings, _ => { });
+        tracker.CaptureBaselines();
+        tracker.CurrentKey = keyA;
+
+        // Later lazy initialization of ContentSettings to its defaults is not a user edit.
+        settings.Sheets[keyA].ContentSettings = new ContentSettings();
+
+        Assert.False(tracker.HasChangesFor(keyA));
     }
 
     [Fact]

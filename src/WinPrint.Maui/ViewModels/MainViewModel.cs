@@ -642,7 +642,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 new(_app.SheetDefinitions, _app.CurrentSheetDefinitionIndex);
             await host.Navigation.PushModalAsync(dialog);
             SaveSheetChoice choice = await dialog.Completion;
-            await host.Navigation.PopModalAsync();
+
+            // The dialog may already be off the modal stack (back gesture / programmatic pop, which
+            // OnDisappearing surfaces as Cancel). Only pop when it's still the top modal so we never
+            // pop the wrong page or throw.
+            IReadOnlyList<Page> modalStack = host.Navigation.ModalStack;
+            if (modalStack.Count > 0 && ReferenceEquals(modalStack[^1], dialog))
+            {
+                await host.Navigation.PopModalAsync();
+            }
 
             switch (choice)
             {
