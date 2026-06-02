@@ -76,6 +76,7 @@ public sealed class MainView : View
     {
         Settings.Bind(context);
         Core.ViewModels.AppViewModel app = context.App;
+        AppViewModel = app;
 
         SeedHeaderFooter(context);
 
@@ -188,4 +189,7 @@ public sealed class MainView : View
 
     /// <summary>The page preview (fills the right, between header and footer).</summary>
     public PreviewPane Preview { get; }
+
+    /// <summary>The shared application view model, or <see langword="null" /> when bound to sample data.</summary>
+    public Core.ViewModels.AppViewModel? AppViewModel { get; private set; }
 }

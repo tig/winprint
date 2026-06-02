@@ -13,7 +13,6 @@ public class ServiceLocator
         SimpleIoc.Default.Register<LogService>(true);
         SimpleIoc.Default.Register<TelemetryService>(true);
         SimpleIoc.Default.Register<UpdateService>();
-        SimpleIoc.Default.Register<PygmentsConverterService>();
     }
 
     public static ServiceLocator Current => s_current ??= new ServiceLocator();
@@ -23,9 +22,6 @@ public class ServiceLocator
     public SettingsService SettingsService => SimpleIoc.Default.GetInstance<SettingsService>();
     public FileTypeMappingService FileTypeMappingService => SimpleIoc.Default.GetInstance<FileTypeMappingService>();
     public UpdateService UpdateService => SimpleIoc.Default.GetInstance<UpdateService>();
-
-    public PygmentsConverterService PygmentsConverterService =>
-        SimpleIoc.Default.GetInstance<PygmentsConverterService>();
 
     public void Register<VM, V>()
         where VM : class
@@ -41,6 +37,5 @@ public class ServiceLocator
         SimpleIoc.Default.Unregister<LogService>();
         SimpleIoc.Default.Unregister<TelemetryService>();
         SimpleIoc.Default.Unregister<UpdateService>();
-        SimpleIoc.Default.Unregister<PygmentsConverterService>();
     }
 }

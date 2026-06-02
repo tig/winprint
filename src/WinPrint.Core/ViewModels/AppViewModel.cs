@@ -43,6 +43,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private int _selectedSheetIndex = -1;
     private bool _suppressReflow;
 
+    private SheetDefinitionChangeTracker? _changeTracker;
+
     private string _activeFile = string.Empty;
     private string _statusText = "Ready";
     private bool _isBusy;
@@ -160,6 +162,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void LoadSheets()
     {
+        // Capture a baseline of every sheet before the user edits anything, so the change tracker
+        // (used to prompt for saving a changed sheet definition on exit) can detect/revert edits.
+        _changeTracker ??= new SheetDefinitionChangeTracker(Settings);
+        _changeTracker.CaptureBaselines();
+
         _sheetKeys.Clear();
         SheetNames.Clear();
         foreach (KeyValuePair<string, SheetSettings> kvp in Settings.Sheets)
@@ -204,6 +211,10 @@ public sealed class AppViewModel : INotifyPropertyChanged
         bool changed = _selectedSheetIndex != index;
         _selectedSheetIndex = index;
         _currentSheet = sheetSettings;
+        if (_changeTracker is not null)
+        {
+            _changeTracker.CurrentKey = _sheetKeys[index];
+        }
 
         // Initialize the sheet VM (this resets ContentEngine, header/footer state, etc).
         _sheetVM?.SetSheet(sheetSettings);
@@ -251,6 +262,130 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
 
         return false;
+    }
+
+    // ----- Sheet definition save / create (exit prompt) -----
+
+    /// <summary>
+    ///     True when the currently selected sheet definition has unsaved edits relative to the
+    ///     last-loaded/saved state. Front ends use this to decide whether to prompt on exit.
+    /// </summary>
+    public bool HasUnsavedSheetChanges => _changeTracker?.HasChanges ?? false;
+
+    /// <summary>
+    ///     True when <em>any</em> sheet definition has unsaved edits — not just the current one. Front ends
+    ///     use this on exit so edits made to a sheet the user later switched away from are still caught.
+    /// </summary>
+    public bool HasAnyUnsavedSheetChanges => (_changeTracker?.DirtyKeys.Count ?? 0) > 0;
+
+    /// <summary>The dictionary keys of every sheet definition with unsaved edits.</summary>
+    public IReadOnlyList<string> DirtySheetDefinitionKeys => _changeTracker?.DirtyKeys ?? [];
+
+    /// <summary>True when the definition identified by <paramref name="key" /> has unsaved edits.</summary>
+    public bool IsSheetDefinitionDirty(string key)
+    {
+        return _changeTracker?.HasChangesFor(key) ?? false;
+    }
+
+    /// <summary>
+    ///     Points the change tracker at the definition identified by <paramref name="key" /> so the
+    ///     <see cref="HasUnsavedSheetChanges" /> / save APIs operate on it. Used by exit prompts that
+    ///     iterate <see cref="DirtySheetDefinitionKeys" />.
+    /// </summary>
+    public void SetCurrentSheetDefinition(string key)
+    {
+        if (_changeTracker is not null)
+        {
+            _changeTracker.CurrentKey = key;
+        }
+    }
+
+    /// <summary>The available sheet definitions (key + name), in settings order.</summary>
+    public IReadOnlyList<SheetDefinitionInfo> SheetDefinitions => _changeTracker?.Definitions ?? [];
+
+    /// <summary>Index of the current sheet definition within <see cref="SheetDefinitions" />.</summary>
+    public int CurrentSheetDefinitionIndex =>
+        _changeTracker?.IndexOfCurrent ?? _selectedSheetIndex;
+
+    /// <summary>
+    ///     Persists the edited current sheet to an existing definition identified by its dictionary key.
+    ///     Choosing a key other than the current one reverts the current definition and updates the chosen one.
+    /// </summary>
+    public void SaveSheetChangesToKey(string definitionKey)
+    {
+        _changeTracker?.SaveTo(definitionKey);
+    }
+
+    /// <summary>
+    ///     Persists the edited current sheet to the existing definition at <paramref name="index" /> in
+    ///     <see cref="SheetDefinitions" />.
+    /// </summary>
+    public void SaveSheetChangesToIndex(int index)
+    {
+        IReadOnlyList<SheetDefinitionInfo> defs = SheetDefinitions;
+        if (index >= 0 && index < defs.Count)
+        {
+            SaveSheetChangesToKey(defs[index].Key);
+        }
+    }
+
+    /// <summary>
+    ///     Creates a new sheet definition named <paramref name="name" /> from the edited current sheet,
+    ///     leaving the original definition unchanged, and makes the new definition the selected default so
+    ///     it is remembered on exit. Returns the new definition's key (or null if no tracker).
+    /// </summary>
+    public string? CreateSheetDefinition(string name)
+    {
+        string? key = _changeTracker?.CreateNew(name);
+        if (key is not null)
+        {
+            // The tracker made the new definition the default; keep the cached selection in step so exit
+            // persistence records it (rather than overwriting DefaultSheet with the prior selection).
+            SyncSelectionToDefinition(key);
+        }
+
+        return key;
+    }
+
+    // Point the cached sheet selection at a (possibly newly created) definition without re-capturing
+    // baselines, so TryGetSelectedSheetGuid resolves to it and exit persistence keeps it as the default.
+    private void SyncSelectionToDefinition(string key)
+    {
+        int idx = _sheetKeys.IndexOf(key);
+        if (idx < 0 && Settings.Sheets.TryGetValue(key, out SheetSettings? sheet))
+        {
+            _sheetKeys.Add(key);
+            SheetNames.Add(sheet.Name);
+            idx = _sheetKeys.Count - 1;
+        }
+
+        if (idx < 0)
+        {
+            return;
+        }
+
+        _selectedSheetIndex = idx;
+        if (_changeTracker is not null)
+        {
+            _changeTracker.CurrentKey = key;
+        }
+    }
+
+    /// <summary>Reverts the current sheet's edits to the last-loaded/saved state (no persistence).</summary>
+    public void DiscardSheetChanges()
+    {
+        _changeTracker?.Discard();
+    }
+
+    /// <summary>
+    ///     Re-captures the baseline of every sheet definition from their current state, so subsequent
+    ///     change detection compares against "now". Front ends call this after applying command-line
+    ///     <see cref="Options" /> (e.g. <c>--landscape</c>/<c>--sheet</c>) so those startup overrides are
+    ///     not mistaken for user edits that should be prompted to save on exit.
+    /// </summary>
+    public void RecaptureSheetBaselines()
+    {
+        _changeTracker?.CaptureBaselines();
     }
 
     // ----- File loading -----
@@ -568,25 +703,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void RestorePrinterSelection(IList<string> availablePrinters, string? systemDefault)
     {
-        if (availablePrinters == null || availablePrinters.Count == 0)
-        {
-            SelectedPrinter = null;
-            return;
-        }
-
-        string? saved = Settings.LastPrinter;
-        if (!string.IsNullOrEmpty(saved) && availablePrinters.Contains(saved))
-        {
-            SelectedPrinter = saved;
-        }
-        else if (!string.IsNullOrEmpty(systemDefault) && availablePrinters.Contains(systemDefault))
-        {
-            SelectedPrinter = systemDefault;
-        }
-        else
-        {
-            SelectedPrinter = availablePrinters[0];
-        }
+        SelectedPrinter = PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
+            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList());
     }
 
     /// <summary>
@@ -601,6 +719,81 @@ public sealed class AppViewModel : INotifyPropertyChanged
         {
             SelectedPaperSize = saved;
         }
+    }
+
+    /// <summary>
+    ///     Persists the given printer / paper-size selection to <see cref="Settings.LastPrinter"/> /
+    ///     <see cref="Settings.LastPaperSize"/>, saving <em>only</em> when at least one value changed.
+    ///     The selection is passed explicitly (rather than read from a single representation) because
+    ///     front ends track it differently (MAUI: <see cref="SelectedPrinter"/>; TUI:
+    ///     <see cref="CurrentPageSetup"/>).
+    /// </summary>
+    /// <param name="printer">The printer name to persist (ignored when null/empty).</param>
+    /// <param name="paperSize">The paper-size name to persist (ignored when null/empty).</param>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SettingsService.SaveSettings"/> (without CTE settings).
+    /// </param>
+    /// <returns><see langword="true"/> if a value changed and settings were saved; otherwise <see langword="false"/>.</returns>
+    public bool PersistPrinterAndPaperIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
+    {
+        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings, printer, paperSize, save: save);
+    }
+
+    /// <summary>
+    ///     Persists all "remember-last" exit state (printer, paper size, and the selected sheet
+    ///     definition) in a single conditional write. Used by front ends that have no window
+    ///     geometry to persist (notably the TUI), so exiting writes the settings file at most once.
+    /// </summary>
+    /// <param name="printer">The printer name to persist (ignored when null/empty).</param>
+    /// <param name="paperSize">The paper-size name to persist (ignored when null/empty).</param>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SettingsService.SaveSettings" /> (without CTE settings).
+    /// </param>
+    /// <returns><see langword="true" /> if a value changed and settings were saved; otherwise <see langword="false" />.</returns>
+    public bool PersistExitStateIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
+    {
+        Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
+        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings, printer, paperSize, sheet, save: save);
+    }
+
+    /// <summary>
+    ///     Persists the currently selected sheet definition to <see cref="Settings.DefaultSheet"/>,
+    ///     saving <em>only</em> when the selection differs from the stored default. Mirrors the
+    ///     printer/paper "remember-last" persistence in <see cref="PersistPrinterAndPaperIfChanged"/>
+    ///     so frontends (notably the TUI) can remember which sheet definition was last in use.
+    /// </summary>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SettingsService.SaveSettings"/> (without CTE settings).
+    /// </param>
+    /// <returns><see langword="true"/> if the default changed and settings were saved; otherwise <see langword="false"/>.</returns>
+    public bool PersistSelectedSheetIfChanged(Action<Settings>? save = null)
+    {
+        if (!TryGetSelectedSheetGuid(out Guid selected))
+        {
+            return false;
+        }
+
+        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings, defaultSheet: selected, save: save);
+    }
+
+    /// <summary>
+    ///     <see langword="true"/> when the selected sheet definition differs from the persisted
+    ///     <see cref="Settings.DefaultSheet"/> (i.e. exiting would change the remembered default).
+    /// </summary>
+    public bool SelectedSheetDiffersFromDefault =>
+        TryGetSelectedSheetGuid(out Guid selected) && Settings.DefaultSheet != selected;
+
+    // Resolve the selected sheet key to a Guid, returning false when nothing is selected or the
+    // key is not a Guid (sheet keys are normally the definition's Guid in string form).
+    private bool TryGetSelectedSheetGuid(out Guid guid)
+    {
+        guid = Guid.Empty;
+        return _selectedSheetIndex >= 0
+               && _selectedSheetIndex < _sheetKeys.Count
+               && Guid.TryParse(_sheetKeys[_selectedSheetIndex], out guid);
     }
 
     // ----- Command-line options -----
@@ -685,27 +878,22 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void SaveWindowState(double x, double y, double width, double height, bool isMaximized)
     {
-        Settings settings = Settings;
-        settings.WindowState = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
+        FormWindowState state = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
 
-        if (!isMaximized)
-        {
-            settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
-            settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
-        }
+        // While maximized, leave the remembered normal bounds untouched (mirrors WinForms RestoreBounds).
+        WindowSize? size = isMaximized ? null : new WindowSize((int)width, (int)height);
+        WindowLocation? location = isMaximized ? null : new WindowLocation((int)x, (int)y);
 
-        if (_selectedSheetIndex >= 0 && _selectedSheetIndex < _sheetKeys.Count)
-        {
-            if (Guid.TryParse(_sheetKeys[_selectedSheetIndex], out Guid sheetGuid))
-            {
-                settings.DefaultSheet = sheetGuid;
-            }
-        }
+        Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
 
-        settings.LastPrinter = _selectedPrinter;
-        settings.LastPaperSize = _selectedPaperSize;
-
-        ServiceLocator.Current.SettingsService.SaveSettings(settings, false);
+        ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings,
+            _selectedPrinter,
+            _selectedPaperSize,
+            sheet,
+            size,
+            location,
+            state);
     }
 
     /// <summary>
