@@ -85,6 +85,16 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
     /// <summary>The sheet range (From/To) being edited. Editing From/To mutates this instance.</summary>
     public PageRange Range { get; private set; } = new();
 
+    /// <summary>Replaces the printer list with the given names.</summary>
+    public void SetPrinters(IEnumerable<string> printers)
+    {
+        _printers.Clear();
+        foreach (string p in printers)
+        {
+            _printers.Add(p);
+        }
+    }
+
     /// <inheritdoc />
     protected override void OnValueChanged(PrintPageSetup? newValue)
     {

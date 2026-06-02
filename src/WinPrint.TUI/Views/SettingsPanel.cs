@@ -94,6 +94,13 @@ public sealed class SettingsPanel : View
         _context = context;
         AppViewModel app = context.App;
 
+        // Populate real printer names from the platform print service
+        IReadOnlyList<PrinterInfo> printers = context.PrintService.GetAvailablePrinters();
+        if (printers.Count > 0)
+        {
+            Printer.SetPrinters(printers.Select(p => p.Name));
+        }
+
         Sheet.SetSheets(app.Settings.Sheets.Values);
         Sheet.ValueChanged += (_, _) =>
         {

@@ -3,12 +3,17 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
         <AssemblyName>wp</AssemblyName>
         <RootNamespace>WinPrint.TUI</RootNamespace>
         <Description>winprint Terminal.Gui full-screen TUI front end (wp)</Description>
         <Platforms>AnyCPU;x64;x86</Platforms>
         <IsPackable>false</IsPackable>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
+        <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

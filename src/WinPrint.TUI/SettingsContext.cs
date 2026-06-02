@@ -77,12 +77,14 @@ public sealed class SettingsContext
         // Create a real SheetViewModel so the TUI participates in the shared print path
         var sheetVM = new SheetViewModel();
 
-        var pageSetup = new PrintPageSetup();
+        // Seed the page setup from the platform print service so printer/paper are populated
+        IPrintService svc = printService ?? PrintServiceFactory.Create();
+        PrintPageSetup pageSetup = svc.GetDefaultPageSetup();
+
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();
 
-        var context = new SettingsContext(app, sheetVM, renderer,
-            printService is null ? null : () => printService);
+        var context = new SettingsContext(app, sheetVM, renderer, () => svc);
         if (options is not null)
         {
             context.File = app.ApplyOptions(options);
