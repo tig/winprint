@@ -91,7 +91,8 @@ public class UpdateService
             UpdateManager manager = CreateUpdateManager();
             if (!manager.IsInstalled)
             {
-                ErrorMessage = "Velopack updates are only available when WinPrint is installed from a Velopack package.";
+                ErrorMessage =
+                    "Velopack updates are only available when WinPrint is installed from a Velopack package.";
                 LatestVersion = CurrentVersion;
                 Log.Information("Update: {msg}", ErrorMessage);
             }

@@ -94,9 +94,10 @@ internal static class GuiLauncher
         Func<ProcessStartInfo, bool> startProcess,
         Func<string, bool> directoryExists)
     {
-        string resolvedFileName = File.Exists(fileName) || directoryExists(fileName) || Path.IsPathFullyQualified(fileName)
-            ? fileName
-            : Path.GetFileName(fileName);
+        string resolvedFileName =
+            File.Exists(fileName) || directoryExists(fileName) || Path.IsPathFullyQualified(fileName)
+                ? fileName
+                : Path.GetFileName(fileName);
 
         var startInfo = new ProcessStartInfo
         {
