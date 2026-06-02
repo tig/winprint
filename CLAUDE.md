@@ -13,7 +13,7 @@ obvious from the code alone.
   **not** build on Linux).
 - `tests/WinPrint.Core.UnitTests` — xUnit. Targets `net10.0-windows` but most tests run
   on Linux too (see below).
-- Solution: `src/WinPrint.slnx`.
+- Solution: `WinPrint.slnx`.
 
 ## Build & test
 ```bash

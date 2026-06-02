@@ -1,0 +1,10 @@
+{
+    // Extensions recommended for developing winprint in VS Code on Windows, macOS, or Linux.
+    // VS Code prompts to install these the first time the folder is opened.
+    "recommendations": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.dotnet-maui",
+        "editorconfig.editorconfig"
+    ]
+}

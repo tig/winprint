@@ -178,7 +178,11 @@ public partial class MainPage : ContentPage
 
     private async Task PerformPrintAsync()
     {
-        await PrintOrchestrator.PrintAsync(_printService, _viewModel);
+        PrintJobResult result = await PrintOrchestrator.PrintAsync(_printService, _viewModel);
+        if (!result.Success && !string.IsNullOrEmpty(result.Error))
+        {
+            await DisplayAlertAsync("Print Error", result.Error, "OK");
+        }
     }
 
     private void PopulatePrinters()
@@ -221,7 +225,7 @@ public partial class MainPage : ContentPage
     private static IPrintService CreatePlatformPrintService()
     {
 #if WINDOWS
-        return new WindowsPrintService();
+        return new WinPrint.Core.Printing.WindowsPrintService();
 #elif MACCATALYST
         return new MacPrintService();
 #else

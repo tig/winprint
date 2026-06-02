@@ -66,6 +66,9 @@ public sealed class MauiGraphicsContext : IGraphicsContext
 
     public void SetClip(GraphicsRectF rect)
     {
+        // MAUI's ClipRectangle is cumulative and cannot be undone without SaveState/RestoreState.
+        // Save state before clipping so ResetClip can restore it.
+        _canvas.SaveState();
         _canvas.ClipRectangle(rect.X, rect.Y, rect.Width, rect.Height);
     }
 
@@ -76,7 +79,8 @@ public sealed class MauiGraphicsContext : IGraphicsContext
 
     public void ResetClip()
     {
-        // MAUI Graphics doesn't have ResetClip; manage via Save/Restore pattern
+        // Undo the SaveState from SetClip to remove the clip region.
+        _canvas.RestoreState();
     }
 
     public void SetTextRenderingMode(GraphicsTextRenderingMode mode)

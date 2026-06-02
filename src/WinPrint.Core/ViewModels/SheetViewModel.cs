@@ -509,12 +509,10 @@ public class SheetViewModel : ViewModelBase
                 throw new InvalidOperationException($"Content type engine not found for '{contentType}'.");
             }
 
-#if WINDOWS
             if (ContentEngine is TextMateCte textMateCte)
             {
                 textMateCte.Configure(ContentType, Language, File);
             }
-#endif
 
             // Content settings in Sheet take precidence over Engine
             if (ContentEngine.ContentSettings is null)
@@ -1036,7 +1034,11 @@ public class SheetViewModel : ViewModelBase
 
         return h;
 #else
-        return font?.Size ?? 8F;
+        // Cross-platform approximation: convert point size to hundredths of inch at 100 DPI
+        // matching System.Drawing.Font.GetHeight(100) behavior.
+        // Formula: pointSize * 100 / 72 * lineSpacingRatio (≈1.2 for most fonts)
+        float pointSize = font?.Size ?? 8F;
+        return pointSize * 100f / 72f * 1.2f;
 #endif
     }
 
@@ -1152,11 +1154,15 @@ public class SheetViewModel : ViewModelBase
                 }
             }
 
+            // Clip content to page boundaries (prevents text overflow in multi-column layouts)
+            g.SetClip(new GraphicsRectF(0, 0, w, h));
+
             if (ContentEngine != null)
             {
                 ContentEngine.PaintPage(g, pageOnSheet);
             }
 
+            g.ResetClip();
             g.TranslateTransform(-xPos, -yPos);
         }
     }
