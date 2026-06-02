@@ -128,12 +128,10 @@ public sealed class TuiCommand : IViewerCommand
                     return;
                 }
 
-                // Persist the remembered printer / paper selection (writes only if it changed).
+                // Persist the remembered printer / paper selection and the selected sheet definition
+                // in a single conditional write (only touches the file if something changed).
                 PrintPageSetup setup = vm.CurrentPageSetup;
-                vm.PersistPrinterAndPaperIfChanged(setup.PrinterName, setup.PaperSizeName);
-
-                // Persist the selected sheet definition (writes only if it changed).
-                vm.PersistSelectedSheetIfChanged();
+                vm.PersistExitStateIfChanged(setup.PrinterName, setup.PaperSizeName);
 
                 app.RequestStop();
             }

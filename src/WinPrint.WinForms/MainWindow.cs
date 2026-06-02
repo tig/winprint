@@ -36,6 +36,11 @@ public partial class MainWindow : Form
     // Tracks sheet-definition edits so the user can be prompted to save them on exit.
     private SheetDefinitionChangeTracker? _changeTracker;
 
+    // The Settings.DefaultSheet value loaded at startup. WinForms mutates Settings.DefaultSheet live
+    // when the user picks a sheet (that property change drives the live preview via SheetChanged), so
+    // the shared value-comparison can't detect it. We compare against this baseline on exit instead.
+    private Guid _initialDefaultSheet;
+
     // Flag: Has Dispose already been called?
     private bool disposed;
 
@@ -612,6 +617,9 @@ public partial class MainWindow : Form
         _changeTracker = new SheetDefinitionChangeTracker(ModelLocator.Current.Settings);
         _changeTracker.CaptureBaselines();
 
+        // Remember the loaded default sheet so we can tell on exit whether the user changed it.
+        _initialDefaultSheet = ModelLocator.Current.Settings.DefaultSheet;
+
         // By running this on a different thread, we enable the main window to show
         // as quickly as possible; making startup seem faster.
         //Task.Run(() => Start());
@@ -895,40 +903,48 @@ public partial class MainWindow : Form
         ServiceLocator.Current.UpdateService.DownloadComplete -= UpdateService_DownloadComplete;
         ;
 
-        // Save Window state
+        // Persist window geometry plus the sticky printer / paper selections through the shared
+        // conditional-write path (consistent with the TUI and MAUI front ends). The selected sheet
+        // is handled separately below because WinForms mutates Settings.DefaultSheet live. When
+        // maximized, remember the restored (normal) bounds, matching the prior behavior.
+        WindowSize size;
+        WindowLocation location;
         if (WindowState == FormWindowState.Normal)
         {
-            ModelLocator.Current.Settings.Size = new WindowSize(Size.Width, Size.Height);
-            ModelLocator.Current.Settings.Location = new WindowLocation(Location.X, Location.Y);
+            size = new WindowSize(Size.Width, Size.Height);
+            location = new WindowLocation(Location.X, Location.Y);
         }
         else
         {
-            ModelLocator.Current.Settings.Size = new WindowSize(RestoreBounds.Width, RestoreBounds.Height);
-            ModelLocator.Current.Settings.Location = new WindowLocation(RestoreBounds.X, RestoreBounds.Y);
-        }
-
-        ModelLocator.Current.Settings.WindowState = (Core.Models.FormWindowState)WindowState;
-
-        // Persist the remembered printer / paper selection (sticky across sessions).
-        if (!string.IsNullOrEmpty(printersCB.Text))
-        {
-            ModelLocator.Current.Settings.LastPrinter = printersCB.Text;
-        }
-
-        if (!string.IsNullOrEmpty(paperSizesCB.Text))
-        {
-            ModelLocator.Current.Settings.LastPaperSize = paperSizesCB.Text;
+            size = new WindowSize(RestoreBounds.Width, RestoreBounds.Height);
+            location = new WindowLocation(RestoreBounds.X, RestoreBounds.Y);
         }
 
         ServiceLocator.Current.TelemetryService.TrackEvent("Form Closing",
             new Dictionary<string, string?>
             {
-                { "windowState", ModelLocator.Current.Settings.WindowState.ToString() },
-                { "size", $"{ModelLocator.Current.Settings.Size.Width}x{ModelLocator.Current.Settings.Size.Height}" },
-                { "location", $"{ModelLocator.Current.Settings.Location.X}x{ModelLocator.Current.Settings.Location.Y}" }
+                { "windowState", ((Core.Models.FormWindowState)WindowState).ToString() },
+                { "size", $"{size.Width}x{size.Height}" },
+                { "location", $"{location.X}x{location.Y}" }
             });
 
-        ServiceLocator.Current.SettingsService.SaveSettings(ModelLocator.Current.Settings);
+        Settings settings = ModelLocator.Current.Settings;
+        bool changed = ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            settings,
+            lastPrinter: printersCB.Text,
+            lastPaperSize: paperSizesCB.Text,
+            size: size,
+            location: location,
+            windowState: (Core.Models.FormWindowState)WindowState,
+            saveCteSettings: true);
+
+        // DefaultSheet is mutated live (it drives the active-sheet preview), so the shared
+        // value-comparison can't see it. Detect a sheet change against the startup baseline and
+        // ensure it's persisted even when nothing else changed (still at most one write).
+        if (!changed && settings.DefaultSheet != _initialDefaultSheet)
+        {
+            ServiceLocator.Current.SettingsService.SaveSettings(settings, true);
+        }
     }
 
     private void MainWindow_Layout(object? sender, LayoutEventArgs e)
@@ -1181,6 +1197,8 @@ public partial class MainWindow : Form
         LogService.TraceMessage($"comboBoxSheet_SelectedIndexChanged: {si.Key}, {si.Value}");
         if (printersCB.Enabled)
         {
+            // Mutate DefaultSheet live: the resulting PropertyChanged drives SheetChanged() so the
+            // preview switches to the selected definition. Persisted on exit via baseline comparison.
             ModelLocator.Current.Settings.DefaultSheet = Guid.Parse(si.Key);
             ServiceLocator.Current.TelemetryService.TrackEvent("Change Selected Sheet Settings",
                 new Dictionary<string, string?>

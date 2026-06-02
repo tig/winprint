@@ -703,30 +703,26 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// <returns><see langword="true"/> if a value changed and settings were saved; otherwise <see langword="false"/>.</returns>
     public bool PersistPrinterAndPaperIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
     {
-        Settings settings = Settings;
-        bool changed = false;
+        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings, lastPrinter: printer, lastPaperSize: paperSize, save: save);
+    }
 
-        if (!string.IsNullOrEmpty(printer) && !string.Equals(settings.LastPrinter, printer, StringComparison.Ordinal))
-        {
-            settings.LastPrinter = printer;
-            changed = true;
-        }
-
-        if (!string.IsNullOrEmpty(paperSize) &&
-            !string.Equals(settings.LastPaperSize, paperSize, StringComparison.Ordinal))
-        {
-            settings.LastPaperSize = paperSize;
-            changed = true;
-        }
-
-        if (!changed)
-        {
-            return false;
-        }
-
-        Action<Settings> persist = save ?? (s => ServiceLocator.Current.SettingsService.SaveSettings(s, false));
-        persist(settings);
-        return true;
+    /// <summary>
+    ///     Persists all "remember-last" exit state (printer, paper size, and the selected sheet
+    ///     definition) in a single conditional write. Used by front ends that have no window
+    ///     geometry to persist (notably the TUI), so exiting writes the settings file at most once.
+    /// </summary>
+    /// <param name="printer">The printer name to persist (ignored when null/empty).</param>
+    /// <param name="paperSize">The paper-size name to persist (ignored when null/empty).</param>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SettingsService.SaveSettings" /> (without CTE settings).
+    /// </param>
+    /// <returns><see langword="true" /> if a value changed and settings were saved; otherwise <see langword="false" />.</returns>
+    public bool PersistExitStateIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
+    {
+        Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
+        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings, lastPrinter: printer, lastPaperSize: paperSize, defaultSheet: sheet, save: save);
     }
 
     /// <summary>
@@ -746,16 +742,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
             return false;
         }
 
-        Settings settings = Settings;
-        if (settings.DefaultSheet == selected)
-        {
-            return false;
-        }
-
-        settings.DefaultSheet = selected;
-        Action<Settings> persist = save ?? (s => ServiceLocator.Current.SettingsService.SaveSettings(s, false));
-        persist(settings);
-        return true;
+        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings, defaultSheet: selected, save: save);
     }
 
     /// <summary>
@@ -857,27 +845,22 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void SaveWindowState(double x, double y, double width, double height, bool isMaximized)
     {
-        Settings settings = Settings;
-        settings.WindowState = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
+        FormWindowState state = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
 
-        if (!isMaximized)
-        {
-            settings.Location = new WindowLocation { X = (int)x, Y = (int)y };
-            settings.Size = new WindowSize { Width = (int)width, Height = (int)height };
-        }
+        // While maximized, leave the remembered normal bounds untouched (mirrors WinForms RestoreBounds).
+        WindowSize? size = isMaximized ? null : new WindowSize((int)width, (int)height);
+        WindowLocation? location = isMaximized ? null : new WindowLocation((int)x, (int)y);
 
-        if (_selectedSheetIndex >= 0 && _selectedSheetIndex < _sheetKeys.Count)
-        {
-            if (Guid.TryParse(_sheetKeys[_selectedSheetIndex], out Guid sheetGuid))
-            {
-                settings.DefaultSheet = sheetGuid;
-            }
-        }
+        Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
 
-        settings.LastPrinter = _selectedPrinter;
-        settings.LastPaperSize = _selectedPaperSize;
-
-        ServiceLocator.Current.SettingsService.SaveSettings(settings, false);
+        ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+            Settings,
+            lastPrinter: _selectedPrinter,
+            lastPaperSize: _selectedPaperSize,
+            defaultSheet: sheet,
+            size: size,
+            location: location,
+            windowState: state);
     }
 
     /// <summary>
