@@ -74,6 +74,8 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 
 ## Graphical Interface
 
+(This is the soon to be depericted WinForms based GUI. An almost identical-looking Maui-based GUI that works on both Mac and Windows is available).
+
 ![WinPrint](https://tig.github.io/winprint/winprint2.png)
 
 ## Command Line Interface
