@@ -2,8 +2,8 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
 using Velopack;
-#if WINDOWS
 using WinPrint.Core.Models;
+#if WINDOWS
 using WinPrint.Core.Services;
 #endif
 
@@ -11,16 +11,28 @@ namespace WinPrint.Maui;
 
 public static class MauiProgram
 {
+    /// <summary>
+    ///     The working directory the process was launched from, captured by the
+    ///     platform entry point. On MacCatalyst, UIKit changes the CWD to the .app
+    ///     bundle before <see cref="CreateMauiApp"/> runs, so capturing it here
+    ///     would be too late to resolve relative file arguments.
+    /// </summary>
+    internal static string? LaunchCwd { get; set; }
+
     public static MauiApp CreateMauiApp()
     {
+#if !MACCATALYST
+        // Velopack's locator throws PlatformNotSupportedException on MacCatalyst (it
+        // doesn't recognize the platform). The Mac app is installed/updated via the
+        // Homebrew cask instead, so only hook Velopack up elsewhere (Windows).
         VelopackApp.Build().Run();
+#endif
 
-#if WINDOWS
         // Capture the *invocation* CWD before we change it below, so relative file
         // arguments passed on the command line can be resolved against the directory
-        // the user launched the app from rather than the install directory.
-        string launchCwd = Directory.GetCurrentDirectory();
-#endif
+        // the user launched the app from rather than the install directory. Prefer
+        // the value the platform entry point captured (see LaunchCwd).
+        string launchCwd = LaunchCwd ?? Directory.GetCurrentDirectory();
 
         // MAUI/WinUI3 packaged apps start with CWD set to System32.
         // Set it to the exe directory so relative paths and settings file resolution work correctly.
@@ -33,8 +45,11 @@ public static class MauiProgram
 #if WINDOWS
         // Initialize services (same as WinForms Program.cs)
         ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
+#endif
 
-        // Parse command-line arguments using same Options model as WinForms/CLI
+        // Parse command-line arguments using same Options model as WinForms/CLI.
+        // macOS may inject non-winprint args (e.g. -psn_… when launched from Finder);
+        // those simply fail to parse and WithParsed never fires, which is fine.
         string[] args = [.. Environment.GetCommandLineArgs().Skip(1)];
         if (args.Length > 0)
         {
@@ -56,7 +71,6 @@ public static class MauiProgram
                 });
             parser.Dispose();
         }
-#endif
 
         MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder

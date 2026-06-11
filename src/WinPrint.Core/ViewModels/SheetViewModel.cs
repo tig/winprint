@@ -185,6 +185,14 @@ public class SheetViewModel : ViewModelBase
         set => SetField(ref _contentEngine, value);
     }
 
+    /// <summary>
+    ///     Measurement context handed to every content engine this view model creates, so
+    ///     reflow can measure text without System.Drawing. Required on non-Windows
+    ///     platforms (e.g. Skia on MacCatalyst); leave null on Windows to use the
+    ///     System.Drawing default.
+    /// </summary>
+    public IGraphicsContext? MeasurementContext { get; set; }
+
     // These properties are all either calculated or dependent on printer settings
     /// <summary>
     ///     Size of the Sheet of Paper in 100ths of an inch.
@@ -523,6 +531,7 @@ public class SheetViewModel : ViewModelBase
 
             ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
+            ContentEngine.MeasurementContext = MeasurementContext;
             ContentEngine.Encoding = Encoding;
             retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
         }

@@ -23,6 +23,11 @@ public partial class MainPage : ContentPage
         _drawable = new PrintPreviewDrawable(_viewModel);
         _printService = CreatePlatformPrintService();
 
+        // Reflow needs a text-measurement context. The Windows service returns null
+        // (System.Drawing default); the Mac service returns a Skia context — without
+        // it, every load on MacCatalyst fails with "requires a MeasurementContext".
+        _viewModel.SheetViewModel.MeasurementContext = _printService.CreateMeasurementContext();
+
         InitializeComponent();
 
         BindingContext = _viewModel;
