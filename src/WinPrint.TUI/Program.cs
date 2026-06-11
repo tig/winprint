@@ -6,7 +6,10 @@
 using System.Diagnostics;
 using System.Reflection;
 using Terminal.Gui.Cli;
+using Velopack;
 using WinPrint.TUI;
+
+VelopackApp.Build().Run();
 
 var assembly = Assembly.GetExecutingAssembly();
 var versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
@@ -22,6 +25,7 @@ CliHost host = new(options =>
 });
 
 host.Registry.Register(new TuiCommand());
+host.Registry.Register(new GuiCommand());
 host.Registry.Register(new ViewsCommand());
 
 return await host.RunAsync(args).ConfigureAwait(false);

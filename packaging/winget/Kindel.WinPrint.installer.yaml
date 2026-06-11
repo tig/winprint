@@ -1,0 +1,17 @@
+PackageIdentifier: Kindel.WinPrint
+PackageVersion: "{{version}}"
+InstallerType: exe
+InstallModes:
+  - interactive
+  - silent
+InstallerSwitches:
+  Silent: --silent
+  SilentWithProgress: --silent
+UpgradeBehavior: install
+ReleaseDate: "{{releaseDate}}"
+Installers:
+  - Architecture: x64
+    InstallerUrl: "{{installerUrl}}"
+    InstallerSha256: "{{installerSha256}}"
+ManifestType: installer
+ManifestVersion: 1.10.0

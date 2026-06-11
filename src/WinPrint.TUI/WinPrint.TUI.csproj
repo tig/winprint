@@ -20,6 +20,7 @@
         <PackageReference Include="Terminal.Gui" Version="2.4.4" />
         <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
+        <PackageReference Include="Velopack" Version="1.1.1" />
         <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
@@ -32,6 +33,12 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\CaskaydiaCoveNFM-Regular.ttf" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>WinPrint.TUI.UnitTests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>

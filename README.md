@@ -36,13 +36,13 @@ See the [Installation Guide](https://tig.github.io/winprint/install.html) for de
 
 ## Getting Started
 
-Launch the TUI (terminal interface):
+Launch the TUI:
 
 ```bash
 wp
 ```
 
-Launch the GUI:
+Launch the GUI on Windows or macOS:
 
 ```bash
 wp gui
@@ -57,12 +57,13 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
-* Simple and elegant graphical user interface with accurate print preview.
-* `wp` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
+* `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the MAUI GUI on Windows and macOS.
 * The legacy PowerShell `Out-WinPrint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `wp`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Cross-platform: Windows, macOS, and Linux.
+* Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
 
 ## Documentation
 
@@ -80,28 +81,28 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 
 ## Command Line Interface
 
-Count sheets without printing and emit a JSON envelope:
+Open a file in the terminal UI:
 
 ```bash
-wp Program.cs --what-if --json
+wp Program.cs
 ```
 
-Print a file to a named printer:
+Pass print preview options:
 
 ```bash
-wp Program.cs --printer "Microsoft Print to PDF" --title "Program.cs"
+wp Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
 ```
 
-Print with language override:
+Launch the GUI:
 
 ```bash
-cat profile.ps1 | wp --language powershell --title "PowerShell profile"
+wp gui
 ```
 
-Get machine-readable command metadata:
+List catalogued TUI views:
 
 ```bash
-wp --opencli
+wp views
 ```
 
 See the [User's Guide](https://tig.github.io/winprint/users-guide.html) for complete CLI documentation.

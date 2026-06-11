@@ -7,16 +7,17 @@
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
-* Simple and elegant graphical user interface with accurate print preview.
-* `wp` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
+* Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
+* `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the MAUI GUI on Windows and macOS.
 * The legacy PowerShell `Out-WinPrint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `wp`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Cross-platform: Windows, macOS, and Linux.
+* Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
 
 ## Command Line Interface
 
-The primary command for WinPrint is `wp`. It provides a Terminal.Gui.Cli-based interface with JSON output and OpenCLI metadata support.
+The primary command for WinPrint is `wp`. It provides a Terminal.Gui-based terminal UI.
 
 ```bash
 wp [options] [file...]
@@ -26,9 +27,9 @@ wp [options] [file...]
 
 | Command | Description |
 |---------|-------------|
-| `wp file.cs` | Print a file directly |
+| `wp file.cs` | Open a file in the TUI |
 | `wp` | Launch the TUI (terminal user interface) |
-| `wp gui` | Launch the graphical user interface |
+| `wp gui` | Launch the graphical user interface on Windows/macOS |
 
 ### Examples
 
@@ -38,39 +39,39 @@ Check the installed version:
 wp --version
 ```
 
-Count sheets without printing:
+Open a file in the terminal UI:
 
 ```bash
-wp Program.cs --what-if
+wp Program.cs
 ```
 
-Return a JSON envelope:
+Pass print preview options:
 
 ```bash
-wp Program.cs --what-if --json
+wp Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
 ```
 
-Print to a named printer with language override:
+Launch the GUI:
 
 ```bash
-wp Program.cs --printer "Microsoft Print to PDF" --language csharp --title "Program.cs"
+wp gui
 ```
 
-Pipe text through stdin:
+List catalogued TUI views:
 
 ```bash
-cat profile.ps1 | wp --language powershell --title "PowerShell profile"
+wp views
 ```
 
-Get machine-readable command metadata:
+Get help:
 
 ```bash
-wp --opencli
+wp --help
 ```
 
 ### CLI Options
 
-Common options include `--printer`, `--paper-size`, `--sheet`, `--language`, `--content-type`, `--orientation`, `--line-numbers`, `--from-sheet`, `--to-sheet`, `--what-if`, and `--config`. The Terminal.Gui.Cli framework also provides `--help`, `--version`, `--json`, `--output`, `--initial`, `--timeout`, and `--opencli`.
+Common TUI options include `--printer`, `--paper-size`, `--sheet`, `--content-type`, `--landscape`, `--portrait`, `--from-sheet`, `--to-sheet`, `--view`, `--width`, and `--height`. The Terminal.Gui.Cli framework also provides `--help`, `--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 
 ### Deprecated PowerShell CmdLet
 
@@ -100,11 +101,7 @@ The GUI provides an easy-to-use interface for previewing how a file will be prin
 
 ## Auto-Update
 
-WinPrint includes automatic update support via Velopack. When a new version is available:
-
-1. On launch, WinPrint checks for updates in the background.
-2. If an update is found, you'll be prompted to install it.
-3. The update is downloaded and applied automatically — no manual download required.
+WinPrint packages are built with Velopack, which provides the install/update engine for packaged builds.
 
 You can also update manually using your package manager:
 
@@ -213,7 +210,7 @@ To associate a file extension with a particular Content Type Engine, modify the 
 
 For associating file extensions with a particular programming language see below.
 
-The `out-winprint` parameter `-ContentTypeEngine` and the `winprint --content-type` option override content type and language detection.
+The `out-winprint` parameter `-ContentTypeEngine` and the `wp --content-type` option override content type and language detection.
 
 ## Language Associations
 

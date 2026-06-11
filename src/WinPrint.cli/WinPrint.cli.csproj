@@ -6,7 +6,6 @@
         <RootNamespace>WinPrint.cli</RootNamespace>
         <AssemblyTitle>winprint CLI</AssemblyTitle>
         <AssemblyName>winprint</AssemblyName>
-        <Version>2.5.0.0</Version>
         <Company>Kindel</Company>
         <Product>winprint</Product>
         <Authors>Tig Kindel</Authors>

@@ -1,0 +1,8 @@
+# Template for submitting WinPrint to microsoft/winget-pkgs.
+# Replace {{version}}, {{installerUrl}}, and {{installerSha256}} with values from
+# the signed Velopack Windows artifact in the GitHub Release.
+PackageIdentifier: Kindel.WinPrint
+PackageVersion: "{{version}}"
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.10.0
