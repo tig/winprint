@@ -67,6 +67,18 @@
 		<DefineConstants>$(DefineConstants);MACCATALYST</DefineConstants>
 	</PropertyGroup>
 
+	<!-- The app was renamed (AssemblyName WinPrint.Maui -> winprint, bundle
+	     WinPrint.Maui.app -> WinPrint.app). Incremental builds never remove the old
+	     bundle, which leaves a stale-but-launchable WinPrint.Maui.app sitting next to
+	     the real one — running it silently exercises pre-rename code with none of the
+	     current fixes. Delete it on every build. This target can be removed once
+	     everyone's output directories have cycled past the rename. -->
+	<Target Name="RemoveLegacyMauiBundle" AfterTargets="Build"
+	        Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst' And Exists('$(OutputPath)WinPrint.Maui.app')">
+		<RemoveDir Directories="$(OutputPath)WinPrint.Maui.app" />
+		<Message Importance="high" Text="Removed stale legacy bundle $(OutputPath)WinPrint.Maui.app" />
+	</Target>
+
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
