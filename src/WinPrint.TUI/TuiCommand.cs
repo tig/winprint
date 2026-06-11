@@ -3,8 +3,10 @@ using Terminal.Gui.App;
 using Terminal.Gui.Cli;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views;
 
@@ -86,8 +88,58 @@ public sealed class TuiCommand : IViewerCommand
         };
         window.Add(content);
 
+        // Intercept the quit key so a changed sheet definition can be saved on exit.
+        InstallSaveOnExitGuard(app, content);
+
         await app.RunAsync(window, cancellationToken).ConfigureAwait(false);
         return new CommandResult(CommandStatus.Ok, null, null, null);
+    }
+
+    private bool _saving;
+
+    // Intercept the quit key on every exit so that (a) changed sheet definitions can be saved via the
+    // prompt (Cancel aborts the quit) and (b) the remembered printer / paper selection is persisted.
+    private void InstallSaveOnExitGuard(IApplication app, View content)
+    {
+        if (content is not MainView { AppViewModel: { } vm })
+        {
+            return;
+        }
+
+        app.Keyboard.KeyDown += (_, key) =>
+        {
+            if (_saving)
+            {
+                return;
+            }
+
+            if (!app.Keyboard.KeyBindings.GetCommands(key).Contains(Command.Quit))
+            {
+                return;
+            }
+
+            key.Handled = true;
+            _saving = true;
+            try
+            {
+                if (vm.HasAnyUnsavedSheetChanges && !SaveSheetDialog.ShowAndApply(app, vm))
+                {
+                    // User cancelled the save prompt: abort the quit so they can keep editing.
+                    return;
+                }
+
+                // Persist the remembered printer / paper selection and the selected sheet definition
+                // in a single conditional write (only touches the file if something changed).
+                PrintPageSetup setup = vm.CurrentPageSetup;
+                vm.PersistExitStateIfChanged(setup.PrinterName, setup.PaperSizeName);
+
+                app.RequestStop();
+            }
+            finally
+            {
+                _saving = false;
+            }
+        };
     }
 
     /// <inheritdoc />

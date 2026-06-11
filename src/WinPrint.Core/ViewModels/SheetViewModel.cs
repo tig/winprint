@@ -523,25 +523,6 @@ public class SheetViewModel : ViewModelBase
 
             ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
-            if (ContentEngine.SupportedContentTypes.Contains("text/ansi") &&
-                !ContentEngine.SupportedContentTypes.Contains(ContentType))
-            {
-                (bool pygmentsInstalled, string message) =
-                    ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-                if (pygmentsInstalled)
-                {
-                    // Convert the document to ANSI using Pygments
-                    // TODO: Spin up a thread
-                    Log.Information("Applying source code formatting.");
-                    document = await ServiceLocator.Current.PygmentsConverterService
-                        .ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
-                }
-                else
-                {
-                    Log.Information("Treating file as plain text.");
-                }
-            }
-
             ContentEngine.Encoding = Encoding;
             retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
         }
@@ -898,7 +879,12 @@ public class SheetViewModel : ViewModelBase
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
+                    // Properties the view model does not mirror (e.g. Name, or values applied in bulk by
+                    // ModelBase.CopyPropertiesFrom when a sheet definition is saved/reverted/created on
+                    // exit) need no view-model action. Ignore them rather than throwing, which would crash
+                    // the app mid-save and leave definitions in an inconsistent state.
+                    LogService.TraceMessage($"sheet.PropertyChanged ignored: {e.PropertyName}");
+                    return;
             }
 
             OnSettingsChanged(reflow, e.PropertyName);
@@ -969,7 +955,10 @@ public class SheetViewModel : ViewModelBase
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
+                    // See OnSheetPropertyChanged: tolerate properties not mirrored by the view model
+                    // (including bulk copies via ModelBase.CopyPropertiesFrom) instead of throwing.
+                    LogService.TraceMessage($"ContentSettings.PropertyChanged ignored: {e.PropertyName}");
+                    return;
             }
 
             OnSettingsChanged(reflow, e.PropertyName);

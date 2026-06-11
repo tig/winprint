@@ -252,6 +252,106 @@ public class SettingsService
         }
     }
 
+    /// <summary>
+    ///     Centralizes "save on exit" persistence shared by every front end (TUI, WinForms, MAUI).
+    ///     Each candidate value is compared against what is already stored in <paramref name="settings" />
+    ///     and only the fields that actually changed are mutated. The settings file is written at most
+    ///     once, and only when something changed, so callers can invoke this unconditionally on exit
+    ///     without rewriting an unchanged file.
+    /// </summary>
+    /// <param name="settings">The settings instance to update and persist.</param>
+    /// <param name="lastPrinter">Sticky printer name to remember (ignored when null/empty).</param>
+    /// <param name="lastPaperSize">Sticky paper-size name to remember (ignored when null/empty).</param>
+    /// <param name="defaultSheet">Selected sheet definition to remember (ignored when null).</param>
+    /// <param name="size">Window size to remember (ignored when null, e.g. while maximized).</param>
+    /// <param name="location">Window location to remember (ignored when null, e.g. while maximized).</param>
+    /// <param name="windowState">Window state to remember (ignored when null).</param>
+    /// <param name="saveCteSettings">
+    ///     When the default <paramref name="save" /> path is used, controls whether Content Type Engine
+    ///     settings are written too. Defaults to <see langword="false" /> (TUI/MAUI); WinForms passes
+    ///     <see langword="true" /> to preserve its historical behavior.
+    /// </param>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SaveSettings(Settings, bool, bool)" /> using
+    ///     <paramref name="saveCteSettings" />. Injectable for tests.
+    /// </param>
+    /// <returns><see langword="true" /> if something changed and settings were saved; otherwise <see langword="false" />.</returns>
+    public bool PersistExitStateIfChanged(
+        Settings settings,
+        string? lastPrinter = null,
+        string? lastPaperSize = null,
+        Guid? defaultSheet = null,
+        WindowSize? size = null,
+        WindowLocation? location = null,
+        FormWindowState? windowState = null,
+        bool saveCteSettings = false,
+        Action<Settings>? save = null)
+    {
+        if (settings is null)
+        {
+            return false;
+        }
+
+        bool changed = false;
+
+        if (!string.IsNullOrEmpty(lastPrinter) &&
+            !string.Equals(settings.LastPrinter, lastPrinter, StringComparison.Ordinal))
+        {
+            settings.LastPrinter = lastPrinter;
+            changed = true;
+        }
+
+        if (!string.IsNullOrEmpty(lastPaperSize) &&
+            !string.Equals(settings.LastPaperSize, lastPaperSize, StringComparison.Ordinal))
+        {
+            settings.LastPaperSize = lastPaperSize;
+            changed = true;
+        }
+
+        if (defaultSheet is { } sheet && settings.DefaultSheet != sheet)
+        {
+            settings.DefaultSheet = sheet;
+            changed = true;
+        }
+
+        if (windowState is { } state && settings.WindowState != state)
+        {
+            settings.WindowState = state;
+            changed = true;
+        }
+
+        if (size is { } newSize && !SameSize(settings.Size, newSize))
+        {
+            settings.Size = new WindowSize(newSize.Width, newSize.Height);
+            changed = true;
+        }
+
+        if (location is { } newLocation && !SameLocation(settings.Location, newLocation))
+        {
+            settings.Location = new WindowLocation(newLocation.X, newLocation.Y);
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        Action<Settings> persist = save ?? (s => SaveSettings(s, saveCteSettings));
+        persist(settings);
+        return true;
+    }
+
+    private static bool SameSize(WindowSize? current, WindowSize candidate)
+    {
+        return current is not null && current.Width == candidate.Width && current.Height == candidate.Height;
+    }
+
+    private static bool SameLocation(WindowLocation? current, WindowLocation candidate)
+    {
+        return current is not null && current.X == candidate.X && current.Y == candidate.Y;
+    }
+
     // Factory - creates 
     public static Settings? Create()
     {

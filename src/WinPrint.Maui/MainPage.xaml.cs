@@ -103,6 +103,9 @@ public partial class MainPage : ContentPage
 
         // Track window size changes to capture normal bounds
         HookWindowStateTracking();
+
+        // Intercept window close to prompt for saving sheet-definition edits.
+        HookCloseHandling();
 #endif
     }
 
@@ -215,6 +218,10 @@ public partial class MainPage : ContentPage
     {
         Options options = ModelLocator.Current.Options;
         string? file = _viewModel.App.ApplyOptions(options, _viewModel.PrinterNames, _viewModel.PaperSizes);
+
+        // Treat startup overrides (e.g. --sheet/--landscape) as the baseline so they aren't mistaken
+        // for user edits when prompting to save sheet-definition changes on exit.
+        _viewModel.App.RecaptureSheetBaselines();
 
         if (!string.IsNullOrEmpty(file))
         {
@@ -447,6 +454,66 @@ public partial class MainPage : ContentPage
                 _viewModel.SaveNormalBounds(Window.X, Window.Y, Window.Width, Window.Height);
             }
         };
+    }
+
+    private bool _allowClose;
+    private bool _closeHooked;
+    private bool _closePromptInProgress;
+
+    /// <summary>
+    ///     Intercept the native window's close so we can prompt the user to save changed sheet-definition
+    ///     settings. The WinUI <see cref="AppWindow.Closing" /> handler can't await, so we cancel the
+    ///     first close, run the async prompt, and re-issue the close if the user didn't cancel.
+    /// </summary>
+    private void HookCloseHandling()
+    {
+        if (_closeHooked)
+        {
+            return;
+        }
+
+        if (Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
+        {
+            return;
+        }
+
+        nativeWindow.AppWindow.Closing += OnAppWindowClosing;
+        _closeHooked = true;
+    }
+
+    private async void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_allowClose || !_viewModel.HasUnsavedSheetChanges)
+        {
+            return;
+        }
+
+        // Stop this close; we'll re-issue it after the (async) prompt resolves.
+        args.Cancel = true;
+
+        // Guard against re-entrancy while the prompt is open (e.g. repeated close attempts).
+        if (_closePromptInProgress)
+        {
+            return;
+        }
+
+        _closePromptInProgress = true;
+        try
+        {
+            bool proceed = await _viewModel.PromptSaveSheetOnExitAsync(this);
+            if (proceed)
+            {
+                _allowClose = true;
+                Application.Current?.Quit();
+            }
+        }
+        finally
+        {
+            if (!_allowClose)
+            {
+                _closePromptInProgress = false;
+            }
+        }
     }
 #endif
 }
