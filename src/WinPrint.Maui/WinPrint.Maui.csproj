@@ -44,6 +44,12 @@
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 
+		<!-- The MacCatalyst SDK hard-errors when the installed Xcode's major.minor doesn't
+		     exactly match what the workload was built against (e.g. workload 26.4 vs
+		     Xcode 26.5), even when they're compatible. Relax it to keep local builds working
+		     across routine Xcode point releases. -->
+		<ValidateXcodeVersion>false</ValidateXcodeVersion>
+
 		<!-- Suppress NuGet audit warnings for transitive vulnerabilities pulled in by the
 		     MAUI workload templates (e.g. System.Private.Uri 4.3.0). These come from packages
 		     we don't directly reference and cannot upgrade without waiting on upstream. -->
