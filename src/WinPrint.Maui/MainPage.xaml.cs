@@ -44,9 +44,9 @@ public partial class MainPage : ContentPage
         // Sync window title with ViewModel title
         _viewModel.PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName == nameof(_viewModel.Title) && Window != null)
+            if (e.PropertyName == nameof(_viewModel.Title))
             {
-                MainThread.BeginInvokeOnMainThread(() => Window.Title = _viewModel.Title);
+                MainThread.BeginInvokeOnMainThread(SyncWindowTitle);
             }
         };
 
@@ -60,9 +60,25 @@ public partial class MainPage : ContentPage
         Unloaded += OnPageUnloaded;
     }
 
+    /// <summary>
+    ///     Pushes the view-model title to the native window. The title can change before
+    ///     the page is attached to its Window — command-line file loads are queued from
+    ///     the constructor — so <see cref="OnHandlerChanged" /> calls this again once the
+    ///     window exists.
+    /// </summary>
+    private void SyncWindowTitle()
+    {
+        if (Window != null)
+        {
+            Window.Title = _viewModel.Title;
+        }
+    }
+
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
+
+        SyncWindowTitle();
 
         // Restore saved window size and state (mirrors WinForms pattern)
         Settings settings = ModelLocator.Current.Settings;
