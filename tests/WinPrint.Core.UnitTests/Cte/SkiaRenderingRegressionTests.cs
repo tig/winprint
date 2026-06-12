@@ -33,7 +33,7 @@ public class SkiaRenderingRegressionTests
     [Fact]
     public void SkiaMeasure_RunAdvances_SumToWholeLineMeasurement()
     {
-        SkiaGraphicsContext g = SkiaGraphicsContext.CreateMeasurementContext();
+        var g = SkiaGraphicsContext.CreateMeasurementContext();
         using IGraphicsFont font = MonospaceFont(g);
 
         // Typical syntax-highlight tokenization: words and whitespace measured separately.
@@ -51,7 +51,7 @@ public class SkiaRenderingRegressionTests
     [Fact]
     public void SkiaMeasure_WhitespaceRuns_HaveNonZeroWidth()
     {
-        SkiaGraphicsContext g = SkiaGraphicsContext.CreateMeasurementContext();
+        var g = SkiaGraphicsContext.CreateMeasurementContext();
         using IGraphicsFont font = MonospaceFont(g);
 
         // Whitespace-only runs must not collapse to zero (TextBlock-style trimming would
@@ -65,7 +65,7 @@ public class SkiaRenderingRegressionTests
     {
         // Mirror SkiaPreviewPageRenderer: measure with a Skia measurement context, paint
         // into a Skia canvas over a bitmap, then prove glyphs actually landed.
-        SkiaGraphicsContext measure = SkiaGraphicsContext.CreateMeasurementContext();
+        var measure = SkiaGraphicsContext.CreateMeasurementContext();
         var cte = new TextCte
         {
             ContentSettings = new ContentSettings

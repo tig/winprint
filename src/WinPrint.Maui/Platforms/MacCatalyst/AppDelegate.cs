@@ -55,7 +55,7 @@ public class AppDelegate : MauiUIApplicationDelegate
 
     private static UIKeyCommand MakeKeyCommand(NSString input, UIKeyModifierFlags modifiers)
     {
-        UIKeyCommand command = UIKeyCommand.Create(input, modifiers, new Selector(KeySelector));
+        var command = UIKeyCommand.Create(input, modifiers, new Selector(KeySelector));
         command.WantsPriorityOverSystemBehavior = true;
         return command;
     }

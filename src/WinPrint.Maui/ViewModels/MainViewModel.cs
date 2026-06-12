@@ -547,6 +547,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     ///     know when its cached page rendering is stale.
     /// </summary>
     public int PreviewContentGeneration { get; private set; }
+
     public Func<Task<string?>>? PickFileAsync { get; set; }
     public Func<Task>? PerformPrintAsync { get; set; }
     public Func<string, float, string, Task<(string Family, float Size, string Style)?>>? PickFontAsync { get; set; }

@@ -143,7 +143,7 @@ public sealed class PrintPreviewDrawable : IDrawable
         if (_pageImage is null || key != _pageImageKey)
         {
             _pageImage?.Dispose();
-            _pageImage = Graphics.SkiaPreviewPageRenderer.Render(_viewModel, (int)boundsW, (int)boundsH);
+            _pageImage = SkiaPreviewPageRenderer.Render(_viewModel, (int)boundsW, (int)boundsH);
             _pageImageKey = key;
             _displayImage?.Dispose();
             _displayImage = null;
@@ -154,7 +154,7 @@ public sealed class PrintPreviewDrawable : IDrawable
             // Pick the display copy: needed on-screen pixels (view units × screen density)
             // of the page's larger edge (Downsize constrains the larger dimension),
             // rounded up to a bucket and capped at the master's resolution.
-            float density = (float)Microsoft.Maui.Devices.DeviceDisplay.Current.MainDisplayInfo.Density;
+            float density = (float)DeviceDisplay.Current.MainDisplayInfo.Density;
             float masterMaxPx = Math.Max(_pageImage.Width, _pageImage.Height);
             float neededPx = Math.Max(pageWidth, pageHeight) * Math.Max(density, 1f);
             float bucketPx = Math.Min(MathF.Ceiling(neededPx / DisplayBucketPx) * DisplayBucketPx,
@@ -164,7 +164,7 @@ public sealed class PrintPreviewDrawable : IDrawable
                 _displayImage?.Dispose();
                 _displayImage = bucketPx >= masterMaxPx
                     ? null // full resolution needed — draw the master directly
-                    : _pageImage.Downsize(bucketPx, false);
+                    : _pageImage.Downsize(bucketPx);
                 _displayImageWidth = bucketPx;
             }
 

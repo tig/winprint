@@ -638,9 +638,12 @@ public partial class MainPage : ContentPage
 
     private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-        // An open ComboBox dropdown uses paging/Home/End for selection; don't also act.
-        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBox
-            or Microsoft.UI.Xaml.Controls.ComboBoxItem)
+        // An OPEN ComboBox dropdown uses paging/Home/End for selection; don't also act.
+        // A merely-focused (closed) ComboBox must NOT suppress shortcuts — that would
+        // kill keyboard nav/zoom after every picker click. ComboBoxItem only exists
+        // while the dropdown is open.
+        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBoxItem ||
+            (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBox combo && combo.IsDropDownOpen))
         {
             return;
         }
