@@ -208,6 +208,7 @@
                 <GraphicsView.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnPreviewTapped" />
                     <PinchGestureRecognizer PinchUpdated="OnPreviewPinchUpdated" />
+                    <PanGestureRecognizer PanUpdated="OnPreviewPanUpdated" />
                 </GraphicsView.GestureRecognizers>
             </GraphicsView>
 

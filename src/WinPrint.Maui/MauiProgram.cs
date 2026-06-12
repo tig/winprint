@@ -81,6 +81,12 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+#if MACCATALYST
+        // The preview must be able to take keyboard focus (see FocusablePlatformGraphicsView).
+        builder.ConfigureMauiHandlers(handlers =>
+            handlers.AddHandler<GraphicsView, FocusableGraphicsViewHandler>());
+#endif
+
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddSingleton<MainPage>();
 #if WINDOWS
