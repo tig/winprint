@@ -207,6 +207,7 @@
                           BackgroundColor="{AppThemeBinding Light=DarkGray, Dark=#555}">
                 <GraphicsView.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnPreviewTapped" />
+                    <PinchGestureRecognizer PinchUpdated="OnPreviewPinchUpdated" />
                 </GraphicsView.GestureRecognizers>
             </GraphicsView>
 
