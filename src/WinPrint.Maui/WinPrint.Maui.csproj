@@ -113,4 +113,12 @@
 		<ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
 	</ItemGroup>
 
+	<!-- Pre-main hook that records the launch directory in WINPRINT_LAUNCH_CWD before
+	     the Catalyst startup code chdirs to the .app bundle (see launchcwd.c — the
+	     prebuilt universal dylib is committed because CI builds on Windows and can't
+	     run clang for Mac targets). -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<NativeReference Include="Platforms\MacCatalyst\NativeLibs\liblaunchcwd.dylib" Kind="Dynamic" SmartLink="false" />
+	</ItemGroup>
+
 </Project>
