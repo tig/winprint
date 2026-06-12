@@ -23,6 +23,13 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- The Windows TFM pulls SkiaSharp's win natives transitively, but running these tests
+       on a Mac (dev loop for the MacCatalyst preview/print path) needs the macOS natives
+       too — Core only references them for non-Windows TFMs. Harmless on Windows/CI. -->
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.116.1" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\WinPrint.Core\WinPrint.Core.csproj" />
   </ItemGroup>

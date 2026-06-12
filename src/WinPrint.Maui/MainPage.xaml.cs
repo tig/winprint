@@ -17,8 +17,15 @@ public partial class MainPage : ContentPage
     private readonly PrintPreviewDrawable _drawable;
     private readonly IPrintService _printService;
 
+    /// <summary>
+    ///     The live page instance, so platform key handlers (e.g. the MacCatalyst
+    ///     AppDelegate's UIKeyCommands) can route shortcuts here regardless of focus.
+    /// </summary>
+    public static MainPage? Current { get; private set; }
+
     public MainPage()
     {
+        Current = this;
         _viewModel = new MainViewModel();
         _drawable = new PrintPreviewDrawable(_viewModel);
         _printService = CreatePlatformPrintService();
@@ -63,7 +70,102 @@ public partial class MainPage : ContentPage
 
         // Subscribe to window lifecycle for state save
         Unloaded += OnPageUnloaded;
+
+#if MACCATALYST
+        // Make the preview the initial keyboard target (its platform view is focusable
+        // via FocusablePlatformGraphicsView) and hook the scroll wheel, which MAUI
+        // doesn't surface.
+        Loaded += (_, _) => Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(250), () =>
+        {
+            FocusPreview();
+            HookScrollWheel();
+        });
+#endif
     }
+
+#if MACCATALYST
+    /// <summary>
+    ///     Moves keyboard focus to the preview. Becoming first responder implicitly
+    ///     resigns whatever sidebar control held it (Picker, Entry, …).
+    /// </summary>
+    internal void FocusPreview()
+    {
+        if (PreviewGraphicsView.Handler?.PlatformView is UIKit.UIView nativeView)
+        {
+            nativeView.BecomeFirstResponder();
+        }
+    }
+
+    private UIKit.UIPanGestureRecognizer? _scrollRecognizer;
+    private float _scrollFlipAccum;
+    private float _scrollStartPanX;
+    private float _scrollStartPanY;
+
+    /// <summary>Scroll travel (view units) per page flip when the preview is at fit zoom.</summary>
+    private const float ScrollPageThreshold = 50f;
+
+    /// <summary>
+    ///     MAUI has no scroll-wheel event, but Catalyst delivers mouse-wheel and two-finger
+    ///     trackpad scrolls to a UIPanGestureRecognizer with a scroll mask and NO touch
+    ///     types (so it never competes with the drag-to-pan PanGestureRecognizer).
+    /// </summary>
+    private void HookScrollWheel()
+    {
+        if (_scrollRecognizer is not null ||
+            PreviewGraphicsView.Handler?.PlatformView is not UIKit.UIView nativeView)
+        {
+            return;
+        }
+
+        _scrollRecognizer = new UIKit.UIPanGestureRecognizer(OnNativeScroll)
+        {
+            AllowedScrollTypesMask = UIKit.UIScrollTypeMask.All,
+            AllowedTouchTypes = []
+        };
+        nativeView.AddGestureRecognizer(_scrollRecognizer);
+    }
+
+    private void OnNativeScroll(UIKit.UIPanGestureRecognizer recognizer)
+    {
+        CoreGraphics.CGPoint translation = recognizer.TranslationInView(recognizer.View);
+        switch (recognizer.State)
+        {
+            case UIKit.UIGestureRecognizerState.Began:
+                _scrollFlipAccum = 0;
+                _scrollStartPanX = _viewModel.PanX;
+                _scrollStartPanY = _viewModel.PanY;
+                break;
+
+            case UIKit.UIGestureRecognizerState.Changed when IsPreviewZoomed:
+                // Zoomed: scroll pans, content follows the scroll direction.
+                _viewModel.PanX = PrintPreviewDrawable.ClampPanOffset(
+                    _scrollStartPanX + (float)translation.X, _drawable.BaseX, _drawable.PageW, _drawable.ViewW);
+                _viewModel.PanY = PrintPreviewDrawable.ClampPanOffset(
+                    _scrollStartPanY + (float)translation.Y, _drawable.BaseY, _drawable.PageH, _drawable.ViewH);
+                break;
+
+            case UIKit.UIGestureRecognizerState.Changed:
+                // Fit zoom: page-flip per ScrollPageThreshold of travel. Scrolling forward
+                // (content moving up, translation negative) goes to the next page.
+                float delta = (float)translation.Y - _scrollFlipAccum;
+                while (delta <= -ScrollPageThreshold)
+                {
+                    _viewModel.NextPageCommand.Execute(null);
+                    _scrollFlipAccum -= ScrollPageThreshold;
+                    delta += ScrollPageThreshold;
+                }
+
+                while (delta >= ScrollPageThreshold)
+                {
+                    _viewModel.PreviousPageCommand.Execute(null);
+                    _scrollFlipAccum += ScrollPageThreshold;
+                    delta -= ScrollPageThreshold;
+                }
+
+                break;
+        }
+    }
+#endif
 
     /// <summary>
     ///     Pushes the view-model title to the native window. The title can change before
@@ -177,6 +279,99 @@ public partial class MainPage : ContentPage
                     _viewModel.ZoomFitCommand.Execute(null);
                 }
 
+                break;
+            // Arrow keys: pan the zoomed preview (scroll convention: Down reveals lower
+            // content); at fit zoom they page-navigate, like Preview.app.
+            case "Up":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(0, ArrowPanStep);
+                }
+                else
+                {
+                    _viewModel.PreviousPageCommand.Execute(null);
+                }
+
+                break;
+            case "Down":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(0, -ArrowPanStep);
+                }
+                else
+                {
+                    _viewModel.NextPageCommand.Execute(null);
+                }
+
+                break;
+            case "Left":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(ArrowPanStep, 0);
+                }
+                else
+                {
+                    _viewModel.PreviousPageCommand.Execute(null);
+                }
+
+                break;
+            case "Right":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(-ArrowPanStep, 0);
+                }
+                else
+                {
+                    _viewModel.NextPageCommand.Execute(null);
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>True when the preview is zoomed in past fit (pan becomes meaningful).</summary>
+    public bool IsPreviewZoomed => _viewModel.ZoomFactor > 1.01f;
+
+    private const float ArrowPanStep = 60f;
+
+    private void PanPreview(float dx, float dy)
+    {
+        if (!IsPreviewZoomed)
+        {
+            return;
+        }
+
+        _viewModel.PanX = PrintPreviewDrawable.ClampPanOffset(
+            _viewModel.PanX + dx, _drawable.BaseX, _drawable.PageW, _drawable.ViewW);
+        _viewModel.PanY = PrintPreviewDrawable.ClampPanOffset(
+            _viewModel.PanY + dy, _drawable.BaseY, _drawable.PageH, _drawable.ViewH);
+    }
+
+    private float _panGestureStartX;
+    private float _panGestureStartY;
+
+    /// <summary>
+    ///     Drag-to-pan on the zoomed preview. <see cref="PanUpdatedEventArgs.TotalX" /> is
+    ///     cumulative since the gesture started, so capture the offsets at Started.
+    /// </summary>
+    private void OnPreviewPanUpdated(object? sender, PanUpdatedEventArgs e)
+    {
+        if (!IsPreviewZoomed)
+        {
+            return;
+        }
+
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                _panGestureStartX = _viewModel.PanX;
+                _panGestureStartY = _viewModel.PanY;
+                break;
+            case GestureStatus.Running:
+                _viewModel.PanX = PrintPreviewDrawable.ClampPanOffset(
+                    _panGestureStartX + (float)e.TotalX, _drawable.BaseX, _drawable.PageW, _drawable.ViewW);
+                _viewModel.PanY = PrintPreviewDrawable.ClampPanOffset(
+                    _panGestureStartY + (float)e.TotalY, _drawable.BaseY, _drawable.PageH, _drawable.ViewH);
                 break;
         }
     }
@@ -293,6 +488,13 @@ public partial class MainPage : ContentPage
     }
 
     /// <summary>
+    ///     Exaggerates the raw pinch delta (an exponent in log-zoom space) — trackpad
+    ///     pinches report small per-update scale changes, which made reaching 4x feel
+    ///     like rowing.
+    /// </summary>
+    private const float PinchSensitivity = 2.5f;
+
+    /// <summary>
     ///     Pinch-to-zoom on the preview. <see cref="PinchGestureUpdatedEventArgs.Scale" />
     ///     is the relative change since the previous update, so accumulate it
     ///     multiplicatively, clamped to the same range as the zoom commands.
@@ -301,7 +503,8 @@ public partial class MainPage : ContentPage
     {
         if (e.Status == GestureStatus.Running)
         {
-            _viewModel.ZoomFactor = Math.Clamp(_viewModel.ZoomFactor * (float)e.Scale, 0.25f, 4.0f);
+            float amplified = MathF.Pow((float)e.Scale, PinchSensitivity);
+            _viewModel.ZoomFactor = Math.Clamp(_viewModel.ZoomFactor * amplified, 0.25f, 4.0f);
         }
     }
 
@@ -314,6 +517,13 @@ public partial class MainPage : ContentPage
         {
             await _viewModel.OpenFileAsync();
         }
+#if MACCATALYST
+        else
+        {
+            // Clicking the preview gives it keyboard focus, like any native view.
+            FocusPreview();
+        }
+#endif
     }
 
     // --- Collapsible section handlers ---
@@ -407,20 +617,51 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        content.KeyDown += OnNativeKeyDown;
+        // handledEventsToo: a focused WinUI TextBox (Entry) marks PageUp/PageDown/Home/End
+        // handled for caret movement, so a plain KeyDown subscription never sees them and
+        // the paging shortcuts go dead whenever an Entry has focus.
+        content.AddHandler(
+            Microsoft.UI.Xaml.UIElement.KeyDownEvent,
+            new Microsoft.UI.Xaml.Input.KeyEventHandler(OnNativeKeyDown),
+            true);
         content.PointerWheelChanged += OnNativePointerWheel;
+
+        // Nothing has keyboard focus at startup, and key events don't route without a
+        // focused element — shortcuts appeared dead until the user clicked somewhere.
+        if (Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(content)
+            is Microsoft.UI.Xaml.UIElement firstFocusable)
+        {
+            _ = Microsoft.UI.Xaml.Input.FocusManager.TryFocusAsync(
+                firstFocusable, Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
     }
 
     private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-        var window = sender as Microsoft.UI.Xaml.UIElement;
+        // An OPEN ComboBox dropdown uses paging/Home/End for selection; don't also act.
+        // A merely-focused (closed) ComboBox must NOT suppress shortcuts — that would
+        // kill keyboard nav/zoom after every picker click. ComboBoxItem only exists
+        // while the dropdown is open.
+        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBoxItem ||
+            (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBox combo && combo.IsDropDownOpen))
+        {
+            return;
+        }
+
+        string key = e.Key.ToString();
+
+        // In a text box, Home/End move the caret — that must win over page navigation.
+        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.TextBox && key is "Home" or "End")
+        {
+            return;
+        }
+
         bool ctrl = Microsoft.UI.Input.InputKeyboardSource
             .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
-        string key = e.Key.ToString();
         HandleKeyDown(key, ctrl, shift);
     }
 

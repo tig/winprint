@@ -75,6 +75,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _app.PropertyChanged += OnAppPropertyChanged;
         _app.PreviewInvalidated += (_, _) =>
         {
+            // Content (not just zoom/page) changed — rendered-page caches are stale.
+            PreviewContentGeneration++;
             if (MainThread.IsMainThread)
             {
                 InvalidatePreview?.Invoke();
@@ -148,6 +150,44 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set
         {
             if (SetField(ref _zoomFactor, value))
+            {
+                if (value <= 1.01f)
+                {
+                    // Back at fit — recenter so the next zoom-in starts from a sane spot.
+                    _panX = 0;
+                    _panY = 0;
+                }
+
+                InvalidatePreview?.Invoke();
+            }
+        }
+    }
+
+    // --- Preview panning (only meaningful when ZoomFactor > 1) ---
+
+    private float _panX;
+    private float _panY;
+
+    /// <summary>Horizontal pan offset of the zoomed preview page, in view units.</summary>
+    public float PanX
+    {
+        get => _panX;
+        set
+        {
+            if (SetField(ref _panX, value))
+            {
+                InvalidatePreview?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>Vertical pan offset of the zoomed preview page, in view units.</summary>
+    public float PanY
+    {
+        get => _panY;
+        set
+        {
+            if (SetField(ref _panY, value))
             {
                 InvalidatePreview?.Invoke();
             }
@@ -500,6 +540,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand SettingsCommand { get; }
 
     public Action? InvalidatePreview { get; set; }
+
+    /// <summary>
+    ///     Incremented whenever the page CONTENT changes (reflow, sheet/margin edits,
+    ///     file load) — but not on zoom or page navigation. Lets the preview drawable
+    ///     know when its cached page rendering is stale.
+    /// </summary>
+    public int PreviewContentGeneration { get; private set; }
+
     public Func<Task<string?>>? PickFileAsync { get; set; }
     public Func<Task>? PerformPrintAsync { get; set; }
     public Func<string, float, string, Task<(string Family, float Size, string Style)?>>? PickFontAsync { get; set; }
