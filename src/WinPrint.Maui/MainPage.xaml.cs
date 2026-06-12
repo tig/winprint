@@ -293,6 +293,19 @@ public partial class MainPage : ContentPage
     }
 
     /// <summary>
+    ///     Pinch-to-zoom on the preview. <see cref="PinchGestureUpdatedEventArgs.Scale" />
+    ///     is the relative change since the previous update, so accumulate it
+    ///     multiplicatively, clamped to the same range as the zoom commands.
+    /// </summary>
+    private void OnPreviewPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
+    {
+        if (e.Status == GestureStatus.Running)
+        {
+            _viewModel.ZoomFactor = Math.Clamp(_viewModel.ZoomFactor * (float)e.Scale, 0.25f, 4.0f);
+        }
+    }
+
+    /// <summary>
     ///     When preview is tapped and no file is loaded, open file dialog (per spec).
     /// </summary>
     private async void OnPreviewTapped(object? sender, TappedEventArgs e)
