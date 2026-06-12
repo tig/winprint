@@ -394,20 +394,48 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        content.KeyDown += OnNativeKeyDown;
+        // handledEventsToo: a focused WinUI TextBox (Entry) marks PageUp/PageDown/Home/End
+        // handled for caret movement, so a plain KeyDown subscription never sees them and
+        // the paging shortcuts go dead whenever an Entry has focus.
+        content.AddHandler(
+            Microsoft.UI.Xaml.UIElement.KeyDownEvent,
+            new Microsoft.UI.Xaml.Input.KeyEventHandler(OnNativeKeyDown),
+            true);
         content.PointerWheelChanged += OnNativePointerWheel;
+
+        // Nothing has keyboard focus at startup, and key events don't route without a
+        // focused element — shortcuts appeared dead until the user clicked somewhere.
+        if (Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(content)
+            is Microsoft.UI.Xaml.UIElement firstFocusable)
+        {
+            _ = Microsoft.UI.Xaml.Input.FocusManager.TryFocusAsync(
+                firstFocusable, Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
     }
 
     private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-        var window = sender as Microsoft.UI.Xaml.UIElement;
+        // An open ComboBox dropdown uses paging/Home/End for selection; don't also act.
+        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBox
+            or Microsoft.UI.Xaml.Controls.ComboBoxItem)
+        {
+            return;
+        }
+
+        string key = e.Key.ToString();
+
+        // In a text box, Home/End move the caret — that must win over page navigation.
+        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.TextBox && key is "Home" or "End")
+        {
+            return;
+        }
+
         bool ctrl = Microsoft.UI.Input.InputKeyboardSource
             .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
-        string key = e.Key.ToString();
         HandleKeyDown(key, ctrl, shift);
     }
 
