@@ -96,7 +96,7 @@
                                 </Grid>
                                 <!-- Bottom (centered) -->
                                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
-                                    <Label Text="Bot:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
+                                    <Label Text="Bottom:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
                                     <Entry Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="54" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
