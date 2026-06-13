@@ -23,27 +23,29 @@
         </MenuBarItem>
     </ContentPage.MenuBarItems>
 
-    <!-- Font sizes are DynamicResources so MacCatalyst can swap in the system's
-         preferred (Dynamic Type) sizes at startup — see MainPage ctor. -->
+    <!-- One base size for all the UI chrome so the panel is visually consistent. Controls
+         keep MAUI's default FontAutoScalingEnabled="True", so this base is scaled by the
+         OS text-size setting automatically on both MacCatalyst and Windows — no per-platform
+         code. (Print-output fonts — header/footer and content — are rendered by the engine,
+         not these controls, so they're unaffected and stay at their true point sizes.) -->
     <ContentPage.Resources>
-        <x:Double x:Key="SidebarFontSize">12</x:Double>
-        <x:Double x:Key="SidebarFontSizeSmall">10</x:Double>
-        <x:Double x:Key="ToolbarButtonFontSize">14</x:Double>
+        <x:Double x:Key="SidebarFontSize">13</x:Double>
     </ContentPage.Resources>
 
     <Grid ColumnDefinitions="Auto,Auto,*">
 
-        <!-- LEFT PANEL: Settings (collapsible horizontally) -->
-        <ScrollView x:Name="LeftPanel" Grid.Column="0" WidthRequest="210"
-                    BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-            <VerticalStackLayout Padding="6,4" Spacing="2">
+        <!-- LEFT PANEL: Settings (collapsible horizontally). Grid rows so the settings sit
+             at the top (row 0) and Help/version pins to the bottom of the panel (row 1). -->
+        <Grid x:Name="LeftPanel" Grid.Column="0" WidthRequest="210" RowDefinitions="*,Auto"
+              BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
+            <VerticalStackLayout Grid.Row="0" Padding="6,4" Spacing="2">
 
                 <!-- File / Print buttons -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
-                            FontSize="{DynamicResource ToolbarButtonFontSize}" Padding="8,4" HeightRequest="34" />
+                            FontSize="{DynamicResource SidebarFontSize}" Padding="8,4" HeightRequest="34" />
                     <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
-                            FontSize="{DynamicResource ToolbarButtonFontSize}" Padding="8,4" HeightRequest="34" />
+                            FontSize="{DynamicResource SidebarFontSize}" Padding="8,4" HeightRequest="34" />
                 </Grid>
 
                 <!-- Sheet Definition group (collapsible) -->
@@ -70,7 +72,7 @@
                             </HorizontalStackLayout>
 
                             <!-- Margins (diamond layout like WinForms) -->
-                            <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,2,0,0">
+                            <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,10,0,0">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />
                                 </Label.GestureRecognizers>
@@ -100,7 +102,7 @@
                             </VerticalStackLayout>
 
                             <!-- Multiple Pages Up -->
-                            <Label x:Name="PagesUpHeader" Text="▼ Pages Up" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,2,0,0">
+                            <Label x:Name="PagesUpHeader" Text="▼ Pages Up" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,10,0,0">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPagesUpHeaderTapped" />
                                 </Label.GestureRecognizers>
@@ -122,7 +124,7 @@
                                 </HorizontalStackLayout>
                                 <HorizontalStackLayout Spacing="4">
                                     <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
-                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSizeSmall}">
+                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
                                         <Label.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                         </Label.GestureRecognizers>
@@ -131,7 +133,7 @@
                             </VerticalStackLayout>
 
                             <!-- Fonts (collapsible) -->
-                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,2,0,0">
+                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,10,0,0">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnFontsHeaderTapped" />
                                 </Label.GestureRecognizers>
@@ -191,19 +193,21 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- Version / Help -->
-                <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
-                    <Label Grid.Column="0" Text="Help &amp; about..." FontSize="{DynamicResource SidebarFontSize}"
-                           TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnHelpTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                    <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="{DynamicResource SidebarFontSize}"
-                           HorizontalTextAlignment="End" />
-                </Grid>
             </VerticalStackLayout>
-        </ScrollView>
+
+            <!-- Help / version, pinned to the bottom of the panel (Grid row 1). -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,*" Padding="6,4">
+                <Label Grid.Column="0" Text="Help &amp; about..." FontSize="{DynamicResource SidebarFontSize}"
+                       VerticalOptions="End"
+                       TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHelpTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Grid.Column="1" Text="{Binding VersionText}" FontSize="{DynamicResource SidebarFontSize}"
+                       VerticalOptions="End" HorizontalTextAlignment="End" />
+            </Grid>
+        </Grid>
 
         <!-- Panel collapse toggle -->
         <VerticalStackLayout Grid.Column="1" WidthRequest="14" VerticalOptions="Center"

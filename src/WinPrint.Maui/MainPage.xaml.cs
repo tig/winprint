@@ -38,14 +38,6 @@ public partial class MainPage : ContentPage
         InitializeComponent();
 
 #if MACCATALYST
-        // Honor the user's system text size (Dynamic Type). The XAML defaults are
-        // Windows-ish 12/10/14pt, which read tiny on a Mac; Subheadline/Footnote/Body
-        // track the size the user picked in System Settings.
-        // Resources is non-null once InitializeComponent has run (the XAML declares them).
-        Resources!["SidebarFontSize"] = PreferredFontSize(UIKit.UIFontTextStyle.Subheadline, 13);
-        Resources["SidebarFontSizeSmall"] = PreferredFontSize(UIKit.UIFontTextStyle.Footnote, 11);
-        Resources["ToolbarButtonFontSize"] = PreferredFontSize(UIKit.UIFontTextStyle.Body, 15);
-
         // The XAML MenuBarItems drive the Windows menu strip, but on Catalyst MAUI also
         // renders them — duplicating the File ▸ Open…/Print… items that the AppDelegate's
         // native UIMenuBuilder already adds (and merges correctly into the system File
@@ -100,12 +92,6 @@ public partial class MainPage : ContentPage
     }
 
 #if MACCATALYST
-    private static double PreferredFontSize(UIKit.UIFontTextStyle style, double fallback)
-    {
-        UIKit.UIFont? font = UIKit.UIFont.GetPreferredFontForTextStyle(style);
-        return font is null ? fallback : (double)font.PointSize;
-    }
-
     /// <summary>
     ///     Moves keyboard focus to the preview. Becoming first responder implicitly
     ///     resigns whatever sidebar control held it (Picker, Entry, …).
