@@ -1,21 +1,115 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <!-- Background -->
-    <rect x="0" y="0" width="456" height="456" fill="#2B579A" rx="48" ry="48"/>
-    <!-- Paper/document -->
-    <rect x="128" y="60" width="200" height="260" fill="white" rx="4" ry="4"/>
-    <!-- Text lines on paper -->
-    <rect x="152" y="90" width="152" height="8" fill="#CCCCCC" rx="2"/>
-    <rect x="152" y="112" width="140" height="8" fill="#CCCCCC" rx="2"/>
-    <rect x="152" y="134" width="160" height="8" fill="#CCCCCC" rx="2"/>
-    <rect x="152" y="156" width="120" height="8" fill="#CCCCCC" rx="2"/>
-    <rect x="152" y="178" width="148" height="8" fill="#CCCCCC" rx="2"/>
-    <rect x="152" y="200" width="130" height="8" fill="#CCCCCC" rx="2"/>
-    <!-- Printer body -->
-    <rect x="88" y="220" width="280" height="140" fill="#E8E8E8" rx="12" ry="12"/>
-    <rect x="88" y="220" width="280" height="40" fill="#555555" rx="12" ry="12"/>
-    <!-- Printer output tray -->
-    <rect x="148" y="340" width="160" height="60" fill="white" rx="4" ry="4"/>
-    <!-- Printer indicator light -->
-    <circle cx="340" cy="240" r="8" fill="#4CAF50"/>
+<!--
+  WinPrint app icon — SINGLE SOURCE OF TRUTH (hand-authored vector).
+  See README.md in this folder for the full design doc + tweak recipes.
+
+  Concept: "B+C" — a syntax-highlighted code page (the thing WinPrint makes
+  beautiful on paper) whose TOP line is a `>_` prompt (the `wp` command), so the
+  code reads as the command's output. Tilted +5°. macOS idiom.
+
+  HOW IT'S USED
+    csproj <MauiIcon Include="...appicon.svg" ForegroundFile="...appiconfg.svg" Color="#2B4FC8"/>
+    appiconfg.svg is intentionally EMPTY — the whole design lives here so the
+    composite is predictable. MAUI's resizetizer rasterizes this to every
+    platform size at build time. This file stays the editable master.
+
+  CANVAS / MASKING
+    1024x1024, FULL-BLEED (no baked rounded corners, no margin). macOS/iOS apply
+    their own rounded-rect mask + shadow at display time, so the art must reach
+    the edges. (Do NOT add rounded corners or a margin here.)
+
+  COORDINATE TRICK
+    The art was originally drawn inside a 92..932 "squircle box" (840 wide). The
+    outer <g transform="translate(-112.19 -112.19) scale(1.2190476)"> maps that
+    box onto the full 0..1024 canvas. So inner numbers are in the ORIGINAL design
+    space; keep editing in that space and the mapping handles full-bleed scaling.
+    (scale = 1024/840; translate = -92 * scale.)
+
+  TILT
+    <g transform="rotate(5 518 511)"> — +5° about the page centre (518,511 in
+    design space). Change the 5 to re-tilt; ±5° was chosen over larger angles.
+
+  PALETTE (edit gradient stops / strokes below)
+    background gradient #4A6CF7 -> #2336A8   (legacy WinPrint blue, modernised)
+    paper gradient      #FFFFFF -> #EDF0F5
+    fold                #E4E8F0 -> #C9CFDB
+    line-number ticks   #C7CCD6
+    SYNTAX TOKENS (light theme, the one "pop"):
+      keyword  #A626A4   function #4078F2   string #50A14F
+      variable #E45649   number   #C18401   type   #0184BC   plain #A0A6B0
+    prompt: chevron #2B59C3, cursor block #4078F2
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A6CF7"/>
+      <stop offset="1" stop-color="#2336A8"/>
+    </linearGradient>
+    <!-- soft top highlight on the tile -->
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#EDF0F5"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E4E8F0"/>
+      <stop offset="1" stop-color="#C9CFDB"/>
+    </linearGradient>
+    <!-- paper drop shadow -->
+    <filter id="psh" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="22"/>
+    </filter>
+  </defs>
+
+  <!-- ============ BACKGROUND (full-bleed; OS masks the corners) ============ -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#glow)"/>
+
+  <!-- ============ FOREGROUND: the syntax sheet ============ -->
+  <!-- squircle-space -> full-bleed map (see header) -->
+  <g transform="translate(-112.19 -112.19) scale(1.2190476)">
+    <!-- +5deg tilt about the page centre -->
+    <g transform="rotate(5 518 511)">
+      <!-- page body: dog-eared rectangle. Shadow first, then the page. -->
+      <path d="M316 210 L648 210 L736 298 L736 796 Q736 812 720 812 L316 812 Q300 812 300 796 L300 226 Q300 210 316 210 Z"
+            transform="translate(0 22)" fill="#0E1F52" opacity="0.34" filter="url(#psh)"/>
+      <path d="M316 210 L648 210 L736 298 L736 796 Q736 812 720 812 L316 812 Q300 812 300 796 L300 226 Q300 210 316 210 Z"
+            fill="url(#paper)"/>
+      <!-- folded top-right corner -->
+      <path d="M648 210 L736 298 L648 298 Z" fill="url(#fold)"/>
+
+      <!-- line-number gutter: divider + 9 ticks (one per code row) -->
+      <line x1="352" y1="244" x2="352" y2="784" stroke="#E3E6EC" stroke-width="3"/>
+      <g stroke="#C7CCD6" stroke-width="8" stroke-linecap="round">
+        <line x1="312" y1="262" x2="338" y2="262"/><line x1="312" y1="320" x2="338" y2="320"/>
+        <line x1="312" y1="378" x2="338" y2="378"/><line x1="312" y1="436" x2="338" y2="436"/>
+        <line x1="312" y1="494" x2="338" y2="494"/><line x1="312" y1="552" x2="338" y2="552"/>
+        <line x1="312" y1="610" x2="338" y2="610"/><line x1="312" y1="668" x2="338" y2="668"/>
+        <line x1="312" y1="726" x2="338" y2="726"/>
+      </g>
+
+      <!-- ROW 1 = wp PROMPT: chevron + cursor block + (greyed) command text -->
+      <polyline points="372,248 408,262 372,276" fill="none" stroke="#2B59C3" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="424" y="247" width="28" height="30" rx="6" fill="#4078F2"/>
+      <line x1="470" y1="262" x2="556" y2="262" stroke="#A0A6B0" stroke-width="20" stroke-linecap="round"/>
+      <!-- divider: command vs. rendered code -->
+      <line x1="366" y1="294" x2="700" y2="294" stroke="#ECEEF2" stroke-width="4"/>
+
+      <!-- ROWS 2-9 = syntax-highlighted code. Each <line> is one token; x1->x2 is
+           token width, stroke is its syntax colour (see palette in header). -->
+      <g stroke-linecap="round" stroke-width="20">
+        <line x1="404" y1="320" x2="470" y2="320" stroke="#4078F2"/><line x1="478" y1="320" x2="498" y2="320" stroke="#A0A6B0"/><line x1="506" y1="320" x2="628" y2="320" stroke="#50A14F"/>
+        <line x1="404" y1="378" x2="456" y2="378" stroke="#A626A4"/><line x1="466" y1="378" x2="548" y2="378" stroke="#E45649"/>
+        <line x1="440" y1="436" x2="508" y2="436" stroke="#4078F2"/><line x1="516" y1="436" x2="536" y2="436" stroke="#A0A6B0"/><line x1="544" y1="436" x2="616" y2="436" stroke="#C18401"/>
+        <line x1="404" y1="494" x2="572" y2="494" stroke="#50A14F"/>
+        <line x1="366" y1="552" x2="422" y2="552" stroke="#A626A4"/><line x1="432" y1="552" x2="516" y2="552" stroke="#4078F2"/><line x1="524" y1="552" x2="544" y2="552" stroke="#A0A6B0"/>
+        <line x1="404" y1="610" x2="432" y2="610" stroke="#A0A6B0"/><line x1="442" y1="610" x2="552" y2="610" stroke="#4078F2"/><line x1="560" y1="610" x2="580" y2="610" stroke="#A0A6B0"/>
+        <line x1="404" y1="668" x2="470" y2="668" stroke="#0184BC"/><line x1="480" y1="668" x2="556" y2="668" stroke="#E45649"/>
+        <line x1="366" y1="726" x2="440" y2="726" stroke="#4078F2"/><line x1="450" y1="726" x2="470" y2="726" stroke="#A0A6B0"/><line x1="478" y1="726" x2="590" y2="726" stroke="#50A14F"/>
+      </g>
+    </g>
+  </g>
 </svg>
