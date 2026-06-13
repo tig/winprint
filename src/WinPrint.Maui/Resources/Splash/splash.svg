@@ -1,8 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <path d="m 105.50037,281.60863 c -2.70293,0 -5.00091,-0.90042 -6.893127,-2.70209 -1.892214,-1.84778 -2.837901,-4.04181 -2.837901,-6.58209 0,-2.58722 0.945687,-4.80389 2.837901,-6.65167 1.892217,-1.84778 4.190197,-2.77167 6.893127,-2.77167 2.74819,0 5.06798,0.92389 6.96019,2.77167 1.93749,1.84778 2.90581,4.06445 2.90581,6.65167 0,2.54028 -0.96832,4.73431 -2.90581,6.58209 -1.89221,1.80167 -4.212,2.70209 -6.96019,2.70209 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="M 213.56111,280.08446 H 195.99044 L 149.69953,207.0544 c -1.17121,-1.84778 -2.14037,-3.76515 -2.90581,-5.75126 h -0.40578 c 0.36051,2.12528 0.54076,6.67515 0.54076,13.6496 v 65.13172 h -15.54349 v -99.36009 h 18.71925 l 44.7374,71.29798 c 1.89222,2.95695 3.1087,4.98917 3.64945,6.09751 h 0.26996 c -0.45021,-2.6325 -0.67573,-7.09015 -0.67573,-13.37293 v -64.02256 h 15.47557 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="m 289.25134,280.08446 h -54.40052 v -99.36009 h 52.23835 v 13.99669 h -36.15411 v 28.13085 h 33.31621 v 13.9271 h -33.31621 v 29.37835 h 38.31628 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
-    <path d="M 366.56466,194.72106 H 338.7222 v 85.3634 h -16.08423 v -85.3634 h -27.77455 v -13.99669 h 71.70124 z" style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.838376" />
+<!--
+  WinPrint launch splash: the icon's syntax-sheet mark, centered on the brand-blue
+  splash background (the MauiSplashScreen Color in the csproj). Same paths/palette
+  as Resources/AppIcon/appicon.svg — keep them in sync. See AppIcon/README.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" version="1.1">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#EDF0F5"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E4E8F0"/><stop offset="1" stop-color="#C9CFDB"/>
+    </linearGradient>
+    <filter id="psh" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="22"/></filter>
+  </defs>
+
+  <!-- centre the sheet (design-space bbox ~ 300..736 x 210..812) in the 720 viewBox -->
+  <g transform="translate(-158 -151)">
+    <g transform="rotate(5 518 511)">
+      <path d="M316 210 L648 210 L736 298 L736 796 Q736 812 720 812 L316 812 Q300 812 300 796 L300 226 Q300 210 316 210 Z" transform="translate(0 22)" fill="#0A1A40" opacity="0.30" filter="url(#psh)"/>
+      <path d="M316 210 L648 210 L736 298 L736 796 Q736 812 720 812 L316 812 Q300 812 300 796 L300 226 Q300 210 316 210 Z" fill="url(#paper)"/>
+      <path d="M648 210 L736 298 L648 298 Z" fill="url(#fold)"/>
+      <line x1="352" y1="244" x2="352" y2="784" stroke="#E3E6EC" stroke-width="3"/>
+      <g stroke="#C7CCD6" stroke-width="8" stroke-linecap="round">
+        <line x1="312" y1="262" x2="338" y2="262"/><line x1="312" y1="320" x2="338" y2="320"/><line x1="312" y1="378" x2="338" y2="378"/><line x1="312" y1="436" x2="338" y2="436"/><line x1="312" y1="494" x2="338" y2="494"/><line x1="312" y1="552" x2="338" y2="552"/><line x1="312" y1="610" x2="338" y2="610"/><line x1="312" y1="668" x2="338" y2="668"/><line x1="312" y1="726" x2="338" y2="726"/>
+      </g>
+      <polyline points="372,248 408,262 372,276" fill="none" stroke="#2B59C3" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="424" y="247" width="28" height="30" rx="6" fill="#4078F2"/>
+      <line x1="470" y1="262" x2="556" y2="262" stroke="#A0A6B0" stroke-width="20" stroke-linecap="round"/>
+      <line x1="366" y1="294" x2="700" y2="294" stroke="#ECEEF2" stroke-width="4"/>
+      <g stroke-linecap="round" stroke-width="20">
+        <line x1="404" y1="320" x2="470" y2="320" stroke="#4078F2"/><line x1="478" y1="320" x2="498" y2="320" stroke="#A0A6B0"/><line x1="506" y1="320" x2="628" y2="320" stroke="#50A14F"/>
+        <line x1="404" y1="378" x2="456" y2="378" stroke="#A626A4"/><line x1="466" y1="378" x2="548" y2="378" stroke="#E45649"/>
+        <line x1="440" y1="436" x2="508" y2="436" stroke="#4078F2"/><line x1="516" y1="436" x2="536" y2="436" stroke="#A0A6B0"/><line x1="544" y1="436" x2="616" y2="436" stroke="#C18401"/>
+        <line x1="404" y1="494" x2="572" y2="494" stroke="#50A14F"/>
+        <line x1="366" y1="552" x2="422" y2="552" stroke="#A626A4"/><line x1="432" y1="552" x2="516" y2="552" stroke="#4078F2"/><line x1="524" y1="552" x2="544" y2="552" stroke="#A0A6B0"/>
+        <line x1="404" y1="610" x2="432" y2="610" stroke="#A0A6B0"/><line x1="442" y1="610" x2="552" y2="610" stroke="#4078F2"/><line x1="560" y1="610" x2="580" y2="610" stroke="#A0A6B0"/>
+        <line x1="404" y1="668" x2="470" y2="668" stroke="#0184BC"/><line x1="480" y1="668" x2="556" y2="668" stroke="#E45649"/>
+        <line x1="366" y1="726" x2="440" y2="726" stroke="#4078F2"/><line x1="450" y1="726" x2="470" y2="726" stroke="#A0A6B0"/><line x1="478" y1="726" x2="590" y2="726" stroke="#50A14F"/>
+      </g>
+    </g>
+  </g>
 </svg>
