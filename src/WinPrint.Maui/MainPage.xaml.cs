@@ -37,6 +37,22 @@ public partial class MainPage : ContentPage
 
         InitializeComponent();
 
+#if MACCATALYST
+        // Honor the user's system text size (Dynamic Type). The XAML defaults are
+        // Windows-ish 12/10/14pt, which read tiny on a Mac; Subheadline/Footnote/Body
+        // track the size the user picked in System Settings.
+        // Resources is non-null once InitializeComponent has run (the XAML declares them).
+        Resources!["SidebarFontSize"] = PreferredFontSize(UIKit.UIFontTextStyle.Subheadline, 13);
+        Resources["SidebarFontSizeSmall"] = PreferredFontSize(UIKit.UIFontTextStyle.Footnote, 11);
+        Resources["ToolbarButtonFontSize"] = PreferredFontSize(UIKit.UIFontTextStyle.Body, 15);
+
+        // The XAML MenuBarItems drive the Windows menu strip, but on Catalyst MAUI also
+        // renders them — duplicating the File ▸ Open…/Print… items that the AppDelegate's
+        // native UIMenuBuilder already adds (and merges correctly into the system File
+        // menu). Drop the MAUI copy here so the Mac shows a single File menu.
+        MenuBarItems.Clear();
+#endif
+
         BindingContext = _viewModel;
         PreviewGraphicsView.Drawable = _drawable;
 
@@ -84,6 +100,12 @@ public partial class MainPage : ContentPage
     }
 
 #if MACCATALYST
+    private static double PreferredFontSize(UIKit.UIFontTextStyle style, double fallback)
+    {
+        UIKit.UIFont? font = UIKit.UIFont.GetPreferredFontForTextStyle(style);
+        return font is null ? fallback : (double)font.PointSize;
+    }
+
     /// <summary>
     ///     Moves keyboard focus to the preview. Becoming first responder implicitly
     ///     resigns whatever sidebar control held it (Picker, Entry, …).
@@ -231,6 +253,28 @@ public partial class MainPage : ContentPage
         HookCloseHandling();
 #endif
     }
+
+    /// <summary>
+    ///     Trigger the Open command. MacCatalyst's native File ▸ Open… menu item routes
+    ///     here via <see cref="Current" /> (MAUI's MenuBarItems don't reach the Catalyst
+    ///     menu bar, so the menu is built natively in the AppDelegate).
+    /// </summary>
+    public void InvokeOpenFile() => _viewModel.OpenFileCommand.Execute(null);
+
+    /// <summary>
+    ///     Trigger the Print command from the native File ▸ Print… menu item. Guarded so a
+    ///     stray invoke with no document loaded is a no-op (the command's CanExecute gate).
+    /// </summary>
+    public void InvokePrint()
+    {
+        if (_viewModel.PrintCommand.CanExecute(null))
+        {
+            _viewModel.PrintCommand.Execute(null);
+        }
+    }
+
+    /// <summary>Whether Print is currently available — drives native menu-item enablement.</summary>
+    public bool CanPrint => _viewModel.PrintCommand.CanExecute(null);
 
     /// <summary>
     ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, +, -).
