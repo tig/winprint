@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Microsoft Store listing (Product Description Page) for WinPrint, in StoreBroker's
+  PDP format. Validate against StoreBroker's PDP.xsd before submitting; field limits
+  are enforced by Partner Center (e.g. Description <= 10,000 chars, up to 7 search
+  terms, 9 desktop screenshots). Privacy policy / pricing / age rating are set in
+  Partner Center, not here.
+-->
+<ProductDescription language="en-us"
+    xmlns="http://schemas.microsoft.com/appx/2012/ProductDescription"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <AppStoreName>WinPrint</AppStoreName>
+
+  <Keywords>
+    <Keyword>source code printing</Keyword>
+    <Keyword>print code</Keyword>
+    <Keyword>syntax highlighting</Keyword>
+    <Keyword>text printing</Keyword>
+    <Keyword>developer tools</Keyword>
+    <Keyword>print preview</Keyword>
+    <Keyword>line numbers</Keyword>
+  </Keywords>
+
+  <Description>WinPrint makes source code and text files beautiful on paper.
+
+A modern take on the classic source-code printing app, WinPrint gives you:
+
+- Syntax highlighting for hundreds of languages, using bundled TextMate grammars
+- Line numbering
+- Headers and footers with rich macros — file name, dates, page numbers, language, and more
+- "N-up" printing: multiple pages on a single sheet to save paper
+- Full control over margins, fonts, orientation, and paper size
+- An accurate print preview, so you see exactly what you'll get
+- Sheet Definitions to save settings for frequent print jobs
+
+Print source code, HTML, Markdown, logs, reports, and any text file — exactly the way you want it.</Description>
+
+  <ReleaseNotes>First Microsoft Store release of WinPrint. Source and text printing with syntax highlighting, line numbers, headers/footers, n-up layouts, and an accurate preview.</ReleaseNotes>
+
+  <ScreenshotCaptions>
+    <Caption DesktopImageFileName="01-preview.png">Accurate print preview with syntax highlighting and line numbers</Caption>
+    <Caption DesktopImageFileName="02-twoup.png">Save paper with multiple-pages-up (n-up) layouts</Caption>
+  </ScreenshotCaptions>
+
+  <AppFeatures>
+    <AppFeature>Syntax highlighting for hundreds of languages</AppFeature>
+    <AppFeature>Line numbers, headers and footers with macros</AppFeature>
+    <AppFeature>Paper-saving multiple-pages-up (n-up) printing</AppFeature>
+    <AppFeature>Accurate print preview</AppFeature>
+  </AppFeatures>
+
+  <CopyrightAndTrademark>© Kindel, LLC</CopyrightAndTrademark>
+  <AdditionalLicenseTerms></AdditionalLicenseTerms>
+  <WebsiteURL>https://tig.github.io/winprint</WebsiteURL>
+  <SupportContactInfo>https://tig.github.io/winprint/support</SupportContactInfo>
+</ProductDescription>
