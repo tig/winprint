@@ -165,6 +165,26 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
         Graphics.FillRectangle(GetBrush(brush), x, y, width, height);
     }
 
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            return new SystemDrawingImage(Image.FromStream(stream));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (image is SystemDrawingImage sdi)
+        {
+            Graphics.DrawImage(sdi.Image, x, y, width, height);
+        }
+    }
+
     public static GraphicsRectF FromRectangleF(RectangleF rect)
     {
         return new GraphicsRectF(rect.X, rect.Y, rect.Width, rect.Height);

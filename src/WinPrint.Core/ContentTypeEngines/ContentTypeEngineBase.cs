@@ -116,6 +116,13 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     }
 
     /// <summary>
+    ///     Path of the source file being rendered, when known. Used to resolve document-relative
+    ///     references (e.g. local images in Markdown). May be empty/null for string-loaded content.
+    /// </summary>
+    [JsonIgnore]
+    public string? SourceFileName { get; set; }
+
+    /// <summary>
     ///     The contents encoding of the file to be printed.
     /// </summary>
     [JsonIgnore]

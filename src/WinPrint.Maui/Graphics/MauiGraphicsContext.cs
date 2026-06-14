@@ -1,5 +1,6 @@
 using Microsoft.Maui.Graphics;
 using WinPrint.Core.Abstractions;
+using IImage = Microsoft.Maui.Graphics.IImage;
 
 namespace WinPrint.Maui.Graphics;
 
@@ -270,6 +271,27 @@ public sealed class MauiGraphicsContext : IGraphicsContext
         var mauiBrush = (MauiBrush)brush;
         _canvas.FillColor = mauiBrush.Color;
         _canvas.FillRectangle(x, y, width, height);
+    }
+
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            IImage? image = Microsoft.Maui.Graphics.Platform.PlatformImage.FromStream(stream);
+            return image is null ? null : new MauiImage(image);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (image is MauiImage mi)
+        {
+            _canvas.DrawImage(mi.Image, x, y, width, height);
+        }
     }
 
     private void ApplyPen(IGraphicsPen pen)

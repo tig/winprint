@@ -214,6 +214,74 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task MarkdownCte_RendersImage_FromDataUri_DrawsScaledImage()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000)
+        };
+
+        // A tiny non-empty data URI: the recording context decodes any non-empty stream to a
+        // deterministic 120x60 intrinsic image, which fits the 400pt page unscaled.
+        const string md = "![logo](data:image/png;base64,iVBORw0KGgo=)\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // The image is drawn (not alt text): one DrawImage at the page's left edge, 120x60, and no 🖼.
+        RecordedImage drawn = Assert.Single(paint.DrawnImages);
+        Assert.Equal(0, drawn.X);
+        Assert.Equal(120, drawn.Width);
+        Assert.Equal(60, drawn.Height);
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("🖼", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task MarkdownCte_RendersImage_MissingLocalFile_FallsBackToAltText()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000)
+        };
+
+        const string md = "![a diagram](does-not-exist.png)\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        Assert.Empty(paint.DrawnImages);
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("🖼", StringComparison.Ordinal));
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "diagram");
+    }
+
+    [Fact]
     public async Task MarkdownCte_RendersTable_WithGridHeaderAndColumns()
     {
         var measure = new RecordingGraphicsContext();

@@ -2,7 +2,9 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System.Globalization;
+using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
 using Markdig;
 using Markdig.Extensions.Tables;
 using Markdig.Syntax;
@@ -20,7 +22,11 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     bulleted/numbered/nested lists, blockquotes (indented with a bar), fenced/indented code blocks
 ///     (monospace on a shaded background), horizontal rules, and links (colored). Reflow word-wraps
 ///     styled runs into variable-height <see cref="MarkdownLine" />s and paginates by cumulative height.
-///     Images render as alt text — <see cref="IGraphicsContext" /> has no image primitive.
+///     Images that sit alone in a paragraph (<c>![alt](src)</c>) are decoded and drawn through
+///     <see cref="IGraphicsContext.DrawImage" />, scaled to fit the page; local files (resolved relative
+///     to <see cref="ContentTypeEngineBase.SourceFileName" />), <c>data:</c> URIs, and <c>http(s)</c>
+///     URLs are supported. Anything that fails to load (and inline images mixed with text) falls back
+///     to alt text.
 /// </summary>
 public class MarkdownCte : ContentTypeEngineBase
 {
@@ -28,6 +34,11 @@ public class MarkdownCte : ContentTypeEngineBase
 
     private static readonly MarkdownPipeline s_pipeline =
         new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+
+    private static readonly HttpClient s_http = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    /// <summary>Decoded image bytes keyed by source URL/path; null marks a load that failed (don't retry).</summary>
+    private readonly Dictionary<string, byte[]?> _imageCache = new(StringComparer.Ordinal);
 
     private static readonly GraphicsColor TextColor = GraphicsColor.FromRgb(0x1d, 0x1d, 0x1f);
     private static readonly GraphicsColor LinkColor = GraphicsColor.FromRgb(0x0b, 0x57, 0xd0);
@@ -80,6 +91,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
         _dpiY = dpiY;
         _lines.Clear();
+        _imageCache.Clear();
 
         IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
         var fontCache = new Dictionary<string, IGraphicsFont>();
@@ -97,6 +109,7 @@ public class MarkdownCte : ContentTypeEngineBase
             }
 
             MarkdownDocument ast = Markdown.Parse(Document, s_pipeline);
+            await PreloadImagesAsync(ast);
             WalkBlocks(ast, g, fontCache, 0, 0);
 
             _pageCount = Paginate();
@@ -136,6 +149,12 @@ public class MarkdownCte : ContentTypeEngineBase
         {
             if (line.Page != pageNum)
             {
+                continue;
+            }
+
+            if (line.Image is { } image)
+            {
+                PaintImage(g, line, image);
                 continue;
             }
 
@@ -198,6 +217,21 @@ public class MarkdownCte : ContentTypeEngineBase
         }
     }
 
+    private void PaintImage(IGraphicsContext g, MarkdownLine line, MarkdownImage image)
+    {
+        if (!_imageCache.TryGetValue(image.CacheKey, out byte[]? bytes) || bytes is not { Length: > 0 })
+        {
+            return;
+        }
+
+        using var ms = new MemoryStream(bytes);
+        using IGraphicsImage? decoded = g.LoadImage(ms);
+        if (decoded is not null)
+        {
+            g.DrawImage(decoded, line.Indent, line.Y, image.Width, image.Height);
+        }
+    }
+
     // ---- AST walk ---------------------------------------------------------------------------------
 
     private void WalkBlocks(IEnumerable<Block> blocks, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
@@ -211,6 +245,13 @@ public class MarkdownCte : ContentTypeEngineBase
                     EmitInline(h.Inline, g, fonts, HeadingScale(h.Level), GraphicsFontStyle.Bold,
                         quoteDepth > 0 ? QuoteColor : TextColor, indentLevel, quoteDepth,
                         _baseLineHeight * (h.Level <= 2 ? 1.0f : 0.7f));
+                    break;
+                case ParagraphBlock p when GetStandaloneImages(p) is { } images:
+                    foreach (LinkInline image in images)
+                    {
+                        EmitImage(image.Url ?? string.Empty, GetInlineText(image), g, fonts, indentLevel, quoteDepth);
+                    }
+
                     break;
                 case ParagraphBlock p:
                     EmitInline(p.Inline, g, fonts, 1f, GraphicsFontStyle.Regular,
@@ -343,6 +384,72 @@ public class MarkdownCte : ContentTypeEngineBase
             QuoteBar = quoteDepth > 0,
             SpaceBefore = _baseLineHeight * 0.5f
         });
+    }
+
+    private void EmitImage(string url, string alt, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
+        int indentLevel, int quoteDepth)
+    {
+        float indent = quoteDepth * _indentStep + indentLevel * _indentStep;
+        byte[]? bytes = url.Length > 0 && _imageCache.TryGetValue(url, out byte[]? cached) ? cached : null;
+
+        IGraphicsImage? probe = null;
+        if (bytes is { Length: > 0 })
+        {
+            using var ms = new MemoryStream(bytes);
+            probe = g.LoadImage(ms);
+        }
+
+        if (probe is null)
+        {
+            EmitImageAltFallback(alt, g, fonts, indent, quoteDepth);
+            return;
+        }
+
+        using (probe)
+        {
+            float maxWidth = Math.Max(1f, PageSize.Width - indent);
+            float maxHeight = Math.Max(1f, PageSize.Height - _baseLineHeight * 0.5f);
+            float drawWidth = probe.Width;
+            float drawHeight = probe.Height;
+            if (drawWidth <= 0 || drawHeight <= 0)
+            {
+                EmitImageAltFallback(alt, g, fonts, indent, quoteDepth);
+                return;
+            }
+
+            if (drawWidth > maxWidth)
+            {
+                float s = maxWidth / drawWidth;
+                drawWidth *= s;
+                drawHeight *= s;
+            }
+
+            if (drawHeight > maxHeight)
+            {
+                float s = maxHeight / drawHeight;
+                drawWidth *= s;
+                drawHeight *= s;
+            }
+
+            _lines.Add(new MarkdownLine
+            {
+                Indent = indent,
+                Height = drawHeight,
+                SpaceBefore = _baseLineHeight * 0.5f,
+                QuoteBar = quoteDepth > 0,
+                Image = new MarkdownImage { CacheKey = url, Width = drawWidth, Height = drawHeight }
+            });
+        }
+    }
+
+    private void EmitImageAltFallback(string alt, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
+        float indent, int quoteDepth)
+    {
+        var tokens = new List<MarkdownRun>();
+        AppendText($"🖼 {alt}", 1f, GraphicsFontStyle.Italic, QuoteColor, tokens);
+        List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, indent, indent, PageSize.Width);
+        Decorate(lines, _baseLineHeight * 0.5f, quoteDepth > 0);
+        _lines.AddRange(lines);
     }
 
     private void EmitTable(Table table, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
@@ -489,6 +596,145 @@ public class MarkdownCte : ContentTypeEngineBase
         return w;
     }
 
+    // ---- images -----------------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Returns the image inlines of a paragraph that contains only images and whitespace (so it can
+    ///     be rendered as block images), or null when the paragraph mixes images with other content.
+    /// </summary>
+    private static List<LinkInline>? GetStandaloneImages(ParagraphBlock paragraph)
+    {
+        if (paragraph.Inline is null)
+        {
+            return null;
+        }
+
+        var images = new List<LinkInline>();
+        foreach (Inline node in paragraph.Inline)
+        {
+            switch (node)
+            {
+                case LinkInline { IsImage: true } image:
+                    images.Add(image);
+                    break;
+                case LiteralInline lit when string.IsNullOrWhiteSpace(lit.Content.ToString()):
+                case LineBreakInline:
+                    break;
+                default:
+                    return null;
+            }
+        }
+
+        return images.Count > 0 ? images : null;
+    }
+
+    private async Task PreloadImagesAsync(MarkdownDocument ast)
+    {
+        foreach (ParagraphBlock paragraph in ast.Descendants<ParagraphBlock>())
+        {
+            if (GetStandaloneImages(paragraph) is not { } images)
+            {
+                continue;
+            }
+
+            foreach (LinkInline image in images)
+            {
+                string url = image.Url ?? string.Empty;
+                if (url.Length == 0 || _imageCache.ContainsKey(url))
+                {
+                    continue;
+                }
+
+                _imageCache[url] = await LoadImageBytesAsync(url);
+            }
+        }
+    }
+
+    private async Task<byte[]?> LoadImageBytesAsync(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return null;
+        }
+
+        byte[]? dataUri = TryDecodeDataUri(url);
+        if (dataUri is not null)
+        {
+            return dataUri;
+        }
+
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                return await s_http.GetByteArrayAsync(url);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Markdown: failed to fetch image {url}", url);
+                return null;
+            }
+        }
+
+        try
+        {
+            string path = ResolveLocalPath(url);
+            return File.Exists(path) ? await File.ReadAllBytesAsync(path) : null;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Markdown: failed to read image {url}", url);
+            return null;
+        }
+    }
+
+    private string ResolveLocalPath(string url)
+    {
+        string path = url;
+        if (url.StartsWith("file://", StringComparison.OrdinalIgnoreCase) &&
+            Uri.TryCreate(url, UriKind.Absolute, out Uri? fileUri))
+        {
+            return fileUri.LocalPath;
+        }
+
+        path = Uri.UnescapeDataString(path);
+        if (Path.IsPathRooted(path))
+        {
+            return path;
+        }
+
+        string? dir = string.IsNullOrEmpty(SourceFileName) ? null : Path.GetDirectoryName(SourceFileName);
+        return string.IsNullOrEmpty(dir) ? path : Path.Combine(dir, path);
+    }
+
+    private static byte[]? TryDecodeDataUri(string url)
+    {
+        if (!url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        int comma = url.IndexOf(',');
+        if (comma < 0)
+        {
+            return null;
+        }
+
+        string meta = url[5..comma];
+        string data = url[(comma + 1)..];
+        try
+        {
+            return meta.Contains("base64", StringComparison.OrdinalIgnoreCase)
+                ? Convert.FromBase64String(data)
+                : Encoding.UTF8.GetBytes(Uri.UnescapeDataString(data));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     private void EmitInline(ContainerInline? inline, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
         float scale, GraphicsFontStyle style, GraphicsColor color, int indentLevel, int quoteDepth, float spaceBefore)
     {
@@ -573,7 +819,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
     private static string GetInlineText(ContainerInline container)
     {
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
         foreach (Inline node in container)
         {
             if (node is LiteralInline lit)

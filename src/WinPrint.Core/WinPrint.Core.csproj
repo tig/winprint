@@ -36,6 +36,7 @@
         <Compile Remove="Abstractions\SystemDrawingBrush.cs" />
         <Compile Remove="Abstractions\SystemDrawingFont.cs" />
         <Compile Remove="Abstractions\SystemDrawingGraphicsContext.cs" />
+        <Compile Remove="Abstractions\SystemDrawingImage.cs" />
         <Compile Remove="Abstractions\SystemDrawingPen.cs" />
         <Compile Remove="Abstractions\SystemDrawingState.cs" />
         <Compile Remove="ContentTypeEngines\WindowsMeasurementContext.cs" />

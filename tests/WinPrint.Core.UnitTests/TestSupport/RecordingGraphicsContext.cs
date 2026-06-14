@@ -34,6 +34,7 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
     public List<RecordedLine> DrawnLines { get; } = [];
     public List<RecordedRect> DrawnRectangles { get; } = [];
     public List<RecordedRect> FilledRectangles { get; } = [];
+    public List<RecordedImage> DrawnImages { get; } = [];
 
     public float DpiX { get; }
     public float DpiY { get; }
@@ -153,5 +154,22 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
     public void FillRectangle(IGraphicsBrush brush, float x, float y, float width, float height)
     {
         FilledRectangles.Add(new RecordedRect(x, y, width, height));
+    }
+
+    /// <summary>
+    ///     Returns a <see cref="RecordingImage" /> with deterministic 120×60 intrinsic dimensions for
+    ///     any non-empty stream, or <see langword="null" /> for an empty stream (mirrors a decode failure,
+    ///     so alt-text fallback can be exercised).
+    /// </summary>
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        return ms.Length == 0 ? null : new RecordingImage(120f, 60f);
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        DrawnImages.Add(new RecordedImage(x, y, width, height));
     }
 }
