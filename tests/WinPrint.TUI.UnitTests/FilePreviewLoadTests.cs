@@ -30,7 +30,7 @@ public class FilePreviewLoadTests
         try
         {
             // The same path `wp file.cs` takes: options → SettingsContext → bound AppViewModel.
-            SettingsContext context = SettingsContext.Create(new Options { Files = [file] });
+            var context = SettingsContext.Create(new Options { Files = [file] });
             AppViewModel app = context.App;
             Assert.Equal(file, context.File);
 
@@ -38,7 +38,8 @@ public class FilePreviewLoadTests
             bool loaded = await app.LoadFileAsync(context.File!);
 
             Assert.True(loaded, "LoadFileAsync should succeed for a real file (CLI arg and File button both use it).");
-            Assert.True(app.IsFileLoaded, "ActiveFile should remain set after a successful load (not reset to <no file>).");
+            Assert.True(app.IsFileLoaded,
+                "ActiveFile should remain set after a successful load (not reset to <no file>).");
             Assert.True(app.TotalPages > 0, "A loaded file should reflow to at least one sheet for the preview.");
         }
         finally
