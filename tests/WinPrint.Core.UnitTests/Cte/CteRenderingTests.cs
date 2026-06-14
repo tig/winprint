@@ -154,7 +154,7 @@ public class CteRenderingTests
     }
 
     [Fact]
-    public async Task MarkdownCte_RendersFlattenedText()
+    public async Task MarkdownCte_RendersRichMarkdown_Structurally()
     {
         var measure = new RecordingGraphicsContext();
         var cte = new MarkdownCte
@@ -166,12 +166,21 @@ public class CteRenderingTests
                 TabSpaces = 4
             },
             MeasurementContext = measure,
-            PageSize = new System.Drawing.SizeF(200, 200)
+            PageSize = new System.Drawing.SizeF(400, 4000)
         };
 
-        Assert.True(await cte.SetDocumentAsync("# Title\n\nHello world"));
-        int pages = await cte.RenderAsync(Dpi96, null);
+        const string md =
+            "# Title\n\n" +
+            "Some **bold** and *italic* and `code` and a [link](https://x.com).\n\n" +
+            "- one\n- two\n\n" +
+            "> a quote\n\n" +
+            "```\ncodeblock\n```\n\n" +
+            "![alt](img.png)\n\n" +
+            "---\n\n" +
+            "End.";
 
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
         Assert.True(pages >= 1);
 
         var paint = new RecordingGraphicsContext();
@@ -180,9 +189,26 @@ public class CteRenderingTests
             cte.PaintPage(paint, p);
         }
 
-        // Markdown markers are gone; the prose is rendered.
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("Title"));
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("Hello world"));
-        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("#"));
+        List<string> texts = [.. paint.DrawnStrings.Select(s => s.Text)];
+        string all = string.Concat(texts);
+
+        // Inline/prose content is rendered as styled runs (word by word).
+        foreach (string word in new[] { "Title", "bold", "italic", "code", "link", "one", "two", "quote", "codeblock", "End." })
+        {
+            Assert.Contains(word, texts);
+        }
+
+        // List bullet marker and image alt-text fallback are emitted.
+        Assert.Contains(texts, t => t.Contains('•'));
+        Assert.Contains(texts, t => t.Contains("🖼", StringComparison.Ordinal));
+
+        // Raw Markdown markers never reach the page.
+        Assert.DoesNotContain('#', all);
+        Assert.DoesNotContain('*', all);
+        Assert.DoesNotContain("```", all);
+
+        // Code background + blockquote bar are filled rectangles; the horizontal rule is a drawn line.
+        Assert.NotEmpty(paint.FilledRectangles);
+        Assert.NotEmpty(paint.DrawnLines);
     }
 }
