@@ -20,11 +20,11 @@ store/
     fastlane/                   # fastlane `deliver` — App Store Connect listing as code
       Appfile Fastfile Deliverfile
       metadata/ … en-US/*.txt   # name, subtitle, description, keywords, urls, …
-    screenshots/                # 2880×1800 (generated)
+    screenshots/en-US/          # 2880×1800 (generated; deliver scans <locale>/ folders)
   windows/
     StoreBroker/                # Microsoft Store listing as code
       config.json  PDP/en-us/PDP.xml
-    screenshots/                # 2560×1440 (generated)
+    screenshots/en-us/          # 2560×1440 (generated; StoreBroker resolves media per <lang>)
 ```
 
 ## Screenshots
@@ -32,8 +32,12 @@ store/
 ```bash
 TUIREC=/path/to/tuirec ./capture-screenshots.sh
 ```
-Produces exact store canvas sizes (Mac 2880×1800, Windows 2560×1440) from the headless
-`wp` TUI. They're **git-ignored** — regenerate before each submission.
+Produces two shots per store at exact canvas sizes, written into the **locale subfolders**
+each tool expects — `macos/screenshots/en-US/` (fastlane `deliver` scans `<locale>/`) and
+`windows/screenshots/en-us/` (StoreBroker resolves PDP media per `<lang>`):
+`01-preview.png` (zoomed: syntax + line numbers) and `02-twoup.png` (the n-up layout,
+matching the PDP `ScreenshotCaptions`). They're **git-ignored** — regenerate before each
+submission.
 
 ⚠️ The script currently captures the **TUI** (headless, reproducible). For listings that
 should show the **desktop GUI**, add captures of the MacCatalyst app
