@@ -225,7 +225,8 @@ public sealed class PrintPreviewDrawable : IDrawable
     {
         canvas.FontColor = Colors.Gray;
         canvas.FontSize = 16;
-        canvas.DrawString("Open a file to preview",
+        // The tap handler opens the file dialog when no file is loaded — say so.
+        canvas.DrawString("Click here to open a file…",
             dirtyRect.X, dirtyRect.Y, dirtyRect.Width, dirtyRect.Height,
             HorizontalAlignment.Center, VerticalAlignment.Center);
     }

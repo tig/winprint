@@ -98,16 +98,6 @@ namespace WinPrint.WinForms {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon printer_and_fax_w {
-            get {
-                object obj = ResourceManager.GetObject("printer_and_fax_w", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Rendering....
         /// </summary>
         internal static string RenderingMsg {

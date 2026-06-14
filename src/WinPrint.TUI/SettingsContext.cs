@@ -27,15 +27,6 @@ public sealed class SettingsContext
         SheetVM = sheetVM;
         Renderer = renderer;
         _printService = new Lazy<IPrintService>(printServiceFactory ?? PrintServiceFactory.Create);
-
-        // Inject the ImageSharp measurement context whenever a new ContentEngine is assigned
-        sheetVM.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(SheetViewModel.ContentEngine) && sheetVM.ContentEngine is not null)
-            {
-                sheetVM.ContentEngine.MeasurementContext = renderer.CreateMeasurementContext();
-            }
-        };
     }
 
     /// <summary>The shared application view model (with full preview/reflow).</summary>
@@ -76,6 +67,12 @@ public sealed class SettingsContext
 
         // Create a real SheetViewModel so the TUI participates in the shared print path
         var sheetVM = new SheetViewModel();
+
+        // Give it a cross-platform measurement context (WinForms/MAUI set this on the SheetViewModel
+        // too). SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it
+        // the engine fails to load and AppViewModel resets ActiveFile back to "<no file>", so neither
+        // the `wp file.cs` argument nor the File… button renders a preview.
+        sheetVM.MeasurementContext = renderer.CreateMeasurementContext();
 
         // Seed the page setup from the platform print service so printer/paper are populated
         IPrintService svc = printService ?? PrintServiceFactory.Create();

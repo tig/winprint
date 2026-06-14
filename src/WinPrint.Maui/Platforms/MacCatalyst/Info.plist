@@ -19,9 +19,13 @@
 	<array>
 		<string>fetch</string>
 	</array>
+	<!-- 6 = Mac idiom ("Optimize Interface for Mac"): renders at true 1:1 Mac scale so
+	     fonts and controls match native Mac apps, instead of the iPad idiom (2) that
+	     scales the whole UI to 77%. Requires SupportedOSPlatformVersion >= 14.0 (set in
+	     the csproj to 15.0). -->
 	<key>UIDeviceFamily</key>
 	<array>
-		<integer>2</integer>
+		<integer>6</integer>
 	</array>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.lifestyle</string>

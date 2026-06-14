@@ -48,7 +48,7 @@ public partial class MainWindow : Form
     {
         InitializeComponent();
 
-        Icon = Resources.printer_and_fax_w;
+        Icon = Resources.Document;
 
         PrintPreview = new PrintPreview
         {

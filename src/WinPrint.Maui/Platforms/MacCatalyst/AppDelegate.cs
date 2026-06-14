@@ -8,10 +8,57 @@ namespace WinPrint.Maui;
 public class AppDelegate : MauiUIApplicationDelegate
 {
     private const string KeySelector = "winprintHandleKeyCommand:";
+    private const string OpenSelector = "winprintOpenFile:";
+    private const string PrintSelector = "winprintPrint:";
 
     protected override MauiApp CreateMauiApp()
     {
         return MauiProgram.CreateMauiApp();
+    }
+
+    /// <summary>
+    ///     Build the native macOS menu bar. MAUI's XAML <c>MenuBarItems</c> never reach the
+    ///     Catalyst menu bar (they work on Windows only), so File ▸ Open…/Print… are added
+    ///     here via UIKit and routed to the page through <see cref="MainPage.Current" /> —
+    ///     the same bridge the keyboard shortcuts use.
+    /// </summary>
+    public override void BuildMenu(IUIMenuBuilder builder)
+    {
+        base.BuildMenu(builder);
+
+        // Strip the standard menus the app doesn't use, leaving only the system
+        // Application menu (WinPrint — About/Quit, not removable), File, and Help.
+        builder.RemoveMenu(UIMenuIdentifier.Edit.GetConstant()!);
+        builder.RemoveMenu(UIMenuIdentifier.Format.GetConstant()!);
+        builder.RemoveMenu(UIMenuIdentifier.View.GetConstant()!);
+        // Note: the Window menu is bridged from AppKit and macOS re-inserts it after this
+        // build, so RemoveMenu can't drop it — it stays whether or not we ask. Left in to
+        // document intent and in case a future macOS honors it.
+        builder.RemoveMenu(UIMenuIdentifier.Window.GetConstant()!);
+
+        var open = UIKeyCommand.Create(
+            "Open…", null, new Selector(OpenSelector), "o", UIKeyModifierFlags.Command, null);
+        var print = UIKeyCommand.Create(
+            "Print…", null, new Selector(PrintSelector), "p", UIKeyModifierFlags.Command, null);
+
+        // DisplayInline so the two items merge into the existing File menu as a group
+        // rather than appearing as a nested submenu.
+        var group = UIMenu.Create(
+            string.Empty, null, null, UIMenuOptions.DisplayInline, [open, print]);
+
+        builder.InsertChildMenuAtStart(group, UIMenuIdentifier.File.GetConstant()!);
+    }
+
+    [Export(OpenSelector)]
+    public void HandleOpenFileMenu(NSObject sender)
+    {
+        MainPage.Current?.InvokeOpenFile();
+    }
+
+    [Export(PrintSelector)]
+    public void HandlePrintMenu(NSObject sender)
+    {
+        MainPage.Current?.InvokePrint();
     }
 
     /// <summary>
