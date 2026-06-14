@@ -41,6 +41,14 @@ public class AppDelegate : MauiUIApplicationDelegate
         var print = UIKeyCommand.Create(
             "Print…", null, new Selector(PrintSelector), "p", UIKeyModifierFlags.Command, null);
 
+        // Grey out Print when there's nothing to print (no document loaded). MainPage asks the
+        // menu system to rebuild whenever PrintCommand's executability changes, so this stays in
+        // sync — see the CanExecuteChanged hook in MainPage's ctor.
+        if (MainPage.Current?.CanPrint != true)
+        {
+            print.Attributes = UIMenuElementAttributes.Disabled;
+        }
+
         // DisplayInline so the two items merge into the existing File menu as a group
         // rather than appearing as a nested submenu.
         var group = UIMenu.Create(
