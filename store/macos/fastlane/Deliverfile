@@ -1,0 +1,17 @@
+# fastlane deliver config for WinPrint (Mac App Store).
+# Metadata + screenshots are version-controlled under this folder; the binary is
+# built/signed/notarized separately (see store/README.md) and uploaded with `upload`.
+
+app_identifier "com.kindel.winprint"
+platform "osx"                      # Mac App Store
+
+# Where this repo keeps the listing assets.
+metadata_path "./metadata"
+screenshots_path "./screenshots"
+
+# Safety: review these before flipping to true / running `deliver` for real.
+submit_for_review false
+automatic_release false
+force false                         # set true in CI to skip the HTML preview prompt
+
+# Pricing/availability are managed in App Store Connect (see README) — not here.

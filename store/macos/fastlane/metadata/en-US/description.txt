@@ -1,0 +1,13 @@
+WinPrint makes source code and text files beautiful on paper.
+
+A modern take on the classic source-code printing app, WinPrint gives you:
+
+• Syntax highlighting for hundreds of languages, using bundled TextMate grammars
+• Line numbering
+• Headers & footers with rich macros — file name, dates, page numbers, language, and more
+• "N-up" printing: multiple pages on a single sheet to save paper
+• Full control over margins, fonts, orientation, and paper size
+• An accurate print preview, so you see exactly what you'll get
+• Sheet Definitions to save settings for frequent print jobs
+
+Print source code, HTML, Markdown, logs, reports, and any text file — exactly the way you want it.
