@@ -193,7 +193,8 @@ public class CteRenderingTests
         string all = string.Concat(texts);
 
         // Inline/prose content is rendered as styled runs (word by word).
-        foreach (string word in new[] { "Title", "bold", "italic", "code", "link", "one", "two", "quote", "codeblock", "End." })
+        foreach (string word in new[]
+                     { "Title", "bold", "italic", "code", "link", "one", "two", "quote", "codeblock", "End." })
         {
             Assert.Contains(word, texts);
         }

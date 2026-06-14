@@ -59,7 +59,8 @@ public class MarkdownCte : ContentTypeEngineBase
         return await Task.FromResult(true);
     }
 
-    public override async Task<int> RenderAsync(PrintResolution? printerResolution, EventHandler<string>? reflowProgress)
+    public override async Task<int> RenderAsync(PrintResolution? printerResolution,
+        EventHandler<string>? reflowProgress)
     {
         LogService.TraceMessage();
         if (Document is null)
@@ -94,7 +95,7 @@ public class MarkdownCte : ContentTypeEngineBase
             }
 
             MarkdownDocument ast = Markdown.Parse(Document, s_pipeline);
-            WalkBlocks(ast, g, fontCache, indentLevel: 0, quoteDepth: 0);
+            WalkBlocks(ast, g, fontCache, 0, 0);
 
             _pageCount = Paginate();
             Log.Debug("Rendered {pages} Markdown pages from {lines} lines.", _pageCount, _lines.Count);
@@ -147,7 +148,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
             if (line.Rule)
             {
-                float midY = line.Y + (line.Height / 2f);
+                float midY = line.Y + line.Height / 2f;
                 g.DrawLine(rulePen, line.Indent, midY, PageSize.Width, midY);
                 continue;
             }
@@ -160,7 +161,8 @@ public class MarkdownCte : ContentTypeEngineBase
                     continue;
                 }
 
-                using IGraphicsFont font = g.CreateFont(ContentSettings.Font.Family, basePt * run.Scale, run.Style, unit);
+                using IGraphicsFont font = g.CreateFont(ContentSettings.Font.Family, basePt * run.Scale, run.Style,
+                    unit);
                 using IGraphicsBrush brush = g.CreateSolidBrush(run.Color);
                 g.DrawString(run.Text, font, brush, x, line.Y, GraphicsStringFormat);
                 x += Measure(g, run.Text, font).Width;
@@ -192,7 +194,7 @@ public class MarkdownCte : ContentTypeEngineBase
                 case QuoteBlock quote:
                     WalkBlocks(quote, g, fonts, indentLevel, quoteDepth + 1);
                     break;
-                case Markdig.Syntax.CodeBlock code: // covers FencedCodeBlock too
+                case CodeBlock code: // covers FencedCodeBlock too
                     EmitCodeBlock(code, g, fonts, indentLevel, quoteDepth);
                     break;
                 case ThematicBreakBlock:
@@ -244,7 +246,7 @@ public class MarkdownCte : ContentTypeEngineBase
         }
 
         float quoteGutter = quoteDepth * _indentStep;
-        float markerIndent = quoteGutter + (indentLevel * _indentStep) + (_indentStep * 0.4f);
+        float markerIndent = quoteGutter + indentLevel * _indentStep + _indentStep * 0.4f;
         List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, markerIndent, markerIndent + markerWidth);
         Decorate(lines, _baseLineHeight * 0.18f, quoteDepth > 0);
         _lines.AddRange(lines);
@@ -256,10 +258,10 @@ public class MarkdownCte : ContentTypeEngineBase
         }
     }
 
-    private void EmitCodeBlock(Markdig.Syntax.CodeBlock code, IGraphicsContext g,
+    private void EmitCodeBlock(CodeBlock code, IGraphicsContext g,
         Dictionary<string, IGraphicsFont> fonts, int indentLevel, int quoteDepth)
     {
-        float indent = (quoteDepth * _indentStep) + (indentLevel * _indentStep) + (_indentStep * 0.4f);
+        float indent = quoteDepth * _indentStep + indentLevel * _indentStep + _indentStep * 0.4f;
         IGraphicsFont font = GetFont(g, fonts, 0.92f, GraphicsFontStyle.Regular);
         float height = font.GetHeight(_dpiY);
         float charWidth = Math.Max(1f, Measure(g, "M", font).Width);
@@ -272,7 +274,9 @@ public class MarkdownCte : ContentTypeEngineBase
             // char-wrap long code lines so they don't clip
             for (int start = 0; start == 0 || start < raw.Length; start += maxChars)
             {
-                string seg = raw.Length == 0 ? string.Empty : raw.Substring(start, Math.Min(maxChars, raw.Length - start));
+                string seg = raw.Length == 0
+                    ? string.Empty
+                    : raw.Substring(start, Math.Min(maxChars, raw.Length - start));
                 var line = new MarkdownLine
                 {
                     Indent = indent,
@@ -298,7 +302,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
     private void EmitRule(int indentLevel, int quoteDepth)
     {
-        float indent = (quoteDepth * _indentStep) + (indentLevel * _indentStep);
+        float indent = quoteDepth * _indentStep + indentLevel * _indentStep;
         _lines.Add(new MarkdownLine
         {
             Indent = indent,
@@ -319,7 +323,7 @@ public class MarkdownCte : ContentTypeEngineBase
             return;
         }
 
-        float indent = (quoteDepth * _indentStep) + (indentLevel * _indentStep);
+        float indent = quoteDepth * _indentStep + indentLevel * _indentStep;
         List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, indent, indent);
         Decorate(lines, spaceBefore, quoteDepth > 0);
         _lines.AddRange(lines);
@@ -360,11 +364,14 @@ public class MarkdownCte : ContentTypeEngineBase
                     break;
                 case EmphasisInline em:
                     GraphicsFontStyle emStyle = style |
-                                                (em.DelimiterCount >= 2 ? GraphicsFontStyle.Bold : GraphicsFontStyle.Italic);
+                                                (em.DelimiterCount >= 2
+                                                    ? GraphicsFontStyle.Bold
+                                                    : GraphicsFontStyle.Italic);
                     FlattenInlines(em, scale, emStyle, color, tokens);
                     break;
                 case CodeInline ci:
-                    tokens.Add(new MarkdownRun { Text = ci.Content, Scale = scale, Style = style, Color = InlineCodeColor });
+                    tokens.Add(new MarkdownRun
+                    { Text = ci.Content, Scale = scale, Style = style, Color = InlineCodeColor });
                     break;
                 case LinkInline link when link.IsImage:
                     AppendText($"🖼 {GetInlineText(link)}", scale, GraphicsFontStyle.Italic, QuoteColor, tokens);
