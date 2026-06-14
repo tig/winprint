@@ -4,6 +4,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Markdig;
+using Markdig.Extensions.Tables;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Serilog;
@@ -36,6 +37,7 @@ public class MarkdownCte : ContentTypeEngineBase
     private static readonly GraphicsColor CodeBgColor = GraphicsColor.FromRgb(0xf3, 0xf3, 0xf5);
     private static readonly GraphicsColor QuoteBarColor = GraphicsColor.FromRgb(0xcf, 0xd3, 0xda);
     private static readonly GraphicsColor RuleColor = GraphicsColor.FromRgb(0xc7, 0xcc, 0xd6);
+    private static readonly GraphicsColor TableHeaderColor = GraphicsColor.FromRgb(0xee, 0xf1, 0xf6);
 
     private readonly List<MarkdownLine> _lines = [];
     private float _baseLineHeight;
@@ -126,7 +128,9 @@ public class MarkdownCte : ContentTypeEngineBase
 
         using IGraphicsBrush codeBg = g.CreateSolidBrush(CodeBgColor);
         using IGraphicsBrush quoteBar = g.CreateSolidBrush(QuoteBarColor);
+        using IGraphicsBrush headerBg = g.CreateSolidBrush(TableHeaderColor);
         using IGraphicsPen rulePen = g.CreatePen(RuleColor, 2f);
+        using IGraphicsPen gridPen = g.CreatePen(RuleColor);
 
         foreach (MarkdownLine line in _lines)
         {
@@ -153,6 +157,29 @@ public class MarkdownCte : ContentTypeEngineBase
                 continue;
             }
 
+            if (line.ColumnEdges is { Count: > 1 } edges)
+            {
+                if (line.HeaderShade)
+                {
+                    g.FillRectangle(headerBg, edges[0], line.Y, edges[^1] - edges[0], line.Height);
+                }
+
+                foreach (float ex in edges)
+                {
+                    g.DrawLine(gridPen, ex, line.Y, ex, line.Y + line.Height);
+                }
+
+                if (line.TableRowTop)
+                {
+                    g.DrawLine(gridPen, edges[0], line.Y, edges[^1], line.Y);
+                }
+
+                if (line.TableRowBottom)
+                {
+                    g.DrawLine(gridPen, edges[0], line.Y + line.Height, edges[^1], line.Y + line.Height);
+                }
+            }
+
             float x = line.Indent;
             foreach (MarkdownRun run in line.Runs)
             {
@@ -164,8 +191,9 @@ public class MarkdownCte : ContentTypeEngineBase
                 using IGraphicsFont font = g.CreateFont(ContentSettings.Font.Family, basePt * run.Scale, run.Style,
                     unit);
                 using IGraphicsBrush brush = g.CreateSolidBrush(run.Color);
-                g.DrawString(run.Text, font, brush, x, line.Y, GraphicsStringFormat);
-                x += Measure(g, run.Text, font).Width;
+                float rx = run.X ?? x;
+                g.DrawString(run.Text, font, brush, rx, line.Y, GraphicsStringFormat);
+                x = rx + Measure(g, run.Text, font).Width;
             }
         }
     }
@@ -199,6 +227,9 @@ public class MarkdownCte : ContentTypeEngineBase
                     break;
                 case ThematicBreakBlock:
                     EmitRule(indentLevel, quoteDepth);
+                    break;
+                case Table table:
+                    EmitTable(table, g, fonts, indentLevel, quoteDepth);
                     break;
                 case ContainerBlock container:
                     WalkBlocks(container, g, fonts, indentLevel, quoteDepth);
@@ -247,7 +278,8 @@ public class MarkdownCte : ContentTypeEngineBase
 
         float quoteGutter = quoteDepth * _indentStep;
         float markerIndent = quoteGutter + indentLevel * _indentStep + _indentStep * 0.4f;
-        List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, markerIndent, markerIndent + markerWidth);
+        List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, markerIndent, markerIndent + markerWidth,
+            PageSize.Width);
         Decorate(lines, _baseLineHeight * 0.18f, quoteDepth > 0);
         _lines.AddRange(lines);
 
@@ -313,6 +345,150 @@ public class MarkdownCte : ContentTypeEngineBase
         });
     }
 
+    private void EmitTable(Table table, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
+        int indentLevel, int quoteDepth)
+    {
+        // Flatten every cell's inline content into tokens; track header rows and the column count.
+        var rows = new List<(bool Header, List<List<MarkdownRun>> Cells)>();
+        int cols = 0;
+        foreach (Block rowBlock in table)
+        {
+            if (rowBlock is not TableRow row)
+            {
+                continue;
+            }
+
+            var cells = new List<List<MarkdownRun>>();
+            GraphicsFontStyle style = row.IsHeader ? GraphicsFontStyle.Bold : GraphicsFontStyle.Regular;
+            GraphicsColor color = quoteDepth > 0 ? QuoteColor : TextColor;
+            foreach (Block cellBlock in row)
+            {
+                if (cellBlock is not TableCell cell)
+                {
+                    continue;
+                }
+
+                var toks = new List<MarkdownRun>();
+                foreach (Block b in cell)
+                {
+                    if (b is LeafBlock { Inline: { } cin })
+                    {
+                        FlattenInlines(cin, 1f, style, color, toks);
+                    }
+                }
+
+                cells.Add(toks);
+            }
+
+            cols = Math.Max(cols, cells.Count);
+            rows.Add((row.IsHeader, cells));
+        }
+
+        if (cols == 0)
+        {
+            return;
+        }
+
+        float indent = quoteDepth * _indentStep + indentLevel * _indentStep;
+        float avail = PageSize.Width - indent;
+        float pad = _baseSizePx * 0.4f;
+
+        // Column widths: natural content width per column, scaled to fit the available width.
+        float[] widths = new float[cols];
+        foreach ((bool _, List<List<MarkdownRun>> cells) in rows)
+        {
+            for (int c = 0; c < cells.Count; c++)
+            {
+                widths[c] = Math.Max(widths[c], MeasureTokens(g, fonts, cells[c]) + 2 * pad);
+            }
+        }
+
+        float total = widths.Sum();
+        if (total > avail && total > 0)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                widths[c] *= avail / total;
+            }
+        }
+
+        float[] edges = new float[cols + 1];
+        edges[0] = indent;
+        for (int c = 0; c < cols; c++)
+        {
+            edges[c + 1] = edges[c] + widths[c];
+        }
+
+        IReadOnlyList<float> edgeList = edges;
+
+        for (int r = 0; r < rows.Count; r++)
+        {
+            (bool header, List<List<MarkdownRun>> cells) = rows[r];
+            var cellLines = new List<List<MarkdownLine>>();
+            int visual = 1;
+            for (int c = 0; c < cols; c++)
+            {
+                List<MarkdownRun> toks = c < cells.Count ? cells[c] : [];
+                List<MarkdownLine> wrapped = WrapTokens(toks, g, fonts, 0f, 0f, Math.Max(1f, widths[c] - 2 * pad));
+                cellLines.Add(wrapped);
+                visual = Math.Max(visual, wrapped.Count);
+            }
+
+            for (int k = 0; k < visual; k++)
+            {
+                var rowLine = new MarkdownLine
+                {
+                    Indent = indent,
+                    Height = _baseLineHeight,
+                    ColumnEdges = edgeList,
+                    TableRowTop = k == 0,
+                    TableRowBottom = r == rows.Count - 1 && k == visual - 1,
+                    HeaderShade = header,
+                    QuoteBar = quoteDepth > 0,
+                    SpaceBefore = r == 0 && k == 0 ? _baseLineHeight * 0.5f : 0f
+                };
+
+                for (int c = 0; c < cols; c++)
+                {
+                    if (k >= cellLines[c].Count)
+                    {
+                        continue;
+                    }
+
+                    bool firstInCell = true;
+                    foreach (MarkdownRun run in cellLines[c][k].Runs)
+                    {
+                        if (firstInCell)
+                        {
+                            run.X = edges[c] + pad;
+                            firstInCell = false;
+                        }
+
+                        rowLine.Runs.Add(run);
+                    }
+                }
+
+                _lines.Add(rowLine);
+            }
+        }
+    }
+
+    private float MeasureTokens(IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts, List<MarkdownRun> tokens)
+    {
+        float w = 0f;
+        foreach (MarkdownRun t in tokens)
+        {
+            if (t.Text == "\n")
+            {
+                continue;
+            }
+
+            w += Measure(g, t.Text, GetFont(g, fonts, t.Scale, t.Style)).Width;
+        }
+
+        return w;
+    }
+
     private void EmitInline(ContainerInline? inline, IGraphicsContext g, Dictionary<string, IGraphicsFont> fonts,
         float scale, GraphicsFontStyle style, GraphicsColor color, int indentLevel, int quoteDepth, float spaceBefore)
     {
@@ -324,7 +500,7 @@ public class MarkdownCte : ContentTypeEngineBase
         }
 
         float indent = quoteDepth * _indentStep + indentLevel * _indentStep;
-        List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, indent, indent);
+        List<MarkdownLine> lines = WrapTokens(tokens, g, fonts, indent, indent, PageSize.Width);
         Decorate(lines, spaceBefore, quoteDepth > 0);
         _lines.AddRange(lines);
     }
@@ -440,7 +616,7 @@ public class MarkdownCte : ContentTypeEngineBase
     // ---- wrapping & pagination --------------------------------------------------------------------
 
     private List<MarkdownLine> WrapTokens(List<MarkdownRun> tokens, IGraphicsContext g,
-        Dictionary<string, IGraphicsFont> fonts, float firstIndent, float restIndent)
+        Dictionary<string, IGraphicsFont> fonts, float firstIndent, float restIndent, float maxWidth)
     {
         var lines = new List<MarkdownLine>();
         var line = new MarkdownLine { Indent = firstIndent };
@@ -469,7 +645,7 @@ public class MarkdownCte : ContentTypeEngineBase
             IGraphicsFont font = GetFont(g, fonts, tok.Scale, tok.Style);
             float w = Measure(g, tok.Text, font).Width;
             float h = font.GetHeight(_dpiY);
-            float avail = PageSize.Width - line.Indent;
+            float avail = maxWidth - line.Indent;
 
             if (tok.IsSpace)
             {

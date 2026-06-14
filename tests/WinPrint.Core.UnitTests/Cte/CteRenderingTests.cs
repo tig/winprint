@@ -212,4 +212,46 @@ public class CteRenderingTests
         Assert.NotEmpty(paint.FilledRectangles);
         Assert.NotEmpty(paint.DrawnLines);
     }
+
+    [Fact]
+    public async Task MarkdownCte_RendersTable_WithGridHeaderAndColumns()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(600, 4000)
+        };
+
+        const string md = "| Name | Role |\n|------|------|\n| Tig | Author |\n| You | Reader |\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        List<string> texts = [.. paint.DrawnStrings.Select(s => s.Text)];
+        foreach (string cell in new[] { "Name", "Role", "Tig", "Author", "You", "Reader" })
+        {
+            Assert.Contains(cell, texts);
+        }
+
+        // Gridlines (column verticals + row borders) are drawn, the header row is shaded, and the
+        // second column is positioned to the right of the first (distinct column x-offsets).
+        Assert.NotEmpty(paint.DrawnLines);
+        Assert.NotEmpty(paint.FilledRectangles);
+        float nameX = paint.DrawnStrings.First(s => s.Text == "Name").X;
+        float roleX = paint.DrawnStrings.First(s => s.Text == "Role").X;
+        Assert.True(roleX > nameX, "Second column should be right of the first.");
+    }
 }

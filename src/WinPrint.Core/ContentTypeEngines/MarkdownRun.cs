@@ -26,4 +26,10 @@ public sealed class MarkdownRun
 
     /// <summary>Whether this run is whitespace (collapsible at the start/end of a wrapped line).</summary>
     public bool IsSpace { get; set; }
+
+    /// <summary>
+    ///     Absolute x (pixels) to paint this run at, overriding the normal left-to-right flow. Used to
+    ///     place the first run of each table cell at its column; null means flow from the previous run.
+    /// </summary>
+    public float? X { get; set; }
 }

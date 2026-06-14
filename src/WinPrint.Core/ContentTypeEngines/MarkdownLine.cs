@@ -32,6 +32,18 @@ public sealed class MarkdownLine
     /// <summary>Draw a horizontal rule centered in this line (thematic break).</summary>
     public bool Rule { get; set; }
 
+    /// <summary>Absolute x of each table column edge (n+1 values) when this line is a table row.</summary>
+    public IReadOnlyList<float>? ColumnEdges { get; set; }
+
+    /// <summary>Draw the top gridline of a table row above this line.</summary>
+    public bool TableRowTop { get; set; }
+
+    /// <summary>Draw the bottom gridline of a table (below the last row).</summary>
+    public bool TableRowBottom { get; set; }
+
+    /// <summary>Shade this table row as a header.</summary>
+    public bool HeaderShade { get; set; }
+
     /// <summary>1-based page this line was assigned to during reflow.</summary>
     public int Page { get; set; }
 
