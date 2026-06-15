@@ -1006,6 +1006,19 @@
     },
     {
       "aliases": [
+        "ansi",
+        "ansiart"
+      ],
+      "extensions": [
+        "*.an",
+        "*.ans",
+        "*.ansi"
+      ],
+      "id": "text/ansi",
+      "title": "ANSI Text"
+    },
+    {
+      "aliases": [
         "text"
       ],
       "extensions": [
