@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
@@ -26,6 +27,7 @@ namespace WinPrint.Maui.ViewModels;
 public sealed class MainViewModel : INotifyPropertyChanged
 {
     private readonly AppViewModel _app;
+    private readonly OpenFilePickerFolder _openFilePickerFolder = new();
 
     private readonly PrintPageSetup _currentPageSetup = new()
     {
@@ -556,16 +558,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public async Task OpenFileAsync()
     {
-        string? filePath = PickFileAsync != null ? await PickFileAsync() : null;
+        string? filePath = PickFileAsync != null
+            ? await _openFilePickerFolder.RunFromRememberedDirectoryAsync(PickFileAsync)
+            : null;
         if (!string.IsNullOrEmpty(filePath))
         {
             await LoadFileAsync(filePath);
         }
     }
 
-    public Task<bool> LoadFileAsync(string filePath)
+    public async Task<bool> LoadFileAsync(string filePath)
     {
-        return _app.LoadFileAsync(filePath);
+        bool loaded = await _app.LoadFileAsync(filePath);
+        if (loaded)
+        {
+            _openFilePickerFolder.RememberFile(filePath);
+        }
+
+        return loaded;
     }
 
     public async Task PrintAsync()
