@@ -340,6 +340,64 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task MarkdownCte_CodeBlock_HonorsTabSpacesSetting()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 2 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000)
+        };
+
+        const string md = "```\n\tcode\n```\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // The leading tab expands to TabSpaces (2) spaces, not a hard-coded 4.
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "  code");
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("    code"));
+    }
+
+    [Fact]
+    public async Task MarkdownCte_WrapsOversizedToken_ToFitPageWidth()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            // 100pt page fits exactly 10 chars (CharWidth = 10).
+            PageSize = new System.Drawing.SizeF(100, 4000)
+        };
+
+        // A single token far wider than the page (no spaces to wrap at), e.g. a long URL/word.
+        string word = new('a', 25);
+        Assert.True(await cte.SetDocumentAsync(word));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        List<string> pieces = [.. paint.DrawnStrings.Select(s => s.Text).Where(t => t.Contains('a'))];
+        // Every painted piece fits the page (<= 10 chars) and together they reconstruct the word.
+        Assert.All(pieces, t => Assert.True(t.Length <= 10, $"piece '{t}' overflows the page width"));
+        Assert.Equal(word, string.Concat(pieces));
+    }
+
+    [Fact]
     public async Task MarkdownCte_RendersTable_WithGridHeaderAndColumns()
     {
         var measure = new RecordingGraphicsContext();
