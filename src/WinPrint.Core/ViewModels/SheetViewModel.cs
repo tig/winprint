@@ -533,6 +533,7 @@ public class SheetViewModel : ViewModelBase
 
             ContentEngine.MeasurementContext = MeasurementContext;
             ContentEngine.Encoding = Encoding;
+            ContentEngine.SourceFileName = File;
             retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
         }
         catch

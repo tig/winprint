@@ -340,6 +340,34 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         _image.Mutate(ctx => ctx.Fill(color, rect));
     }
 
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            return new ImageSharpImage(Image.Load(stream));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (image is not ImageSharpImage isi)
+        {
+            return;
+        }
+
+        RectangleF dest = TransformRect(x, y, width, height);
+        int w = Math.Max(1, (int)MathF.Round(dest.Width));
+        int h = Math.Max(1, (int)MathF.Round(dest.Height));
+        var location = new Point((int)MathF.Round(dest.X), (int)MathF.Round(dest.Y));
+
+        using Image resized = isi.Image.Clone(ctx => ctx.Resize(w, h));
+        _image.Mutate(ctx => ctx.DrawImage(resized, location, 1f));
+    }
+
     #region Helpers
 
     private PointF TransformPoint(float x, float y)

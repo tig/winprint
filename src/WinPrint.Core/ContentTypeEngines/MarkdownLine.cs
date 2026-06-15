@@ -32,6 +32,9 @@ public sealed class MarkdownLine
     /// <summary>Draw a horizontal rule centered in this line (thematic break).</summary>
     public bool Rule { get; set; }
 
+    /// <summary>When set, this line paints a raster image (sized to <see cref="Height" />) instead of runs.</summary>
+    public MarkdownImage? Image { get; set; }
+
     /// <summary>Absolute x of each table column edge (n+1 values) when this line is a table row.</summary>
     public IReadOnlyList<float>? ColumnEdges { get; set; }
 

@@ -292,6 +292,31 @@ public sealed class SkiaGraphicsContext : IGraphicsContext
         _canvas.DrawRect(x, y, width, height, paint);
     }
 
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            using var data = SKData.Create(stream);
+            SKImage? image = data is null ? null : SKImage.FromEncodedData(data);
+            return image is null ? null : new SkiaImage(image);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (_canvas is null || image is not SkiaImage si)
+        {
+            return;
+        }
+
+        using var paint = new SKPaint { IsAntialias = true };
+        _canvas.DrawImage(si.Image, SKRect.Create(x, y, width, height), paint);
+    }
+
     private void DrawTextDecorations(SkiaFont font, SKPaint paint, float x, float baseline, float width)
     {
         bool underline = (font.Style & GraphicsFontStyle.Underline) != 0;
