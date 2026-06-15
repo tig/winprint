@@ -71,6 +71,56 @@ public class HtmlCteRasterTests
     }
 
     [Fact]
+    public async Task HtmlCte_Paginates_SecondPageRendersDifferentContent()
+    {
+        var sb = new System.Text.StringBuilder("<html><body>");
+        for (int i = 1; i <= 80; i++)
+        {
+            sb.Append($"<p>Paragraph number {i} with enough text to take up vertical space on the page.</p>");
+        }
+
+        sb.Append("</body></html>");
+
+        var page = new System.Drawing.SizeF(800, 300);
+        var cte = new HtmlCte
+        {
+            ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 } },
+            MeasurementContext = new ImageSharpMeasurementContext(96, 96),
+            PageSize = page
+        };
+        Assert.True(await cte.SetDocumentAsync(sb.ToString()));
+        int pages = await cte.RenderAsync(new PrintResolution { X = 96, Y = 96 }, null);
+        Assert.True(pages >= 2, $"Expected a multi-page document; got {pages} page(s).");
+
+        using var p1 = new Image<Rgba32>(800, 300, Color.White);
+        cte.PaintPage(new ImageSharpGraphicsContext(p1, 96, 96, FontCollectionFactory.GetCollection()), 1);
+        using var p2 = new Image<Rgba32>(800, 300, Color.White);
+        cte.PaintPage(new ImageSharpGraphicsContext(p2, 96, 96, FontCollectionFactory.GetCollection()), 2);
+
+        // Page 2 must not be blank (the pagination scroll-offset bug rendered later pages empty)...
+        Assert.True(CountNonWhitePixels(p2) > 100, "Page 2 rendered blank — pagination offset is wrong.");
+        // ...and it must show different content than page 1.
+        Assert.False(PixelsEqual(p1, p2), "Page 2 is identical to page 1 — pagination did not advance.");
+    }
+
+    private static bool PixelsEqual(Image<Rgba32> a, Image<Rgba32> b)
+    {
+        bool equal = true;
+        a.ProcessPixelRows(b, (ra, rb) =>
+        {
+            for (int y = 0; y < ra.Height; y++)
+            {
+                if (!ra.GetRowSpan(y).SequenceEqual(rb.GetRowSpan(y)))
+                {
+                    equal = false;
+                    return;
+                }
+            }
+        });
+        return equal;
+    }
+
+    [Fact]
     public async Task HtmlCte_RendersTableContent_VisiblePixels()
     {
         const string html =

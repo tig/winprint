@@ -14,6 +14,7 @@ namespace WinPrint.Core.ContentTypeEngines.Html;
 /// </summary>
 internal sealed class WinPrintHtmlGraphics : RGraphics
 {
+    private readonly Dictionary<(string Family, double Size, GraphicsFontStyle Style), IGraphicsFont> _fonts = [];
     private readonly IGraphicsContext _g;
 
     public WinPrintHtmlGraphics(WinPrintHtmlAdapter adapter, IGraphicsContext g, RRect initialClip)
@@ -196,12 +197,27 @@ internal sealed class WinPrintHtmlGraphics : RGraphics
 
     public override void Dispose()
     {
-        // The IGraphicsContext is owned by the engine (HtmlCte); nothing to release here.
+        // Dispose the native fonts created during this render pass; the IGraphicsContext itself is
+        // owned by the engine (HtmlCte) and is not disposed here.
+        foreach (IGraphicsFont font in _fonts.Values)
+        {
+            font.Dispose();
+        }
+
+        _fonts.Clear();
     }
 
     private IGraphicsFont Native(RFont font)
     {
-        return ((WinPrintHtmlFont)font).Native(_g);
+        var f = (WinPrintHtmlFont)font;
+        (string Family, double Size, GraphicsFontStyle Style) key = (f.Family, f.Size, f.Style);
+        if (!_fonts.TryGetValue(key, out IGraphicsFont? native))
+        {
+            native = _g.CreateFont(f.Family, (float)f.Size, f.Style, GraphicsFontUnit.Pixel);
+            _fonts[key] = native;
+        }
+
+        return native;
     }
 
     // No fill-polygon primitive in IGraphicsContext; approximate by filling the polygon's bounding box.

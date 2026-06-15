@@ -115,7 +115,8 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         (HtmlContainerInt container, WinPrintHtmlAdapter adapter, _) = LayoutHtml(g, _dpiY);
         try
         {
-            container.ScrollOffset = new RPoint(0, (pageNum - 1) * PageSize.Height);
+            // Negative scrolls the laid-out content up so page N's slice maps to the top of the surface.
+            container.ScrollOffset = new RPoint(0, -((pageNum - 1) * PageSize.Height));
             var clip = RRect.FromLTRB(0, 0, PageSize.Width, PageSize.Height);
             using var gfx = new WinPrintHtmlGraphics(adapter, g, clip);
             gfx.PushClip(clip);
@@ -139,6 +140,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
             MaxSize = new RSize(PageSize.Width, 0)
         };
         container.ImageLoad += (_, e) => OnImageLoad(adapter, e);
+        container.StylesheetLoad += (_, e) => OnStylesheetLoad(e);
         container.RenderError += (_, e) => Log.Warning("HtmlCte render error: {type} {message}", e.Type, e.Message);
         container.SetHtml(Document ?? string.Empty);
 
@@ -151,7 +153,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
     private void OnImageLoad(WinPrintHtmlAdapter adapter, HtmlImageLoadEventArgs e)
     {
         e.Handled = true;
-        byte[]? bytes = LoadImageBytes(e.Src);
+        byte[]? bytes = LoadResourceBytes(e.Src);
         if (bytes is not { Length: > 0 })
         {
             return;
@@ -165,7 +167,18 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         }
     }
 
-    private byte[]? LoadImageBytes(string? url)
+    private void OnStylesheetLoad(HtmlStylesheetLoadEventArgs e)
+    {
+        // Resolve external stylesheets (<link rel="stylesheet">) the same way as images: local files
+        // relative to SourceFileName, data: URIs, and http(s).
+        byte[]? bytes = LoadResourceBytes(e.Src);
+        if (bytes is { Length: > 0 })
+        {
+            e.SetStyleSheet = Encoding.UTF8.GetString(bytes);
+        }
+    }
+
+    private byte[]? LoadResourceBytes(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
