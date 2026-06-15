@@ -121,6 +121,26 @@ public class HtmlCteRasterTests
     }
 
     [Fact]
+    public async Task HtmlCte_RendersRealMhtmlArchive_VisiblePixels()
+    {
+        // Locate the real .mhtml web-archive fixture by walking up to the repo's testfiles/.
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        string? path = null;
+        while (dir is not null && path is null)
+        {
+            string candidate = Path.Combine(dir.FullName, "testfiles", "pull request.mhtml");
+            path = File.Exists(candidate) ? candidate : null;
+            dir = dir.Parent;
+        }
+
+        Assert.True(path is not null, "Could not locate testfiles/pull request.mhtml");
+        using Image<Rgba32> image = await RenderFirstPageAsync(await File.ReadAllTextAsync(path!));
+
+        // The MHTML archive unpacks to HTML and renders visibly (was previously mis-typed as "Mason").
+        Assert.True(CountNonWhitePixels(image) > 100, "Expected the .mhtml web archive to render visibly.");
+    }
+
+    [Fact]
     public async Task HtmlCte_RendersTableContent_VisiblePixels()
     {
         const string html =

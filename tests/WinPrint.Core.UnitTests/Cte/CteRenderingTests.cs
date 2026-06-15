@@ -280,6 +280,54 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task HtmlCte_RendersMhtmlArchive_AsHtml_NotRawMime()
+    {
+        // A minimal MHTML (.mhtml) web archive: MIME multipart/related wrapping a quoted-printable
+        // HTML part ("=20" is a space; "=\r\n" is a soft line break).
+        const string mhtml =
+            "From: <Saved by Test>\r\n" +
+            "MIME-Version: 1.0\r\n" +
+            "Content-Type: multipart/related; boundary=\"BOUND123\"\r\n" +
+            "\r\n" +
+            "--BOUND123\r\n" +
+            "Content-Type: text/html; charset=utf-8\r\n" +
+            "Content-Transfer-Encoding: quoted-printable\r\n" +
+            "Content-Location: http://example.com/page.html\r\n" +
+            "\r\n" +
+            "<html><body><h1>Archived=20Heading</h1><p>Body from =\r\nthe archive.</p></body></html>\r\n" +
+            "--BOUND123--\r\n";
+
+        var measure = new RecordingGraphicsContext();
+        var cte = new HtmlCte
+        {
+            ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 } },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 1100)
+        };
+
+        Assert.True(await cte.SetDocumentAsync(mhtml));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        // The unpacked HTML renders (quoted-printable decoded)...
+        foreach (string word in new[] { "Archived", "Heading", "Body", "archive." })
+        {
+            Assert.Contains(word, all, StringComparison.Ordinal);
+        }
+
+        // ...and the MIME envelope is NOT rendered as text.
+        Assert.DoesNotContain("MIME-Version", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("multipart/related", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("BOUND123", all, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task HtmlCte_RendersHtml_AsStyledTextWithoutTags()
     {
         var measure = new RecordingGraphicsContext();

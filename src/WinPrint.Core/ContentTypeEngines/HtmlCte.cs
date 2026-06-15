@@ -28,6 +28,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
     private static readonly string[] s_supportedContentTypes = ["text/html"];
     private static readonly HttpClient s_http = new() { Timeout = TimeSpan.FromSeconds(10) };
 
+    private MhtmlArchive? _archive;
     private bool _disposed;
     private int _dpiY = 96;
     private int _pageCount;
@@ -60,6 +61,9 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
     public override async Task<bool> SetDocumentAsync(string doc)
     {
         Document = doc;
+        // .mhtml/.mht web archives are MIME multipart, not HTML — unpack the root HTML part and its
+        // embedded resources so they render offline.
+        _archive = doc is not null && MhtmlArchive.LooksLikeMhtml(doc) ? MhtmlArchive.Parse(doc) : null;
         return await Task.FromResult(true);
     }
 
@@ -142,7 +146,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         container.ImageLoad += (_, e) => OnImageLoad(adapter, e);
         container.StylesheetLoad += (_, e) => OnStylesheetLoad(e);
         container.RenderError += (_, e) => Log.Warning("HtmlCte render error: {type} {message}", e.Type, e.Message);
-        container.SetHtml(Document ?? string.Empty);
+        container.SetHtml(_archive?.Html ?? Document ?? string.Empty);
 
         var layoutGfx = new WinPrintHtmlGraphics(adapter, g, RRect.FromLTRB(0, 0, PageSize.Width, 1_000_000));
         container.PerformLayout(layoutGfx);
@@ -153,7 +157,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
     private void OnImageLoad(WinPrintHtmlAdapter adapter, HtmlImageLoadEventArgs e)
     {
         e.Handled = true;
-        byte[]? bytes = LoadResourceBytes(e.Src);
+        byte[]? bytes = _archive?.Resolve(e.Src) ?? LoadResourceBytes(e.Src);
         if (bytes is not { Length: > 0 })
         {
             return;
@@ -169,9 +173,9 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
 
     private void OnStylesheetLoad(HtmlStylesheetLoadEventArgs e)
     {
-        // Resolve external stylesheets (<link rel="stylesheet">) the same way as images: local files
-        // relative to SourceFileName, data: URIs, and http(s).
-        byte[]? bytes = LoadResourceBytes(e.Src);
+        // Resolve external stylesheets (<link rel="stylesheet">) from the MHTML archive if present,
+        // else the same way as images: local files relative to SourceFileName, data: URIs, and http(s).
+        byte[]? bytes = _archive?.Resolve(e.Src) ?? LoadResourceBytes(e.Src);
         if (bytes is { Length: > 0 })
         {
             e.SetStyleSheet = Encoding.UTF8.GetString(bytes);
