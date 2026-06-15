@@ -1,7 +1,9 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
+using System.Collections.Concurrent;
 using System.Reflection;
+using Serilog;
 using TextMateSharp.Internal.Grammars.Reader;
 using TextMateSharp.Internal.Types;
 
@@ -21,7 +23,8 @@ internal static class WinPrintGrammars
         ["source.intercal"] = "intercal.tmLanguage.json"
     };
 
-    private static readonly Dictionary<string, IRawGrammar?> s_cache = new(StringComparer.Ordinal);
+    // Concurrent because grammars are resolved from multiple render threads / parallel tests.
+    private static readonly ConcurrentDictionary<string, IRawGrammar?> s_cache = new(StringComparer.Ordinal);
 
     /// <summary>Maps a file extension, content type, or language name to one of our custom scopes, or null.</summary>
     public static string? ResolveScope(string? extension, string? contentType, string? language)
@@ -46,37 +49,38 @@ internal static class WinPrintGrammars
     /// <summary>Returns the parsed grammar for one of our scopes, or null if it isn't ours / can't be read.</summary>
     public static IRawGrammar? GetGrammar(string scopeName)
     {
-        if (!s_resourceByScope.TryGetValue(scopeName, out string? suffix))
-        {
-            return null;
-        }
-
-        if (!s_cache.TryGetValue(scopeName, out IRawGrammar? grammar))
-        {
-            grammar = Load(suffix);
-            s_cache[scopeName] = grammar;
-        }
-
-        return grammar;
+        return s_resourceByScope.TryGetValue(scopeName, out string? suffix)
+            ? s_cache.GetOrAdd(scopeName, _ => Load(suffix))
+            : null;
     }
 
     private static IRawGrammar? Load(string resourceSuffix)
     {
-        Assembly assembly = typeof(WinPrintGrammars).Assembly;
-        string? name = assembly.GetManifestResourceNames()
-            .FirstOrDefault(n => n.EndsWith(resourceSuffix, StringComparison.OrdinalIgnoreCase));
-        if (name is null)
+        try
         {
+            Assembly assembly = typeof(WinPrintGrammars).Assembly;
+            string? name = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith(resourceSuffix, StringComparison.OrdinalIgnoreCase));
+            if (name is null)
+            {
+                return null;
+            }
+
+            using Stream? stream = assembly.GetManifestResourceStream(name);
+            if (stream is null)
+            {
+                return null;
+            }
+
+            using var reader = new StreamReader(stream);
+            return GrammarReader.ReadGrammarSync(reader);
+        }
+        catch (Exception ex)
+        {
+            // A malformed bundled grammar must not abort printing — fall back to plain text.
+            Log.Warning(ex, "WinPrintGrammars: failed to load grammar resource {resource}; using plain text.",
+                resourceSuffix);
             return null;
         }
-
-        using Stream? stream = assembly.GetManifestResourceStream(name);
-        if (stream is null)
-        {
-            return null;
-        }
-
-        using var reader = new StreamReader(stream);
-        return GrammarReader.ReadGrammarSync(reader);
     }
 }

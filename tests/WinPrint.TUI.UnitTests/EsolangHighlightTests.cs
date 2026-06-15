@@ -12,8 +12,9 @@ namespace WinPrint.TUI.UnitTests;
 /// <summary>
 ///     Verifies WinPrint's bundled TextMate grammars for the esoteric languages Brainfuck and INTERCAL
 ///     (which <c>TextMateSharp.Grammars</c> does not ship) actually highlight. Rendering through the real
-///     ImageSharp backend, a highlighted document paints chromatic (colored) pixels for its tokens, whereas
-///     the same text without a resolved grammar paints only grayscale — so the grammar is demonstrably applied.
+///     ImageSharp backend, a highlighted document paints more chromatic (colored) pixels for its tokens
+///     than the same text without a resolved grammar — so the grammar is demonstrably applied. Assertions
+///     are relative to a plain baseline (rather than an absolute zero) to be robust to subpixel anti-aliasing.
 /// </summary>
 public class EsolangHighlightTests
 {
@@ -23,7 +24,7 @@ public class EsolangHighlightTests
     private const string IntercalSnippet =
         "DO ,1 <- #13\nPLEASE DO ,1 SUB #1 <- #238\nDO READ OUT ,1\nPLEASE GIVE UP\n";
 
-    private static async Task<int> ChromaticPixelsAsync(string contentType, string? language, string filePath,
+    private static async Task<int> ChromaticPixelsAsync(string? contentType, string? language, string filePath,
         string code)
     {
         var cte = new TextMateCte
@@ -66,21 +67,10 @@ public class EsolangHighlightTests
     {
         int highlighted =
             await ChromaticPixelsAsync("application/x-brainfuck", "Brainfuck", "hello.bf", BrainfuckHelloWorld);
-        int plain = await ChromaticPixelsAsync(null!, null, "hello.unknownext", BrainfuckHelloWorld);
+        int plain = await ChromaticPixelsAsync("text/plain", "Plain Text", "hello.txt", BrainfuckHelloWorld);
 
-        Assert.True(plain == 0, $"Plain text should be grayscale; found {plain} colored pixels.");
-        Assert.True(highlighted > 0,
-            "Brainfuck should be syntax-highlighted (colored tokens), but no colored pixels were painted.");
-    }
-
-    [Fact]
-    public async Task EsolangExtension_HonorsExplicitContentTypeOverride()
-    {
-        // A .bf file whose content type was explicitly overridden to plain text must NOT be force-
-        // highlighted as Brainfuck by the extension — the explicit override wins, so it stays grayscale.
-        int chromatic = await ChromaticPixelsAsync("text/plain", "Plain Text", "hello.bf", BrainfuckHelloWorld);
-        Assert.True(chromatic == 0,
-            $"Explicit text/plain override should not be highlighted as Brainfuck; found {chromatic} colored pixels.");
+        Assert.True(highlighted > plain,
+            $"Brainfuck should add colored token pixels (highlighted={highlighted}, plain baseline={plain}).");
     }
 
     [Fact]
@@ -88,10 +78,33 @@ public class EsolangHighlightTests
     {
         int highlighted =
             await ChromaticPixelsAsync("application/x-intercal", "INTERCAL", "hello.intercal", IntercalSnippet);
-        int plain = await ChromaticPixelsAsync(null!, null, "hello.unknownext", IntercalSnippet);
+        int plain = await ChromaticPixelsAsync("text/plain", "Plain Text", "hello.txt", IntercalSnippet);
 
-        Assert.True(plain == 0, $"Plain text should be grayscale; found {plain} colored pixels.");
-        Assert.True(highlighted > 0,
-            "INTERCAL should be syntax-highlighted (colored tokens), but no colored pixels were painted.");
+        Assert.True(highlighted > plain,
+            $"INTERCAL should add colored token pixels (highlighted={highlighted}, plain baseline={plain}).");
+    }
+
+    [Fact]
+    public async Task EsolangExtension_HonorsExplicitContentTypeOverride()
+    {
+        // A .bf file whose content type was explicitly overridden to plain text must render exactly like
+        // plain text — the override wins and the .bf extension does not force Brainfuck highlighting.
+        int overridden = await ChromaticPixelsAsync("text/plain", "Plain Text", "hello.bf", BrainfuckHelloWorld);
+        int plain = await ChromaticPixelsAsync("text/plain", "Plain Text", "hello.txt", BrainfuckHelloWorld);
+
+        Assert.Equal(plain, overridden);
+    }
+
+    [Fact]
+    public async Task Brainfuck_RendersConcurrently_WithoutGrammarCacheCorruption()
+    {
+        // Exercises the shared grammar cache from many threads at once (xUnit parallelizes and the app
+        // can render concurrently). An unsynchronized cache could throw or corrupt under this load.
+        IEnumerable<Task<int>> tasks = Enumerable.Range(0, 16)
+            .Select(_ => Task.Run(() =>
+                ChromaticPixelsAsync("application/x-brainfuck", "Brainfuck", "hello.bf", BrainfuckHelloWorld)));
+
+        int[] results = await Task.WhenAll(tasks);
+        Assert.All(results, r => Assert.True(r > 0));
     }
 }

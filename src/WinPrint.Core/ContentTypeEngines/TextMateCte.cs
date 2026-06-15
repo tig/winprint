@@ -265,7 +265,18 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         var options = new RegistryOptions(theme);
         _registry = new Registry(new WinPrintRegistryOptions(options));
         _resolvedScopeName = ResolveScopeName(options);
-        _grammar = string.IsNullOrEmpty(_resolvedScopeName) ? null : _registry.LoadGrammar(_resolvedScopeName);
+        try
+        {
+            _grammar = string.IsNullOrEmpty(_resolvedScopeName) ? null : _registry.LoadGrammar(_resolvedScopeName);
+        }
+        catch (Exception ex)
+        {
+            // A missing/broken grammar must not abort printing — fall back to plain (unhighlighted) text.
+            Log.Warning(ex, "TextMate: failed to load grammar {scope}; rendering as plain text.", _resolvedScopeName);
+            _grammar = null;
+            _resolvedScopeName = null;
+        }
+
         Log.Debug("TextMate grammar: {scope}", _resolvedScopeName ?? "(plain text)");
     }
 
