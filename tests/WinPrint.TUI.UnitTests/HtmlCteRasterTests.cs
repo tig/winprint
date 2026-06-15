@@ -18,22 +18,42 @@ namespace WinPrint.TUI.UnitTests;
 /// </summary>
 public class HtmlCteRasterTests
 {
-    private static async Task<Image<Rgba32>> RenderFirstPageAsync(string html, int width = 800, int height = 600)
+    // PageSize is in hundredths-of-an-inch (like PaperSize); the print path scales the surface by
+    // dpi/100 (see PageRenderer), so the tests do the same to exercise the real coordinate mapping.
+    private const float Dpi = 96f;
+    private const float Scale = Dpi / 100f;
+
+    private static HtmlCte MakeCte(System.Drawing.SizeF pageHundredths)
     {
-        var page = new System.Drawing.SizeF(width, height);
-        var cte = new HtmlCte
+        return new HtmlCte
         {
             ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 } },
-            MeasurementContext = new ImageSharpMeasurementContext(96, 96),
-            PageSize = page
+            MeasurementContext = new ImageSharpMeasurementContext(Dpi, Dpi),
+            PageSize = pageHundredths
         };
+    }
+
+    private static Image<Rgba32> NewPageImage(System.Drawing.SizeF pageHundredths, out ImageSharpGraphicsContext ctx)
+    {
+        var image = new Image<Rgba32>(
+            (int)Math.Ceiling(pageHundredths.Width * Scale),
+            (int)Math.Ceiling(pageHundredths.Height * Scale),
+            Color.White);
+        ctx = new ImageSharpGraphicsContext(image, Dpi, Dpi, FontCollectionFactory.GetCollection());
+        ctx.ScaleTransform(Scale, Scale);
+        return image;
+    }
+
+    private static async Task<Image<Rgba32>> RenderFirstPageAsync(string html)
+    {
+        var page = new System.Drawing.SizeF(850, 1100); // 8.5" x 11"
+        HtmlCte cte = MakeCte(page);
 
         Assert.True(await cte.SetDocumentAsync(html));
         int pages = await cte.RenderAsync(new PrintResolution { X = 96, Y = 96 }, null);
         Assert.True(pages >= 1);
 
-        var image = new Image<Rgba32>(width, height, Color.White);
-        var ctx = new ImageSharpGraphicsContext(image, 96, 96, FontCollectionFactory.GetCollection());
+        Image<Rgba32> image = NewPageImage(page, out ImageSharpGraphicsContext ctx);
         cte.PaintPage(ctx, 1);
         return image;
     }
@@ -81,21 +101,16 @@ public class HtmlCteRasterTests
 
         sb.Append("</body></html>");
 
-        var page = new System.Drawing.SizeF(800, 300);
-        var cte = new HtmlCte
-        {
-            ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 } },
-            MeasurementContext = new ImageSharpMeasurementContext(96, 96),
-            PageSize = page
-        };
+        var page = new System.Drawing.SizeF(800, 300); // hundredths-of-inch
+        HtmlCte cte = MakeCte(page);
         Assert.True(await cte.SetDocumentAsync(sb.ToString()));
         int pages = await cte.RenderAsync(new PrintResolution { X = 96, Y = 96 }, null);
         Assert.True(pages >= 2, $"Expected a multi-page document; got {pages} page(s).");
 
-        using var p1 = new Image<Rgba32>(800, 300, Color.White);
-        cte.PaintPage(new ImageSharpGraphicsContext(p1, 96, 96, FontCollectionFactory.GetCollection()), 1);
-        using var p2 = new Image<Rgba32>(800, 300, Color.White);
-        cte.PaintPage(new ImageSharpGraphicsContext(p2, 96, 96, FontCollectionFactory.GetCollection()), 2);
+        using Image<Rgba32> p1 = NewPageImage(page, out ImageSharpGraphicsContext c1);
+        cte.PaintPage(c1, 1);
+        using Image<Rgba32> p2 = NewPageImage(page, out ImageSharpGraphicsContext c2);
+        cte.PaintPage(c2, 2);
 
         // Page 2 must not be blank (the pagination scroll-offset bug rendered later pages empty)...
         Assert.True(CountNonWhitePixels(p2) > 100, "Page 2 rendered blank — pagination offset is wrong.");

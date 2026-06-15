@@ -16,22 +16,32 @@ using WinPrint.Core.Services;
 namespace WinPrint.Core.ContentTypeEngines;
 
 /// <summary>
-///     Implements <c>text/html</c> by laying out and painting HTML/CSS through the pure-managed
-///     HtmlRenderer engine, rendered onto WinPrint's cross-platform <see cref="IGraphicsContext" /> via
-///     <see cref="WinPrintHtmlAdapter" />. Images (local files relative to
-///     <see cref="ContentTypeEngineBase.SourceFileName" />, <c>data:</c> URIs, and <c>http(s)</c> URLs)
-///     are resolved through the engine's image-load hook. Pagination splits the laid-out document by
-///     <c>PageSize.Height</c>.
+///     Implements <c>text/html</c> (and <c>.mhtml</c>/<c>.mht</c> web archives) by laying out and painting
+///     HTML/CSS through the pure-managed HtmlRenderer engine, rendered onto WinPrint's cross-platform
+///     <see cref="IGraphicsContext" /> via <see cref="WinPrintHtmlAdapter" />. The document is laid out once
+///     (in <see cref="RenderAsync" />) and that layout is reused for every page; images are decoded per
+///     paint backend on demand. Local files (relative to <see cref="ContentTypeEngineBase.SourceFileName" />)
+///     and <c>data:</c> URIs always load; <c>http(s)</c> resources require <see cref="AllowRemoteResources" />.
 /// </summary>
 public class HtmlCte : ContentTypeEngineBase, IDisposable
 {
     private static readonly string[] s_supportedContentTypes = ["text/html"];
     private static readonly HttpClient s_http = new() { Timeout = TimeSpan.FromSeconds(10) };
 
+    private readonly Dictionary<string, byte[]?> _resourceCache = new(StringComparer.Ordinal);
+    private WinPrintHtmlAdapter? _adapter;
     private MhtmlArchive? _archive;
+    private HtmlContainerInt? _container;
     private bool _disposed;
     private int _dpiY = 96;
     private int _pageCount;
+
+    /// <summary>
+    ///     When false (the default), <c>http(s)</c> resources referenced by the HTML are not fetched —
+    ///     avoiding SSRF-style outbound requests when printing untrusted documents. Local (document-relative)
+    ///     files, <c>data:</c> URIs, and MHTML-embedded resources always load.
+    /// </summary>
+    public bool AllowRemoteResources { get; set; }
 
     public override string[] SupportedContentTypes => s_supportedContentTypes;
 
@@ -53,6 +63,12 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         if (_disposed)
         {
             return;
+        }
+
+        if (disposing)
+        {
+            _container?.Dispose();
+            _container = null;
         }
 
         _disposed = true;
@@ -90,13 +106,34 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
             throw new InvalidOperationException($"Page height ({PageSize.Height:F2}) is too small.");
         }
 
+        _resourceCache.Clear();
+        _container?.Dispose();
+
+        // Lay the document out exactly once; PaintPage reuses this layout for every page.
         IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
         try
         {
-            (HtmlContainerInt container, _, double height) = LayoutHtml(g, dpiY);
-            container.Dispose();
+            _adapter = new WinPrintHtmlAdapter { Graphics = g, DpiY = dpiY };
+            _container = new HtmlContainerInt(_adapter)
+            {
+                AvoidAsyncImagesLoading = true,
+                AvoidImagesLateLoading = true,
+                MaxSize = new RSize(PageSize.Width, 0)
+            };
+            _container.ImageLoad += (_, e) => OnImageLoad(e);
+            _container.StylesheetLoad += (_, e) => OnStylesheetLoad(e);
+            _container.RenderError += (_, e) =>
+                Log.Warning("HtmlCte render error: {type} {message}", e.Type, e.Message);
+            _container.SetHtml(_archive?.Html ?? Document ?? string.Empty);
+
+            using (var layoutGfx = new WinPrintHtmlGraphics(_adapter, g, RRect.FromLTRB(0, 0, PageSize.Width, 1e6)))
+            {
+                _container.PerformLayout(layoutGfx);
+            }
+
+            double height = _container.ActualSize.Height;
             _pageCount = height <= 0 ? 1 : Math.Max(1, (int)Math.Ceiling(height / PageSize.Height));
-            Log.Debug("Rendered {pages} HTML pages from {height:F0}px of content.", _pageCount, height);
+            Log.Debug("Rendered {pages} HTML pages from {height:F0} (1/100\") of content.", _pageCount, height);
             return await Task.FromResult(_pageCount);
         }
         finally
@@ -108,87 +145,70 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
     public override void PaintPage(IGraphicsContext g, int pageNum)
     {
         LogService.TraceMessage($"{pageNum}");
-        if (Document is null)
+        if (_container is null || _adapter is null)
         {
             return;
         }
 
         g.SetTextRenderingMode(GraphicsTextRenderingMode);
 
-        // Re-layout against the paint context so fonts and decoded images bind to the paint backend.
-        (HtmlContainerInt container, WinPrintHtmlAdapter adapter, _) = LayoutHtml(g, _dpiY);
-        try
-        {
-            // Negative scrolls the laid-out content up so page N's slice maps to the top of the surface.
-            container.ScrollOffset = new RPoint(0, -((pageNum - 1) * PageSize.Height));
-            var clip = RRect.FromLTRB(0, 0, PageSize.Width, PageSize.Height);
-            using var gfx = new WinPrintHtmlGraphics(adapter, g, clip);
-            gfx.PushClip(clip);
-            container.PerformPaint(gfx);
-            gfx.PopClip();
-        }
-        finally
-        {
-            container.Dispose();
-        }
+        // Reuse the single layout; only the paint surface and scroll position change per page.
+        _adapter.Graphics = g;
+        _adapter.DpiY = _dpiY;
+        // Negative scrolls the laid-out content up so page N's slice maps to the top of the surface.
+        _container.ScrollOffset = new RPoint(0, -((pageNum - 1) * PageSize.Height));
+
+        var clip = RRect.FromLTRB(0, 0, PageSize.Width, PageSize.Height);
+        using var gfx = new WinPrintHtmlGraphics(_adapter, g, clip);
+        _container.PerformPaint(gfx);
     }
 
-    private (HtmlContainerInt container, WinPrintHtmlAdapter adapter, double height) LayoutHtml(IGraphicsContext g,
-        int dpiY)
-    {
-        var adapter = new WinPrintHtmlAdapter { Graphics = g, DpiY = dpiY };
-        var container = new HtmlContainerInt(adapter)
-        {
-            AvoidAsyncImagesLoading = true,
-            AvoidImagesLateLoading = true,
-            MaxSize = new RSize(PageSize.Width, 0)
-        };
-        container.ImageLoad += (_, e) => OnImageLoad(adapter, e);
-        container.StylesheetLoad += (_, e) => OnStylesheetLoad(e);
-        container.RenderError += (_, e) => Log.Warning("HtmlCte render error: {type} {message}", e.Type, e.Message);
-        container.SetHtml(_archive?.Html ?? Document ?? string.Empty);
-
-        var layoutGfx = new WinPrintHtmlGraphics(adapter, g, RRect.FromLTRB(0, 0, PageSize.Width, 1_000_000));
-        container.PerformLayout(layoutGfx);
-        layoutGfx.Dispose();
-        return (container, adapter, container.ActualSize.Height);
-    }
-
-    private void OnImageLoad(WinPrintHtmlAdapter adapter, HtmlImageLoadEventArgs e)
+    private void OnImageLoad(HtmlImageLoadEventArgs e)
     {
         e.Handled = true;
-        byte[]? bytes = _archive?.Resolve(e.Src) ?? LoadResourceBytes(e.Src);
-        if (bytes is not { Length: > 0 })
-        {
-            return;
-        }
-
-        using var ms = new MemoryStream(bytes);
-        IGraphicsImage? image = adapter.Graphics.LoadImage(ms);
+        byte[]? bytes = ResolveResource(e.Src);
+        WinPrintHtmlImage? image = bytes is { Length: > 0 } ? _adapter?.CreateImage(bytes) : null;
         if (image is not null)
         {
-            e.Callback(new WinPrintHtmlImage(image));
+            e.Callback(image);
         }
     }
 
     private void OnStylesheetLoad(HtmlStylesheetLoadEventArgs e)
     {
-        // Resolve external stylesheets (<link rel="stylesheet">) from the MHTML archive if present,
-        // else the same way as images: local files relative to SourceFileName, data: URIs, and http(s).
-        byte[]? bytes = _archive?.Resolve(e.Src) ?? LoadResourceBytes(e.Src);
+        // Resolve external stylesheets (<link rel="stylesheet">) the same way as images.
+        byte[]? bytes = ResolveResource(e.Src);
         if (bytes is { Length: > 0 })
         {
             e.SetStyleSheet = Encoding.UTF8.GetString(bytes);
         }
     }
 
-    private byte[]? LoadResourceBytes(string? url)
+    private byte[]? ResolveResource(string? src)
     {
-        if (string.IsNullOrWhiteSpace(url))
+        // MHTML archive first, then a per-render cache so resources load at most once across pages.
+        byte[]? fromArchive = _archive?.Resolve(src);
+        if (fromArchive is not null)
+        {
+            return fromArchive;
+        }
+
+        if (string.IsNullOrEmpty(src))
         {
             return null;
         }
 
+        if (!_resourceCache.TryGetValue(src, out byte[]? bytes))
+        {
+            bytes = LoadResourceBytes(src);
+            _resourceCache[src] = bytes;
+        }
+
+        return bytes;
+    }
+
+    private byte[]? LoadResourceBytes(string url)
+    {
         byte[]? dataUri = TryDecodeDataUri(url);
         if (dataUri is not null)
         {
@@ -200,7 +220,13 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
             if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
-                return s_http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+                if (!AllowRemoteResources)
+                {
+                    Log.Debug("HtmlCte: skipping remote resource {url} (AllowRemoteResources is false).", url);
+                    return null;
+                }
+
+                return s_http.GetByteArrayAsync(url).ConfigureAwait(false).GetAwaiter().GetResult();
             }
 
             string path = ResolveLocalPath(url);
@@ -208,7 +234,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         }
         catch (Exception ex)
         {
-            Log.Debug(ex, "HtmlCte: failed to load image {url}", url);
+            Log.Debug(ex, "HtmlCte: failed to load resource {url}", url);
             return null;
         }
     }

@@ -49,18 +49,30 @@ internal sealed class WinPrintHtmlAdapter : RAdapter
 
     protected override RImage ConvertImageInt(object image)
     {
-        return image switch
-        {
-            WinPrintHtmlImage wrapped => wrapped,
-            IGraphicsImage gi => new WinPrintHtmlImage(gi),
-            _ => null!
-        };
+        return image is WinPrintHtmlImage wrapped
+            ? wrapped
+            : throw new NotSupportedException(
+                $"HtmlCte only supplies {nameof(WinPrintHtmlImage)} images; got {image?.GetType().Name ?? "null"}.");
     }
 
     protected override RImage? ImageFromStreamInt(Stream memoryStream)
     {
-        IGraphicsImage? image = Graphics?.LoadImage(memoryStream);
-        return image is null ? null : new WinPrintHtmlImage(image);
+        using var ms = new MemoryStream();
+        memoryStream.CopyTo(ms);
+        return CreateImage(ms.ToArray());
+    }
+
+    /// <summary>Creates a byte-backed image, probing intrinsic size with the current context; null on failure.</summary>
+    public WinPrintHtmlImage? CreateImage(byte[] bytes)
+    {
+        if (bytes.Length == 0 || Graphics is null)
+        {
+            return null;
+        }
+
+        using var ms = new MemoryStream(bytes);
+        using IGraphicsImage? probe = Graphics.LoadImage(ms);
+        return probe is null ? null : new WinPrintHtmlImage(bytes, probe.Width, probe.Height);
     }
 
     protected override RFont CreateFontInt(string family, double size, RFontStyle style)

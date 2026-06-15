@@ -154,8 +154,12 @@ internal sealed class WinPrintHtmlGraphics : RGraphics
 
     public override void DrawImage(RImage image, RRect destRect)
     {
-        _g.DrawImage(((WinPrintHtmlImage)image).Image, (float)destRect.X, (float)destRect.Y,
-            (float)destRect.Width, (float)destRect.Height);
+        IGraphicsImage? native = ((WinPrintHtmlImage)image).Decode(_g);
+        if (native is not null)
+        {
+            _g.DrawImage(native, (float)destRect.X, (float)destRect.Y,
+                (float)destRect.Width, (float)destRect.Height);
+        }
     }
 
     public override void DrawPath(RPen pen, RGraphicsPath path)
