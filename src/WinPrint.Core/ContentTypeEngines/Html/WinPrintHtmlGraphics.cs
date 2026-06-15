@@ -14,7 +14,6 @@ namespace WinPrint.Core.ContentTypeEngines.Html;
 /// </summary>
 internal sealed class WinPrintHtmlGraphics : RGraphics
 {
-    private readonly Stack<IGraphicsState> _clips = new();
     private readonly IGraphicsContext _g;
 
     public WinPrintHtmlGraphics(WinPrintHtmlAdapter adapter, IGraphicsContext g, RRect initialClip)
@@ -23,24 +22,21 @@ internal sealed class WinPrintHtmlGraphics : RGraphics
         _g = g;
     }
 
+    // HtmlRenderer pushes a clip per box (for overflow). We intentionally do NOT propagate these to the
+    // backend: page-boundary clipping is already provided by the host's page clip and the page-sized
+    // surface, and some backends (ImageSharp) only approximate text clipping by the run's origin point,
+    // which drops visible text at sub-pixel box edges. Overflow:hidden is therefore not clipped (a
+    // deliberate MVP trade-off for a print engine, where showing content is preferable to hiding it).
     public override void PopClip()
     {
-        if (_clips.Count > 0)
-        {
-            _g.Restore(_clips.Pop());
-        }
     }
 
     public override void PushClip(RRect rect)
     {
-        _clips.Push(_g.Save());
-        _g.SetClip(ToRect(rect));
     }
 
     public override void PushClipExclude(RRect rect)
     {
-        _clips.Push(_g.Save());
-        _g.ExcludeClip(ToRect(rect));
     }
 
     public override object? SetAntiAliasSmoothingMode()
@@ -200,10 +196,7 @@ internal sealed class WinPrintHtmlGraphics : RGraphics
 
     public override void Dispose()
     {
-        while (_clips.Count > 0)
-        {
-            _g.Restore(_clips.Pop());
-        }
+        // The IGraphicsContext is owned by the engine (HtmlCte); nothing to release here.
     }
 
     private IGraphicsFont Native(RFont font)
@@ -233,10 +226,5 @@ internal sealed class WinPrintHtmlGraphics : RGraphics
 
         using IGraphicsBrush native = _g.CreateSolidBrush(brush.Color);
         _g.FillRectangle(native, minX, minY, maxX - minX, maxY - minY);
-    }
-
-    private static GraphicsRectF ToRect(RRect rect)
-    {
-        return new GraphicsRectF((float)rect.X, (float)rect.Y, (float)rect.Width, (float)rect.Height);
     }
 }
