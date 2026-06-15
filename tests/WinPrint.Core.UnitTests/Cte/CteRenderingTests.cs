@@ -154,7 +154,7 @@ public class CteRenderingTests
     }
 
     [Fact]
-    public async Task MarkdownCte_RendersFlattenedText()
+    public async Task MarkdownCte_RendersRichMarkdown_Structurally()
     {
         var measure = new RecordingGraphicsContext();
         var cte = new MarkdownCte
@@ -166,12 +166,21 @@ public class CteRenderingTests
                 TabSpaces = 4
             },
             MeasurementContext = measure,
-            PageSize = new System.Drawing.SizeF(200, 200)
+            PageSize = new System.Drawing.SizeF(400, 4000)
         };
 
-        Assert.True(await cte.SetDocumentAsync("# Title\n\nHello world"));
-        int pages = await cte.RenderAsync(Dpi96, null);
+        const string md =
+            "# Title\n\n" +
+            "Some **bold** and *italic* and `code` and a [link](https://x.com).\n\n" +
+            "- one\n- two\n\n" +
+            "> a quote\n\n" +
+            "```\ncodeblock\n```\n\n" +
+            "![alt](img.png)\n\n" +
+            "---\n\n" +
+            "End.";
 
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
         Assert.True(pages >= 1);
 
         var paint = new RecordingGraphicsContext();
@@ -180,9 +189,127 @@ public class CteRenderingTests
             cte.PaintPage(paint, p);
         }
 
-        // Markdown markers are gone; the prose is rendered.
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("Title"));
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("Hello world"));
-        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("#"));
+        List<string> texts = [.. paint.DrawnStrings.Select(s => s.Text)];
+        string all = string.Concat(texts);
+
+        // Inline/prose content is rendered as styled runs (word by word).
+        foreach (string word in new[]
+                     { "Title", "bold", "italic", "code", "link", "one", "two", "quote", "codeblock", "End." })
+        {
+            Assert.Contains(word, texts);
+        }
+
+        // List bullet marker and image alt-text fallback are emitted.
+        Assert.Contains(texts, t => t.Contains('•'));
+        Assert.Contains(texts, t => t.Contains("🖼", StringComparison.Ordinal));
+
+        // Raw Markdown markers never reach the page.
+        Assert.DoesNotContain('#', all);
+        Assert.DoesNotContain('*', all);
+        Assert.DoesNotContain("```", all);
+
+        // Code background + blockquote bar are filled rectangles; the horizontal rule is a drawn line.
+        Assert.NotEmpty(paint.FilledRectangles);
+        Assert.NotEmpty(paint.DrawnLines);
+    }
+
+    [Fact]
+    public async Task MarkdownCte_CodeBlock_HonorsTabSpacesSetting()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 2 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000)
+        };
+
+        const string md = "```\n\tcode\n```\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // The leading tab expands to TabSpaces (2) spaces, not a hard-coded 4.
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "  code");
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("    code"));
+    }
+
+    [Fact]
+    public async Task MarkdownCte_WrapsOversizedToken_ToFitPageWidth()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            // 100pt page fits exactly 10 chars (CharWidth = 10).
+            PageSize = new System.Drawing.SizeF(100, 4000)
+        };
+
+        // A single token far wider than the page (no spaces to wrap at), e.g. a long URL/word.
+        string word = new('a', 25);
+        Assert.True(await cte.SetDocumentAsync(word));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        List<string> pieces = [.. paint.DrawnStrings.Select(s => s.Text).Where(t => t.Contains('a'))];
+        // Every painted piece fits the page (<= 10 chars) and together they reconstruct the word.
+        Assert.All(pieces, t => Assert.True(t.Length <= 10, $"piece '{t}' overflows the page width"));
+        Assert.Equal(word, string.Concat(pieces));
+    }
+
+    [Fact]
+    public async Task MarkdownCte_RendersTable_WithGridHeaderAndColumns()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(600, 4000)
+        };
+
+        const string md = "| Name | Role |\n|------|------|\n| Tig | Author |\n| You | Reader |\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        List<string> texts = [.. paint.DrawnStrings.Select(s => s.Text)];
+        foreach (string cell in new[] { "Name", "Role", "Tig", "Author", "You", "Reader" })
+        {
+            Assert.Contains(cell, texts);
+        }
+
+        // Gridlines (column verticals + row borders) are drawn, the header row is shaded, and the
+        // second column is positioned to the right of the first (distinct column x-offsets).
+        Assert.NotEmpty(paint.DrawnLines);
+        Assert.NotEmpty(paint.FilledRectangles);
+        float nameX = paint.DrawnStrings.First(s => s.Text == "Name").X;
+        float roleX = paint.DrawnStrings.First(s => s.Text == "Role").X;
+        Assert.True(roleX > nameX, "Second column should be right of the first.");
     }
 }
