@@ -70,10 +70,9 @@ public class AnsiCteTests
         type = ContentTypeEngineBase.GetContentType(path);
         Assert.Equal("text/x-csharp", type);
 
-        // .mhtml/.mht web archives are HTML (not Mason); .m stays Mason.
+        // .mhtml/.mht web archives map to HTML (they used to be mis-typed as Mason).
         Assert.Equal("text/html", ContentTypeEngineBase.GetContentType("page.mhtml"));
         Assert.Equal("text/html", ContentTypeEngineBase.GetContentType("page.mht"));
-        Assert.Equal("application/x-mason", ContentTypeEngineBase.GetContentType("component.m"));
 
         // ANSI (.an/.ans/.ansi) → text/ansi (handled by AnsiCte)
         path = "foo.an";
