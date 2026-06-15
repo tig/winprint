@@ -169,7 +169,11 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
     {
         try
         {
-            return new SystemDrawingImage(Image.FromStream(stream));
+            // Image.FromStream keeps a reference to the source stream and reads pixels lazily, so it
+            // would fault once the caller disposes/rewinds the stream. Copy into an owned Bitmap so the
+            // returned image is fully decoded and independent of the stream.
+            using var decoded = Image.FromStream(stream);
+            return new SystemDrawingImage(new Bitmap(decoded));
         }
         catch (Exception)
         {

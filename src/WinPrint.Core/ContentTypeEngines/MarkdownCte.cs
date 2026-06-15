@@ -152,12 +152,6 @@ public class MarkdownCte : ContentTypeEngineBase
                 continue;
             }
 
-            if (line.Image is { } image)
-            {
-                PaintImage(g, line, image);
-                continue;
-            }
-
             if (line.CodeBackground)
             {
                 g.FillRectangle(codeBg, line.Indent - _indentStep * 0.3f, line.Y,
@@ -167,6 +161,13 @@ public class MarkdownCte : ContentTypeEngineBase
             if (line.QuoteBar)
             {
                 g.FillRectangle(quoteBar, line.Indent - _indentStep * 0.6f, line.Y, _baseSizePx * 0.22f, line.Height);
+            }
+
+            // After block decoration (so an image inside a blockquote still gets its gutter bar).
+            if (line.Image is { } image)
+            {
+                PaintImage(g, line, image);
+                continue;
             }
 
             if (line.Rule)
@@ -219,17 +220,24 @@ public class MarkdownCte : ContentTypeEngineBase
 
     private void PaintImage(IGraphicsContext g, MarkdownLine line, MarkdownImage image)
     {
-        if (!_imageCache.TryGetValue(image.CacheKey, out byte[]? bytes) || bytes is not { Length: > 0 })
+        if (_imageCache.TryGetValue(image.CacheKey, out byte[]? bytes) && bytes is { Length: > 0 })
         {
-            return;
+            using var ms = new MemoryStream(bytes);
+            using IGraphicsImage? decoded = g.LoadImage(ms);
+            if (decoded is not null)
+            {
+                g.DrawImage(decoded, line.Indent, line.Y, image.Width, image.Height);
+                return;
+            }
         }
 
-        using var ms = new MemoryStream(bytes);
-        using IGraphicsImage? decoded = g.LoadImage(ms);
-        if (decoded is not null)
-        {
-            g.DrawImage(decoded, line.Indent, line.Y, image.Width, image.Height);
-        }
+        // The image decoded during reflow but not on this paint context (e.g. a backend format
+        // mismatch). Fall back to alt text so the page never shows a blank hole.
+        GraphicsFontUnit unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
+        float basePt = g.IsDisplayUnit ? ContentSettings!.Font.Size : ContentSettings!.Font.Size / 72F * 96F;
+        using IGraphicsFont font = g.CreateFont(ContentSettings.Font.Family, basePt, GraphicsFontStyle.Italic, unit);
+        using IGraphicsBrush brush = g.CreateSolidBrush(QuoteColor);
+        g.DrawString($"🖼 {image.AltText}", font, brush, line.Indent, line.Y, GraphicsStringFormat);
     }
 
     // ---- AST walk ---------------------------------------------------------------------------------
@@ -437,7 +445,7 @@ public class MarkdownCte : ContentTypeEngineBase
                 Height = drawHeight,
                 SpaceBefore = _baseLineHeight * 0.5f,
                 QuoteBar = quoteDepth > 0,
-                Image = new MarkdownImage { CacheKey = url, Width = drawWidth, Height = drawHeight }
+                Image = new MarkdownImage { CacheKey = url, AltText = alt, Width = drawWidth, Height = drawHeight }
             });
         }
     }

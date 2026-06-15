@@ -251,6 +251,64 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task MarkdownCte_RendersImage_InBlockquote_DrawsQuoteBar()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000)
+        };
+
+        // An image alone inside a blockquote: it must get the blockquote gutter bar like quoted text.
+        const string md = "> ![logo](data:image/png;base64,iVBORw0KGgo=)\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // The image is drawn AND the blockquote bar (a filled rect left of the image) is drawn.
+        Assert.Single(paint.DrawnImages);
+        Assert.NotEmpty(paint.FilledRectangles);
+    }
+
+    [Fact]
+    public async Task MarkdownCte_ImageDecodeFailsAtPaint_FallsBackToAltText()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000)
+        };
+
+        // Decodes fine during reflow (an image line is emitted)...
+        const string md = "![a diagram](data:image/png;base64,iVBORw0KGgo=)\n";
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        // ...but the paint context fails to decode: the page must not be left blank.
+        var paint = new RecordingGraphicsContext(failImageLoad: true);
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        Assert.Empty(paint.DrawnImages);
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("🖼", StringComparison.Ordinal));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("diagram", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task MarkdownCte_RendersImage_MissingLocalFile_FallsBackToAltText()
     {
         var measure = new RecordingGraphicsContext();

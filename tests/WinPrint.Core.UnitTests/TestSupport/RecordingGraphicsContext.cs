@@ -17,12 +17,16 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
     private readonly IGraphicsBrush _brush = new RecordingResource();
     private readonly IGraphicsPen _pen = new RecordingResource();
 
-    public RecordingGraphicsContext(float charWidth = 10f, float lineHeight = 20f, float dpi = 96f)
+    private readonly bool _failImageLoad;
+
+    public RecordingGraphicsContext(float charWidth = 10f, float lineHeight = 20f, float dpi = 96f,
+        bool failImageLoad = false)
     {
         CharWidth = charWidth;
         LineHeight = lineHeight;
         DpiX = dpi;
         DpiY = dpi;
+        _failImageLoad = failImageLoad;
     }
 
     public float CharWidth { get; }
@@ -158,14 +162,15 @@ public sealed class RecordingGraphicsContext : IGraphicsContext
 
     /// <summary>
     ///     Returns a <see cref="RecordingImage" /> with deterministic 120×60 intrinsic dimensions for
-    ///     any non-empty stream, or <see langword="null" /> for an empty stream (mirrors a decode failure,
-    ///     so alt-text fallback can be exercised).
+    ///     any non-empty stream, or <see langword="null" /> for an empty stream — or always when the
+    ///     context was constructed with <c>failImageLoad: true</c> (mirrors a decode failure, so
+    ///     alt-text fallback can be exercised even when bytes are present).
     /// </summary>
     public IGraphicsImage? LoadImage(Stream stream)
     {
         using var ms = new MemoryStream();
         stream.CopyTo(ms);
-        return ms.Length == 0 ? null : new RecordingImage(120f, 60f);
+        return _failImageLoad || ms.Length == 0 ? null : new RecordingImage(120f, 60f);
     }
 
     public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)

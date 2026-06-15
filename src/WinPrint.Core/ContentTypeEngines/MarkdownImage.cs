@@ -14,6 +14,9 @@ public sealed class MarkdownImage
     /// <summary>Source URL/path; the key into the engine's decoded-bytes cache.</summary>
     public string CacheKey { get; set; } = string.Empty;
 
+    /// <summary>Alt text, painted as a fallback if the image fails to decode on the paint context.</summary>
+    public string AltText { get; set; } = string.Empty;
+
     /// <summary>Draw width in pixels (already scaled to fit the page).</summary>
     public float Width { get; set; }
 
