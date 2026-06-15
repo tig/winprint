@@ -40,6 +40,23 @@ public class CteRenderingTests
 
     private static PrintResolution Dpi96 => new() { X = 96, Y = 96 };
 
+    private static string FindTestFile(string name)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            string candidate = Path.Combine(dir.FullName, "testfiles", name);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new FileNotFoundException($"Could not locate testfiles/{name} from {AppContext.BaseDirectory}");
+    }
+
     [Fact]
     public async Task TextCte_CountsPages_FromLinesPerPage()
     {
@@ -119,6 +136,112 @@ public class CteRenderingTests
         Assert.Contains(new RecordedString("abc", 40, 0), paint.DrawnStrings);
         // The line-number separator is drawn as a vertical line in the gutter.
         Assert.NotEmpty(paint.DrawnLines);
+    }
+
+    [Fact]
+    public async Task AnsiCte_DecodesAnsi_RendersTextWithoutEscapeCodes()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new AnsiCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                LineNumbers = false,
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 4000)
+        };
+
+        // SGR sequences: red "Hello", reset, space, bold "World", reset.
+        const string ansi = "\u001b[31mHello\u001b[0m \u001b[1mWorld\u001b[0m";
+
+        Assert.True(await cte.SetDocumentAsync(ansi));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        // The decoded glyphs are painted; the raw escape sequences never reach the page.
+        Assert.Contains("Hello", all);
+        Assert.Contains("World", all);
+        Assert.DoesNotContain('\u001b', all);
+        Assert.DoesNotContain("[31m", all, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AnsiCte_RendersLineNumbers_WhenEnabled()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new AnsiCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                LineNumbers = true,
+                LineNumberSeparator = true,
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 4000)
+        };
+
+        Assert.True(await cte.SetDocumentAsync("line one\nline two"));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // Line numbers "1" and "2" are drawn in the gutter, plus the separator line.
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "1");
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "2");
+        Assert.NotEmpty(paint.DrawnLines);
+    }
+
+    [Theory]
+    [InlineData("Program.cs.an")]
+    [InlineData("Fixed Pitch Alignment.c.ans")]
+    public async Task AnsiCte_RendersRealAnsiTestFile(string fileName)
+    {
+        string doc = await File.ReadAllTextAsync(FindTestFile(fileName));
+
+        var measure = new RecordingGraphicsContext();
+        var cte = new AnsiCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                LineNumbers = true,
+                LineNumberSeparator = true,
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 1100)
+        };
+
+        Assert.True(await cte.SetDocumentAsync(doc));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // The real Pygments-style ANSI file decodes to visible glyphs; raw escape codes never paint.
+        Assert.NotEmpty(paint.DrawnStrings);
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        Assert.DoesNotContain('\u001b', all);
     }
 
     [Fact]
@@ -206,7 +329,7 @@ public class CteRenderingTests
         // Raw Markdown markers never reach the page.
         Assert.DoesNotContain('#', all);
         Assert.DoesNotContain('*', all);
-        Assert.DoesNotContain("```", all);
+        Assert.DoesNotContain('\u001b', all);
 
         // Code background + blockquote bar are filled rectangles; the horizontal rule is a drawn line.
         Assert.NotEmpty(paint.FilledRectangles);

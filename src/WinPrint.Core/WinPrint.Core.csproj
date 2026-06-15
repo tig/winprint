@@ -66,6 +66,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- Vendored managed ANSI/VT100 decoder used by AnsiCte (text/ansi). -->
+        <ProjectReference Include="..\libvt100\libvt100.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="Markdig" Version="1.2.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
