@@ -74,6 +74,16 @@ public class EsolangHighlightTests
     }
 
     [Fact]
+    public async Task EsolangExtension_HonorsExplicitContentTypeOverride()
+    {
+        // A .bf file whose content type was explicitly overridden to plain text must NOT be force-
+        // highlighted as Brainfuck by the extension — the explicit override wins, so it stays grayscale.
+        int chromatic = await ChromaticPixelsAsync("text/plain", "Plain Text", "hello.bf", BrainfuckHelloWorld);
+        Assert.True(chromatic == 0,
+            $"Explicit text/plain override should not be highlighted as Brainfuck; found {chromatic} colored pixels.");
+    }
+
+    [Fact]
     public async Task Intercal_IsHighlighted()
     {
         int highlighted =

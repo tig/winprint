@@ -273,14 +273,16 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     {
         string? fileExtension = string.IsNullOrEmpty(_filePath) ? null : Path.GetExtension(_filePath);
 
-        // WinPrint's own grammars (Brainfuck, INTERCAL) take precedence — TextMateSharp.Grammars
-        // doesn't bundle them, so the standard resolution below would never find them.
-        string? customScope = WinPrintGrammars.ResolveScope(fileExtension, ContentType, Language);
-        if (customScope is not null)
+        // 1. WinPrint's own grammars (Brainfuck, INTERCAL) resolved from the *content type/language* —
+        // this is the normal path (LoadFileAsync sets ContentType from the extension) and, crucially,
+        // honors an explicit --content-type / fileTypeMapping override before the extension is consulted.
+        string? customByType = WinPrintGrammars.ResolveScope(null, ContentType, Language);
+        if (customByType is not null)
         {
-            return customScope;
+            return customByType;
         }
 
+        // 2. Bundled grammar by file extension.
         if (!string.IsNullOrEmpty(fileExtension))
         {
             string? scope = options.GetScopeByExtension(fileExtension);
@@ -290,6 +292,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             }
         }
 
+        // 3. Bundled grammar by content type / language.
         List<Language>? languages = options.GetAvailableLanguages();
         string? normalizedContentType = Normalize(ContentType);
         string? normalizedLanguage = Normalize(Language);
@@ -298,8 +301,16 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             Matches(l.Id, normalizedContentType) ||
             (l.Aliases?.Any(a => Matches(a, normalizedLanguage) || Matches(a, normalizedContentType)) ?? false) ||
             (l.MimeTypes?.Any(m => Matches(m, normalizedContentType)) ?? false));
+        if (match is not null)
+        {
+            return options.GetScopeByLanguageId(match.Id);
+        }
 
-        return match is null ? null : options.GetScopeByLanguageId(match.Id);
+        // 4. Esolang fallback by extension — only when no explicit content type/language was given, so an
+        // override (even to plain text or another grammar) is never overridden by the file extension.
+        return string.IsNullOrEmpty(ContentType) && string.IsNullOrEmpty(Language)
+            ? WinPrintGrammars.ResolveScope(fileExtension, null, null)
+            : null;
     }
 
     private static bool Matches(string? value, string? normalized)
