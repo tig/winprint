@@ -299,10 +299,11 @@ public class MarkdownCte : ContentTypeEngineBase
         float charWidth = Math.Max(1f, Measure(g, "M", font).Width);
         int maxChars = Math.Max(8, (int)Math.Floor((PageSize.Width - indent) / charWidth));
 
+        string tab = new(' ', Math.Max(0, ContentSettings!.TabSpaces));
         bool first = true;
         for (int n = 0; n < code.Lines.Count; n++)
         {
-            string raw = code.Lines.Lines[n].Slice.ToString().Replace("\t", "    ");
+            string raw = code.Lines.Lines[n].Slice.ToString().Replace("\t", tab);
             // char-wrap long code lines so they don't clip
             for (int start = 0; start == 0 || start < raw.Length; start += maxChars)
             {
@@ -665,6 +666,43 @@ public class MarkdownCte : ContentTypeEngineBase
                 Flush();
             }
 
+            // A single token wider than a full empty line (e.g. a long URL) can't be placed whole
+            // without clipping; hard-split it character-by-character to fit, mirroring TextCte. The 1px
+            // tolerance avoids splitting at exact-fit column boundaries (sub-pixel measurement drift).
+            if (w > maxWidth - line.Indent + 1f && tok.Text.Length > 1)
+            {
+                string remaining = tok.Text;
+                while (remaining.Length > 0)
+                {
+                    float curAvail = maxWidth - line.Indent - x;
+                    int fit = FitChars(g, remaining, font, curAvail);
+                    if (fit <= 0)
+                    {
+                        if (any)
+                        {
+                            Flush();
+                            continue; // retry on a fresh line
+                        }
+
+                        fit = 1; // guarantee progress on an empty line
+                    }
+
+                    string piece = remaining[..fit];
+                    line.Runs.Add(new MarkdownRun
+                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color });
+                    x += Measure(g, piece, font).Width;
+                    maxHeight = Math.Max(maxHeight, h);
+                    any = true;
+                    remaining = remaining[fit..];
+                    if (remaining.Length > 0)
+                    {
+                        Flush();
+                    }
+                }
+
+                continue;
+            }
+
             line.Runs.Add(tok);
             x += w;
             maxHeight = Math.Max(maxHeight, h);
@@ -730,6 +768,19 @@ public class MarkdownCte : ContentTypeEngineBase
     {
         var proposed = new GraphicsSizeF(PageSize.Width, _baseLineHeight * 4f);
         return g.MeasureString(text, font, proposed, GraphicsStringFormat, out _, out _);
+    }
+
+    /// <summary>Longest prefix of <paramref name="text" /> (in characters) that fits <paramref name="width" />.</summary>
+    private int FitChars(IGraphicsContext g, string text, IGraphicsFont font, float width)
+    {
+        if (width <= 0)
+        {
+            return 0;
+        }
+
+        var proposed = new GraphicsSizeF(width, _baseLineHeight * 4f);
+        g.MeasureString(text, font, proposed, GraphicsStringFormat, out int charsFitted, out _);
+        return Math.Min(charsFitted, text.Length);
     }
 
     private static float HeadingScale(int level)
