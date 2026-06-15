@@ -43,6 +43,12 @@ public partial class MainPage : ContentPage
         // native UIMenuBuilder already adds (and merges correctly into the system File
         // menu). Drop the MAUI copy here so the Mac shows a single File menu.
         MenuBarItems.Clear();
+
+        // The native File ▸ Print… item is greyed out when PrintCommand can't execute (see the
+        // AppDelegate's BuildMenu). Rebuild the menu whenever that changes — e.g. a file loads —
+        // so the item enables/disables in step with CanPrint.
+        _viewModel.PrintCommand.CanExecuteChanged += (_, _) =>
+            MainThread.BeginInvokeOnMainThread(() => UIKit.UIMenuSystem.MainSystem.SetNeedsRebuild());
 #endif
 
         BindingContext = _viewModel;
