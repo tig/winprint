@@ -74,6 +74,11 @@ public class AnsiCteTests
         Assert.Equal("text/html", ContentTypeEngineBase.GetContentType("page.mhtml"));
         Assert.Equal("text/html", ContentTypeEngineBase.GetContentType("page.mht"));
 
+        // Esoteric languages with WinPrint-bundled TextMate grammars.
+        Assert.Equal("application/x-brainfuck", ContentTypeEngineBase.GetContentType("hello.bf"));
+        Assert.Equal("application/x-intercal", ContentTypeEngineBase.GetContentType("hello.intercal"));
+        Assert.Equal("application/x-intercal", ContentTypeEngineBase.GetContentType("hello.ick"));
+
         // ANSI (.an/.ans/.ansi) → text/ansi (handled by AnsiCte)
         path = "foo.an";
         type = ContentTypeEngineBase.GetContentType(path);

@@ -17,6 +17,17 @@
     },
     {
       "aliases": [
+        "intercal"
+      ],
+      "extensions": [
+        "*.intercal",
+        "*.ick"
+      ],
+      "id": "application/x-intercal",
+      "title": "INTERCAL"
+    },
+    {
+      "aliases": [
         "less"
       ],
       "extensions": [

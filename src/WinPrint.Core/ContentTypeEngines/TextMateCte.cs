@@ -263,7 +263,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     {
         ThemeName theme = ParseTheme(ContentSettings?.Style);
         var options = new RegistryOptions(theme);
-        _registry = new Registry(options);
+        _registry = new Registry(new WinPrintRegistryOptions(options));
         _resolvedScopeName = ResolveScopeName(options);
         _grammar = string.IsNullOrEmpty(_resolvedScopeName) ? null : _registry.LoadGrammar(_resolvedScopeName);
         Log.Debug("TextMate grammar: {scope}", _resolvedScopeName ?? "(plain text)");
@@ -271,16 +271,22 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
 
     private string? ResolveScopeName(RegistryOptions options)
     {
-        if (!string.IsNullOrEmpty(_filePath))
+        string? fileExtension = string.IsNullOrEmpty(_filePath) ? null : Path.GetExtension(_filePath);
+
+        // WinPrint's own grammars (Brainfuck, INTERCAL) take precedence — TextMateSharp.Grammars
+        // doesn't bundle them, so the standard resolution below would never find them.
+        string? customScope = WinPrintGrammars.ResolveScope(fileExtension, ContentType, Language);
+        if (customScope is not null)
         {
-            string extension = Path.GetExtension(_filePath);
-            if (!string.IsNullOrEmpty(extension))
+            return customScope;
+        }
+
+        if (!string.IsNullOrEmpty(fileExtension))
+        {
+            string? scope = options.GetScopeByExtension(fileExtension);
+            if (!string.IsNullOrEmpty(scope))
             {
-                string? scope = options.GetScopeByExtension(extension);
-                if (!string.IsNullOrEmpty(scope))
-                {
-                    return scope;
-                }
+                return scope;
             }
         }
 

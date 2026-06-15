@@ -52,6 +52,7 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\FileTypeMapping.json" />
+        <EmbeddedResource Include="Resources\Grammars\*.tmLanguage.json" />
     </ItemGroup>
 
     <ItemGroup>

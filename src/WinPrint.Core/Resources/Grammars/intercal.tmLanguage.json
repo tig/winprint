@@ -1,0 +1,15 @@
+{
+  "name": "INTERCAL",
+  "scopeName": "source.intercal",
+  "patterns": [
+    { "name": "keyword.other.politeness.intercal", "match": "(?i)\\bPLEASE\\b" },
+    {
+      "name": "keyword.control.intercal",
+      "match": "(?i)\\b(DO|NOT|NEXT|RESUME|FORGET|STASH|RETRIEVE|IGNORE|REMEMBER|ABSTAIN\\s+FROM|REINSTATE|COME\\s+FROM|READ\\s+OUT|WRITE\\s+IN|GIVE\\s+UP)\\b"
+    },
+    { "name": "keyword.operator.intercal", "match": "N'T|<-|~|\\?|\\$|¢|\\bV\\b|&" },
+    { "name": "entity.name.label.intercal", "match": "\\([0-9]+\\)" },
+    { "name": "constant.numeric.intercal", "match": "#[0-9]+" },
+    { "name": "variable.other.intercal", "match": "[.:,;][0-9]+" }
+  ]
+}
