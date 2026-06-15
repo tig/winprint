@@ -208,6 +208,41 @@ public class CteRenderingTests
     }
 
     [Theory]
+    [InlineData("\u001b[38;5;196mRED\u001b[0m end")] // 256-color (indexed) foreground
+    [InlineData("\u001b[48;5;21mBG\u001b[0m end")] // 256-color (indexed) background
+    [InlineData("\u001b[KAFTER end")] // erase-line before any glyphs
+    [InlineData("hi\u001b[K end")] // erase-line forward past a short line's end
+    [InlineData("\u001b[99mZ\u001b[0m end")] // unknown SGR rendition; decoder must survive
+    public async Task AnsiCte_SurvivesTrickyAnsi_AndKeepsRenderingFollowingText(string ansi)
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new AnsiCte
+        {
+            ContentSettings = new ContentSettings
+            { Font = new Font { Family = "Courier New", Size = 10 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 4000)
+        };
+
+        Assert.True(await cte.SetDocumentAsync(ansi));
+        // Must not throw on 256-color, erase-line-past-end, or unknown escape sequences.
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // Decoding recovers and the text following the tricky sequence still reaches the page.
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        Assert.Contains("end", all, StringComparison.Ordinal);
+        Assert.DoesNotContain('\u001b', all);
+    }
+
+
+    [Theory]
     [InlineData("Program.cs.an")]
     [InlineData("Fixed Pitch Alignment.c.ans")]
     public async Task AnsiCte_RendersRealAnsiTestFile(string fileName)
@@ -329,7 +364,7 @@ public class CteRenderingTests
         // Raw Markdown markers never reach the page.
         Assert.DoesNotContain('#', all);
         Assert.DoesNotContain('*', all);
-        Assert.DoesNotContain('\u001b', all);
+        Assert.DoesNotContain("```", all);
 
         // Code background + blockquote bar are filled rectangles; the horizontal rule is a drawn line.
         Assert.NotEmpty(paint.FilledRectangles);

@@ -17,12 +17,15 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     <see cref="DynamicScreen" /> (lines of styled <see cref="DynamicScreen.Run" />s) and painting
 ///     through the cross-platform <see cref="IGraphicsContext" /> pipeline: per-run foreground color and
 ///     bold/italic, with optional line numbers. libvt100 owns the line/word wrapping (unlike
-///     <see cref="TextCte" />, which wraps itself).
+///     <see cref="TextCte" />, which wraps itself). Selected for <c>text/ansi</c>; <c>text/plain</c> is
+///     also declared (registry parity with the historical engine) but resolves to the default CTE.
 ///     NOTE: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 /// </summary>
 public class AnsiCte : ContentTypeEngineBase, IDisposable
 {
-    private static readonly string[] s_supportedContentTypes = ["text/ansi"];
+    // text/plain is listed (as the historical AnsiCte did) so the engine is in the registry for it,
+    // but text/plain resolves to the default CTE (TextMate); AnsiCte is selected for text/ansi.
+    private static readonly string[] s_supportedContentTypes = ["text/plain", "text/ansi"];
 
     private GraphicsSizeF _charSize;
     private bool _disposed;
@@ -129,7 +132,16 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable
             byte[] bytes = vt100.Encoding.GetBytes(Document);
             if (bytes is { Length: > 0 })
             {
-                vt100.Input(bytes);
+                try
+                {
+                    vt100.Input(bytes);
+                }
+                catch (Exception ex)
+                {
+                    // The decoder is meant to survive bad data on its own; this is a last-resort guard so
+                    // a malformed ANSI file degrades to a partial render instead of aborting reflow.
+                    Log.Warning(ex, "AnsiCte: ANSI decode aborted early; rendering partial output.");
+                }
             }
 
             int n = (int)Math.Ceiling(_screen.Lines.Count / (double)_linesPerPage);

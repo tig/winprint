@@ -1015,7 +1015,7 @@
         "*.ansi"
       ],
       "id": "text/ansi",
-      "title": "ANSI"
+      "title": "ANSI Text"
     },
     {
       "aliases": [

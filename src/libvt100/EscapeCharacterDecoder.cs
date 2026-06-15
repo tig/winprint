@@ -196,9 +196,18 @@ namespace libvt100 {
                 String parameter = new String(parameterChars);
 
                 byte command = m_commandBuffer[end];
-                // Eat exceptions thrown by ProcessCommand
+                // Eat exceptions thrown by ProcessCommand so the decoder survives invalid/unsupported
+                // sequences and keeps processing subsequent bytes (per the IDecoder contract).
                 try {
                     ProcessCommand(command, parameter);
+                }
+                catch (InvalidCommandException) {
+                }
+                catch (InvalidParameterException) {
+                }
+                catch (ArgumentException) {
+                }
+                catch (IndexOutOfRangeException) {
                 }
                 finally {
                     // We're done procesing the command. 

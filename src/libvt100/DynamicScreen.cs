@@ -483,24 +483,33 @@ namespace libvt100 {
         }
 
         void IAnsiDecoderClient.ClearLine(IAnsiDecoder _sender, ClearDirection _direction) {
+            // Cells past the current line length are not allocated (the indexer getter returns null);
+            // erasing them is a no-op, so guard against null instead of throwing.
             switch (_direction) {
                 case ClearDirection.Forward:
                     for (int x = _cursorPosition.X; x < Width; ++x) {
-                        this[x, _cursorPosition.Y].Char = ' ';
+                        ClearCell(x);
                     }
                     break;
 
                 case ClearDirection.Backward:
                     for (int x = _cursorPosition.X; x >= 0; --x) {
-                        this[x, _cursorPosition.Y].Char = ' ';
+                        ClearCell(x);
                     }
                     break;
 
                 case ClearDirection.Both:
                     for (int x = 0; x < Width; ++x) {
-                        this[x, _cursorPosition.Y].Char = ' ';
+                        ClearCell(x);
                     }
                     break;
+            }
+        }
+
+        private void ClearCell(int x) {
+            Character cell = this[x, _cursorPosition.Y];
+            if (cell != null) {
+                cell.Char = ' ';
             }
         }
 
@@ -692,30 +701,99 @@ namespace libvt100 {
                         break;
 
                     case GraphicRendition.ForegroundColor:
-                        // ESC[ 38;2;⟨r⟩;⟨g⟩;⟨b⟩ m Select RGB foreground color
-                        /// Next arguments are 5;n or 2;r;g;b, see colors
-                        /// _commands is [38, 2, r, g, b, ...] 
-                        _currentAttributes.ForegroundColor = Color.FromArgb((int)_commands[2], (int)_commands[3], (int)_commands[4]);
-                        i += 4;
+                        // ESC[38;2;r;g;b (truecolor) or ESC[38;5;n (256-color indexed).
+                        if (TryParseExtendedColor(_commands, ref i, out Color fg)) {
+                            _currentAttributes.ForegroundColor = fg;
+                        }
                         break;
 
                     case GraphicRendition.BackgroundColor:
-                        // ESC[ 48;2;⟨r⟩;⟨g⟩;⟨b⟩ m Select RGB background color
-                        /// Next arguments are 5;n or 2;r;g;b, see colors
-                        /// _commands is [38, 2, r, g, b, ...] 
-                        _currentAttributes.BackgroundColor = Color.FromArgb((int)_commands[2], (int)_commands[3], (int)_commands[4]);
-                        i += 4;
+                        // ESC[48;2;r;g;b (truecolor) or ESC[48;5;n (256-color indexed).
+                        if (TryParseExtendedColor(_commands, ref i, out Color bg)) {
+                            _currentAttributes.BackgroundColor = bg;
+                        }
                         break;
 
                     default:
-
-                        throw new Exception("Unknown rendition command");
+                        // Unknown/unsupported rendition: ignore so decoding survives (per IDecoder contract).
+                        break;
                 }
 
             }
 
             // Indicate we need to start a new run if more content follows this
             _newRun = true;
+        }
+
+        // Parses an SGR extended-color operand at commands[i] (38 or 48): "2;r;g;b" (truecolor) or
+        // "5;n" (256-color indexed). Advances i past the consumed operands and returns false (leaving
+        // the color unchanged) for malformed/short sequences rather than throwing.
+        private static bool TryParseExtendedColor(GraphicRendition[] commands, ref int i, out Color color) {
+            color = Color.Black;
+            if (i + 1 >= commands.Length) {
+                return false;
+            }
+
+            int mode = (int)commands[i + 1];
+            if (mode == 2) {
+                if (i + 4 >= commands.Length) {
+                    i = commands.Length;
+                    return false;
+                }
+
+                color = Color.FromArgb((int)commands[i + 2], (int)commands[i + 3], (int)commands[i + 4]);
+                i += 4;
+                return true;
+            }
+
+            if (mode == 5) {
+                if (i + 2 >= commands.Length) {
+                    i = commands.Length;
+                    return false;
+                }
+
+                color = Xterm256ToColor((int)commands[i + 2]);
+                i += 2;
+                return true;
+            }
+
+            return false;
+        }
+
+        // Maps an xterm 256-color palette index to an RGB color: 0-15 system, 16-231 6x6x6 cube,
+        // 232-255 grayscale ramp.
+        private static Color Xterm256ToColor(int index) {
+            if (index < 0) {
+                index = 0;
+            }
+
+            if (index > 255) {
+                index = 255;
+            }
+
+            int[] basic16 = {
+                0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xC0C0C0,
+                0x808080, 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF
+            };
+            if (index < 16) {
+                int rgb = basic16[index];
+                return Color.FromArgb((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
+            }
+
+            if (index < 232) {
+                int n = index - 16;
+                int r = n / 36;
+                int g = (n % 36) / 6;
+                int b = n % 6;
+                return Color.FromArgb(CubeComponent(r), CubeComponent(g), CubeComponent(b));
+            }
+
+            int gray = 8 + (index - 232) * 10;
+            return Color.FromArgb(gray, gray, gray);
+        }
+
+        private static int CubeComponent(int c) {
+            return c == 0 ? 0 : 55 + c * 40;
         }
         #endregion
 

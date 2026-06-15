@@ -23,6 +23,15 @@ public class InvalidParameterException : InvalidByteException
          return m_parameter;
       }
    }
+
+   // Correctly-spelled alias for the misspelled Paramter property (kept for compatibility).
+   public string Parameter
+   {
+      get
+      {
+         return m_parameter;
+      }
+   }
    
    public InvalidParameterException( byte _command, string _parameter )
       : base( _command, String.Format("Invalid parameter for command {0:X2} '{1}', parameter = \"{2}\"", _command, (char) _command, _parameter ) )

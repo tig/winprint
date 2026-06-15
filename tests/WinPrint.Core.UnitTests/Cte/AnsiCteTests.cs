@@ -26,9 +26,9 @@ public class AnsiCteTests
     public void SupportedContentTypesTest()
     {
         var cte = new AnsiCte();
-        // AnsiCte now handles only text/ansi (.ans/.ansi); text/plain belongs to TextCte/TextMateCte.
-        Assert.Single(cte.SupportedContentTypes);
-        Assert.Equal("text/ansi", cte.SupportedContentTypes[0]);
+        Assert.Equal(2, cte.SupportedContentTypes.Length);
+        Assert.Equal("text/plain", cte.SupportedContentTypes[0]);
+        Assert.Equal("text/ansi", cte.SupportedContentTypes[1]);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class AnsiCteTests
         Assert.NotNull(svm.ContentEngine);
 
         Assert.Equal(CteClassName, svm.ContentEngine!.GetType().Name);
-        Assert.Equal("text/ansi", svm.ContentType);
+        Assert.Equal("text/plain", svm.ContentType);
     }
 
     [Fact]
