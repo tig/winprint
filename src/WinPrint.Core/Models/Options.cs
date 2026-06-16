@@ -56,9 +56,9 @@ public class Options : ModelBase
     public bool CountPages { get; set; }
 
     [SafeForTelemetry]
-    [Option('e', "content-type-engine", Default = "", Required = false,
+    [Option('e', "content-type", Default = "", Required = false,
         HelpText =
-            "Name of the Content Type Engine to use for rendering (\"text/plain\", \"text/html\", or \"<language>\".")]
+            "Content type engine / language override for rendering (\"text/plain\", \"text/html\", or \"<language>\").")]
     public string? ContentType { get; set; }
 
     // App Options
