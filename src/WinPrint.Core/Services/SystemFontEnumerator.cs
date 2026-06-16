@@ -58,6 +58,10 @@ public static class SystemFontEnumerator
     ///     ("i") and a wide glyph ("W"). Skia does not surface the OpenType fixed-pitch flag in its managed
     ///     API, but in a true monospace font every glyph shares one advance, so the two widths are equal.
     /// </summary>
+    // ASCII letters whose advances must all match for a monospace Latin face. A mix of narrow ("i", "l")
+    // and wide ("W", "M") glyphs so a proportional font is clearly distinguished.
+    private const string ProbeChars = "iWlM";
+
     private static bool IsFixedPitch(string family)
     {
         try
@@ -68,13 +72,32 @@ public static class SystemFontEnumerator
                 return false;
             }
 
-            using var font = new SKFont(typeface, 64f);
-            float narrow = font.MeasureText("i");
-            float wide = font.MeasureText("W");
+            // The font must actually contain these Latin glyphs. Arabic/Hebrew/symbol/emoji faces (Al Bayan,
+            // Arial Hebrew, Apple Braille, Apple Color Emoji, …) lack them, so every probe char falls back to
+            // the same .notdef advance and the width test below would wrongly report "monospace".
+            ushort[] glyphs = typeface.GetGlyphs(ProbeChars);
+            if (glyphs.Length != ProbeChars.Length || Array.IndexOf(glyphs, (ushort)0) >= 0)
+            {
+                return false;
+            }
 
-            // Both glyphs must be present (non-zero) and advance identically. A small tolerance absorbs
-            // sub-pixel rounding from hinting/subpixel positioning.
-            return narrow > 0f && Math.Abs(narrow - wide) < 0.01f;
+            using var font = new SKFont(typeface, 64f);
+            float first = font.MeasureText(ProbeChars.AsSpan(0, 1));
+            if (first <= 0f)
+            {
+                return false;
+            }
+
+            for (int i = 1; i < ProbeChars.Length; i++)
+            {
+                // A small tolerance absorbs sub-pixel rounding from hinting/subpixel positioning.
+                if (Math.Abs(font.MeasureText(ProbeChars.AsSpan(i, 1)) - first) >= 0.01f)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
         catch (Exception)
         {

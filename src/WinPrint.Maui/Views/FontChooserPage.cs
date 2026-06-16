@@ -1,7 +1,6 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using System.Collections.ObjectModel;
 using System.Globalization;
 using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.Models;
@@ -17,9 +16,10 @@ namespace WinPrint.Maui.Views;
 ///     one consistent dialog, presented as a centered card over a dimmed backdrop. Await
 ///     <see cref="Completion" /> for the chosen <c>(Family, Size, Style)</c>, or <c>null</c> if cancelled.
 ///     <para>
-///         Toggles and buttons are tap-driven <see cref="Border" />+<see cref="Label" /> affordances rather
-///         than <see cref="CheckBox" />/<see cref="Button" />: those two controls render unreliably under
-///         Mac Catalyst (CheckBox is often invisible/non-interactive; a custom-colored Button looks disabled).
+///         Toggles and buttons are tap-driven <see cref="Border" />+<see cref="Label" /> affordances so they
+///         render and theme consistently on the white card across platforms — a plain <see cref="CheckBox" />
+///         is near-invisible here and a custom-colored <see cref="Button" /> looks washed-out under Mac
+///         Catalyst.
 ///     </para>
 /// </summary>
 internal sealed class FontChooserPage : ContentPage
@@ -35,7 +35,6 @@ internal sealed class FontChooserPage : ContentPage
     private readonly TaskCompletionSource<(string Family, float Size, string Style)?> _completion = new();
 
     private readonly IReadOnlyList<SystemFontFamily> _allFamilies;
-    private readonly ObservableCollection<string> _visibleFamilies = [];
     private readonly CollectionView _familyList;
     private readonly Entry _filter;
     private readonly Entry _size;
@@ -72,7 +71,6 @@ internal sealed class FontChooserPage : ContentPage
         _filter.TextChanged += (_, _) => RebuildFamilyList();
 
         _familyList = MakeListView();
-        _familyList.ItemsSource = _visibleFamilies;
         _familyList.SelectionChanged += (_, _) =>
         {
             if (_familyList.SelectedItem is string family)
@@ -118,7 +116,7 @@ internal sealed class FontChooserPage : ContentPage
     {
         string filter = _filter.Text?.Trim() ?? string.Empty;
 
-        _visibleFamilies.Clear();
+        var visible = new List<string>();
         foreach (SystemFontFamily family in _allFamilies)
         {
             if (_fixedPitchOnly && !family.IsFixedPitch)
@@ -131,11 +129,16 @@ internal sealed class FontChooserPage : ContentPage
                 continue;
             }
 
-            _visibleFamilies.Add(family.Name);
+            visible.Add(family.Name);
         }
 
+        // Reassign ItemsSource (rather than mutating an ObservableCollection in place): CollectionView on
+        // Mac Catalyst does not reliably refresh on ObservableCollection.Clear()/Reset, which left the list
+        // showing every font regardless of the filter. A fresh list forces a full rebuild.
+        _familyList.ItemsSource = visible;
+
         // Keep the current family selected/visible when it survives the filter so the list reflects state.
-        if (_visibleFamilies.Contains(_selectedFamily))
+        if (visible.Contains(_selectedFamily))
         {
             _familyList.SelectedItem = _selectedFamily;
         }

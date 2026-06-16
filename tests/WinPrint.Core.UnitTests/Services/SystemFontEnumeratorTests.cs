@@ -65,6 +65,24 @@ public class SystemFontEnumeratorTests
         }
     }
 
+    [Fact]
+    public void FixedPitchFamilies_ContainLatinGlyphs()
+    {
+        // Regression guard: fonts with no Latin glyphs (Arabic/Hebrew/symbol/emoji) measure every probe
+        // char as the same .notdef advance, which made the width-only test report them as monospace and
+        // flooded the "fixed-pitch only" filter with non-mono faces. A real fixed-pitch family must contain
+        // the glyphs it's being measured by.
+        var families = SystemFontEnumerator.GetFamilies();
+
+        foreach (SystemFontFamily family in families.Where(f => f.IsFixedPitch))
+        {
+            using SKTypeface? typeface = SKTypeface.FromFamilyName(family.Name);
+            Assert.NotNull(typeface);
+            ushort[] glyphs = typeface.GetGlyphs("iWlM");
+            Assert.DoesNotContain((ushort)0, glyphs);
+        }
+    }
+
     private static bool GlyphsAdvanceEqually(string family)
     {
         using SKTypeface? typeface = SKTypeface.FromFamilyName(family);
