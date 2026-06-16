@@ -604,6 +604,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // preferFixedPitch: true — source/document printing favors monospace, so seed the chooser's
+        // "fixed-pitch only" filter on. The user can still turn it off to pick a proportional face.
         (string Family, float Size, string Style)? result =
             await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString(), true);
         if (result.HasValue)
@@ -629,6 +631,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // preferFixedPitch: false — headers/footers default to a proportional face (see Settings defaults),
+        // so seed the chooser's "fixed-pitch only" filter off. The user can still turn it on.
         (string Family, float Size, string Style)? result =
             await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString(), false);
         if (result.HasValue)
@@ -641,11 +645,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     ? style
                     : FontStyle.Regular
             };
-            header.Font = newFont;
-            if (SheetViewModel.Footer != null)
-            {
-                SheetViewModel.Footer.Font = (Core.Models.Font)newFont.Clone();
-            }
+
+            // Write to the header/footer MODELS (not the view-models). Setting the view-model's Font
+            // directly never propagated to the model, so the choice didn't reflow correctly and was lost
+            // on save — that's why picking a header/footer font appeared to do nothing.
+            SheetViewModel.SetHeaderFooterFont(newFont);
 
             OnPropertyChanged(nameof(HeaderFooterFontDescription));
             await _app.ReflowAsync();

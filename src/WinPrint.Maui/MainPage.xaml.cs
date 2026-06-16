@@ -501,30 +501,28 @@ public partial class MainPage : ContentPage
         return result?.FullPath;
     }
 
+    /// <summary>
+    ///     Shows the cross-platform <see cref="Views.FontChooserPage" /> (family list + Bold/Italic + size
+    ///     + fixed-pitch filter + live preview). <paramref name="preferFixedPitch" /> seeds the
+    ///     "fixed-pitch only" filter — on for content (source printing favors monospace), off for
+    ///     headers/footers (whose default is a proportional face). The user can still toggle it either way.
+    /// </summary>
     private async Task<(string Family, float Size, string Style)?> PickFontAsync(
-        string currentFamily, float currentSize, string currentStyle, bool canChooseProportional)
+        string currentFamily, float currentSize, string currentStyle, bool preferFixedPitch)
     {
-#if MACCATALYST
-        return await MacFontPicker.PickAsync(this, currentFamily, currentSize, currentStyle, canChooseProportional);
-#else
-        // MAUI doesn't have a built-in font picker dialog.
-        // Use a simple prompt as a placeholder — platform-specific dialogs
-        // can be added later via dependency injection.
-        string? input = await DisplayPromptAsync(
-            "Font",
-            $"Current: {currentFamily}, {currentSize}pt, {currentStyle}\nEnter: Family, Size",
-            initialValue: $"{currentFamily}, {currentSize}");
+        Views.FontChooserPage dialog = new(currentFamily, currentSize, currentStyle, preferFixedPitch);
+        await Navigation.PushModalAsync(dialog);
+        (string Family, float Size, string Style)? result = await dialog.Completion;
 
-        if (string.IsNullOrWhiteSpace(input))
+        // The dialog may already be off the modal stack (back gesture / programmatic pop, which
+        // OnDisappearing surfaces as a null result). Only pop when it's still the top modal.
+        IReadOnlyList<Page> modalStack = Navigation.ModalStack;
+        if (modalStack.Count > 0 && ReferenceEquals(modalStack[^1], dialog))
         {
-            return null;
+            await Navigation.PopModalAsync();
         }
 
-        string[] parts = input.Split(',', StringSplitOptions.TrimEntries);
-        string family = parts.Length > 0 ? parts[0] : currentFamily;
-        float size = parts.Length > 1 && float.TryParse(parts[1], out float s) ? s : currentSize;
-        return (family, size, currentStyle);
-#endif
+        return result;
     }
 
     /// <summary>
