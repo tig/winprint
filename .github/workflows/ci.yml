@@ -94,6 +94,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Diagnose runner toolchain (image defaults, before setup-dotnet)
+        run: |
+          echo "=== image dotnet ==="; which dotnet && dotnet --version && dotnet --list-sdks
+          echo "=== image workloads (Xcode-matched) ==="; dotnet workload list || true
+          echo "=== Xcodes ==="; ls -d /Applications/Xcode*.app; xcode-select -p; xcodebuild -version || true
+          for x in /Applications/Xcode*.app; do echo "--- $x ---"; ls "$x/Contents/Developer/Platforms/" 2>/dev/null || echo "(no Platforms)"; done
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
@@ -101,6 +108,9 @@ jobs:
 
       - name: Install MAUI workloads
         run: dotnet workload install maui
+
+      - name: Workloads after install
+        run: dotnet workload list || true
 
       - name: Build MacCatalyst app
         # Use the runner's default Xcode (do NOT xcode-select — the highest-numbered Xcode_*.app on the
