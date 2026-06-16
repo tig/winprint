@@ -6,6 +6,7 @@ using Terminal.Gui.Drivers;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views;
@@ -40,16 +41,12 @@ public sealed class TuiCommand : IViewerCommand
     public bool AcceptsPositionalArgs => true;
 
     /// <inheritdoc />
+    // The shared print options come from the canonical WinPrint.Core catalog so they can never diverge
+    // from the other front ends; the TUI then adds its own appropriate extras (--view/--width/--height).
     public IReadOnlyList<CommandOptionDescriptor> Options { get; } =
     [
-        new("sheet", "s", typeof(string), "Sheet definition name or ID.", false, null),
-        new("landscape", "l", typeof(bool), "Force landscape orientation.", false, null),
-        new("portrait", null, typeof(bool), "Force portrait orientation.", false, null),
-        new("printer", "p", typeof(string), "Printer name.", false, null),
-        new("paper-size", "z", typeof(string), "Paper size name.", false, null),
-        new("from-sheet", "f", typeof(int), "First sheet to show.", false, null),
-        new("to-sheet", "t", typeof(int), "Last sheet to show.", false, null),
-        new("content-type", "e", typeof(string), "Content type engine / language override.", false, null),
+        .. WinPrintOptions.Shared.Select(o =>
+            new CommandOptionDescriptor(o.Name, o.Short?.ToString(), o.ValueType, o.Help, false, null)),
         new("view", null, typeof(string), "Show a single catalogued view instead of the full app (see `wp views`).",
             false, null),
         new("width", null, typeof(int), "Grid width in cells for --cat (0 = terminal width).", false, null),

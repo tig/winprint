@@ -15,7 +15,7 @@ public class SettingsPanelGoldenTests
     public void InitialRender_MatchesGolden()
     {
         var panel = new SettingsPanel("2.5.0");
-        var fixture = new AppFixture(panel, 52, 24);
+        var fixture = new AppFixture(panel, 52, 60);
 
         GridSnapshot.Verify(fixture.Screen, "settings-panel");
     }
@@ -24,7 +24,7 @@ public class SettingsPanelGoldenTests
     public void Render_ShowsEverySectionInWinFormsOrder()
     {
         var panel = new SettingsPanel("2.5.0");
-        var fixture = new AppFixture(panel, 52, 24);
+        var fixture = new AppFixture(panel, 52, 60);
 
         string screen = fixture.Screen;
         int file = screen.IndexOf("File", StringComparison.Ordinal);
@@ -51,7 +51,7 @@ public class SettingsPanelGoldenTests
     public void BordersAutoJoin_IntoOneFrame()
     {
         var panel = new SettingsPanel("2.5.0");
-        var fixture = new AppFixture(panel, 52, 24);
+        var fixture = new AppFixture(panel, 52, 60);
 
         // A right-tee marks where section title borders join via the shared LineCanvas.
         DriverAssert.ContainsText(fixture.Screen, "┤");
