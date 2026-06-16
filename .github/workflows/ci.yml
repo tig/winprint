@@ -146,6 +146,7 @@ jobs:
       - name: Test (MAUI UI / Appium)
         env:
           APPIUM_SERVER: http://127.0.0.1:4723
+          MENU_TREE_DUMP_DIR: ${{ github.workspace }}
         run: dotnet test tests/WinPrint.Maui.UITests/WinPrint.Maui.UITests.csproj --configuration Debug --verbosity normal
 
       - name: Upload Appium log
@@ -154,4 +155,14 @@ jobs:
         with:
           name: appium-log
           path: appium.log
+          if-no-files-found: ignore
+
+      - name: Upload menu accessibility tree
+        # Written by the UI test when a menu item locator misses — the actual XCUITest tree for the
+        # Catalyst File menu, so the locator can be corrected from real data rather than guesswork.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-tree
+          path: menu-tree.xml
           if-no-files-found: ignore

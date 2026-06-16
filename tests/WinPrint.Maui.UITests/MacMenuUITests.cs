@@ -62,8 +62,47 @@ public class MacMenuUITests
             By.XPath("//XCUIElementTypeMenuBarItem[@title='File']"));
         fileMenu.Click();
 
-        return driver.FindElement(
-            By.XPath($"//XCUIElementTypeMenuItem[@title='{itemTitle}']"));
+        try
+        {
+            return driver.FindElement(
+                By.XPath($"//XCUIElementTypeMenuItem[@title='{itemTitle}']"));
+        }
+        catch (WebDriverException)
+        {
+            // The menu item wasn't where we expected. Dump the live accessibility tree so the exact
+            // representation of the Catalyst File-menu items (element type / title / label) is visible in
+            // the CI log and uploaded as an artifact, instead of guessing at the locator blind.
+            DumpAccessibilityTree(driver, itemTitle);
+            throw;
+        }
+    }
+
+    private static void DumpAccessibilityTree(MacDriver driver, string itemTitle)
+    {
+        string source;
+        try
+        {
+            source = driver.PageSource;
+        }
+        catch (WebDriverException ex)
+        {
+            source = $"<could-not-capture-page-source>{ex.Message}</could-not-capture-page-source>";
+        }
+
+        Console.WriteLine($"===== ACCESSIBILITY TREE (item '{itemTitle}' not found) =====");
+        Console.WriteLine(source);
+        Console.WriteLine("===== END ACCESSIBILITY TREE =====");
+
+        string dir = Environment.GetEnvironmentVariable("MENU_TREE_DUMP_DIR")
+                     ?? Directory.GetCurrentDirectory();
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "menu-tree.xml"), source);
+        }
+        catch (IOException)
+        {
+            // Best-effort: the console dump above is the primary record.
+        }
     }
 
     private static MacDriver CreateDriver()
