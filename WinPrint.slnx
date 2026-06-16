@@ -23,6 +23,27 @@
   <Project Path="tests/WinPrint.TUI.UnitTests/WinPrint.TUI.UnitTests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="tests/WinPrint.TUI.UITests/WinPrint.TUI.UITests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="tests/WinPrint.Maui.UnitTests/WinPrint.Maui.UnitTests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="tests/WinPrint.Maui.UITests/WinPrint.Maui.UITests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="tests/WinPrint.cli.UnitTests/WinPrint.cli.UnitTests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="tests/WinPrint.cli.UITests/WinPrint.cli.UITests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="tests/WinPrint.WinForms.UnitTests/WinPrint.WinForms.UnitTests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="tests/WinPrint.WinForms.UITests/WinPrint.WinForms.UITests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="src/WinPrint.cli/WinPrint.cli.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>

@@ -53,5 +53,97 @@ jobs:
           dotnet format WinPrint.slnx --no-restore
           git diff --exit-code
 
-      - name: Test
+      # Core + every front end's unit tests, plus the UI tests that run on a Windows desktop session:
+      # TUI (headless render), cli (process e2e), and WinForms (FlaUI). The MAUI Appium UI tests run on
+      # the macOS job below; MAUI unit tests (pure geometry) run here.
+      - name: Test (Core)
         run: dotnet test tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (TUI unit)
+        run: dotnet test tests/WinPrint.TUI.UnitTests/WinPrint.TUI.UnitTests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (TUI UI)
+        run: dotnet test tests/WinPrint.TUI.UITests/WinPrint.TUI.UITests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (cli unit)
+        run: dotnet test tests/WinPrint.cli.UnitTests/WinPrint.cli.UnitTests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (cli UI / e2e)
+        run: dotnet test tests/WinPrint.cli.UITests/WinPrint.cli.UITests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (WinForms unit)
+        run: dotnet test tests/WinPrint.WinForms.UnitTests/WinPrint.WinForms.UnitTests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (WinForms UI / FlaUI)
+        run: dotnet test tests/WinPrint.WinForms.UITests/WinPrint.WinForms.UITests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+      - name: Test (MAUI unit)
+        run: dotnet test tests/WinPrint.Maui.UnitTests/WinPrint.Maui.UnitTests.csproj --configuration Debug -p:Platform=x64 --no-build --verbosity normal
+
+  # MAUI UI automation: Appium (mac2 driver) against the MacCatalyst app. Needs a macOS host with Xcode,
+  # Appium, and the built app — hence a separate job from the Windows build/test matrix.
+  # Non-blocking for now: this job is new and can't be validated off-CI; it needs the runner's Xcode to
+  # match the MacCatalyst SDK and Appium/app-launch to settle. Flip continue-on-error off once it's green.
+  maui-ui-tests:
+    runs-on: macos-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI workloads
+        run: dotnet workload install maui
+
+      - name: Build MacCatalyst app
+        # Use the runner's default Xcode (do NOT xcode-select — the highest-numbered Xcode_*.app on the
+        # image can be a broken/partial install missing actool/MacOSX SDK).
+        # MtouchLink=None disables trimming (MacCatalyst forces PublishTrimmed=true); we only need a
+        # launchable Debug bundle for the UI tests, and trimming would otherwise require MacCatalyst SDK
+        # headers the runner's Xcode may predate (MT0180 / NETSDK1144).
+        # NOTE: the maui workload can resolve to a MacCatalyst SDK newer than the runner's Xcode; if this
+        # build still fails on that skew, the job is continue-on-error and does not gate the PR. TODO:
+        # pin the workload to the runner's Xcode once a stable pairing is known.
+        run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst -p:MtouchLink=None
+
+      - name: Install Appium + mac2 driver
+        run: |
+          npm install -g appium
+          appium driver install mac2
+
+      - name: Start Appium server
+        run: |
+          appium --base-path / --port 4723 > appium.log 2>&1 &
+          # Wait for the server to accept connections.
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:4723/status >/dev/null; then echo "Appium up"; break; fi
+            sleep 1
+          done
+
+      - name: Locate MacCatalyst app bundle
+        # Don't hardcode the runtime-identifier subfolder — Debug's default RID differs by host/arch
+        # (maccatalyst-x64 vs -arm64). Find the bundle the build actually produced.
+        run: |
+          app=$(find src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst -maxdepth 2 -name 'WinPrint.app' -type d | head -1)
+          echo "Found app bundle: $app"
+          echo "APPIUM_APP=$app" >> "$GITHUB_ENV"
+
+      - name: Test (MAUI UI / Appium)
+        env:
+          APPIUM_SERVER: http://127.0.0.1:4723
+        run: dotnet test tests/WinPrint.Maui.UITests/WinPrint.Maui.UITests.csproj --configuration Debug --verbosity normal
+
+      - name: Upload Appium log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-log
+          path: appium.log
+          if-no-files-found: ignore

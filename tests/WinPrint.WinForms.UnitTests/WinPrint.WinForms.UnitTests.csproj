@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Unit tests for the WinForms front end. WinForms is net10.0-windows + UseWindowsForms, so these
+         run on the Windows CI runner. WinForms is UI-dominated — most logic is forms (covered by the
+         FlaUI WinPrint.WinForms.UITests) or delegates to WinPrint.Core (covered by Core tests); this
+         project covers the non-UI helpers that remain. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+        <NoWarn>1701;1702</NoWarn>
+        <UseWindowsForms>true</UseWindowsForms>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\WinPrint.WinForms\WinPrint.WinForms.csproj" />
+    </ItemGroup>
+
+</Project>
