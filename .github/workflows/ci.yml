@@ -94,20 +94,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Diagnose runner toolchain (image defaults, before setup-dotnet)
-        run: |
-          echo "=== image dotnet ==="; which dotnet && dotnet --version && dotnet --list-sdks
-          echo "=== image workloads (Xcode-matched) ==="; dotnet workload list || true
-          echo "=== Xcodes ==="; ls -d /Applications/Xcode*.app; xcode-select -p; xcodebuild -version || true
-          for x in /Applications/Xcode*.app; do echo "--- $x ---"; ls "$x/Contents/Developer/Platforms/" 2>/dev/null || echo "(no Platforms)"; done
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
       - name: Install MAUI workloads
-        run: dotnet workload install maui
+        # --skip-manifest-update pins the workload to the SDK's baked manifest set instead of pulling the
+        # latest from NuGet. The latest resolves to a MacCatalyst SDK (e.g. 26.5) that needs an Xcode the
+        # runner doesn't have (newest is 26.3; default is 16.4), causing MT0180/NETSDK1144. The pinned set
+        # matches the runner's default Xcode.
+        run: dotnet workload install maui --skip-manifest-update
 
       - name: Workloads after install
         run: dotnet workload list || true
