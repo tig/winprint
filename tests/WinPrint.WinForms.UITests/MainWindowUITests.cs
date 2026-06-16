@@ -62,12 +62,18 @@ public class MainWindowUITests
             throw new InvalidOperationException($"Could not locate repo root from '{dir}'.");
         }
 
-        string exe = Path.Combine(root, "src", "WinPrint.WinForms", "bin", config, "net10.0-windows",
-            "winprintgui.exe");
-        if (!File.Exists(exe))
+        string binRoot = Path.Combine(root, "src", "WinPrint.WinForms", "bin");
+        // Search recursively: layout is bin/<Config>/<tfm>/ locally but bin/<Platform>/<Config>/<tfm>/
+        // when built with -p:Platform=x64 (as CI does).
+        string sep = Path.DirectorySeparatorChar.ToString();
+        string? exe = Directory.Exists(binRoot)
+            ? Directory.EnumerateFiles(binRoot, "winprintgui.exe", SearchOption.AllDirectories)
+                .FirstOrDefault(p => p.Contains($"{sep}{config}{sep}"))
+            : null;
+        if (exe is null)
         {
-            throw new FileNotFoundException($"winprintgui.exe not found at '{exe}'. Build WinPrint.WinForms first.",
-                exe);
+            throw new FileNotFoundException(
+                $"winprintgui.exe ({config}) not found under '{binRoot}'. Build WinPrint.WinForms first.");
         }
 
         return exe;

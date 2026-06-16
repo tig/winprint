@@ -87,11 +87,18 @@ public class CliEndToEndTests
         }
 
         string exeName = OperatingSystem.IsWindows() ? "winprint.exe" : "winprint";
-        string exe = Path.Combine(root, "src", "WinPrint.cli", "bin", config, "net10.0-windows", exeName);
-        if (!File.Exists(exe))
+        string binRoot = Path.Combine(root, "src", "WinPrint.cli", "bin");
+        // Search recursively for the exe under bin/: the layout is bin/<Config>/<tfm>/ locally but
+        // bin/<Platform>/<Config>/<tfm>/ when built with -p:Platform=x64 (as CI does).
+        string sep = Path.DirectorySeparatorChar.ToString();
+        string? exe = Directory.Exists(binRoot)
+            ? Directory.EnumerateFiles(binRoot, exeName, SearchOption.AllDirectories)
+                .FirstOrDefault(p => p.Contains($"{sep}{config}{sep}"))
+            : null;
+        if (exe is null)
         {
             throw new FileNotFoundException(
-                $"winprint executable not found at '{exe}'. Build WinPrint.cli first.", exe);
+                $"winprint executable ({exeName}, {config}) not found under '{binRoot}'. Build WinPrint.cli first.");
         }
 
         return exe;
