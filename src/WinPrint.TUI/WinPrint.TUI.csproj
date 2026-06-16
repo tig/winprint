@@ -17,7 +17,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui" Version="2.4.4" />
+        <!-- Local build from the #5493 PR worktree (tg-local feed in nuget.config) — adds the
+             public IDriver.SetSixelSupport/SetKittyGraphicsSupport API and Kitty graphics support.
+             Revert to a released version once the API ships upstream. -->
+        <PackageReference Include="Terminal.Gui" Version="2.4.7-tig-add-kitty-graphics-protocol-support.1" />
         <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
         <PackageReference Include="Velopack" Version="1.1.1" />

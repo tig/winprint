@@ -1,4 +1,3 @@
-using System.Reflection;
 using Terminal.Gui.App;
 using Terminal.Gui.Cli;
 using Terminal.Gui.Drawing;
@@ -74,9 +73,7 @@ public sealed class TuiCommand : IViewerCommand
             app.Driver?.SetScreenSize(width, height);
         }
 
-        // The headless/PTY driver skips the sixel-support handshake, so ImageView falls back to cell
-        // rendering. WP_FORCE_SIXEL forces support on to exercise the sixel DCS encode path.
-        ForceSixelIfRequested(app);
+        ForceGraphicsIfRequested(app);
 
         // Borderless host filling the screen; each composed view carries its own border. The app
         // defaults to AppModel.FullScreen, so this fills the alternate screen buffer.
@@ -212,25 +209,38 @@ public sealed class TuiCommand : IViewerCommand
         }
     }
 
-    // When WP_FORCE_SIXEL is set, force sixel support on so ImageView emits the sixel DCS stream. The
-    // setter lives on the internal driver impl, so reach it via reflection.
-    private static void ForceSixelIfRequested(IApplication app)
+    // The headless/PTY driver skips the graphics-capability handshake, so ImageView falls back to cell
+    // rendering. WP_FORCE_SIXEL / WP_FORCE_KITTY override detection via the public IDriver setters so the
+    // raster encode paths can be exercised under tuirec / golden capture.
+    private static void ForceGraphicsIfRequested(IApplication app)
     {
-        if (Environment.GetEnvironmentVariable("WP_FORCE_SIXEL") is not ("1" or "true") || app.Driver is not { } driver)
+        if (app.Driver is not { } driver)
         {
             return;
         }
 
-        var support = new SixelSupportResult
+        if (IsEnvEnabled("WP_FORCE_SIXEL"))
         {
-            IsSupported = true,
-            MaxPaletteColors = 256,
-            SupportsTransparency = true
-        };
-        driver.GetType()
-            .GetMethod("SetSixelSupport", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-            ?.Invoke(driver, [support]);
+            driver.SetSixelSupport(new SixelSupportResult
+            {
+                IsSupported = true,
+                MaxPaletteColors = 256,
+                SupportsTransparency = true
+            });
+
+            // TG prefers Kitty when both are supported, so on a Kitty/Ghostty terminal the forced Sixel
+            // path would otherwise never run. Disable Kitty so the Sixel encode path is actually exercised.
+            driver.SetKittyGraphicsSupport(new KittyGraphicsSupportResult { IsSupported = false });
+        }
+
+        if (IsEnvEnabled("WP_FORCE_KITTY"))
+        {
+            driver.SetKittyGraphicsSupport(new KittyGraphicsSupportResult { IsSupported = true });
+        }
     }
+
+    private static bool IsEnvEnabled(string name) =>
+        Environment.GetEnvironmentVariable(name) is "1" or "true";
 
     private static string? GetOption(CommandRunOptions options, string name)
     {
