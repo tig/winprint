@@ -81,7 +81,9 @@ public class MacMenuUITests
         string? appPath = Environment.GetEnvironmentVariable("APPIUM_APP");
         if (!string.IsNullOrEmpty(appPath))
         {
-            options.AddAdditionalAppiumOption("app", appPath);
+            // `app` is a reserved capability with a first-class property; AddAdditionalAppiumOption("app", …)
+            // throws ("use the Application property instead"). Set the property so it serializes to appium:app.
+            options.App = appPath;
         }
         else
         {
