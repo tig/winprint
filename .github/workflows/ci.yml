@@ -13,6 +13,13 @@ jobs:
   build-and-test:
     runs-on: windows-latest
 
+    # Build only WinPrint.Maui's Windows head on this job — the macOS job builds AND UI-tests MacCatalyst,
+    # so cross-compiling it here is redundant. With the MacCatalyst TFM dropped (honored by every MSBuild
+    # tool below, incl. jb cleanupcode and dotnet format) we install just the maui-windows workload and skip
+    # the multi-minute Apple/Android pack download.
+    env:
+      WinPrintWindowsOnly: 'true'
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
@@ -25,7 +32,15 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Install MAUI workloads
-        run: dotnet workload install maui
+        # maui-windows only — the MacCatalyst head isn't built on this job (see WinPrintWindowsOnly).
+        run: dotnet workload install maui-windows
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', 'Directory.Build.props', 'Directory.Build.targets', 'global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - name: Restore
         run: dotnet restore WinPrint.slnx /p:Configuration=Debug
@@ -109,6 +124,13 @@ jobs:
 
       - name: Install MAUI workloads
         run: dotnet workload install maui
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', 'Directory.Build.props', 'Directory.Build.targets', 'global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - name: Select Xcode 26.5
         # Pin explicitly rather than rely on the image default so the MacCatalyst SDK <-> Xcode pairing is
