@@ -82,8 +82,11 @@ jobs:
 
   # MAUI UI automation: Appium (mac2 driver) against the MacCatalyst app. Needs a macOS host with Xcode,
   # Appium, and the built app — hence a separate job from the Windows build/test matrix.
+  # Non-blocking for now: this job is new and can't be validated off-CI; it needs the runner's Xcode to
+  # match the MacCatalyst SDK and Appium/app-launch to settle. Flip continue-on-error off once it's green.
   maui-ui-tests:
     runs-on: macos-latest
+    continue-on-error: true
 
     steps:
       - name: Checkout source
@@ -96,11 +99,21 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Select newest Xcode
+        # The maui workload resolves to the latest MacCatalyst SDK (e.g. 26.5), which needs the matching
+        # Xcode headers; the runner's default Xcode may be older (error MT0180). Point at the newest
+        # installed Xcode so the SDK and Xcode agree.
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+
       - name: Install MAUI workloads
         run: dotnet workload install maui
 
       - name: Build MacCatalyst app
-        run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst
+        # MtouchLink=None disables trimming (MacCatalyst forces PublishTrimmed=true). We only need a
+        # launchable Debug bundle for the UI tests, and trimming would otherwise require MacCatalyst SDK
+        # headers the runner's Xcode may predate (MT0180 / NETSDK1144). Belt-and-suspenders with the
+        # Xcode selection above.
+        run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst -p:MtouchLink=None
 
       - name: Install Appium + mac2 driver
         run: |
