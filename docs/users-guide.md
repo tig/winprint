@@ -88,7 +88,7 @@ apply everywhere:
 
 Front ends add their own *appropriate* extras: the TUI adds `--view`, `--width`, `--height`; the `wp`
 CLI adds `--line-numbers`, `--what-if` (`-w`, count sheets without printing), `--gui` (`-g`), and
-`--config`. The Terminal.Gui.Cli framework — which **winprint** uses for all command-line handling —
+`--config`. The Terminal.Gui.Cli framework — which the `wp` CLI/TUI uses for command-line handling —
 also provides `--help`, `--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and
 `--cat`.
 
