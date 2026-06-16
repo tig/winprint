@@ -55,7 +55,7 @@ public sealed class PreviewPane : View
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            UseSixel = true,
+            UseRasterGraphics = true,
             CanFocus = true,
             SchemeName = CanvasSchemeName
         };
@@ -95,7 +95,7 @@ public sealed class PreviewPane : View
         Initialized += (_, _) => RequestRender();
     }
 
-    /// <summary>The hosted image view (sixel-enabled).</summary>
+    /// <summary>The hosted image view (raster-graphics-enabled: Kitty/Ghostty or Sixel).</summary>
     public ImageView Image { get; }
 
     /// <summary>No-file/error overlay label.</summary>
@@ -203,21 +203,9 @@ public sealed class PreviewPane : View
             return LastPage() == true;
         }
 
-        if (key == Key.PageUp.WithCtrl)
-        {
-            return ZoomIn() == true;
-        }
-
-        if (key == Key.PageDown.WithCtrl)
-        {
-            return ZoomOut() == true;
-        }
-
-        if (key == Key.Home.WithCtrl)
-        {
-            return ResetZoom() == true;
-        }
-
+        // Zoom keys are owned by Terminal.Gui's ImageView (see gui-cs/Terminal.Gui#5494) rather than
+        // overridden here — the old Ctrl+PageUp/Down/Home bindings were intercepted by macOS Mission
+        // Control and never reached the app. Mouse Ctrl+wheel zoom is still handled in HandlePreviewMouse.
         if (key == Key.CursorUp)
         {
             return Pan(Command.ScrollUp);
@@ -243,12 +231,11 @@ public sealed class PreviewPane : View
 
     private void ConfigureNavigationBindings()
     {
+        // Free PageUp/PageDown/Home from ImageView's zoom so the preview can use them for page
+        // navigation. Zoom keys themselves are left to ImageView (gui-cs/Terminal.Gui#5494).
         Image.KeyBindings.Remove(Key.PageDown);
         Image.KeyBindings.Remove(Key.PageUp);
         Image.KeyBindings.Remove(Key.Home);
-        Image.KeyBindings.Remove(Key.PageDown.WithCtrl);
-        Image.KeyBindings.Remove(Key.PageUp.WithCtrl);
-        Image.KeyBindings.Remove(Key.Home.WithCtrl);
         Image.KeyBindings.Remove(Key.CursorUp);
         Image.KeyBindings.Remove(Key.CursorDown);
         Image.KeyBindings.Remove(Key.CursorLeft);
@@ -488,7 +475,7 @@ public sealed class PreviewPane : View
 
     private (int width, int height) GetPreviewPixelSize()
     {
-        if (Image.IsUsingSixel)
+        if (Image.IsUsingRasterGraphics)
         {
             try
             {
@@ -500,7 +487,7 @@ public sealed class PreviewPane : View
             }
             catch (InvalidOperationException)
             {
-                // Fall back to deterministic cell estimates in tests and non-sixel terminals.
+                // Fall back to deterministic cell estimates in tests and non-raster terminals.
             }
         }
 

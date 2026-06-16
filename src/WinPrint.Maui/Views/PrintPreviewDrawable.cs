@@ -45,13 +45,11 @@ public sealed class PrintPreviewDrawable : IDrawable
     /// <summary>
     ///     Clamps a desired pan offset so the page edge never pans past the view edge on
     ///     its overflowing axis, and stays put (no pan) on an axis where the page fits.
+    ///     Delegates to <see cref="PreviewGeometry.ClampPanOffset" />; kept here as the entry point
+    ///     MainPage's gesture/keyboard handlers call.
     /// </summary>
-    internal static float ClampPanOffset(float desiredPan, float basePos, float pageExtent, float viewExtent)
-    {
-        float lo = Math.Min(basePos, viewExtent - pageExtent) - basePos;
-        float hi = Math.Max(basePos, 0f) - basePos;
-        return Math.Clamp(desiredPan, lo, hi);
-    }
+    internal static float ClampPanOffset(float desiredPan, float basePos, float pageExtent, float viewExtent) =>
+        PreviewGeometry.ClampPanOffset(desiredPan, basePos, pageExtent, viewExtent);
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
@@ -85,26 +83,10 @@ public sealed class PrintPreviewDrawable : IDrawable
         float pageAspect = boundsW / boundsH;
         float zoom = _viewModel.ZoomFactor;
 
-        float availWidth = dirtyRect.Width * 0.9f;
-        float availHeight = dirtyRect.Height * 0.9f;
-
-        float pageWidth, pageHeight;
-        if (availWidth / availHeight > pageAspect)
-        {
-            pageHeight = availHeight * zoom;
-            pageWidth = pageHeight * pageAspect;
-        }
-        else
-        {
-            pageWidth = availWidth * zoom;
-            pageHeight = pageWidth / pageAspect;
-        }
-
-        // Position: center at ≤100% zoom; top-center at >100% (per spec)
-        float x = (dirtyRect.Width - pageWidth) / 2;
-        float y = zoom <= 1.0f
-            ? (dirtyRect.Height - pageHeight) / 2
-            : dirtyRect.Height * 0.02f;
+        // Fit + position the page (centered at ≤100% zoom, top-center above). Pure geometry lives in
+        // PreviewGeometry so it can be unit-tested without a MAUI canvas.
+        (float x, float y, float pageWidth, float pageHeight) =
+            PreviewGeometry.ComputePageLayout(dirtyRect.Width, dirtyRect.Height, pageAspect, zoom);
 
         // Publish the layout so gesture/keyboard handlers can clamp pan offsets.
         BaseX = x;
