@@ -33,7 +33,7 @@ internal sealed class MacFontPickerDelegate : UIFontPickerViewControllerDelegate
         Complete(viewController, (font.FamilyName, GetStyle(descriptor.SymbolicTraits)));
     }
 
-    public override void WasCancelled(UIFontPickerViewController viewController)
+    public override void DidCancel(UIFontPickerViewController viewController)
     {
         Complete(viewController, null);
     }

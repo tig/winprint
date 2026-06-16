@@ -14,7 +14,7 @@ internal static class MacFontPicker
         bool showAllFonts = false;
         if (canChooseProportional)
         {
-            string choice = await host.DisplayActionSheet(
+            string choice = await host.DisplayActionSheetAsync(
                 "Content Font", "Cancel", null, FixedPitchFonts, AllFonts);
             switch (choice)
             {
