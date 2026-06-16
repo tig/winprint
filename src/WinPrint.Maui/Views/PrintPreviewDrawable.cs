@@ -48,8 +48,10 @@ public sealed class PrintPreviewDrawable : IDrawable
     ///     Delegates to <see cref="PreviewGeometry.ClampPanOffset" />; kept here as the entry point
     ///     MainPage's gesture/keyboard handlers call.
     /// </summary>
-    internal static float ClampPanOffset(float desiredPan, float basePos, float pageExtent, float viewExtent) =>
-        PreviewGeometry.ClampPanOffset(desiredPan, basePos, pageExtent, viewExtent);
+    internal static float ClampPanOffset(float desiredPan, float basePos, float pageExtent, float viewExtent)
+    {
+        return PreviewGeometry.ClampPanOffset(desiredPan, basePos, pageExtent, viewExtent);
+    }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {

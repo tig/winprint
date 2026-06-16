@@ -23,7 +23,7 @@ public class MainWindowUITests
         }
 
         string exe = LocateGuiExe();
-        Application app = Application.Launch(exe);
+        var app = Application.Launch(exe);
         try
         {
             using var automation = new UIA3Automation();
@@ -62,10 +62,12 @@ public class MainWindowUITests
             throw new InvalidOperationException($"Could not locate repo root from '{dir}'.");
         }
 
-        string exe = Path.Combine(root, "src", "WinPrint.WinForms", "bin", config, "net10.0-windows", "winprintgui.exe");
+        string exe = Path.Combine(root, "src", "WinPrint.WinForms", "bin", config, "net10.0-windows",
+            "winprintgui.exe");
         if (!File.Exists(exe))
         {
-            throw new FileNotFoundException($"winprintgui.exe not found at '{exe}'. Build WinPrint.WinForms first.", exe);
+            throw new FileNotFoundException($"winprintgui.exe not found at '{exe}'. Build WinPrint.WinForms first.",
+                exe);
         }
 
         return exe;

@@ -19,10 +19,10 @@ public class PreviewGeometryTests
         // View is wider (relative to the page) than the page aspect → the page is height-constrained.
         (float x, float y, float w, float h) = PreviewGeometry.ComputePageLayout(1000f, 800f, LetterAspect, 1f);
 
-        Assert.Equal(800f * 0.9f, h, 3);              // height = 90% of view height
-        Assert.Equal(h * LetterAspect, w, 3);         // width follows the aspect
-        Assert.Equal((1000f - w) / 2f, x, 3);         // centered horizontally
-        Assert.Equal((800f - h) / 2f, y, 3);          // centered vertically (zoom ≤ 1)
+        Assert.Equal(800f * 0.9f, h, 3); // height = 90% of view height
+        Assert.Equal(h * LetterAspect, w, 3); // width follows the aspect
+        Assert.Equal((1000f - w) / 2f, x, 3); // centered horizontally
+        Assert.Equal((800f - h) / 2f, y, 3); // centered vertically (zoom ≤ 1)
     }
 
     [Fact]
@@ -31,8 +31,8 @@ public class PreviewGeometryTests
         // View is narrower than the page aspect → the page is width-constrained.
         (float x, float y, float w, float h) = PreviewGeometry.ComputePageLayout(400f, 1000f, LetterAspect, 1f);
 
-        Assert.Equal(400f * 0.9f, w, 3);              // width = 90% of view width
-        Assert.Equal(w / LetterAspect, h, 3);         // height follows the aspect
+        Assert.Equal(400f * 0.9f, w, 3); // width = 90% of view width
+        Assert.Equal(w / LetterAspect, h, 3); // height follows the aspect
         Assert.Equal((400f - w) / 2f, x, 3);
         Assert.Equal((1000f - h) / 2f, y, 3);
     }
@@ -68,7 +68,7 @@ public class PreviewGeometryTests
     public void ClampPanOffset_PageFitsWithinView_NoPanAllowed()
     {
         // Page (500) fits in the view (1000), centered at basePos = 250. Pan must be pinned to 0.
-        float panned = PreviewGeometry.ClampPanOffset(desiredPan: 123f, basePos: 250f, pageExtent: 500f, viewExtent: 1000f);
+        float panned = PreviewGeometry.ClampPanOffset(123f, 250f, 500f, 1000f);
 
         Assert.Equal(0f, panned, 3);
     }
@@ -82,7 +82,8 @@ public class PreviewGeometryTests
 
         Assert.Equal(250f, PreviewGeometry.ClampPanOffset(10_000f, basePos, pageExtent, viewExtent), 3);
         Assert.Equal(-250f, PreviewGeometry.ClampPanOffset(-10_000f, basePos, pageExtent, viewExtent), 3);
-        Assert.Equal(100f, PreviewGeometry.ClampPanOffset(100f, basePos, pageExtent, viewExtent), 3); // within range, unchanged
+        Assert.Equal(100f, PreviewGeometry.ClampPanOffset(100f, basePos, pageExtent, viewExtent),
+            3); // within range, unchanged
     }
 
     [Fact]

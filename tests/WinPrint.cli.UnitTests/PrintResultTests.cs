@@ -35,7 +35,7 @@ public class PrintResultTests
     [Fact]
     public void ToString_UnknownAction_ReturnsActionVerbatim()
     {
-        PrintResult result = PrintResult.NoPrint("Opened WinPrint configuration.");
+        var result = PrintResult.NoPrint("Opened WinPrint configuration.");
 
         Assert.Equal("Opened WinPrint configuration.", result.ToString());
     }
@@ -43,7 +43,7 @@ public class PrintResultTests
     [Fact]
     public void NoPrint_HasZeroSheetsAndEmptyMetadata()
     {
-        PrintResult result = PrintResult.NoPrint("Opened WinPrint GUI.");
+        var result = PrintResult.NoPrint("Opened WinPrint GUI.");
 
         Assert.Equal("Opened WinPrint GUI.", result.Action);
         Assert.Equal(0, result.Sheets);
