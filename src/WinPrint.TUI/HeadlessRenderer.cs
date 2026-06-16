@@ -34,6 +34,11 @@ public static class HeadlessRenderer
     {
         ArgumentNullException.ThrowIfNull(content);
 
+        // Render without touching the real terminal so SetScreenSize is authoritative. Without this the
+        // ANSI driver reads the host console size on Windows (ignoring SetScreenSize), which makes the
+        // grid — and the golden snapshots — platform-dependent. (The `wp --cat` path sets this too.)
+        Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
+
         using IApplication app = Application.Create();
         app.AppModel = AppModel.FullScreen;
         app.Init(DriverRegistry.Names.ANSI);
