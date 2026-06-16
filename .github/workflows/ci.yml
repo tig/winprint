@@ -90,11 +90,11 @@ jobs:
   # Xcode 26.5 (its default), which pairs with this SDK. Bump both together when the SDK requires a newer
   # Xcode (the error names the exact version).
   #
-  # Still continue-on-error: the build is now sound, but the Appium app-launch/menu locators were authored
-  # without a local runner and may need a fixup pass. Flip this off once a full green run is observed.
+  # Gating: build, Appium session, app activation, and the File-menu UI assertions all pass on macos-26.
+  # If the Appium menu-bar tests prove timing-flaky in practice, re-add continue-on-error rather than
+  # leaving a red gate.
   maui-ui-tests:
     runs-on: macos-26
-    continue-on-error: true
 
     steps:
       - name: Checkout source
