@@ -23,7 +23,7 @@ internal sealed class MacFontPickerDelegate : UIFontPickerViewControllerDelegate
             return;
         }
 
-        UIFont? font = UIFont.FromDescriptor(descriptor, _currentSize);
+        var font = UIFont.FromDescriptor(descriptor, _currentSize);
         if (font is null)
         {
             Complete(viewController, null);

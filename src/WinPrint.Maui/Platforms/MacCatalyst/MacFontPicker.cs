@@ -67,7 +67,9 @@ internal static class MacFontPicker
         }
 
         var picker = new UIFontPickerViewController(configuration);
-        var completion = new TaskCompletionSource<(string Family, string Style)?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion =
+            new TaskCompletionSource<(string Family, string Style)?>(TaskCreationOptions
+                .RunContinuationsAsynchronously);
         var pickerDelegate = new MacFontPickerDelegate(completion, currentSize);
         picker.Delegate = pickerDelegate;
 
