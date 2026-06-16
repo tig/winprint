@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- UI automation tests for the WinForms front end, driven with FlaUI (UIA3). They launch the real
+         winprintgui.exe and drive it through the accessibility tree, so they require a Windows desktop
+         session — they run only on the Windows CI runner, not on macOS/Linux. The ProjectReference
+         guarantees winprintgui.exe is built first. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+        <NoWarn>1701;1702</NoWarn>
+        <!-- No UseWindowsForms: this project drives the app through FlaUI/UIA, not WinForms types.
+             Enabling it would add a global System.Windows.Forms using that collides with FlaUI's
+             Application/Button. -->
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageReference Include="FlaUI.UIA3" Version="4.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\WinPrint.WinForms\WinPrint.WinForms.csproj" />
+    </ItemGroup>
+
+</Project>

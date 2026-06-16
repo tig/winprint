@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- UI automation tests for the MAUI front end, driven with Appium (mac2 driver) against the running
+         MacCatalyst app (WinPrint.app, bundle id com.kindel.winprint). They talk to an Appium server over
+         HTTP, so this is a plain net10.0 project with no ProjectReference to the maccatalyst app. Requires
+         a macOS host with Appium + appium-mac2-driver and the app installed — the macOS CI job, not the
+         Windows runner. Tests no-op (pass) on non-macOS so the solution build stays green everywhere. -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+        <NoWarn>1701;1702</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageReference Include="Appium.WebDriver" Version="5.0.0" />
+    </ItemGroup>
+
+</Project>

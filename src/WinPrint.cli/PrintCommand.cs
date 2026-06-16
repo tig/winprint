@@ -27,19 +27,14 @@ public sealed class PrintCommand : ICliCommand
 
     public bool AcceptsPositionalArgs => true;
 
+    // The shared print options come from the canonical WinPrint.Core catalog so they match the TUI and
+    // the other front ends exactly (same names, aliases, semantics); the CLI then adds its own
+    // appropriate extras for scripting (--line-numbers, --what-if, --gui, --config).
     public IReadOnlyList<CommandOptionDescriptor> Options { get; } =
     [
-        new("printer", "P", typeof(string), "Printer name. Defaults to the system default printer.", false, null),
-        new("paper-size", null, typeof(string), "Paper size supported by the selected printer.", false, null),
-        new("sheet", "s", typeof(string), "WinPrint sheet definition name or ID.", false, null),
-        new("content-type", "c", typeof(string), "Content type engine, content type, or language override.", false,
-            null),
-        new("language", "l", typeof(string), "Language or content type override for syntax highlighting.", false,
-            null),
-        new("orientation", null, typeof(string), "Page orientation: portrait or landscape.", false, null),
+        .. WinPrintOptions.Shared.Select(o =>
+            new CommandOptionDescriptor(o.Name, o.Short?.ToString(), o.ValueType, o.Help, false, null)),
         new("line-numbers", null, typeof(string), "Line number setting: yes or no.", false, null),
-        new("from-sheet", null, typeof(int), "First sheet to print.", false, null),
-        new("to-sheet", null, typeof(int), "Last sheet to print.", false, null),
         new("what-if", "w", typeof(bool), "Count sheets without printing.", false, null),
         new("gui", "g", typeof(bool), "Open the WinPrint GUI for the file instead of printing from the CLI.", false,
             null),
@@ -80,8 +75,8 @@ public sealed class PrintCommand : ICliCommand
             ConfigurePrinter(print, options);
             SheetSettings sheet = ConfigureSheet(print, options);
             string title = options.Title ?? fileName ?? "winprint";
-            string? contentType = GetOption(options, "language")
-                                  ?? GetOption(options, "content-type")
+            // --content-type is the single canonical language/content-type override (matches the TUI).
+            string? contentType = GetOption(options, "content-type")
                                   ?? ContentTypeEngineBase.GetContentType(fileName ?? "");
 
             print.SheetViewModel.File = fileName ?? "";
@@ -181,10 +176,14 @@ public sealed class PrintCommand : ICliCommand
         string? sheetDefinition = GetOption(options, "sheet");
         SheetSettings sheet = print.SheetViewModel.FindSheet(sheetDefinition ?? "", out _);
 
-        if (GetOption(options, "orientation") is { Length: > 0 } orientation)
+        // Canonical orientation: --landscape / --portrait flags (shared with the TUI), not a string.
+        if (GetFlag(options, "landscape"))
         {
-            sheet.Landscape = orientation.Equals("landscape", StringComparison.OrdinalIgnoreCase)
-                              || orientation.Equals("yes", StringComparison.OrdinalIgnoreCase);
+            sheet.Landscape = true;
+        }
+        else if (GetFlag(options, "portrait"))
+        {
+            sheet.Landscape = false;
         }
 
         if (GetOption(options, "line-numbers") is { Length: > 0 } lineNumbers)
