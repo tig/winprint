@@ -552,7 +552,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public Func<Task<string?>>? PickFileAsync { get; set; }
     public Func<Task>? PerformPrintAsync { get; set; }
-    public Func<string, float, string, Task<(string Family, float Size, string Style)?>>? PickFontAsync { get; set; }
+
+    public Func<string, float, string, bool, Task<(string Family, float Size, string Style)?>>? PickFontAsync
+    {
+        get;
+        set;
+    }
 
     // --- Actions ---
 
@@ -600,7 +605,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         (string Family, float Size, string Style)? result =
-            await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString());
+            await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString(), true);
         if (result.HasValue)
         {
             cs.Font = new Core.Models.Font
@@ -625,7 +630,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         (string Family, float Size, string Style)? result =
-            await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString());
+            await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString(), false);
         if (result.HasValue)
         {
             var newFont = new Core.Models.Font

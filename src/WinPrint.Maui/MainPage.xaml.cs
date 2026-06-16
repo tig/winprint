@@ -502,8 +502,11 @@ public partial class MainPage : ContentPage
     }
 
     private async Task<(string Family, float Size, string Style)?> PickFontAsync(
-        string currentFamily, float currentSize, string currentStyle)
+        string currentFamily, float currentSize, string currentStyle, bool canChooseProportional)
     {
+#if MACCATALYST
+        return await MacFontPicker.PickAsync(this, currentFamily, currentSize, currentStyle, canChooseProportional);
+#else
         // MAUI doesn't have a built-in font picker dialog.
         // Use a simple prompt as a placeholder — platform-specific dialogs
         // can be added later via dependency injection.
@@ -521,6 +524,7 @@ public partial class MainPage : ContentPage
         string family = parts.Length > 0 ? parts[0] : currentFamily;
         float size = parts.Length > 1 && float.TryParse(parts[1], out float s) ? s : currentSize;
         return (family, size, currentStyle);
+#endif
     }
 
     /// <summary>

@@ -21,6 +21,7 @@
          so it can be tested cross-platform and in CI (windows-latest). Keep linked files dependency-free. -->
     <ItemGroup>
         <Compile Include="..\..\src\WinPrint.Maui\Views\PreviewGeometry.cs" Link="Linked\PreviewGeometry.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\FontSizeParser.cs" Link="Linked\FontSizeParser.cs" />
     </ItemGroup>
 
 </Project>
