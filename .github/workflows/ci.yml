@@ -31,9 +31,27 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Cache .NET workload packs
+        # The workload install is the job's biggest cost (~5 min) because `dotnet workload install`
+        # reconciles every workload already present on the image (android/ios/maccatalyst/wasm preinstalled
+        # via VS), re-downloading their packs regardless of which workload we name. Cache the installed
+        # packs/manifests/metadata so a warm run restores them and the install below is a no-op.
+        # Bump the -v suffix to force a rebuild if a future image SDK leaves the cached packs stale.
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\Program Files\dotnet\packs
+            C:\Program Files\dotnet\sdk-manifests
+            C:\Program Files\dotnet\metadata
+            C:\Program Files\dotnet\library-packs
+            C:\Program Files\dotnet\template-packs
+          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('global.json') }}-v1
+
       - name: Install MAUI workloads
         # maui-windows only — the MacCatalyst head isn't built on this job (see WinPrintWindowsOnly).
-        run: dotnet workload install maui-windows
+        # --skip-manifest-update: don't re-resolve newer manifests; use what the SDK/cache already has, so
+        # a cache hit makes this a fast no-op instead of a 5-min reconcile.
+        run: dotnet workload install maui-windows --skip-manifest-update
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
