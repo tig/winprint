@@ -3,6 +3,7 @@
 
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using FontStyle = WinPrint.Core.Models.FontStyle;
@@ -13,8 +14,13 @@ namespace WinPrint.Maui.Views;
 ///     A single cross-platform font chooser: a filterable list of the installed font families, a size list,
 ///     Bold/Italic toggles, a "fixed-pitch only" filter, and a live preview. Replaces the platform-specific
 ///     pickers (the macOS multi-step <c>UIFontPickerViewController</c> flow and the Windows text prompt) with
-///     one consistent dialog. Presented as a centered card over a dimmed backdrop. Await
+///     one consistent dialog, presented as a centered card over a dimmed backdrop. Await
 ///     <see cref="Completion" /> for the chosen <c>(Family, Size, Style)</c>, or <c>null</c> if cancelled.
+///     <para>
+///         Toggles and buttons are tap-driven <see cref="Border" />+<see cref="Label" /> affordances rather
+///         than <see cref="CheckBox" />/<see cref="Button" />: those two controls render unreliably under
+///         Mac Catalyst (CheckBox is often invisible/non-interactive; a custom-colored Button looks disabled).
+///     </para>
 /// </summary>
 internal sealed class FontChooserPage : ContentPage
 {
@@ -32,9 +38,6 @@ internal sealed class FontChooserPage : ContentPage
     private readonly ObservableCollection<string> _visibleFamilies = [];
     private readonly CollectionView _familyList;
     private readonly Entry _filter;
-    private readonly CheckBox _fixedPitchOnly;
-    private readonly CheckBox _bold;
-    private readonly CheckBox _italic;
     private readonly Entry _size;
     private readonly CollectionView _sizeList;
     private readonly Label _preview;
@@ -45,6 +48,9 @@ internal sealed class FontChooserPage : ContentPage
     private readonly FontStyle _preservedStyleBits;
 
     private string _selectedFamily;
+    private bool _fixedPitchOnly;
+    private bool _bold;
+    private bool _italic;
     private bool _completed;
 
     public FontChooserPage(string currentFamily, float currentSize, string currentStyle, bool preferFixedPitch)
@@ -54,16 +60,16 @@ internal sealed class FontChooserPage : ContentPage
         _allFamilies = SystemFontEnumerator.GetFamilies();
         _selectedFamily = currentFamily;
         _initialSize = currentSize;
+        _fixedPitchOnly = preferFixedPitch;
 
         FontStyle initialStyle = Enum.TryParse(currentStyle, out FontStyle parsed) ? parsed : FontStyle.Regular;
         _preservedStyleBits = initialStyle & ~(FontStyle.Bold | FontStyle.Italic);
+        _bold = initialStyle.HasFlag(FontStyle.Bold);
+        _italic = initialStyle.HasFlag(FontStyle.Italic);
 
         _filter = MakeEntry();
         _filter.Placeholder = "Filter fonts…";
         _filter.TextChanged += (_, _) => RebuildFamilyList();
-
-        _fixedPitchOnly = new CheckBox { IsChecked = preferFixedPitch };
-        _fixedPitchOnly.CheckedChanged += (_, _) => RebuildFamilyList();
 
         _familyList = MakeListView();
         _familyList.ItemsSource = _visibleFamilies;
@@ -76,14 +82,8 @@ internal sealed class FontChooserPage : ContentPage
             }
         };
 
-        _bold = new CheckBox { IsChecked = initialStyle.HasFlag(FontStyle.Bold) };
-        _bold.CheckedChanged += (_, _) => UpdatePreview();
-        _italic = new CheckBox { IsChecked = initialStyle.HasFlag(FontStyle.Italic) };
-        _italic.CheckedChanged += (_, _) => UpdatePreview();
-
         _size = MakeEntry();
         _size.Keyboard = Keyboard.Numeric;
-        _size.WidthRequest = 70;
         _size.Text = currentSize.ToString(CultureInfo.CurrentCulture);
         _size.TextChanged += (_, _) => UpdatePreview();
 
@@ -116,13 +116,12 @@ internal sealed class FontChooserPage : ContentPage
 
     private void RebuildFamilyList()
     {
-        bool fixedOnly = _fixedPitchOnly.IsChecked;
         string filter = _filter.Text?.Trim() ?? string.Empty;
 
         _visibleFamilies.Clear();
         foreach (SystemFontFamily family in _allFamilies)
         {
-            if (fixedOnly && !family.IsFixedPitch)
+            if (_fixedPitchOnly && !family.IsFixedPitch)
             {
                 continue;
             }
@@ -145,12 +144,12 @@ internal sealed class FontChooserPage : ContentPage
     private void UpdatePreview()
     {
         FontAttributes attributes = FontAttributes.None;
-        if (_bold.IsChecked)
+        if (_bold)
         {
             attributes |= FontAttributes.Bold;
         }
 
-        if (_italic.IsChecked)
+        if (_italic)
         {
             attributes |= FontAttributes.Italic;
         }
@@ -169,12 +168,12 @@ internal sealed class FontChooserPage : ContentPage
     private (string Family, float Size, string Style)? BuildResult()
     {
         FontStyle style = _preservedStyleBits;
-        if (_bold.IsChecked)
+        if (_bold)
         {
             style |= FontStyle.Bold;
         }
 
-        if (_italic.IsChecked)
+        if (_italic)
         {
             style |= FontStyle.Italic;
         }
@@ -209,7 +208,7 @@ internal sealed class FontChooserPage : ContentPage
             BackgroundColor = CardColor,
             Stroke = HintColor,
             StrokeThickness = 1,
-            StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+            StrokeShape = new RoundRectangle { CornerRadius = 10 },
             Padding = new Thickness(18),
             Margin = new Thickness(24),
             WidthRequest = 580,
@@ -245,7 +244,12 @@ internal sealed class FontChooserPage : ContentPage
             }
         };
         filterRow.Add(_filter, 0);
-        filterRow.Add(CheckRow("Fixed-pitch only", _fixedPitchOnly), 1);
+        filterRow.Add(
+            MakeToggle("Fixed-pitch only", () => _fixedPitchOnly, v =>
+            {
+                _fixedPitchOnly = v;
+                RebuildFamilyList();
+            }), 1);
 
         // Families on the left, sizes on the right.
         var listsRow = new Grid
@@ -276,8 +280,20 @@ internal sealed class FontChooserPage : ContentPage
 
         var styleRow = new HorizontalStackLayout
         {
-            Spacing = 16,
-            Children = { CheckRow("Bold", _bold), CheckRow("Italic", _italic) }
+            Spacing = 12,
+            Children =
+            {
+                MakeToggle("Bold", () => _bold, v =>
+                {
+                    _bold = v;
+                    UpdatePreview();
+                }),
+                MakeToggle("Italic", () => _italic, v =>
+                {
+                    _italic = v;
+                    UpdatePreview();
+                })
+            }
         };
 
         var previewBorder = new Border
@@ -290,27 +306,15 @@ internal sealed class FontChooserPage : ContentPage
             Content = _preview
         };
 
-        var cancel = new Button
-        {
-            Text = "Cancel",
-            BackgroundColor = FieldColor,
-            TextColor = InkColor
-        };
-        cancel.Clicked += (_, _) => Complete(null);
-
-        var ok = new Button
-        {
-            Text = "OK",
-            BackgroundColor = AccentColor,
-            TextColor = Colors.White
-        };
-        ok.Clicked += (_, _) => Complete(BuildResult());
-
         var buttonRow = new HorizontalStackLayout
         {
             Spacing = 10,
             HorizontalOptions = LayoutOptions.End,
-            Children = { cancel, ok }
+            Children =
+            {
+                MakePill("Cancel", FieldColor, InkColor, () => Complete(null)),
+                MakePill("OK", AccentColor, Colors.White, () => Complete(BuildResult()))
+            }
         };
 
         var body = new Grid
@@ -371,27 +375,65 @@ internal sealed class FontChooserPage : ContentPage
     }
 
     /// <summary>
-    ///     A checkbox plus a tap-connected label (MAUI's CheckBox has no built-in label, and a sibling Label
-    ///     isn't click-connected to it).
+    ///     A tap-driven toggle (checkbox replacement). Shows a check glyph + label and fills with the accent
+    ///     color when on. <paramref name="get" />/<paramref name="set" /> read and write the backing field;
+    ///     <paramref name="set" /> performs the side effect (re-filter / re-preview).
     /// </summary>
-    private HorizontalStackLayout CheckRow(string text, CheckBox box)
+    private View MakeToggle(string text, Func<bool> get, Action<bool> set)
     {
-        var label = new Label { Text = text, TextColor = InkColor, VerticalOptions = LayoutOptions.Center };
+        var label = new Label { TextColor = InkColor, VerticalOptions = LayoutOptions.Center };
+        var border = new Border
+        {
+            StrokeThickness = 1,
+            Stroke = HintColor,
+            StrokeShape = new RoundRectangle { CornerRadius = 6 },
+            Padding = new Thickness(10, 6),
+            Content = label
+        };
+
+        void Render()
+        {
+            bool on = get();
+            label.Text = (on ? "☑  " : "☐  ") + text;
+            label.TextColor = on ? Colors.White : InkColor;
+            border.BackgroundColor = on ? AccentColor : FieldColor;
+        }
+
         var tap = new TapGestureRecognizer();
         tap.Tapped += (_, _) =>
         {
-            if (box.IsEnabled)
-            {
-                box.IsChecked = !box.IsChecked;
-            }
+            set(!get());
+            Render();
         };
-        label.GestureRecognizers.Add(tap);
+        border.GestureRecognizers.Add(tap);
 
-        return new HorizontalStackLayout
+        Render();
+        return border;
+    }
+
+    /// <summary>A tap-driven button (Button replacement that renders consistently on Mac Catalyst).</summary>
+    private View MakePill(string text, Color background, Color foreground, Action onTap)
+    {
+        var label = new Label
         {
-            Spacing = 4,
-            VerticalOptions = LayoutOptions.Center,
-            Children = { box, label }
+            Text = text,
+            TextColor = foreground,
+            FontAttributes = FontAttributes.Bold,
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Center
         };
+        var border = new Border
+        {
+            BackgroundColor = background,
+            StrokeThickness = 0,
+            StrokeShape = new RoundRectangle { CornerRadius = 6 },
+            Padding = new Thickness(22, 10),
+            Content = label
+        };
+
+        var tap = new TapGestureRecognizer();
+        tap.Tapped += (_, _) => onTap();
+        border.GestureRecognizers.Add(tap);
+        return border;
     }
 }
