@@ -52,8 +52,8 @@ public class OpenFilePickerFolderTests
             var folder = new OpenFilePickerFolder();
             folder.RememberFile(Path.Combine(rememberedDirectory, "sample.txt"));
 
-            string pickerDirectory = await folder.RunFromRememberedDirectoryAsync(
-                () => Task.FromResult(Environment.CurrentDirectory));
+            string pickerDirectory =
+                await folder.RunFromRememberedDirectoryAsync(() => Task.FromResult(Environment.CurrentDirectory));
 
             Assert.Equal(rememberedDirectory, pickerDirectory);
             Assert.Equal(startDirectory, Environment.CurrentDirectory);
