@@ -280,6 +280,122 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task HtmlCte_RendersMhtmlArchive_AsHtml_NotRawMime()
+    {
+        // A minimal MHTML (.mhtml) web archive: MIME multipart/related wrapping a quoted-printable
+        // HTML part ("=20" is a space; "=\r\n" is a soft line break).
+        const string mhtml =
+            "From: <Saved by Test>\r\n" +
+            "MIME-Version: 1.0\r\n" +
+            "Content-Type: multipart/related; boundary=\"BOUND123\"\r\n" +
+            "\r\n" +
+            "--BOUND123\r\n" +
+            "Content-Type: text/html; charset=utf-8\r\n" +
+            "Content-Transfer-Encoding: quoted-printable\r\n" +
+            "Content-Location: http://example.com/page.html\r\n" +
+            "\r\n" +
+            "<html><body><h1>Archived=20Heading</h1><p>Body from =\r\nthe archive.</p></body></html>\r\n" +
+            "--BOUND123--\r\n";
+
+        var measure = new RecordingGraphicsContext();
+        var cte = new HtmlCte
+        {
+            ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 } },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 1100)
+        };
+
+        Assert.True(await cte.SetDocumentAsync(mhtml));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        // The unpacked HTML renders (quoted-printable decoded)...
+        foreach (string word in new[] { "Archived", "Heading", "Body", "archive." })
+        {
+            Assert.Contains(word, all, StringComparison.Ordinal);
+        }
+
+        // ...and the MIME envelope is NOT rendered as text.
+        Assert.DoesNotContain("MIME-Version", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("multipart/related", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("BOUND123", all, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task HtmlCte_RendersHtml_AsStyledTextWithoutTags()
+    {
+        var measure = new RecordingGraphicsContext();
+        var cte = new HtmlCte
+        {
+            ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 1100)
+        };
+
+        const string html =
+            "<html><body><h1>Title</h1><p>Hello <b>bold</b> and <i>italic</i> world</p>" +
+            "<ul><li>one</li><li>two</li></ul></body></html>";
+
+        Assert.True(await cte.SetDocumentAsync(html));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        foreach (string word in new[] { "Title", "Hello", "bold", "italic", "world", "one", "two" })
+        {
+            Assert.Contains(word, all, StringComparison.Ordinal);
+        }
+
+        // The HTML is rendered, not dumped: no raw tags reach the page.
+        Assert.DoesNotContain("<h1>", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("<p>", all, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("table.html")]
+    [InlineData("samplePage no CSS.html")]
+    public async Task HtmlCte_RendersRealHtmlTestFile(string fileName)
+    {
+        string doc = await File.ReadAllTextAsync(FindTestFile(fileName));
+
+        var measure = new RecordingGraphicsContext();
+        var cte = new HtmlCte
+        {
+            ContentSettings = new ContentSettings { Font = new Font { Family = "Arial", Size = 12 }, TabSpaces = 4 },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(800, 1100),
+            SourceFileName = FindTestFile(fileName)
+        };
+
+        Assert.True(await cte.SetDocumentAsync(doc));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        // Something was laid out and painted as text; no raw tags reach the page.
+        Assert.NotEmpty(paint.DrawnStrings);
+        string all = string.Concat(paint.DrawnStrings.Select(s => s.Text));
+        Assert.DoesNotContain("</", all, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task TextMateCte_RendersTokenizedText_CrossPlatform()
     {
         var measure = new RecordingGraphicsContext();
