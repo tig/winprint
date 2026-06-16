@@ -112,8 +112,8 @@ public class OpenFilePickerFolderTests
 
             // The action's exception must propagate unchanged — the best-effort directory restore in the
             // finally must never throw and mask it.
-            InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => folder.RunFromRememberedDirectoryAsync<int>(() => throw new InvalidOperationException("boom")));
+            InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                folder.RunFromRememberedDirectoryAsync<int>(() => throw new InvalidOperationException("boom")));
 
             Assert.Equal("boom", ex.Message);
         }
