@@ -44,9 +44,7 @@ internal static class MacFontPicker
             return null;
         }
 
-        float size = float.TryParse(sizeInput, NumberStyles.Float, CultureInfo.CurrentCulture, out float parsed)
-            ? parsed
-            : currentSize;
+        float size = FontSizeParser.Parse(sizeInput, currentSize);
         string style = string.IsNullOrWhiteSpace(font.Value.Style) ? currentStyle : font.Value.Style;
         return (font.Value.Family, size, style);
     }

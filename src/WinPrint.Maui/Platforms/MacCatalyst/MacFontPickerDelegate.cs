@@ -40,8 +40,10 @@ internal sealed class MacFontPickerDelegate : UIFontPickerViewControllerDelegate
 
     private void Complete(UIFontPickerViewController viewController, (string Family, string Style)? result)
     {
-        viewController.DismissViewController(true, null);
-        _completion.TrySetResult(result);
+        // Complete only after the dismissal animation finishes, so PickAsync's follow-up
+        // (DisplayPromptAsync for the size) doesn't present while the picker is still dismissing —
+        // which can drop the prompt or trigger a UIKit "presentation already in progress" error.
+        viewController.DismissViewController(true, () => _completion.TrySetResult(result));
     }
 
     private static string GetStyle(UIFontDescriptorSymbolicTraits traits)
