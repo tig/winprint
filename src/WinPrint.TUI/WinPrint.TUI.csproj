@@ -39,6 +39,9 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>WinPrint.TUI.UnitTests</_Parameter1>
         </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>WinPrint.TUI.UITests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>

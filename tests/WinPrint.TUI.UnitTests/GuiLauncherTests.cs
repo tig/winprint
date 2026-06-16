@@ -20,6 +20,14 @@ public class GuiLauncherTests
     [Fact]
     public void Windows_LaunchesWinprintExeFromBaseDirectory()
     {
+        // Windows-only: GuiLauncher relies on Path.IsPathFullyQualified, which is OS-specific — a
+        // "C:\..." drive path is fully qualified only on Windows (on Unix it falls back to the bare
+        // filename). The Windows launch path is verified on the windows-latest CI runner.
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
         List<ProcessStartInfo> starts = [];
 
         GuiLauncher.Launch(
