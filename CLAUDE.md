@@ -21,6 +21,21 @@ dotnet build src/WinPrint.Core/WinPrint.Core.csproj          # builds both TFMs
 dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 dotnet test  ... --filter "FullyQualifiedName~CteRenderingTests"   # single class
 ```
+### Local Terminal.Gui #5493 build (per-machine env vars — do NOT hard-code)
+`src/WinPrint.TUI` consumes a **locally-built** Terminal.Gui from the #5493 PR worktree
+(Kitty graphics). The feed path and the package version differ per machine (different
+worktree locations / branch-derived version strings), so they are **not** committed —
+hard-coding either one caused Mac⇄Windows build fights on every pull. Instead each
+machine sets two environment variables (persisted in the shell profile):
+- `WINPRINT_TG_FEED` — absolute path to the local `Terminal.Gui/bin/Debug`
+  (consumed by `nuget.config`).
+- `WINPRINT_TG_VERSION` — the version that worktree built (consumed by
+  `Directory.Build.props` → `WinPrintTgVersion` → the TUI `PackageReference`).
+
+If unset, the TUI build fails fast with an actionable message (see the
+`_CheckWinPrintTgEnv` target). **Never** put a machine-specific path or version back
+into `nuget.config` / the `.csproj` — set the env vars instead.
+
 CI (`.github/workflows/ci.yml`) runs on **windows-latest**, installs the `maui`
 workload, builds `WinPrint.slnx`, then enforces a **style gate**:
 `dotnet jb cleanupcode` + `dotnet format` with `git diff --exit-code`. Run those
