@@ -82,10 +82,18 @@ jobs:
 
   # MAUI UI automation: Appium (mac2 driver) against the MacCatalyst app. Needs a macOS host with Xcode,
   # Appium, and the built app — hence a separate job from the Windows build/test matrix.
-  # Non-blocking for now: this job is new and can't be validated off-CI; it needs the runner's Xcode to
-  # match the MacCatalyst SDK and Appium/app-launch to settle. Flip continue-on-error off once it's green.
+  #
+  # Runner: macos-26 (NOT macos-latest). The .NET 10 maui workload's Microsoft.MacCatalyst pack hard-
+  # requires the MacCatalyst 26.5 SDK (Xcode 26.5) — its ILLink 'Setup' step version-checks the SDK and
+  # fails with MT0180/NETSDK1144 on anything older, regardless of trim/link mode. macos-latest is still
+  # macOS 15, whose newest Xcode is 26.3, so the build can never satisfy the gate there. macos-26 ships
+  # Xcode 26.5 (its default), which pairs with this SDK. Bump both together when the SDK requires a newer
+  # Xcode (the error names the exact version).
+  #
+  # Still continue-on-error: the build is now sound, but the Appium app-launch/menu locators were authored
+  # without a local runner and may need a fixup pass. Flip this off once a full green run is observed.
   maui-ui-tests:
-    runs-on: macos-latest
+    runs-on: macos-26
     continue-on-error: true
 
     steps:
@@ -102,15 +110,15 @@ jobs:
       - name: Install MAUI workloads
         run: dotnet workload install maui
 
+      - name: Select Xcode 26.5
+        # Pin explicitly rather than rely on the image default so the MacCatalyst SDK <-> Xcode pairing is
+        # deterministic across image refreshes. 26.5 is the macos-26 default today; this is a no-op now but
+        # guards against a future default bump leaving the SDK requirement unmet.
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app
+
       - name: Build MacCatalyst app
-        # Use the runner's default Xcode (do NOT xcode-select — the highest-numbered Xcode_*.app on the
-        # image can be a broken/partial install missing actool/MacOSX SDK).
-        # MtouchLink=None disables trimming (MacCatalyst forces PublishTrimmed=true); we only need a
-        # launchable Debug bundle for the UI tests, and trimming would otherwise require MacCatalyst SDK
-        # headers the runner's Xcode may predate (MT0180 / NETSDK1144).
-        # NOTE: the maui workload can resolve to a MacCatalyst SDK newer than the runner's Xcode; if this
-        # build still fails on that skew, the job is continue-on-error and does not gate the PR. TODO:
-        # pin the workload to the runner's Xcode once a stable pairing is known.
+        # We only need a launchable Debug bundle for the Appium UI tests. MtouchLink=None asks for the
+        # lightest link mode; with Xcode 26.5 present the Apple linker's SDK check (MT0180) now passes.
         run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst -p:MtouchLink=None
 
       - name: Install Appium + mac2 driver
