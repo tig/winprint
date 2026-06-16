@@ -100,29 +100,21 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Install MAUI workloads
-        # --skip-manifest-update pins the workload to the SDK's baked manifest set instead of pulling the
-        # latest from NuGet (which resolves to MacCatalyst SDK 26.5, needing an Xcode the runner lacks).
-        # The pinned set resolves to MacCatalyst SDK 26.0.
+        # --skip-manifest-update pins to the SDK's baked manifest (MacCatalyst SDK 26.0) instead of the
+        # latest from NuGet (26.5), so we don't need an even newer Xcode than the image has.
         run: dotnet workload install maui --skip-manifest-update
-
-      - name: Select Xcode for the pinned MacCatalyst SDK
-        # The pinned workload is MacCatalyst SDK 26.0, which needs Xcode 26.0; the runner's default is
-        # 16.4. Select the matching Xcode explicitly (by exact version — not the highest Xcode_*.app,
-        # since Xcode_26.3.0.app on the image is a partial install missing the MacOSX SDK/actool).
-        run: sudo xcode-select -s /Applications/Xcode_26.0.app
 
       - name: Workloads after install
         run: dotnet workload list || true
 
       - name: Build MacCatalyst app
-        # Use the runner's default Xcode (do NOT xcode-select — the highest-numbered Xcode_*.app on the
-        # image can be a broken/partial install missing actool/MacOSX SDK).
-        # MtouchLink=None disables trimming (MacCatalyst forces PublishTrimmed=true); we only need a
-        # launchable Debug bundle for the UI tests, and trimming would otherwise require MacCatalyst SDK
-        # headers the runner's Xcode may predate (MT0180 / NETSDK1144).
-        # NOTE: the maui workload can resolve to a MacCatalyst SDK newer than the runner's Xcode; if this
-        # build still fails on that skew, the job is continue-on-error and does not gate the PR. TODO:
-        # pin the workload to the runner's Xcode once a stable pairing is known.
+        # KNOWN-BLOCKED on the current macos-latest image, hence continue-on-error on this job:
+        #   - .NET 10 MacCatalyst needs Xcode 26.x (workload SDK is net10.0_26.0).
+        #   - The image's only FULLY-installed Xcode is 16.4 (has actool/MacOSX SDK) -> too old (MT0180).
+        #   - The image's Xcode 26.x are PARTIAL (no MacOSX SDK / actool) -> "actool not found".
+        # There is no complete Xcode on the image matching the .NET 10 MacCatalyst SDK. This will start
+        # passing once GitHub provisions a full Xcode 26.x on macos-latest; then flip continue-on-error
+        # off to make this a real gate. (MtouchLink=None keeps the build to a launchable Debug bundle.)
         run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst -p:MtouchLink=None
 
       - name: Install Appium + mac2 driver
