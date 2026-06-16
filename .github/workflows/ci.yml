@@ -127,11 +127,17 @@ jobs:
             sleep 1
           done
 
+      - name: Locate MacCatalyst app bundle
+        # Don't hardcode the runtime-identifier subfolder — Debug's default RID differs by host/arch
+        # (maccatalyst-x64 vs -arm64). Find the bundle the build actually produced.
+        run: |
+          app=$(find src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst -maxdepth 2 -name 'WinPrint.app' -type d | head -1)
+          echo "Found app bundle: $app"
+          echo "APPIUM_APP=$app" >> "$GITHUB_ENV"
+
       - name: Test (MAUI UI / Appium)
         env:
           APPIUM_SERVER: http://127.0.0.1:4723
-          # Launch the freshly built bundle by path (resolved by the test's CreateDriver).
-          APPIUM_APP: ${{ github.workspace }}/src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/WinPrint.app
         run: dotnet test tests/WinPrint.Maui.UITests/WinPrint.Maui.UITests.csproj --configuration Debug --verbosity normal
 
       - name: Upload Appium log
