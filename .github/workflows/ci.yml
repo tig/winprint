@@ -99,20 +99,18 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Select newest Xcode
-        # The maui workload resolves to the latest MacCatalyst SDK (e.g. 26.5), which needs the matching
-        # Xcode headers; the runner's default Xcode may be older (error MT0180). Point at the newest
-        # installed Xcode so the SDK and Xcode agree.
-        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
-
       - name: Install MAUI workloads
         run: dotnet workload install maui
 
       - name: Build MacCatalyst app
-        # MtouchLink=None disables trimming (MacCatalyst forces PublishTrimmed=true). We only need a
+        # Use the runner's default Xcode (do NOT xcode-select — the highest-numbered Xcode_*.app on the
+        # image can be a broken/partial install missing actool/MacOSX SDK).
+        # MtouchLink=None disables trimming (MacCatalyst forces PublishTrimmed=true); we only need a
         # launchable Debug bundle for the UI tests, and trimming would otherwise require MacCatalyst SDK
-        # headers the runner's Xcode may predate (MT0180 / NETSDK1144). Belt-and-suspenders with the
-        # Xcode selection above.
+        # headers the runner's Xcode may predate (MT0180 / NETSDK1144).
+        # NOTE: the maui workload can resolve to a MacCatalyst SDK newer than the runner's Xcode; if this
+        # build still fails on that skew, the job is continue-on-error and does not gate the PR. TODO:
+        # pin the workload to the runner's Xcode once a stable pairing is known.
         run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst -p:MtouchLink=None
 
       - name: Install Appium + mac2 driver
