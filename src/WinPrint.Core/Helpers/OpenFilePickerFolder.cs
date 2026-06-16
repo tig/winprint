@@ -27,10 +27,11 @@ public sealed class OpenFilePickerFolder
                 _currentDirectory = directory;
             }
         }
-        catch (ArgumentException)
-        {
-        }
-        catch (NotSupportedException)
+        // RememberFile is best-effort: ignore any unusable path. Path.GetFullPath can throw
+        // ArgumentException/NotSupportedException (invalid chars), PathTooLongException (an IOException),
+        // SecurityException, or UnauthorizedAccessException — none should escape to the caller.
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or IOException
+                                       or System.Security.SecurityException or UnauthorizedAccessException)
         {
         }
     }
@@ -45,18 +46,35 @@ public sealed class OpenFilePickerFolder
             return await action().ConfigureAwait(false);
         }
 
+        // Switching the process-wide current directory is best-effort: if we can't switch (directory
+        // vanished, permission/IO error) still run the action from the original directory, and never let
+        // the restore in the finally throw and mask the action's own exception.
         string originalDirectory = Environment.CurrentDirectory;
+        bool switched = TrySetCurrentDirectory(directory);
         try
         {
-            Environment.CurrentDirectory = directory;
             return await action().ConfigureAwait(false);
         }
         finally
         {
-            if (Directory.Exists(originalDirectory))
+            if (switched)
             {
-                Environment.CurrentDirectory = originalDirectory;
+                TrySetCurrentDirectory(originalDirectory);
             }
+        }
+    }
+
+    private static bool TrySetCurrentDirectory(string directory)
+    {
+        try
+        {
+            Environment.CurrentDirectory = directory;
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or System.Security.SecurityException
+                                       or UnauthorizedAccessException or ArgumentException)
+        {
+            return false;
         }
     }
 }
