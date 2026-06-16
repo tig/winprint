@@ -139,8 +139,10 @@ jobs:
         # Don't hardcode the runtime-identifier subfolder — Debug's default RID differs by host/arch
         # (maccatalyst-x64 vs -arm64). Find the bundle the build actually produced.
         run: |
-          app=$(find src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst -maxdepth 2 -name 'WinPrint.app' -type d | head -1)
+          app=$(find "$PWD/src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst" -maxdepth 2 -name 'WinPrint.app' -type d | head -1)
           echo "Found app bundle: $app"
+          # Absolute path: the Appium server runs as a separate background process, so a relative path
+          # would resolve against its CWD, not the test's.
           echo "APPIUM_APP=$app" >> "$GITHUB_ENV"
 
       - name: Test (MAUI UI / Appium)

@@ -133,6 +133,24 @@ public class MacMenuUITests
 
         var driver = new MacDriver(new Uri(server), options);
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(15);
+
+        // Launching by `app` path starts the process but does NOT make it frontmost — XCUITest's menu bar
+        // is owned by whatever app is active (Finder on a fresh CI desktop), so menu-item lookups would hit
+        // Finder's File menu, not ours. Explicitly activate our app so its menu bar is the one in the tree.
+        ActivateApp(driver);
         return driver;
+    }
+
+    private static void ActivateApp(MacDriver driver)
+    {
+        try
+        {
+            driver.ExecuteScript("macos: activateApp", new Dictionary<string, object> { ["bundleId"] = BundleId });
+        }
+        catch (WebDriverException)
+        {
+            // Non-fatal: if activation isn't supported/needed the menu-item find (and its tree dump on
+            // failure) still runs and tells us what actually happened.
+        }
     }
 }
