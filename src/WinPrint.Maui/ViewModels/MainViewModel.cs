@@ -693,20 +693,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     ///     user's choice. Returns <c>true</c> if the app may close (everything saved/created or nothing to
     ///     save) or <c>false</c> if the user cancelled and wants to keep editing.
     /// </summary>
-    public async Task<bool> PromptSaveSheetOnExitAsync(Page host)
+    public Task<bool> PromptSaveSheetOnExitAsync(Page host)
     {
-        foreach (string key in _app.DirtySheetDefinitionKeys)
+        // The decision logic (which definitions to prompt for, and how to apply each choice) lives in the
+        // shared AppViewModel guard so every front end behaves identically. Here we only present the dialog.
+        return _app.ResolveUnsavedSheetsOnExitAsync(async (definitions, currentIndex) =>
         {
-            // A prior Save-to-other may have resolved this definition as a side effect.
-            if (!_app.IsSheetDefinitionDirty(key))
-            {
-                continue;
-            }
-
-            _app.SetCurrentSheetDefinition(key);
-
-            Views.SaveSheetDialogPage dialog =
-                new(_app.SheetDefinitions, _app.CurrentSheetDefinitionIndex);
+            Views.SaveSheetDialogPage dialog = new(definitions, currentIndex);
             await host.Navigation.PushModalAsync(dialog);
             SaveSheetChoice choice = await dialog.Completion;
 
@@ -719,27 +712,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 await host.Navigation.PopModalAsync();
             }
 
-            switch (choice)
-            {
-                case SaveSheetChoice.Save:
-                    _app.SaveSheetChangesToIndex(dialog.SelectedIndex);
-                    break;
-
-                case SaveSheetChoice.Create:
-                    _app.CreateSheetDefinition(dialog.NewName);
-                    break;
-
-                case SaveSheetChoice.DontSave:
-                    // Discard this definition's edits but let the exit proceed.
-                    _app.DiscardSheetChanges();
-                    break;
-
-                default:
-                    return false;
-            }
-        }
-
-        return true;
+            return new SaveSheetResolution(choice, dialog.SelectedIndex, dialog.NewName);
+        });
     }
 
     // --- Internals ---

@@ -268,6 +268,41 @@ public partial class MainPage : ContentPage
     /// <summary>Whether Print is currently available — drives native menu-item enablement.</summary>
     public bool CanPrint => _viewModel.PrintCommand.CanExecute(null);
 
+#if MACCATALYST
+    private bool _macQuitInProgress;
+
+    /// <summary>Whether there are unsaved sheet edits — checked by the Mac quit interceptor before deferring
+    ///     termination to run the save prompt.</summary>
+    public bool HasUnsavedSheetChangesForExit => _viewModel.HasUnsavedSheetChanges;
+
+    /// <summary>
+    ///     Runs the shared save-on-exit prompt in response to a Mac quit (⌘Q / App ▸ Quit), then tells AppKit
+    ///     whether to proceed. The interceptor already returned <c>NSTerminateLater</c>, so termination is
+    ///     paused until <see cref="MacQuitInterceptor.ReplyToTerminate" /> is called here. This gives the Mac
+    ///     the same behavior as the Windows <c>AppWindow.Closing</c> handler.
+    /// </summary>
+    public async void BeginExitPromptThenReply()
+    {
+        if (_macQuitInProgress)
+        {
+            // A prompt is already up; abort this extra termination request and let the in-flight one decide.
+            MacQuitInterceptor.ReplyToTerminate(false);
+            return;
+        }
+
+        _macQuitInProgress = true;
+        try
+        {
+            bool mayQuit = await _viewModel.PromptSaveSheetOnExitAsync(this);
+            MacQuitInterceptor.ReplyToTerminate(mayQuit);
+        }
+        finally
+        {
+            _macQuitInProgress = false;
+        }
+    }
+#endif
+
     /// <summary>
     ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, +, -).
     /// </summary>
