@@ -78,7 +78,7 @@ internal static class MacQuitInterceptor
 
             IntPtr delClass = object_getClass(del);
             IntPtr sel = sel_registerName("applicationShouldTerminate:");
-            var imp = (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, nuint>)&ShouldTerminate;
+            IntPtr imp = (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, nuint>)&ShouldTerminate;
 
             // "Q@:@" = returns NSUInteger; args are self, _cmd, sender. Add it if the AppKit delegate doesn't
             // already implement it (the common case); otherwise replace the existing implementation.

@@ -66,7 +66,7 @@ public static class SystemFontEnumerator
     {
         try
         {
-            using SKTypeface? typeface = SKTypeface.FromFamilyName(family);
+            using var typeface = SKTypeface.FromFamilyName(family);
             if (typeface is null)
             {
                 return false;

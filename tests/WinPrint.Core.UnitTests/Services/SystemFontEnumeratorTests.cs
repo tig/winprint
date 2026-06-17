@@ -17,7 +17,7 @@ public class SystemFontEnumeratorTests
     [Fact]
     public void GetFamilies_ReturnsInstalledFamilies()
     {
-        var families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
 
         Assert.NotEmpty(families);
         Assert.All(families, f => Assert.False(string.IsNullOrWhiteSpace(f.Name)));
@@ -26,14 +26,14 @@ public class SystemFontEnumeratorTests
     [Fact]
     public void GetFamilies_IsCachedAndSortedDistinct()
     {
-        var first = SystemFontEnumerator.GetFamilies();
-        var second = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> first = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> second = SystemFontEnumerator.GetFamilies();
 
         Assert.Same(first, second);
 
         var names = first.Select(f => f.Name).ToList();
-        Assert.Equal(names.Count, names.Distinct(System.StringComparer.OrdinalIgnoreCase).Count());
-        Assert.Equal(names.OrderBy(n => n, System.StringComparer.OrdinalIgnoreCase), names);
+        Assert.Equal(names.Count, names.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.Equal(names.OrderBy(n => n, StringComparer.OrdinalIgnoreCase), names);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class SystemFontEnumeratorTests
     {
         // Every platform WinPrint targets ships at least one monospaced family (Consolas/Courier New on
         // Windows, Menlo/Monaco/Courier on macOS, DejaVu/Liberation Mono on typical Linux).
-        var families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
         Assert.Contains(families, f => f.IsFixedPitch);
     }
 
@@ -50,7 +50,7 @@ public class SystemFontEnumeratorTests
     {
         // The flag must mean what it says: in a family marked fixed-pitch a narrow and a wide glyph advance
         // identically; in one marked proportional they differ. Verify both directions against Skia directly.
-        var families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
 
         SystemFontFamily? mono = families.FirstOrDefault(f => f.IsFixedPitch);
         if (mono is not null)
@@ -72,11 +72,11 @@ public class SystemFontEnumeratorTests
         // char as the same .notdef advance, which made the width-only test report them as monospace and
         // flooded the "fixed-pitch only" filter with non-mono faces. A real fixed-pitch family must contain
         // the glyphs it's being measured by.
-        var families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
 
         foreach (SystemFontFamily family in families.Where(f => f.IsFixedPitch))
         {
-            using SKTypeface? typeface = SKTypeface.FromFamilyName(family.Name);
+            using var typeface = SKTypeface.FromFamilyName(family.Name);
             Assert.NotNull(typeface);
             ushort[] glyphs = typeface.GetGlyphs("iWlM");
             Assert.DoesNotContain((ushort)0, glyphs);
@@ -85,9 +85,9 @@ public class SystemFontEnumeratorTests
 
     private static bool GlyphsAdvanceEqually(string family)
     {
-        using SKTypeface? typeface = SKTypeface.FromFamilyName(family);
+        using var typeface = SKTypeface.FromFamilyName(family);
         Assert.NotNull(typeface);
         using var font = new SKFont(typeface, 64f);
-        return font.MeasureText("i") > 0f && System.Math.Abs(font.MeasureText("i") - font.MeasureText("W")) < 0.01f;
+        return font.MeasureText("i") > 0f && Math.Abs(font.MeasureText("i") - font.MeasureText("W")) < 0.01f;
     }
 }
