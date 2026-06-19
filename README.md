@@ -1,5 +1,4 @@
 [![GitHub Release](https://img.shields.io/github/v/release/tig/winprint)](https://github.com/tig/winprint/releases)
-![.NET Core](https://github.com/tig/winprint/workflows/.NET%20Core/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/tig/winprint/badge?s=93affda0738af869187afe5296914b814511f529)](https://www.codefactor.io/repository/github/tig/winprint)
 
 # WinPrint
@@ -10,7 +9,7 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 <img width="1102" height="666" alt="hero" src="docs/hero.gif" />
 
-*The `wp` terminal UI renders true print previews as sixel graphics, without leaving the terminal: page through a document, zoom in, pan smoothly with the mouse, switch sheet definitions, and open another file.*
+*The `wp` terminal UI renders true print previews as sixel/kittu graphics, without leaving the terminal: page through a document, zoom in, pan smoothly with the mouse, switch sheet definitions, and open another file.*
 
 ## Installation
 
