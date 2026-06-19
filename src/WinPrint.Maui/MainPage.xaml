@@ -64,7 +64,8 @@
                                     FontSize="{DynamicResource SidebarFontSize}" />
                             <HorizontalStackLayout Spacing="4">
                                 <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.7" />
-                                <Label Text="Landscape" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
+                                <Label Text="Landscape" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}"
+                                       Margin="{OnPlatform Default='0', WinUI='-8,0,0,0'}">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                     </Label.GestureRecognizers>
@@ -124,7 +125,8 @@
                                 </HorizontalStackLayout>
                                 <HorizontalStackLayout Spacing="4">
                                     <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
-                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
+                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}"
+                                           Margin="{OnPlatform Default='0', WinUI='-8,0,0,0'}">
                                         <Label.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                         </Label.GestureRecognizers>
@@ -156,7 +158,8 @@
                             <!-- Line Numbers -->
                             <HorizontalStackLayout Spacing="4">
                                 <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.65" />
-                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
+                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}"
+                                       Margin="{OnPlatform Default='0', WinUI='-8,0,0,0'}">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                     </Label.GestureRecognizers>

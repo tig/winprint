@@ -4,6 +4,7 @@ using Serilog;
 using Velopack;
 using WinPrint.Core.Models;
 #if WINDOWS
+using Microsoft.Maui.Handlers;
 using WinPrint.Core.Services;
 #endif
 
@@ -85,6 +86,16 @@ public static class MauiProgram
         // The preview must be able to take keyboard focus (see FocusablePlatformGraphicsView).
         builder.ConfigureMauiHandlers(handlers =>
             handlers.AddHandler<GraphicsView, FocusableGraphicsViewHandler>());
+#endif
+
+#if WINDOWS
+        builder.ConfigureMauiHandlers(_ =>
+            CheckBoxHandler.Mapper.AppendToMapping("CompactDesktopLayout", (handler, _) =>
+            {
+                handler.PlatformView.MinWidth = 0;
+                handler.PlatformView.MinHeight = 0;
+                handler.PlatformView.Padding = new Microsoft.UI.Xaml.Thickness(0);
+            }));
 #endif
 
         builder.Services.AddSingleton<AppShell>();

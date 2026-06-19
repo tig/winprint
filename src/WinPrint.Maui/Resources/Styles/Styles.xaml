@@ -41,12 +41,9 @@
     <Style TargetType="CheckBox">
         <!--
             No Color setter: use the platform's native accent so the checkbox looks
-            like the OS standard. WinUI measures the native checkbox by its larger
-            touch target even when Scale shrinks the visible glyph, so keep that
-            layout slot compact on Windows to avoid a large gap before adjacent text.
+            like the OS standard. WinUI's native minimum width is reduced in
+            MauiProgram so checkbox labels can sit next to the visible glyph.
         -->
-        <Setter Property="WidthRequest" Value="{OnPlatform Default=-1, WinUI=24}" />
-        <Setter Property="HeightRequest" Value="{OnPlatform Default=-1, WinUI=24}" />
     </Style>
 
     <Style TargetType="DatePicker">
