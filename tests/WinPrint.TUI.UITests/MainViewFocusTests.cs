@@ -1,3 +1,8 @@
+using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
+using Terminal.Gui.Drivers;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using WinPrint.TUI.UnitTests.Testing;
 using WinPrint.TUI.Views;
 using Xunit;
@@ -24,5 +29,26 @@ public class MainViewFocusTests
             focusable,
             "The header/footer format field must be keyboard-focusable: some container in the "
             + "MainView → SettingsPanel → HeaderFooterEditor chain has CanFocus = false.");
+    }
+
+    [Fact]
+    public void OnStartup_PreviewImageHasFocus()
+    {
+        using IApplication app = Application.Create();
+        app.AppModel = AppModel.FullScreen;
+        app.Init(DriverRegistry.Names.ANSI);
+        app.Driver!.SetScreenSize(80, 25);
+
+        var main = new MainView(version: "test");
+        var window = new Window { Width = Dim.Fill(), Height = Dim.Fill(), BorderStyle = LineStyle.None };
+        window.Add(main);
+
+        SessionToken? token = app.Begin(window);
+        app.LayoutAndDraw();
+
+        Assert.True(main.Preview.Image.HasFocus,
+            "The preview ImageView should have focus by default so zoom/pan keys work immediately.");
+
+        app.End(token!);
     }
 }

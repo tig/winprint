@@ -66,6 +66,11 @@ public sealed class PreviewPane : View
                 e.Handled = true;
             }
         };
+
+        // Zoom (whether via the ImageView's own +/-/= keys or our Ctrl+wheel) only crops/upscales the
+        // already-transmitted bitmap, so it stays smooth but gets soft when zoomed in. Re-rasterize the page
+        // at the new zoom (debounced) so it sharpens once the gesture settles.
+        Image.ZoomLevelChanged += (_, _) => RequestRender();
         Add(Image);
         ConfigureNavigationBindings();
 
@@ -312,38 +317,42 @@ public sealed class PreviewPane : View
         return true;
     }
 
+    // Zoom is applied natively by the hosted ImageView (it re-scales the existing bitmap in place, the
+    // same way the Terminal.Gui Images scenario does), so manipulation stays smooth. The page is only
+    // re-rasterized on a debounce — once zooming settles — to refine sharpness at the new scale.
+    // Re-rasterizing on every step (with the spinner + a fresh Image array) is what caused the flicker.
     private bool? ZoomIn()
     {
         bool? handled = Zoom(Command.ZoomIn, null);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomIn(Mouse mouse)
     {
         bool? handled = Zoom(Command.ZoomIn, mouse);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomOut()
     {
         bool? handled = Zoom(Command.ZoomOut, null);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomOut(Mouse mouse)
     {
         bool? handled = Zoom(Command.ZoomOut, mouse);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ResetZoom()
     {
         Image.ZoomLevel = 1d;
-        RenderCurrentPage();
+        RequestRender();
         return true;
     }
 
@@ -404,7 +413,11 @@ public sealed class PreviewPane : View
         {
             (width, height) = GetPreviewPixelSize();
             renderScale = GetRenderScale(width, height);
-            SetRenderingVisible(true);
+
+            // Only show the spinner when there is nothing to display yet (initial load). For a refine
+            // re-render (zoom settle, settings change, page nav) keep the current image visible and swap
+            // it in when ready — flashing a spinner over an existing preview reads as flicker.
+            SetRenderingVisible(Image.Image is null);
         }
         catch (Exception ex)
         {

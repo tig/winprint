@@ -65,6 +65,10 @@ public sealed class MainView : View
 
         Add(Settings, Header, Preview, Footer);
 
+        // The preview ImageView owns the zoom/pan keys (gui-cs/Terminal.Gui#5494), so give it focus by
+        // default — otherwise the keys do nothing until the user tabs into the preview.
+        Initialized += (_, _) => Preview.Image.SetFocus();
+
         if (context is not null)
         {
             Bind(context);
