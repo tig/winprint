@@ -10,6 +10,8 @@ namespace WinPrint.Maui.UITests;
 public class WindowsCheckboxSpacingUITests
 {
     private const double MaximumCheckboxLabelGap = 8;
+    private const double MaximumSidebarContentHeight = 760;
+    private const double MaximumMarginEntryMisalignment = 2;
 
     [Fact]
     public void SidebarCheckboxLabels_AreAdjacentToCheckboxesOnWindows()
@@ -49,6 +51,87 @@ public class WindowsCheckboxSpacingUITests
         }
     }
 
+    [Fact]
+    public void SidebarContent_IsCompactEnoughForTypicalWindowsScreens()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string? appPath = FindBuiltWindowsApp();
+        if (appPath is null)
+        {
+            return;
+        }
+
+        using Process app = Process.Start(new ProcessStartInfo(appPath)
+        {
+            UseShellExecute = false,
+            WorkingDirectory = Path.GetDirectoryName(appPath)!
+        })!;
+
+        try
+        {
+            Dictionary<string, double> metrics = MeasureSidebarLayout(app.Id);
+
+            Assert.True(metrics.TryGetValue("SidebarContentHeight", out double height), "Could not measure sidebar content height.");
+            Assert.True(
+                height <= MaximumSidebarContentHeight,
+                $"Sidebar content is {height:0.#} px tall; expected <= {MaximumSidebarContentHeight:0.#} px.");
+        }
+        finally
+        {
+            app.CloseMainWindow();
+            if (!app.WaitForExit(TimeSpan.FromSeconds(2)))
+            {
+                app.Kill(entireProcessTree: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void MarginDiamond_TopAndBottomEntriesAreVerticallyAligned()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string? appPath = FindBuiltWindowsApp();
+        if (appPath is null)
+        {
+            return;
+        }
+
+        using Process app = Process.Start(new ProcessStartInfo(appPath)
+        {
+            UseShellExecute = false,
+            WorkingDirectory = Path.GetDirectoryName(appPath)!
+        })!;
+
+        try
+        {
+            Dictionary<string, double> metrics = MeasureSidebarLayout(app.Id);
+
+            Assert.True(metrics.TryGetValue("TopEntryLeft", out double topLeft), "Could not find the Top margin entry.");
+            Assert.True(metrics.TryGetValue("BottomEntryLeft", out double bottomLeft), "Could not find the Bottom margin entry.");
+
+            double misalignment = Math.Abs(topLeft - bottomLeft);
+            Assert.True(
+                misalignment <= MaximumMarginEntryMisalignment,
+                $"Top and Bottom margin entries are misaligned by {misalignment:0.#} px; expected <= {MaximumMarginEntryMisalignment:0.#} px.");
+        }
+        finally
+        {
+            app.CloseMainWindow();
+            if (!app.WaitForExit(TimeSpan.FromSeconds(2)))
+            {
+                app.Kill(entireProcessTree: true);
+            }
+        }
+    }
+
     private static string? FindBuiltWindowsApp()
     {
         string? configured = Environment.GetEnvironmentVariable("WINPRINT_MAUI_EXE");
@@ -77,7 +160,9 @@ public class WindowsCheckboxSpacingUITests
             "net10.0-windows10.0.19041.0");
 
         return Directory.Exists(buildOutput)
-            ? Directory.EnumerateFiles(buildOutput, "winprint.exe", SearchOption.AllDirectories).FirstOrDefault()
+            ? Directory.EnumerateFiles(buildOutput, "winprint.exe", SearchOption.AllDirectories)
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .FirstOrDefault()
             : null;
     }
 
@@ -134,6 +219,108 @@ public class WindowsCheckboxSpacingUITests
             string output = powerShell.StandardOutput.ReadToEnd();
             string error = powerShell.StandardError.ReadToEnd();
             Assert.True(powerShell.WaitForExit(20000), "Timed out while measuring checkbox label spacing.");
+            Assert.True(powerShell.ExitCode == 0, error);
+
+            return output
+                .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Split('\t'))
+                .Where(parts => parts.Length == 2)
+                .ToDictionary(parts => parts[0], parts => double.Parse(parts[1]));
+        }
+        finally
+        {
+            File.Delete(scriptPath);
+        }
+    }
+
+    private static Dictionary<string, double> MeasureSidebarLayout(int processId)
+    {
+        string scriptPath = Path.Combine(Path.GetTempPath(), $"winprint-sidebar-layout-{Guid.NewGuid():N}.ps1");
+        File.WriteAllText(scriptPath, """
+            param([Parameter(Mandatory)] [int] $ProcessId)
+            Add-Type -AssemblyName UIAutomationClient
+            Add-Type -AssemblyName UIAutomationTypes
+
+            $condition = New-Object System.Windows.Automation.PropertyCondition(
+                [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ProcessId)
+            $deadline = [DateTime]::UtcNow.AddSeconds(15)
+            $window = $null
+            do {
+                $window = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                    [System.Windows.Automation.TreeScope]::Children, $condition)
+                if ($window -ne $null) { break }
+                Start-Sleep -Milliseconds 250
+            } while ([DateTime]::UtcNow -lt $deadline)
+
+            if ($window -eq $null) { throw "No top-level window appeared for process $ProcessId." }
+
+            $elements = $window.FindAll(
+                [System.Windows.Automation.TreeScope]::Descendants,
+                [System.Windows.Automation.Condition]::TrueCondition)
+
+            $fileTop = $null
+            $settingsBottom = $null
+            $topEntryLeft = $null
+            $bottomEntryLeft = $null
+
+            for ($i = 0; $i -lt $elements.Count; $i++) {
+                $current = $elements.Item($i).Current
+                $type = $current.ControlType.ProgrammaticName -replace 'ControlType.', ''
+
+                if ($type -eq 'Button' -and $current.Name -like '*File...') {
+                    $fileTop = $current.BoundingRectangle.Top
+                }
+
+                if ($type -in @('Text', 'Edit', 'ComboBox', 'CheckBox') -and
+                    $current.BoundingRectangle.Left -lt 420 -and
+                    $current.Name -notlike 'Help & about*' -and
+                    $current.Name -notlike 'v*') {
+                    if ($settingsBottom -eq $null -or $current.BoundingRectangle.Bottom -gt $settingsBottom) {
+                        $settingsBottom = $current.BoundingRectangle.Bottom
+                    }
+                }
+
+                if ($type -eq 'Text' -and ($current.Name -eq 'Top:' -or $current.Name -eq 'Bottom:')) {
+                    for ($j = $i + 1; $j -lt $elements.Count; $j++) {
+                        $candidate = $elements.Item($j).Current
+                        $candidateType = $candidate.ControlType.ProgrammaticName -replace 'ControlType.', ''
+                        if ($candidateType -eq 'Edit') {
+                            if ($current.Name -eq 'Top:') {
+                                $topEntryLeft = $candidate.BoundingRectangle.Left
+                            } else {
+                                $bottomEntryLeft = $candidate.BoundingRectangle.Left
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+
+            if ($fileTop -ne $null -and $settingsBottom -ne $null) {
+                "SidebarContentHeight`t$($settingsBottom - $fileTop)"
+            }
+            if ($topEntryLeft -ne $null) {
+                "TopEntryLeft`t$topEntryLeft"
+            }
+            if ($bottomEntryLeft -ne $null) {
+                "BottomEntryLeft`t$bottomEntryLeft"
+            }
+            """);
+
+        try
+        {
+            using Process powerShell = Process.Start(new ProcessStartInfo(
+                "powershell",
+                $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -ProcessId {processId}")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            })!;
+
+            string output = powerShell.StandardOutput.ReadToEnd();
+            string error = powerShell.StandardError.ReadToEnd();
+            Assert.True(powerShell.WaitForExit(20000), "Timed out while measuring sidebar layout.");
             Assert.True(powerShell.ExitCode == 0, error);
 
             return output
