@@ -1,6 +1,6 @@
  ╭───────╮                                  
 ─╯Printer╰──────────────────────────────────
-Microsoft Print to PDF                     ▼
-Paper: Letter                              ▼
+Microsoft Print to PDF  ▼                   
+Paper: Letter     ▼                         
 Pages From: ▼1▲  To ▼0▲                     
                                             
