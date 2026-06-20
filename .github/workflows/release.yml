@@ -16,6 +16,7 @@ env:
   VPK_VERSION: 1.1.1
   HAS_AZURE_SIGNING: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_SIGNING_ACCOUNT != '' && secrets.AZURE_SIGNING_PROFILE != '' && secrets.AZURE_SIGNING_ENDPOINT != '' }}
   HAS_APPLE_SIGNING: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_SIGNING_IDENTITY != '' }}
+  HAS_WINGET: ${{ secrets.WINGET_TOKEN != '' }}
 
 jobs:
   package:
@@ -291,3 +292,26 @@ jobs:
           # Tags with a pre-release label (e.g. v2.6.0-rc.1) publish as a pre-release so
           # GitHub doesn't mark them "Latest"; stable tags (v2.6.0) become the latest release.
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # Auto-update the winget-pkgs manifest on every STABLE release. Pre-releases are skipped.
+  # Requires a classic PAT in the WINGET_TOKEN secret (public_repo scope) and a one-time
+  # manual bootstrap of the package into microsoft/winget-pkgs — see packaging/winget/README.md.
+  winget:
+    name: Submit to winget-pkgs
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      - name: Derive winget version (strip leading v)
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Submit to winget-pkgs
+        if: ${{ env.HAS_WINGET == 'true' }}
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Kindel.WinPrint
+          version: ${{ steps.ver.outputs.version }}
+          release-tag: ${{ github.ref_name }}
+          installers-regex: 'win-Setup\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
