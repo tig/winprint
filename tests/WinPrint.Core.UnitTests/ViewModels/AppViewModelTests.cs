@@ -5,6 +5,7 @@ using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.UnitTests.Services;
+using WinPrint.Core.UnitTests.TestSupport;
 using WinPrint.Core.ViewModels;
 using Xunit;
 using Xunit.Abstractions;
@@ -63,6 +64,93 @@ public class AppViewModelTests : TestServicesBase
         Assert.Equal(
             ModelLocator.Current.Settings.DefaultSheet.ToString(),
             vm.SheetKeys[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
+    public void SetPaperSize_KnownPaper_UpdatesSelectionNameAndDimensions()
+    {
+        AppViewModel vm = CreateVm();
+
+        vm.SetPaperSize("Legal");
+
+        Assert.Equal("Legal", vm.SelectedPaperSize);
+        Assert.Equal("Legal", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPaperSize_DisplayPaperName_UpdatesDimensions()
+    {
+        AppViewModel vm = CreateVm();
+
+        vm.SetPaperSize("A4 (210 x 297mm)");
+
+        Assert.Equal("A4 (210 x 297mm)", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPaperSize_UnknownPaper_PreservesExistingDimensions()
+    {
+        AppViewModel vm = CreateVm();
+        vm.SetPaperSize("Legal");
+
+        vm.SetPaperSize("Letterhead");
+
+        Assert.Equal("Letterhead", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPrinterSetup_AfterDirectPaperNameMutation_UpdatesDimensions()
+    {
+        AppViewModel vm = CreateVm();
+        vm.SetPaperSize("Letter");
+
+        vm.CurrentPageSetup.PaperSizeName = "Legal";
+        vm.SetPrinterSetup("Printer", "Legal", 2, 3);
+
+        Assert.Equal("Printer", vm.CurrentPageSetup.PrinterName);
+        Assert.Equal("Legal", vm.SelectedPaperSize);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+        Assert.Equal(2, vm.CurrentPageSetup.FromSheet);
+        Assert.Equal(3, vm.CurrentPageSetup.ToSheet);
+    }
+
+    [Fact]
+    public async Task SetPaperSize_LoadedFile_ReflowsPreviewBounds()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_paper_reflow_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(file, "hello\nworld\n");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SetLandscape(false);
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(850, vm.SheetViewModel.Bounds.Width);
+            Assert.Equal(1100, vm.SheetViewModel.Bounds.Height);
+
+            var reflowed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            vm.ReflowCompleted += (_, _) => reflowed.TrySetResult();
+
+            vm.SetPaperSize("Legal");
+
+            await reflowed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(850, vm.SheetViewModel.Bounds.Width);
+            Assert.Equal(1400, vm.SheetViewModel.Bounds.Height);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 
     [Fact]
@@ -522,6 +610,8 @@ public class AppViewModelTests : TestServicesBase
         ModelLocator.Current.Settings.LastPaperSize = "A4";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
         Assert.Equal("A4", vm.SelectedPaperSize);
+        Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
 
         ModelLocator.Current.Settings.LastPaperSize = "Foolscap";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
