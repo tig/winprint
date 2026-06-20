@@ -378,6 +378,65 @@ public sealed class AppViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    ///     Shared "save on exit" guard. Walks every sheet definition with unsaved edits, asks the supplied
+    ///     <paramref name="promptAsync" /> delegate what to do with each, and applies the choice
+    ///     (save / create / discard). Returns <c>true</c> when the app may exit (everything resolved or
+    ///     nothing was dirty) or <c>false</c> if the user cancelled and wants to keep editing.
+    ///     <para>
+    ///         This is the single, front-end-agnostic decision path. Each front end wires its own platform
+    ///         "about to exit" event — WinForms <c>FormClosing</c>, MAUI WinUI <c>AppWindow.Closing</c> and
+    ///         Mac Catalyst Quit, the TUI Quit command — to this method and only owns presenting the dialog
+    ///         (via <paramref name="promptAsync" />). Keeping the logic here is what makes the behavior
+    ///         identical across platforms instead of silently diverging.
+    ///     </para>
+    /// </summary>
+    /// <param name="promptAsync">
+    ///     Presents the per-definition save prompt and returns the user's <see cref="SaveSheetResolution" />.
+    ///     Called once per dirty definition, with the current <see cref="SheetDefinitions" /> and the
+    ///     <see cref="CurrentSheetDefinitionIndex" /> of the definition being resolved.
+    /// </param>
+    public async Task<bool> ResolveUnsavedSheetsOnExitAsync(
+        Func<IReadOnlyList<SheetDefinitionInfo>, int, Task<SaveSheetResolution>> promptAsync)
+    {
+        ArgumentNullException.ThrowIfNull(promptAsync);
+
+        // Snapshot the dirty keys: applying a choice mutates the tracker's live dirty set.
+        foreach (string key in DirtySheetDefinitionKeys.ToArray())
+        {
+            // A prior Save-to-other may have already resolved this definition as a side effect.
+            if (!IsSheetDefinitionDirty(key))
+            {
+                continue;
+            }
+
+            SetCurrentSheetDefinition(key);
+
+            SaveSheetResolution resolution =
+                await promptAsync(SheetDefinitions, CurrentSheetDefinitionIndex).ConfigureAwait(false);
+
+            switch (resolution.Choice)
+            {
+                case SaveSheetChoice.Save:
+                    SaveSheetChangesToIndex(resolution.SelectedIndex);
+                    break;
+
+                case SaveSheetChoice.Create:
+                    CreateSheetDefinition(resolution.NewName);
+                    break;
+
+                case SaveSheetChoice.DontSave:
+                    DiscardSheetChanges();
+                    break;
+
+                default:
+                    return false; // Cancel — abort the exit.
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Re-captures the baseline of every sheet definition from their current state, so subsequent
     ///     change detection compares against "now". Front ends call this after applying command-line
     ///     <see cref="Options" /> (e.g. <c>--landscape</c>/<c>--sheet</c>) so those startup overrides are

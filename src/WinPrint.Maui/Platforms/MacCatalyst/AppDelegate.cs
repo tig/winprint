@@ -115,6 +115,13 @@ public class AppDelegate : MauiUIApplicationDelegate
         return command;
     }
 
+    public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
+    {
+        bool result = base.FinishedLaunching(application, launchOptions);
+        MacQuitInterceptor.Install();
+        return result;
+    }
+
     private static bool IsTextInputFocused()
     {
         foreach (UIScene scene in UIApplication.SharedApplication.ConnectedScenes)

@@ -5,6 +5,7 @@ using System.Drawing.Printing;
 using System.Reflection;
 using TextMateSharp.Internal.Grammars;
 using TextMateFontStyle = TextMateSharp.Themes.FontStyle;
+using ModelFont = WinPrint.Core.Models.Font;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
@@ -74,7 +75,7 @@ public class TextMateCteTests
         cte.Configure(svm.ContentType, svm.Language, "Program.cs");
         cte.ContentSettings = new ContentSettings
         {
-            Font = new Font { Family = "Courier New", Size = 10 },
+            Font = new ModelFont { Family = "Courier New", Size = 10 },
             LineNumbers = false
         };
 
@@ -98,7 +99,7 @@ public class TextMateCteTests
         cte.Configure("text/plain", "Plain Text", "notes.txt");
         cte.ContentSettings = new ContentSettings
         {
-            Font = new Font { Family = "Courier New", Size = 10 },
+            Font = new ModelFont { Family = "Courier New", Size = 10 },
             LineNumbers = true,
             NewPageOnFormFeed = true
         };

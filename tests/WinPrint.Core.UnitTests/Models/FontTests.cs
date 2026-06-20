@@ -55,6 +55,17 @@ public class FontTests : TestModelsBase
     }
 
     [Fact]
+    public void Style_AcceptsDefinedFlagCombinations()
+    {
+        var font = new Font
+        {
+            Style = FontStyle.Bold | FontStyle.Underline
+        };
+
+        Assert.Equal(FontStyle.Bold | FontStyle.Underline, font.Style);
+    }
+
+    [Fact]
     public void TestPersistence()
     {
         var font = new Font();

@@ -1,6 +1,7 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
+using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.ViewModels;
 
 namespace WinPrint.Maui.Views;
@@ -13,6 +14,9 @@ namespace WinPrint.Maui.Views;
 /// </summary>
 internal sealed class SaveSheetDialogPage : ContentPage
 {
+    private static readonly Color InkColor = Color.FromArgb("#1C1C1E");
+    private static readonly Color HintColor = Color.FromArgb("#8E8E93");
+
     private readonly TaskCompletionSource<SaveSheetChoice> _completion = new();
     private readonly List<string> _names;
     private readonly CollectionView _list;
@@ -33,7 +37,7 @@ internal sealed class SaveSheetDialogPage : ContentPage
             ItemsSource = _names,
             ItemTemplate = new DataTemplate(() =>
             {
-                Label label = new() { Padding = new Thickness(8, 6) };
+                Label label = new() { Padding = new Thickness(8, 6), TextColor = InkColor };
                 label.SetBinding(Label.TextProperty, ".");
                 return label;
             })
@@ -95,7 +99,8 @@ internal sealed class SaveSheetDialogPage : ContentPage
         Label titleLabel = new()
         {
             Text = "Sheet Definition has changed. Select definition to update.",
-            FontAttributes = FontAttributes.Bold
+            FontAttributes = FontAttributes.Bold,
+            TextColor = InkColor
         };
 
         Grid root = new()
@@ -115,7 +120,23 @@ internal sealed class SaveSheetDialogPage : ContentPage
         root.Add(newNameRow, 0, 2);
         root.Add(buttonRow, 0, 3);
 
-        Content = root;
+        // Present as a centered card over a dimmed backdrop (matching the font chooser) rather than a
+        // full-screen modal page.
+        BackgroundColor = Color.FromRgba(0, 0, 0, 0.45);
+        Border card = new()
+        {
+            BackgroundColor = Colors.White,
+            Stroke = HintColor,
+            StrokeThickness = 1,
+            StrokeShape = new RoundRectangle { CornerRadius = 10 },
+            Margin = new Thickness(24),
+            WidthRequest = 480,
+            HeightRequest = 460,
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center,
+            Content = root
+        };
+        Content = new Grid { card };
 
         UpdateButtons();
     }
