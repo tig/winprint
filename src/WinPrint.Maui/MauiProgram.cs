@@ -77,6 +77,9 @@ public static class MauiProgram
         // The preview must be able to take keyboard focus (see FocusablePlatformGraphicsView).
         builder.ConfigureMauiHandlers(handlers =>
             handlers.AddHandler<GraphicsView, FocusableGraphicsViewHandler>());
+
+        // Replace MAUI's UIPickerView-based dropdown, which crashes in the Mac idiom (#133).
+        MacPickerWorkaround.Register();
 #endif
 
         builder.Services.AddSingleton<AppShell>();
