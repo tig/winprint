@@ -62,8 +62,47 @@ public class MacMenuUITests
             By.XPath("//XCUIElementTypeMenuBarItem[@title='File']"));
         fileMenu.Click();
 
-        return driver.FindElement(
-            By.XPath($"//XCUIElementTypeMenuItem[@title='{itemTitle}']"));
+        try
+        {
+            return driver.FindElement(
+                By.XPath($"//XCUIElementTypeMenuItem[@title='{itemTitle}']"));
+        }
+        catch (WebDriverException)
+        {
+            // The menu item wasn't where we expected. Dump the live accessibility tree so the exact
+            // representation of the Catalyst File-menu items (element type / title / label) is visible in
+            // the CI log and uploaded as an artifact, instead of guessing at the locator blind.
+            DumpAccessibilityTree(driver, itemTitle);
+            throw;
+        }
+    }
+
+    private static void DumpAccessibilityTree(MacDriver driver, string itemTitle)
+    {
+        string source;
+        try
+        {
+            source = driver.PageSource;
+        }
+        catch (WebDriverException ex)
+        {
+            source = $"<could-not-capture-page-source>{ex.Message}</could-not-capture-page-source>";
+        }
+
+        Console.WriteLine($"===== ACCESSIBILITY TREE (item '{itemTitle}' not found) =====");
+        Console.WriteLine(source);
+        Console.WriteLine("===== END ACCESSIBILITY TREE =====");
+
+        string dir = Environment.GetEnvironmentVariable("MENU_TREE_DUMP_DIR")
+                     ?? Directory.GetCurrentDirectory();
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "menu-tree.xml"), source);
+        }
+        catch (IOException)
+        {
+            // Best-effort: the console dump above is the primary record.
+        }
     }
 
     private static MacDriver CreateDriver()
@@ -81,7 +120,9 @@ public class MacMenuUITests
         string? appPath = Environment.GetEnvironmentVariable("APPIUM_APP");
         if (!string.IsNullOrEmpty(appPath))
         {
-            options.AddAdditionalAppiumOption("app", appPath);
+            // `app` is a reserved capability with a first-class property; AddAdditionalAppiumOption("app", …)
+            // throws ("use the Application property instead"). Set the property so it serializes to appium:app.
+            options.App = appPath;
         }
         else
         {
@@ -92,6 +133,24 @@ public class MacMenuUITests
 
         var driver = new MacDriver(new Uri(server), options);
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(15);
+
+        // Launching by `app` path starts the process but does NOT make it frontmost — XCUITest's menu bar
+        // is owned by whatever app is active (Finder on a fresh CI desktop), so menu-item lookups would hit
+        // Finder's File menu, not ours. Explicitly activate our app so its menu bar is the one in the tree.
+        ActivateApp(driver);
         return driver;
+    }
+
+    private static void ActivateApp(MacDriver driver)
+    {
+        try
+        {
+            driver.ExecuteScript("macos: activateApp", new Dictionary<string, object> { ["bundleId"] = BundleId });
+        }
+        catch (WebDriverException)
+        {
+            // Non-fatal: if activation isn't supported/needed the menu-item find (and its tree dump on
+            // failure) still runs and tells us what actually happened.
+        }
     }
 }
