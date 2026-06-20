@@ -75,9 +75,15 @@ public static class MauiProgram
             });
 
 #if MACCATALYST
-        // The preview must be able to take keyboard focus (see FocusablePlatformGraphicsView).
         builder.ConfigureMauiHandlers(handlers =>
-            handlers.AddHandler<GraphicsView, FocusableGraphicsViewHandler>());
+        {
+            // The preview must be able to take keyboard focus (see FocusablePlatformGraphicsView).
+            handlers.AddHandler<GraphicsView, FocusableGraphicsViewHandler>();
+
+            // Render Picker as a native Mac pop-up button — MAUI's UIPickerView crashes in the
+            // Mac idiom (#133).
+            handlers.AddHandler<Microsoft.Maui.Controls.Picker, MacPickerHandler>();
+        });
 #endif
 
 #if WINDOWS
