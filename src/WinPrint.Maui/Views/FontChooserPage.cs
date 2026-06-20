@@ -47,6 +47,7 @@ internal sealed class FontChooserPage : ContentPage
     private readonly FontStyle _preservedStyleBits;
 
     private string _selectedFamily;
+    private Border? _okButton;
     private bool _fixedPitchOnly;
     private bool _bold;
     private bool _italic;
@@ -137,15 +138,23 @@ internal sealed class FontChooserPage : ContentPage
         // showing every font regardless of the filter. A fresh list forces a full rebuild.
         _familyList.ItemsSource = visible;
 
-        // Keep the current family selected/visible when it survives the filter so the list reflects state.
-        if (visible.Contains(_selectedFamily))
-        {
-            _familyList.SelectedItem = _selectedFamily;
-        }
+        // Keep the selected family aligned with the visible list so OK can never return a filtered-out face.
+        _selectedFamily = FontChooserSelection.SelectVisibleFamily(visible, _selectedFamily);
+        _familyList.SelectedItem = string.IsNullOrEmpty(_selectedFamily) ? null : _selectedFamily;
+        SetOkEnabled(!string.IsNullOrEmpty(_selectedFamily));
+        UpdatePreview();
     }
 
     private void UpdatePreview()
     {
+        if (string.IsNullOrEmpty(_selectedFamily))
+        {
+            _preview.FontFamily = null;
+            _preview.FontAttributes = FontAttributes.None;
+            _preview.Text = "No matching fonts";
+            return;
+        }
+
         FontAttributes attributes = FontAttributes.None;
         if (_bold)
         {
@@ -170,6 +179,11 @@ internal sealed class FontChooserPage : ContentPage
 
     private (string Family, float Size, string Style)? BuildResult()
     {
+        if (string.IsNullOrEmpty(_selectedFamily))
+        {
+            return null;
+        }
+
         FontStyle style = _preservedStyleBits;
         if (_bold)
         {
@@ -309,6 +323,8 @@ internal sealed class FontChooserPage : ContentPage
             Content = _preview
         };
 
+        _okButton = MakePill("OK", AccentColor, Colors.White, () => Complete(BuildResult()));
+
         var buttonRow = new HorizontalStackLayout
         {
             Spacing = 10,
@@ -316,7 +332,7 @@ internal sealed class FontChooserPage : ContentPage
             Children =
             {
                 MakePill("Cancel", FieldColor, InkColor, () => Complete(null)),
-                MakePill("OK", AccentColor, Colors.White, () => Complete(BuildResult()))
+                _okButton
             }
         };
 
@@ -415,7 +431,7 @@ internal sealed class FontChooserPage : ContentPage
     }
 
     /// <summary>A tap-driven button (Button replacement that renders consistently on Mac Catalyst).</summary>
-    private View MakePill(string text, Color background, Color foreground, Action onTap)
+    private Border MakePill(string text, Color background, Color foreground, Action onTap)
     {
         var label = new Label
         {
@@ -438,5 +454,16 @@ internal sealed class FontChooserPage : ContentPage
         tap.Tapped += (_, _) => onTap();
         border.GestureRecognizers.Add(tap);
         return border;
+    }
+
+    private void SetOkEnabled(bool enabled)
+    {
+        if (_okButton is null)
+        {
+            return;
+        }
+
+        _okButton.IsEnabled = enabled;
+        _okButton.Opacity = enabled ? 1 : 0.45;
     }
 }
