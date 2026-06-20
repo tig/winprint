@@ -100,18 +100,25 @@ if (-not $SpObjectId) {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Federated credentials: refs/tags/* + one per configured branch
+# 3. Federated credentials
+#
+#    Branches use exact-match `subject` credentials. Tags use a *flexible* FIC
+#    (`claimsMatchingExpression`) instead, because Entra federated-credential
+#    `subject` is an EXACT string match — a wildcard subject like
+#    "repo:o/r:ref:refs/tags/*" never matches a real tag token and OIDC login
+#    fails with AADSTS700213. The flexible form (beta Graph endpoint) supports
+#    the `matches` operator and covers every `v*` tag with one credential.
 # ---------------------------------------------------------------------------
 Write-Host "==> Federated credentials" -ForegroundColor Cyan
-$desired = [ordered]@{ 'gh-tags' = "repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/tags/*" }
+$AppObjectId = az ad app show --id $AppId --query id -o tsv
+$ficUrl = "https://graph.microsoft.com/beta/applications/$AppObjectId/federatedIdentityCredentials"
+$existing = (az rest --method get --url $ficUrl | ConvertFrom-Json).value
+
+# 3a. Branch credentials (exact subject)
 foreach ($b in $cfg.Branches) {
-    $desired["gh-$b"] = "repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/heads/$b"
-}
-$existing = (az ad app federated-credential list --id $AppId | ConvertFrom-Json)
-$existingSubjects = @($existing.subject)
-foreach ($name in $desired.Keys) {
-    $subject = $desired[$name]
-    if ($existingSubjects -contains $subject) {
+    $name = "gh-$b"
+    $subject = "repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/heads/$b"
+    if (@($existing.subject) -contains $subject) {
         Write-Host "    exists  $name -> $subject"
         continue
     }
@@ -126,6 +133,32 @@ foreach ($name in $desired.Keys) {
     az ad app federated-credential create --id $AppId --parameters "@$tmp" --only-show-errors | Out-Null
     Remove-Item $tmp
     Write-Host "    created $name -> $subject"
+}
+
+# 3b. Tag credential (flexible claimsMatchingExpression)
+$tagName = 'gh-tags'
+$tagExpr = "claims['sub'] matches 'repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/tags/*'"
+$tagCred = $existing | Where-Object { $_.name -eq $tagName }
+if ($tagCred -and $tagCred.subject) {
+    # Legacy broken form (wildcard subject) from before the flexible-FIC fix — replace it.
+    az ad app federated-credential delete --id $AppId --federated-credential-id $tagCred.id --only-show-errors | Out-Null
+    Write-Host "    removed legacy subject-based $tagName"
+    $tagCred = $null
+}
+if (-not $tagCred) {
+    $body = @{
+        name                     = $tagName
+        issuer                   = 'https://token.actions.githubusercontent.com'
+        audiences                = @('api://AzureADTokenExchange')
+        claimsMatchingExpression = @{ value = $tagExpr; languageVersion = 1 }
+    } | ConvertTo-Json -Compress -Depth 5
+    $tmp = New-TemporaryFile
+    Set-Content -Path $tmp -Value $body -Encoding utf8
+    az rest --method post --url $ficUrl --headers "Content-Type=application/json" --body "@$tmp" | Out-Null
+    Remove-Item $tmp
+    Write-Host "    created (flexible) $tagName -> $tagExpr"
+} else {
+    Write-Host "    exists  (flexible) $tagName"
 }
 
 # ---------------------------------------------------------------------------
