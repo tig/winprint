@@ -44,6 +44,9 @@ public static class InteractiveCapture
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(keys);
 
+        // Match HeadlessRenderer: make SetScreenSize authoritative instead of reading the host console size.
+        Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
+
         using IApplication app = Application.Create();
         app.AppModel = AppModel.FullScreen;
         app.Init(DriverRegistry.Names.ANSI);
@@ -110,7 +113,7 @@ public static class InteractiveCapture
             // overlay has had a couple of frames to draw — or at the safety ceiling.
             grid = HeadlessRenderer.Canonicalize(app.Driver?.ToString());
 
-            if (captureWhen?.Invoke(target) ?? true)
+            if (captureWhen?.Invoke((Editor)target) ?? true)
             {
                 settleFrames++;
             }
@@ -131,6 +134,9 @@ public static class InteractiveCapture
     public static bool CanFocusInnerEditor(View content, int width, int height)
     {
         ArgumentNullException.ThrowIfNull(content);
+
+        // Match HeadlessRenderer: make SetScreenSize authoritative instead of reading the host console size.
+        Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
 
         using IApplication app = Application.Create();
         app.AppModel = AppModel.FullScreen;

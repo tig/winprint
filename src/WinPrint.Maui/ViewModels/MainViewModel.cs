@@ -605,6 +605,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // preferFixedPitch: true — source/document printing favors monospace, so seed the chooser's
+        // "fixed-pitch only" filter on. The user can still turn it off to pick a proportional face.
         (string Family, float Size, string Style)? result =
             await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString(), true);
         if (result.HasValue)
@@ -630,6 +632,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // preferFixedPitch: false — headers/footers default to a proportional face (see Settings defaults),
+        // so seed the chooser's "fixed-pitch only" filter off. The user can still turn it on.
         (string Family, float Size, string Style)? result =
             await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString(), false);
         if (result.HasValue)
@@ -642,11 +646,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     ? style
                     : FontStyle.Regular
             };
-            header.Font = newFont;
-            if (SheetViewModel.Footer != null)
-            {
-                SheetViewModel.Footer.Font = (WinPrintFont)newFont.Clone();
-            }
+
+            // Write to the header/footer MODELS (not the view-models). Setting the view-model's Font
+            // directly never propagated to the model, so the choice didn't reflow correctly and was lost
+            // on save — that's why picking a header/footer font appeared to do nothing.
+            SheetViewModel.SetHeaderFooterFont(newFont);
 
             OnPropertyChanged(nameof(HeaderFooterFontDescription));
             await _app.ReflowAsync();
@@ -690,20 +694,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     ///     user's choice. Returns <c>true</c> if the app may close (everything saved/created or nothing to
     ///     save) or <c>false</c> if the user cancelled and wants to keep editing.
     /// </summary>
-    public async Task<bool> PromptSaveSheetOnExitAsync(Page host)
+    public Task<bool> PromptSaveSheetOnExitAsync(Page host)
     {
-        foreach (string key in _app.DirtySheetDefinitionKeys)
+        // The decision logic (which definitions to prompt for, and how to apply each choice) lives in the
+        // shared AppViewModel guard so every front end behaves identically. Here we only present the dialog.
+        return _app.ResolveUnsavedSheetsOnExitAsync(async (definitions, currentIndex) =>
         {
-            // A prior Save-to-other may have resolved this definition as a side effect.
-            if (!_app.IsSheetDefinitionDirty(key))
-            {
-                continue;
-            }
-
-            _app.SetCurrentSheetDefinition(key);
-
-            Views.SaveSheetDialogPage dialog =
-                new(_app.SheetDefinitions, _app.CurrentSheetDefinitionIndex);
+            Views.SaveSheetDialogPage dialog = new(definitions, currentIndex);
             await host.Navigation.PushModalAsync(dialog);
             SaveSheetChoice choice = await dialog.Completion;
 
@@ -716,27 +713,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 await host.Navigation.PopModalAsync();
             }
 
-            switch (choice)
-            {
-                case SaveSheetChoice.Save:
-                    _app.SaveSheetChangesToIndex(dialog.SelectedIndex);
-                    break;
-
-                case SaveSheetChoice.Create:
-                    _app.CreateSheetDefinition(dialog.NewName);
-                    break;
-
-                case SaveSheetChoice.DontSave:
-                    // Discard this definition's edits but let the exit proceed.
-                    _app.DiscardSheetChanges();
-                    break;
-
-                default:
-                    return false;
-            }
-        }
-
-        return true;
+            return new SaveSheetResolution(choice, dialog.SelectedIndex, dialog.NewName);
+        });
     }
 
     // --- Internals ---
