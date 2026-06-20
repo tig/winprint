@@ -74,7 +74,7 @@ public class TextMateCteTests
         cte.Configure(svm.ContentType, svm.Language, "Program.cs");
         cte.ContentSettings = new ContentSettings
         {
-            Font = new Core.Models.Font { Family = "Courier New", Size = 10 },
+            Font = new Font { Family = "Courier New", Size = 10 },
             LineNumbers = false
         };
 
@@ -98,7 +98,7 @@ public class TextMateCteTests
         cte.Configure("text/plain", "Plain Text", "notes.txt");
         cte.ContentSettings = new ContentSettings
         {
-            Font = new Core.Models.Font { Family = "Courier New", Size = 10 },
+            Font = new Font { Family = "Courier New", Size = 10 },
             LineNumbers = true,
             NewPageOnFormFeed = true
         };

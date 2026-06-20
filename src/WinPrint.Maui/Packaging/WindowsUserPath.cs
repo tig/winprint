@@ -39,8 +39,8 @@ internal static class WindowsUserPath
         string[] remainingEntries =
         [
             .. currentPath
-            .Split(PathSeparator, StringSplitOptions.RemoveEmptyEntries)
-            .Where(pathEntry => !PathEntriesMatch(pathEntry, entry))
+                .Split(PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+                .Where(pathEntry => !PathEntriesMatch(pathEntry, entry))
         ];
 
         return string.Join(PathSeparator, remainingEntries);
