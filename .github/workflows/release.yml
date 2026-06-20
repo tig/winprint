@@ -85,8 +85,17 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Install MAUI workload
-        if: ${{ matrix.includeGui }}
+      # Windows: install only the maui-windows workload and build only the Windows head
+      # (WinPrintWindowsOnly below). Installing the full `maui` workload + leaving the
+      # MacCatalyst head active makes the Windows job try to cross-compile MacCatalyst from
+      # win-x64, which demands the host Mono cross-pack Microsoft.NETCore.App.Runtime.Mono.win-x64
+      # (not published on nuget.org) and fails restore (NU1102). Mirrors ci.yml.
+      - name: Install MAUI workload (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet workload install maui-windows
+
+      - name: Install MAUI workload (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
         run: dotnet workload install maui
 
       - name: Install Velopack CLI
@@ -141,7 +150,8 @@ jobs:
             -r "${{ matrix.mauiRuntime }}" `
             --self-contained true `
             -o $publishDir `
-            /p:WindowsPackageType=None
+            /p:WindowsPackageType=None `
+            /p:WinPrintWindowsOnly=true
 
       - name: Publish macOS GUI
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
