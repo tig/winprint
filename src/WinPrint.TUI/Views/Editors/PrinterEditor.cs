@@ -82,6 +82,8 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         Add(_printer, paperLabel, _paper, pagesLabel, _from, toLabel, _to);
     }
 
+    public event EventHandler? Edited;
+
     /// <summary>The sheet range (From/To) being edited. Editing From/To mutates this instance.</summary>
     public PageRange Range { get; private set; } = new();
 
@@ -155,6 +157,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         Range.From = _from.Value;
         Range.To = _to.Value;
         SyncRangeToValue();
+        Edited?.Invoke(this, EventArgs.Empty);
     }
 
     // A bound printer/paper may not be in the offered list (e.g. set from a saved profile); add it so

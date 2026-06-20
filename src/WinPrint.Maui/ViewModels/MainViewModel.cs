@@ -484,13 +484,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (_app.SelectedPaperSize != value)
             {
-                _app.SelectedPaperSize = value;
-                if (value != null)
-                {
-                    UpdatePageSetupForPaper(value);
-                    _ = _app.ReflowAsync();
-                }
-
+                _app.SetPaperSize(value);
                 OnPropertyChanged();
             }
         }
@@ -837,25 +831,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 (int)(top * 100),
                 (int)(bottom * 100));
             _app.SetMargins(margins);
-        }
-    }
-
-    private void UpdatePageSetupForPaper(string paperName)
-    {
-        if (paperName.StartsWith("Letter"))
-        {
-            _currentPageSetup.PaperWidth = 850;
-            _currentPageSetup.PaperHeight = 1100;
-        }
-        else if (paperName.StartsWith("Legal"))
-        {
-            _currentPageSetup.PaperWidth = 850;
-            _currentPageSetup.PaperHeight = 1400;
-        }
-        else if (paperName.StartsWith("A4"))
-        {
-            _currentPageSetup.PaperWidth = 827;
-            _currentPageSetup.PaperHeight = 1169;
         }
     }
 
