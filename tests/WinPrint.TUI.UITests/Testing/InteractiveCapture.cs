@@ -44,6 +44,8 @@ public static class InteractiveCapture
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(keys);
 
+        Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
+
         using IApplication app = Application.Create();
         app.AppModel = AppModel.FullScreen;
         app.Init(DriverRegistry.Names.ANSI);
@@ -131,6 +133,8 @@ public static class InteractiveCapture
     public static bool CanFocusInnerEditor(View content, int width, int height)
     {
         ArgumentNullException.ThrowIfNull(content);
+
+        Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
 
         using IApplication app = Application.Create();
         app.AppModel = AppModel.FullScreen;
