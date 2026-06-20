@@ -236,8 +236,10 @@ public sealed class TuiCommand : IViewerCommand
         }
     }
 
-    private static bool IsEnvEnabled(string name) =>
-        Environment.GetEnvironmentVariable(name) is "1" or "true";
+    private static bool IsEnvEnabled(string name)
+    {
+        return Environment.GetEnvironmentVariable(name) is "1" or "true";
+    }
 
     private static string? GetOption(CommandRunOptions options, string name)
     {

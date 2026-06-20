@@ -11,21 +11,7 @@
          explicit package references for runtime resolution and cannot be pruned. -->
     <NoWarn>$(NoWarn);NU1510</NoWarn>
 
-    <!-- Local Terminal.Gui #5493 build version. Sourced from the WINPRINT_TG_VERSION
-         env var so it never gets hard-coded into a committed file (which previously
-         caused Mac<->Windows build fights on every pull). See nuget.config. -->
-    <WinPrintTgVersion Condition="'$(WinPrintTgVersion)' == ''">$(WINPRINT_TG_VERSION)</WinPrintTgVersion>
-
   </PropertyGroup>
-
-  <!-- Fail early with an actionable message if the local Terminal.Gui version env var
-       is missing, instead of a cryptic NuGet restore error. -->
-  <Target Name="_CheckWinPrintTgEnv"
-          BeforeTargets="CollectPackageReferences;Restore"
-          Condition="'$(MSBuildProjectName)' == 'WinPrint.TUI'">
-    <Error Condition="'$(WinPrintTgVersion)' == ''"
-           Text="WINPRINT_TG_VERSION is not set. Set it (and WINPRINT_TG_FEED) to your local Terminal.Gui #5493 build — e.g. WINPRINT_TG_VERSION=2.4.7-tig-add-kitty-graphics-protocol-support.1 and WINPRINT_TG_FEED=/path/to/Terminal.Gui/bin/Debug. See nuget.config." />
-  </Target>
 
   <ItemGroup>
     <PackageReference Include="GitVersion.MsBuild" Version="6.4.0" PrivateAssets="all" />

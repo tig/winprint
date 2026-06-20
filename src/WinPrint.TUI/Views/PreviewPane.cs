@@ -64,13 +64,15 @@ public sealed class PreviewPane : View
             if (OnKeyDown(e))
             {
                 e.Handled = true;
+                return;
+            }
+
+            if (IsImageZoomKey(e))
+            {
+                RequestRender();
             }
         };
 
-        // Zoom (whether via the ImageView's own +/-/= keys or our Ctrl+wheel) only crops/upscales the
-        // already-transmitted bitmap, so it stays smooth but gets soft when zoomed in. Re-rasterize the page
-        // at the new zoom (debounced) so it sharpens once the gesture settles.
-        Image.ZoomLevelChanged += (_, _) => RequestRender();
         Add(Image);
         ConfigureNavigationBindings();
 
@@ -232,6 +234,11 @@ public sealed class PreviewPane : View
         }
 
         return false;
+    }
+
+    private static bool IsImageZoomKey(Key key)
+    {
+        return key == new Key('+') || key == new Key('=') || key == new Key('-') || key == Key.D0;
     }
 
     private void ConfigureNavigationBindings()

@@ -39,7 +39,7 @@ public class MainViewFocusTests
         app.Init(DriverRegistry.Names.ANSI);
         app.Driver!.SetScreenSize(80, 25);
 
-        var main = new MainView(version: "test");
+        var main = new MainView("test");
         var window = new Window { Width = Dim.Fill(), Height = Dim.Fill(), BorderStyle = LineStyle.None };
         window.Add(main);
 

@@ -17,14 +17,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- Local build from the #5493 PR worktree (tg-local feed in nuget.config) — adds the
-             public IDriver.SetSixelSupport/SetKittyGraphicsSupport API and Kitty graphics support.
-             Revert to a released version once the API ships upstream.
-
-             Version comes from the WINPRINT_TG_VERSION env var (set per machine) so this
-             file never changes between Mac/Windows — see nuget.config for details. -->
-        <PackageReference Include="Terminal.Gui" Version="$(WinPrintTgVersion)" />
-        <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
+        <PackageReference Include="Terminal.Gui" Version="2.4.7" />
+        <PackageReference Include="Terminal.Gui.Cli" Version="0.2.1" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
         <PackageReference Include="Velopack" Version="1.1.1" />
         <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
