@@ -3,7 +3,7 @@
 ▝▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▀▘                                                     
  ╭────────────────╮                                                                         
 ─╯Sheet Definition╰───────────────────────                                                  
-Saved: Default 1-Up                      ▼                                                  
+Saved: Default 1-Up  ▼                                                                      
                                                                                             
 ☐ Landscape                                                                                 
 ┄┤Margins├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
@@ -17,16 +17,16 @@ Padding: ▼0.03▲
 ☐ Page Separator                                  Hello. Click here to open a file...       
                                                                                             
 ┄┤Content Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
-Source Code Pro                          ▼                                                  
+Source Code Pro   ▼                                                                         
 10  ▼ pt                                                                                    
                                                                                             
 ┄┤Header/Footer Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
-Source Code Pro                          ▼                                                  
+Source Code Pro   ▼                                                                         
 8   ▼ pt                                                                                    
                                                                                             
 ☑ Line Numbers                                                                              
  ╭───────╮                                                                                  
 ─╯Printer╰────────────────────────────────                                                  
-Microsoft Print to PDF                   ▼                                                  
-Paper: Letter                            ▼                                                  
+Microsoft Print to PDF  ▼                                                                   
+Paper: Letter     ▼                                                                         
 Help & about…   v2.5.0                     ☑ Footer: {FilePath}||{DatePrinted}              

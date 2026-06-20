@@ -26,11 +26,8 @@ public class Font : ICloneable
     public FontStyle Style
     {
         get => _style;
-        set
-        {
-            _style = value & AllStyles;
-            //                SetField(ref style, value);
-        }
+        set => _style = value & AllStyles;
+        //                SetField(ref style, value);
     }
 
     /// <summary>

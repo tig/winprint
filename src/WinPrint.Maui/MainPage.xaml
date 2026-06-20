@@ -29,7 +29,10 @@
          code. (Print-output fonts — header/footer and content — are rendered by the engine,
          not these controls, so they're unaffected and stay at their true point sizes.) -->
     <ContentPage.Resources>
-        <x:Double x:Key="SidebarFontSize">13</x:Double>
+        <OnPlatform x:Key="SidebarFontSize" x:TypeArguments="x:Double">
+            <On Platform="Default" Value="13" />
+            <On Platform="WinUI" Value="11" />
+        </OnPlatform>
     </ContentPage.Resources>
 
     <Grid ColumnDefinitions="Auto,Auto,*">
@@ -38,33 +41,34 @@
              at the top (row 0) and Help/version pins to the bottom of the panel (row 1). -->
         <Grid x:Name="LeftPanel" Grid.Column="0" WidthRequest="210" RowDefinitions="*,Auto"
               BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
-            <VerticalStackLayout Grid.Row="0" Padding="6,4" Spacing="2">
+            <VerticalStackLayout Grid.Row="0" Padding="6,4" Spacing="1">
 
                 <!-- File / Print buttons -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
-                            FontSize="{DynamicResource SidebarFontSize}" Padding="8,4" HeightRequest="34" />
+                            FontSize="{DynamicResource SidebarFontSize}" Padding="6,2" HeightRequest="{OnPlatform Default=34, WinUI=28}" />
                     <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
-                            FontSize="{DynamicResource SidebarFontSize}" Padding="8,4" HeightRequest="34" />
+                            FontSize="{DynamicResource SidebarFontSize}" Padding="6,2" HeightRequest="{OnPlatform Default=34, WinUI=28}" />
                 </Grid>
 
                 <!-- Sheet Definition group (collapsible) -->
-                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,4,0,0"
+                <Border Stroke="Gray" StrokeThickness="1" Padding="{OnPlatform Default='6,2', WinUI='5,1'}" Margin="0,4,0,0"
                         StrokeShape="RoundRectangle 3">
-                    <VerticalStackLayout Spacing="2">
+                    <VerticalStackLayout Spacing="1">
                         <Label x:Name="SheetDefHeader" Text="▼ Sheet Definition" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}">
                             <Label.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSheetDefHeaderTapped" />
                             </Label.GestureRecognizers>
                         </Label>
-                        <VerticalStackLayout x:Name="SheetDefContent" Spacing="2">
+                        <VerticalStackLayout x:Name="SheetDefContent" Spacing="1">
                             <!-- Sheet selector -->
                             <Picker ItemsSource="{Binding SheetNames}"
                                     SelectedIndex="{Binding SelectedSheetIndex}"
-                                    FontSize="{DynamicResource SidebarFontSize}" />
+                                    FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=-1, WinUI=28}" />
                             <HorizontalStackLayout Spacing="4">
                                 <CheckBox IsChecked="{Binding Landscape}" VerticalOptions="Center" Scale="0.7" />
-                                <Label Text="Landscape" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
+                                <Label Text="Landscape" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}"
+                                       Margin="{OnPlatform Default='0', WinUI='-8,0,0,0'}">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                     </Label.GestureRecognizers>
@@ -72,59 +76,60 @@
                             </HorizontalStackLayout>
 
                             <!-- Margins (diamond layout like WinForms) -->
-                            <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,10,0,0">
+                            <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="{OnPlatform Default='0,10,0,0', WinUI='0,6,0,0'}">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <VerticalStackLayout x:Name="MarginsContent" Spacing="2">
+                            <VerticalStackLayout x:Name="MarginsContent" Spacing="{OnPlatform Default=2, WinUI=0}">
                                 <!-- Top (centered) -->
-                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
-                                    <Label Text="Top:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                    <Entry Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="54" />
-                                </HorizontalStackLayout>
+                                <Grid HorizontalOptions="Center" ColumnDefinitions="52,54" ColumnSpacing="4">
+                                    <Label Grid.Column="0" Text="Top:" VerticalOptions="Center" HorizontalTextAlignment="End" FontSize="{DynamicResource SidebarFontSize}" />
+                                    <Entry Grid.Column="1" Text="{Binding MarginTop}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="54" />
+                                </Grid>
                                 <!-- Left and Right (side by side) -->
                                 <Grid ColumnDefinitions="*,*" Margin="0">
                                     <HorizontalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Start">
                                         <Label Text="Left:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                        <Entry Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="54" />
+                                        <Entry Text="{Binding MarginLeft}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="54" />
                                     </HorizontalStackLayout>
                                     <HorizontalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="End">
                                         <Label Text="Right:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                        <Entry Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="54" />
+                                        <Entry Text="{Binding MarginRight}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="54" />
                                     </HorizontalStackLayout>
                                 </Grid>
                                 <!-- Bottom (centered) -->
-                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
-                                    <Label Text="Bottom:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                    <Entry Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="54" />
-                                </HorizontalStackLayout>
+                                <Grid HorizontalOptions="Center" ColumnDefinitions="52,54" ColumnSpacing="4">
+                                    <Label Grid.Column="0" Text="Bottom:" VerticalOptions="Center" HorizontalTextAlignment="End" FontSize="{DynamicResource SidebarFontSize}" />
+                                    <Entry Grid.Column="1" Text="{Binding MarginBottom}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="54" />
+                                </Grid>
                             </VerticalStackLayout>
 
                             <!-- Multiple Pages Up -->
-                            <Label x:Name="PagesUpHeader" Text="▼ Pages Up" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,10,0,0">
+                            <Label x:Name="PagesUpHeader" Text="▼ Pages Up" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="{OnPlatform Default='0,10,0,0', WinUI='0,6,0,0'}">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPagesUpHeaderTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <VerticalStackLayout x:Name="PagesUpContent" Spacing="2" Margin="4,0,0,0">
+                            <VerticalStackLayout x:Name="PagesUpContent" Spacing="{OnPlatform Default=2, WinUI=0}" Margin="4,0,0,0">
                                 <Grid ColumnDefinitions="*,*">
                                     <HorizontalStackLayout Grid.Column="0" Spacing="4">
                                         <Label Text="Rows:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                        <Entry Text="{Binding Rows}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="40" />
+                                        <Entry Text="{Binding Rows}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="40" />
                                     </HorizontalStackLayout>
                                     <HorizontalStackLayout Grid.Column="1" Spacing="4">
                                         <Label Text="Cols:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                        <Entry Text="{Binding Columns}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="40" />
+                                        <Entry Text="{Binding Columns}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="40" />
                                     </HorizontalStackLayout>
                                 </Grid>
                                 <HorizontalStackLayout Spacing="4">
                                     <Label Text="Padding:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                    <Entry Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="24" WidthRequest="54" />
+                                    <Entry Text="{Binding PaddingValue}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=24, WinUI=22}" WidthRequest="54" />
                                 </HorizontalStackLayout>
                                 <HorizontalStackLayout Spacing="4">
                                     <CheckBox IsChecked="{Binding PageSeparator}" VerticalOptions="Center" Scale="0.65" />
-                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
+                                    <Label Text="Page Separator" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}"
+                                           Margin="{OnPlatform Default='0', WinUI='-8,0,0,0'}">
                                         <Label.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                         </Label.GestureRecognizers>
@@ -133,7 +138,7 @@
                             </VerticalStackLayout>
 
                             <!-- Fonts (collapsible) -->
-                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="0,10,0,0">
+                            <Label x:Name="FontsHeader" Text="▼ Fonts" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="{OnPlatform Default='0,10,0,0', WinUI='0,6,0,0'}">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnFontsHeaderTapped" />
                                 </Label.GestureRecognizers>
@@ -156,7 +161,8 @@
                             <!-- Line Numbers -->
                             <HorizontalStackLayout Spacing="4">
                                 <CheckBox IsChecked="{Binding LineNumbers}" VerticalOptions="Center" Scale="0.65" />
-                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}">
+                                <Label Text="Line Numbers" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}"
+                                       Margin="{OnPlatform Default='0', WinUI='-8,0,0,0'}">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCheckBoxLabelTapped" />
                                     </Label.GestureRecognizers>
@@ -167,27 +173,27 @@
                 </Border>
 
                 <!-- Printer group (collapsible) -->
-                <Border Stroke="Gray" StrokeThickness="1" Padding="6,2" Margin="0,4,0,0"
+                <Border Stroke="Gray" StrokeThickness="1" Padding="{OnPlatform Default='6,2', WinUI='5,1'}" Margin="0,4,0,0"
                         StrokeShape="RoundRectangle 3">
-                    <VerticalStackLayout Spacing="2">
+                    <VerticalStackLayout Spacing="1">
                         <Label x:Name="PrinterHeader" Text="▼ Printer" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}">
                             <Label.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnPrinterHeaderTapped" />
                             </Label.GestureRecognizers>
                         </Label>
-                        <VerticalStackLayout x:Name="PrinterContent" Spacing="2">
+                        <VerticalStackLayout x:Name="PrinterContent" Spacing="{OnPlatform Default=2, WinUI=0}">
                             <Picker ItemsSource="{Binding PrinterNames}"
                                     SelectedItem="{Binding SelectedPrinter}"
-                                    FontSize="{DynamicResource SidebarFontSize}" />
+                                    FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=-1, WinUI=28}" />
                             <Label Text="Paper:" FontSize="{DynamicResource SidebarFontSize}" />
                             <Picker ItemsSource="{Binding PaperSizes}"
                                     SelectedItem="{Binding SelectedPaperSize}"
-                                    FontSize="{DynamicResource SidebarFontSize}" />
+                                    FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=-1, WinUI=28}" />
                             <Grid ColumnDefinitions="38,44,18,44" ColumnSpacing="2">
                                 <Label Grid.Column="0" Text="Pages:" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" />
-                                <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="22" Placeholder="From" />
+                                <Entry Grid.Column="1" Text="{Binding FromPage}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=22, WinUI=22}" Placeholder="From" />
                                 <Label Grid.Column="2" Text="to" VerticalOptions="Center" FontSize="{DynamicResource SidebarFontSize}" HorizontalTextAlignment="Center" />
-                                <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="22" Placeholder="To" />
+                                <Entry Grid.Column="3" Text="{Binding ToPage}" Keyboard="Numeric" FontSize="{DynamicResource SidebarFontSize}" HeightRequest="{OnPlatform Default=22, WinUI=22}" Placeholder="To" />
                             </Grid>
                         </VerticalStackLayout>
                     </VerticalStackLayout>

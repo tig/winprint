@@ -8,6 +8,8 @@ namespace WinPrint.TUI.Views.Editors;
 /// </summary>
 internal static class EditorMetrics
 {
+    private const int DropDownArrowWidth = 3;
+
     /// <summary>Width of the left-hand label column (fits the longest label, "Size (pt):").</summary>
     public const int LabelWidth = 10;
 
@@ -24,4 +26,11 @@ internal static class EditorMetrics
     ///     auto-sized editors when stacked.
     /// </summary>
     public const int ContentWidth = LabelWidth + FieldWidth;
+
+    /// <summary>Returns a compact dropdown width that fits the longest item plus the dropdown arrow.</summary>
+    public static int DropDownWidth(IEnumerable<string> items)
+    {
+        int contentWidth = items.DefaultIfEmpty(string.Empty).Max(static item => item.Length);
+        return Math.Max(DropDownArrowWidth, contentWidth + DropDownArrowWidth);
+    }
 }

@@ -113,7 +113,7 @@ fails the build on any diff. Match it locally:
 
 ```bash
 dotnet tool restore
-dotnet jb cleanupcode WinPrint.slnx --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs"
+dotnet jb cleanupcode WinPrint.slnx --profile="WinPrintCleanup" --exclude="**/*.xaml.cs"
 dotnet format WinPrint.slnx
 git diff --exit-code
 ```
