@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Windows": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    },
+    "Windows Program.cs": {
+      "commandName": "Project",
+      "commandLineArgs": "Program.cs",
+      "workingDirectory": "../../testfiles",
+      "nativeDebugging": false
+    }
+  }
+}

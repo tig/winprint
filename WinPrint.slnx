@@ -1,0 +1,34 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="README.md" />
+    <File Path="src/README.md" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj" />
+  </Folder>
+  <Project Path="tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj" />
+  <Project Path="tests/WinPrint.TUI.UnitTests/WinPrint.TUI.UnitTests.csproj" />
+  <Project Path="tests/WinPrint.TUI.UITests/WinPrint.TUI.UITests.csproj" />
+  <Project Path="tests/WinPrint.Maui.UnitTests/WinPrint.Maui.UnitTests.csproj" />
+  <Project Path="tests/WinPrint.Maui.UITests/WinPrint.Maui.UITests.csproj" />
+  <Project Path="tests/WinPrint.cli.UnitTests/WinPrint.cli.UnitTests.csproj" />
+  <Project Path="tests/WinPrint.cli.UITests/WinPrint.cli.UITests.csproj" />
+  <Project Path="tests/WinPrint.WinForms.UnitTests/WinPrint.WinForms.UnitTests.csproj" />
+  <Project Path="tests/WinPrint.WinForms.UITests/WinPrint.WinForms.UITests.csproj" />
+  <Project Path="src/WinPrint.cli/WinPrint.cli.csproj" />
+  <Project Path="src/WinPrint.Core/WinPrint.Core.csproj" />
+  <Project Path="src/WinPrint.TUI/WinPrint.TUI.csproj" />
+  <Project Path="src/WinPrint.WinForms/WinPrint.WinForms.csproj" />
+  <Project Path="src/WinPrint.Maui/WinPrint.Maui.csproj" />
+</Solution>

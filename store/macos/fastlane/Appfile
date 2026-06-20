@@ -1,0 +1,14 @@
+# fastlane Appfile — Mac App Store identity for WinPrint.
+# Real values come from environment variables / CI secrets, never hard-coded here.
+#
+#   APPLE_ID                Apple Developer account email (App Store Connect user)
+#   FASTLANE_ITC_TEAM_ID    App Store Connect team id
+#   FASTLANE_TEAM_ID        Apple Developer Portal team id
+#
+# For CI, prefer an App Store Connect API key (Issuer ID + Key ID + .p8) over
+# APPLE_ID/password — see the Fastfile and store/README.md.
+
+app_identifier "com.kindel.winprint"   # must match the MacCatalyst bundle id
+apple_id ENV["APPLE_ID"]
+itc_team_id ENV["FASTLANE_ITC_TEAM_ID"]
+team_id ENV["FASTLANE_TEAM_ID"]

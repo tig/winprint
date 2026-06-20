@@ -130,9 +130,6 @@
   <data name="LoadingMsg" xml:space="preserve">
     <value>Loading...</value>
   </data>
-  <data name="printer_and_fax_w" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>printer_and_fax_w.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="RenderingMsg" xml:space="preserve">
     <value>Rendering...</value>
   </data>

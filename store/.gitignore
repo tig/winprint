@@ -1,0 +1,8 @@
+# Store screenshots are large and regenerable — keep them out of git.
+# Run ./capture-screenshots.sh to (re)create them into the <locale>/ subfolders.
+macos/screenshots/**/*.png
+windows/screenshots/**/*.png
+# fastlane runtime artifacts
+macos/fastlane/report.xml
+macos/fastlane/Preview.html
+macos/fastlane/*.log

@@ -1,0 +1,22 @@
+# Build
+
+## Getting source ready
+
+* `git config --global status.submoduleSummary true`
+* `git clone --recurse-submodules -j8 tig:tig/winprint`
+
+# Pre-reqs
+
+* VS 2022+
+* Python/Pygments are only needed when using the legacy `AnsiCte` highlighter.
+
+# Enable telemtry/logging key
+
+* Right click on `winprint\src\WinPrint.Core\Services\TelemetryService.tt` and "Run Custom Tool" to run T4 compiler
+* MS ApplicationInsights used to be in the Kindel account, but is no longer there!
+
+# Versions
+
+* Used to be managed by `msbump` https://github.com/BalassaMarton/MSBump
+    * Prime version is stored in `Winprint.Core.dll` via `src\WinPrint.Core\WinPrint.Core.csproj`: `<Version>2.1.0.0</Version>`
+        * Must manually bump `major.minor.rel` in `WinPrint.WinForms.csproj`, `WinPrint.PowerShell.csproj`, `WinPrint.cli.csproj`, and `Winprint.LiteHtml.csproj` before release

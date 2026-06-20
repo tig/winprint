@@ -10,7 +10,7 @@
   "windowState": "maximized",
   "defaultSheet": "0002a500-0000-0000-c000-000000000046",
   "type": "text/html",
-  "textFileSettings": {
+  "textContentTypeEngineSettings": {
     "lineNumbers": true,
     "lineNumberSeparator": false,
     "tabSpaces": 4,
@@ -21,7 +21,7 @@
       "size": 8
     }
   },
-  "htmlFileSettings": {
+  "htmlContentTypeEngineSettings": {
     "monspacedFont": null,
     "font": {
       "family": "Verdana",
@@ -29,7 +29,7 @@
       "size": 10
     }
   },
-  "prismFileSettings": {
+  "textMateContentTypeEngineSettings": {
     "lineNumbers": true,
     "lineNumberSeparator": true,
     "language": null,
@@ -164,13 +164,13 @@
       "printPageBounds": false
     }
   },
-  "languageAssociations": {
-    "files.associations": {
+  "fileTypeMapping": {
+    "filesAssociations": {
       "*.config": "config",
       "*.html": "text/html",
       "*.htm": "text/html"
     },
-    "languages": [
+    "contentTypes": [
       {
         "id": "config",
         "extensions": [

@@ -62,7 +62,7 @@ namespace WinPrint.Core.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///  &quot;files.associations&quot;: {
+        ///  &quot;filesAssociations&quot;: {
         ///    &quot;*.txt&quot;: &quot;text&quot;,
         ///    &quot;*.ans&quot;: &quot;ansi&quot;,
         ///    &quot;*.markup&quot;: &quot;markup&quot;,

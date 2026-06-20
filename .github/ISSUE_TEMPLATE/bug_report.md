@@ -38,7 +38,7 @@ Include the first line from the log (`%appdata%\Kindel Systems\winprintlogs`), l
 2020-03-29 16:42:20,435 INFO  - winprint v2.0.0.4000 - OS: Microsoft Windows NT 10.0.18363.0 on x64 - .NET: 4.0.30319.42000
 ```
 
-Or, from running `out-winprint -verbose`.
+Or, from running `winprint --debug` (or deprecated `out-winprint -verbose` if you are using the legacy PowerShell module).
 
 **Snippets from the log**
 Include any other relevant log files found in `%appdata%\Kindel Systems\winprint` which contain more debug info.

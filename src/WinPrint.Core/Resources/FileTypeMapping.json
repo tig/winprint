@@ -1,8 +1,8 @@
 {
-  "files.associations": {
+  "filesAssociations": {
     
   },
-  "languages": [
+  "contentTypes": [
     {
       "aliases": [
         "brainfuck",
@@ -14,6 +14,17 @@
       ],
       "id": "application/x-brainfuck",
       "title": "Brainfuck"
+    },
+    {
+      "aliases": [
+        "intercal"
+      ],
+      "extensions": [
+        "*.intercal",
+        "*.ick"
+      ],
+      "id": "application/x-intercal",
+      "title": "INTERCAL"
     },
     {
       "aliases": [
@@ -1003,6 +1014,19 @@
       ],
       "id": "text/x-llvm",
       "title": "LLVM"
+    },
+    {
+      "aliases": [
+        "ansi",
+        "ansiart"
+      ],
+      "extensions": [
+        "*.an",
+        "*.ans",
+        "*.ansi"
+      ],
+      "id": "text/ansi",
+      "title": "ANSI Text"
     },
     {
       "aliases": [
@@ -4281,7 +4305,9 @@
         "*.html",
         "*.htm",
         "*.xhtml",
-        "*.xslt"
+        "*.xslt",
+        "*.mhtml",
+        "*.mht"
       ],
       "id": "text/html",
       "title": "HTML"
@@ -4497,7 +4523,6 @@
       ],
       "extensions": [
         "*.m",
-        "*.mhtml",
         "*.mc",
         "*.mi",
         "autohandler",

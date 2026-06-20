@@ -1,0 +1,129 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- MacCatalyst always; the Windows TFM only on Windows so a Mac/Linux build
+		     doesn't try (and fail NETSDK1100) to build the Windows head. -->
+		<TargetFrameworks>net10.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0;net10.0-maccatalyst</TargetFrameworks>
+		<!-- CI opt-in: on Windows, build only the Windows head. The macOS job already builds AND UI-tests
+		     MacCatalyst, so the Windows job's MacCatalyst cross-compile is redundant; dropping it lets that
+		     job install just the maui-windows workload and skip the heavy Apple/Android packs. Unset locally,
+		     so a normal Windows build still produces both heads. -->
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) and '$(WinPrintWindowsOnly)' == 'true'">net10.0-windows10.0.19041.0</TargetFrameworks>
+
+		<!-- Note for MacCatalyst:
+		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
+		When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
+		The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
+		either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
+		<!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>WinPrint.Maui</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- Enable XAML source generation for faster build times and improved performance.
+		     This generates C# code from XAML at compile time instead of runtime inflation.
+		     To disable, remove this line.
+		     For individual files, you can override by setting Inflator metadata:
+		       <MauiXaml Update="MyPage.xaml" Inflator="Default" /> (reverts to defaults: Runtime for Debug, XamlC for Release)
+		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+		<!-- Display name -->
+		<ApplicationTitle>WinPrint</ApplicationTitle>
+		<AssemblyName>winprint</AssemblyName>
+
+		<!-- App Identifier -->
+		<ApplicationId>com.kindel.winprint</ApplicationId>
+
+		<!-- Versions -->
+		<ApplicationDisplayVersion>$(GitVersion_MajorMinorPatch)</ApplicationDisplayVersion>
+		<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' != ''">$(GitVersion_CommitsSinceVersionSource)</ApplicationVersion>
+		<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' == ''">1</ApplicationVersion>
+
+		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
+		<WindowsPackageType>None</WindowsPackageType>
+
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+
+		<!-- The MacCatalyst SDK hard-errors when the installed Xcode's major.minor doesn't
+		     exactly match what the workload was built against (e.g. workload 26.4 vs
+		     Xcode 26.5), even when they're compatible. Relax it to keep local builds working
+		     across routine Xcode point releases. -->
+		<ValidateXcodeVersion>false</ValidateXcodeVersion>
+
+		<!-- Suppress NuGet audit warnings for transitive vulnerabilities pulled in by the
+		     MAUI workload templates (e.g. System.Private.Uri 4.3.0). These come from packages
+		     we don't directly reference and cannot upgrade without waiting on upstream. -->
+		<NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+	</PropertyGroup>
+
+	<!-- Windows-specific: define WINDOWS -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+	</PropertyGroup>
+
+	<!-- Mac Catalyst define -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<DefineConstants>$(DefineConstants);MACCATALYST</DefineConstants>
+	</PropertyGroup>
+
+	<!-- The app was renamed (AssemblyName WinPrint.Maui -> winprint, bundle
+	     WinPrint.Maui.app -> WinPrint.app). Incremental builds never remove the old
+	     bundle, which leaves a stale-but-launchable WinPrint.Maui.app sitting next to
+	     the real one — running it silently exercises pre-rename code with none of the
+	     current fixes. Delete it on every build. This target can be removed once
+	     everyone's output directories have cycled past the rename. -->
+	<Target Name="RemoveLegacyMauiBundle" AfterTargets="Build"
+	        Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst' And Exists('$(OutputPath)WinPrint.Maui.app')">
+		<RemoveDir Directories="$(OutputPath)WinPrint.Maui.app" />
+		<Message Importance="high" Text="Removed stale legacy bundle $(OutputPath)WinPrint.Maui.app" />
+	</Target>
+
+	<ItemGroup>
+		<!-- App Icon -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#2B4FC8" />
+
+		<!-- Splash Screen -->
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#2B4FC8" BaseSize="128,128" />
+
+		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
+		
+		<!-- Custom Fonts -->
+		<MauiFont Include="Resources\Fonts\*" />
+
+		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Velopack" Version="1.1.1" />
+	</ItemGroup>
+
+	<!-- Windows: reference WinForms (for PrintDialog) and System.Drawing.Common (for PrintDocument) -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+	</ItemGroup>
+
+	<!-- Pre-main hook that records the launch directory in WINPRINT_LAUNCH_CWD before
+	     the Catalyst startup code chdirs to the .app bundle (see launchcwd.c — the
+	     prebuilt universal dylib is committed because CI builds on Windows and can't
+	     run clang for Mac targets). -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<NativeReference Include="Platforms\MacCatalyst\NativeLibs\liblaunchcwd.dylib" Kind="Dynamic" SmartLink="false" />
+	</ItemGroup>
+
+</Project>

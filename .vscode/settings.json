@@ -1,0 +1,35 @@
+{
+    // Load the solution explicitly so the C# Dev Kit doesn't have to guess.
+    "dotnet.defaultSolution": "WinPrint.slnx",
+
+    // Use the C# Dev Kit / Roslyn language service (not OmniSharp).
+    // NOTE: the legacy "omnisharp.useGlobalMono" setting is obsolete and intentionally
+    // omitted — the C# Dev Kit does not use OmniSharp or Mono.
+    "dotnet.preferCSharpExtension": false,
+
+    // Format on save, driven by .editorconfig. Organize-imports is left OFF on purpose:
+    // it hoists `using`s out of the `#if WINDOWS` blocks this repo relies on for its
+    // multi-TFM build, which the CI style gate then rejects.
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "never"
+    },
+    "[csharp]": {
+        "editor.defaultFormatter": "ms-dotnettools.csharp",
+        "editor.formatOnSave": true
+    },
+
+    // Keep build output out of the explorer, search, and the file watcher.
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    },
+    "search.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    },
+    "files.watcherExclude": {
+        "**/bin/**": true,
+        "**/obj/**": true
+    }
+}

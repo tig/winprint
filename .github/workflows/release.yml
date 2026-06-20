@@ -1,0 +1,290 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  PACK_ID: Kindel.WinPrint
+  PACK_TITLE: WinPrint
+  VPK_VERSION: 1.1.1
+  HAS_AZURE_SIGNING: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_SIGNING_ACCOUNT != '' && secrets.AZURE_SIGNING_PROFILE != '' && secrets.AZURE_SIGNING_ENDPOINT != '' }}
+  HAS_APPLE_SIGNING: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_SIGNING_IDENTITY != '' }}
+
+jobs:
+  package:
+    name: Package ${{ matrix.runtime }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+            tuiFramework: net10.0-windows
+            includeGui: true
+            mauiFramework: net10.0-windows10.0.19041.0
+            mauiRuntime: win-x64
+            channel: win
+            mainExe: wp.exe
+            icon: src/WinPrint.cli/winprint.ico
+
+          - os: macos-26
+            runtime: osx-x64
+            tuiFramework: net10.0
+            includeGui: true
+            mauiFramework: net10.0-maccatalyst
+            mauiRuntime: maccatalyst-x64
+            channel: osx
+            mainExe: wp
+            icon: ''
+
+          - os: macos-26
+            runtime: osx-arm64
+            tuiFramework: net10.0
+            includeGui: true
+            mauiFramework: net10.0-maccatalyst
+            mauiRuntime: maccatalyst-arm64
+            channel: osx
+            mainExe: wp
+            icon: ''
+
+          - os: ubuntu-latest
+            runtime: linux-x64
+            tuiFramework: net10.0
+            includeGui: false
+            channel: linux
+            mainExe: wp
+            icon: ''
+
+          - os: ubuntu-latest
+            runtime: linux-arm64
+            tuiFramework: net10.0
+            includeGui: false
+            channel: linux
+            mainExe: wp
+            icon: ''
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      # Windows: install only the maui-windows workload and build only the Windows head
+      # (WinPrintWindowsOnly below). Installing the full `maui` workload + leaving the
+      # MacCatalyst head active makes the Windows job try to cross-compile MacCatalyst from
+      # win-x64, which demands the host Mono cross-pack Microsoft.NETCore.App.Runtime.Mono.win-x64
+      # (not published on nuget.org) and fails restore (NU1102). Mirrors ci.yml.
+      - name: Install MAUI workload (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet workload install maui-windows
+
+      - name: Install MAUI workload (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
+        run: dotnet workload install maui
+
+      - name: Install Velopack CLI
+        shell: pwsh
+        run: |
+          dotnet tool install --global vpk --version $env:VPK_VERSION
+          if ($IsWindows) {
+            "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Append
+          } else {
+            "$HOME/.dotnet/tools" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
+
+      - name: Restore TUI
+        run: dotnet restore src/WinPrint.TUI/WinPrint.TUI.csproj
+
+      # Restore the same single head we publish. Without WinPrintWindowsOnly the csproj
+      # also exposes net10.0-maccatalyst on Windows, so a plain restore would evaluate the
+      # MacCatalyst head even though only the maui-windows workload is installed.
+      - name: Restore MAUI (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj /p:WinPrintWindowsOnly=true
+
+      - name: Restore MAUI (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
+        run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj
+
+      - name: Get version
+        id: version
+        shell: pwsh
+        run: |
+          $gitVersionDll = Join-Path $HOME ".nuget/packages/gitversion.msbuild/6.4.0/tools/net8.0/gitversion.dll"
+          $versionInfo = dotnet --roll-forward Major $gitVersionDll . -output json | ConvertFrom-Json
+          $version = $versionInfo.SemVer
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "GitVersion SemVer was empty."
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Publish TUI
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
+          dotnet publish src/WinPrint.TUI/WinPrint.TUI.csproj `
+            -c Release `
+            -f "${{ matrix.tuiFramework }}" `
+            -r "${{ matrix.runtime }}" `
+            --self-contained true `
+            -o $publishDir `
+            /p:PublishSingleFile=false
+
+      - name: Publish Windows GUI
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
+          dotnet publish src/WinPrint.Maui/WinPrint.Maui.csproj `
+            -c Release `
+            -f "${{ matrix.mauiFramework }}" `
+            -r "${{ matrix.mauiRuntime }}" `
+            --self-contained true `
+            -o $publishDir `
+            /p:WindowsPackageType=None `
+            /p:WinPrintWindowsOnly=true
+
+      - name: Publish macOS GUI
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
+          dotnet publish src/WinPrint.Maui/WinPrint.Maui.csproj `
+            -c Release `
+            -f "${{ matrix.mauiFramework }}" `
+            -r "${{ matrix.mauiRuntime }}" `
+            --self-contained true `
+            -o $publishDir `
+            /p:EnableCodeSigning=false
+
+      - name: Azure login for Trusted Signing
+        if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create Azure Trusted Signing metadata
+        if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
+        shell: pwsh
+        env:
+          AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ secrets.AZURE_SIGNING_PROFILE }}
+          AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+        run: |
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          @{
+            Endpoint = $env:AZURE_SIGNING_ENDPOINT
+            CodeSigningAccountName = $env:AZURE_SIGNING_ACCOUNT
+            CertificateProfileName = $env:AZURE_SIGNING_PROFILE
+          } | ConvertTo-Json | Set-Content artifacts/azure-trusted-signing.json -Encoding utf8
+
+      - name: Import Apple Developer ID certificate
+        if: ${{ runner.os == 'macOS' && env.HAS_APPLE_SIGNING == 'true' }}
+        shell: bash
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/winprint-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          CERT_PATH="$RUNNER_TEMP/winprint-developer-id.p12"
+
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          xcrun notarytool store-credentials winprint-notary \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --keychain "$KEYCHAIN_PATH"
+
+          echo "APPLE_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Pack with Velopack
+        shell: pwsh
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
+          $releaseDir = "artifacts/velopack/${{ matrix.runtime }}"
+          $vpkArgs = @(
+            "pack",
+            "--yes",
+            "--packId", $env:PACK_ID,
+            "--packTitle", $env:PACK_TITLE,
+            "--packAuthors", "Kindel",
+            "--packVersion", "${{ steps.version.outputs.version }}",
+            "--packDir", $publishDir,
+            "--outputDir", $releaseDir,
+            "--channel", "${{ matrix.channel }}",
+            "--runtime", "${{ matrix.runtime }}",
+            "--mainExe", "${{ matrix.mainExe }}"
+          )
+
+          if ("${{ matrix.icon }}" -ne "") {
+            $vpkArgs += @("--icon", "${{ matrix.icon }}")
+          }
+
+          if ($IsWindows -and $env:HAS_AZURE_SIGNING -eq "true") {
+            $vpkArgs += @("--azureTrustedSignFile", "artifacts/azure-trusted-signing.json")
+          }
+
+          if ($IsMacOS -and $env:HAS_APPLE_SIGNING -eq "true") {
+            $vpkArgs += @(
+              "--signAppIdentity", $env:APPLE_SIGNING_IDENTITY,
+              "--signInstallIdentity", $env:APPLE_SIGNING_IDENTITY,
+              "--notaryProfile", "winprint-notary",
+              "--keychain", $env:APPLE_KEYCHAIN_PATH
+            )
+          }
+
+          vpk @vpkArgs
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: velopack-${{ matrix.runtime }}
+          path: artifacts/velopack/${{ matrix.runtime }}/**/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: release-artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/**/*
+          generate_release_notes: true

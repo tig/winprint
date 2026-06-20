@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  WinPrint launch splash: the icon's syntax-sheet mark, centered on the brand-blue
+  splash background (the MauiSplashScreen Color in the csproj). Same paths/palette
+  as Resources/AppIcon/appicon.svg — keep them in sync. See AppIcon/README.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" version="1.1">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#EDF0F5"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E4E8F0"/><stop offset="1" stop-color="#C9CFDB"/>
+    </linearGradient>
+    <filter id="psh" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="22"/></filter>
+  </defs>
+
+  <!-- centre the sheet (design-space bbox ~ 300..736 x 210..812) in the 720 viewBox -->
+  <g transform="translate(-158 -151)">
+    <g transform="rotate(5 518 511)">
+      <path d="M316 210 L648 210 L736 298 L736 796 Q736 812 720 812 L316 812 Q300 812 300 796 L300 226 Q300 210 316 210 Z" transform="translate(0 22)" fill="#0A1A40" opacity="0.30" filter="url(#psh)"/>
+      <path d="M316 210 L648 210 L736 298 L736 796 Q736 812 720 812 L316 812 Q300 812 300 796 L300 226 Q300 210 316 210 Z" fill="url(#paper)"/>
+      <path d="M648 210 L736 298 L648 298 Z" fill="url(#fold)"/>
+      <line x1="352" y1="244" x2="352" y2="784" stroke="#E3E6EC" stroke-width="3"/>
+      <g stroke="#C7CCD6" stroke-width="8" stroke-linecap="round">
+        <line x1="312" y1="262" x2="338" y2="262"/><line x1="312" y1="320" x2="338" y2="320"/><line x1="312" y1="378" x2="338" y2="378"/><line x1="312" y1="436" x2="338" y2="436"/><line x1="312" y1="494" x2="338" y2="494"/><line x1="312" y1="552" x2="338" y2="552"/><line x1="312" y1="610" x2="338" y2="610"/><line x1="312" y1="668" x2="338" y2="668"/><line x1="312" y1="726" x2="338" y2="726"/>
+      </g>
+      <polyline points="372,248 408,262 372,276" fill="none" stroke="#2B59C3" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="424" y="247" width="28" height="30" rx="6" fill="#4078F2"/>
+      <line x1="470" y1="262" x2="556" y2="262" stroke="#A0A6B0" stroke-width="20" stroke-linecap="round"/>
+      <line x1="366" y1="294" x2="700" y2="294" stroke="#ECEEF2" stroke-width="4"/>
+      <g stroke-linecap="round" stroke-width="20">
+        <line x1="404" y1="320" x2="470" y2="320" stroke="#4078F2"/><line x1="478" y1="320" x2="498" y2="320" stroke="#A0A6B0"/><line x1="506" y1="320" x2="628" y2="320" stroke="#50A14F"/>
+        <line x1="404" y1="378" x2="456" y2="378" stroke="#A626A4"/><line x1="466" y1="378" x2="548" y2="378" stroke="#E45649"/>
+        <line x1="440" y1="436" x2="508" y2="436" stroke="#4078F2"/><line x1="516" y1="436" x2="536" y2="436" stroke="#A0A6B0"/><line x1="544" y1="436" x2="616" y2="436" stroke="#C18401"/>
+        <line x1="404" y1="494" x2="572" y2="494" stroke="#50A14F"/>
+        <line x1="366" y1="552" x2="422" y2="552" stroke="#A626A4"/><line x1="432" y1="552" x2="516" y2="552" stroke="#4078F2"/><line x1="524" y1="552" x2="544" y2="552" stroke="#A0A6B0"/>
+        <line x1="404" y1="610" x2="432" y2="610" stroke="#A0A6B0"/><line x1="442" y1="610" x2="552" y2="610" stroke="#4078F2"/><line x1="560" y1="610" x2="580" y2="610" stroke="#A0A6B0"/>
+        <line x1="404" y1="668" x2="470" y2="668" stroke="#0184BC"/><line x1="480" y1="668" x2="556" y2="668" stroke="#E45649"/>
+        <line x1="366" y1="726" x2="440" y2="726" stroke="#4078F2"/><line x1="450" y1="726" x2="470" y2="726" stroke="#A0A6B0"/><line x1="478" y1="726" x2="590" y2="726" stroke="#50A14F"/>
+      </g>
+    </g>
+  </g>
+</svg>

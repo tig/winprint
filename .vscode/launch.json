@@ -1,0 +1,51 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // winprint CLI. net10.0-windows today, so this runs on Windows.
+            // Put CLI arguments (e.g. a file to print, "--what-if") in "args".
+            "name": "WinPrint.cli",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-cli",
+            "program": "${workspaceFolder}/src/WinPrint.cli/bin/Debug/net10.0-windows/winprint.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/WinPrint.cli",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            // winprint WinForms GUI (winprintgui). Windows only.
+            "name": "WinPrint.WinForms (Windows)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-winforms",
+            "program": "${workspaceFolder}/src/WinPrint.WinForms/bin/x64/Debug/net10.0-windows/winprintgui.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/WinPrint.WinForms",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            // MAUI app on Windows. This project is unpackaged, so launch the built EXE
+            // directly instead of relying on the MAUI debug adapter to deploy it.
+            "name": "WinPrint.Maui (Windows)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-maui-windows",
+            "program": "${workspaceFolder}/src/WinPrint.Maui/bin/x64/Debug/net10.0-windows10.0.19041.0/win-x64/WinPrint.Maui.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/WinPrint.Maui",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            // MAUI app on Mac Catalyst. Requires `dotnet workload install maui`.
+            "name": "WinPrint.Maui (Mac Catalyst)",
+            "type": "maui",
+            "request": "launch",
+            "project": "${workspaceFolder}/src/WinPrint.Maui/WinPrint.Maui.csproj",
+            "targetFramework": "net10.0-maccatalyst"
+        }
+    ]
+}

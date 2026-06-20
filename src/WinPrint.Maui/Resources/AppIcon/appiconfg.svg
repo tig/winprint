@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Foreground intentionally empty: the complete icon art lives in appicon.svg so the
+     composited result is predictable across platforms (no foreground safe-zone scaling). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1">
+  <rect x="0" y="0" width="1024" height="1024" fill="none"/>
+</svg>

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
     <StartupObject>WinPrint.Winforms.Program</StartupObject>
@@ -12,31 +12,38 @@
     <AssemblyTitle>winprint GUI</AssemblyTitle>
     <AssemblyName>winprintgui</AssemblyName>
 
-    <Version>2.0.5.102</Version>
-    <Company>Kindel Systems</Company>
+    <Company>Kindel</Company>
     <Product>winprint</Product>
-    <Authors>Charlie Kindel</Authors>
+    <Authors>Tig Kindel</Authors>
     <Description>winprint GUI App</Description>
-    <Copyright>Copyright Kindel Systems, LLC</Copyright>
+    <Copyright>Copyright Kindel, LLC</Copyright>
     <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <Platforms>AnyCPU;x64</Platforms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>1701;1702</NoWarn>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <NoWarn>1701;1702</NoWarn>
+  </PropertyGroup>
   
   <ItemGroup>
+      <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
 
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+      <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
-    <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>WinPrint.WinForms.UnitTests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
@@ -53,9 +60,5 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="rem copy $(TargetDir)$(TargetName).runtimeconfig.json $(SolutionDir)WinPrint.Console\$(OutDir)&#xD;&#xA;rem copy $(OutDir)\$(TargetName).exe $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).dll $(SolutionDir)..\release\&#xD;&#xA;rem copy $(OutDir)\$(TargetName).runtimeconfig.json $(SolutionDir)..\release&#xD;&#xA;copy $(SolutionDir)..\tools\pygmentize.exe $(TargetDir)" />
-  </Target>
 
 </Project>

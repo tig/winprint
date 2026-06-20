@@ -1,98 +1,148 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.0.5.102</Version>
-    <Company>Kindel Systems</Company>
-    <Product>winprint</Product>
-    <Authors>Charlie Kindel</Authors>
-    <Description>winprint Core Engine</Description>
-    <Copyright>Copyright Kindel Systems, LLC</Copyright>
-    <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
-    <LangVersion>8.0</LangVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <Company>Kindel</Company>
+        <Product>winprint</Product>
+        <Authors>Tig Kindel</Authors>
+        <Description>winprint Core Engine</Description>
+        <Copyright>Copyright Kindel, LLC</Copyright>
+        <PackageReleaseNotes>No release notes.</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/tig/winprint</PackageProjectUrl>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/tig/winprint</RepositoryUrl>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG</DefineConstants>
-  </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
+        <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="ContentTypeEngines\PrismCte.cs" />
-    <Compile Remove="Services\NodeService.cs" />
-  </ItemGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <NoWarn>1701;1702</NoWarn>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
-    <None Remove="Properties\FileTypeMapping.json" />
-    <None Remove="Resources\prism-winprint-overrides.css" />
-    <None Remove="Resources\prism-winprint.css" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="ContentTypeEngines\PrismCte.cs" />
+        <Compile Remove="Services\NodeService.cs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\FileTypeMapping.json" />
-  </ItemGroup>
+    <!-- Windows-only: System.Drawing adapters and Print.cs depend on System.Drawing.Common -->
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
+        <Compile Remove="Abstractions\SystemDrawingAdapters.cs" />
+        <Compile Remove="Abstractions\SystemDrawingBrush.cs" />
+        <Compile Remove="Abstractions\SystemDrawingFont.cs" />
+        <Compile Remove="Abstractions\SystemDrawingGraphicsContext.cs" />
+        <Compile Remove="Abstractions\SystemDrawingImage.cs" />
+        <Compile Remove="Abstractions\SystemDrawingPen.cs" />
+        <Compile Remove="Abstractions\SystemDrawingState.cs" />
+        <Compile Remove="ContentTypeEngines\WindowsMeasurementContext.cs" />
+        <Compile Remove="Print.cs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
-    <PackageReference Include="Octokit" Version="0.47.0" />
-    <PackageReference Include="Serilog" Version="2.9.1-dev-01154" />
-    <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0-dev-00839" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.2-dev-00020" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00864" />
-    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
-    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.1.0" />
-    <PackageReference Include="UTF.Unknown" Version="2.3.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="ContentTypeEngines\prism-winprint-overrides.css" />
+        <None Remove="Properties\FileTypeMapping.json" />
+        <None Remove="Resources\prism-winprint-overrides.css" />
+        <None Remove="Resources\prism-winprint.css" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\libvt100\src\libvt100.csproj" />
-    <ProjectReference Include="..\WinPrint.LiteHtml\WinPrint.LiteHtml.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\FileTypeMapping.json" />
+        <EmbeddedResource Include="Resources\Grammars\*.tmLanguage.json" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Services\TelemetryService.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TelemetryService.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Services\TelemetryService.tt.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TelemetryService.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup>
+      <None Include="..\..\README.md">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+      <None Include="..\..\LICENSE">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Vendored managed ANSI/VT100 decoder used by AnsiCte (text/ansi). -->
+        <ProjectReference Include="..\libvt100\libvt100.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Services\TelemetryService.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TelemetryService.tt.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.9.1" />
+        <PackageReference Include="Markdig" Version="1.2.0" />
+        <PackageReference Include="HtmlRenderer.Core.NetStandard2" Version="1.5.1.3" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+        <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
+        <!-- TextMateSharp pulls in Onigwrap transitively; pin 1.0.11 (over 1.0.10) so the
+             prebuilt maccatalyst libonigwrap.dylib has enough Mach-O header padding for the
+             MAUI bundler's install_name_tool rewrite. 1.0.10 overflows and fails the build. -->
+        <PackageReference Include="Onigwrap" Version="1.0.11" />
+        <PackageReference Include="Serilog" Version="4.1.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+        <PackageReference Include="SkiaSharp" Version="3.116.1" />
+        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" />
+        <PackageReference Include="TextMateSharp" Version="2.0.3" />
+        <PackageReference Include="TextMateSharp.Grammars" Version="2.0.3" />
+        <PackageReference Include="UTF.Unknown" Version="2.5.1" />
+        <PackageReference Include="Velopack" Version="1.1.1" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
+    <!-- Windows-only packages -->
+    <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
+        <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+    </ItemGroup>
+
+    <!-- Non-Windows: SkiaSharp native binaries for the cross-platform PDF print path (lpr/CUPS) -->
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
+        <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.116.1" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+        <Compile Update="Properties\Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Services\TelemetryService.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>TelemetryService.tt</DependentUpon>
+        </Compile>
+        <Compile Update="Services\TelemetryService.tt.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>TelemetryService.tt</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="Properties\Resources.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Services\TelemetryService.tt">
+            <Generator>TextTemplatingFileGenerator</Generator>
+            <LastGenOutput>TelemetryService.tt.cs</LastGenOutput>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
 
 </Project>
-

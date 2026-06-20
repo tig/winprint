@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Printing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using WinPrint.Core;
-using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+
+// This is a very long comment to test wrapping of comments in source code. It goes on and on...
+using test; // This is a long comment that extends way to the right in order to test wrapping
+
+// private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";
+// private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
+    // HAS TAB BEFORE private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
 
 namespace WinPrint {
     public partial class MainWindow : Form {
@@ -23,8 +23,8 @@ namespace WinPrint {
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\formfeeds.txt";
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\TEST.TXT";
         //private string file = "..\\..\\..\\..\\..\\..\\tests\\long html doc as text.TXT";
-        //private string file = @"C:\Users\ckindel\source\winprint\tests\test.html";
-        private string file = ""; //@"..\..\..\..\..\..\proto\winforms\WinPrint\ViewModels\SheetViewModel.cs";
+        // This is a very long comment to test wrapping of comments in source code. It goes on and on...
+        private string file = ""; // this is a long comment that extends way to the right in order to test wrapping
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "<Pending>")]
         public MainWindow() {
