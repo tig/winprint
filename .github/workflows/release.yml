@@ -34,7 +34,7 @@ jobs:
             mauiFramework: net10.0-windows10.0.19041.0
             mauiRuntime: win-x64
             channel: win
-            mainExe: wp.exe
+            mainExe: winprint.exe
             icon: src/WinPrint.cli/winprint.ico
 
           - os: macos-26
@@ -160,6 +160,23 @@ jobs:
             -o $publishDir `
             /p:WindowsPackageType=None `
             /p:WinPrintWindowsOnly=true
+
+      - name: Validate Windows package inputs
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
+          $requiredFiles = @(
+            "winprint.exe", # MAUI GUI; this must be the Start Menu entrypoint.
+            "wp.exe"        # Terminal UI; exposed through the installed folder on PATH.
+          )
+
+          foreach ($file in $requiredFiles) {
+            $path = Join-Path $publishDir $file
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Windows package input is missing required executable: $path"
+            }
+          }
 
       - name: Publish macOS GUI
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
