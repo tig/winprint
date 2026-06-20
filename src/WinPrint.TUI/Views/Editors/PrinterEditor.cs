@@ -40,7 +40,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         _printers = new ObservableCollection<string>(printers ?? PrinterChoices.DefaultPrinters);
         _printer = new DropDownList
         {
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_printers),
             Source = new ListWrapper<string>(_printers)
         };
 
@@ -50,7 +50,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             X = Pos.Right(paperLabel) + 1,
             Y = Pos.Top(paperLabel),
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_papers),
             Source = new ListWrapper<string>(_papers)
         };
 
@@ -93,6 +93,8 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             _printers.Add(p);
         }
+
+        _printer.Width = EditorMetrics.DropDownWidth(_printers);
     }
 
     /// <inheritdoc />
@@ -100,7 +102,9 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
     {
         PrintPageSetup setup = newValue ?? new PrintPageSetup();
         _printer.Value = Ensure(_printers, setup.PrinterName);
+        _printer.Width = EditorMetrics.DropDownWidth(_printers);
         _paper.Value = Ensure(_papers, setup.PaperSizeName);
+        _paper.Width = EditorMetrics.DropDownWidth(_papers);
         RebindRange();
     }
 

@@ -34,7 +34,7 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
         {
             X = Pos.Right(savedLabel) + 1,
             Y = 0,
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_sheets.Select(s => s.Name ?? string.Empty)),
             Source = new ListWrapper<string>(
                 new ObservableCollection<string>(_sheets.Select(s => s.Name ?? string.Empty)))
         };
@@ -56,6 +56,7 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
         _sheets = [.. sheets];
         _sheet.Source = new ListWrapper<string>(
             new ObservableCollection<string>(_sheets.Select(s => s.Name ?? string.Empty)));
+        _sheet.Width = EditorMetrics.DropDownWidth(_sheets.Select(s => s.Name ?? string.Empty));
     }
 
     /// <inheritdoc />

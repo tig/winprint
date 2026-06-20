@@ -12,6 +12,7 @@ using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
+using WinPrintFont = WinPrint.Core.Models.Font;
 
 namespace WinPrint.Maui.ViewModels;
 
@@ -610,7 +611,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString(), true);
         if (result.HasValue)
         {
-            cs.Font = new Core.Models.Font
+            cs.Font = new WinPrintFont
             {
                 Family = result.Value.Family,
                 Size = result.Value.Size,
@@ -637,7 +638,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString(), false);
         if (result.HasValue)
         {
-            var newFont = new Core.Models.Font
+            var newFont = new WinPrintFont
             {
                 Family = result.Value.Family,
                 Size = result.Value.Size,
