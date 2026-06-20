@@ -27,7 +27,7 @@ public class WindowsCheckboxSpacingUITests
             return;
         }
 
-        using Process app = Process.Start(new ProcessStartInfo(appPath)
+        using var app = Process.Start(new ProcessStartInfo(appPath)
         {
             UseShellExecute = false,
             WorkingDirectory = Path.GetDirectoryName(appPath)!
@@ -46,7 +46,7 @@ public class WindowsCheckboxSpacingUITests
             app.CloseMainWindow();
             if (!app.WaitForExit(TimeSpan.FromSeconds(2)))
             {
-                app.Kill(entireProcessTree: true);
+                app.Kill(true);
             }
         }
     }
@@ -65,7 +65,7 @@ public class WindowsCheckboxSpacingUITests
             return;
         }
 
-        using Process app = Process.Start(new ProcessStartInfo(appPath)
+        using var app = Process.Start(new ProcessStartInfo(appPath)
         {
             UseShellExecute = false,
             WorkingDirectory = Path.GetDirectoryName(appPath)!
@@ -75,7 +75,8 @@ public class WindowsCheckboxSpacingUITests
         {
             Dictionary<string, double> metrics = MeasureSidebarLayout(app.Id);
 
-            Assert.True(metrics.TryGetValue("SidebarContentHeight", out double height), "Could not measure sidebar content height.");
+            Assert.True(metrics.TryGetValue("SidebarContentHeight", out double height),
+                "Could not measure sidebar content height.");
             Assert.True(
                 height <= MaximumSidebarContentHeight,
                 $"Sidebar content is {height:0.#} px tall; expected <= {MaximumSidebarContentHeight:0.#} px.");
@@ -85,7 +86,7 @@ public class WindowsCheckboxSpacingUITests
             app.CloseMainWindow();
             if (!app.WaitForExit(TimeSpan.FromSeconds(2)))
             {
-                app.Kill(entireProcessTree: true);
+                app.Kill(true);
             }
         }
     }
@@ -104,7 +105,7 @@ public class WindowsCheckboxSpacingUITests
             return;
         }
 
-        using Process app = Process.Start(new ProcessStartInfo(appPath)
+        using var app = Process.Start(new ProcessStartInfo(appPath)
         {
             UseShellExecute = false,
             WorkingDirectory = Path.GetDirectoryName(appPath)!
@@ -114,8 +115,10 @@ public class WindowsCheckboxSpacingUITests
         {
             Dictionary<string, double> metrics = MeasureSidebarLayout(app.Id);
 
-            Assert.True(metrics.TryGetValue("TopEntryLeft", out double topLeft), "Could not find the Top margin entry.");
-            Assert.True(metrics.TryGetValue("BottomEntryLeft", out double bottomLeft), "Could not find the Bottom margin entry.");
+            Assert.True(metrics.TryGetValue("TopEntryLeft", out double topLeft),
+                "Could not find the Top margin entry.");
+            Assert.True(metrics.TryGetValue("BottomEntryLeft", out double bottomLeft),
+                "Could not find the Bottom margin entry.");
 
             double misalignment = Math.Abs(topLeft - bottomLeft);
             Assert.True(
@@ -127,7 +130,7 @@ public class WindowsCheckboxSpacingUITests
             app.CloseMainWindow();
             if (!app.WaitForExit(TimeSpan.FromSeconds(2)))
             {
-                app.Kill(entireProcessTree: true);
+                app.Kill(true);
             }
         }
     }
@@ -170,44 +173,44 @@ public class WindowsCheckboxSpacingUITests
     {
         string scriptPath = Path.Combine(Path.GetTempPath(), $"winprint-checkbox-spacing-{Guid.NewGuid():N}.ps1");
         File.WriteAllText(scriptPath, """
-            param([Parameter(Mandatory)] [int] $ProcessId)
-            Add-Type -AssemblyName UIAutomationClient
-            Add-Type -AssemblyName UIAutomationTypes
+                                      param([Parameter(Mandatory)] [int] $ProcessId)
+                                      Add-Type -AssemblyName UIAutomationClient
+                                      Add-Type -AssemblyName UIAutomationTypes
 
-            $condition = New-Object System.Windows.Automation.PropertyCondition(
-                [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ProcessId)
-            $deadline = [DateTime]::UtcNow.AddSeconds(15)
-            $window = $null
-            do {
-                $window = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-                    [System.Windows.Automation.TreeScope]::Children, $condition)
-                if ($window -ne $null) { break }
-                Start-Sleep -Milliseconds 250
-            } while ([DateTime]::UtcNow -lt $deadline)
+                                      $condition = New-Object System.Windows.Automation.PropertyCondition(
+                                          [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ProcessId)
+                                      $deadline = [DateTime]::UtcNow.AddSeconds(15)
+                                      $window = $null
+                                      do {
+                                          $window = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                                              [System.Windows.Automation.TreeScope]::Children, $condition)
+                                          if ($window -ne $null) { break }
+                                          Start-Sleep -Milliseconds 250
+                                      } while ([DateTime]::UtcNow -lt $deadline)
 
-            if ($window -eq $null) { throw "No top-level window appeared for process $ProcessId." }
+                                      if ($window -eq $null) { throw "No top-level window appeared for process $ProcessId." }
 
-            $elements = $window.FindAll(
-                [System.Windows.Automation.TreeScope]::Descendants,
-                [System.Windows.Automation.Condition]::TrueCondition)
-            $labels = @('Landscape', 'Page Separator', 'Line Numbers')
+                                      $elements = $window.FindAll(
+                                          [System.Windows.Automation.TreeScope]::Descendants,
+                                          [System.Windows.Automation.Condition]::TrueCondition)
+                                      $labels = @('Landscape', 'Page Separator', 'Line Numbers')
 
-            for ($i = 1; $i -lt $elements.Count; $i++) {
-                $label = $elements.Item($i).Current
-                $checkbox = $elements.Item($i - 1).Current
-                $labelType = $label.ControlType.ProgrammaticName -replace 'ControlType.', ''
-                $checkboxType = $checkbox.ControlType.ProgrammaticName -replace 'ControlType.', ''
+                                      for ($i = 1; $i -lt $elements.Count; $i++) {
+                                          $label = $elements.Item($i).Current
+                                          $checkbox = $elements.Item($i - 1).Current
+                                          $labelType = $label.ControlType.ProgrammaticName -replace 'ControlType.', ''
+                                          $checkboxType = $checkbox.ControlType.ProgrammaticName -replace 'ControlType.', ''
 
-                if ($labelType -eq 'Text' -and $labels -contains $label.Name -and $checkboxType -eq 'CheckBox') {
-                    $gap = $label.BoundingRectangle.Left - $checkbox.BoundingRectangle.Right
-                    "$($label.Name)`t$gap"
-                }
-            }
-            """);
+                                          if ($labelType -eq 'Text' -and $labels -contains $label.Name -and $checkboxType -eq 'CheckBox') {
+                                              $gap = $label.BoundingRectangle.Left - $checkbox.BoundingRectangle.Right
+                                              "$($label.Name)`t$gap"
+                                          }
+                                      }
+                                      """);
 
         try
         {
-            using Process powerShell = Process.Start(new ProcessStartInfo(
+            using var powerShell = Process.Start(new ProcessStartInfo(
                 "powershell",
                 $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -ProcessId {processId}")
             {
@@ -237,79 +240,79 @@ public class WindowsCheckboxSpacingUITests
     {
         string scriptPath = Path.Combine(Path.GetTempPath(), $"winprint-sidebar-layout-{Guid.NewGuid():N}.ps1");
         File.WriteAllText(scriptPath, """
-            param([Parameter(Mandatory)] [int] $ProcessId)
-            Add-Type -AssemblyName UIAutomationClient
-            Add-Type -AssemblyName UIAutomationTypes
+                                      param([Parameter(Mandatory)] [int] $ProcessId)
+                                      Add-Type -AssemblyName UIAutomationClient
+                                      Add-Type -AssemblyName UIAutomationTypes
 
-            $condition = New-Object System.Windows.Automation.PropertyCondition(
-                [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ProcessId)
-            $deadline = [DateTime]::UtcNow.AddSeconds(15)
-            $window = $null
-            do {
-                $window = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
-                    [System.Windows.Automation.TreeScope]::Children, $condition)
-                if ($window -ne $null) { break }
-                Start-Sleep -Milliseconds 250
-            } while ([DateTime]::UtcNow -lt $deadline)
+                                      $condition = New-Object System.Windows.Automation.PropertyCondition(
+                                          [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $ProcessId)
+                                      $deadline = [DateTime]::UtcNow.AddSeconds(15)
+                                      $window = $null
+                                      do {
+                                          $window = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst(
+                                              [System.Windows.Automation.TreeScope]::Children, $condition)
+                                          if ($window -ne $null) { break }
+                                          Start-Sleep -Milliseconds 250
+                                      } while ([DateTime]::UtcNow -lt $deadline)
 
-            if ($window -eq $null) { throw "No top-level window appeared for process $ProcessId." }
+                                      if ($window -eq $null) { throw "No top-level window appeared for process $ProcessId." }
 
-            $elements = $window.FindAll(
-                [System.Windows.Automation.TreeScope]::Descendants,
-                [System.Windows.Automation.Condition]::TrueCondition)
+                                      $elements = $window.FindAll(
+                                          [System.Windows.Automation.TreeScope]::Descendants,
+                                          [System.Windows.Automation.Condition]::TrueCondition)
 
-            $fileTop = $null
-            $settingsBottom = $null
-            $topEntryLeft = $null
-            $bottomEntryLeft = $null
+                                      $fileTop = $null
+                                      $settingsBottom = $null
+                                      $topEntryLeft = $null
+                                      $bottomEntryLeft = $null
 
-            for ($i = 0; $i -lt $elements.Count; $i++) {
-                $current = $elements.Item($i).Current
-                $type = $current.ControlType.ProgrammaticName -replace 'ControlType.', ''
+                                      for ($i = 0; $i -lt $elements.Count; $i++) {
+                                          $current = $elements.Item($i).Current
+                                          $type = $current.ControlType.ProgrammaticName -replace 'ControlType.', ''
 
-                if ($type -eq 'Button' -and $current.Name -like '*File...') {
-                    $fileTop = $current.BoundingRectangle.Top
-                }
+                                          if ($type -eq 'Button' -and $current.Name -like '*File...') {
+                                              $fileTop = $current.BoundingRectangle.Top
+                                          }
 
-                if ($type -in @('Text', 'Edit', 'ComboBox', 'CheckBox') -and
-                    $current.BoundingRectangle.Left -lt 420 -and
-                    $current.Name -notlike 'Help & about*' -and
-                    $current.Name -notlike 'v*') {
-                    if ($settingsBottom -eq $null -or $current.BoundingRectangle.Bottom -gt $settingsBottom) {
-                        $settingsBottom = $current.BoundingRectangle.Bottom
-                    }
-                }
+                                          if ($type -in @('Text', 'Edit', 'ComboBox', 'CheckBox') -and
+                                              $current.BoundingRectangle.Left -lt 420 -and
+                                              $current.Name -notlike 'Help & about*' -and
+                                              $current.Name -notlike 'v*') {
+                                              if ($settingsBottom -eq $null -or $current.BoundingRectangle.Bottom -gt $settingsBottom) {
+                                                  $settingsBottom = $current.BoundingRectangle.Bottom
+                                              }
+                                          }
 
-                if ($type -eq 'Text' -and ($current.Name -eq 'Top:' -or $current.Name -eq 'Bottom:')) {
-                    for ($j = $i + 1; $j -lt $elements.Count; $j++) {
-                        $candidate = $elements.Item($j).Current
-                        $candidateType = $candidate.ControlType.ProgrammaticName -replace 'ControlType.', ''
-                        if ($candidateType -eq 'Edit') {
-                            if ($current.Name -eq 'Top:') {
-                                $topEntryLeft = $candidate.BoundingRectangle.Left
-                            } else {
-                                $bottomEntryLeft = $candidate.BoundingRectangle.Left
-                            }
-                            break
-                        }
-                    }
-                }
-            }
+                                          if ($type -eq 'Text' -and ($current.Name -eq 'Top:' -or $current.Name -eq 'Bottom:')) {
+                                              for ($j = $i + 1; $j -lt $elements.Count; $j++) {
+                                                  $candidate = $elements.Item($j).Current
+                                                  $candidateType = $candidate.ControlType.ProgrammaticName -replace 'ControlType.', ''
+                                                  if ($candidateType -eq 'Edit') {
+                                                      if ($current.Name -eq 'Top:') {
+                                                          $topEntryLeft = $candidate.BoundingRectangle.Left
+                                                      } else {
+                                                          $bottomEntryLeft = $candidate.BoundingRectangle.Left
+                                                      }
+                                                      break
+                                                  }
+                                              }
+                                          }
+                                      }
 
-            if ($fileTop -ne $null -and $settingsBottom -ne $null) {
-                "SidebarContentHeight`t$($settingsBottom - $fileTop)"
-            }
-            if ($topEntryLeft -ne $null) {
-                "TopEntryLeft`t$topEntryLeft"
-            }
-            if ($bottomEntryLeft -ne $null) {
-                "BottomEntryLeft`t$bottomEntryLeft"
-            }
-            """);
+                                      if ($fileTop -ne $null -and $settingsBottom -ne $null) {
+                                          "SidebarContentHeight`t$($settingsBottom - $fileTop)"
+                                      }
+                                      if ($topEntryLeft -ne $null) {
+                                          "TopEntryLeft`t$topEntryLeft"
+                                      }
+                                      if ($bottomEntryLeft -ne $null) {
+                                          "BottomEntryLeft`t$bottomEntryLeft"
+                                      }
+                                      """);
 
         try
         {
-            using Process powerShell = Process.Start(new ProcessStartInfo(
+            using var powerShell = Process.Start(new ProcessStartInfo(
                 "powershell",
                 $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptPath}\" -ProcessId {processId}")
             {
