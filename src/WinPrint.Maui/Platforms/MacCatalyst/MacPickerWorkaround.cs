@@ -24,6 +24,11 @@ namespace WinPrint.Maui;
 /// </summary>
 internal static class MacPickerWorkaround
 {
+    // Distinctive tag so the overlay button can be found and reused when the mapper re-runs.
+    // (We can't subclass UIButton to mark it — .NET MacCatalyst forbids UIButton subclasses
+    // calling the UIButtonType constructor.)
+    private const int OverlayButtonTag = 0x77_70_64; // 'wpd'
+
     public static void Register()
     {
         PickerHandler.Mapper.AppendToMapping("WinPrintMacIdiomPicker", static (handler, picker) =>
@@ -38,25 +43,26 @@ internal static class MacPickerWorkaround
             field.InputAccessoryView = null;
             field.TintColor = UIColor.Clear; // hide the caret; selection is via the menu
 
-            PickerPullDownButton button = FindOrCreateButton(field);
+            UIButton button = FindOrCreateButton(field);
             button.Menu = BuildMenu(picker);
         });
     }
 
-    private static PickerPullDownButton FindOrCreateButton(MauiPicker field)
+    private static UIButton FindOrCreateButton(MauiPicker field)
     {
         foreach (UIView sub in field.Subviews)
         {
-            if (sub is PickerPullDownButton existing)
+            if (sub is UIButton existing && existing.Tag == OverlayButtonTag)
             {
                 return existing;
             }
         }
 
-        var button = new PickerPullDownButton(UIButtonType.Custom)
+        // A plain UIButton(frame) is a Custom-type button — no subclass (which MacCatalyst forbids).
+        var button = new UIButton(field.Bounds)
         {
+            Tag = OverlayButtonTag,
             ShowsMenuAsPrimaryAction = true, // click opens the pull-down anchored to the field
-            Frame = field.Bounds,
             AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
         };
         field.AddSubview(button);
