@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
-using Velopack;
 using WinPrint.Core.Models;
 #if WINDOWS
 using WinPrint.Core.Services;
@@ -21,13 +20,6 @@ public static class MauiProgram
 
     public static MauiApp CreateMauiApp()
     {
-#if !MACCATALYST
-        // Velopack's locator throws PlatformNotSupportedException on MacCatalyst (it
-        // doesn't recognize the platform). The Mac app is installed/updated via the
-        // Homebrew cask instead, so only hook Velopack up elsewhere (Windows).
-        VelopackApp.Build().Run();
-#endif
-
         // Capture the *invocation* CWD before we change it below, so relative file
         // arguments passed on the command line can be resolved against the directory
         // the user launched the app from rather than the install directory. Prefer

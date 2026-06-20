@@ -110,7 +110,7 @@ public static class InteractiveCapture
             // overlay has had a couple of frames to draw — or at the safety ceiling.
             grid = HeadlessRenderer.Canonicalize(app.Driver?.ToString());
 
-            if (captureWhen?.Invoke(target) ?? true)
+            if (captureWhen?.Invoke((Editor)target) ?? true)
             {
                 settleFrames++;
             }
