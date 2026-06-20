@@ -36,19 +36,29 @@ Write-Host "AppId:        $AppId"
 Write-Host "SP ObjectId:  $SpObjectId"
 Write-Host "ProfileScope: $ProfileScope"
 
-# 1) Federated credentials — note ${GhRepo}: the bare $GhRepo:ref form makes PowerShell
-#    treat 'GhRepo:' as a scope qualifier and silently drops the repo name.
-$fics = az ad app federated-credential list --id $AppId | ConvertFrom-Json
-$expectedSubjects = @("repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/tags/*")
-foreach ($b in $cfg.Branches) {
-    $expectedSubjects += "repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/heads/$b"
-}
+# 1) Federated credentials. Read via the beta Graph endpoint so the flexible tag
+#    credential's claimsMatchingExpression is visible (the v1.0 `az` list omits it).
+#    Branches are exact-match subjects; tags are a flexible claimsMatchingExpression
+#    (Entra `subject` is exact-match, so a wildcard tag subject can't work — see
+#    SetupAzure.ps1 / docs/code-signing.md). Note ${GhRepo}: the bare $GhRepo:ref form
+#    makes PowerShell treat 'GhRepo:' as a scope qualifier and silently drops the repo name.
+$AppObjectId = az ad app show --id $AppId --query id -o tsv
+$fics = (az rest --method get --url "https://graph.microsoft.com/beta/applications/$AppObjectId/federatedIdentityCredentials" | ConvertFrom-Json).value
+$fics | Select-Object name, subject, @{ n = 'claimsExpr'; e = { $_.claimsMatchingExpression.value } } | Format-Table -AutoSize
 
-$fics | Select-Object name, subject, issuer, audiences | Format-Table -AutoSize
-foreach ($subject in $expectedSubjects) {
+# Branches: exact subject must be present
+foreach ($b in $cfg.Branches) {
+    $subject = "repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/heads/$b"
     if (-not ($fics.subject -contains $subject)) {
         throw "Missing federated credential subject: $subject"
     }
+}
+
+# Tags: a flexible credential whose expression covers refs/tags/* must be present
+$expectedTagPattern = "repo:$($cfg.GhOwner)/$($cfg.GhRepo):ref:refs/tags/*"
+$tagCred = $fics | Where-Object { $_.claimsMatchingExpression -and $_.claimsMatchingExpression.value -like "*$expectedTagPattern*" }
+if (-not $tagCred) {
+    throw "Missing flexible federated credential (claimsMatchingExpression) covering: $expectedTagPattern"
 }
 
 # 2) Role assignment at the certificate-profile scope

@@ -28,7 +28,9 @@ Subscription (Kindel LLC)
 Entra ID (tenant)
 └─ App registration: winprint                           ← scripted
    ├─ Service principal                                 ← scripted
-   ├─ Federated credentials: refs/tags/*, refs/heads/develop, refs/heads/main   ← scripted
+   ├─ Federated credentials                             ← scripted
+   │    • gh-develop / gh-main : exact subject  repo:tig/winprint:ref:refs/heads/<branch>
+   │    • gh-tags (FLEXIBLE)   : claimsMatchingExpression  matches refs/tags/*  (see gotchas)
    └─ Role: "Artifact Signing Certificate Profile Signer" @ cert-profile scope  ← scripted
 GitHub repo: tig/winprint
 └─ Secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
@@ -79,11 +81,19 @@ A failed run throws on the first missing piece.
 - The job requests `permissions: id-token: write` and `azure/login@v2` with
   `client-id`/`tenant-id`/`subscription-id` — no secret, the OIDC token is exchanged for
   the federated credential.
-- Releases trigger on `v*` **tags** → covered by the `refs/tags/*` credential. Manual
+- Releases trigger on `v*` **tags** → covered by the flexible tag credential. Manual
   `workflow_dispatch` runs are covered by the per-branch credentials (`develop`, `main`).
 
 ## Gotchas / lessons baked into the scripts
 
+- **Entra federated `subject` is EXACT-match — wildcards do not work.** A credential with
+  subject `repo:tig/winprint:ref:refs/tags/*` never matches a real tag token
+  (`…/refs/tags/v2.0.6`) and OIDC login fails with **AADSTS700213**. Tags therefore use a
+  **flexible federated identity credential** (`claimsMatchingExpression`:
+  `claims['sub'] matches 'repo:tig/winprint:ref:refs/tags/*'`), created via the **beta**
+  Microsoft Graph endpoint (`/beta/applications/{id}/federatedIdentityCredentials`) — the
+  `v1.0` endpoint and `az ad app federated-credential create` reject/omit it. Branches
+  (`develop`, `main`) are fixed strings, so they keep plain exact-match subjects.
 - **PowerShell `$var:` trap.** `"...$GhRepo:ref..."` makes PowerShell read `GhRepo:` as a
   scope qualifier and silently drops the repo name. Always brace: `${GhRepo}`. (This bit
   us once; both scripts now use the braced form.)
