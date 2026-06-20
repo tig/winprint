@@ -36,7 +36,7 @@ jobs:
             mainExe: wp.exe
             icon: src/WinPrint.cli/winprint.ico
 
-          - os: macos-latest
+          - os: macos-26
             runtime: osx-x64
             tuiFramework: net10.0
             includeGui: true
@@ -46,7 +46,7 @@ jobs:
             mainExe: wp
             icon: ''
 
-          - os: macos-latest
+          - os: macos-26
             runtime: osx-arm64
             tuiFramework: net10.0
             includeGui: true
