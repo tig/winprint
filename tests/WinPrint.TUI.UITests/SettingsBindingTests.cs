@@ -71,11 +71,23 @@ public class SettingsBindingTests
         var fixture = new AppFixture(view, 96, 32);
 
         // Real content font + sheet from the default settings (not the sample placeholders).
-        // Default content font varies by OS: "Consolas" on Windows, "monospace" elsewhere.
-        string expectedFont = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows)
-            ? "Consolas"
-            : "monospace";
+        // Default content font varies by OS: "Consolas" on Windows, "Menlo" on macOS, "monospace" elsewhere.
+        string expectedFont;
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+                System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            expectedFont = "Consolas";
+        }
+        else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+                     System.Runtime.InteropServices.OSPlatform.OSX))
+        {
+            expectedFont = "Menlo";
+        }
+        else
+        {
+            expectedFont = "monospace";
+        }
+
         DriverAssert.ContainsText(fixture.Screen, expectedFont); // default content font
         DriverAssert.ContainsText(fixture.Screen, "Up"); // default sheet name ("Default 2-Up")
         // The header/footer editors are bound to the current sheet's real models.

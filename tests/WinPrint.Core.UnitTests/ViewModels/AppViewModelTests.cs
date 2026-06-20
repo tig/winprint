@@ -223,6 +223,92 @@ public class AppViewModelTests : TestServicesBase
         Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
     }
 
+    // ResolveUnsavedSheetsOnExitAsync is the shared, front-end-agnostic save-on-exit guard. Each front end
+    // wires its own platform "about to exit" event (WinForms FormClosing, MAUI AppWindow.Closing / Mac Quit,
+    // TUI Quit command) to it and supplies a prompt delegate. These tests pin the decision logic so every
+    // front end behaves identically — the gap that left MAUI/Mac silently exiting without prompting.
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_NothingDirty_DoesNotPromptAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+
+        int prompts = 0;
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+        {
+            prompts++;
+            return Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Cancel, -1, string.Empty));
+        });
+
+        Assert.True(mayExit);
+        Assert.Equal(0, prompts);
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_Cancel_BlocksExitAndKeepsChanges()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+            Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Cancel, -1, string.Empty)));
+
+        Assert.False(mayExit);
+        Assert.True(vm.HasAnyUnsavedSheetChanges); // user cancelled — edits kept, exit blocked
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_DontSave_DiscardsAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        int originalColumns = vm.CurrentSheet!.Columns;
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+            Task.FromResult(new SaveSheetResolution(SaveSheetChoice.DontSave, -1, string.Empty)));
+
+        Assert.True(mayExit);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+        Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_Save_PersistsAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SelectSheetByIndex(0);
+        vm.SetColumns(vm.CurrentSheet!.Columns + 2);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        try
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+
+            bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, currentIndex) =>
+                Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Save, currentIndex, string.Empty)));
+
+            Assert.True(mayExit);
+            Assert.False(vm.HasAnyUnsavedSheetChanges); // saved → no longer dirty
+        }
+        finally
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
     [Fact]
     public void SaveSheetChangesToKey_TargetIsDisplayedSheet_DoesNotThrowAndCopies()
     {

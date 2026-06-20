@@ -16,6 +16,8 @@ env:
   VPK_VERSION: 1.1.1
   HAS_AZURE_SIGNING: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_SIGNING_ACCOUNT != '' && secrets.AZURE_SIGNING_PROFILE != '' && secrets.AZURE_SIGNING_ENDPOINT != '' }}
   HAS_APPLE_SIGNING: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_SIGNING_IDENTITY != '' }}
+  HAS_WINGET: ${{ secrets.WINGET_TOKEN != '' }}
+  HAS_BREW_TAP: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
 
 jobs:
   package:
@@ -33,10 +35,10 @@ jobs:
             mauiFramework: net10.0-windows10.0.19041.0
             mauiRuntime: win-x64
             channel: win
-            mainExe: wp.exe
+            mainExe: winprint.exe
             icon: src/WinPrint.cli/winprint.ico
 
-          - os: macos-latest
+          - os: macos-26
             runtime: osx-x64
             tuiFramework: net10.0
             includeGui: true
@@ -46,7 +48,7 @@ jobs:
             mainExe: wp
             icon: ''
 
-          - os: macos-latest
+          - os: macos-26
             runtime: osx-arm64
             tuiFramework: net10.0
             includeGui: true
@@ -85,8 +87,17 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Install MAUI workload
-        if: ${{ matrix.includeGui }}
+      # Windows: install only the maui-windows workload and build only the Windows head
+      # (WinPrintWindowsOnly below). Installing the full `maui` workload + leaving the
+      # MacCatalyst head active makes the Windows job try to cross-compile MacCatalyst from
+      # win-x64, which demands the host Mono cross-pack Microsoft.NETCore.App.Runtime.Mono.win-x64
+      # (not published on nuget.org) and fails restore (NU1102). Mirrors ci.yml.
+      - name: Install MAUI workload (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet workload install maui-windows
+
+      - name: Install MAUI workload (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
         run: dotnet workload install maui
 
       - name: Install Velopack CLI
@@ -102,8 +113,15 @@ jobs:
       - name: Restore TUI
         run: dotnet restore src/WinPrint.TUI/WinPrint.TUI.csproj
 
-      - name: Restore MAUI
-        if: ${{ matrix.includeGui }}
+      # Restore the same single head we publish. Without WinPrintWindowsOnly the csproj
+      # also exposes net10.0-maccatalyst on Windows, so a plain restore would evaluate the
+      # MacCatalyst head even though only the maui-windows workload is installed.
+      - name: Restore MAUI (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj /p:WinPrintWindowsOnly=true
+
+      - name: Restore MAUI (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
         run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj
 
       - name: Get version
@@ -130,6 +148,23 @@ jobs:
             -o $publishDir `
             /p:PublishSingleFile=false
 
+      # Capture a TUI-only tarball for the Homebrew tap BEFORE the GUI publish writes into
+      # the same dir, so `wp` ships without the (separately-distributed) GUI. macOS + Linux only.
+      - name: Package TUI tarball (Homebrew)
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          mkdir -p artifacts/cli
+          tar -C "artifacts/publish/${{ matrix.runtime }}" -czf "artifacts/cli/wp-${{ matrix.runtime }}.tar.gz" .
+
+      - name: Upload TUI tarball
+        if: ${{ runner.os != 'Windows' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-${{ matrix.runtime }}
+          path: artifacts/cli/wp-${{ matrix.runtime }}.tar.gz
+          if-no-files-found: error
+
       - name: Publish Windows GUI
         if: ${{ matrix.includeGui && runner.os == 'Windows' }}
         shell: pwsh
@@ -141,7 +176,25 @@ jobs:
             -r "${{ matrix.mauiRuntime }}" `
             --self-contained true `
             -o $publishDir `
-            /p:WindowsPackageType=None
+            /p:WindowsPackageType=None `
+            /p:WinPrintWindowsOnly=true
+
+      - name: Validate Windows package inputs
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
+          $requiredFiles = @(
+            "winprint.exe", # MAUI GUI; this must be the Start Menu entrypoint.
+            "wp.exe"        # Terminal UI; exposed through the installed folder on PATH.
+          )
+
+          foreach ($file in $requiredFiles) {
+            $path = Join-Path $publishDir $file
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Windows package input is missing required executable: $path"
+            }
+          }
 
       - name: Publish macOS GUI
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
@@ -271,3 +324,74 @@ jobs:
         with:
           files: release-artifacts/**/*
           generate_release_notes: true
+          # Tags with a pre-release label (e.g. v2.6.0-rc.1) publish as a pre-release so
+          # GitHub doesn't mark them "Latest"; stable tags (v2.6.0) become the latest release.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # Auto-update the winget-pkgs manifest on every STABLE release. Pre-releases are skipped.
+  # Requires a classic PAT in the WINGET_TOKEN secret (public_repo scope) and a one-time
+  # manual bootstrap of the package into microsoft/winget-pkgs — see packaging/winget/README.md.
+  winget:
+    name: Submit to winget-pkgs
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      - name: Derive winget version (strip leading v)
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Submit to winget-pkgs
+        if: ${{ env.HAS_WINGET == 'true' }}
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Kindel.WinPrint
+          version: ${{ steps.ver.outputs.version }}
+          release-tag: ${{ github.ref_name }}
+          installers-regex: 'win-Setup\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  # Update the Homebrew tap (kindel/homebrew-winprint) with the new TUI on every STABLE
+  # release. Renders packaging/homebrew/Formula/winprint.rb with the version + per-arch
+  # SHA256s and pushes it to the tap. Requires a classic PAT (repo scope) in HOMEBREW_TAP_TOKEN
+  # with push access to the tap; no-op until that secret is set.
+  brew:
+    name: Update Homebrew tap
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      - name: Checkout source
+        if: ${{ env.HAS_BREW_TAP == 'true' }}
+        uses: actions/checkout@v5
+
+      - name: Render formula and push to tap
+        if: ${{ env.HAS_BREW_TAP == 'true' }}
+        shell: bash
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
+
+          sed -e "s|{{version}}|${version}|g" \
+              -e "s|{{base}}|${base}|g" \
+              -e "s|{{sha_osx_arm}}|$(sha wp-osx-arm64.tar.gz)|" \
+              -e "s|{{sha_osx_x64}}|$(sha wp-osx-x64.tar.gz)|" \
+              -e "s|{{sha_linux_x64}}|$(sha wp-linux-x64.tar.gz)|" \
+              -e "s|{{sha_linux_arm}}|$(sha wp-linux-arm64.tar.gz)|" \
+              packaging/homebrew/Formula/winprint.rb > /tmp/winprint.rb
+
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/kindel/homebrew-winprint.git" tap
+          mkdir -p tap/Formula
+          cp /tmp/winprint.rb tap/Formula/winprint.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/winprint.rb
+          git diff --cached --quiet && { echo "Formula unchanged."; exit 0; }
+          git commit -m "winprint ${version}"
+          git push
