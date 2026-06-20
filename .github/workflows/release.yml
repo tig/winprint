@@ -111,8 +111,15 @@ jobs:
       - name: Restore TUI
         run: dotnet restore src/WinPrint.TUI/WinPrint.TUI.csproj
 
-      - name: Restore MAUI
-        if: ${{ matrix.includeGui }}
+      # Restore the same single head we publish. Without WinPrintWindowsOnly the csproj
+      # also exposes net10.0-maccatalyst on Windows, so a plain restore would evaluate the
+      # MacCatalyst head even though only the maui-windows workload is installed.
+      - name: Restore MAUI (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj /p:WinPrintWindowsOnly=true
+
+      - name: Restore MAUI (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
         run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj
 
       - name: Get version
