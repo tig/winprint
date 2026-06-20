@@ -29,10 +29,10 @@ Entra ID (tenant)
 └─ App registration: winprint                           ← scripted
    ├─ Service principal                                 ← scripted
    ├─ Federated credentials                             ← scripted
-   │    • gh-develop / gh-main : exact subject  repo:tig/winprint:ref:refs/heads/<branch>
+   │    • gh-develop / gh-main : exact subject  repo:Kindel/winprint:ref:refs/heads/<branch>
    │    • gh-tags (FLEXIBLE)   : claimsMatchingExpression  matches refs/tags/*  (see gotchas)
    └─ Role: "Artifact Signing Certificate Profile Signer" @ cert-profile scope  ← scripted
-GitHub repo: tig/winprint
+GitHub repo: Kindel/winprint
 └─ Secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
             AZURE_SIGNING_ACCOUNT, AZURE_SIGNING_PROFILE, AZURE_SIGNING_ENDPOINT   ← scripted (-SetGitHubSecrets)
 ```
@@ -87,10 +87,10 @@ A failed run throws on the first missing piece.
 ## Gotchas / lessons baked into the scripts
 
 - **Entra federated `subject` is EXACT-match — wildcards do not work.** A credential with
-  subject `repo:tig/winprint:ref:refs/tags/*` never matches a real tag token
+  subject `repo:Kindel/winprint:ref:refs/tags/*` never matches a real tag token
   (`…/refs/tags/v2.0.6`) and OIDC login fails with **AADSTS700213**. Tags therefore use a
   **flexible federated identity credential** (`claimsMatchingExpression`:
-  `claims['sub'] matches 'repo:tig/winprint:ref:refs/tags/*'`), created via the **beta**
+  `claims['sub'] matches 'repo:Kindel/winprint:ref:refs/tags/*'`), created via the **beta**
   Microsoft Graph endpoint (`/beta/applications/{id}/federatedIdentityCredentials`) — the
   `v1.0` endpoint and `az ad app federated-credential create` reject/omit it. Branches
   (`develop`, `main`) are fixed strings, so they keep plain exact-match subjects.

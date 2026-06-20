@@ -23,7 +23,7 @@
     AppDisplayName = 'winprint'
 
     # --- GitHub repo + the refs allowed to mint an OIDC token ---
-    GhOwner        = 'tig'
+    GhOwner        = 'Kindel'
     GhRepo         = 'winprint'
     Branches       = @('develop', 'main')   # plus refs/tags/* (always added)
 

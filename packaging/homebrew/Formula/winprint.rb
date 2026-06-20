@@ -2,8 +2,8 @@
 # Replace the version, sha256, and URL after publishing a Linux Velopack artifact.
 class Winprint < Formula
   desc "Advanced source code and text file printing terminal UI"
-  homepage "https://github.com/tig/winprint"
-  url "https://github.com/tig/winprint/releases/download/v{{version}}/{{linuxArtifactName}}"
+  homepage "https://github.com/Kindel/winprint"
+  url "https://github.com/Kindel/winprint/releases/download/v{{version}}/{{linuxArtifactName}}"
   sha256 "{{sha256}}"
   license "MIT"
 

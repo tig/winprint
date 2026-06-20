@@ -315,3 +315,7 @@ jobs:
           release-tag: ${{ github.ref_name }}
           installers-regex: 'win-Setup\.exe$'
           token: ${{ secrets.WINGET_TOKEN }}
+          # WINGET_TOKEN is tig's PAT and the winget-pkgs fork lives under tig; pin the
+          # fork account so this keeps working after the repo moves to the Kindel org
+          # (the action otherwise defaults fork-user to the repo owner).
+          fork-user: tig

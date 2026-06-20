@@ -27,7 +27,7 @@ which smooths winget validation.
      ```bash
      komac update Kindel.WinPrint \
        --version 2.6.0 \
-       --urls https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-Setup.exe \
+       --urls https://github.com/Kindel/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-Setup.exe \
        --token <PAT> --submit
      ```
      (For a brand-new package use `komac new Kindel.WinPrint`.)
@@ -44,7 +44,7 @@ are needed** — each stable release auto-submits its update.
 
 ```
 PackageVersion:  2.6.0
-InstallerUrl:    https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-Setup.exe
+InstallerUrl:    https://github.com/Kindel/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-Setup.exe
 InstallerSha256: F19CCCE38A0AE67059343648E11C3898614507817893FD01FD3D62D875AD3CE1
 ReleaseDate:     2026-06-20
 ```
