@@ -33,6 +33,15 @@ in `.claude/settings.json`) installs the .NET 10 SDK, `libgdiplus`, the local `j
 and warms NuGet restore. `global.json` pins .NET 10. The hook runs only when
 `CLAUDE_CODE_REMOTE=true`.
 
+## Release / Windows code signing
+Windows installers are signed with **Azure Trusted Signing** via **GitHub OIDC** (no client
+secret). The full, reproducible setup lives in `scripts/` (`Azure.Config.ps1` = single source
+of truth, `SetupAzure.ps1` = idempotent one-shot creator, `ValidateAzure.ps1` = verifier) and
+is documented in **`docs/code-signing.md`**. An authorized operator recreates the CI trust with
+`az login && pwsh scripts/SetupAzure.ps1 -SetGitHubSecrets`. The Trusted Signing account +
+PublicTrust cert profile are a one-time **manual** prerequisite (identity validation can't be
+scripted); everything else is automated. Read `docs/code-signing.md` before touching signing.
+
 ## Content Type Engines (CTEs)
 CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
 `ContentTypeEngineBase`. They are discovered by reflection via `SupportedContentTypes`
