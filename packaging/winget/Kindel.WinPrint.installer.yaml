@@ -1,6 +1,8 @@
 PackageIdentifier: Kindel.WinPrint
 PackageVersion: "{{version}}"
 InstallerType: exe
+# Velopack installs per-user into %LocalAppData% (no admin required).
+Scope: user
 InstallModes:
   - interactive
   - silent
@@ -9,6 +11,14 @@ InstallerSwitches:
   SilentWithProgress: --silent
 UpgradeBehavior: install
 ReleaseDate: "{{releaseDate}}"
+# Lets `winget upgrade` correlate an installed copy with this package. Values mirror the
+# Add/Remove Programs entry Velopack registers (key = PackId, DisplayName = packTitle).
+AppsAndFeaturesEntries:
+  - DisplayName: WinPrint
+    Publisher: Kindel
+    DisplayVersion: "{{version}}"
+    ProductCode: Kindel.WinPrint
+    InstallerType: exe
 Installers:
   - Architecture: x64
     InstallerUrl: "{{installerUrl}}"
