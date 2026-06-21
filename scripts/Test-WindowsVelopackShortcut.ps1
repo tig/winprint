@@ -13,6 +13,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Velopack's Update.exe is a GUI-subsystem binary, so `& $updateExe` may return without
+# setting $LASTEXITCODE. Under StrictMode -Latest, reading an unset $LASTEXITCODE throws.
+# Seed it so the exit-code checks never fault on the cleanup path.
+$global:LASTEXITCODE = 0
+
 if ([string]::IsNullOrWhiteSpace($PackId)) {
     throw "PackId must be provided either as -PackId or PACK_ID."
 }
@@ -253,5 +258,12 @@ try {
     Write-Host "Validated Start Menu shortcut target: $($startMenuShortcuts[0].TargetPath)"
 }
 finally {
-    Remove-InstallArtifacts -InstallRoot $installRoot -ShortcutRoots $shortcutRoots
+    # Cleanup is best-effort — a teardown hiccup must not fail the release after the
+    # shortcut validation above has already passed.
+    try {
+        Remove-InstallArtifacts -InstallRoot $installRoot -ShortcutRoots $shortcutRoots
+    }
+    catch {
+        Write-Warning "Install-artifact cleanup failed (non-fatal): $_"
+    }
 }
