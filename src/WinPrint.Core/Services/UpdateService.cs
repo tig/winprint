@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Serilog;
 using Velopack;
 using Velopack.Sources;
@@ -138,7 +139,33 @@ public class UpdateService
     private static UpdateManager CreateUpdateManager()
     {
         var source = new GithubSource(RepositoryUrl, string.Empty, IncludePrerelease, new HttpClientFileDownloader());
-        return new UpdateManager(source);
+        // The release workflow packs a separate Velopack channel per runtime (win-x64, osx-x64,
+        // osx-arm64, linux-x64, linux-arm64), so each install must ask for its own arch's channel.
+        // Without this, Velopack falls back to the per-OS default channel (win/osx/linux) and would
+        // miss the release feed entirely on macOS/Linux.
+        var options = new UpdateOptions { ExplicitChannel = GetUpdateChannel() };
+        return new UpdateManager(source, options);
+    }
+
+    /// <summary>
+    ///     Builds the Velopack channel name for the running process, matching the per-runtime
+    ///     channels produced by the release workflow (e.g. <c>osx-arm64</c>).
+    /// </summary>
+    private static string GetUpdateChannel()
+    {
+        string os = OperatingSystem.IsWindows() ? "win"
+            : OperatingSystem.IsMacOS() ? "osx"
+            : OperatingSystem.IsLinux() ? "linux"
+            : throw new PlatformNotSupportedException("WinPrint updates are not supported on this OS.");
+
+        string arch = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "arm64",
+            var other => throw new PlatformNotSupportedException($"WinPrint updates are not supported on {other}.")
+        };
+
+        return $"{os}-{arch}";
     }
 
     private static bool IncludePrerelease
