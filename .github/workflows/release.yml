@@ -34,7 +34,7 @@ jobs:
             includeGui: true
             mauiFramework: net10.0-windows10.0.19041.0
             mauiRuntime: win-x64
-            channel: win
+            channel: win-x64
             mainExe: winprint.exe
             icon: src/WinPrint.cli/winprint.ico
 
@@ -44,7 +44,7 @@ jobs:
             includeGui: true
             mauiFramework: net10.0-maccatalyst
             mauiRuntime: maccatalyst-x64
-            channel: osx
+            channel: osx-x64
             mainExe: wp
             icon: ''
 
@@ -54,7 +54,7 @@ jobs:
             includeGui: true
             mauiFramework: net10.0-maccatalyst
             mauiRuntime: maccatalyst-arm64
-            channel: osx
+            channel: osx-arm64
             mainExe: wp
             icon: ''
 
@@ -62,7 +62,7 @@ jobs:
             runtime: linux-x64
             tuiFramework: net10.0
             includeGui: false
-            channel: linux
+            channel: linux-x64
             mainExe: wp
             icon: ''
 
@@ -70,7 +70,7 @@ jobs:
             runtime: linux-arm64
             tuiFramework: net10.0
             includeGui: false
-            channel: linux
+            channel: linux-arm64
             mainExe: wp
             icon: ''
 
@@ -348,7 +348,7 @@ jobs:
           identifier: Kindel.WinPrint
           version: ${{ steps.ver.outputs.version }}
           release-tag: ${{ github.ref_name }}
-          installers-regex: 'win-Setup\.exe$'
+          installers-regex: 'win-x64-Setup\.exe$'
           token: ${{ secrets.WINGET_TOKEN }}
 
   # Update the Homebrew tap (kindel/homebrew-winprint) with the new TUI on every STABLE
