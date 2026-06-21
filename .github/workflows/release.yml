@@ -36,7 +36,7 @@ jobs:
             mauiRuntime: win-x64
             channel: win-x64
             mainExe: winprint.exe
-            icon: src/WinPrint.WinForms/Document.ico
+            icon: packaging/windows/winprint.ico
 
           - os: macos-26
             runtime: osx-x64
