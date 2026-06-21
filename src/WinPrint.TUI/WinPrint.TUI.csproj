@@ -17,8 +17,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui" Version="2.4.4" />
-        <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
+        <PackageReference Include="Terminal.Gui" Version="2.4.7" />
+        <PackageReference Include="Terminal.Gui.Cli" Version="0.2.1" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
         <PackageReference Include="Velopack" Version="1.1.1" />
         <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->

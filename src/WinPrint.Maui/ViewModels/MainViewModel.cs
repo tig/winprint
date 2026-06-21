@@ -12,6 +12,7 @@ using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
+using WinPrintFont = WinPrint.Core.Models.Font;
 
 namespace WinPrint.Maui.ViewModels;
 
@@ -484,13 +485,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (_app.SelectedPaperSize != value)
             {
-                _app.SelectedPaperSize = value;
-                if (value != null)
-                {
-                    UpdatePageSetupForPaper(value);
-                    _ = _app.ReflowAsync();
-                }
-
+                _app.SetPaperSize(value);
                 OnPropertyChanged();
             }
         }
@@ -610,7 +605,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString(), true);
         if (result.HasValue)
         {
-            cs.Font = new Core.Models.Font
+            cs.Font = new WinPrintFont
             {
                 Family = result.Value.Family,
                 Size = result.Value.Size,
@@ -637,7 +632,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString(), false);
         if (result.HasValue)
         {
-            var newFont = new Core.Models.Font
+            var newFont = new WinPrintFont
             {
                 Family = result.Value.Family,
                 Size = result.Value.Size,
@@ -837,25 +832,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 (int)(top * 100),
                 (int)(bottom * 100));
             _app.SetMargins(margins);
-        }
-    }
-
-    private void UpdatePageSetupForPaper(string paperName)
-    {
-        if (paperName.StartsWith("Letter"))
-        {
-            _currentPageSetup.PaperWidth = 850;
-            _currentPageSetup.PaperHeight = 1100;
-        }
-        else if (paperName.StartsWith("Legal"))
-        {
-            _currentPageSetup.PaperWidth = 850;
-            _currentPageSetup.PaperHeight = 1400;
-        }
-        else if (paperName.StartsWith("A4"))
-        {
-            _currentPageSetup.PaperWidth = 827;
-            _currentPageSetup.PaperHeight = 1169;
         }
     }
 

@@ -111,4 +111,3 @@ Other known AOT work (fall out of the spike):
   annotate with `[DynamicallyAccessedMembers]` or replace with generated/explicit copies.
 - CTE discovery (`GetTypes()` + `Activator.CreateInstance` in `ContentTypeEngineBase`) — root the
   engine types or replace reflection with an explicit registry.
-

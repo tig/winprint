@@ -189,6 +189,13 @@ public sealed class SettingsPanel : View
                 app.SetLineNumbers(LineNumbers.Value == CheckState.Checked);
             }
         };
+        Printer.Edited += (_, _) =>
+        {
+            if (!_seeding && Printer.Value is { } setup)
+            {
+                app.SetPrinterSetup(setup.PrinterName, setup.PaperSizeName, setup.FromSheet, setup.ToSheet);
+            }
+        };
 
         FileButton.Accepting += (_, _) => OpenFile();
 

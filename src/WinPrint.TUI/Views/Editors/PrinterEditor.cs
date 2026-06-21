@@ -40,7 +40,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         _printers = new ObservableCollection<string>(printers ?? PrinterChoices.DefaultPrinters);
         _printer = new DropDownList
         {
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_printers),
             Source = new ListWrapper<string>(_printers)
         };
 
@@ -50,7 +50,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             X = Pos.Right(paperLabel) + 1,
             Y = Pos.Top(paperLabel),
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_papers),
             Source = new ListWrapper<string>(_papers)
         };
 
@@ -82,6 +82,8 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         Add(_printer, paperLabel, _paper, pagesLabel, _from, toLabel, _to);
     }
 
+    public event EventHandler? Edited;
+
     /// <summary>The sheet range (From/To) being edited. Editing From/To mutates this instance.</summary>
     public PageRange Range { get; private set; } = new();
 
@@ -93,6 +95,8 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         {
             _printers.Add(p);
         }
+
+        _printer.Width = EditorMetrics.DropDownWidth(_printers);
     }
 
     /// <inheritdoc />
@@ -100,7 +104,9 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
     {
         PrintPageSetup setup = newValue ?? new PrintPageSetup();
         _printer.Value = Ensure(_printers, setup.PrinterName);
+        _printer.Width = EditorMetrics.DropDownWidth(_printers);
         _paper.Value = Ensure(_papers, setup.PaperSizeName);
+        _paper.Width = EditorMetrics.DropDownWidth(_papers);
         RebindRange();
     }
 
@@ -155,6 +161,7 @@ public sealed class PrinterEditor : EditorBase<PrintPageSetup>
         Range.From = _from.Value;
         Range.To = _to.Value;
         SyncRangeToValue();
+        Edited?.Invoke(this, EventArgs.Empty);
     }
 
     // A bound printer/paper may not be in the offered list (e.g. set from a saved profile); add it so

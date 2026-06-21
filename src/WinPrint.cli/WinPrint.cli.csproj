@@ -24,7 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
+        <PackageReference Include="Terminal.Gui.Cli" Version="0.2.1" />
         <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
     </ItemGroup>
 
