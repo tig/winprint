@@ -56,5 +56,8 @@ ReleaseDate:     2026-06-20
 - **`AppsAndFeaturesEntries.ProductCode`** is set to the Velopack PackId (`Kindel.WinPrint`),
   which is the Add/Remove Programs registry key Velopack creates. If `winget upgrade` ever
   fails to detect an installed copy, confirm the actual ARP key on a real install and adjust.
+- The release workflow installs the generated Windows Velopack setup on the GitHub runner and
+  asserts the Start Menu shortcut points to the MAUI GUI (`winprint.exe`), not the bundled TUI
+  (`wp.exe`).
 - Only the **x64** Windows installer is published; add more `Installers` entries if other
   arches ship later.
