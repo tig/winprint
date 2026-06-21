@@ -1,6 +1,7 @@
 # Template rendered by the release pipeline (release.yml -> brew job) and pushed to the
 # kindel/homebrew-winprint tap; the placeholders are filled with each stable release's
-# version, download base URL, and per-arch SHA256s. Free TUI (wp) only — GUI ships via stores.
+# version, download base URL, and per-arch SHA256s. This is the free TUI (`wp`); the free MAUI
+# GUI ships alongside it as the tap's *cask* (packaging/homebrew/Casks/winprint.rb).
 class Winprint < Formula
   desc "Advanced source code and text file printing terminal UI"
   homepage "https://github.com/kindel/winprint"
