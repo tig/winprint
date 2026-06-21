@@ -139,7 +139,10 @@
 	        DependsOnTargets="GetVersion">
 		<PropertyGroup Condition="'$(GitVersion_MajorMinorPatch)' != ''">
 			<ApplicationDisplayVersion>$(GitVersion_MajorMinorPatch)</ApplicationDisplayVersion>
-			<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' != ''">$(GitVersion_CommitsSinceVersionSource)</ApplicationVersion>
+			<!-- On a release tag GitVersion_CommitsSinceVersionSource is 0; CFBundleVersion's first
+			     integer must be > 0 (Apple rejects 0), so map 0 to 1. -->
+			<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' != '' and '$(GitVersion_CommitsSinceVersionSource)' != '0'">$(GitVersion_CommitsSinceVersionSource)</ApplicationVersion>
+			<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' == '0'">1</ApplicationVersion>
 		</PropertyGroup>
 		<Message Importance="high"
 		         Text="WinPrint: Info.plist version = $(ApplicationDisplayVersion) (build $(ApplicationVersion))" />
