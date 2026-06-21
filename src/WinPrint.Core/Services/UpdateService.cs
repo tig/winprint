@@ -153,8 +153,10 @@ public class UpdateService
     /// </summary>
     private static string GetUpdateChannel()
     {
+        // The macOS GUI ships as a MAUI Mac Catalyst build, which reports as MacCatalyst (not
+        // macOS), so map it to the same "osx" channel as the plain-net10.0 TUI.
         string os = OperatingSystem.IsWindows() ? "win"
-            : OperatingSystem.IsMacOS() ? "osx"
+            : OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst() ? "osx"
             : OperatingSystem.IsLinux() ? "linux"
             : throw new PlatformNotSupportedException("WinPrint updates are not supported on this OS.");
 
