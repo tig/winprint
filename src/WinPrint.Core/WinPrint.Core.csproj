@@ -89,8 +89,14 @@
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="SkiaSharp" Version="3.116.1" />
         <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" />
-        <PackageReference Include="TextMateSharp" Version="2.0.3" />
-        <PackageReference Include="TextMateSharp.Grammars" Version="2.0.3" />
+        <!-- Float the patch (2.0.*) so this stays in lockstep with whatever TextMateSharp.Grammars
+             version Terminal.Gui.Cli / Terminal.Gui.Editor pull in transitively. The release
+             publishes the TUI and the GUI into one directory; if Core pinned an older exact patch,
+             the GUI (whose only path to TextMateSharp is through Core) would ship that older
+             TextMateSharp.Grammars.dll and overwrite the TUI's newer one, making `wp` fault on the
+             assembly it was compiled against (#145). A floating patch can't drift apart that way. -->
+        <PackageReference Include="TextMateSharp" Version="2.0.*" />
+        <PackageReference Include="TextMateSharp.Grammars" Version="2.0.*" />
         <PackageReference Include="UTF.Unknown" Version="2.5.1" />
         <PackageReference Include="Velopack" Version="1.1.1" />
     </ItemGroup>

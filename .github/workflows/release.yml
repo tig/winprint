@@ -36,7 +36,7 @@ jobs:
             mauiRuntime: win-x64
             channel: win-x64
             mainExe: winprint.exe
-            icon: src/WinPrint.cli/winprint.ico
+            icon: packaging/windows/winprint.ico
 
           - os: macos-26
             runtime: osx-x64
@@ -196,18 +196,27 @@ jobs:
             }
           }
 
-      - name: Publish macOS GUI
+      # macOS GUI is the MAUI MacCatalyst .app, distributed via a Homebrew *cask* (NOT Velopack —
+      # Velopack's mac packer rebuilds its own .app from loose files and can't wrap a MacCatalyst
+      # bundle, which is what shipped a broken, TUI-launching app in v2.6.2). `dotnet build` (not
+      # publish) assembles a complete, runnable WinPrint.app; we sign + notarize + zip it below.
+      - name: Build macOS GUI (.app)
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
-        shell: pwsh
+        shell: bash
         run: |
-          $publishDir = "artifacts/publish/${{ matrix.runtime }}"
-          dotnet publish src/WinPrint.Maui/WinPrint.Maui.csproj `
-            -c Release `
-            -f "${{ matrix.mauiFramework }}" `
-            -r "${{ matrix.mauiRuntime }}" `
-            --self-contained true `
-            -o $publishDir `
+          set -euo pipefail
+          dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj \
+            -c Release \
+            -f "${{ matrix.mauiFramework }}" \
+            -r "${{ matrix.mauiRuntime }}" \
+            /p:CreatePackage=false \
             /p:EnableCodeSigning=false
+          APP="src/WinPrint.Maui/bin/Release/${{ matrix.mauiFramework }}/${{ matrix.mauiRuntime }}/WinPrint.app"
+          if [ ! -x "$APP/Contents/MacOS/winprint" ]; then
+            echo "::error::Expected GUI bundle missing or incomplete: $APP"
+            exit 1
+          fi
+          echo "GUI_APP=$APP" >> "$GITHUB_ENV"
 
       - name: Azure login for Trusted Signing
         if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
@@ -261,10 +270,40 @@ jobs:
 
           echo "APPLE_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
-      - name: Pack with Velopack
-        shell: pwsh
+      # Developer ID sign (hardened runtime) + notarize + staple the .app, then zip it for the
+      # Homebrew cask. Without the Apple secrets we still emit an (unsigned) zip so the rest of
+      # the release is exercised; Gatekeeper would block that build on a real machine.
+      - name: Sign, notarize, and zip macOS GUI (.app)
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        shell: bash
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          APP="$GUI_APP"
+          mkdir -p artifacts/cask
+          ZIP="artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip"
+          if [ "${HAS_APPLE_SIGNING}" = "true" ]; then
+            codesign --force --deep --options runtime --timestamp \
+              --keychain "$APPLE_KEYCHAIN_PATH" \
+              --entitlements packaging/macos/codesign.entitlements \
+              --sign "$APPLE_SIGNING_IDENTITY" "$APP"
+            codesign --verify --deep --strict --verbose=2 "$APP"
+            ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
+            xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+              --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" --wait
+            xcrun stapler staple "$APP"
+          else
+            echo "::warning::Apple signing secrets absent — emitting an unsigned WinPrint.app (Gatekeeper will block it)."
+          fi
+          ditto -c -k --keepParent "$APP" "$ZIP"
+          echo "Wrote $ZIP"
+
+      # Velopack packages Windows + Linux only. macOS GUI goes out as a notarized .app via the
+      # Homebrew cask (above); macOS TUI ships as the wp-*.tar.gz formula tarball.
+      - name: Pack with Velopack
+        if: ${{ runner.os != 'macOS' }}
+        shell: pwsh
         run: |
           $publishDir = "artifacts/publish/${{ matrix.runtime }}"
           $releaseDir = "artifacts/velopack/${{ matrix.runtime }}"
@@ -290,22 +329,32 @@ jobs:
             $vpkArgs += @("--azureTrustedSignFile", "artifacts/azure-trusted-signing.json")
           }
 
-          if ($IsMacOS -and $env:HAS_APPLE_SIGNING -eq "true") {
-            $vpkArgs += @(
-              "--signAppIdentity", $env:APPLE_SIGNING_IDENTITY,
-              "--signInstallIdentity", $env:APPLE_SIGNING_IDENTITY,
-              "--notaryProfile", "winprint-notary",
-              "--keychain", $env:APPLE_KEYCHAIN_PATH
-            )
-          }
-
           vpk @vpkArgs
 
-      - name: Upload package artifacts
+      - name: Validate Windows Start Menu shortcut
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          scripts\Test-WindowsVelopackShortcut.ps1 `
+            -ReleaseDir "artifacts/velopack/${{ matrix.runtime }}" `
+            -PackId $env:PACK_ID `
+            -PackTitle $env:PACK_TITLE `
+            -ExpectedMainExe "${{ matrix.mainExe }}"
+
+      - name: Upload Velopack artifacts
+        if: ${{ runner.os != 'macOS' }}
         uses: actions/upload-artifact@v4
         with:
           name: velopack-${{ matrix.runtime }}
           path: artifacts/velopack/${{ matrix.runtime }}/**/*
+          if-no-files-found: error
+
+      - name: Upload macOS GUI app zip
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cask-${{ matrix.runtime }}
+          path: artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip
           if-no-files-found: error
 
   publish:
@@ -377,6 +426,7 @@ jobs:
           base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
           sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
 
+          # Formula = free TUI (wp); Cask = free MAUI GUI (WinPrint.app). Both ship via the tap.
           sed -e "s|{{version}}|${version}|g" \
               -e "s|{{base}}|${base}|g" \
               -e "s|{{sha_osx_arm}}|$(sha wp-osx-arm64.tar.gz)|" \
@@ -385,13 +435,20 @@ jobs:
               -e "s|{{sha_linux_arm}}|$(sha wp-linux-arm64.tar.gz)|" \
               packaging/homebrew/Formula/winprint.rb > /tmp/winprint.rb
 
+          sed -e "s|{{version}}|${version}|g" \
+              -e "s|{{base}}|${base}|g" \
+              -e "s|{{sha_cask_arm}}|$(sha WinPrint-osx-arm64.app.zip)|" \
+              -e "s|{{sha_cask_x64}}|$(sha WinPrint-osx-x64.app.zip)|" \
+              packaging/homebrew/Casks/winprint.rb > /tmp/winprint-cask.rb
+
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/kindel/homebrew-winprint.git" tap
-          mkdir -p tap/Formula
+          mkdir -p tap/Formula tap/Casks
           cp /tmp/winprint.rb tap/Formula/winprint.rb
+          cp /tmp/winprint-cask.rb tap/Casks/winprint.rb
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/winprint.rb
-          git diff --cached --quiet && { echo "Formula unchanged."; exit 0; }
+          git add Formula/winprint.rb Casks/winprint.rb
+          git diff --cached --quiet && { echo "Tap unchanged."; exit 0; }
           git commit -m "winprint ${version}"
           git push

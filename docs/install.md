@@ -40,8 +40,12 @@ Or use **Settings → Apps → Installed apps** and search for "WinPrint".
 
 ### Install with Homebrew (Recommended)
 
+The GUI app and the `wp` terminal UI / CLI are separate Homebrew packages — install whichever
+you want, or both. `wp gui` (launching the GUI from the terminal) needs both:
+
 ```bash
-brew install --cask winprint
+brew install --cask winprint   # GUI app (WinPrint.app)
+brew install winprint          # wp — the terminal UI / CLI
 ```
 
 ### Prerequisites
@@ -50,16 +54,19 @@ No additional prerequisites are required for basic operation. For printing, macO
 
 ### Upgrade
 
-WinPrint packages are built with Velopack. Installed builds can use Velopack-managed updates, and Homebrew can also upgrade the cask:
+The macOS GUI is a notarized Developer ID `.app` distributed via the Homebrew cask, so Homebrew
+handles updates (there is no in-app self-updater on macOS):
 
 ```bash
-brew upgrade --cask winprint
+brew upgrade --cask winprint   # GUI
+brew upgrade winprint          # wp CLI
 ```
 
 ### Uninstall
 
 ```bash
-brew uninstall --cask winprint
+brew uninstall --cask winprint   # GUI
+brew uninstall winprint          # wp CLI
 ```
 
 ---
