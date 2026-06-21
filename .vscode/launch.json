@@ -9,6 +9,9 @@
             "request": "launch",
             "preLaunchTask": "build-tui",
             "program": "${workspaceFolder}/src/WinPrint.TUI/bin/Debug/net10.0/wp.dll",
+            "windows": {
+                "program": "${workspaceFolder}/src/WinPrint.TUI/bin/Debug/net10.0-windows/wp.dll"
+            },
             "args": [],
             "cwd": "${workspaceFolder}/src/WinPrint.TUI",
             "console": "integratedTerminal",
