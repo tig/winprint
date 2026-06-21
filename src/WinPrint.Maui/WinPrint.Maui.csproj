@@ -129,4 +129,23 @@
 		<NativeReference Include="Platforms\MacCatalyst\NativeLibs\liblaunchcwd.dylib" Kind="Dynamic" SmartLink="false" />
 	</ItemGroup>
 
+	<!-- The ApplicationDisplayVersion/ApplicationVersion above use $(GitVersion_*), but those are
+	     only populated by GitVersion.MsBuild's GetVersion *target* at build time — the PropertyGroup
+	     is read at *evaluation* time when they're still empty, so the generated Info.plist gets
+	     CFBundleShortVersionString/CFBundleVersion = 1 (issue #148). Re-apply them here, after
+	     GetVersion has run and before the Apple app manifest is compiled. -->
+	<Target Name="_WinPrintApplyGitVersionToManifest"
+	        BeforeTargets="_CompileAppManifestInputs;_CompileAppManifest"
+	        DependsOnTargets="GetVersion">
+		<PropertyGroup Condition="'$(GitVersion_MajorMinorPatch)' != ''">
+			<ApplicationDisplayVersion>$(GitVersion_MajorMinorPatch)</ApplicationDisplayVersion>
+			<!-- On a release tag GitVersion_CommitsSinceVersionSource is 0; CFBundleVersion's first
+			     integer must be > 0 (Apple rejects 0), so map 0 to 1. -->
+			<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' != '' and '$(GitVersion_CommitsSinceVersionSource)' != '0'">$(GitVersion_CommitsSinceVersionSource)</ApplicationVersion>
+			<ApplicationVersion Condition="'$(GitVersion_CommitsSinceVersionSource)' == '0'">1</ApplicationVersion>
+		</PropertyGroup>
+		<Message Importance="high"
+		         Text="WinPrint: Info.plist version = $(ApplicationDisplayVersion) (build $(ApplicationVersion))" />
+	</Target>
+
 </Project>
