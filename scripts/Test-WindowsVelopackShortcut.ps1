@@ -74,6 +74,21 @@ function Remove-InstallArtifacts {
         [string[]] $ShortcutRoots
     )
 
+    $currentDir = Join-Path $InstallRoot "current"
+    $updateExe = Join-Path $InstallRoot "Update.exe"
+    if (Test-Path -LiteralPath $updateExe -PathType Leaf) {
+        Wait-ForInstallProcessesToExit -InstallRoot $InstallRoot -TimeoutSeconds 60
+
+        & $updateExe --uninstall --silent
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Velopack uninstall failed with exit code $LASTEXITCODE; falling back to direct artifact cleanup."
+        }
+
+        Start-Sleep -Seconds 2
+    }
+
+    Remove-UserPathEntry -Entry $currentDir
+
     foreach ($shortcutRoot in $ShortcutRoots) {
         Get-ShortcutDetails -Root $shortcutRoot -InstallRoot $InstallRoot |
             Where-Object { $_.PointsAtInstall } |
@@ -119,6 +134,64 @@ function Wait-ForCondition {
     throw $FailureMessage
 }
 
+function Get-InstallProcesses {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $InstallRoot
+    )
+
+    @(Get-CimInstance Win32_Process |
+        Where-Object {
+            $_.ExecutablePath -and $_.ExecutablePath.StartsWith($InstallRoot, [StringComparison]::OrdinalIgnoreCase)
+        })
+}
+
+function Wait-ForInstallProcessesToExit {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $InstallRoot,
+
+        [int] $TimeoutSeconds = 60
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        if (@(Get-InstallProcesses -InstallRoot $InstallRoot).Count -eq 0) {
+            return
+        }
+
+        Start-Sleep -Seconds 1
+    } while ((Get-Date) -lt $deadline)
+
+    $processes = Get-InstallProcesses -InstallRoot $InstallRoot
+    $details = ($processes | ForEach-Object { "$($_.ProcessId): $($_.ExecutablePath)" }) -join [Environment]::NewLine
+    Write-Warning "Timed out waiting for validation install processes to exit before uninstall:$([Environment]::NewLine)$details"
+}
+
+function Remove-UserPathEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Entry
+    )
+
+    $currentPath = [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::User)
+    if ([string]::IsNullOrEmpty($currentPath)) {
+        return
+    }
+
+    $normalizedEntry = [IO.Path]::TrimEndingDirectorySeparator($Entry.Trim().Trim('"'))
+    $remainingEntries = @($currentPath.Split(";", [StringSplitOptions]::RemoveEmptyEntries) |
+        Where-Object {
+            $normalizedPathEntry = [IO.Path]::TrimEndingDirectorySeparator($_.Trim().Trim('"'))
+            -not $normalizedPathEntry.Equals($normalizedEntry, [StringComparison]::OrdinalIgnoreCase)
+        })
+    $updatedPath = $remainingEntries -join ";"
+
+    if (-not $updatedPath.Equals($currentPath, [StringComparison]::Ordinal)) {
+        [Environment]::SetEnvironmentVariable("PATH", $updatedPath, [EnvironmentVariableTarget]::User)
+    }
+}
+
 $shortcutRoots = @(
     (Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"),
     ([Environment]::GetFolderPath("DesktopDirectory"))
@@ -146,22 +219,24 @@ try {
         throw "Expected bundled TUI executable was not installed: $tuiExe"
     }
 
+    $startMenuRoot = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
     $packageShortcuts = @()
+    $startMenuShortcuts = @()
     Wait-ForCondition `
         -Condition {
             $script:packageShortcuts = @($shortcutRoots |
                     ForEach-Object { Get-ShortcutDetails -Root $_ -InstallRoot $installRoot } |
                     Where-Object { $_.PointsAtInstall })
-            $script:packageShortcuts.Count -gt 0
+            $script:startMenuShortcuts = @($script:packageShortcuts |
+                    Where-Object { $_.FullName.StartsWith($startMenuRoot, [StringComparison]::OrdinalIgnoreCase) })
+            $script:startMenuShortcuts.Count -gt 0
         } `
-        -FailureMessage "Timed out waiting for shortcuts to be created for install root '$installRoot'."
+        -FailureMessage "Timed out waiting for a Start Menu shortcut to be created for install root '$installRoot'."
 
     if ($packageShortcuts.Count -eq 0) {
         throw "No shortcuts were created for install root '$installRoot'."
     }
 
-    $startMenuRoot = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
-    $startMenuShortcuts = @($packageShortcuts | Where-Object { $_.FullName.StartsWith($startMenuRoot, [StringComparison]::OrdinalIgnoreCase) })
     if ($startMenuShortcuts.Count -eq 0) {
         throw "No Start Menu shortcut was created for '$PackTitle'."
     }
