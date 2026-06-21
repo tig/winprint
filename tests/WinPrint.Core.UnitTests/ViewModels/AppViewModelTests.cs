@@ -5,6 +5,7 @@ using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.UnitTests.Services;
+using WinPrint.Core.UnitTests.TestSupport;
 using WinPrint.Core.ViewModels;
 using Xunit;
 using Xunit.Abstractions;
@@ -63,6 +64,93 @@ public class AppViewModelTests : TestServicesBase
         Assert.Equal(
             ModelLocator.Current.Settings.DefaultSheet.ToString(),
             vm.SheetKeys[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
+    public void SetPaperSize_KnownPaper_UpdatesSelectionNameAndDimensions()
+    {
+        AppViewModel vm = CreateVm();
+
+        vm.SetPaperSize("Legal");
+
+        Assert.Equal("Legal", vm.SelectedPaperSize);
+        Assert.Equal("Legal", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPaperSize_DisplayPaperName_UpdatesDimensions()
+    {
+        AppViewModel vm = CreateVm();
+
+        vm.SetPaperSize("A4 (210 x 297mm)");
+
+        Assert.Equal("A4 (210 x 297mm)", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPaperSize_UnknownPaper_PreservesExistingDimensions()
+    {
+        AppViewModel vm = CreateVm();
+        vm.SetPaperSize("Legal");
+
+        vm.SetPaperSize("Letterhead");
+
+        Assert.Equal("Letterhead", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPrinterSetup_AfterDirectPaperNameMutation_UpdatesDimensions()
+    {
+        AppViewModel vm = CreateVm();
+        vm.SetPaperSize("Letter");
+
+        vm.CurrentPageSetup.PaperSizeName = "Legal";
+        vm.SetPrinterSetup("Printer", "Legal", 2, 3);
+
+        Assert.Equal("Printer", vm.CurrentPageSetup.PrinterName);
+        Assert.Equal("Legal", vm.SelectedPaperSize);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+        Assert.Equal(2, vm.CurrentPageSetup.FromSheet);
+        Assert.Equal(3, vm.CurrentPageSetup.ToSheet);
+    }
+
+    [Fact]
+    public async Task SetPaperSize_LoadedFile_ReflowsPreviewBounds()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_paper_reflow_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(file, "hello\nworld\n");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SetLandscape(false);
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(850, vm.SheetViewModel.Bounds.Width);
+            Assert.Equal(1100, vm.SheetViewModel.Bounds.Height);
+
+            var reflowed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            vm.ReflowCompleted += (_, _) => reflowed.TrySetResult();
+
+            vm.SetPaperSize("Legal");
+
+            await reflowed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(850, vm.SheetViewModel.Bounds.Width);
+            Assert.Equal(1400, vm.SheetViewModel.Bounds.Height);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 
     [Fact]
@@ -221,6 +309,92 @@ public class AppViewModelTests : TestServicesBase
 
         Assert.False(vm.HasUnsavedSheetChanges);
         Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
+    }
+
+    // ResolveUnsavedSheetsOnExitAsync is the shared, front-end-agnostic save-on-exit guard. Each front end
+    // wires its own platform "about to exit" event (WinForms FormClosing, MAUI AppWindow.Closing / Mac Quit,
+    // TUI Quit command) to it and supplies a prompt delegate. These tests pin the decision logic so every
+    // front end behaves identically — the gap that left MAUI/Mac silently exiting without prompting.
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_NothingDirty_DoesNotPromptAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+
+        int prompts = 0;
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+        {
+            prompts++;
+            return Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Cancel, -1, string.Empty));
+        });
+
+        Assert.True(mayExit);
+        Assert.Equal(0, prompts);
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_Cancel_BlocksExitAndKeepsChanges()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+            Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Cancel, -1, string.Empty)));
+
+        Assert.False(mayExit);
+        Assert.True(vm.HasAnyUnsavedSheetChanges); // user cancelled — edits kept, exit blocked
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_DontSave_DiscardsAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        int originalColumns = vm.CurrentSheet!.Columns;
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+            Task.FromResult(new SaveSheetResolution(SaveSheetChoice.DontSave, -1, string.Empty)));
+
+        Assert.True(mayExit);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+        Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_Save_PersistsAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SelectSheetByIndex(0);
+        vm.SetColumns(vm.CurrentSheet!.Columns + 2);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        try
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+
+            bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, currentIndex) =>
+                Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Save, currentIndex, string.Empty)));
+
+            Assert.True(mayExit);
+            Assert.False(vm.HasAnyUnsavedSheetChanges); // saved → no longer dirty
+        }
+        finally
+        {
+            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
     }
 
     [Fact]
@@ -436,6 +610,8 @@ public class AppViewModelTests : TestServicesBase
         ModelLocator.Current.Settings.LastPaperSize = "A4";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
         Assert.Equal("A4", vm.SelectedPaperSize);
+        Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
 
         ModelLocator.Current.Settings.LastPaperSize = "Foolscap";
         vm.RestorePaperSize(new[] { "Letter", "A4" });

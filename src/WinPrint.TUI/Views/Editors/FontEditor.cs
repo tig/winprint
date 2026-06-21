@@ -32,7 +32,7 @@ public sealed class FontEditor : EditorBase<Font>
         _families = new ObservableCollection<string>(FontChoices.Families);
         _family = new DropDownList
         {
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_families),
             Source = new ListWrapper<string>(_families)
         };
 
@@ -56,6 +56,7 @@ public sealed class FontEditor : EditorBase<Font>
     {
         Font font = newValue ?? new Font();
         _family.Value = Ensure(_families, font.Family);
+        _family.Width = EditorMetrics.DropDownWidth(_families);
         _size.Value = Ensure(_sizes, FormatSize(font.Size));
     }
 

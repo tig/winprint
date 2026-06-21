@@ -110,12 +110,12 @@ public sealed class SettingsContext
             PrinterSelection.ResolvePrinter(settings.LastPrinter, pageSetup.PrinterName, printerNames);
         if (!string.IsNullOrEmpty(chosenPrinter))
         {
-            pageSetup.PrinterName = chosenPrinter;
+            app.SetPrinterName(chosenPrinter);
         }
 
         if (!string.IsNullOrEmpty(settings.LastPaperSize))
         {
-            pageSetup.PaperSizeName = settings.LastPaperSize;
+            app.SetPaperSize(settings.LastPaperSize);
         }
     }
 

@@ -62,9 +62,9 @@ jobs:
           # WinPrintCleanup is a custom profile (in WinPrint.slnx.DotSettings) = Full Cleanup minus
           # "Optimize usings"/"Shorten references"/"Reorder members". Those fight this solution's
           # multi-TFM #if WINDOWS conditional usings (hoisting them out of #if and breaking the other
-          # TFM). MainPage.xaml.cs is excluded because jb's var->explicit on its #if WINDOWS WinUI code
-          # keeps pulling Microsoft.UI usings to the top; dotnet format still applies spacing there.
-          dotnet jb cleanupcode WinPrint.slnx --no-build --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs" --verbosity=WARN
+          # TFM). MAUI XAML code-behind files are excluded because generated partial declarations must
+          # stay partial, and jb's redundancy cleanup removes them; dotnet format still applies spacing.
+          dotnet jb cleanupcode WinPrint.slnx --no-build --profile="WinPrintCleanup" --exclude="**/*.xaml.cs" --verbosity=WARN
           dotnet format WinPrint.slnx --no-restore
           git diff --exit-code
 

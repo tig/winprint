@@ -105,9 +105,12 @@ public class PreviewPaneGoldenTests
         Assert.True(SendKey(preview, Key.CursorRight));
         Assert.Equal(1, preview.CurrentPage);
 
+        // Keyboard zoom is no longer overridden by the preview — it is owned by ImageView
+        // (gui-cs/Terminal.Gui#5494). The old Ctrl+PageUp binding was dead on macOS, so the preview
+        // must not intercept it or change page/zoom; it falls through to ImageView.
         double zoom = preview.Image.ZoomLevel;
-        Assert.True(SendKey(preview, Key.PageUp.WithCtrl));
-        Assert.True(preview.Image.ZoomLevel > zoom);
+        Assert.False(SendKey(preview, Key.PageUp.WithCtrl));
+        Assert.Equal(zoom, preview.Image.ZoomLevel);
         Assert.Equal(1, preview.CurrentPage);
 
         Assert.True(SendKey(preview, Key.Home));
@@ -115,6 +118,21 @@ public class PreviewPaneGoldenTests
 
         Assert.True(SendKey(preview, Key.PageUp));
         Assert.Equal(0, preview.CurrentPage);
+    }
+
+    [Fact]
+    public void ZoomKeys_AreOwnedByImageView()
+    {
+        var preview = new PreviewPane();
+
+        // winprint no longer overrides zoom keys; it inherits ImageView's Mac-safe +/=/- and 0
+        // bindings (gui-cs/Terminal.Gui#5494). PageUp/PageDown are left free for page navigation.
+        Assert.Contains(Command.ZoomIn, preview.Image.KeyBindings.GetCommands(new Key('+')));
+        Assert.Contains(Command.ZoomIn, preview.Image.KeyBindings.GetCommands(new Key('=')));
+        Assert.Contains(Command.ZoomOut, preview.Image.KeyBindings.GetCommands(new Key('-')));
+        Assert.Contains(Command.Home, preview.Image.KeyBindings.GetCommands(Key.D0)); // '0' resets the view
+        Assert.Empty(preview.Image.KeyBindings.GetCommands(Key.PageUp));
+        Assert.Empty(preview.Image.KeyBindings.GetCommands(Key.PageDown));
     }
 
     [Fact]

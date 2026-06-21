@@ -301,6 +301,15 @@ public class Settings : ModelBase
             monoSpaceFamily = "Consolas";
             sansSerifFamily = "Calibri";
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // Real, always-present macOS faces (the generic "monospace"/"sansserif" aliases don't resolve
+            // through the MAUI/CoreText render path). Menlo is the Terminal default and ships Regular/Bold/
+            // Italic; Helvetica Neue is the standard proportional UI face. SF Mono/SF Pro are deliberately
+            // not used — Apple hides the system fonts from enumeration so they can't be picked or measured.
+            monoSpaceFamily = "Menlo";
+            sansSerifFamily = "Helvetica Neue";
+        }
 
         string defaultContentFontFamily = monoSpaceFamily;
         float defaultContentFontSize = 8F;

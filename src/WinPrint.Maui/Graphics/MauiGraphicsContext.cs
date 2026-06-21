@@ -278,7 +278,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
         try
         {
             IImage? image = Microsoft.Maui.Graphics.Platform.PlatformImage.FromStream(stream);
-            return image is null ? null : new MauiImage(image);
+            return image is null ? null : new MauiImage((IImage)image);
         }
         catch (Exception)
         {

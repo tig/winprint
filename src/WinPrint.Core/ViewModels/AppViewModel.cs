@@ -154,6 +154,39 @@ public sealed class AppViewModel : INotifyPropertyChanged
         set => SetField(ref _selectedPaperSize, value);
     }
 
+    public void SetPrinterSetup(string? printerName, string? paperSizeName, int fromSheet, int toSheet)
+    {
+        SetPrinterName(printerName);
+        _pageSetup.FromSheet = fromSheet;
+        _pageSetup.ToSheet = toSheet;
+        SetPaperSize(paperSizeName);
+    }
+
+    public void SetPrinterName(string? printerName)
+    {
+        string value = printerName ?? string.Empty;
+        SelectedPrinter = value;
+        _pageSetup.PrinterName = value;
+    }
+
+    public void SetPaperSize(string? paperSizeName)
+    {
+        string value = paperSizeName ?? string.Empty;
+        int oldWidth = _pageSetup.PaperWidth;
+        int oldHeight = _pageSetup.PaperHeight;
+        bool changed = !string.Equals(_pageSetup.PaperSizeName, value, StringComparison.Ordinal) ||
+                       SelectedPaperSize != value;
+
+        SelectedPaperSize = value;
+        PrinterChoices.ApplyPaperSize(_pageSetup, value);
+        changed = changed || _pageSetup.PaperWidth != oldWidth || _pageSetup.PaperHeight != oldHeight;
+
+        if (changed)
+        {
+            _ = ReflowAsync();
+        }
+    }
+
     // ----- Sheet enumeration / selection -----
 
     /// <summary>
@@ -375,6 +408,65 @@ public sealed class AppViewModel : INotifyPropertyChanged
     public void DiscardSheetChanges()
     {
         _changeTracker?.Discard();
+    }
+
+    /// <summary>
+    ///     Shared "save on exit" guard. Walks every sheet definition with unsaved edits, asks the supplied
+    ///     <paramref name="promptAsync" /> delegate what to do with each, and applies the choice
+    ///     (save / create / discard). Returns <c>true</c> when the app may exit (everything resolved or
+    ///     nothing was dirty) or <c>false</c> if the user cancelled and wants to keep editing.
+    ///     <para>
+    ///         This is the single, front-end-agnostic decision path. Each front end wires its own platform
+    ///         "about to exit" event — WinForms <c>FormClosing</c>, MAUI WinUI <c>AppWindow.Closing</c> and
+    ///         Mac Catalyst Quit, the TUI Quit command — to this method and only owns presenting the dialog
+    ///         (via <paramref name="promptAsync" />). Keeping the logic here is what makes the behavior
+    ///         identical across platforms instead of silently diverging.
+    ///     </para>
+    /// </summary>
+    /// <param name="promptAsync">
+    ///     Presents the per-definition save prompt and returns the user's <see cref="SaveSheetResolution" />.
+    ///     Called once per dirty definition, with the current <see cref="SheetDefinitions" /> and the
+    ///     <see cref="CurrentSheetDefinitionIndex" /> of the definition being resolved.
+    /// </param>
+    public async Task<bool> ResolveUnsavedSheetsOnExitAsync(
+        Func<IReadOnlyList<SheetDefinitionInfo>, int, Task<SaveSheetResolution>> promptAsync)
+    {
+        ArgumentNullException.ThrowIfNull(promptAsync);
+
+        // Snapshot the dirty keys: applying a choice mutates the tracker's live dirty set.
+        foreach (string key in DirtySheetDefinitionKeys.ToArray())
+        {
+            // A prior Save-to-other may have already resolved this definition as a side effect.
+            if (!IsSheetDefinitionDirty(key))
+            {
+                continue;
+            }
+
+            SetCurrentSheetDefinition(key);
+
+            SaveSheetResolution resolution =
+                await promptAsync(SheetDefinitions, CurrentSheetDefinitionIndex).ConfigureAwait(false);
+
+            switch (resolution.Choice)
+            {
+                case SaveSheetChoice.Save:
+                    SaveSheetChangesToIndex(resolution.SelectedIndex);
+                    break;
+
+                case SaveSheetChoice.Create:
+                    CreateSheetDefinition(resolution.NewName);
+                    break;
+
+                case SaveSheetChoice.DontSave:
+                    DiscardSheetChanges();
+                    break;
+
+                default:
+                    return false; // Cancel — abort the exit.
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -703,8 +795,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void RestorePrinterSelection(IList<string> availablePrinters, string? systemDefault)
     {
-        SelectedPrinter = PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
-            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList());
+        SetPrinterName(PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
+            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList()));
     }
 
     /// <summary>
@@ -717,7 +809,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         string? saved = Settings.LastPaperSize;
         if (!string.IsNullOrEmpty(saved) && availablePaperSizes != null && availablePaperSizes.Contains(saved))
         {
-            SelectedPaperSize = saved;
+            SetPaperSize(saved);
         }
     }
 
@@ -838,15 +930,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
             if (!string.IsNullOrEmpty(options.Printer) &&
                 (availablePrinters == null || availablePrinters.Contains(options.Printer)))
             {
-                SelectedPrinter = options.Printer;
-                _pageSetup.PrinterName = options.Printer;
+                SetPrinterName(options.Printer);
             }
 
             if (!string.IsNullOrEmpty(options.PaperSize) &&
                 (availablePaperSizes == null || availablePaperSizes.Contains(options.PaperSize)))
             {
-                SelectedPaperSize = options.PaperSize;
-                _pageSetup.PaperSizeName = options.PaperSize;
+                SetPaperSize(options.PaperSize);
             }
 
             // --from-sheet / --to-sheet print range (0 = default/all).

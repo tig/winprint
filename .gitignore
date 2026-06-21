@@ -356,3 +356,6 @@ Deploy/
 *.CA.dll
 # TUI golden snapshot mismatch artifacts (transient, written on test failure)
 *.txt.actual
+
+# Local git worktrees (e.g. PR checkouts) — never commit as embedded repos
+.worktrees/
