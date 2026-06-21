@@ -7,7 +7,7 @@ obvious from the code alone.
 ## Projects
 - `src/WinPrint.Core` — engine. **Multi-targets `net10.0` and `net10.0-windows`.** The
   `WINDOWS` constant is defined for the `-windows` TFM only.
-- `src/WinPrint.cli` — CLI.
+- `src/WinPrint.TUI` — Terminal.Gui front end and `wp` command.
 - `src/WinPrint.WinForms` — Windows print UI.
 - `src/WinPrint.Maui` — MAUI app (Windows/MacCatalyst; needs the `maui` workload — does
   **not** build on Linux).
@@ -85,7 +85,7 @@ double with a deterministic fixed-pitch measurement model — so the full
   `MarkdownCteTests` pass on Linux.
 
 ## Native AOT roadmap (tracked — NOT yet implemented)
-Goal: ship **`WinPrint.cli` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
+Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
 `WinPrint.WinForms` and `WinPrint.Maui` are **out of scope** — neither supports Native AOT.
 
 Decisions made (record of intent; revisit when work actually starts):
@@ -97,7 +97,7 @@ Decisions made (record of intent; revisit when work actually starts):
   `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
 - **DI: drop MvvmLight `SimpleIoc`** (`ModelLocator`/`ServiceLocator`) in favor of **manual
   construction**. MvvmLight is unmaintained and not trim-annotated.
-- **CLI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
+- **TUI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
 - **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
   (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to
   what's actually used.

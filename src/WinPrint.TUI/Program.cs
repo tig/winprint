@@ -1,6 +1,5 @@
-// `wp` — winprint's Terminal.Gui front end, hosted on the same Terminal.Gui.Cli command framework as
-// the `winprint` CLI (see WinPrint.cli/Program.cs): real --help/--version, global options, and a
-// default command. `wp foo.cs` opens the interactive TUI for a file; `wp tui foo.cs` or
+// `wp` — winprint's Terminal.Gui front end, hosted on Terminal.Gui.Cli with real --help/--version,
+// global options, and a default command. `wp foo.cs` opens the interactive TUI for a file; `wp tui foo.cs` or
 // `wp --tui foo.cs` does the same. `views` lists the catalogued views.
 
 using System.Diagnostics;

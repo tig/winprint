@@ -79,7 +79,7 @@ internal static class GuiLauncher
         foreach (string root in roots)
         {
             string candidate = Path.Combine(root, "WinPrint.app");
-            if (Directory.Exists(candidate))
+            if (directoryExists(candidate))
             {
                 return candidate;
             }
