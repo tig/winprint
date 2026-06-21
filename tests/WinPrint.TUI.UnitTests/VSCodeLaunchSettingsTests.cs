@@ -10,7 +10,7 @@ public class VSCodeLaunchSettingsTests
     {
         string launchJson = File.ReadAllText(Path.Combine(FindRepositoryRoot(), ".vscode", "launch.json"));
 
-        using JsonDocument document = JsonDocument.Parse(
+        using var document = JsonDocument.Parse(
             launchJson,
             new JsonDocumentOptions
             {
