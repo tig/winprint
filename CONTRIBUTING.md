@@ -72,13 +72,13 @@ signed in/activated.
 | Task             | What it does                                                              |
 | ---------------- | ------------------------------------------------------------------------- |
 | `build` *(default)* | **Windows:** full solution. **macOS/Linux:** `WinPrint.Core` only.     |
-| `build-cli`      | Builds `WinPrint.cli` (`winprint`).                                        |
+| `build-tui`      | Builds `WinPrint.TUI` (`wp`).                                             |
 | `build-solution` | Builds the whole `WinPrint.slnx` (needs the MAUI workload).           |
 | `build-winforms` | Builds the WinForms GUI directly for debugging; does not require MAUI.    |
 | `build-maui-windows` | Builds `WinPrint.Maui` for Windows (needs the MAUI workload).        |
 | `restore-maui-workloads` | Restores the MAUI workloads required by `WinPrint.Maui`.        |
 | `test`           | Runs the `WinPrint.Core.UnitTests` suite.                                 |
-| `publish-cli`    | `dotnet publish -c Release` of the CLI.                                   |
+| `publish-tui`    | `dotnet publish -c Release -f net10.0` of the `wp` command.               |
 
 Or from a terminal:
 
@@ -91,7 +91,7 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 
 | Profile                         | Notes                                              |
 | ------------------------------- | -------------------------------------------------- |
-| **WinPrint.cli**                | Legacy CLI debugging profile.                      |
+| **WinPrint.TUI**                | Terminal.Gui front end and `wp` command.           |
 | **WinPrint.WinForms (Windows)** | The GUI (`winprintgui`). Windows only.             |
 | **WinPrint.Maui (Windows)**     | Directly launches the unpackaged Windows MAUI EXE. Needs the MAUI workload. |
 | **WinPrint.Maui (Mac Catalyst)**| MAUI app on macOS. Needs the MAUI workload.        |
@@ -102,7 +102,7 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 | -------------------- | :-----: | ------------------------------------------------ |
 | `WinPrint.Core`      |   ✅    | ✅ (`net10.0`)                                   |
 | `WinPrint.Core.UnitTests` | ✅ | ✅ cross-platform suite; some Windows/GDI+ tests are skipped or env-dependent (see [CLAUDE.md](CLAUDE.md)) |
-| `WinPrint.cli`       |   ✅    | 🟡 compiles (`net10.0-windows` via `EnableWindowsTargeting`) but won't run — printing is `System.Drawing.Printing`/Windows-only. Tracked in #64 |
+| `WinPrint.TUI`       |   ✅    | ✅ (`net10.0`)                                   |
 | `WinPrint.WinForms`  |   ✅    | 🟡 compiles via `EnableWindowsTargeting`; Windows-only at runtime by design |
 | `WinPrint.Maui`      |   ✅    | ✅ `net10.0-maccatalyst` builds with the MAUI workload + Xcode 26.5; the Windows head only builds on Windows. Runtime not yet verified (#64) |
 
