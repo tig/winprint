@@ -5,7 +5,9 @@
      hardened runtime (required for notarization). The .NET/Mono runtime JITs and maps
      executable memory, so it needs the allow-jit / unsigned-executable-memory /
      disable-library-validation exceptions or notarization-grade hardened signing aborts at
-     launch. App Sandbox stays OFF (direct/Homebrew-cask distribution, not the App Store) so
+     launch. (allow-dyld-environment-variables is intentionally NOT set — .NET doesn't need
+     DYLD_* injection and it would weaken the hardened runtime.) App Sandbox stays OFF
+     (direct/Homebrew-cask distribution, not the App Store) so
      winprint can read arbitrary files passed on the command line. -->
 <dict>
     <key>com.apple.security.cs.allow-jit</key>
@@ -13,8 +15,6 @@
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
     <true/>
     <key>com.apple.security.cs.disable-library-validation</key>
-    <true/>
-    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
     <true/>
     <key>com.apple.security.network.client</key>
     <true/>

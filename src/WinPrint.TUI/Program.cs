@@ -16,11 +16,18 @@ using WinPrint.TUI;
 // stays clean.
 TaskScheduler.UnobservedTaskException += (_, e) =>
 {
+    // Serilog is started lazily by the commands, so Log.* is a no-op this early (and during
+    // shutdown). Always write to stderr too so the failure is visible regardless (#143).
+    Console.Error.WriteLine($"wp: unobserved task exception: {e.Exception?.GetBaseException().Message}");
     Log.Warning(e.Exception, "wp: unobserved task exception");
     e.SetObserved();
 };
 AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-    Log.Error(e.ExceptionObject as Exception, "wp: unhandled exception (terminating={terminating})", e.IsTerminating);
+{
+    var ex = e.ExceptionObject as Exception;
+    Console.Error.WriteLine($"wp: unhandled exception (terminating={e.IsTerminating}): {ex?.Message}");
+    Log.Error(ex, "wp: unhandled exception (terminating={terminating})", e.IsTerminating);
+};
 
 VelopackApp.Build().Run();
 
