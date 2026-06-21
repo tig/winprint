@@ -119,6 +119,7 @@ public class AppDelegate : MauiUIApplicationDelegate
     {
         bool result = base.FinishedLaunching(application, launchOptions);
         MacQuitInterceptor.Install();
+        MacAboutInterceptor.Install();
         return result;
     }
 
