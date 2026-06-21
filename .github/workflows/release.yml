@@ -301,6 +301,16 @@ jobs:
 
           vpk @vpkArgs
 
+      - name: Validate Windows Start Menu shortcut
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          scripts\Test-WindowsVelopackShortcut.ps1 `
+            -ReleaseDir "artifacts/velopack/${{ matrix.runtime }}" `
+            -PackId $env:PACK_ID `
+            -PackTitle $env:PACK_TITLE `
+            -ExpectedMainExe "${{ matrix.mainExe }}"
+
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         with:
