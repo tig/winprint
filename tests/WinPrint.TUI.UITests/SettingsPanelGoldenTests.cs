@@ -21,7 +21,7 @@ public class SettingsPanelGoldenTests
     }
 
     [Fact]
-    public void Render_ShowsEverySectionInWinFormsOrder()
+    public void Render_ShowsEverySectionInExpectedOrder()
     {
         var panel = new SettingsPanel("2.5.0");
         var fixture = new AppFixture(panel, 52, 60);
@@ -38,7 +38,7 @@ public class SettingsPanelGoldenTests
         Assert.All(new[] { file, sheet, margins, pages, headerFooter, content, printer },
             index => Assert.True(index >= 0));
 
-        // Sections appear top-to-bottom in the WinForms left-column order.
+        // Sections appear top-to-bottom in the expected left-column order.
         Assert.True(file < sheet);
         Assert.True(sheet < margins);
         Assert.True(margins < pages);

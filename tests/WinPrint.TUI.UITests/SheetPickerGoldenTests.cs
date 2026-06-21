@@ -7,7 +7,7 @@ namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
 ///     Golden + behavior tests for <see cref="SheetPicker" />: a bare dropdown of predefined sheet
-///     names (the WinForms <c>comboBoxSheet</c>), whose value is the selected <see cref="SheetSettings" />.
+///     names whose value is the selected <see cref="SheetSettings" />.
 /// </summary>
 public class SheetPickerGoldenTests
 {

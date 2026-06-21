@@ -104,10 +104,13 @@ internal static class MacAboutInterceptor
         return plus >= 0 ? version![..plus] : version ?? "unknown";
     }
 
-    private static string GetArchitecture() => RuntimeInformation.ProcessArchitecture switch
+    private static string GetArchitecture()
     {
-        Architecture.Arm64 => "Apple Silicon · arm64",
-        Architecture.X64 => "Intel · x86_64",
-        var other => other.ToString(),
-    };
+        return RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.Arm64 => "Apple Silicon · arm64",
+            Architecture.X64 => "Intel · x86_64",
+            var other => other.ToString(),
+        };
+    }
 }

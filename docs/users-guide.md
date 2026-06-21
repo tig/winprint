@@ -72,7 +72,7 @@ wp --help
 ### CLI Options
 
 **winprint** exposes one **canonical set of print options across every front end** — the `wp` CLI, the
-TUI, and the `gui` (Windows WinForms and macOS/Windows MAUI). The same name, short alias, and meaning
+TUI, and the MAUI `gui` on Windows and macOS. The same name, short alias, and meaning
 apply everywhere:
 
 | Option | Alias | Description |
@@ -87,10 +87,10 @@ apply everywhere:
 | `--content-type` | `-e` | Content type engine / language override (e.g. `text/plain`, `text/html`, or a `<language>`). |
 
 Front ends add their own *appropriate* extras: the TUI adds `--view`, `--width`, `--height`; the `wp`
-CLI adds `--line-numbers`, `--what-if` (`-w`, count sheets without printing), `--gui` (`-g`), and
-`--config`. The Terminal.Gui.Cli framework — which the `wp` CLI/TUI uses for command-line handling —
-also provides `--help`, `--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and
-`--cat`.
+print command adds `--line-numbers`, `--what-if` (`-w`, count sheets without printing), and
+`--config`; and the GUI launches through the separate `wp gui` command. The Terminal.Gui.Cli framework
+— which the `wp` CLI/TUI uses for command-line handling — also provides `--help`, `--version`,
+`--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 
 This consistency is enforced by tests: the canonical surface lives in `WinPrint.Core` and every front
 end derives its parser from it (see `WinPrintOptionsConsistencyTests`).

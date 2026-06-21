@@ -1,7 +1,7 @@
 namespace WinPrint.Core.Abstractions;
 
 /// <summary>
-///     The inclusive range of sheets to print, mirroring the WinForms From/To inputs. <see cref="From" />
+///     The inclusive range of sheets to print, mirroring the UI From/To inputs. <see cref="From" />
 ///     is 1-based; <see cref="To" /> of <c>0</c> means "to the end" (print all remaining sheets).
 /// </summary>
 public sealed class PageRange

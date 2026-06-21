@@ -14,8 +14,8 @@ namespace WinPrint.Core.UnitTests.ViewModels;
 
 /// <summary>
 ///     Exercises the shared <see cref="AppViewModel"/> directly so the bug-prone
-///     state and persistence paths used by every WinPrint frontend (WinForms,
-///     MAUI, CLI) can be verified without a UI runtime.
+///     state and persistence paths used by every WinPrint frontend (MAUI,
+///     TUI, CLI) can be verified without a UI runtime.
 /// </summary>
 public class AppViewModelTests : TestServicesBase
 {
@@ -312,8 +312,8 @@ public class AppViewModelTests : TestServicesBase
     }
 
     // ResolveUnsavedSheetsOnExitAsync is the shared, front-end-agnostic save-on-exit guard. Each front end
-    // wires its own platform "about to exit" event (WinForms FormClosing, MAUI AppWindow.Closing / Mac Quit,
-    // TUI Quit command) to it and supplies a prompt delegate. These tests pin the decision logic so every
+    // wires its own platform "about to exit" event (MAUI AppWindow.Closing / Mac Quit, TUI Quit command)
+    // to it and supplies a prompt delegate. These tests pin the decision logic so every
     // front end behaves identically — the gap that left MAUI/Mac silently exiting without prompting.
 
     [Fact]

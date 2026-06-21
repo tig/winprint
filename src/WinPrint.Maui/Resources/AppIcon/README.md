@@ -85,16 +85,6 @@ preview is enough for normal iteration.
 
 - **MAUI (Windows + MacCatalyst)** — uses `appicon.svg` directly via the
   `MauiIcon` in the csproj. Nothing else to do.
-- **WinForms (`src/WinPrint.WinForms`)** — its `<ApplicationIcon>` is
-  `Document.ico`, generated from this same art. **Regenerate it** whenever
-  `appicon.svg` changes:
-
-  ```bash
-  ./render-preview.sh   # produces _preview/appicon-1024.png
-  python3 -c "from PIL import Image; Image.open('_preview/appicon-1024.png').convert('RGBA').save('../../../WinPrint.WinForms/Document.ico', format='ICO', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
-  ```
-
-  The Windows installer also uses this ICO for its package icon.
 
 ## Regenerate the platform icon set
 
