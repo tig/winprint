@@ -55,7 +55,7 @@ public sealed class PreviewPane : View
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            UseSixel = true,
+            UseRasterGraphics = true,
             CanFocus = true,
             SchemeName = CanvasSchemeName
         };
@@ -64,8 +64,15 @@ public sealed class PreviewPane : View
             if (OnKeyDown(e))
             {
                 e.Handled = true;
+                return;
+            }
+
+            if (IsImageZoomKey(e))
+            {
+                RequestRender();
             }
         };
+
         Add(Image);
         ConfigureNavigationBindings();
 
@@ -95,7 +102,7 @@ public sealed class PreviewPane : View
         Initialized += (_, _) => RequestRender();
     }
 
-    /// <summary>The hosted image view (sixel-enabled).</summary>
+    /// <summary>The hosted image view (raster-graphics-enabled: Kitty/Ghostty or Sixel).</summary>
     public ImageView Image { get; }
 
     /// <summary>No-file/error overlay label.</summary>
@@ -203,21 +210,9 @@ public sealed class PreviewPane : View
             return LastPage() == true;
         }
 
-        if (key == Key.PageUp.WithCtrl)
-        {
-            return ZoomIn() == true;
-        }
-
-        if (key == Key.PageDown.WithCtrl)
-        {
-            return ZoomOut() == true;
-        }
-
-        if (key == Key.Home.WithCtrl)
-        {
-            return ResetZoom() == true;
-        }
-
+        // Zoom keys are owned by Terminal.Gui's ImageView (see gui-cs/Terminal.Gui#5494) rather than
+        // overridden here — the old Ctrl+PageUp/Down/Home bindings were intercepted by macOS Mission
+        // Control and never reached the app. Mouse Ctrl+wheel zoom is still handled in HandlePreviewMouse.
         if (key == Key.CursorUp)
         {
             return Pan(Command.ScrollUp);
@@ -241,14 +236,18 @@ public sealed class PreviewPane : View
         return false;
     }
 
+    private static bool IsImageZoomKey(Key key)
+    {
+        return key == new Key('+') || key == new Key('=') || key == new Key('-') || key == Key.D0;
+    }
+
     private void ConfigureNavigationBindings()
     {
+        // Free PageUp/PageDown/Home from ImageView's zoom so the preview can use them for page
+        // navigation. Zoom keys themselves are left to ImageView (gui-cs/Terminal.Gui#5494).
         Image.KeyBindings.Remove(Key.PageDown);
         Image.KeyBindings.Remove(Key.PageUp);
         Image.KeyBindings.Remove(Key.Home);
-        Image.KeyBindings.Remove(Key.PageDown.WithCtrl);
-        Image.KeyBindings.Remove(Key.PageUp.WithCtrl);
-        Image.KeyBindings.Remove(Key.Home.WithCtrl);
         Image.KeyBindings.Remove(Key.CursorUp);
         Image.KeyBindings.Remove(Key.CursorDown);
         Image.KeyBindings.Remove(Key.CursorLeft);
@@ -325,38 +324,42 @@ public sealed class PreviewPane : View
         return true;
     }
 
+    // Zoom is applied natively by the hosted ImageView (it re-scales the existing bitmap in place, the
+    // same way the Terminal.Gui Images scenario does), so manipulation stays smooth. The page is only
+    // re-rasterized on a debounce — once zooming settles — to refine sharpness at the new scale.
+    // Re-rasterizing on every step (with the spinner + a fresh Image array) is what caused the flicker.
     private bool? ZoomIn()
     {
         bool? handled = Zoom(Command.ZoomIn, null);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomIn(Mouse mouse)
     {
         bool? handled = Zoom(Command.ZoomIn, mouse);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomOut()
     {
         bool? handled = Zoom(Command.ZoomOut, null);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomOut(Mouse mouse)
     {
         bool? handled = Zoom(Command.ZoomOut, mouse);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ResetZoom()
     {
         Image.ZoomLevel = 1d;
-        RenderCurrentPage();
+        RequestRender();
         return true;
     }
 
@@ -417,7 +420,11 @@ public sealed class PreviewPane : View
         {
             (width, height) = GetPreviewPixelSize();
             renderScale = GetRenderScale(width, height);
-            SetRenderingVisible(true);
+
+            // Only show the spinner when there is nothing to display yet (initial load). For a refine
+            // re-render (zoom settle, settings change, page nav) keep the current image visible and swap
+            // it in when ready — flashing a spinner over an existing preview reads as flicker.
+            SetRenderingVisible(Image.Image is null);
         }
         catch (Exception ex)
         {
@@ -488,7 +495,7 @@ public sealed class PreviewPane : View
 
     private (int width, int height) GetPreviewPixelSize()
     {
-        if (Image.IsUsingSixel)
+        if (Image.IsUsingRasterGraphics)
         {
             try
             {
@@ -500,7 +507,7 @@ public sealed class PreviewPane : View
             }
             catch (InvalidOperationException)
             {
-                // Fall back to deterministic cell estimates in tests and non-sixel terminals.
+                // Fall back to deterministic cell estimates in tests and non-raster terminals.
             }
         }
 

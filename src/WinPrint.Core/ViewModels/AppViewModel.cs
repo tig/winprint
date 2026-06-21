@@ -154,6 +154,39 @@ public sealed class AppViewModel : INotifyPropertyChanged
         set => SetField(ref _selectedPaperSize, value);
     }
 
+    public void SetPrinterSetup(string? printerName, string? paperSizeName, int fromSheet, int toSheet)
+    {
+        SetPrinterName(printerName);
+        _pageSetup.FromSheet = fromSheet;
+        _pageSetup.ToSheet = toSheet;
+        SetPaperSize(paperSizeName);
+    }
+
+    public void SetPrinterName(string? printerName)
+    {
+        string value = printerName ?? string.Empty;
+        SelectedPrinter = value;
+        _pageSetup.PrinterName = value;
+    }
+
+    public void SetPaperSize(string? paperSizeName)
+    {
+        string value = paperSizeName ?? string.Empty;
+        int oldWidth = _pageSetup.PaperWidth;
+        int oldHeight = _pageSetup.PaperHeight;
+        bool changed = !string.Equals(_pageSetup.PaperSizeName, value, StringComparison.Ordinal) ||
+                       SelectedPaperSize != value;
+
+        SelectedPaperSize = value;
+        PrinterChoices.ApplyPaperSize(_pageSetup, value);
+        changed = changed || _pageSetup.PaperWidth != oldWidth || _pageSetup.PaperHeight != oldHeight;
+
+        if (changed)
+        {
+            _ = ReflowAsync();
+        }
+    }
+
     // ----- Sheet enumeration / selection -----
 
     /// <summary>
@@ -762,8 +795,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void RestorePrinterSelection(IList<string> availablePrinters, string? systemDefault)
     {
-        SelectedPrinter = PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
-            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList());
+        SetPrinterName(PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
+            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList()));
     }
 
     /// <summary>
@@ -776,7 +809,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         string? saved = Settings.LastPaperSize;
         if (!string.IsNullOrEmpty(saved) && availablePaperSizes != null && availablePaperSizes.Contains(saved))
         {
-            SelectedPaperSize = saved;
+            SetPaperSize(saved);
         }
     }
 
@@ -897,15 +930,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
             if (!string.IsNullOrEmpty(options.Printer) &&
                 (availablePrinters == null || availablePrinters.Contains(options.Printer)))
             {
-                SelectedPrinter = options.Printer;
-                _pageSetup.PrinterName = options.Printer;
+                SetPrinterName(options.Printer);
             }
 
             if (!string.IsNullOrEmpty(options.PaperSize) &&
                 (availablePaperSizes == null || availablePaperSizes.Contains(options.PaperSize)))
             {
-                SelectedPaperSize = options.PaperSize;
-                _pageSetup.PaperSizeName = options.PaperSize;
+                SetPaperSize(options.PaperSize);
             }
 
             // --from-sheet / --to-sheet print range (0 = default/all).

@@ -60,11 +60,14 @@ public sealed class MainView : View
         KeyBindings.AddApp(Key.PageDown, Preview, Command.PageDown);
         KeyBindings.AddApp(Key.PageUp, Preview, Command.PageUp);
         KeyBindings.AddApp(Key.Home, Preview, Command.Home);
-        KeyBindings.AddApp(Key.PageUp.WithCtrl, Preview, Command.ZoomIn);
-        KeyBindings.AddApp(Key.PageDown.WithCtrl, Preview, Command.ZoomOut);
-        KeyBindings.AddApp(Key.Home.WithCtrl, Preview, Command.Start);
+        // Zoom keybindings are owned by Terminal.Gui's ImageView (gui-cs/Terminal.Gui#5494); the old
+        // Ctrl+PageUp/Down/Home app bindings were dead on macOS (intercepted by Mission Control).
 
         Add(Settings, Header, Preview, Footer);
+
+        // The preview ImageView owns the zoom/pan keys (gui-cs/Terminal.Gui#5494), so give it focus by
+        // default — otherwise the keys do nothing until the user tabs into the preview.
+        Initialized += (_, _) => Preview.Image.SetFocus();
 
         if (context is not null)
         {
