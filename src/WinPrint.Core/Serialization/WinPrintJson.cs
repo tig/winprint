@@ -14,13 +14,13 @@ internal static class WinPrintJson
 
     public static Settings LoadSettingsWithDefaults(string json)
     {
-        Settings defaults = Settings.CreateDefaultSettings();
+        var defaults = Settings.CreateDefaultSettings();
         if (string.IsNullOrWhiteSpace(json))
         {
             return defaults;
         }
 
-        JsonNode? userNode = JsonNode.Parse(json, documentOptions: s_documentOptions);
+        var userNode = JsonNode.Parse(json, documentOptions: s_documentOptions);
         if (userNode is not JsonObject userObject)
         {
             return DeserializeSettings(json) ?? defaults;
@@ -36,20 +36,30 @@ internal static class WinPrintJson
         return DeserializeSettings(baseObject.ToJsonString()) ?? defaults;
     }
 
-    public static Settings? DeserializeSettings(string json) =>
-        JsonSerializer.Deserialize(json, WinPrintJsonSerializerContext.Default.Settings);
+    public static Settings? DeserializeSettings(string json)
+    {
+        return JsonSerializer.Deserialize(json, WinPrintJsonSerializerContext.Default.Settings);
+    }
 
-    public static string SerializeSettings(Settings settings) =>
-        JsonSerializer.Serialize(settings, WinPrintJsonSerializerContext.Default.Settings);
+    public static string SerializeSettings(Settings settings)
+    {
+        return JsonSerializer.Serialize(settings, WinPrintJsonSerializerContext.Default.Settings);
+    }
 
-    public static FileTypeMapping? DeserializeFileTypeMapping(string json) =>
-        JsonSerializer.Deserialize(json, WinPrintJsonSerializerContext.Default.FileTypeMapping);
+    public static FileTypeMapping? DeserializeFileTypeMapping(string json)
+    {
+        return JsonSerializer.Deserialize(json, WinPrintJsonSerializerContext.Default.FileTypeMapping);
+    }
 
-    public static string SerializeSheetSettings(SheetSettings sheet) =>
-        JsonSerializer.Serialize(sheet, WinPrintJsonSerializerContext.Default.SheetSettings);
+    public static string SerializeSheetSettings(SheetSettings sheet)
+    {
+        return JsonSerializer.Serialize(sheet, WinPrintJsonSerializerContext.Default.SheetSettings);
+    }
 
-    public static SheetSettings? DeserializeSheetSettings(string json) =>
-        JsonSerializer.Deserialize(json, WinPrintJsonSerializerContext.Default.SheetSettings);
+    public static SheetSettings? DeserializeSheetSettings(string json)
+    {
+        return JsonSerializer.Deserialize(json, WinPrintJsonSerializerContext.Default.SheetSettings);
+    }
 
     private static void MergeObjects(JsonObject target, JsonObject source)
     {

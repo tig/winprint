@@ -9,8 +9,7 @@ namespace WinPrint.Core.Models;
 /// </summary>
 public class Options : ModelBase
 {
-    [JsonIgnore]
-    public IEnumerable<string>? Files { get; set; }
+    [JsonIgnore] public IEnumerable<string>? Files { get; set; }
 
     /// <summary>
     ///     Provides the count of files specified on the command line for telemetry purposes.

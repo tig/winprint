@@ -164,8 +164,10 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     ///     All concrete content-type engines shipped in this assembly (see
     ///     <see cref="ContentTypeEngineRegistry" />).
     /// </summary>
-    public static IReadOnlyList<ContentTypeEngineBase> GetDerivedClassesCollection() =>
-        ContentTypeEngineRegistry.CreateAll();
+    public static IReadOnlyList<ContentTypeEngineBase> GetDerivedClassesCollection()
+    {
+        return ContentTypeEngineRegistry.CreateAll();
+    }
 
     /// <summary>
     ///     Resolves the <see cref="IGraphicsContext" /> used to measure text during reflow. Returns the

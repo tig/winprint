@@ -40,7 +40,10 @@ public abstract class ModelBase : INotifyPropertyChanged
     ///     property of a class derived from ModelBase to enable emitting to telemetry.
     /// </summary>
     /// <returns>A dictionary with the properties and values (as strings). Suitable for calling TrackEvent().</returns>
-    public virtual IDictionary<string, string?> GetTelemetryDictionary() => TelemetryCollector.Create();
+    public virtual IDictionary<string, string?> GetTelemetryDictionary()
+    {
+        return TelemetryCollector.Create();
+    }
 
     /// <summary>
     ///     System.Text.Json does not support copying a deserialized object to an existing instance.

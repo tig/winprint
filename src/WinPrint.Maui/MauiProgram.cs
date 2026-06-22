@@ -83,7 +83,7 @@ public static class MauiProgram
 
             // Render Picker as a native Mac pop-up button — MAUI's UIPickerView crashes in the
             // Mac idiom (#133).
-            handlers.AddHandler<Microsoft.Maui.Controls.Picker, MacPickerHandler>();
+            handlers.AddHandler<Picker, MacPickerHandler>();
         });
 #endif
 
