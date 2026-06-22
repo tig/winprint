@@ -58,6 +58,15 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         return content;
     }
 
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        base.CopyPropertiesFrom(source);
+        if (source is HtmlCte src)
+        {
+            AllowRemoteResources = src.AllowRemoteResources;
+        }
+    }
+
     private void Dispose(bool disposing)
     {
         if (_disposed)

@@ -1,5 +1,5 @@
-using System.Text.Json;
 using WinPrint.Core.Models;
+using WinPrint.Core.Serialization;
 using WinPrint.Core.Services;
 
 namespace WinPrint.Core.ViewModels;
@@ -19,8 +19,6 @@ namespace WinPrint.Core.ViewModels;
 /// </summary>
 public sealed class SheetDefinitionChangeTracker
 {
-    private static readonly JsonSerializerOptions CloneOptions = new();
-
     private readonly Dictionary<string, string> _baselines = new(StringComparer.Ordinal);
     private readonly Action<Settings> _save;
     private readonly Settings _settings;
@@ -165,7 +163,7 @@ public sealed class SheetDefinitionChangeTracker
     private void RevertToBaseline(string key, SheetSettings live)
     {
         if (_baselines.TryGetValue(key, out string? baseline)
-            && JsonSerializer.Deserialize<SheetSettings>(baseline, CloneOptions) is { } restored)
+            && WinPrintJson.DeserializeSheetSettings(baseline) is { } restored)
         {
             live.CopyPropertiesFrom(restored);
         }
@@ -183,19 +181,18 @@ public sealed class SheetDefinitionChangeTracker
     {
         if (sheet.ContentSettings is not null)
         {
-            return JsonSerializer.Serialize(sheet, CloneOptions);
+            return WinPrintJson.SerializeSheetSettings(sheet);
         }
 
         // Normalize a lazily-initialized ContentSettings in the snapshot only (never mutating the live
         // sheet) so later lazy init of ContentSettings to its defaults does not register as a change.
-        SheetSettings snapshot = JsonSerializer.Deserialize<SheetSettings>(
-            JsonSerializer.Serialize(sheet, CloneOptions), CloneOptions)!;
+        SheetSettings snapshot = WinPrintJson.DeserializeSheetSettings(WinPrintJson.SerializeSheetSettings(sheet))!;
         snapshot.ContentSettings = new ContentSettings();
-        return JsonSerializer.Serialize(snapshot, CloneOptions);
+        return WinPrintJson.SerializeSheetSettings(snapshot);
     }
 
     private static SheetSettings Clone(SheetSettings sheet)
     {
-        return JsonSerializer.Deserialize<SheetSettings>(Serialize(sheet), CloneOptions)!;
+        return WinPrintJson.DeserializeSheetSettings(Serialize(sheet))!;
     }
 }

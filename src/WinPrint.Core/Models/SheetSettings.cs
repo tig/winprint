@@ -154,4 +154,56 @@ public class SheetSettings : ModelBase
         get => _darkness;
         set => SetField(ref _darkness, value);
     }
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not SheetSettings src)
+        {
+            return;
+        }
+
+        Name = src.Name;
+        Landscape = src.Landscape;
+        Rows = src.Rows;
+        Columns = src.Columns;
+        Padding = src.Padding;
+        PageSeparator = src.PageSeparator;
+        ModelCopyHelpers.CopyMargins(Margins, src.Margins);
+
+        if (src.ContentSettings is null)
+        {
+            ContentSettings = null;
+        }
+        else
+        {
+            ContentSettings ??= new ContentSettings();
+            ContentSettings.CopyPropertiesFrom(src.ContentSettings);
+        }
+
+        Header.CopyPropertiesFrom(src.Header);
+        Footer.CopyPropertiesFrom(src.Footer);
+        PrintBackground = src.PrintBackground;
+        Grayscale = src.Grayscale;
+        Darkness = src.Darkness;
+    }
+
+    public override IDictionary<string, string?> GetTelemetryDictionary()
+    {
+        Dictionary<string, string?> dictionary = TelemetryCollector.Create();
+        TelemetryCollector.Add(dictionary, nameof(Name), Name);
+        TelemetryCollector.Add(dictionary, nameof(Landscape), Landscape);
+        TelemetryCollector.Add(dictionary, nameof(Rows), Rows);
+        TelemetryCollector.Add(dictionary, nameof(Columns), Columns);
+        TelemetryCollector.Add(dictionary, nameof(Padding), Padding);
+        TelemetryCollector.Add(dictionary, nameof(PageSeparator), PageSeparator);
+        TelemetryCollector.Add(dictionary, nameof(Margins), Margins.ToString());
+        if (ContentSettings is not null)
+        {
+            TelemetryCollector.AddNested(dictionary, nameof(ContentSettings), ContentSettings);
+        }
+
+        TelemetryCollector.AddNested(dictionary, nameof(Header), Header);
+        TelemetryCollector.AddNested(dictionary, nameof(Footer), Footer);
+        return dictionary;
+    }
 }

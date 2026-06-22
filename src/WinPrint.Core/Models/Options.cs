@@ -1,92 +1,85 @@
 using System.Text.Json.Serialization;
-using CommandLine;
-using CommandLine.Text;
 
 namespace WinPrint.Core.Models;
 
+/// <summary>
+///     Shared command-line options model used by every front end. Parsing attributes live in
+///     <c>WinPrint.Maui.CommandLineOptions</c> (MAUI); the TUI maps <see cref="WinPrintOptions" />
+///     onto this DTO directly.
+/// </summary>
 public class Options : ModelBase
 {
-    // Files
-    [JsonIgnore]
-    [Value(0, Required = true, MetaName = "<files>", HelpText = "One or more files to be printed.")]
-    public IEnumerable<string>? Files { get; set; }
+    [JsonIgnore] public IEnumerable<string>? Files { get; set; }
 
     /// <summary>
     ///     Provides the count of files specified on the command line for telemetry purposes.
     /// </summary>
     [JsonIgnore]
     [SafeForTelemetry]
-    // TODO: This won't work once we support wildcards
-    public int NumFiles => Files!.Count();
+    public int NumFiles => Files?.Count() ?? 0;
 
-    // Print options
-    [SafeForTelemetry]
-    [Option('s', "sheet", Required = false,
-        HelpText = "Sheet definition to use for formatting. Use sheet ID or friendly name.")]
-    public string? Sheet { get; set; }
+    [SafeForTelemetry] public string? Sheet { get; set; }
 
-    [SafeForTelemetry]
-    [Option('l', "landscape", Required = false, Default = false, HelpText = "Force landscape orientation.")]
-    public bool Landscape { get; set; }
+    [SafeForTelemetry] public bool Landscape { get; set; }
 
-    [SafeForTelemetry]
-    [Option('r', "portrait", Required = false, Default = false, HelpText = "Force portrait orientation.")]
-    public bool Portrait { get; set; }
+    [SafeForTelemetry] public bool Portrait { get; set; }
 
-    [SafeForTelemetry]
-    [Option('p', "printer", HelpText = "Printer name.")]
-    public string? Printer { get; set; }
+    [SafeForTelemetry] public string? Printer { get; set; }
 
-    [SafeForTelemetry]
-    [Option('z', "paper-size", HelpText = "Paper size name.")]
-    public string? PaperSize { get; set; }
+    [SafeForTelemetry] public string? PaperSize { get; set; }
 
-    [SafeForTelemetry]
-    [Option('f', "from-sheet", Default = 0,
-        HelpText = "Number of first sheet to print (may be used with --to-sheet).")]
-    public int FromPage { get; set; }
+    [SafeForTelemetry] public int FromPage { get; set; }
 
-    [SafeForTelemetry]
-    [Option('t', "to-sheet", Default = 0, HelpText = "Number of last sheet to print (may be used with --from-sheet).")]
-    public int ToPage { get; set; }
+    [SafeForTelemetry] public int ToPage { get; set; }
 
-    [SafeForTelemetry]
-    [Option('c', "count-sheets", Default = false, Required = false,
-        HelpText = "Exit code is set to number of sheets that would be printed. Use --verbose to display the count.")]
-    public bool CountPages { get; set; }
+    [SafeForTelemetry] public bool CountPages { get; set; }
 
-    [SafeForTelemetry]
-    [Option('e', "content-type", Default = "", Required = false,
-        HelpText =
-            "Content type engine / language override for rendering (\"text/plain\", \"text/html\", or \"<language>\").")]
-    public string? ContentType { get; set; }
+    [SafeForTelemetry] public string? ContentType { get; set; }
 
-    // App Options
-    [SafeForTelemetry]
-    [Option('v', "verbose", Default = false, HelpText = "Verbose console output (log is always verbose).")]
-    public bool Verbose { get; set; }
+    [SafeForTelemetry] public bool Verbose { get; set; }
 
-    [SafeForTelemetry]
-    [Option('d', "debug", Default = false, HelpText = "Debug-level console & log output.")]
-    public bool Debug { get; set; }
+    [SafeForTelemetry] public bool Debug { get; set; }
 
-    [SafeForTelemetry]
-    [Option('g', "gui", Default = false, SetName = "gui",
-        HelpText = "Show WinPrint GUI (to preview or change sheet settings).")]
-    public bool Gui { get; set; }
+    [SafeForTelemetry] public bool Gui { get; set; }
 
-    [Usage(ApplicationAlias = "winprint")]
-    public static IEnumerable<Example> Examples => new List<Example>
+    public override void CopyPropertiesFrom(ModelBase? source)
     {
-        new("Print Program.cs in landscape mode",
-            new Options { Files = new List<string> { "Program.cs" }, Landscape = true }),
-        new("Print all .cs files on a specific printer with a specific paper size",
-            new Options { Files = new List<string> { "*.cs" }, Printer = "Fabricam 535", PaperSize = "A4" }),
-        new("Print the first two sheets of Program.cs",
-            new Options { Files = new List<string> { "Program.cs" }, FromPage = 1, ToPage = 2 }),
-        new("Print Program.cs using the 2 Up sheet definition",
-            new Options { Files = new List<string> { "Program.cs" }, Sheet = "2 Up" }),
-        new("Print tapes.pas using C-like syntax highlighting.",
-            new Options { Files = new List<string> { "tapes.pas" }, ContentType = "clike" })
-    };
+        if (source is not Options src)
+        {
+            return;
+        }
+
+        Files = src.Files is null ? null : src.Files.ToList();
+        Sheet = src.Sheet;
+        Landscape = src.Landscape;
+        Portrait = src.Portrait;
+        Printer = src.Printer;
+        PaperSize = src.PaperSize;
+        FromPage = src.FromPage;
+        ToPage = src.ToPage;
+        CountPages = src.CountPages;
+        ContentType = src.ContentType;
+        Verbose = src.Verbose;
+        Debug = src.Debug;
+        Gui = src.Gui;
+    }
+
+    public override IDictionary<string, string?> GetTelemetryDictionary()
+    {
+        Dictionary<string, string?> dictionary = TelemetryCollector.Create();
+        TelemetryCollector.Add(dictionary, nameof(NumFiles), NumFiles);
+        TelemetryCollector.Add(dictionary, nameof(Sheet), Sheet);
+        TelemetryCollector.Add(dictionary, nameof(Landscape), Landscape);
+        TelemetryCollector.Add(dictionary, nameof(Portrait), Portrait);
+        TelemetryCollector.Add(dictionary, nameof(Printer), Printer);
+        TelemetryCollector.Add(dictionary, nameof(PaperSize), PaperSize);
+        TelemetryCollector.Add(dictionary, nameof(FromPage), FromPage);
+        TelemetryCollector.Add(dictionary, nameof(ToPage), ToPage);
+        TelemetryCollector.Add(dictionary, nameof(CountPages), CountPages);
+        TelemetryCollector.Add(dictionary, nameof(ContentType), ContentType);
+        TelemetryCollector.Add(dictionary, nameof(Verbose), Verbose);
+        TelemetryCollector.Add(dictionary, nameof(Debug), Debug);
+        TelemetryCollector.Add(dictionary, nameof(Gui), Gui);
+        return dictionary;
+    }
 }

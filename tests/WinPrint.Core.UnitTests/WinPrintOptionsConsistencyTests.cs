@@ -1,5 +1,4 @@
 using System.Reflection;
-using CommandLine;
 using WinPrint.Core;
 using WinPrint.Core.Models;
 using Xunit;
@@ -7,16 +6,14 @@ using Xunit;
 namespace WinPrint.Core.UnitTests;
 
 /// <summary>
-///     Guards cross-front-end command-line consistency. <see cref="WinPrintOptions.Shared" /> is the
-///     canonical option surface (TUI is the reference); every front end must expose these options with
-///     identical names, short aliases, and value types. This verifies (a) the catalog itself is
-///     conflict-free and (b) the MAUI surface — <see cref="Options" />'s CommandLineParser
-///     attributes — matches the catalog. The TUI and CLI derive their descriptors from the catalog
-///     directly, so they cannot diverge.
+///     Guards the shared <see cref="Options" /> DTO against <see cref="WinPrintOptions.Shared" />.
+///     MAUI <c>CommandLineOptions</c> attribute parity is covered by
+///     <c>WinPrint.Maui.UnitTests.CommandLineOptionsConsistencyTests</c>; the TUI derives descriptors
+///     from the same catalog.
 /// </summary>
 public class WinPrintOptionsConsistencyTests
 {
-    // Canonical option name -> the MAUI Options property that carries it.
+    // Canonical option name -> the shared Options DTO property that carries it.
     private static readonly Dictionary<string, string> SharedToOptionsProperty = new()
     {
         ["sheet"] = nameof(Options.Sheet),
@@ -59,17 +56,12 @@ public class WinPrintOptionsConsistencyTests
 
     [Theory]
     [MemberData(nameof(SharedOptionNames))]
-    public void Options_CommandLineAttributes_MatchCanonicalCatalog(string optionName)
+    public void Options_Properties_MatchCanonicalCatalog(string optionName)
     {
         WinPrintOption canonical = WinPrintOptions.Find(optionName)!;
         PropertyInfo property = typeof(Options).GetProperty(SharedToOptionsProperty[optionName])!;
-        OptionAttribute attr = property.GetCustomAttribute<OptionAttribute>()
-                               ?? throw new InvalidOperationException($"{property.Name} has no [Option].");
+        Assert.NotNull(property);
 
-        Assert.Equal(canonical.Name, attr.LongName);
-        Assert.Equal(canonical.Short?.ToString() ?? string.Empty, attr.ShortName);
-
-        // Flags are bool; valued options carry their CLR type.
         Type expected = canonical.ValueType == typeof(bool) ? typeof(bool)
             : canonical.ValueType == typeof(int) ? typeof(int)
             : typeof(string);

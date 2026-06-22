@@ -21,6 +21,15 @@
         <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     </PropertyGroup>
 
+    <!-- Native AOT trim analyzers on every build (inventory cleared in issue #66). -->
+    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+        <DefineConstants>$(DefineConstants);NATIVE_AOT</DefineConstants>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <NoWarn>1701;1702</NoWarn>
     </PropertyGroup>
@@ -72,16 +81,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <!-- Keep in lockstep with Terminal.Gui's transitive Markdig in the TUI. The Windows release
              publishes the TUI and GUI into one directory; if the GUI publishes an older Markdig.dll
              after the TUI, `wp` fails during Terminal.Gui configuration startup. -->
         <PackageReference Include="Markdig" Version="1.3.2" />
         <PackageReference Include="HtmlRenderer.Core.NetStandard2" Version="1.5.1.3" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
-        <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
+
         <!-- TextMateSharp pulls in Onigwrap transitively; pin 1.0.11 (over 1.0.10) so the
              prebuilt maccatalyst libonigwrap.dylib has enough Mach-O header padding for the
              MAUI bundler's install_name_tool rewrite. 1.0.10 overflows and fails the build. -->
@@ -91,7 +97,6 @@
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="SkiaSharp" Version="3.116.1" />
-        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" />
         <!-- Float the patch (2.0.*) so this stays in lockstep with whatever TextMateSharp.Grammars
              version Terminal.Gui.Cli / Terminal.Gui.Editor pull in transitively. The release
              publishes the TUI and the GUI into one directory; if Core pinned an older exact patch,
@@ -104,8 +109,8 @@
         <PackageReference Include="Velopack" Version="1.1.1" />
     </ItemGroup>
 
-    <!-- Windows-only packages -->
-    <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
+    <!-- Windows-only packages (ApplicationInsights is not trim/AOT-safe; omitted for Native AOT publish). -->
+    <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows')) and '$(PublishAot)' != 'true'">
         <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
         <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
     </ItemGroup>
@@ -152,6 +157,12 @@
 
     <ItemGroup>
         <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>WinPrint.Core.UnitTests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>
