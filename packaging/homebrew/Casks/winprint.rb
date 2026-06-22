@@ -29,6 +29,14 @@ cask "winprint" do
   app "WinPrint.app"
   binary "#{appdir}/WinPrint.app/Contents/Helpers/wp/wp"
 
+  # WinPrint.app is not yet Apple-notarized (tracked in tig/winprint#162), so Gatekeeper may
+  # report it as "damaged". Remove this caveat once notarization ships.
+  caveats <<~EOS
+    WinPrint.app is not yet notarized by Apple. If macOS says it "is damaged and can't be
+    opened", clear the download quarantine and reopen it:
+      xattr -dr com.apple.quarantine "#{appdir}/WinPrint.app"
+  EOS
+
   zap trash: [
     "~/Library/Application Support/WinPrint",
     "~/Library/Preferences/com.kindel.winprint.plist",
