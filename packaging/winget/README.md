@@ -27,7 +27,7 @@ which smooths winget validation.
      ```bash
      komac update Kindel.WinPrint \
        --version 2.6.0 \
-       --urls https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-Setup.exe \
+       --urls https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-x64-Setup.exe \
        --token <PAT> --submit
      ```
      (For a brand-new package use `komac new Kindel.WinPrint`.)
@@ -44,7 +44,7 @@ are needed** — each stable release auto-submits its update.
 
 ```
 PackageVersion:  2.6.0
-InstallerUrl:    https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-Setup.exe
+InstallerUrl:    https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-x64-Setup.exe
 InstallerSha256: F19CCCE38A0AE67059343648E11C3898614507817893FD01FD3D62D875AD3CE1
 ReleaseDate:     2026-06-20
 ```
@@ -56,5 +56,8 @@ ReleaseDate:     2026-06-20
 - **`AppsAndFeaturesEntries.ProductCode`** is set to the Velopack PackId (`Kindel.WinPrint`),
   which is the Add/Remove Programs registry key Velopack creates. If `winget upgrade` ever
   fails to detect an installed copy, confirm the actual ARP key on a real install and adjust.
+- The release workflow installs the generated Windows Velopack setup on the GitHub runner and
+  asserts the Start Menu shortcut points to the MAUI GUI (`winprint.exe`), not the bundled TUI
+  (`wp.exe`).
 - Only the **x64** Windows installer is published; add more `Installers` entries if other
   arches ship later.

@@ -22,7 +22,8 @@ winget install Kindel.WinPrint
 ### macOS
 
 ```bash
-brew install --cask winprint
+brew install --cask winprint   # GUI app (WinPrint.app)
+brew install winprint          # wp — the terminal UI / CLI (also needed for `wp gui`)
 ```
 
 ### Linux

@@ -94,8 +94,7 @@ preview is enough for normal iteration.
   python3 -c "from PIL import Image; Image.open('_preview/appicon-1024.png').convert('RGBA').save('../../../WinPrint.WinForms/Document.ico', format='ICO', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
   ```
 
-  (The CLI, `src/WinPrint.cli/winprint.ico`, is a separate icon and is **not**
-  updated by the above — update it too if you want full consistency.)
+  The Windows installer also uses this ICO for its package icon.
 
 ## Regenerate the platform icon set
 
