@@ -503,6 +503,28 @@ jobs:
               -e "s|{{sha_cask_x64}}|$(sha WinPrint-osx-x64.app.zip)|" \
               packaging/homebrew/Casks/winprint.rb > /tmp/winprint-cask.rb
 
+          # Validate the rendered cask + formula actually LOAD under Homebrew before publishing.
+          # `ruby -c` only checks syntax and misses invalid DSL — e.g. a cask using the formula-only
+          # `conflicts_with formula:` key, which once shipped a cask the tap couldn't even parse.
+          # Load them by name from a throwaway local tap so an invalid stanza fails this job instead.
+          # On ubuntu-latest Homebrew is pre-installed but NOT on PATH — load its shellenv first, or
+          # every `brew` call below fails with "command not found" and breaks the tap publish.
+          if ! command -v brew >/dev/null 2>&1; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_FROM_API=1
+          VTAP="$(brew --repository)/Library/Taps/kindel/homebrew-winprint"
+          rm -rf "$VTAP"; mkdir -p "$VTAP/Casks" "$VTAP/Formula"
+          git -C "$VTAP" init -q
+          cp /tmp/winprint-cask.rb "$VTAP/Casks/winprint.rb"
+          cp /tmp/winprint.rb "$VTAP/Formula/winprint.rb"
+          git -C "$VTAP" add -A
+          git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm validate
+          echo "Validating rendered cask + formula load under Homebrew…"
+          brew info --cask kindel/winprint/winprint > /dev/null
+          brew info --formula kindel/winprint/winprint > /dev/null
+          rm -rf "$VTAP"
+
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/kindel/homebrew-winprint.git" tap
           mkdir -p tap/Formula tap/Casks
           cp /tmp/winprint.rb tap/Formula/winprint.rb
