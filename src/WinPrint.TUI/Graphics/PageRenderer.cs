@@ -12,7 +12,7 @@ namespace WinPrint.TUI.Graphics;
 ///     Renders a <see cref="SheetViewModel" /> page into a pixel array suitable for Terminal.Gui's
 ///     <c>ImageView.Image</c>. Rasterizes the full <c>PrintSheet</c> paint path through
 ///     <see cref="ImageSharpGraphicsContext" /> — no file round-trip, no PNG encoding.
-///     The output includes a canvas background with drop shadow, matching the WinForms/MAUI preview.
+///     The output includes a canvas background with drop shadow, matching the MAUI preview.
 ///     <para>
 ///         ImageView handles scaling to fit the viewport natively (TG PR #5460) — the renderer
 ///         produces a full-resolution image and lets the view handle display scaling.

@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="coverlet.collector" Version="6.0.2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
         <PackageReference Include="xunit" Version="2.9.2" />
@@ -20,6 +21,11 @@
          from a plain net10.0 test assembly. Pure, MAUI-free logic from the app is linked in as source
          so it can be tested cross-platform and in CI (windows-latest). Keep linked files dependency-free. -->
     <ItemGroup>
+        <ProjectReference Include="..\..\src\WinPrint.Core\WinPrint.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\src\WinPrint.Maui\CommandLineOptions.cs" Link="Linked\CommandLineOptions.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Views\PreviewGeometry.cs" Link="Linked\PreviewGeometry.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\FontSizeParser.cs" Link="Linked\FontSizeParser.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Packaging\WindowsUserPath.cs" Link="Linked\WindowsUserPath.cs" />

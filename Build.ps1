@@ -11,10 +11,6 @@ texttransform .\src\WinPrint.Core\Services\TelemetryService.tt
 msbuild /p:Configuration=$configuration /p:Platform=$platform WinPrint.slnx
 
 $tuiPath = ".\src\WinPrint.TUI\bin\$platform\$configuration\$targetFramework\wp.exe"
-$guiPath = ".\src\WinPrint.WinForms\bin\$platform\$configuration\$targetFramework\winprintgui.exe"
 
 echo "Testing wp CLI"
 & $tuiPath --help
-
-echo "Testing winprintgui"
-& $guiPath .\testfiles\Program.cs 

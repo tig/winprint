@@ -51,7 +51,7 @@ jobs:
         run: dotnet build tools/WinPrint.Analyzers/WinPrint.Analyzers.csproj --no-restore /p:Configuration=Debug
 
       - name: Build
-        run: dotnet build WinPrint.slnx --no-restore /p:Configuration=Debug /p:DefineConstants="CI_BUILD"
+        run: dotnet build WinPrint.slnx --no-restore /p:Configuration=Debug /p:DefineConstants="CI_BUILD" /p:WriteVersionInfoToBuildLog=false
 
       - name: Restore .NET tools
         run: dotnet tool restore
@@ -69,7 +69,7 @@ jobs:
           git diff --exit-code
 
       # Core + every front end's unit tests, plus the UI tests that run on a Windows desktop session:
-      # TUI (headless render) and WinForms (FlaUI). The MAUI Appium UI tests run on the macOS job below;
+      # TUI (headless render). The MAUI Appium UI tests run on the macOS job below;
       # MAUI unit tests (pure geometry) run here.
       - name: Test (Core)
         run: dotnet test tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj --configuration Debug --no-build --verbosity normal
@@ -79,12 +79,6 @@ jobs:
 
       - name: Test (TUI UI)
         run: dotnet test tests/WinPrint.TUI.UITests/WinPrint.TUI.UITests.csproj --configuration Debug --no-build --verbosity normal
-
-      - name: Test (WinForms unit)
-        run: dotnet test tests/WinPrint.WinForms.UnitTests/WinPrint.WinForms.UnitTests.csproj --configuration Debug --no-build --verbosity normal
-
-      - name: Test (WinForms UI / FlaUI)
-        run: dotnet test tests/WinPrint.WinForms.UITests/WinPrint.WinForms.UITests.csproj --configuration Debug --no-build --verbosity normal
 
       - name: Test (MAUI unit)
         run: dotnet test tests/WinPrint.Maui.UnitTests/WinPrint.Maui.UnitTests.csproj --configuration Debug --no-build --verbosity normal

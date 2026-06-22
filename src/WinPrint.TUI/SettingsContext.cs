@@ -9,7 +9,7 @@ namespace WinPrint.TUI;
 
 /// <summary>
 ///     Loads real winprint <see cref="Settings" /> and exposes the same cross-platform
-///     <see cref="AppViewModel" /> orchestrator that WinForms and MAUI bind to — now constructed with a
+///     <see cref="AppViewModel" /> orchestrator that MAUI binds to — now constructed with a
 ///     real <see cref="SheetViewModel" /> and <see cref="ImageSharpMeasurementContext" /> so the TUI can
 ///     perform full document reflow and render live previews through the shared print path.
 /// </summary>
@@ -59,7 +59,7 @@ public sealed class SettingsContext
     /// <summary>
     ///     Creates a context over the real loaded settings and applies command-line
     ///     <paramref name="options" /> (sheet, orientation, printer, paper size, print range, file)
-    ///     through the same <see cref="AppViewModel.ApplyOptions" /> path WinForms/MAUI use.
+    ///     through the same <see cref="AppViewModel.ApplyOptions" /> path MAUI uses.
     /// </summary>
     public static SettingsContext Create(Options? options, IPrintService? printService = null)
     {
@@ -72,12 +72,11 @@ public sealed class SettingsContext
         // Create a real SheetViewModel so the TUI participates in the shared print path
         var sheetVM = new SheetViewModel();
 
-        // Use the print backend's measurement context (Skia on Unix, null on Windows → GDI default) so
-        // reflow matches the print pipeline. ImageSharp is only for sixel preview rasterization.
-        if (svc.CreateMeasurementContext() is { } measurementContext)
-        {
-            sheetVM.MeasurementContext = measurementContext;
-        }
+        // Give it a cross-platform measurement context (MAUI sets this on the SheetViewModel too).
+        // SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it the
+        // engine fails to load and AppViewModel resets ActiveFile back to "<no file>". Prefer the print
+        // backend context (Skia on Unix); fall back to ImageSharp when the backend returns null (Windows GDI).
+        sheetVM.MeasurementContext = svc.CreateMeasurementContext() ?? renderer.CreateMeasurementContext();
 
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();

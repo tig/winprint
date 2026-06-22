@@ -87,7 +87,7 @@ Added `AppHostInfo` (`AppContext.BaseDirectory`, assembly attributes for version
 
 ### P7 — CommandLineParser on `Options` (no IL warnings)
 
-`Options.cs` carries `[Option]` attributes for WinForms/MAUI only. TUI uses `Terminal.Gui.Cli` + `WinPrintOptions` catalog. Package can leave Core once Options is a plain DTO.
+`Options.cs` is a plain DTO; MAUI parses via `WinPrint.Maui.CommandLineOptions`. TUI uses `Terminal.Gui.Cli` + `WinPrintOptions` catalog.
 
 ### P8 — Cross-platform measurement — DONE (TUI wiring)
 

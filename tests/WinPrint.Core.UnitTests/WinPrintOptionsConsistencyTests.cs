@@ -7,8 +7,8 @@ namespace WinPrint.Core.UnitTests;
 
 /// <summary>
 ///     Guards the shared <see cref="Options" /> DTO against <see cref="WinPrintOptions.Shared" />.
-///     WinForms/MAUI <c>CommandLineOptions</c> attribute parity is covered by
-///     <c>WinPrint.WinForms.UnitTests.CommandLineOptionsConsistencyTests</c>; the TUI derives descriptors
+///     MAUI <c>CommandLineOptions</c> attribute parity is covered by
+///     <c>WinPrint.Maui.UnitTests.CommandLineOptionsConsistencyTests</c>; the TUI derives descriptors
 ///     from the same catalog.
 /// </summary>
 public class WinPrintOptionsConsistencyTests

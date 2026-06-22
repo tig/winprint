@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
 using WinPrint.Core.Models;
-using WinPrint.WinForms;
+
 #if WINDOWS
 using Microsoft.Maui.Handlers;
 using WinPrint.Core.Services;
@@ -37,11 +37,11 @@ public static class MauiProgram
         }
 
 #if WINDOWS
-        // Initialize services (same as WinForms Program.cs)
+        // Initialize services for the Windows head.
         ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
 #endif
 
-        // Parse command-line arguments using same Options model as WinForms/CLI.
+        // Parse command-line arguments using the same Options model as the CLI.
         // macOS may inject non-winprint args (e.g. -psn_… when launched from Finder);
         // those simply fail to parse and WithParsed never fires, which is fine.
         string[] args = [.. Environment.GetCommandLineArgs().Skip(1)];

@@ -8,7 +8,6 @@ obvious from the code alone.
 - `src/WinPrint.Core` — engine. **Multi-targets `net10.0` and `net10.0-windows`.** The
   `WINDOWS` constant is defined for the `-windows` TFM only.
 - `src/WinPrint.TUI` — Terminal.Gui front end and `wp` command.
-- `src/WinPrint.WinForms` — Windows print UI.
 - `src/WinPrint.Maui` — MAUI app (Windows/MacCatalyst; needs the `maui` workload — does
   **not** build on Linux).
 - `tests/WinPrint.Core.UnitTests` — xUnit. Targets `net10.0-windows` but most tests run
@@ -86,7 +85,7 @@ double with a deterministic fixed-pitch measurement model — so the full
 
 ## Native AOT roadmap (tracked — NOT yet implemented)
 Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
-`WinPrint.WinForms` and `WinPrint.Maui` are **out of scope** — neither supports Native AOT.
+`WinPrint.Maui` is **out of scope** — MAUI does not support Native AOT.
 
 Decisions made (record of intent; revisit when work actually starts):
 - **Status: track only for now.** No AOT code changes yet. When starting, the first step is a

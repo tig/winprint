@@ -4,7 +4,7 @@
         {
             // Default build (Ctrl/Cmd+Shift+B).
             // Windows: build the whole solution (the everyday Windows experience).
-            // macOS/Linux: build Core only — the WinForms/MAUI-Windows TFMs can't build there,
+            // macOS/Linux: build Core only — the MAUI-Windows TFM can't build there,
             // and the base args below keep the default safe and fast cross-platform.
             "label": "build",
             "command": "dotnet",
@@ -40,7 +40,7 @@
         },
         {
             // Full solution. Needs the MAUI workload installed (`dotnet workload install maui`);
-            // the WinForms/MAUI-Windows targets only build on Windows.
+            // the MAUI-Windows target only builds on Windows.
             "label": "build-solution",
             "command": "dotnet",
             "type": "process",
@@ -49,27 +49,6 @@
                 "${workspaceFolder}/WinPrint.slnx",
                 "/p:Platform=x64"
             ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            // WinForms GUI. Build this directly for debugging so F5 does not require MAUI workloads.
-            "label": "build-winforms",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/WinPrint.WinForms/WinPrint.WinForms.csproj",
-                "/p:Platform=x64"
-            ],
-            "windows": {
-                "command": "${env:ProgramFiles}\\dotnet\\dotnet.exe",
-                "options": {
-                    "env": {
-                        "DOTNET_ROOT": "${env:ProgramFiles}\\dotnet"
-                    }
-                }
-            },
             "group": "build",
             "problemMatcher": "$msCompile"
         },

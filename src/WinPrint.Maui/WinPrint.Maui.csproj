@@ -118,14 +118,8 @@
 		<PackageReference Include="Velopack" Version="1.1.1" />
 	</ItemGroup>
 
-	<!-- WinForms/MAUI share the CommandLineParser-attributed CLI surface. -->
-	<ItemGroup>
-		<Compile Include="..\WinPrint.WinForms\CommandLineOptions.cs" Link="CommandLineOptions.cs" />
-	</ItemGroup>
-
-	<!-- Windows: reference WinForms (for PrintDialog) and System.Drawing.Common (for PrintDocument) -->
+	<!-- Windows: System.Drawing.Common is used for PrintDocument integration. -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
 		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
 	</ItemGroup>
 

@@ -79,7 +79,7 @@ public partial class MainPage : ContentPage
         // Populate printer list from platform service
         PopulatePrinters();
 
-        // Apply command-line options (same pattern as WinForms)
+        // Apply command-line options through the shared Options model.
         ApplyCommandLineOptions();
 
         // Subscribe to window lifecycle for state save
@@ -201,7 +201,7 @@ public partial class MainPage : ContentPage
 
         SyncWindowTitle();
 
-        // Restore saved window size and state (mirrors WinForms pattern)
+        // Restore saved window size and state.
         Settings settings = ModelLocator.Current.Settings;
 
         // First set the normal size/location (this is the "restore bounds" if maximized)
@@ -612,7 +612,7 @@ public partial class MainPage : ContentPage
     }
 
     /// <summary>
-    ///     MAUI's CheckBox has no built-in Text/label, and unlike WinForms a Label
+    ///     MAUI's CheckBox has no built-in Text/label, and a Label
     ///     sitting next to a CheckBox is not click-connected to it. Wire this
     ///     handler to a TapGestureRecognizer on each "checkbox label" so clicking
     ///     the label toggles the sibling CheckBox -- the behavior users (rightly)

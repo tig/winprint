@@ -166,7 +166,7 @@ public sealed class TuiCommand : IViewerCommand
     }
 
     // Map the parsed command options onto the shared winprint Options model so the TUI applies them
-    // through the same AppViewModel.ApplyOptions path WinForms/MAUI/the CLI use.
+    // through the same AppViewModel.ApplyOptions path MAUI and the CLI use.
     private static Options BuildOptions(CommandRunOptions options)
     {
         string? file = options.Arguments.Count > 0 ? options.Arguments[0] : null;

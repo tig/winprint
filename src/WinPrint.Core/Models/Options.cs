@@ -4,8 +4,8 @@ namespace WinPrint.Core.Models;
 
 /// <summary>
 ///     Shared command-line options model used by every front end. Parsing attributes live in
-///     <c>WinPrint.WinForms.CommandLineOptions</c> (WinForms/MAUI); the TUI and CLI map
-///     <see cref="WinPrintOptions" /> onto this DTO directly.
+///     <c>WinPrint.Maui.CommandLineOptions</c> (MAUI); the TUI maps <see cref="WinPrintOptions" />
+///     onto this DTO directly.
 /// </summary>
 public class Options : ModelBase
 {

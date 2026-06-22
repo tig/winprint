@@ -153,7 +153,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
     ///     1. Whitespace-only tokens collapse to zero width, so adjacent tokens
     ///        run together in the preview ("using System" -> "usingSystem").
     ///     2. The advance width is tighter than GDI+'s <c>Graphics.MeasureString</c>
-    ///        (which the WinForms preview and the actual print path use). The text
+    ///        (which the actual print path uses). The text
     ///        engine in <c>TextMateCte</c> uses the measured width to advance xPos
     ///        for the next token, so a tighter measurement makes tokens visually
     ///        butt together with no whitespace between them.
@@ -161,7 +161,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
     ///     We round-trip whitespace with sentinel bookends (fix #1) and then add
     ///     the same trailing padding GDI+ reports (~1/6 em per character that
     ///     GDI+ adds as overhang). This makes the MAUI preview spacing match the
-    ///     WinForms preview and the actual printed output.
+    ///     actual printed output.
     /// </summary>
     private SizeF MeasurePreservingWhitespace(string text, Microsoft.Maui.Graphics.Font mFont, float fontSize)
     {

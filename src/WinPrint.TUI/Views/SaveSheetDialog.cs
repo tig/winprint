@@ -116,7 +116,7 @@ public sealed class SaveSheetDialog : Dialog
             e.Handled = true;
 
             // Save targets the selected definition; with no selection it would be a silent no-op (and
-            // exit with edits unsaved), so require a selection — matching WinForms/MAUI disabling Save.
+            // exit with edits unsaved), so require a selection, matching MAUI disabling Save.
             if (SelectedIndex < 0)
             {
                 return;

@@ -62,7 +62,7 @@ internal static class WindowsUserPath
     private static string NormalizePathEntry(string entry)
     {
         entry = entry.Trim().Trim('"');
-        return Path.TrimEndingDirectorySeparator(entry);
+        return entry.TrimEnd('\\', '/');
     }
 
     private static string GetCurrentDirectoryPathEntry()

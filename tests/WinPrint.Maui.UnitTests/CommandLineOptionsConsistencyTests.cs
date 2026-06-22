@@ -2,14 +2,13 @@ using System.Linq;
 using System.Reflection;
 using CommandLine;
 using WinPrint.Core;
-using WinPrint.WinForms;
+using WinPrint.Maui;
 using Xunit;
 
-namespace WinPrint.WinForms.UnitTests;
+namespace WinPrint.Maui.UnitTests;
 
 /// <summary>
-///     Ensures WinForms/MAUI <see cref="CommandLineOptions" /> stays aligned with
-///     <see cref="WinPrintOptions.Shared" />.
+///     Ensures MAUI <see cref="CommandLineOptions" /> stays aligned with <see cref="WinPrintOptions.Shared" />.
 /// </summary>
 public class CommandLineOptionsConsistencyTests
 {

@@ -2,10 +2,10 @@ using CommandLine;
 using CommandLine.Text;
 using WinPrint.Core.Models;
 
-namespace WinPrint.WinForms;
+namespace WinPrint.Maui;
 
 /// <summary>
-///     CommandLineParser-attributed surface for WinForms/MAUI. Maps onto <see cref="Options" /> after parse.
+///     CommandLineParser-attributed surface for MAUI. Maps onto <see cref="Options" /> after parse.
 /// </summary>
 public sealed class CommandLineOptions
 {

@@ -12,7 +12,7 @@ namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
 ///     Verifies the TUI binds to real settings data through the same cross-platform
-///     <see cref="AppViewModel" /> orchestrator WinForms/MAUI use — constructed preview-less (no
+///     <see cref="AppViewModel" /> orchestrator MAUI uses — constructed preview-less (no
 ///     <c>SheetViewModel</c>) — and that edits flow back into the live <see cref="SheetSettings" />.
 /// </summary>
 public class SettingsBindingTests

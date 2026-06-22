@@ -6,7 +6,7 @@ namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
 ///     Verifies the TUI "save sheet definition?" exit prompt reports no selection as -1 (so the Save
-///     path can validate it), matching the WinForms/MAUI prompts that disable Save without a selection.
+///     path can validate it), matching the MAUI prompt that disables Save without a selection.
 /// </summary>
 public class SaveSheetDialogTests
 {

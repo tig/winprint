@@ -2,7 +2,7 @@ namespace WinPrint.Core;
 
 /// <summary>
 ///     The canonical winprint command-line option surface — the single source of truth all front ends
-///     (CLI, TUI, WinForms, MAUI) derive their parsers from, so a given option means the same thing and
+///     (CLI, TUI, MAUI) derive their parsers from, so a given option means the same thing and
 ///     uses the same name/alias everywhere. The TUI is the reference; see
 ///     <c>WinPrint.Core.UnitTests/WinPrintOptionsConsistencyTests</c> for the guard that keeps each front
 ///     end aligned to this list.
