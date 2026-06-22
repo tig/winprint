@@ -95,6 +95,12 @@ jobs:
           - os: ubuntu-latest
             runtime: linux-x64
             framework: net10.0
+          # Native arm64 runner — AOT links natively (cross-AOT to aarch64 from an x64 runner
+          # fails: "ld.bfd: unrecognised emulation mode: aarch64linux"). This leg was missing,
+          # so a linux-arm64 AOT break only surfaced at release time; cover it in PR CI now.
+          - os: ubuntu-24.04-arm
+            runtime: linux-arm64
+            framework: net10.0
           - os: macos-26
             runtime: osx-arm64
             framework: net10.0
