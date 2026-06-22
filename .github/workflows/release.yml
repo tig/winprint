@@ -16,8 +16,6 @@ env:
   VPK_VERSION: 1.1.1
   HAS_AZURE_SIGNING: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_SIGNING_ACCOUNT != '' && secrets.AZURE_SIGNING_PROFILE != '' && secrets.AZURE_SIGNING_ENDPOINT != '' }}
   HAS_APPLE_SIGNING: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_SIGNING_IDENTITY != '' }}
-  HAS_WINGET: ${{ secrets.WINGET_TOKEN != '' }}
-  HAS_BREW_TAP: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
 
 jobs:
   package:
@@ -386,12 +384,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.ref_name, '-') }}
     steps:
+      # A missing token must FAIL this job, never silently skip into a green check.
+      # A skipped publish that reports success hides the fact the package was never shipped.
+      - name: Require WINGET_TOKEN
+        shell: bash
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if [ -z "${WINGET_TOKEN}" ]; then
+            echo "::error title=winget not submitted::WINGET_TOKEN is not set, so this stable release was NOT submitted to winget-pkgs. Set the secret and re-run this job."
+            exit 1
+          fi
+
       - name: Derive winget version (strip leading v)
         id: ver
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Submit to winget-pkgs
-        if: ${{ env.HAS_WINGET == 'true' }}
         uses: vedantmgoyal9/winget-releaser@v2
         with:
           identifier: Kindel.WinPrint
@@ -410,12 +419,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.ref_name, '-') }}
     steps:
+      # A missing token must FAIL this job, never silently skip into a green check.
+      # Until #153 set HOMEBREW_TAP_TOKEN, this job no-opped yet reported success, so the
+      # tap shipped only a README and `brew install` 404'd while releases looked healthy.
+      - name: Require HOMEBREW_TAP_TOKEN
+        shell: bash
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "${TAP_TOKEN}" ]; then
+            echo "::error title=Homebrew tap not published::HOMEBREW_TAP_TOKEN is not set, so the Homebrew tap was NOT updated for this release. See https://github.com/tig/winprint/issues/153 to set the secret, then re-run this job."
+            exit 1
+          fi
+
       - name: Checkout source
-        if: ${{ env.HAS_BREW_TAP == 'true' }}
         uses: actions/checkout@v5
 
       - name: Render formula and push to tap
-        if: ${{ env.HAS_BREW_TAP == 'true' }}
         shell: bash
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
