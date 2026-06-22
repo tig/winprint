@@ -198,6 +198,19 @@ jobs:
       # Velopack's mac packer rebuilds its own .app from loose files and can't wrap a MacCatalyst
       # bundle, which is what shipped a broken, TUI-launching app in v2.6.2). `dotnet build` (not
       # publish) assembles a complete, runnable WinPrint.app; we sign + notarize + zip it below.
+      #
+      # Expected per-arch size/AOT asymmetry (do NOT mistake the x64 cask for a broken build):
+      #   - WinPrint-osx-arm64.app.zip is Mono-AOT-compiled (~132 MB unzipped: a ~100 MB native
+      #     apphost + *.aotdata.arm64 files).
+      #   - WinPrint-osx-x64.app.zip is Mono-JIT (~35 MB: ~6 MB apphost, no aotdata). This is a
+      #     strict subset of arm64 — same 149 assemblies in MonoBundle — and is fully functional;
+      #     JIT is the normal, performant execution mode on Intel Macs.
+      # This is dictated by the MacCatalyst SDK, not our config: Xamarin.Shared.Sdk.targets gates
+      # `_RunAotCompiler` to `RuntimeIdentifier == maccatalyst-arm64` only (MacCatalyst is
+      # SdkIsDesktop, so the device-AOT default is skipped). The `RunAOTCompilation` MSBuild
+      # property is an Android/WASM lever and is IGNORED here, so it cannot turn on x64 AOT. The
+      # only switch that flips x64 (`MtouchInterpreter`) selects the *interpreter*, which is slower
+      # than the current JIT — so do not "fix" the size gap that way. See PR discussion for v2.6.4.
       - name: Build macOS GUI (.app)
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
         shell: bash
