@@ -26,20 +26,69 @@ workload, builds `WinPrint.slnx`, then enforces a **style gate**:
 before pushing if you touched many files. Code-style analyzers also enforce
 **one top-level type per file** (WPA0001) and **no nested types** (WPA0002).
 
+**CI mechanics & flakiness (don't mistake a flake for a real failure).** Every PR triggers
+CI **twice** (a `push` run and a `pull_request` run). `maui-ui-tests` (Appium) and the
+FlaUI / TUI-golden suites are **flaky**: the tell is the *same commit* passing in one of the
+two sibling runs and failing in the other. Before chasing such a failure, confirm it's not the
+flake; to clear it, `gh run rerun --failed <run-id>` — but you **can't** re-run a job while its
+sibling workflow is still in progress (it's rejected), so wait for both to settle first.
+
 ## Remote (Claude Code on the web) environment
 Fresh Linux containers have no toolchain. `.claude/hooks/session-start.sh` (registered
 in `.claude/settings.json`) installs the .NET 10 SDK, `libgdiplus`, the local `jb` tool,
 and warms NuGet restore. `global.json` pins .NET 10. The hook runs only when
 `CLAUDE_CODE_REMOTE=true`.
 
-## Release / Windows code signing
-Windows installers are signed with **Azure Trusted Signing** via **GitHub OIDC** (no client
-secret). The full, reproducible setup lives in `scripts/` (`Azure.Config.ps1` = single source
-of truth, `SetupAzure.ps1` = idempotent one-shot creator, `ValidateAzure.ps1` = verifier) and
-is documented in **`docs/code-signing.md`**. An authorized operator recreates the CI trust with
-`az login && pwsh scripts/SetupAzure.ps1 -SetGitHubSecrets`. The Trusted Signing account +
-PublicTrust cert profile are a one-time **manual** prerequisite (identity validation can't be
-scripted); everything else is automated. Read `docs/code-signing.md` before touching signing.
+## Release & distribution (read before cutting a release)
+**Cutting a release.** Merge `develop` → `main`, create an **annotated** tag `vX.Y.Z` on the
+merge commit, and `git push` the tag — that triggers `.github/workflows/release.yml`. There is
+no release script; tags are manual. The tag drives the brew/winget version; GitVersion drives the
+Velopack `packVersion` — they coincide on a tagged commit. A pre-release label (`v…-rc.1`)
+publishes as a GitHub *pre-release* (not "Latest"). A burned tag (release failed) can't be reused
+— bump to the next patch. **A green release run can still mean "didn't publish":** if any
+`Package <rid>` job fails, `Publish` / `winget` / `brew` are **skipped** and nothing ships, even
+though the overall run may look done — always confirm a real GitHub release + tap update exist.
+
+**Windows code signing.** Windows installers are signed with **Azure Trusted Signing** via
+**GitHub OIDC** (no client secret). The full, reproducible setup lives in `scripts/`
+(`Azure.Config.ps1` = single source of truth, `SetupAzure.ps1` = idempotent one-shot creator,
+`ValidateAzure.ps1` = verifier) and is documented in **`docs/code-signing.md`**. An authorized
+operator recreates the CI trust with `az login && pwsh scripts/SetupAzure.ps1 -SetGitHubSecrets`.
+The Trusted Signing account + PublicTrust cert profile are a one-time **manual** prerequisite
+(identity validation can't be scripted); everything else is automated. Read `docs/code-signing.md`
+before touching signing.
+
+**Windows package layout — a debugging gotcha.** The win-x64 Velopack package **co-locates
+`wp.exe` (TUI) with `winprint.exe` (MAUI GUI)** in one folder: `Publish TUI` and `Publish Windows
+GUI` write into the *same* dir, so the GUI's `net10.0-windows` assemblies (e.g. `WinPrint.Core.dll`)
+**overwrite** the TUI's `net10.0` ones. So on Windows `wp.exe` runs against *different* DLLs than on
+macOS/Linux (where `wp` ships standalone). **Windows-only `wp` failures often can't be reproduced on
+a Mac** — don't conclude "works locally ⇒ fine." The release job installs the real `Setup.exe` and
+smoke-runs the packaged `wp.exe` (`scripts/Test-WindowsVelopackShortcut.ps1`, currently
+`wp --version`) precisely to catch this class of bug.
+
+**Homebrew (the free distribution path).** Tap = `kindel/homebrew-winprint`, pushed by the release
+`brew` job (needs the `HOMEBREW_TAP_TOKEN` PAT; a missing-token skip now *fails* loudly). TWO
+artifacts in the tap:
+- **Formula** `winprint` → the `wp` TUI (Linux + CLI-only macOS).
+- **Cask** `winprint` → the MAUI GUI, which **also embeds `wp`** at `WinPrint.app/Contents/Helpers/wp`
+  (release.yml copies the self-contained CLI in *before* signing; a `binary` stanza symlinks it onto
+  PATH), so one cask install gives GUI + `wp`. Both provide `wp`, so installing formula + cask
+  collides on the symlink — pick one on macOS (casks **cannot** declare `conflicts_with formula:`).
+- **Validate a cask by LOADING it, never `ruby -c`.** `ruby -c` checks Ruby *syntax* and happily
+  passes invalid cask **DSL** (e.g. `conflicts_with formula:` — that key is cask-only-`cask:`), which
+  once shipped a tap cask Homebrew couldn't parse and broke `brew install --cask` for everyone. The
+  release `brew` job renders into a throwaway tap and `brew info --cask/--formula <name>` them before
+  publishing (`brew audit [path]` is disabled; loading by name is the reliable check) — keep that guard.
+
+**winget & macOS notarization — known gaps (don't mistake for regressions).**
+- **winget:** `winget-releaser` only *updates* an existing winget-pkgs package, so the **first**
+  submission must be bootstrapped manually. Until then the `winget` job **failing is expected**.
+- **macOS is not notarized:** the Apple signing secrets (`APPLE_*`) aren't set, so the cask ships an
+  unsigned/ad-hoc `.app` (Gatekeeper warns; 3rd-party-tap casks also need `brew trust --cask`).
+- **Per-arch cask size differs by design:** `maccatalyst-arm64` is Mono-**AOT** (~130 MB), `-x64` is
+  Mono-**JIT** (~35 MB). The SDK gates AOT to `maccatalyst-arm64` only (the `RunAOTCompilation`
+  property is ignored for MacCatalyst); see the comment in `release.yml`. Not a broken x64 build.
 
 ## Content Type Engines (CTEs)
 CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
@@ -83,9 +132,14 @@ double with a deterministic fixed-pitch measurement model — so the full
   tests (external tooling / filesystem). The cross-platform `CteRenderingTests` and
   `MarkdownCteTests` pass on Linux.
 
-## Native AOT roadmap (tracked — NOT yet implemented)
+## Native AOT roadmap (implementation in flight — verify before acting)
 Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
 `WinPrint.Maui` is **out of scope** — MAUI does not support Native AOT.
+
+> **As of this writing the spike + most of the work below is in PR #156** (Macros hand-rolled
+> resolver, explicit CTE registry, source-gen JSON, `WinPrintServices` DI, explicit `ModelBase`
+> copies, `IsAotCompatible`/`PublishAot`, an `aot-publish` CI matrix). Check whether #156 is merged
+> before starting any of this — the "decisions" below are the design it follows, kept as the record.
 
 Decisions made (record of intent; revisit when work actually starts):
 - **Status: track only for now.** No AOT code changes yet. When starting, the first step is a
