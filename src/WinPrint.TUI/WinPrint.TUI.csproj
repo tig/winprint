@@ -4,6 +4,10 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+        <!-- Only active during RID-specific publish (dotnet publish -r …), so plain dotnet build/test stay clean. -->
+        <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
+        <StripSymbols Condition="'$(RuntimeIdentifier)' != ''">true</StripSymbols>
+        <InvariantGlobalization Condition="'$(RuntimeIdentifier)' != ''">true</InvariantGlobalization>
         <AssemblyName>wp</AssemblyName>
         <RootNamespace>WinPrint.TUI</RootNamespace>
         <Description>winprint Terminal.Gui full-screen TUI front end (wp)</Description>
@@ -28,7 +32,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+        <!-- Forward PublishAot so Core can drop trim-unsafe Windows-only deps (ApplicationInsights). -->
+        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj">
+            <AdditionalProperties Condition="'$(PublishAot)' == 'true'">PublishAot=true</AdditionalProperties>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>

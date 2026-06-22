@@ -65,18 +65,18 @@ public sealed class SettingsContext
     {
         var renderer = new PageRenderer();
 
-        // Create a real SheetViewModel so the TUI participates in the shared print path
-        var sheetVM = new SheetViewModel();
-
-        // Give it a cross-platform measurement context (MAUI sets this on the SheetViewModel
-        // too). SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it
-        // the engine fails to load and AppViewModel resets ActiveFile back to "<no file>", so neither
-        // the `wp file.cs` argument nor the File… button renders a preview.
-        sheetVM.MeasurementContext = renderer.CreateMeasurementContext();
-
         // Seed the page setup from the platform print service so printer/paper are populated
         IPrintService svc = printService ?? PrintServiceFactory.Create();
         PrintPageSetup pageSetup = svc.GetDefaultPageSetup();
+
+        // Create a real SheetViewModel so the TUI participates in the shared print path
+        var sheetVM = new SheetViewModel();
+
+        // Give it a cross-platform measurement context (MAUI sets this on the SheetViewModel too).
+        // SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it the
+        // engine fails to load and AppViewModel resets ActiveFile back to "<no file>". Prefer the print
+        // backend context (Skia on Unix); fall back to ImageSharp when the backend returns null (Windows GDI).
+        sheetVM.MeasurementContext = svc.CreateMeasurementContext() ?? renderer.CreateMeasurementContext();
 
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();

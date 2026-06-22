@@ -24,7 +24,7 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Analyzer</OutputItemType>
       <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
-      <GlobalPropertiesToRemove>RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained;PublishSingleFile;Platform;PlatformTarget</GlobalPropertiesToRemove>
+      <GlobalPropertiesToRemove>RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained;PublishSingleFile;PublishAot;IsAotCompatible;Platform;PlatformTarget</GlobalPropertiesToRemove>
       <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
   </ItemGroup>

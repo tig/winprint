@@ -1,12 +1,14 @@
 using System.Globalization;
-using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace WinPrint.Core.Models;
 
 public sealed class Macros(SheetViewModel svm)
 {
+    private static readonly Regex s_macroRegex = new(
+        @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     /// <summary>
     ///     The SheetModel the Macros will pull data from.
     /// </summary>
@@ -148,48 +150,98 @@ public sealed class Macros(SheetViewModel svm)
     }
 
     /// <summary>
-    ///     Replaces macros of the form "{property:format}" using regex and Dynamic Invoke
-    ///     From https://stackoverflow.com/questions/39874172/dynamic-string-interpolation/39900731#39900731
-    ///     and  https://haacked.com/archive/2009/01/14/named-formats-redux.aspx/
+    ///     Replaces macros of the form "{property:format}" using regex and explicit property lookup.
+    ///     Supported names match <see cref="MacroChoices.Names" />.
     ///     Note this does not work perfectly. Specifically some invalid format specifiers just cause
     ///     string.Format to generate garbage (e.g. {DatePrinted:HelloWorld})
     /// </summary>
     /// <param name="value">A string with macros to be replaced</param>
-    /// <param name="sheetNum">
-    ///     <Page #/ param>
-    ///         <returns></returns>
     public string ReplaceMacros(string? value)
     {
-        return Regex.Replace(value!, @"(?<start>\{)+(?<property>[\w\.\[\]]+)(?<format>:[^}]+)?(?<end>\})+", match =>
+        if (string.IsNullOrEmpty(value))
         {
-            ParameterExpression p = Expression.Parameter(typeof(Macros), "Macros");
+            return value ?? string.Empty;
+        }
 
-            Group startGroup = match.Groups["start"];
-            Group propertyGroup = match.Groups["property"];
-            Group formatGroup = match.Groups["format"];
-            Group endGroup = match.Groups["end"];
+        return s_macroRegex.Replace(value, ExpandMacro);
+    }
 
+    private string ExpandMacro(Match match)
+    {
+        string propertyName = match.Groups["property"].Value;
+        if (!TryGetMacroValue(propertyName, out object? computedValue))
+        {
+            return match.Value;
+        }
+
+        Group formatGroup = match.Groups["format"];
+        if (formatGroup.Success)
+        {
             try
             {
-                // Generate and parse a LambdaExpression
-                LambdaExpression e = DynamicExpressionParser.ParseLambda([p], null, propertyGroup.Value);
-                object? computedValue = e.Compile().DynamicInvoke(this);
-                if (formatGroup.Success)
-                {
-                    // There's a format specifier
-                    // The following does: string.Format("{0:formatGroup.Value}", computedValue)
-                    return string.Format(CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", computedValue);
-                }
-
-                // Get here when there is no format specifier.
-                return (computedValue ?? "").ToString()!;
+                return string.Format(CultureInfo.InvariantCulture, "{0" + formatGroup.Value + "}", computedValue);
             }
-            catch
+            catch (FormatException)
             {
-                //(ParseException ex) {
-                // Non-existent Property or other parse error
-                return match.Groups[0].Value;
+                return match.Value;
             }
-        });
+        }
+
+        return (computedValue ?? string.Empty).ToString()!;
+    }
+
+    private bool TryGetMacroValue(string propertyName, out object? value)
+    {
+        switch (propertyName)
+        {
+            case "FileName":
+                value = FileName;
+                return true;
+            case "FileNameWithoutExtension":
+                value = FileNameWithoutExtension;
+                return true;
+            case "FileExtension":
+                value = FileExtension;
+                return true;
+            case "FileDirectoryName":
+                value = FileDirectoryName;
+                return true;
+            case "FullPath":
+                value = FullPath;
+                return true;
+            case "Title":
+                value = Title;
+                return true;
+            case "Page":
+                value = Page;
+                return true;
+            case "NumPages":
+                value = NumPages;
+                return true;
+            case "DatePrinted":
+                value = DatePrinted;
+                return true;
+            case "DateRevised":
+                value = DateRevised;
+                return true;
+            case "DateCreated":
+                value = DateCreated;
+                return true;
+            case "Language":
+                value = Language;
+                return true;
+            case "ContentType":
+                value = ContentType;
+                return true;
+            case "CteName":
+                value = CteName;
+                return true;
+            case "Style":
+                value = Style;
+                return true;
+            default:
+                value = null;
+                return false;
+        }
     }
 }

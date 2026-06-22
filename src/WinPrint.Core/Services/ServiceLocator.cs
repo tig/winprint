@@ -1,5 +1,3 @@
-using GalaSoft.MvvmLight.Ioc;
-
 namespace WinPrint.Core.Services;
 
 public class ServiceLocator
@@ -8,34 +6,25 @@ public class ServiceLocator
 
     private ServiceLocator()
     {
-        SimpleIoc.Default.Register<SettingsService>();
-        SimpleIoc.Default.Register<FileTypeMappingService>();
-        SimpleIoc.Default.Register<LogService>(true);
-        SimpleIoc.Default.Register<TelemetryService>(true);
-        SimpleIoc.Default.Register<UpdateService>();
     }
 
     public static ServiceLocator Current => s_current ??= new ServiceLocator();
 
-    public LogService LogService => SimpleIoc.Default.GetInstance<LogService>();
-    public TelemetryService TelemetryService => SimpleIoc.Default.GetInstance<TelemetryService>();
-    public SettingsService SettingsService => SimpleIoc.Default.GetInstance<SettingsService>();
-    public FileTypeMappingService FileTypeMappingService => SimpleIoc.Default.GetInstance<FileTypeMappingService>();
-    public UpdateService UpdateService => SimpleIoc.Default.GetInstance<UpdateService>();
+    private static WinPrintServices Services => WinPrintServices.Current;
 
-    public void Register<VM, V>()
-        where VM : class
-    {
-        SimpleIoc.Default.Register<VM>();
-    }
+    public LogService LogService => Services.LogService;
+
+    public TelemetryService TelemetryService => Services.TelemetryService;
+
+    public SettingsService SettingsService => Services.SettingsService;
+
+    public FileTypeMappingService FileTypeMappingService => Services.FileTypeMappingService;
+
+    public UpdateService UpdateService => Services.UpdateService;
 
     public static void Reset()
     {
         s_current = null;
-        SimpleIoc.Default.Unregister<SettingsService>();
-        SimpleIoc.Default.Unregister<FileTypeMappingService>();
-        SimpleIoc.Default.Unregister<LogService>();
-        SimpleIoc.Default.Unregister<TelemetryService>();
-        SimpleIoc.Default.Unregister<UpdateService>();
+        WinPrintServices.Reset();
     }
 }

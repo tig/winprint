@@ -1,8 +1,4 @@
-using GalaSoft.MvvmLight.Ioc;
 using WinPrint.Core.Services;
-
-//using WinPrint.Services;
-//using WinPrint.Views;
 
 namespace WinPrint.Core.Models;
 
@@ -12,30 +8,21 @@ public class ModelLocator
 
     private ModelLocator()
     {
-        // Register the models via the Services Factory
-        SimpleIoc.Default.Register(SettingsService.Create);
-        SimpleIoc.Default.Register(FileTypeMappingService.Create);
-        SimpleIoc.Default.Register<Options>();
     }
 
     public static ModelLocator Current => s_current ??= new ModelLocator();
 
-    public Settings Settings => SimpleIoc.Default.GetInstance<Settings>();
+    private static WinPrintServices Services => WinPrintServices.Current;
 
-    public Options Options => SimpleIoc.Default.GetInstance<Options>();
-    public FileTypeMapping FileTypeMapping => SimpleIoc.Default.GetInstance<FileTypeMapping>();
+    public Settings Settings => Services.Settings;
 
-    public void Register<VM, V>()
-        where VM : class
-    {
-        SimpleIoc.Default.Register<VM>();
-    }
+    public Options Options => Services.Options;
+
+    public FileTypeMapping FileTypeMapping => Services.FileTypeMapping;
 
     public static void Reset()
     {
         s_current = null;
-        SimpleIoc.Default.Unregister<Settings>();
-        SimpleIoc.Default.Unregister<FileTypeMapping>();
-        SimpleIoc.Default.Unregister<Options>();
+        WinPrintServices.Reset();
     }
 }

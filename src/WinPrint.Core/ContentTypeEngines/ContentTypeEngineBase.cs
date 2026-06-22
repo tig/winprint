@@ -161,19 +161,12 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     }
 
     /// <summary>
-    ///     https://stackoverflow.com/questions/5411694/get-all-inherited-classes-of-an-abstract-class
+    ///     All concrete content-type engines shipped in this assembly (see
+    ///     <see cref="ContentTypeEngineRegistry" />).
     /// </summary>
-    public static ICollection<ContentTypeEngineBase> GetDerivedClassesCollection()
+    public static IReadOnlyList<ContentTypeEngineBase> GetDerivedClassesCollection()
     {
-        var objects = new List<ContentTypeEngineBase>();
-        foreach (Type type in typeof(ContentTypeEngineBase).Assembly.GetTypes()
-                     .Where(myType =>
-                         myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(ContentTypeEngineBase))))
-        {
-            objects.Add((ContentTypeEngineBase)Activator.CreateInstance(type)!);
-        }
-
-        return objects;
+        return ContentTypeEngineRegistry.CreateAll();
     }
 
     /// <summary>
@@ -444,4 +437,28 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     }
 
     public abstract Task<bool> SetDocumentAsync(string document);
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not ContentTypeEngineBase src)
+        {
+            return;
+        }
+
+        PageSize = src.PageSize;
+        MeasurementContext = src.MeasurementContext;
+        Document = src.Document;
+        SourceFileName = src.SourceFileName;
+        Encoding = src.Encoding;
+
+        if (src.ContentSettings is null)
+        {
+            ContentSettings = null;
+        }
+        else
+        {
+            ContentSettings ??= new ContentSettings();
+            ContentSettings.CopyPropertiesFrom(src.ContentSettings);
+        }
+    }
 }

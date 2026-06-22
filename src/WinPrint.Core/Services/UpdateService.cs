@@ -1,6 +1,5 @@
-using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using WinPrint.Core;
 using Serilog;
 using Velopack;
 using Velopack.Sources;
@@ -23,8 +22,7 @@ public class UpdateService
     /// <summary>
     ///     Provides the current version number
     /// </summary>
-    public static Version CurrentVersion =>
-        new(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService))!.Location).FileVersion!);
+    public static Version CurrentVersion => AppHostInfo.FileVersionParsed;
 
     /// <summary>
     ///     Contains the version number of the latest version found online (only valid after GotLatestVersion)
