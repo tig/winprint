@@ -32,7 +32,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+        <!-- Forward PublishAot so Core can drop trim-unsafe Windows-only deps (ApplicationInsights). -->
+        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj">
+            <AdditionalProperties Condition="'$(PublishAot)' == 'true'">PublishAot=true</AdditionalProperties>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
