@@ -27,13 +27,13 @@
             "problemMatcher": "$msCompile"
         },
         {
-            // CLI app. net10.0-windows today (see CONTRIBUTING.md) — builds on Windows.
-            "label": "build-cli",
+            // Terminal UI / CLI app (`wp`).
+            "label": "build-tui",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/WinPrint.cli/WinPrint.cli.csproj"
+                "${workspaceFolder}/src/WinPrint.TUI/WinPrint.TUI.csproj"
             ],
             "group": "build",
             "problemMatcher": "$msCompile"
@@ -131,14 +131,16 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish-cli",
+            "label": "publish-tui",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/src/WinPrint.cli/WinPrint.cli.csproj",
+                "${workspaceFolder}/src/WinPrint.TUI/WinPrint.TUI.csproj",
                 "-c",
-                "Release"
+                "Release",
+                "-f",
+                "net10.0"
             ],
             "group": "build",
             "problemMatcher": "$msCompile"

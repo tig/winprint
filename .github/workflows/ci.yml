@@ -69,8 +69,8 @@ jobs:
           git diff --exit-code
 
       # Core + every front end's unit tests, plus the UI tests that run on a Windows desktop session:
-      # TUI (headless render), cli (process e2e), and WinForms (FlaUI). The MAUI Appium UI tests run on
-      # the macOS job below; MAUI unit tests (pure geometry) run here.
+      # TUI (headless render) and WinForms (FlaUI). The MAUI Appium UI tests run on the macOS job below;
+      # MAUI unit tests (pure geometry) run here.
       - name: Test (Core)
         run: dotnet test tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj --configuration Debug --no-build --verbosity normal
 
@@ -79,12 +79,6 @@ jobs:
 
       - name: Test (TUI UI)
         run: dotnet test tests/WinPrint.TUI.UITests/WinPrint.TUI.UITests.csproj --configuration Debug --no-build --verbosity normal
-
-      - name: Test (cli unit)
-        run: dotnet test tests/WinPrint.cli.UnitTests/WinPrint.cli.UnitTests.csproj --configuration Debug --no-build --verbosity normal
-
-      - name: Test (cli UI / e2e)
-        run: dotnet test tests/WinPrint.cli.UITests/WinPrint.cli.UITests.csproj --configuration Debug --no-build --verbosity normal
 
       - name: Test (WinForms unit)
         run: dotnet test tests/WinPrint.WinForms.UnitTests/WinPrint.WinForms.UnitTests.csproj --configuration Debug --no-build --verbosity normal
