@@ -253,7 +253,7 @@ public class SettingsService
     }
 
     /// <summary>
-    ///     Centralizes "save on exit" persistence shared by every front end (TUI, WinForms, MAUI).
+    ///     Centralizes "save on exit" persistence shared by every front end (TUI and MAUI).
     ///     Each candidate value is compared against what is already stored in <paramref name="settings" />
     ///     and only the fields that actually changed are mutated. The settings file is written at most
     ///     once, and only when something changed, so callers can invoke this unconditionally on exit
@@ -268,8 +268,7 @@ public class SettingsService
     /// <param name="windowState">Window state to remember (ignored when null).</param>
     /// <param name="saveCteSettings">
     ///     When the default <paramref name="save" /> path is used, controls whether Content Type Engine
-    ///     settings are written too. Defaults to <see langword="false" /> (TUI/MAUI); WinForms passes
-    ///     <see langword="true" /> to preserve its historical behavior.
+    ///     settings are written too. Defaults to <see langword="false" /> for the interactive front ends.
     /// </param>
     /// <param name="save">
     ///     Persistence callback; defaults to <see cref="SaveSettings(Settings, bool, bool)" /> using

@@ -10,7 +10,7 @@ namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
 ///     Verifies command-line <see cref="Options" /> flow through to the TUI via the same
-///     <see cref="AppViewModel.ApplyOptions" /> path WinForms/MAUI use: sheet, orientation, printer,
+///     <see cref="AppViewModel.ApplyOptions" /> path MAUI uses: sheet, orientation, printer,
 ///     paper size, print range, and the file argument all land on the bound view model / current sheet.
 /// </summary>
 public class CommandLineFlowTests

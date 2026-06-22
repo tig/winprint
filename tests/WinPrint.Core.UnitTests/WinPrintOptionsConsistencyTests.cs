@@ -10,13 +10,13 @@ namespace WinPrint.Core.UnitTests;
 ///     Guards cross-front-end command-line consistency. <see cref="WinPrintOptions.Shared" /> is the
 ///     canonical option surface (TUI is the reference); every front end must expose these options with
 ///     identical names, short aliases, and value types. This verifies (a) the catalog itself is
-///     conflict-free and (b) the WinForms/MAUI surface — <see cref="Options" />'s CommandLineParser
+///     conflict-free and (b) the MAUI surface — <see cref="Options" />'s CommandLineParser
 ///     attributes — matches the catalog. The TUI and CLI derive their descriptors from the catalog
 ///     directly, so they cannot diverge.
 /// </summary>
 public class WinPrintOptionsConsistencyTests
 {
-    // Canonical option name -> the WinForms/MAUI Options property that carries it.
+    // Canonical option name -> the MAUI Options property that carries it.
     private static readonly Dictionary<string, string> SharedToOptionsProperty = new()
     {
         ["sheet"] = nameof(Options.Sheet),
