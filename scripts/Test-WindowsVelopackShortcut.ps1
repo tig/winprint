@@ -224,6 +224,11 @@ try {
         throw "Expected bundled TUI executable was not installed: $tuiExe"
     }
 
+    $wpOutput = & $tuiExe views 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Installed wp.exe failed to start with exit code ${LASTEXITCODE}:$([Environment]::NewLine)$($wpOutput -join [Environment]::NewLine)"
+    }
+
     $startMenuRoot = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
     $packageShortcuts = @()
     $startMenuShortcuts = @()
