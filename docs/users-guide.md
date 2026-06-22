@@ -57,12 +57,6 @@ Launch the GUI:
 wp gui
 ```
 
-List catalogued TUI views:
-
-```bash
-wp views
-```
-
 Get help:
 
 ```bash

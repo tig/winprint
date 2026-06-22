@@ -224,7 +224,10 @@ try {
         throw "Expected bundled TUI executable was not installed: $tuiExe"
     }
 
-    $wpOutput = & $tuiExe views 2>&1
+    # Smoke-test that the freshly-installed wp.exe actually launches (it shares the install
+    # directory with the GUI on Windows, so a merged-publish DLL conflict can break startup).
+    # `--version` exercises Velopack init + CliHost construction without needing a sample file.
+    $wpOutput = & $tuiExe --version 2>&1
     if ($LASTEXITCODE -ne 0) {
         throw "Installed wp.exe failed to start with exit code ${LASTEXITCODE}:$([Environment]::NewLine)$($wpOutput -join [Environment]::NewLine)"
     }
