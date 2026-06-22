@@ -35,9 +35,8 @@ public abstract class ModelBase : INotifyPropertyChanged
     }
 
     /// <summary>
-    ///     Returns a dictionary containing all the properties of the object that
-    ///     are safe to track via telemetry. Use the [SafeForTelemetry] attribute on any
-    ///     property of a class derived from ModelBase to enable emitting to telemetry.
+    ///     Returns a dictionary of telemetry-safe values for this model. Derived types override and
+    ///     call <see cref="TelemetryCollector" /> helpers to emit explicit fields (no reflection).
     /// </summary>
     /// <returns>A dictionary with the properties and values (as strings). Suitable for calling TrackEvent().</returns>
     public virtual IDictionary<string, string?> GetTelemetryDictionary()

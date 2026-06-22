@@ -6,10 +6,10 @@ using Xunit;
 namespace WinPrint.Core.UnitTests;
 
 /// <summary>
-///     Guards cross-front-end command-line consistency. <see cref="WinPrintOptions.Shared" /> is the
-///     canonical option surface (TUI is the reference); every front end must expose these options with
-///     identical names, short aliases, and value types. WinForms/MAUI parse via
-///     <c>WinPrint.WinForms.CommandLineOptions</c>; the TUI and CLI derive descriptors from this catalog.
+///     Guards the shared <see cref="Options" /> DTO against <see cref="WinPrintOptions.Shared" />.
+///     WinForms/MAUI <c>CommandLineOptions</c> attribute parity is covered by
+///     <c>WinPrint.WinForms.UnitTests.CommandLineOptionsConsistencyTests</c>; the TUI derives descriptors
+///     from the same catalog.
 /// </summary>
 public class WinPrintOptionsConsistencyTests
 {

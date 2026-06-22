@@ -14,7 +14,7 @@ public class ModelLocator
 
     private static WinPrintServices Services => WinPrintServices.Current;
 
-    public Settings Settings => Services.Settings!;
+    public Settings Settings => Services.Settings;
 
     public Options Options => Services.Options;
 

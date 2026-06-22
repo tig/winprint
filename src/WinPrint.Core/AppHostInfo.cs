@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace WinPrint.Core;
@@ -13,6 +14,32 @@ public static class AppHostInfo
     /// <summary>Directory containing the running app (exe or single-file extract dir).</summary>
     public static string BaseDirectory =>
         AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+    /// <summary>
+    ///     Directory containing winprint assemblies. Uses <see cref="Assembly.Location" /> when available
+    ///     (e.g. Out-WinPrint PowerShell module); falls back to <see cref="BaseDirectory" /> under Native AOT.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL3000",
+        Justification =
+            "Location is consulted only when non-empty (e.g. Out-WinPrint module); empty under AOT/single-file falls back to BaseDirectory.")]
+    public static string AssemblyDirectory
+    {
+        get
+        {
+#if !NATIVE_AOT
+            string? location = s_assembly.Location;
+            if (!string.IsNullOrEmpty(location))
+            {
+                string? dir = Path.GetDirectoryName(location);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    return dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                }
+            }
+#endif
+            return BaseDirectory;
+        }
+    }
 
     /// <summary>File version string from assembly metadata (GitVersion / build).</summary>
     public static string? FileVersion =>

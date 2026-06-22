@@ -9,7 +9,7 @@ Target: `WinPrint.TUI` (`wp`) + `WinPrint.Core`, cross-platform (`net10.0` / `ne
 |--------|------|
 | Stop `PublishAot` leaking to analyzer project | `Directory.Build.props` — added `PublishAot;IsAotCompatible` to `GlobalPropertiesToRemove` |
 | Native AOT publish flags (RID-gated) | `WinPrint.TUI.csproj` — `PublishAot`, `StripSymbols`, `InvariantGlobalization` active only when `RuntimeIdentifier` is set (so `dotnet build` / `dotnet test` stay clean) |
-| `IsAotCompatible` on Core | **Deferred** — setting it in .NET 10 SDK enables trim analyzers on every build and currently yields 35 errors. Add `<IsAotCompatible>true</IsAotCompatible>` to `WinPrint.Core.csproj` once the inventory below is cleared. |
+| `IsAotCompatible` on Core | **Done** — `<IsAotCompatible>true</IsAotCompatible>` on net8.0-compatible TFMs; inventory items P1–P7 cleared. ApplicationInsights omitted under `PublishAot` (not trim-safe). |
 
 ## Spike command
 

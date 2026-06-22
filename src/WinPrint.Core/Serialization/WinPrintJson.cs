@@ -65,15 +65,35 @@ internal static class WinPrintJson
     {
         foreach (KeyValuePair<string, JsonNode?> property in source)
         {
+            string? targetKey = FindPropertyKey(target, property.Key);
             if (property.Value is JsonObject sourceChild
-                && target[property.Key] is JsonObject targetChild)
+                && targetKey is not null
+                && target[targetKey] is JsonObject targetChild)
             {
                 MergeObjects(targetChild, sourceChild);
             }
             else
             {
-                target[property.Key] = property.Value?.DeepClone();
+                target[targetKey ?? property.Key] = property.Value?.DeepClone();
             }
         }
+    }
+
+    private static string? FindPropertyKey(JsonObject target, string sourceKey)
+    {
+        if (target.ContainsKey(sourceKey))
+        {
+            return sourceKey;
+        }
+
+        foreach (KeyValuePair<string, JsonNode?> entry in target)
+        {
+            if (string.Equals(entry.Key, sourceKey, StringComparison.OrdinalIgnoreCase))
+            {
+                return entry.Key;
+            }
+        }
+
+        return null;
     }
 }

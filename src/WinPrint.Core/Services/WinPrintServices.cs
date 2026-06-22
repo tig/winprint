@@ -31,7 +31,7 @@ public sealed class WinPrintServices
 
     public Options Options { get; } = new();
 
-    public Settings? Settings => _settings ??= SettingsService.ReadSettings();
+    public Settings Settings => _settings ??= SettingsService.ReadSettings() ?? Settings.CreateDefaultSettings();
 
     public FileTypeMapping FileTypeMapping => _fileTypeMapping ??= FileTypeMappingService.Load();
 

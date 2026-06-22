@@ -35,5 +35,4 @@ namespace WinPrint.Core.Serialization;
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(List<ContentType>))]
 [JsonSerializable(typeof(List<string>))]
-[JsonSerializable(typeof(Dictionary<string, string>))]
 internal sealed partial class WinPrintJsonSerializerContext : JsonSerializerContext;

@@ -27,43 +27,55 @@ public class SettingsService
     ///     However, if the exe was started from somewhere else, work in "portable mode" and
     ///     use the dir containing the exe as the path.
     /// </summary>
-    public static string? SettingsPath
+    public static string? SettingsPath => ResolveSettingsPath(
+        AppHostInfo.BaseDirectory,
+        AppHostInfo.AssemblyDirectory,
+        AppHostInfo.CompanyName,
+        AppHostInfo.ProductName,
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+    internal static string? ResolveSettingsPath(
+        string? baseDirectory,
+        string? assemblyDirectory,
+        string? companyName,
+        string? productName,
+        bool isWindows)
     {
-        get
+        string? path = baseDirectory;
+
+        if (!isWindows)
         {
-            string? path = AppHostInfo.BaseDirectory;
-            string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // Your OSX code here.
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                // 
-            }
-            else
-            {
-                string? company = AppHostInfo.CompanyName;
-                string? product = AppHostInfo.ProductName;
-
-                // is this in Kindel\winprint?
-                if (path is not null && !string.IsNullOrEmpty(company) && !string.IsNullOrEmpty(product) &&
-                    path.Contains($@"{company}{Path.DirectorySeparatorChar}{product}"))
-                {
-                    // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
-                    path = $@"{appdata}{Path.DirectorySeparatorChar}{company}{Path.DirectorySeparatorChar}{product}";
-                }
-
-                // TODO: Remove internal knowledge of Out-WinPrint from here
-                if (path is not null && path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
-                {
-                    path = AppHostInfo.BaseDirectory;
-                }
-            }
-
             return path;
         }
+
+        string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+        // is this in Kindel\winprint?
+        if (path is not null && !string.IsNullOrEmpty(companyName) && !string.IsNullOrEmpty(productName) &&
+            ContainsPathSegment(path, $"{companyName}{Path.DirectorySeparatorChar}{productName}"))
+        {
+            // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
+            path = $@"{appdata}{Path.DirectorySeparatorChar}{companyName}{Path.DirectorySeparatorChar}{productName}";
+        }
+
+        // TODO: Remove internal knowledge of Out-WinPrint from here
+        if (path is not null && ContainsPathSegment(path, $@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
+        {
+            path = assemblyDirectory ?? baseDirectory;
+        }
+
+        return path;
+    }
+
+    private static bool ContainsPathSegment(string path, string segment)
+    {
+        return NormalizePathSeparators(path)
+            .Contains(NormalizePathSeparators(segment), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizePathSeparators(string path)
+    {
+        return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
     }
 
     /// <summary>
