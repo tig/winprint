@@ -9,6 +9,7 @@ using Serilog.Events;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.WinForms;
+using CommandLineOptions = WinPrint.WinForms.CommandLineOptions;
 
 namespace WinPrint.Winforms;
 
@@ -35,7 +36,7 @@ internal static class Program
         if (args.Length > 0)
         {
             var parser = new Parser(with => with.EnableDashDash = true);
-            ParserResult<Options>? result = parser.ParseArguments<Options>(args);
+            ParserResult<CommandLineOptions>? result = parser.ParseArguments<CommandLineOptions>(args);
             result
                 .WithParsed(o =>
                 {
@@ -53,10 +54,10 @@ internal static class Program
                         ServiceLocator.Current.LogService.ConsoleLevelSwitch.MinimumLevel = LogEventLevel.Information;
                     }
 
+                    o.ApplyTo(ModelLocator.Current.Options);
                     ServiceLocator.Current.TelemetryService.TrackEvent("Command Line Options",
-                        o.GetTelemetryDictionary());
+                        ModelLocator.Current.Options.GetTelemetryDictionary());
                     Log.Information("Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
-                    ModelLocator.Current.Options.CopyPropertiesFrom(o);
                 })
                 .WithNotParsed(errs => DisplayHelp(result));
             parser.Dispose();

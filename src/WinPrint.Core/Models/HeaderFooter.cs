@@ -146,4 +146,41 @@ public abstract class HeaderFooter : ModelBase
         get => _verticalPadding;
         set => SetField(ref _verticalPadding, value);
     }
+
+    protected void CopyHeaderFooterFrom(HeaderFooter source)
+    {
+        Text = source.Text;
+        if (source.Font is null)
+        {
+            Font = null;
+        }
+        else
+        {
+            Font ??= new Font();
+            ModelCopyHelpers.CopyFont(Font, source.Font);
+        }
+
+        LeftBorder = source.LeftBorder;
+        TopBorder = source.TopBorder;
+        RightBorder = source.RightBorder;
+        BottomBorder = source.BottomBorder;
+        Enabled = source.Enabled;
+        VerticalPadding = source.VerticalPadding;
+    }
+
+    protected void AddHeaderFooterTelemetry(Dictionary<string, string?> dictionary)
+    {
+        TelemetryCollector.Add(dictionary, nameof(MacrosUsed), MacrosUsed);
+        if (Font is not null)
+        {
+            TelemetryCollector.Add(dictionary, nameof(Font), Font);
+        }
+
+        TelemetryCollector.Add(dictionary, nameof(LeftBorder), LeftBorder);
+        TelemetryCollector.Add(dictionary, nameof(TopBorder), TopBorder);
+        TelemetryCollector.Add(dictionary, nameof(RightBorder), RightBorder);
+        TelemetryCollector.Add(dictionary, nameof(BottomBorder), BottomBorder);
+        TelemetryCollector.Add(dictionary, nameof(Enabled), Enabled);
+        TelemetryCollector.Add(dictionary, nameof(VerticalPadding), VerticalPadding);
+    }
 }

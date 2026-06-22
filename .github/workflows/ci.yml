@@ -95,6 +95,70 @@ jobs:
       - name: Test (MAUI unit)
         run: dotnet test tests/WinPrint.Maui.UnitTests/WinPrint.Maui.UnitTests.csproj --configuration Debug --no-build --verbosity normal
 
+  # Native AOT publish smoke for wp (issue #66). Gates trim/AOT regressions on PRs without waiting for release.
+  aot-publish:
+    name: AOT publish (${{ matrix.runtime }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            runtime: linux-x64
+            framework: net10.0
+          - os: macos-26
+            runtime: osx-arm64
+            framework: net10.0
+          - os: windows-latest
+            runtime: win-x64
+            framework: net10.0-windows
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', 'Directory.Build.props', 'Directory.Build.targets', 'global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Publish wp (Native AOT)
+        shell: bash
+        run: |
+          publishDir="artifacts/aot-ci/${{ matrix.runtime }}"
+          dotnet publish src/WinPrint.TUI/WinPrint.TUI.csproj \
+            -c Release \
+            -f "${{ matrix.framework }}" \
+            -r "${{ matrix.runtime }}" \
+            --self-contained true \
+            -o "$publishDir"
+
+      - name: Smoke (version)
+        shell: bash
+        run: |
+          wp="artifacts/aot-ci/${{ matrix.runtime }}/wp"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            wp="artifacts/aot-ci/${{ matrix.runtime }}/wp.exe"
+          fi
+          "$wp" --version
+
+      - name: Smoke (headless --cat)
+        shell: bash
+        run: |
+          wp="artifacts/aot-ci/${{ matrix.runtime }}/wp"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            wp="artifacts/aot-ci/${{ matrix.runtime }}/wp.exe"
+          fi
+          "$wp" tui testfiles/oneline.txt --cat --width 40 --height 10 | head -5
+
   # MAUI UI automation: Appium (mac2 driver) against the MacCatalyst app. Needs a macOS host with Xcode,
   # Appium, and the built app — hence a separate job from the Windows build/test matrix.
   #

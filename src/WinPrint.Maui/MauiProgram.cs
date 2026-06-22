@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
 using WinPrint.Core.Models;
+using WinPrint.WinForms;
 #if WINDOWS
 using Microsoft.Maui.Handlers;
 using WinPrint.Core.Services;
@@ -47,7 +48,7 @@ public static class MauiProgram
         if (args.Length > 0)
         {
             var parser = new Parser(with => with.EnableDashDash = true);
-            parser.ParseArguments<Options>(args)
+            parser.ParseArguments<CommandLineOptions>(args)
                 .WithParsed(o =>
                 {
                     // Resolve relative file paths against the launch CWD, not the
@@ -59,7 +60,7 @@ public static class MauiProgram
                             .ToList();
                     }
 
-                    ModelLocator.Current.Options.CopyPropertiesFrom(o);
+                    o.ApplyTo(ModelLocator.Current.Options);
                     Log.Information("MAUI Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
                 });
             parser.Dispose();

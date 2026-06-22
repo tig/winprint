@@ -3,21 +3,17 @@
 // default command. `wp foo.cs` opens the interactive TUI for a file; `wp tui foo.cs` or
 // `wp --tui foo.cs` does the same. `views` lists the catalogued views.
 
-using System.Diagnostics;
-using System.Reflection;
 using Terminal.Gui.Cli;
 using Velopack;
+using WinPrint.Core;
 using WinPrint.TUI;
 
 VelopackApp.Build().Run();
 
-var assembly = Assembly.GetExecutingAssembly();
-var versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-
 CliHost host = new(options =>
 {
     options.ApplicationName = "wp";
-    options.Version = versionInfo.ProductVersion ?? "0.0.0";
+    options.Version = AppHostInfo.DisplayVersion;
     options.DefaultCommand = "tui";
     options.GlobalOptions.Add(new GlobalOptionDescriptor("verbose", "v", "Write progress details to stderr.", true));
     options.GlobalOptions.Add(new GlobalOptionDescriptor("debug", null, "Write diagnostic details to stderr.", true));

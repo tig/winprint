@@ -65,18 +65,19 @@ public sealed class SettingsContext
     {
         var renderer = new PageRenderer();
 
-        // Create a real SheetViewModel so the TUI participates in the shared print path
-        var sheetVM = new SheetViewModel();
-
-        // Give it a cross-platform measurement context (WinForms/MAUI set this on the SheetViewModel
-        // too). SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it
-        // the engine fails to load and AppViewModel resets ActiveFile back to "<no file>", so neither
-        // the `wp file.cs` argument nor the File… button renders a preview.
-        sheetVM.MeasurementContext = renderer.CreateMeasurementContext();
-
         // Seed the page setup from the platform print service so printer/paper are populated
         IPrintService svc = printService ?? PrintServiceFactory.Create();
         PrintPageSetup pageSetup = svc.GetDefaultPageSetup();
+
+        // Create a real SheetViewModel so the TUI participates in the shared print path
+        var sheetVM = new SheetViewModel();
+
+        // Use the print backend's measurement context (Skia on Unix, null on Windows → GDI default) so
+        // reflow matches the print pipeline. ImageSharp is only for sixel preview rasterization.
+        if (svc.CreateMeasurementContext() is { } measurementContext)
+        {
+            sheetVM.MeasurementContext = measurementContext;
+        }
 
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();

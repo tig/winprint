@@ -1,5 +1,4 @@
-using System.Diagnostics;
-using System.Reflection;
+using WinPrint.Core;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Serilog;
@@ -42,8 +41,7 @@ public class LogService
             // TODO: Keep this at Debug until after Beta, then change it to Information
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #endif
-        string? productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService))!.Location)
-            .FileVersion;
+        string? productVersion = AppHostInfo.FileVersion;
         LogPath =
             $"{SettingsService.SettingsPath}{Path.DirectorySeparatorChar}logs{Path.DirectorySeparatorChar}{appName}.log"
                 .Replace(@"file:\", "");

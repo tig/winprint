@@ -106,9 +106,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommandLineParser" Version="2.9.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Velopack" Version="1.1.1" />
+	</ItemGroup>
+
+	<!-- WinForms/MAUI share the CommandLineParser-attributed CLI surface. -->
+	<ItemGroup>
+		<Compile Include="..\WinPrint.WinForms\CommandLineOptions.cs" Link="CommandLineOptions.cs" />
 	</ItemGroup>
 
 	<!-- Windows: reference WinForms (for PrintDialog) and System.Drawing.Common (for PrintDocument) -->

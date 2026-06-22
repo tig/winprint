@@ -10,6 +10,7 @@ using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.Win32;
 #endif
 using Serilog;
+using WinPrint.Core;
 
 namespace WinPrint.Core.Services;
 
@@ -56,8 +57,7 @@ public class TelemetryService
 #endif
 
         telemetry = new TelemetryClient(config);
-        telemetry.Context.Component.Version = FileVersionInfo
-            .GetVersionInfo(Assembly.GetAssembly(typeof(TelemetryService))!.Location).FileVersion;
+        telemetry.Context.Component.Version = AppHostInfo.FileVersion;
         telemetry.Context.Session.Id = Guid.NewGuid().ToString();
         telemetry.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
         // Anonymyize user ID
