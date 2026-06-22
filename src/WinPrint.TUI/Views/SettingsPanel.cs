@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
@@ -78,7 +76,8 @@ public sealed class SettingsPanel : View
 
         FileButton = new Button { Text = "_File..." };
         PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
-        ConfigButton = new Button { Text = "_Config...", X = Pos.Right(PrintButton) };
+        // A bare gear glyph (issue #166); the JSON config path is shown in the editor's title bar.
+        ConfigButton = new Button { Text = "⚙", X = Pos.Right(PrintButton) };
         var buttonRow = new View
         {
             CanFocus = true,
@@ -371,7 +370,7 @@ public sealed class SettingsPanel : View
     /// <summary>The Print button (initiates print).</summary>
     public Button PrintButton { get; }
 
-    /// <summary>The Config button (opens the JSON config file in the default editor).</summary>
+    /// <summary>The Config button (gear glyph; opens the JSON config file in a modal Terminal.Gui editor).</summary>
     public Button ConfigButton { get; }
 
     /// <summary>Raised before a dialog/runnable opens (suspend sixel rendering).</summary>
@@ -429,40 +428,23 @@ public sealed class SettingsPanel : View
 
     private void OpenConfigFile()
     {
+        if (GetApp() is not { } app)
+        {
+            return;
+        }
+
         string configFile = ServiceLocator.Current.SettingsService.SettingsFileName;
+
+        // Edit in a modal Terminal.Gui editor (issue #166) rather than shelling out to the OS default
+        // editor, so it works headless/over SSH and JSON is validated before the file is written.
+        RunnableOpening?.Invoke(this, EventArgs.Empty);
         try
         {
-            Process.Start(CreateConfigOpenStartInfo(configFile))?.Dispose();
+            ConfigEditorDialog.Show(app, configFile);
         }
-        catch (Win32Exception ex)
+        finally
         {
-            ShowConfigError(configFile, ex.Message);
+            RunnableClosed?.Invoke(this, EventArgs.Empty);
         }
-        catch (InvalidOperationException ex)
-        {
-            ShowConfigError(configFile, ex.Message);
-        }
-    }
-
-    private static ProcessStartInfo CreateConfigOpenStartInfo(string configFile)
-    {
-        return new ProcessStartInfo
-        {
-            FileName = configFile,
-            UseShellExecute = true
-        };
-    }
-
-    private void ShowConfigError(string configFile, string message)
-    {
-        var dlg = new Dialog
-        {
-            Title = "Config Error",
-            Width = Dim.Auto(DimAutoStyle.Content),
-            Height = Dim.Auto(DimAutoStyle.Content)
-        };
-        dlg.Add(new Label { Text = $"Couldn't open {configFile}: {message}" });
-        dlg.AddButton(new Button { Text = "OK", IsDefault = true });
-        GetApp()!.Run(dlg);
     }
 }
