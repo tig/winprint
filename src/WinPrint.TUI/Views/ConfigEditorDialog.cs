@@ -72,9 +72,9 @@ public sealed class ConfigEditorDialog : Dialog
         // Color the config as JSON using the editor's built-in syntax definition.
         _editor.HighlightingDefinition = HighlightingManager.Instance.GetDefinition("Json");
 
-        // Scrollbars so long configs (and long lines) are navigable with the mouse.
-        _editor.VerticalScrollBar.Visible = true;
-        _editor.HorizontalScrollBar.Visible = true;
+        // Scrollbars so long configs (and long lines) are navigable with the mouse. In TG v2 the switch
+        // is the ViewportSettings flag, not ScrollBar.Visible (which the layout overrides).
+        _editor.ViewportSettings |= ViewportSettingsFlags.HasScrollBars;
         Add(_editor);
 
         _errorLabel = new Label
