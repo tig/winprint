@@ -46,7 +46,7 @@ public sealed class TuiCommand : IViewerCommand
     [
         .. WinPrintOptions.Shared.Select(o =>
             new CommandOptionDescriptor(o.Name, o.Short?.ToString(), o.ValueType, o.Help, false, null)),
-        new("view", null, typeof(string), "Show a single catalogued view instead of the full app (see `wp views`).",
+        new("view", null, typeof(string), "Show a single catalogued view instead of the full app.",
             false, null),
         new("width", null, typeof(int), "Grid width in cells for --cat (0 = terminal width).", false, null),
         new("height", null, typeof(int), "Grid height in cells for --cat (0 = terminal height).", false, null)
