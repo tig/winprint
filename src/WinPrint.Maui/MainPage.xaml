@@ -75,7 +75,7 @@
                                 </Label>
                             </HorizontalStackLayout>
 
-                            <!-- Margins (diamond layout like WinForms) -->
+                            <!-- Margins (diamond layout) -->
                             <Label x:Name="MarginsHeader" Text="▼ Margins (inches)" FontAttributes="Bold" FontSize="{DynamicResource SidebarFontSize}" Margin="{OnPlatform Default='0,10,0,0', WinUI='0,6,0,0'}">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnMarginsHeaderTapped" />

@@ -7,8 +7,8 @@ using WinPrint.Core.ViewModels;
 namespace WinPrint.Maui.Views;
 
 /// <summary>
-///     Modal prompt shown when the user exits with unsaved sheet-definition edits. Mirrors the TUI and
-///     WinForms prompts: a list of existing definitions to update, plus a "New name" field + Create to
+///     Modal prompt shown when the user exits with unsaved sheet-definition edits. Mirrors the TUI prompt:
+///     a list of existing definitions to update, plus a "New name" field + Create to
 ///     spin off a new definition, and Don't Save / Cancel / Save buttons. Await <see cref="Completion" />
 ///     for the user's choice.
 /// </summary>

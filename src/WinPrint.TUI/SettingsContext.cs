@@ -9,7 +9,7 @@ namespace WinPrint.TUI;
 
 /// <summary>
 ///     Loads real winprint <see cref="Settings" /> and exposes the same cross-platform
-///     <see cref="AppViewModel" /> orchestrator that WinForms and MAUI bind to — now constructed with a
+///     <see cref="AppViewModel" /> orchestrator that MAUI binds to — now constructed with a
 ///     real <see cref="SheetViewModel" /> and <see cref="ImageSharpMeasurementContext" /> so the TUI can
 ///     perform full document reflow and render live previews through the shared print path.
 /// </summary>
@@ -59,7 +59,7 @@ public sealed class SettingsContext
     /// <summary>
     ///     Creates a context over the real loaded settings and applies command-line
     ///     <paramref name="options" /> (sheet, orientation, printer, paper size, print range, file)
-    ///     through the same <see cref="AppViewModel.ApplyOptions" /> path WinForms/MAUI use.
+    ///     through the same <see cref="AppViewModel.ApplyOptions" /> path MAUI uses.
     /// </summary>
     public static SettingsContext Create(Options? options, IPrintService? printService = null)
     {
@@ -68,7 +68,7 @@ public sealed class SettingsContext
         // Create a real SheetViewModel so the TUI participates in the shared print path
         var sheetVM = new SheetViewModel();
 
-        // Give it a cross-platform measurement context (WinForms/MAUI set this on the SheetViewModel
+        // Give it a cross-platform measurement context (MAUI sets this on the SheetViewModel
         // too). SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it
         // the engine fails to load and AppViewModel resets ActiveFile back to "<no file>", so neither
         // the `wp file.cs` argument nor the File… button renders a preview.

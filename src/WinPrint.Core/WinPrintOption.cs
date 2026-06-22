@@ -1,7 +1,7 @@
 namespace WinPrint.Core;
 
 /// <summary>
-///     One canonical winprint command-line option, shared by every front end (CLI, TUI, WinForms, MAUI).
+///     One canonical winprint command-line option, shared by every front end (CLI, TUI, MAUI).
 ///     The TUI is the reference surface; <see cref="WinPrintOptions" /> is the single source of truth that
 ///     every front end derives its parser from, so option names, short aliases, and semantics can never
 ///     diverge between front ends.
