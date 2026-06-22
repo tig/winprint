@@ -1,6 +1,6 @@
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Terminal.Gui.App;
+using Terminal.Gui.Configuration;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Editor;
 using Terminal.Gui.Editor.Highlighting;
 using Terminal.Gui.ViewBase;
@@ -10,48 +10,60 @@ namespace WinPrint.TUI.Views;
 
 /// <summary>
 ///     Modal editor for the WinPrint JSON config file. The title shows the config-file path; the body is
-///     a multiline, JSON-syntax-highlighted text editor. Save validates the JSON first and refuses to
-///     write (showing the parse error) when it's invalid; closing via the Cancel button with unsaved
-///     edits prompts to Save / Don't Save / Cancel.
+///     a multiline, JSON-syntax-highlighted text editor. Standard dialog model: <b>Save</b> is enabled
+///     only once the file has been edited and validates the config first (loading it the way the app
+///     does) — if it can't be loaded the error is shown inline and the file isn't written; <b>Cancel</b>
+///     / Esc always exit without saving (no prompt). A save reloads the settings into the running app.
 /// </summary>
 /// <remarks>
 ///     This replaces shelling out to the OS default editor so the TUI works in headless / SSH sessions
-///     and can enforce JSON validity before the file is written (see issue #166).
+///     and can enforce config validity before the file is written (see issue #166), and applies the
+///     saved settings live (see issue #85).
 /// </remarks>
 public sealed class ConfigEditorDialog : Dialog
 {
-    // Mirrors the leniency WinPrintJson uses when it loads the config (trailing commas + // comments),
-    // so the editor only rejects what the loader would also reject.
-    private static readonly JsonDocumentOptions s_validationOptions = new()
-    {
-        AllowTrailingCommas = true,
-        CommentHandling = JsonCommentHandling.Skip
-    };
-
     private readonly Editor _editor;
+    private readonly Label _errorLabel;
     private readonly string _filePath;
 
-    /// <summary>Whether the edited config was validated and written to disk before the dialog closed.</summary>
+    // Returns null when the text loads as valid settings, else a human-readable reason it doesn't.
+    private readonly Func<string?, string?> _validateError;
+
+    // Reloads the just-saved file into the running app (live update). May throw; the dialog surfaces it.
+    private readonly Action _applyAfterSave;
+
+    /// <summary>Whether the edited config was validated, written to disk, and applied before closing.</summary>
     public bool Saved { get; private set; }
 
     /// <summary>Creates the editor over <paramref name="filePath" />, seeded with <paramref name="initialText" />.</summary>
-    public ConfigEditorDialog(string filePath, string initialText)
+    /// <param name="validateError">Returns null if the text loads as settings, otherwise the reason it doesn't.</param>
+    /// <param name="applyAfterSave">Reloads/applies the saved file to the running app; may throw.</param>
+    public ConfigEditorDialog(
+        string filePath,
+        string initialText,
+        Func<string?, string?> validateError,
+        Action applyAfterSave)
     {
         ArgumentNullException.ThrowIfNull(filePath);
+        ArgumentNullException.ThrowIfNull(validateError);
+        ArgumentNullException.ThrowIfNull(applyAfterSave);
 
         _filePath = filePath;
+        _validateError = validateError;
+        _applyAfterSave = applyAfterSave;
 
         // The title is the config path so the user knows exactly which file they're editing (issue #166).
         Title = filePath;
         Width = Dim.Percent(90);
         Height = Dim.Percent(90);
+        SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Accent);
 
         _editor = new Editor
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
+            Height = Dim.Fill(1), // leave the last content row for the inline error message
             Multiline = true,
             GutterOptions = GutterOptions.LineNumbers,
             Text = initialText ?? string.Empty
@@ -61,63 +73,74 @@ public sealed class ConfigEditorDialog : Dialog
         _editor.HighlightingDefinition = HighlightingManager.Instance.GetDefinition("Json");
         Add(_editor);
 
-        var save = new Button { Text = "_Save", IsDefault = true };
+        _errorLabel = new Label
+        {
+            X = 0,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+            Height = 1,
+            SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Error),
+            Visible = false
+        };
+        Add(_errorLabel);
+
+        // Baseline is the editor's own (line-ending-normalized) text, so Save toggles purely on real edits.
+        string baseline = _editor.Text;
+
+        // Standard dialog model: Save (disabled until the file is touched) is the last-added button, which
+        // the dialog treats as the default; Cancel always just exits. Esc closes the same way Cancel does,
+        // so no save prompt is needed.
+        var cancel = new Button { Text = "_Cancel" };
+        cancel.Accepting += (_, e) =>
+        {
+            e.Handled = true;
+            RequestStop();
+        };
+
+        var save = new Button { Text = "_Save", Enabled = false };
         save.Accepting += (_, e) =>
         {
             e.Handled = true;
             TrySave();
         };
 
-        var cancel = new Button { Text = "_Cancel" };
-        cancel.Accepting += (_, e) =>
+        AddButton(cancel);
+        AddButton(save);
+
+        // Enable Save once the text differs from the loaded file (and disable again if it's reverted); any
+        // edit also clears a stale error since the user is in the middle of fixing it. The editor reports
+        // IsModified=true the moment Text is set, so compare content instead.
+        _editor.ContentChanged += (_, _) =>
         {
-            e.Handled = true;
-            TryCancel();
+            save.Enabled = !string.Equals(_editor.Text, baseline, StringComparison.Ordinal);
+            ClearError();
         };
 
-        AddButton(save);
-        AddButton(cancel);
-    }
-
-    /// <summary>
-    ///     Validates <paramref name="text" /> as a JSON document using the same leniency the config loader
-    ///     applies (trailing commas, <c>//</c> comments). Returns <see langword="true" /> when it parses;
-    ///     otherwise <paramref name="error" /> describes the first problem.
-    /// </summary>
-    public static bool TryValidateJson(string? text, out string? error)
-    {
-        if (string.IsNullOrWhiteSpace(text))
+        // Surface a pre-existing problem in the file on open, so the user knows why and can fix it (#85).
+        if (validateError(initialText) is { } loadError)
         {
-            // An empty file is valid: the loader falls back to default settings.
-            error = null;
-            return true;
-        }
-
-        try
-        {
-            JsonNode.Parse(text, documentOptions: s_validationOptions);
-            error = null;
-            return true;
-        }
-        catch (JsonException ex)
-        {
-            error = ex.Message;
-            return false;
+            ShowError(loadError);
         }
     }
 
     /// <summary>
     ///     Reads <paramref name="filePath" /> (treating a missing file as empty) and runs the modal editor.
-    ///     Returns <see langword="true" /> if the user saved valid JSON.
+    ///     Returns <see langword="true" /> if the user saved a valid config.
     /// </summary>
-    public static bool Show(IApplication app, string filePath)
+    /// <param name="validateError">Returns null if the text loads as settings, otherwise the reason it doesn't.</param>
+    /// <param name="applyAfterSave">Reloads/applies the saved file to the running app; may throw.</param>
+    public static bool Show(
+        IApplication app,
+        string filePath,
+        Func<string?, string?> validateError,
+        Action applyAfterSave)
     {
         ArgumentNullException.ThrowIfNull(app);
         ArgumentNullException.ThrowIfNull(filePath);
 
         string initialText = File.Exists(filePath) ? File.ReadAllText(filePath) : string.Empty;
 
-        var dialog = new ConfigEditorDialog(filePath, initialText);
+        var dialog = new ConfigEditorDialog(filePath, initialText, validateError, applyAfterSave);
         try
         {
             app.Run(dialog);
@@ -131,13 +154,10 @@ public sealed class ConfigEditorDialog : Dialog
 
     private void TrySave()
     {
-        if (!TryValidateJson(_editor.Text, out string? error))
+        // Validate by loading the config the way the app does; refuse to write an unloadable file (#166).
+        if (_validateError(_editor.Text) is { } error)
         {
-            MessageBox.ErrorQuery(
-                GetApp()!,
-                "Invalid JSON",
-                $"The config can't be saved because it isn't valid JSON:\n\n{error}",
-                "OK");
+            ShowError(error);
             return;
         }
 
@@ -147,12 +167,24 @@ public sealed class ConfigEditorDialog : Dialog
         }
         catch (IOException ex)
         {
-            MessageBox.ErrorQuery(GetApp()!, "Save Failed", $"Couldn't write {_filePath}:\n\n{ex.Message}", "OK");
+            ShowError($"Couldn't write {_filePath}: {ex.Message}");
             return;
         }
         catch (UnauthorizedAccessException ex)
         {
-            MessageBox.ErrorQuery(GetApp()!, "Save Failed", $"Couldn't write {_filePath}:\n\n{ex.Message}", "OK");
+            ShowError($"Couldn't write {_filePath}: {ex.Message}");
+            return;
+        }
+
+        // Reload the saved settings into the running app (issue #85). Validated above, so this should
+        // succeed; if it somehow doesn't, keep the editor open with the reason rather than closing.
+        try
+        {
+            _applyAfterSave();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Saved, but applying the settings failed: {ex.Message}");
             return;
         }
 
@@ -160,32 +192,17 @@ public sealed class ConfigEditorDialog : Dialog
         RequestStop();
     }
 
-    private void TryCancel()
+    private void ShowError(string message)
     {
-        if (!_editor.IsModified)
-        {
-            RequestStop();
-            return;
-        }
+        _errorLabel.Text = message;
+        _errorLabel.Visible = true;
+    }
 
-        int? choice = MessageBox.Query(
-            GetApp()!,
-            "Unsaved Changes",
-            "The config has unsaved changes. Save them before closing?",
-            "_Save", "_Don't Save", "_Cancel");
-
-        switch (choice)
+    private void ClearError()
+    {
+        if (_errorLabel.Visible)
         {
-            case 0:
-                // Save only closes when the JSON is valid; otherwise TrySave keeps the editor open.
-                TrySave();
-                break;
-            case 1:
-                RequestStop();
-                break;
-            default:
-                // Cancel (or dismissed): stay in the editor.
-                break;
+            _errorLabel.Visible = false;
         }
     }
 }

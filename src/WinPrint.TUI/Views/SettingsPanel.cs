@@ -433,18 +433,33 @@ public sealed class SettingsPanel : View
             return;
         }
 
-        string configFile = ServiceLocator.Current.SettingsService.SettingsFileName;
+        SettingsService settings = ServiceLocator.Current.SettingsService;
 
         // Edit in a modal Terminal.Gui editor (issue #166) rather than shelling out to the OS default
-        // editor, so it works headless/over SSH and JSON is validated before the file is written.
+        // editor, so it works headless/over SSH and the config is validated before the file is written.
         RunnableOpening?.Invoke(this, EventArgs.Empty);
         try
         {
-            ConfigEditorDialog.Show(app, configFile);
+            ConfigEditorDialog.Show(
+                app,
+                settings.SettingsFileName,
+                text => SettingsService.TryValidateSettingsJson(text, out string? error) ? null : error,
+                ApplySavedConfig);
         }
         finally
         {
             RunnableClosed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    // Reloads the just-saved config into the running app and refreshes the preview (issue #85).
+    private void ApplySavedConfig()
+    {
+        ServiceLocator.Current.SettingsService.ReloadAndApplySettings();
+        if (_context is not null)
+        {
+            _context.App.LoadSheets();
+            _ = _context.App.ReflowAsync();
         }
     }
 }
