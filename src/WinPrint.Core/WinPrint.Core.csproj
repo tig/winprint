@@ -81,7 +81,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Markdig" Version="1.2.0" />
+        <!-- Keep in lockstep with Terminal.Gui's transitive Markdig in the TUI. The Windows release
+             publishes the TUI and GUI into one directory; if the GUI publishes an older Markdig.dll
+             after the TUI, `wp` fails during Terminal.Gui configuration startup. -->
+        <PackageReference Include="Markdig" Version="1.3.2" />
         <PackageReference Include="HtmlRenderer.Core.NetStandard2" Version="1.5.1.3" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
 
