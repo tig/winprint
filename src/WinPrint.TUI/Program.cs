@@ -1,6 +1,6 @@
 // `wp` — winprint's Terminal.Gui front end, hosted on Terminal.Gui.Cli with real --help/--version,
 // global options, and a default command. `wp foo.cs` opens the interactive TUI for a file; `wp tui foo.cs` or
-// `wp --tui foo.cs` does the same. `views` lists the catalogued views.
+// `wp --tui foo.cs` does the same.
 
 using System.Diagnostics;
 using System.Reflection;
@@ -45,7 +45,6 @@ CliHost host = new(options =>
 
 host.Registry.Register(new TuiCommand());
 host.Registry.Register(new GuiCommand());
-host.Registry.Register(new ViewsCommand());
 
 // Guard the whole run so an exception thrown during interactive teardown is logged and
 // turned into a normal non-zero exit rather than an abort on the way out (#143).
