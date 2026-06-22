@@ -1,9 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Terminal.Gui.App;
-using Terminal.Gui.Drawing;
 using Terminal.Gui.Editor;
-using Terminal.Gui.Input;
+using Terminal.Gui.Editor.Highlighting;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
@@ -11,8 +10,9 @@ namespace WinPrint.TUI.Views;
 
 /// <summary>
 ///     Modal editor for the WinPrint JSON config file. The title shows the config-file path; the body is
-///     a multiline text editor. Save validates the JSON first and refuses to write (showing the parse
-///     error) when it's invalid; closing with unsaved edits prompts to Save / Don't Save / Cancel.
+///     a multiline, JSON-syntax-highlighted text editor. Save validates the JSON first and refuses to
+///     write (showing the parse error) when it's invalid; closing via the Cancel button with unsaved
+///     edits prompts to Save / Don't Save / Cancel.
 /// </summary>
 /// <remarks>
 ///     This replaces shelling out to the OS default editor so the TUI works in headless / SSH sessions
@@ -56,6 +56,9 @@ public sealed class ConfigEditorDialog : Dialog
             GutterOptions = GutterOptions.LineNumbers,
             Text = initialText ?? string.Empty
         };
+
+        // Color the config as JSON using the editor's built-in syntax definition.
+        _editor.HighlightingDefinition = HighlightingManager.Instance.GetDefinition("Json");
         Add(_editor);
 
         var save = new Button { Text = "_Save", IsDefault = true };
@@ -74,17 +77,6 @@ public sealed class ConfigEditorDialog : Dialog
 
         AddButton(save);
         AddButton(cancel);
-
-        // Intercept Esc so a quick exit doesn't silently discard edits; route it through the same
-        // unsaved-changes prompt the Cancel button uses.
-        KeyDown += (_, key) =>
-        {
-            if (key == Key.Esc)
-            {
-                key.Handled = true;
-                TryCancel();
-            }
-        };
     }
 
     /// <summary>
