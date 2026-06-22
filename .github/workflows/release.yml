@@ -64,7 +64,11 @@ jobs:
             mainExe: wp
             icon: ''
 
-          - os: ubuntu-latest
+          # Build linux-arm64 on a NATIVE arm64 runner. Native AOT links with the target's
+          # binutils, and an x64 runner's ld.bfd can't emit aarch64 ("unrecognised emulation
+          # mode: aarch64linux"), so cross-AOT from ubuntu-latest (x64) fails. ubuntu-24.04-arm
+          # is a free GitHub-hosted arm64 runner (public repos) and AOT-links natively.
+          - os: ubuntu-24.04-arm
             runtime: linux-arm64
             tuiFramework: net10.0
             includeGui: false
