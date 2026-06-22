@@ -507,6 +507,11 @@ jobs:
           # `ruby -c` only checks syntax and misses invalid DSL — e.g. a cask using the formula-only
           # `conflicts_with formula:` key, which once shipped a cask the tap couldn't even parse.
           # Load them by name from a throwaway local tap so an invalid stanza fails this job instead.
+          # On ubuntu-latest Homebrew is pre-installed but NOT on PATH — load its shellenv first, or
+          # every `brew` call below fails with "command not found" and breaks the tap publish.
+          if ! command -v brew >/dev/null 2>&1; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
           export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_FROM_API=1
           VTAP="$(brew --repository)/Library/Taps/kindel/homebrew-winprint"
           rm -rf "$VTAP"; mkdir -p "$VTAP/Casks" "$VTAP/Formula"
