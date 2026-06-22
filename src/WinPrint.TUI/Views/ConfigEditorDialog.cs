@@ -71,6 +71,10 @@ public sealed class ConfigEditorDialog : Dialog
 
         // Color the config as JSON using the editor's built-in syntax definition.
         _editor.HighlightingDefinition = HighlightingManager.Instance.GetDefinition("Json");
+
+        // Scrollbars so long configs (and long lines) are navigable with the mouse.
+        _editor.VerticalScrollBar.Visible = true;
+        _editor.HorizontalScrollBar.Visible = true;
         Add(_editor);
 
         _errorLabel = new Label

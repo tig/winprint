@@ -76,8 +76,9 @@ public sealed class SettingsPanel : View
 
         FileButton = new Button { Text = "_File..." };
         PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
-        // A bare gear glyph (issue #166); the JSON config path is shown in the editor's title bar.
-        ConfigButton = new Button { Text = "⚙", X = Pos.Right(PrintButton) };
+        // A bare gear glyph (issue #166), right-aligned in the button row; the JSON config path is
+        // shown in the editor's title bar.
+        ConfigButton = new Button { Text = "⚙", X = Pos.AnchorEnd() };
         var buttonRow = new View
         {
             CanFocus = true,
