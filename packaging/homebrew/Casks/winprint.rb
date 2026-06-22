@@ -6,8 +6,10 @@
 # The GUI bundle ALSO embeds the `wp` TUI (release.yml copies the self-contained CLI payload into
 # WinPrint.app/Contents/Helpers/wp), so this single cask install delivers BOTH the GUI and the `wp`
 # command — the `binary` stanza below symlinks the embedded wp onto PATH. The standalone Homebrew
-# *formula* still ships `wp` for Linux and CLI-only installs; the cask therefore conflicts with the
-# formula (both would provide `wp`).
+# *formula* still ships `wp` for Linux and CLI-only installs. Both provide `wp`, so installing the
+# cask and the formula together collides on the `wp` symlink (Homebrew errors at link time) — pick
+# one on macOS. (Casks can't declare a `conflicts_with formula:`; that key is cask-only, so we just
+# document it here instead of encoding an invalid stanza.)
 cask "winprint" do
   version "{{version}}"
 
@@ -23,8 +25,6 @@ cask "winprint" do
   name "WinPrint"
   desc "Advanced source code and text file printing GUI (bundles the wp TUI)"
   homepage "https://github.com/kindel/winprint"
-
-  conflicts_with formula: "winprint"
 
   app "WinPrint.app"
   binary "#{appdir}/WinPrint.app/Contents/Helpers/wp/wp"

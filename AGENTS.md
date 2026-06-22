@@ -33,9 +33,9 @@ two sibling runs and failing in the other. Before chasing such a failure, confir
 flake; to clear it, `gh run rerun --failed <run-id>` — but you **can't** re-run a job while its
 sibling workflow is still in progress (it's rejected), so wait for both to settle first.
 
-## Remote (Claude Code on the web) environment
-Fresh Linux containers have no toolchain. `.claude/hooks/session-start.sh` (registered
-in `.claude/settings.json`) installs the .NET 10 SDK, `libgdiplus`, the local `jb` tool,
+## Remote (Codex on the web) environment
+Fresh Linux containers have no toolchain. `.Codex/hooks/session-start.sh` (registered
+in `.Codex/settings.json`) installs the .NET 10 SDK, `libgdiplus`, the local `jb` tool,
 and warms NuGet restore. `global.json` pins .NET 10. The hook runs only when
 `CLAUDE_CODE_REMOTE=true`.
 
