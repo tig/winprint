@@ -20,7 +20,7 @@
 # PREREQUISITES:
 #   - dotnet (.NET 10 SDK), DOTNET_ROOT exported
 #   - tuirec >= 0.8 + agg  (set TUIREC=/path/to/tuirec; agg ships with the tuirec release)
-#     https://github.com/gui-cs/tuirec/releases
+#     https://github.com/tui-cs/tuirec/releases
 #   - python3 with Pillow  (pip install --user Pillow)
 set -euo pipefail
 
