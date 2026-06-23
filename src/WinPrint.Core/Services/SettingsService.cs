@@ -145,6 +145,52 @@ public class SettingsService
         return WinPrintJson.LoadSettingsWithDefaults(json);
     }
 
+    /// <summary>
+    ///     Reloads the settings file from disk and applies it to the live <see cref="ModelLocator" />
+    ///     instance (the same propagation the file watcher does), so a save made elsewhere — e.g. the TUI
+    ///     config editor — takes effect immediately (issue #85). Throws if the file can't be parsed; the
+    ///     caller is expected to surface that so the user can fix it.
+    /// </summary>
+    public void ReloadAndApplySettings()
+    {
+        Settings changedSettings = LoadSettings();
+
+        if (ModelLocator.Current?.Settings == null)
+        {
+            // This can happen if settings failed to load when the app started.
+            WinPrintServices.Current.EnsureSettingsInstance();
+        }
+
+        // CopyPropertiesFrom does a deep, property-by-property copy, raising PropertyChanged as it goes.
+        ModelLocator.Current?.Settings.CopyPropertiesFrom(changedSettings);
+    }
+
+    /// <summary>
+    ///     Validates that <paramref name="json" /> loads as settings using the same path the app uses at
+    ///     startup (<see cref="WinPrintJson.LoadSettingsWithDefaults" />): well-formed JSON that merges
+    ///     onto the defaults. An empty/whitespace document is valid (the loader falls back to defaults).
+    ///     Returns <see langword="true" /> when it loads; otherwise <paramref name="error" /> describes why.
+    /// </summary>
+    public static bool TryValidateSettingsJson(string? json, out string? error)
+    {
+        try
+        {
+            WinPrintJson.LoadSettingsWithDefaults(json ?? string.Empty);
+            error = null;
+            return true;
+        }
+        catch (JsonException ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+        catch (NotSupportedException ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+    }
+
     private void ReportUnknownFileError(Exception ex)
     {
         // TODO: Graceful error handling for .config file 
@@ -165,16 +211,7 @@ public class SettingsService
 
         try
         {
-            Settings changedSettings = LoadSettings();
-
-            if (ModelLocator.Current?.Settings == null)
-            {
-                // This can happen if settings failed to load when app started.
-                WinPrintServices.Current.EnsureSettingsInstance();
-            }
-
-            // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
-            ModelLocator.Current?.Settings.CopyPropertiesFrom(changedSettings);
+            ReloadAndApplySettings();
         }
         catch (FileNotFoundException fnfe)
         {

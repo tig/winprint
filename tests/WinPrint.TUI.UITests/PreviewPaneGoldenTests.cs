@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Diagnostics;
 using System.Drawing;
 using Terminal.Gui.Configuration;
 using Terminal.Gui.Drawing;
@@ -79,18 +78,6 @@ public class PreviewPaneGoldenTests
 
         Assert.False(preview.PageLabel.Visible);
         Assert.Null(preview.PageLabel.SchemeName);
-    }
-
-    [Fact]
-    public void ConfigOpenStartInfo_UsesShellExecuteWithoutRedirects()
-    {
-        ProcessStartInfo startInfo = CreateConfigOpenStartInfo("settings.json");
-
-        Assert.True(startInfo.UseShellExecute);
-        Assert.False(startInfo.RedirectStandardOutput);
-        Assert.False(startInfo.RedirectStandardError);
-        Assert.Equal("settings.json", startInfo.FileName);
-        Assert.Empty(startInfo.ArgumentList);
     }
 
     [Fact]
@@ -220,13 +207,6 @@ public class PreviewPaneGoldenTests
         typeof(PreviewPane)
             .GetMethod("SetRenderingVisible", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(preview, [visible]);
-    }
-
-    private static ProcessStartInfo CreateConfigOpenStartInfo(string configFile)
-    {
-        return (ProcessStartInfo)typeof(SettingsPanel)
-            .GetMethod("CreateConfigOpenStartInfo", BindingFlags.Static | BindingFlags.NonPublic)!
-            .Invoke(null, [configFile])!;
     }
 
     private static float GetRenderScale(PreviewPane preview, int width, int height)

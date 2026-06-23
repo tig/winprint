@@ -1,5 +1,6 @@
 using Terminal.Gui.App;
 using Terminal.Gui.Cli;
+using Terminal.Gui.Configuration;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Drivers;
 using Terminal.Gui.Input;
@@ -78,7 +79,8 @@ public sealed class TuiCommand : IViewerCommand
         {
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            BorderStyle = LineStyle.None
+            BorderStyle = LineStyle.None,
+            SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Accent)
         };
         window.Add(content);
 
