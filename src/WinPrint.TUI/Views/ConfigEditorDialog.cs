@@ -142,7 +142,25 @@ public sealed class ConfigEditorDialog : Dialog
         ArgumentNullException.ThrowIfNull(app);
         ArgumentNullException.ThrowIfNull(filePath);
 
-        string initialText = File.Exists(filePath) ? File.ReadAllText(filePath) : string.Empty;
+        // Reading can fail (permissions, transient lock) the same way writing can; surface it as a
+        // recoverable error instead of letting it bubble out of the gear button and crash the TUI.
+        string initialText;
+        try
+        {
+            initialText = File.Exists(filePath) ? File.ReadAllText(filePath) : string.Empty;
+        }
+        catch (IOException ex)
+        {
+            MessageBox.ErrorQuery(app, "Config Error", $"Couldn't read {filePath}: {ex.Message}", "OK");
+
+            return false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            MessageBox.ErrorQuery(app, "Config Error", $"Couldn't read {filePath}: {ex.Message}", "OK");
+
+            return false;
+        }
 
         var dialog = new ConfigEditorDialog(filePath, initialText, validateError, applyAfterSave);
         try
