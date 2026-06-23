@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
@@ -78,7 +76,9 @@ public sealed class SettingsPanel : View
 
         FileButton = new Button { Text = "_File..." };
         PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
-        ConfigButton = new Button { Text = "_Config...", X = Pos.Right(PrintButton) };
+        // A bare gear glyph (issue #166), right-aligned in the button row; the JSON config path is
+        // shown in the editor's title bar.
+        ConfigButton = new Button { Text = "⚙", X = Pos.AnchorEnd() };
         var buttonRow = new View
         {
             CanFocus = true,
@@ -371,7 +371,7 @@ public sealed class SettingsPanel : View
     /// <summary>The Print button (initiates print).</summary>
     public Button PrintButton { get; }
 
-    /// <summary>The Config button (opens the JSON config file in the default editor).</summary>
+    /// <summary>The Config button (gear glyph; opens the JSON config file in a modal Terminal.Gui editor).</summary>
     public Button ConfigButton { get; }
 
     /// <summary>Raised before a dialog/runnable opens (suspend sixel rendering).</summary>
@@ -429,40 +429,38 @@ public sealed class SettingsPanel : View
 
     private void OpenConfigFile()
     {
-        string configFile = ServiceLocator.Current.SettingsService.SettingsFileName;
+        if (GetApp() is not { } app)
+        {
+            return;
+        }
+
+        SettingsService settings = ServiceLocator.Current.SettingsService;
+
+        // Edit in a modal Terminal.Gui editor (issue #166) rather than shelling out to the OS default
+        // editor, so it works headless/over SSH and the config is validated before the file is written.
+        RunnableOpening?.Invoke(this, EventArgs.Empty);
         try
         {
-            Process.Start(CreateConfigOpenStartInfo(configFile))?.Dispose();
+            ConfigEditorDialog.Show(
+                app,
+                settings.SettingsFileName,
+                text => SettingsService.TryValidateSettingsJson(text, out string? error) ? null : error,
+                ApplySavedConfig);
         }
-        catch (Win32Exception ex)
+        finally
         {
-            ShowConfigError(configFile, ex.Message);
-        }
-        catch (InvalidOperationException ex)
-        {
-            ShowConfigError(configFile, ex.Message);
+            RunnableClosed?.Invoke(this, EventArgs.Empty);
         }
     }
 
-    private static ProcessStartInfo CreateConfigOpenStartInfo(string configFile)
+    // Reloads the just-saved config into the running app and refreshes the preview (issue #85).
+    private void ApplySavedConfig()
     {
-        return new ProcessStartInfo
+        ServiceLocator.Current.SettingsService.ReloadAndApplySettings();
+        if (_context is not null)
         {
-            FileName = configFile,
-            UseShellExecute = true
-        };
-    }
-
-    private void ShowConfigError(string configFile, string message)
-    {
-        var dlg = new Dialog
-        {
-            Title = "Config Error",
-            Width = Dim.Auto(DimAutoStyle.Content),
-            Height = Dim.Auto(DimAutoStyle.Content)
-        };
-        dlg.Add(new Label { Text = $"Couldn't open {configFile}: {message}" });
-        dlg.AddButton(new Button { Text = "OK", IsDefault = true });
-        GetApp()!.Run(dlg);
+            _context.App.LoadSheets();
+            _ = _context.App.ReflowAsync();
+        }
     }
 }
