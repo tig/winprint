@@ -21,7 +21,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui" Version="2.4.7" />
+        <PackageReference Include="Terminal.Gui" Version="2.4.8" />
         <PackageReference Include="Terminal.Gui.Cli" Version="0.2.1" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
         <PackageReference Include="Velopack" Version="1.1.1" />
