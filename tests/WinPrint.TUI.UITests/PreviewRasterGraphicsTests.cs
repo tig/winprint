@@ -87,7 +87,7 @@ public class PreviewRasterGraphicsTests
     ///     placement crops (<c>a=p</c>); the regressed behavior deleted the placement (<c>a=d</c>) and
     ///     re-sent the whole image each frame, which read as a per-step flash on macOS Kitty/Ghostty
     ///     (Windows Terminal Sixel was unaffected). Fixed upstream in Terminal.Gui 2.4.8
-    ///     (gui-cs/Terminal.Gui#5514); this fails if winprint is ever pinned back to a flickering build.
+    ///     (tui-cs/Terminal.Gui#5514); this fails if winprint is ever pinned back to a flickering build.
     /// </summary>
     [Fact]
     public void KittyPreview_Pan_DoesNotRetransmitImage()

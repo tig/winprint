@@ -455,7 +455,7 @@ So the loop wants **two layers**, kept side by side:
 | Layer | Source | Captures | Role |
 |---|---|---|---|
 | **Plain-text grid** | in-process `IDriver.ToString()` → `.txt` | glyphs + layout | fast, diffable CI regression check (every run) |
-| **Full-fidelity image** | [tuirec](https://github.com/gui-cs/tuirec) `.cast` → image | color, underline, hotkey, attrs | human review + appearance regressions |
+| **Full-fidelity image** | [tuirec](https://github.com/tui-cs/tuirec) `.cast` → image | color, underline, hotkey, attrs | human review + appearance regressions |
 
 The full-fidelity layer is **tuirec's** job, not a bespoke rasterizer's. tuirec already drives a real
 binary through a PTY and records an asciinema `.cast` — which *is* the full-fidelity capture (ANSI

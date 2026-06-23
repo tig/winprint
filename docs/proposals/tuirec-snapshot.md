@@ -1,6 +1,6 @@
 # Proposal: a `snapshot` (still-image) mode for tuirec
 
-> **Status:** proposal / discussion starter, to be carried to [gui-cs/tuirec](https://github.com/gui-cs/tuirec).
+> **Status:** proposal / discussion starter, to be carried to [tui-cs/tuirec](https://github.com/tui-cs/tuirec).
 > **Origin:** building winprint's TUI with an AI agent surfaced the need for *full-fidelity* (color/underline/hotkey) golden images of individual views. tuirec is the right home for that — it already owns the cast→image pipeline. This drafts the feature against tuirec's actual source (studied at `main`, built and run locally on Linux/Go 1.24).
 > **Companion:** `docs/proposals/tui-agent-design-loop.md` (the agent/human design loop this feeds).
 
@@ -94,7 +94,7 @@ would yield a **full-fidelity** `margin-editor.png` — showing the `_Margins` h
 
 ## Dependency note (agg)
 
-`agg` (`v1.8.1`, auto-downloaded by `pkg/gif/download.go`) currently emits **GIF only** — confirmed from its README. Implementation **(b)** avoids depending on an agg still mode. If the gui-cs/asciinema relationship makes it easy, a tiny agg feature — "render last frame (or frame N) to PNG" — would let GIF and PNG share one engine via implementation **(a)**; worth raising upstream but not a blocker.
+`agg` (`v1.8.1`, auto-downloaded by `pkg/gif/download.go`) currently emits **GIF only** — confirmed from its README. Implementation **(b)** avoids depending on an agg still mode. If the tui-cs/asciinema relationship makes it easy, a tiny agg feature — "render last frame (or frame N) to PNG" — would let GIF and PNG share one engine via implementation **(a)**; worth raising upstream but not a blocker.
 
 ## Suggested rollout
 
