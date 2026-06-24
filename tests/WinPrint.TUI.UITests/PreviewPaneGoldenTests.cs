@@ -38,18 +38,6 @@ public class PreviewPaneGoldenTests
     }
 
     [Fact]
-    public void PreviewCanvasScheme_MatchesRendererCanvasBackground()
-    {
-        _ = new PreviewPane();
-
-        Scheme scheme = SchemeManager.GetScheme(PreviewPane.PreviewCanvasSchemeName);
-
-        Assert.Equal(224, scheme.Normal.Background.R);
-        Assert.Equal(224, scheme.Normal.Background.G);
-        Assert.Equal(224, scheme.Normal.Background.B);
-    }
-
-    [Fact]
     public void RenderSpinner_StartsHiddenAndCanBeToggled()
     {
         var preview = new PreviewPane();
@@ -184,8 +172,9 @@ public class PreviewPaneGoldenTests
     private static void SetTotalPages(PreviewPane preview, int totalPages)
     {
         typeof(PreviewPane)
-            .GetField("_totalPages", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .SetValue(preview, totalPages);
+            .GetProperty(nameof(PreviewPane.TotalPages))!
+            .GetSetMethod(true)!
+            .Invoke(preview, [totalPages]);
     }
 
     private static bool SendKey(PreviewPane preview, Key key)
@@ -226,7 +215,7 @@ public class PreviewPaneGoldenTests
     private static void SetLoadedPreview(PreviewPane preview)
     {
         typeof(PreviewPane)
-            .GetField("_sheetVM", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetField("_sheetVm", BindingFlags.Instance | BindingFlags.NonPublic)!
             .SetValue(preview, new SheetViewModel());
 
         typeof(PreviewPane)

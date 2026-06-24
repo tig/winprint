@@ -274,8 +274,12 @@ public class WindowsCheckboxSpacingUITests
                                               $fileTop = $current.BoundingRectangle.Top
                                           }
 
+                                          # Only consider controls inside the LeftPanel sidebar (WidthRequest=210 in
+                                          # MainPage.xaml; its controls render at Left < ~265). A wider bound sweeps in
+                                          # the Header/Footer text fields that float over the page preview (column 2) at
+                                          # the very bottom of the window, which wrongly inflates the measured height.
                                           if ($type -in @('Text', 'Edit', 'ComboBox', 'CheckBox') -and
-                                              $current.BoundingRectangle.Left -lt 420 -and
+                                              $current.BoundingRectangle.Left -lt 280 -and
                                               $current.Name -notlike 'Help & about*' -and
                                               $current.Name -notlike 'v*') {
                                               if ($settingsBottom -eq $null -or $current.BoundingRectangle.Bottom -gt $settingsBottom) {
