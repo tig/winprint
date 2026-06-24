@@ -13,16 +13,17 @@ public sealed class PrintPreviewDrawable : IDrawable
 {
     private readonly MainViewModel _viewModel;
 
-#if MACCATALYST
-    // Page rendered via Skia (see SkiaPreviewPageRenderer), cached until the page,
-    // content generation, or sheet geometry changes. Zoom only rescales the cached image.
+#if MACCATALYST || WINDOWS
+    // Page rendered through the engine that measured it — Skia on macOS (SkiaPreviewPageRenderer),
+    // GDI+ on Windows (WindowsPreviewPageRenderer) — cached until the page, content generation, or
+    // sheet geometry changes. Zoom only rescales the cached image.
     private Microsoft.Maui.Graphics.IImage? _pageImage;
     private (string File, int Page, int Generation, int Width, int Height) _pageImageKey;
 
-    // Downsampled copy of _pageImage near the current on-screen size. CoreGraphics
-    // rescaling the full-resolution page on every frame makes pinch-zoom crawl; drawing
-    // a near-1:1 bitmap is cheap. Regenerated only when the needed size crosses a
-    // bucket boundary, so a pinch triggers a handful of downsamples, not one per tick.
+    // Downsampled copy of _pageImage near the current on-screen size. Rescaling the full-resolution
+    // page on every frame makes pinch-zoom crawl; drawing a near-1:1 bitmap is cheap. Regenerated
+    // only when the needed size crosses a bucket boundary, so a pinch triggers a handful of
+    // downsamples, not one per tick.
     private Microsoft.Maui.Graphics.IImage? _displayImage;
     private float _displayImageWidth;
     private const float DisplayBucketPx = 256f;
@@ -118,16 +119,21 @@ public sealed class PrintPreviewDrawable : IDrawable
         canvas.DrawRectangle(x, y, pageWidth, pageHeight);
 
         // Render content via SheetViewModel
-#if MACCATALYST
-        // Paint with Skia — the engine that measured the document and renders the printed
-        // PDF — instead of MAUI's CoreGraphics canvas, whose text measurement is wider than
-        // its drawing and spreads runs apart. See SkiaPreviewPageRenderer.
+#if MACCATALYST || WINDOWS
+        // Paint with the engine that measured the document and renders the printed output — Skia on
+        // macOS (PDF), GDI+ on Windows (printer DC) — instead of MAUI's CoreGraphics canvas, whose
+        // text measurement is wider than its drawing and spreads runs apart. See
+        // SkiaPreviewPageRenderer / WindowsPreviewPageRenderer (the engine-pairing invariant).
         (string, int, int, int, int) key = (_viewModel.ActiveFile, _viewModel.CurrentPage,
             _viewModel.PreviewContentGeneration, bounds.Width, bounds.Height);
         if (_pageImage is null || key != _pageImageKey)
         {
             _pageImage?.Dispose();
+#if MACCATALYST
             _pageImage = SkiaPreviewPageRenderer.Render(_viewModel, (int)boundsW, (int)boundsH);
+#else
+            _pageImage = WindowsPreviewPageRenderer.Render(_viewModel, (int)boundsW, (int)boundsH);
+#endif
             _pageImageKey = key;
             _displayImage?.Dispose();
             _displayImage = null;
