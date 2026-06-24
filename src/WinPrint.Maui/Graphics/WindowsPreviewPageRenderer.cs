@@ -9,6 +9,7 @@ using Microsoft.Maui.Graphics.Platform;
 using WinPrint.Core.Abstractions;
 using WinPrint.Maui.ViewModels;
 using IImage = Microsoft.Maui.Graphics.IImage;
+using PointF = System.Drawing.PointF;
 
 namespace WinPrint.Maui.Graphics;
 
@@ -24,11 +25,14 @@ namespace WinPrint.Maui.Graphics;
 internal static class WindowsPreviewPageRenderer
 {
     /// <summary>
-    ///     Linear oversample factor for the rendered bitmap, applied as a world transform so the page
-    ///     stays crisp at typical zoom without changing the font-size-to-layout relationship the engine
-    ///     reflowed with. 2 ≈ double-resolution.
+    ///     Target preview raster density in pixels per hundredth-of-an-inch (≈200 DPI), independent of the
+    ///     sheet's printer DPI. The shared <c>SheetViewModel</c> can be reflowed for a real 600–1200 DPI
+    ///     printer (e.g. after a print job), and rasterizing the page at that density would allocate
+    ///     hundreds of MB; the preview always renders at this fixed screen density and scales the GDI+
+    ///     world transform to compensate. The layout is DPI-independent (CTEs paint a Point-unit font in
+    ///     Display mode), so this only sets sharpness, not wrapping.
     /// </summary>
-    private const float Oversample = 2f;
+    private const float TargetPixelsPerHundredth = 2f;
 
     /// <summary>
     ///     Renders the view model's current page into an image sized
@@ -42,30 +46,36 @@ internal static class WindowsPreviewPageRenderer
             return null;
         }
 
-        // Paint with the SAME GDI+ unit system the engine reflowed with: PageUnit=Display at the
-        // sheet's reflow DPI (WindowsMeasurementContext uses PrinterResolution). Matching the DPI is
-        // what keeps glyph sizes and wrap/line positions identical to the measurement pass — painting
-        // at a different DPI under-scales the measured positions and crushes the page into the top.
+        // Paint in the SAME GDI+ unit system the engine reflowed with (PageUnit=Display at the sheet's
+        // reflow DPI, as WindowsMeasurementContext uses) so glyph metrics match the measurement pass.
         int dpi = viewModel.SheetViewModel.PrinterResolution?.X ?? 96;
         if (dpi <= 0)
         {
             dpi = 96;
         }
 
-        // Size the bitmap to the page's exact device extent under the paint transform, so the page
-        // fills it precisely regardless of how GraphicsUnit.Display maps units to pixels on this device.
-        var corner = new[] { new System.Drawing.PointF(widthHundredths, heightHundredths) };
+        // GraphicsUnit.Display maps page units (hundredths of an inch) to device pixels by a factor that
+        // depends on the surface, so probe it, then choose a world scale that renders the page at a fixed
+        // TargetPixelsPerHundredth — keeping the bitmap a screen-sized raster even when the sheet was
+        // reflowed for a 600/1200 DPI printer (which would otherwise allocate hundreds of MB).
+        PointF[] probePoint = [new PointF(widthHundredths, heightHundredths)];
         using (var probe = new Bitmap(1, 1))
         {
             probe.SetResolution(dpi, dpi);
             using var pg = System.Drawing.Graphics.FromImage(probe);
             pg.PageUnit = GraphicsUnit.Display;
-            pg.ScaleTransform(Oversample, Oversample);
-            pg.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, corner);
+            pg.TransformPoints(CoordinateSpace.Device, CoordinateSpace.World, probePoint);
         }
 
-        int pixelWidth = (int)Math.Ceiling(corner[0].X);
-        int pixelHeight = (int)Math.Ceiling(corner[0].Y);
+        float unitToPixel = probePoint[0].X / widthHundredths;
+        if (unitToPixel <= 0)
+        {
+            return null;
+        }
+
+        float oversample = TargetPixelsPerHundredth / unitToPixel;
+        int pixelWidth = (int)Math.Ceiling(widthHundredths * TargetPixelsPerHundredth);
+        int pixelHeight = (int)Math.Ceiling(heightHundredths * TargetPixelsPerHundredth);
         if (pixelWidth <= 0 || pixelHeight <= 0)
         {
             return null;
@@ -77,7 +87,7 @@ internal static class WindowsPreviewPageRenderer
         {
             graphics.Clear(System.Drawing.Color.White);
             graphics.PageUnit = GraphicsUnit.Display; // Display = 1/100" (matches WindowsMeasurementContext)
-            graphics.ScaleTransform(Oversample, Oversample);
+            graphics.ScaleTransform(oversample, oversample);
             var context = new SystemDrawingGraphicsContext(graphics);
             viewModel.PaintCurrentPage(context);
         }

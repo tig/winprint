@@ -106,7 +106,7 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
         {
             try
             {
-                using SKTypeface? typeface = SKTypeface.FromFamilyName(requested);
+                using var typeface = SKTypeface.FromFamilyName(requested);
                 string? resolved = typeface?.FamilyName;
                 if (!string.IsNullOrEmpty(resolved) &&
                     !string.Equals(resolved, requested, StringComparison.OrdinalIgnoreCase) &&
