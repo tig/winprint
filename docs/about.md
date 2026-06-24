@@ -16,9 +16,13 @@ This all led to me re-discovering my old WinPrint 2.0 source code. Reminiscing o
 2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. PowerShell and scriptable command-line interfaces. It can syntax-highlight source code with bundled TextMate grammars. It's written in C# using modern .NET. And more.
 3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
 
-So, there you are: I present to you WinPrint 2.0. I hope you enjoy it.
+That was WinPrint 2.0.
 
--tig ([@ckindel](twitter.com/ckindel) on twitter; see my [blog](https://ceklog.kindel.com))
+Then, after shipping the most popular framework for building terminal (TUI) apps, [Terminal.Gui](https://github.com/tui-cs/Terminal.Gui), and adding graphics support, I realized WinPrint would be really cool as a terminal app... imagine Print Preview IN THE TERMINAL. I also rewrote the GUI to work as well on the Mac as it did on Windows. 
+
+This is WinPrint 3.0. I hope you enjoy it!
+
+-tig ([@tigkindel](twitter.com/tigkindel) on X; see my [blog](https://blog.kindel.com))
 
 ## License (MIT)
 

@@ -10,7 +10,6 @@
 * Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
 * `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
 * `wp gui` launches the MAUI GUI on Windows and macOS.
-* The legacy PowerShell `Out-WinPrint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `wp`.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
