@@ -63,7 +63,7 @@ public sealed class SettingsPanel : View
 
         LineNumbers = new CheckBox
         {
-            Text = "Li_ne Numbers",
+            Text = "Line N_umbers",
             Value = CheckState.Checked
         };
 
@@ -75,8 +75,9 @@ public sealed class SettingsPanel : View
 
         About = new AboutView(version);
 
-        FileButton = new Button { Text = "_File..." };
-        PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
+        FileButton = new Button { Text = "📁 _File…" };
+        PrintButton = new Button { Text = "🖨 _Print…", X = Pos.Right(FileButton) };
+        ConfigButton = new Button { Title = "⚙ Conf_ig…", X = Pos.Right(PrintButton) };
 
         var buttonRow = new View
         {
@@ -84,7 +85,7 @@ public sealed class SettingsPanel : View
             Width = Dim.Fill(),
             Height = Dim.Auto(DimAutoStyle.Content)
         };
-        buttonRow.Add(FileButton, PrintButton);
+        buttonRow.Add(FileButton, PrintButton, ConfigButton);
 
         Add(buttonRow);
 
@@ -107,9 +108,7 @@ public sealed class SettingsPanel : View
         About.X = 0;
         About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
 
-        ConfigButton = new Button { Title = "⚙ Confi_g...", Y = Pos.Top(About), X = Pos.AnchorEnd() };
-
-        Add(About, ConfigButton);
+        Add(About);
     }
 
     /// <summary>
