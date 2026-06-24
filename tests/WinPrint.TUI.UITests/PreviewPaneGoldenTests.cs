@@ -173,7 +173,7 @@ public class PreviewPaneGoldenTests
     {
         typeof(PreviewPane)
             .GetProperty(nameof(PreviewPane.TotalPages))!
-            .GetSetMethod(nonPublic: true)!
+            .GetSetMethod(true)!
             .Invoke(preview, [totalPages]);
     }
 
