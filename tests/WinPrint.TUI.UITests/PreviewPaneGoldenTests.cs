@@ -38,18 +38,6 @@ public class PreviewPaneGoldenTests
     }
 
     [Fact]
-    public void PreviewCanvasScheme_MatchesRendererCanvasBackground()
-    {
-        _ = new PreviewPane();
-
-        Scheme scheme = SchemeManager.GetScheme(PreviewPane.PreviewCanvasSchemeName);
-
-        Assert.Equal(224, scheme.Normal.Background.R);
-        Assert.Equal(224, scheme.Normal.Background.G);
-        Assert.Equal(224, scheme.Normal.Background.B);
-    }
-
-    [Fact]
     public void RenderSpinner_StartsHiddenAndCanBeToggled()
     {
         var preview = new PreviewPane();

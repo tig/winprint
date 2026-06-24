@@ -23,6 +23,7 @@ public sealed class SettingsPanel : View
     ///     Version text for the About footer (without the leading <c>v</c>). Defaults to the runtime
     ///     product version; pass a fixed value for deterministic rendering (e.g. golden tests).
     /// </param>
+    /// <param name="fillHeight"></param>
     public SettingsPanel(string? version = null, bool fillHeight = false)
     {
         Width = Dim.Auto(DimAutoStyle.Content, Dim.Absolute(MinContentWidth));
@@ -76,16 +77,14 @@ public sealed class SettingsPanel : View
 
         FileButton = new Button { Text = "_File..." };
         PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
-        // A bare gear glyph (issue #166), right-aligned in the button row; the JSON config path is
-        // shown in the editor's title bar.
-        ConfigButton = new Button { Text = "⚙", X = Pos.AnchorEnd() };
+
         var buttonRow = new View
         {
             CanFocus = true,
             Width = Dim.Fill(),
             Height = Dim.Auto(DimAutoStyle.Content)
         };
-        buttonRow.Add(FileButton, PrintButton, ConfigButton);
+        buttonRow.Add(FileButton, PrintButton);
 
         Add(buttonRow);
 
@@ -107,7 +106,10 @@ public sealed class SettingsPanel : View
 
         About.X = 0;
         About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
-        Add(About);
+
+        ConfigButton = new Button { Title = "⚙ Confi_g...", Y = Pos.Top(About), X = Pos.AnchorEnd() };
+
+        Add(About, ConfigButton);
     }
 
     /// <summary>
@@ -163,24 +165,25 @@ public sealed class SettingsPanel : View
         };
         HeaderFooterFont.ValueChanged += (_, _) =>
         {
-            if (!_seeding && HeaderFooterFont.Value is { } font && _context?.CurrentSheet?.Header != null)
+            if (_seeding || HeaderFooterFont.Value is not { } font || _context?.CurrentSheet?.Header == null)
             {
-                _context.CurrentSheet.Header.Font = font;
-                if (_context.CurrentSheet.Footer != null)
-                {
-                    _context.CurrentSheet.Footer.Font = font;
-                }
-
-                _ = app.ReflowAsync();
+                return;
             }
+
+            _context.CurrentSheet.Header.Font = font;
+            _context.CurrentSheet.Footer.Font = font;
+
+            _ = app.ReflowAsync();
         };
         ContentFont.ValueChanged += (_, _) =>
         {
-            if (!_seeding && ContentFont.Value is { } font && _context?.CurrentSheet?.ContentSettings != null)
+            if (_seeding || ContentFont.Value is not { } font || _context?.CurrentSheet?.ContentSettings == null)
             {
-                _context.CurrentSheet.ContentSettings.Font = font;
-                _ = app.ReflowAsync();
+                return;
             }
+
+            _context.CurrentSheet.ContentSettings.Font = font;
+            _ = app.ReflowAsync();
         };
         LineNumbers.ValueChanged += (_, _) =>
         {
@@ -280,14 +283,6 @@ public sealed class SettingsPanel : View
 
     private void UpdatePrintStatus(string message)
     {
-        void Update()
-        {
-            if (_context is not null)
-            {
-                _context.App.StatusText = message;
-            }
-        }
-
         try
         {
             if (GetApp() is { } application)
@@ -302,6 +297,16 @@ public sealed class SettingsPanel : View
         catch (InvalidOperationException)
         {
             Update();
+        }
+
+        return;
+
+        void Update()
+        {
+            if (_context is not null)
+            {
+                _context.App.StatusText = message;
+            }
         }
     }
 
@@ -380,18 +385,6 @@ public sealed class SettingsPanel : View
     /// <summary>Raised after a dialog/runnable closes (resume sixel rendering).</summary>
     public event EventHandler? RunnableClosed;
 
-    private void StackJoined(params View[] sections)
-    {
-        View? previous = null;
-        foreach (View section in sections)
-        {
-            section.X = 0;
-            section.Y = previous is null ? 0 : Pos.Bottom(previous);
-            Add(section);
-            previous = section;
-        }
-    }
-
     private void StackJoinedAfter(View anchor, params View[] sections)
     {
         View previous = anchor;
@@ -420,7 +413,7 @@ public sealed class SettingsPanel : View
         };
         GetApp()!.Run(dlg);
         RunnableClosed?.Invoke(this, EventArgs.Empty);
-        if (!dlg.Canceled && dlg.FilePaths.Count > 0)
+        if (dlg is { Canceled: false, FilePaths.Count: > 0 })
         {
             string file = dlg.FilePaths[0];
             _ = _context.App.LoadFileAsync(file);
