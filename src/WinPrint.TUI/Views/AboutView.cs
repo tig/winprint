@@ -37,8 +37,8 @@ public sealed class AboutView : View
 
         var versionLabel = new Label
         {
-            X = Pos.Right(help) + 3,
-            Y = 0,
+            X = 0,
+            Y = 1,
             Text = $"v{version ?? ProductVersion()}"
         };
 

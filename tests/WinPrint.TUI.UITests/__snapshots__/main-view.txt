@@ -1,6 +1,6 @@
 ─┤<no file>├────────────────────────────────────────────────────────────────────────────────
-⟦ File... ⟧▖⟦ Print... ⟧▖           ⟦ ⚙ ⟧▖ ☑ Header: {FileName}|{Title}|Page {Page}         
-▝▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▘           ▝▀▀▀▀▘                                                  
+⟦ 📁 File… ⟧▖⟦ 🖨 Print… ⟧▖⟦ ⚙ Config… ⟧▖   ☑ Header: {FileName}|{Title}|Page {Page}         
+▝▀▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▀▘                                                    
  ╭────────────────╮                                                                         
 ─╯Sheet Definition╰───────────────────────                                                  
 Saved: Default 1-Up  ▼                                                                      
@@ -28,5 +28,5 @@ Source Code Pro   ▼
  ╭───────╮                                                                                  
 ─╯Printer╰────────────────────────────────                                                  
 Microsoft Print to PDF  ▼                                                                   
-Paper: Letter     ▼                                                                         
-Help & about…   v2.5.0                     ☑ Footer: {FilePath}||{DatePrinted}              
+Help & about…                                                                               
+v2.5.0                                     ☑ Footer: {FilePath}||{DatePrinted}              

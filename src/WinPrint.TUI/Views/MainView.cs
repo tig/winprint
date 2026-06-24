@@ -54,7 +54,6 @@ public sealed class MainView : View
             Width = Dim.Fill(),
             Height = Dim.Fill() - Dim.Height(Footer)
         };
-        Preview.Border.Thickness = new Thickness(0);
         Preview.OpenFileRequested += (_, _) => Settings.OpenFile();
         Preview.BindNavigationKeys(this);
         KeyBindings.AddApp(Key.PageDown, Preview, Command.PageDown);
@@ -67,7 +66,7 @@ public sealed class MainView : View
 
         // The preview ImageView owns the zoom/pan keys (tui-cs/Terminal.Gui#5494), so give it focus by
         // default — otherwise the keys do nothing until the user tabs into the preview.
-        Initialized += (_, _) => Preview.Image.SetFocus();
+        Initialized += (_, _) => Preview.SetFocus();
 
         if (context is not null)
         {
@@ -85,19 +84,23 @@ public sealed class MainView : View
 
         Header.ValueChanged += (_, _) =>
         {
-            if (Header.Value is { } h)
+            if (Header.Value is not { } h)
             {
-                app.SetHeaderEnabled(h.Enabled);
-                app.SetHeaderText(h.Text ?? string.Empty);
+                return;
             }
+
+            app.SetHeaderEnabled(h.Enabled);
+            app.SetHeaderText(h.Text ?? string.Empty);
         };
         Footer.ValueChanged += (_, _) =>
         {
-            if (Footer.Value is { } f)
+            if (Footer.Value is not { } f)
             {
-                app.SetFooterEnabled(f.Enabled);
-                app.SetFooterText(f.Text ?? string.Empty);
+                return;
             }
+
+            app.SetFooterEnabled(f.Enabled);
+            app.SetFooterText(f.Text ?? string.Empty);
         };
 
         app.SheetApplied += (_, _) =>

@@ -4,7 +4,7 @@
 
 ### Install with winget (Recommended)
 
-```powershell
+```bash
 winget install Kindel.WinPrint
 ```
 
@@ -40,12 +40,8 @@ Or use **Settings → Apps → Installed apps** and search for "WinPrint".
 
 ### Install with Homebrew (Recommended)
 
-The GUI app and the `wp` terminal UI / CLI are separate Homebrew packages — install whichever
-you want, or both. `wp gui` (launching the GUI from the terminal) needs both:
-
 ```bash
-brew install --cask winprint   # GUI app (WinPrint.app)
-brew install winprint          # wp — the terminal UI / CLI
+brew install winprint    
 ```
 
 ### Prerequisites
@@ -58,15 +54,13 @@ The macOS GUI is a notarized Developer ID `.app` distributed via the Homebrew ca
 handles updates (there is no in-app self-updater on macOS):
 
 ```bash
-brew upgrade --cask winprint   # GUI
-brew upgrade winprint          # wp CLI
+brew upgrade winprint
 ```
 
 ### Uninstall
 
 ```bash
-brew uninstall --cask winprint   # GUI
-brew uninstall winprint          # wp CLI
+brew uninstall winprint
 ```
 
 ---
