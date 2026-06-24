@@ -72,11 +72,21 @@ public sealed class SettingsContext
         // Create a real SheetViewModel so the TUI participates in the shared print path
         var sheetVM = new SheetViewModel();
 
-        // Give it a cross-platform measurement context (MAUI sets this on the SheetViewModel too).
-        // SheetViewModel.LoadFileAsync copies it onto each ContentEngine it creates; without it the
-        // engine fails to load and AppViewModel resets ActiveFile back to "<no file>". Prefer the print
-        // backend context (Skia on Unix); fall back to ImageSharp when the backend returns null (Windows GDI).
-        sheetVM.MeasurementContext = svc.CreateMeasurementContext() ?? renderer.CreateMeasurementContext();
+        // Give it a cross-platform measurement context. SheetViewModel.LoadFileAsync copies it onto
+        // each ContentEngine it creates; without it the engine fails to load and AppViewModel resets
+        // ActiveFile back to "<no file>".
+        //
+        // ENGINE-PAIRING INVARIANT: reflow must measure with the SAME engine the preview paints with.
+        // The live preview is rasterized by PageRenderer through ImageSharp, so reflow must measure
+        // through ImageSharp too — otherwise wrap points and line height are computed for a different
+        // font than the one drawn. The two engines agree for installed families but diverge for ones
+        // that aren't installed (Skia's SKTypeface.FromFamilyName silently substitutes a wide platform
+        // fallback, while ImageSharp falls back to the embedded CaskaydiaCove NFM), which made every
+        // non-installed content font wrap early and render wrong. Do NOT swap in the print service's
+        // Skia context here: the print path reflows separately (PrintPlanner) with its own Skia context,
+        // keeping print self-consistent. (See SkiaPreviewPageRenderer in WinPrint.Maui — the MAUI
+        // preview honours the same invariant by painting with Skia, the engine that measured it.)
+        sheetVM.MeasurementContext = renderer.CreateMeasurementContext();
 
         var app = new AppViewModel(pageSetup, sheetVM);
         app.LoadSheets();
