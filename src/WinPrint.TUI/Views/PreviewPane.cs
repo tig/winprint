@@ -210,7 +210,7 @@ public sealed class PreviewPane : View
             return LastPage() == true;
         }
 
-        // Zoom keys are owned by Terminal.Gui's ImageView (see gui-cs/Terminal.Gui#5494) rather than
+        // Zoom keys are owned by Terminal.Gui's ImageView (see tui-cs/Terminal.Gui#5494) rather than
         // overridden here — the old Ctrl+PageUp/Down/Home bindings were intercepted by macOS Mission
         // Control and never reached the app. Mouse Ctrl+wheel zoom is still handled in HandlePreviewMouse.
         if (key == Key.CursorUp)
@@ -244,7 +244,7 @@ public sealed class PreviewPane : View
     private void ConfigureNavigationBindings()
     {
         // Free PageUp/PageDown/Home from ImageView's zoom so the preview can use them for page
-        // navigation. Zoom keys themselves are left to ImageView (gui-cs/Terminal.Gui#5494).
+        // navigation. Zoom keys themselves are left to ImageView (tui-cs/Terminal.Gui#5494).
         Image.KeyBindings.Remove(Key.PageDown);
         Image.KeyBindings.Remove(Key.PageUp);
         Image.KeyBindings.Remove(Key.Home);

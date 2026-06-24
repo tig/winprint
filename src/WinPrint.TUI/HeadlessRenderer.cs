@@ -21,7 +21,7 @@ namespace WinPrint.TUI;
 ///     <para>
 ///         This is exactly the "render a view to a grid string" one-liner that Terminal.Gui could
 ///         expose as a first-class API (e.g. <c>Application.RenderToString(view, width, height)</c>);
-///         having to hand-roll it here is a finding worth feeding back to gui-cs.
+///         having to hand-roll it here is a finding worth feeding back to tui-cs.
 ///     </para>
 /// </remarks>
 public static class HeadlessRenderer
