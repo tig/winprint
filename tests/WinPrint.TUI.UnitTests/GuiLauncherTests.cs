@@ -11,6 +11,15 @@ public class GuiLauncherTests
 
     private static readonly Func<string, IEnumerable<string>> NoBundles = _ => [];
 
+    // The macOS GUI resolution builds and walks POSIX paths; on Windows Path.Combine/GetDirectoryName use
+    // '\' and rooting differs, so these macOS-behavior cases don't hold there (production only ever runs the
+    // macOS branch on macOS). CI is windows-latest, so they're exercised in local dev on macOS/Linux. Each
+    // macOS test early-returns on Windows — the same skip pattern Windows_… uses for the inverse case.
+    private static bool SkipOnWindows()
+    {
+        return OperatingSystem.IsWindows();
+    }
+
     [Fact]
     public void GuiCommand_AdvertisesGuiSubcommand()
     {
@@ -55,6 +64,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_LaunchesSiblingGuiBundle()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // wp published next to the GUI: WinPrint.app sits beside wp in the same directory.
         List<ProcessStartInfo> starts = [];
         const string baseDirectory = "/opt/winprint";
@@ -81,6 +95,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_LaunchesEnclosingGuiBundleWhenWpIsEmbedded()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // Homebrew cask / packaged build: wp runs from WinPrint.app/Contents/Helpers, so the GUI is the
         // enclosing bundle — found by walking up, not by any global lookup.
         List<ProcessStartInfo> starts = [];
@@ -108,6 +127,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_PassesBundlePathAsSingleArgument_EvenWithSpaces()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // A bundle path containing spaces must reach `open` as ONE argument (via ArgumentList), not a
         // space-split Arguments string that `open` would treat as several (non-existent) paths.
         List<ProcessStartInfo> starts = [];
@@ -137,6 +161,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_LaunchesSiblingMauiProjectBuildOutput()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // Source-tree `dotnet build`: wp builds to src/WinPrint.TUI/bin/<config>/<tfm> while the GUI
         // builds to the sibling src/WinPrint.Maui/bin/<config>/<tfm>/<rid>/WinPrint.app.
         List<ProcessStartInfo> starts = [];
@@ -165,6 +194,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_PrefersDevGuiBundleMatchingBuildConfig()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // When both Debug and Release GUI builds exist, a Debug wp must open the Debug bundle (and not a
         // stale Release one), regardless of enumeration order.
         List<ProcessStartInfo> starts = [];
@@ -194,6 +228,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_DetectsBuildConfigStructurally_IgnoringUnrelatedDebugSegments()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // A parent directory literally named "Debug" must not fool config detection: the build config is
         // the segment right after wp's `bin`, so a Release wp opens the Release bundle — not the Debug one
         // a naive "first Debug/Release anywhere in the path" scan would prefer.
@@ -224,6 +263,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_IgnoresLookAlikeBundleWithoutGuiExecutable()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // A WinPrint.app whose Contents/MacOS lacks the `winprint` GUI executable (e.g. a stale/legacy
         // bundle that only contains the TUI) must NOT be launched — wp gui should report the GUI missing
         // rather than silently opening the wrong app.
@@ -245,6 +289,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_ReportsMissingGuiWhenNoBundleNearby()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // Formula-only install (TUI without the GUI cask): no WinPrint.app near wp → helpful error,
         // never a fallback to /Applications or `open -a WinPrint`.
         List<ProcessStartInfo> starts = [];
