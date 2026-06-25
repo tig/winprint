@@ -6,8 +6,8 @@ using Xunit;
 namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
-///     Golden + behavior tests for <see cref="FontEditor" />: two side-by-side dropdowns (family and
-///     point size, no style), and edits flow back into the bound mutable <see cref="Font" />.
+///     Golden + behavior tests for <see cref="FontEditor" />: a summary line showing the current
+///     family/style/size, plus a button that opens the full <see cref="WinPrint.TUI.Views.FontChooserDialog" />.
 /// </summary>
 public class FontEditorGoldenTests
 {
@@ -24,23 +24,24 @@ public class FontEditorGoldenTests
     }
 
     [Fact]
-    public void Render_ShowsFamilyAndSize_NotStyle()
+    public void Render_ShowsFamilyStyleSizeSummary_AndButton()
     {
         var editor = new FontEditor
         {
-            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
+            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Bold | FontStyle.Italic }
         };
         var fixture = new AppFixture(editor, 60, 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Source Code Pro");
-        DriverAssert.ContainsText(fixture.Screen, "10");
-        DriverAssert.DoesNotContainText(fixture.Screen, "Bold"); // style is intentionally omitted
+        DriverAssert.ContainsText(fixture.Screen, "Bold Italic"); // the summary now reflects style
+        DriverAssert.ContainsText(fixture.Screen, "10pt");
+        DriverAssert.ContainsText(fixture.Screen, "Font…"); // the chooser button
     }
 
     [Fact]
-    public void OnValueChanged_AddsUnlistedFamilySoItDisplays()
+    public void OnValueChanged_ShowsAnyFamily()
     {
-        // A family not in FontChoices is still shown (model family is free-form).
+        // Family is a free-form string at the model level; the summary shows whatever it is.
         var editor = new FontEditor
         {
             Value = new Font { Family = "Wingdings Deluxe", Size = 10f, Style = FontStyle.Regular }
@@ -51,11 +52,12 @@ public class FontEditorGoldenTests
     }
 
     [Fact]
-    public void ChangingFamily_RaisesValueChanged_SoPreviewCanReflow()
+    public void ChangingFont_RaisesValueChanged_SoPreviewCanReflow()
     {
-        // Regression: picking a different family in the dropdown must raise ValueChanged so the
-        // SettingsPanel handler writes the new font and reflows. (Mutating the bound Font in place left
-        // Value reference-identical, so EditorBase never raised ValueChanged and the preview never reflowed.)
+        // Regression (#178): changing the font must raise ValueChanged so the SettingsPanel handler writes
+        // the new font and reflows. The chooser hands back a fresh Font instance; assigning it through Value
+        // is what raises the event (Font has value equality, so an identical selection is a no-op). The old
+        // in-place dropdown mutation left Value reference-identical and never reflowed.
         var editor = new FontEditor
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
@@ -65,29 +67,11 @@ public class FontEditorGoldenTests
         Font? changedTo = null;
         editor.ValueChanged += (_, e) => changedTo = e.NewValue;
 
-        editor.SelectInDropDown("_family", "Courier New");
+        editor.Value = new Font { Family = "Courier New", Size = 12f, Style = FontStyle.Bold };
 
         Assert.NotNull(changedTo);
         Assert.Equal("Courier New", changedTo!.Family);
-        Assert.Equal(10f, changedTo.Size); // size preserved
-    }
-
-    [Fact]
-    public void ChangingSize_RaisesValueChanged_SoPreviewCanReflow()
-    {
-        var editor = new FontEditor
-        {
-            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
-        };
-        _ = new AppFixture(editor, 60, 6);
-
-        Font? changedTo = null;
-        editor.ValueChanged += (_, e) => changedTo = e.NewValue;
-
-        editor.SelectInDropDown("_size", "12");
-
-        Assert.NotNull(changedTo);
-        Assert.Equal(12f, changedTo!.Size);
-        Assert.Equal("Source Code Pro", changedTo.Family); // family preserved
+        Assert.Equal(12f, changedTo.Size);
+        Assert.Equal(FontStyle.Bold, changedTo.Style);
     }
 }

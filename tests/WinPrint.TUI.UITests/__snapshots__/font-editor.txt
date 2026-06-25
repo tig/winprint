@@ -1,6 +1,6 @@
 ┄┤Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
-Source Code Pro   ▼                                         
-10  ▼ pt                                                    
+Source Code Pro, Regular, 10pt                              
+⟦ Font… ⟧                                                   
                                                             
                                                             
                                                             

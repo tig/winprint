@@ -114,10 +114,10 @@ public class SettingsBindingTests
     [Fact]
     public void BoundPanel_ChangingContentFontWritesThroughToModel()
     {
-        // Regression: picking a different content font family/size in the dropdown must route through the
-        // ContentFont.ValueChanged handler into the live sheet model (the same handler calls ReflowAsync,
-        // so this also proves the preview relayouts). Previously the in-place Font mutation raised no
-        // ValueChanged, so the handler never ran and nothing relayouted.
+        // Regression (#178): changing the content font must route through the ContentFont.ValueChanged
+        // handler into the live sheet model (the same handler calls ReflowAsync, so this also proves the
+        // preview relayouts). The chooser hands back a fresh Font; assigning it to ContentFont.Value is what
+        // raises ValueChanged. The old in-place mutation raised none, so the handler never ran.
         var context = SettingsContext.Create();
         var panel = new SettingsPanel();
         panel.Bind(context);
@@ -128,8 +128,7 @@ public class SettingsBindingTests
         var original = (Font)content.Font.Clone();
         try
         {
-            panel.ContentFont.SelectInDropDown("_family", "Courier New");
-            panel.ContentFont.SelectInDropDown("_size", "16");
+            panel.ContentFont.Value = new Font { Family = "Courier New", Size = 16f };
 
             Assert.Equal("Courier New", content.Font.Family);
             Assert.Equal(16f, content.Font.Size);

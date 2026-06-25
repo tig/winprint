@@ -16,12 +16,14 @@ Padding: ▼0.03▲
 ☐ Page Separator                                    
                                                     
 ┄┤Content Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄          
-Source Code Pro   ▼                                 
-10  ▼ pt                                            
+Source Code Pro, Regular, 10pt                      
+⟦ Content Font… ⟧                                   
+                                                    
                                                     
 ┄┤Header/Footer Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄          
-Source Code Pro   ▼                                 
-8   ▼ pt                                            
+Source Code Pro, Regular, 8pt                       
+⟦ Header/Footer Font… ⟧                             
+                                                    
                                                     
 ☑ Line Numbers                                      
  ╭───────╮                                          
@@ -30,8 +32,6 @@ Microsoft Print to PDF  ▼
 Paper: Letter     ▼                                 
 Help & about…                                       
 v2.5.0                                              
-                                                    
-                                                    
                                                     
                                                     
                                                     

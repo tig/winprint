@@ -17,16 +17,16 @@ Padding: ▼0.03▲
 ☐ Page Separator                                  Hello. Click here to open a file...       
                                                                                             
 ┄┤Content Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
-Source Code Pro   ▼                                                                         
-10  ▼ pt                                                                                    
+Source Code Pro, Regular, 10pt                                                              
+⟦ Content Font… ⟧                                                                           
+                                                                                            
                                                                                             
 ┄┤Header/Footer Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
-Source Code Pro   ▼                                                                         
-8   ▼ pt                                                                                    
+Source Code Pro, Regular, 8pt                                                               
+⟦ Header/Footer Font… ⟧                                                                     
+                                                                                            
                                                                                             
 ☑ Line Numbers                                                                              
  ╭───────╮                                                                                  
-─╯Printer╰────────────────────────────────                                                  
-Microsoft Print to PDF  ▼                                                                   
-Help & about…                                                                               
+─╯lp & ab╰────────────────────────────────                                                  
 v2.5.0                                     ☑ Footer: {FilePath}||{DatePrinted}              
