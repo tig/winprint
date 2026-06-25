@@ -47,7 +47,8 @@ public class FontSampleRendererTests
 
         // Bold (real or synthetic) thickens the glyphs, so the rasters must not be identical — this is
         // what makes the preview truthful about the style that will actually print.
-        Assert.True(CountNonWhite(boldPixels) != CountNonWhite(regularPixels) || !PixelsEqual(regularPixels, boldPixels),
+        Assert.True(
+            CountNonWhite(boldPixels) != CountNonWhite(regularPixels) || !PixelsEqual(regularPixels, boldPixels),
             "Bold sample should differ from the regular sample.");
     }
 
