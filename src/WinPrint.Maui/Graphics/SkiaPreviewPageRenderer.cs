@@ -1,7 +1,7 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-#if MACCATALYST
+#if MACCATALYST || WINDOWS
 using Microsoft.Maui.Graphics.Platform;
 using SkiaSharp;
 using WinPrint.Core.Printing.Skia;
@@ -12,11 +12,11 @@ namespace WinPrint.Maui.Graphics;
 
 /// <summary>
 ///     Renders a preview page into a bitmap with <see cref="SkiaGraphicsContext" /> — the same
-///     engine that measured the document during reflow and that renders the PDF sent to the
-///     printer. MAUI's CoreGraphics-backed <c>ICanvas</c> measures text wider than it draws it,
-///     so painting the preview through it spreads syntax-highlight runs apart; rendering with
-///     Skia keeps the preview metric-identical to the printed output (the engine-pairing
-///     invariant).
+///     engine that measured the document during reflow and that renders the page sent to the
+///     printer (a PDF on macOS, XPS on Windows). MAUI's platform <c>ICanvas</c> measures text
+///     wider than it draws it, so painting the preview through it spreads syntax-highlight runs
+///     apart; rendering with Skia keeps the preview metric-identical to the printed output (the
+///     engine-pairing invariant), and gives MAUI Windows and macOS one shared rasterizer.
 /// </summary>
 internal static class SkiaPreviewPageRenderer
 {

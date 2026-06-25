@@ -121,19 +121,15 @@ public sealed class PrintPreviewDrawable : IDrawable
         // Render content via SheetViewModel
 #if MACCATALYST || WINDOWS
         // Paint with the engine that measured the document and renders the printed output — Skia on
-        // macOS (PDF), GDI+ on Windows (printer DC) — instead of MAUI's CoreGraphics canvas, whose
-        // text measurement is wider than its drawing and spreads runs apart. See
-        // SkiaPreviewPageRenderer / WindowsPreviewPageRenderer (the engine-pairing invariant).
+        // both macOS (PDF) and Windows (XPS) — instead of MAUI's platform canvas, whose text
+        // measurement is wider than its drawing and spreads runs apart. See SkiaPreviewPageRenderer
+        // (the engine-pairing invariant; one shared rasterizer across MAUI platforms).
         (string, int, int, int, int) key = (_viewModel.ActiveFile, _viewModel.CurrentPage,
             _viewModel.PreviewContentGeneration, bounds.Width, bounds.Height);
         if (_pageImage is null || key != _pageImageKey)
         {
             _pageImage?.Dispose();
-#if MACCATALYST
             _pageImage = SkiaPreviewPageRenderer.Render(_viewModel, (int)boundsW, (int)boundsH);
-#else
-            _pageImage = WindowsPreviewPageRenderer.Render(_viewModel, (int)boundsW, (int)boundsH);
-#endif
             _pageImageKey = key;
             _displayImage?.Dispose();
             _displayImage = null;
