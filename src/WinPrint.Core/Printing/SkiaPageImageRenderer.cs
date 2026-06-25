@@ -63,7 +63,7 @@ public static class SkiaPageImageRenderer
                 render(context, pageNumber);
             }
 
-            using SKImage image = SKImage.FromBitmap(bitmap);
+            using var image = SKImage.FromBitmap(bitmap);
             using SKData png = image.Encode(SKEncodedImageFormat.Png, 100);
             images.Add(png.ToArray());
         }
