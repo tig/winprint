@@ -340,27 +340,30 @@ jobs:
           ZIP="artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip"
           if [ "${HAS_APPLE_SIGNING}" = "true" ]; then
             # Two-pass signing (validated locally against a representative bundle):
-            #  1. `codesign --deep` does NOT descend into Contents/MonoBundle (the GUI's Mono dylibs are
-            #     dynamically loaded, not linked), so it left libonigwrap.dylib / liblaunchcwd.dylib
-            #     unsigned and notarization rejected them. Sign EVERY nested Mach-O explicitly first, with
-            #     the hardened runtime + secure timestamp. Exclude Contents/MacOS — signing the bundle's
-            #     main executable seals the whole bundle, which must come last.
+            #  1. `codesign --deep` signs the linked nested code (the main exe + the embedded wp payload
+            #     under Contents/Helpers) but does NOT descend into Contents/MonoBundle — the GUI's Mono
+            #     dylibs are dynamically loaded, not linked — so it left libonigwrap.dylib /
+            #     liblaunchcwd.dylib unsigned and notarization rejected them. Explicitly sign ONLY the
+            #     MonoBundle Mach-O first (hardened runtime + secure timestamp). Signing just what --deep
+            #     misses keeps the timestamp-server round-trips low: signing EVERY nested binary made the
+            #     two concurrent macOS jobs flood Apple's TSA and stall the step for 30+ minutes.
             #     (Use `case`, not `file ... | grep -q`: under `set -o pipefail` grep -q closes the pipe,
             #     `file` dies with SIGPIPE, and the non-zero pipeline makes the test FALSE — silent no-op.)
-            while IFS= read -r -d '' f; do
-              case "$f" in "$APP/Contents/MacOS/"*) continue ;; esac
-              case "$(file -b "$f")" in
-                *Mach-O*)
-                  codesign --force --options runtime --timestamp \
-                    --keychain "$APPLE_KEYCHAIN_PATH" \
-                    --sign "$APPLE_SIGNING_IDENTITY" "$f"
-                  ;;
-              esac
-            done < <(find "$APP/Contents" -type f -print0)
+            if [ -d "$APP/Contents/MonoBundle" ]; then
+              while IFS= read -r -d '' f; do
+                case "$(file -b "$f")" in
+                  *Mach-O*)
+                    codesign --force --options runtime --timestamp \
+                      --keychain "$APPLE_KEYCHAIN_PATH" \
+                      --sign "$APPLE_SIGNING_IDENTITY" "$f"
+                    ;;
+                esac
+              done < <(find "$APP/Contents/MonoBundle" -type f -print0)
+            fi
             #  2. Seal the whole bundle with --deep: only --deep can sign over the embedded wp's loose
             #     CoreCLR payload under Contents/Helpers (a plain bundle sign rejects the .dll/.pdb/.json
-            #     data files as unsigned "subcomponents"). It re-signs the main exe + Helpers and applies
-            #     the JIT/runtime entitlements; the explicitly-signed MonoBundle dylibs keep their sigs.
+            #     data files as unsigned "subcomponents"). It signs the main exe + Helpers (with secure
+            #     timestamps) and applies the JIT/runtime entitlements; the MonoBundle sigs are preserved.
             codesign --force --deep --options runtime --timestamp \
               --keychain "$APPLE_KEYCHAIN_PATH" \
               --entitlements packaging/macos/codesign.entitlements \
