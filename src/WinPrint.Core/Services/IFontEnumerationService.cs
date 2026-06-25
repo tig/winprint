@@ -18,8 +18,9 @@ public interface IFontEnumerationService
 {
     /// <summary>
     ///     Returns the installed font families, de-duplicated and sorted by name, each flagged fixed-pitch.
-    ///     Implementations are expected to cache the result for the life of the process (the installed font
-    ///     set does not change while the app runs).
+    ///     The installed font set does not change while the app runs, so callers may treat the result as
+    ///     stable; implementations may cache it (the default <see cref="SystemFontEnumerator" /> caches per
+    ///     instance, and is registered as a singleton).
     /// </summary>
     IReadOnlyList<SystemFontFamily> GetFamilies();
 }

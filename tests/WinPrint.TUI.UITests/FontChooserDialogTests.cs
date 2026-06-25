@@ -38,17 +38,34 @@ public class FontChooserDialogTests
     public void Render_ListsFamiliesFromInjectedEnumerator()
     {
         // The family list must come from the IFontEnumerationService (issue #173), not a hard-coded list.
-        // Seed the dialog with a made-up fixed-pitch family that could only appear if the dialog sourced it
+        // Seed the dialog with made-up fixed-pitch families that could only appear if the dialog sourced them
         // from the injected enumerator (the default fixed-pitch filter keeps fixed-pitch families visible).
+        // The proportional family proves the default "Fixed Pitch Only" toggle actually filters the injected
+        // list rather than showing everything.
         var enumerator = new FakeFontEnumerationService(
             new SystemFontFamily("Nonexistent Mono", true),
-            new SystemFontFamily("Another Test Mono", true));
+            new SystemFontFamily("Another Test Mono", true),
+            new SystemFontFamily("Proportional Test Sans", false));
         var dialog = new FontChooserDialog(
             new Font { Family = "Nonexistent Mono", Size = 10f }, enumerator);
         var fixture = new AppFixture(dialog, 100, 30);
 
         DriverAssert.ContainsText(fixture.Screen, "Nonexistent Mono");
         DriverAssert.ContainsText(fixture.Screen, "Another Test Mono");
+        DriverAssert.DoesNotContainText(fixture.Screen, "Proportional Test Sans");
+    }
+
+    [Fact]
+    public void Render_WithEmptyEnumeration_KeepsSeededFamilySelectable()
+    {
+        // Removing the curated FontChoices.Families fallback (issue #173) means an empty enumeration yields
+        // an empty installed-font list. The chooser must degrade gracefully — not crash — and must still keep
+        // the seeded current family selectable so a configured font is never silently dropped.
+        var dialog = new FontChooserDialog(
+            new Font { Family = "Seeded Family", Size = 10f }, new FakeFontEnumerationService());
+        var fixture = new AppFixture(dialog, 100, 30);
+
+        DriverAssert.ContainsText(fixture.Screen, "Seeded Family");
     }
 
     [Fact]

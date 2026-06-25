@@ -1,3 +1,6 @@
+// Copyright Kindel, LLC - http://www.kindel.com
+// Published under the MIT License at https://github.com/tig/winprint
+
 using WinPrint.Core.Services;
 
 namespace WinPrint.TUI.UnitTests;
