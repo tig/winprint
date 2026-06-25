@@ -664,11 +664,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         string path = ServiceLocator.Current.SettingsService.SettingsFileName;
         try
         {
-            // The app reads (and creates-with-defaults) the config at startup, so it normally exists; reading
-            // again here makes the button self-healing if the file was deleted while running.
+            // The app reads (and creates-with-defaults) the config at startup, so it normally exists; if it
+            // was deleted while running, ReadSettings recreates it on disk with defaults so there is always
+            // a file to open. (ReloadAndApplySettings only *reads* — it throws when the file is missing.)
             if (!File.Exists(path))
             {
-                ServiceLocator.Current.SettingsService.ReloadAndApplySettings();
+                ServiceLocator.Current.SettingsService.ReadSettings();
             }
 
             await Launcher.Default.OpenAsync(new OpenFileRequest

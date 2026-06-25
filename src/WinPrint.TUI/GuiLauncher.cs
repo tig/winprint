@@ -11,6 +11,10 @@ internal static class GuiLauncher
     private const string MacGuiExecutable = "winprint";
     private const string WindowsGuiExecutable = "winprint.exe";
 
+    // `open <bundle>` launches a .app on macOS. Absolute path + UseShellExecute=false so the bundle path is
+    // passed as a single argv entry (ArgumentList) and survives spaces.
+    private const string MacOpenCommand = "/usr/bin/open";
+
     // In a source tree the GUI builds to a sibling project's output (src/WinPrint.Maui/bin/...), not next to
     // wp (src/WinPrint.TUI/bin/...), so the dev fallback looks under this project's bin.
     private const string MauiProjectName = "WinPrint.Maui";
@@ -39,7 +43,13 @@ internal static class GuiLauncher
             case GuiPlatform.Windows:
                 // The Velopack package co-locates winprint.exe (GUI) with wp.exe (TUI), so the GUI that
                 // ships/builds alongside this wp is its sibling — never a global lookup.
-                Start(Path.Combine(baseDirectory, WindowsGuiExecutable), "", startProcess, directoryExists);
+                Run(
+                    new ProcessStartInfo
+                    {
+                        FileName = Path.Combine(baseDirectory, WindowsGuiExecutable),
+                        UseShellExecute = true
+                    },
+                    startProcess);
                 return;
 
             case GuiPlatform.MacOS:
@@ -82,7 +92,14 @@ internal static class GuiLauncher
                 "`brew install --cask kindel/winprint/winprint`, or build/run wp from the packaged bundle.");
         }
 
-        Start("open", appPath, startProcess, directoryExists);
+        // ArgumentList (not Arguments) so a bundle path with spaces reaches `open` as one argument.
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = MacOpenCommand,
+            UseShellExecute = false
+        };
+        startInfo.ArgumentList.Add(appPath);
+        Run(startInfo, startProcess);
     }
 
     private static string? FindMacGuiBundle(
@@ -121,7 +138,7 @@ internal static class GuiLauncher
         Func<string, bool> fileExists,
         Func<string, IEnumerable<string>> enumerateBundles)
     {
-        string? config = ExtractBuildConfig(baseDirectory);
+        string? config = BuildConfigOf(baseDirectory);
 
         for (string? dir = baseDirectory; dir is not null; dir = Path.GetDirectoryName(dir))
         {
@@ -138,7 +155,8 @@ internal static class GuiLauncher
             // so `wp gui` from a Debug build doesn't open a stale Release one (or vice versa).
             string? sameConfig = config is null
                 ? null
-                : bundles.FirstOrDefault(bundle => ContainsPathSegment(bundle, config));
+                : bundles.FirstOrDefault(bundle =>
+                    string.Equals(BuildConfigOf(bundle), config, StringComparison.OrdinalIgnoreCase));
 
             return sameConfig ?? bundles.FirstOrDefault();
         }
@@ -146,21 +164,16 @@ internal static class GuiLauncher
         return null;
     }
 
-    // The build configuration ("Debug"/"Release") is the path segment two levels above wp's bin output
-    // (bin/<config>/<tfm>); pick it out so the dev GUI lookup can prefer a matching configuration.
-    private static string? ExtractBuildConfig(string path)
+    // The build configuration is the path segment immediately after `bin` (bin/<config>/<tfm>...). Reading
+    // it structurally — rather than scanning for the first "Debug"/"Release" anywhere — avoids mis-detecting
+    // a configuration when an unrelated ancestor directory happens to be named "Debug"/"Release".
+    private static string? BuildConfigOf(string path)
     {
-        return Array.Find(
-            path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-            segment => string.Equals(segment, "Debug", StringComparison.OrdinalIgnoreCase) ||
-                       string.Equals(segment, "Release", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static bool ContainsPathSegment(string path, string segment)
-    {
-        return path
-            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .Any(part => string.Equals(part, segment, StringComparison.OrdinalIgnoreCase));
+        string[] segments = path.Split(
+            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+            StringSplitOptions.RemoveEmptyEntries);
+        int binIndex = Array.LastIndexOf(segments, "bin");
+        return binIndex >= 0 && binIndex + 1 < segments.Length ? segments[binIndex + 1] : null;
     }
 
     private static bool IsMacGuiBundle(
@@ -179,27 +192,11 @@ internal static class GuiLauncher
             : [];
     }
 
-    private static void Start(
-        string fileName,
-        string arguments,
-        Func<ProcessStartInfo, bool> startProcess,
-        Func<string, bool> directoryExists)
+    private static void Run(ProcessStartInfo startInfo, Func<ProcessStartInfo, bool> startProcess)
     {
-        string resolvedFileName =
-            File.Exists(fileName) || directoryExists(fileName) || Path.IsPathFullyQualified(fileName)
-                ? fileName
-                : Path.GetFileName(fileName);
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = resolvedFileName,
-            Arguments = arguments,
-            UseShellExecute = true
-        };
-
         if (!startProcess(startInfo))
         {
-            throw new InvalidOperationException($"Could not launch {resolvedFileName}.");
+            throw new InvalidOperationException($"Could not launch {startInfo.FileName}.");
         }
     }
 

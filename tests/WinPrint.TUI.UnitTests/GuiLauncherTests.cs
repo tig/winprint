@@ -7,6 +7,8 @@ namespace WinPrint.TUI.UnitTests;
 
 public class GuiLauncherTests
 {
+    private const string MacOpen = "/usr/bin/open";
+
     private static readonly Func<string, IEnumerable<string>> NoBundles = _ => [];
 
     [Fact]
@@ -46,7 +48,7 @@ public class GuiLauncherTests
 
         ProcessStartInfo start = Assert.Single(starts);
         Assert.Equal(@"C:\Apps\WinPrint\winprint.exe", start.FileName);
-        Assert.Equal("", start.Arguments);
+        Assert.Empty(start.ArgumentList);
         Assert.True(start.UseShellExecute);
     }
 
@@ -72,9 +74,8 @@ public class GuiLauncherTests
             });
 
         ProcessStartInfo start = Assert.Single(starts);
-        Assert.Equal("open", start.FileName);
-        Assert.Equal(bundle, start.Arguments);
-        Assert.True(start.UseShellExecute);
+        Assert.Equal(MacOpen, start.FileName);
+        Assert.Equal(bundle, Assert.Single(start.ArgumentList));
     }
 
     [Fact]
@@ -100,8 +101,37 @@ public class GuiLauncherTests
             });
 
         ProcessStartInfo start = Assert.Single(starts);
-        Assert.Equal("open", start.FileName);
-        Assert.Equal(bundle, start.Arguments);
+        Assert.Equal(MacOpen, start.FileName);
+        Assert.Equal(bundle, Assert.Single(start.ArgumentList));
+    }
+
+    [Fact]
+    public void MacOS_PassesBundlePathAsSingleArgument_EvenWithSpaces()
+    {
+        // A bundle path containing spaces must reach `open` as ONE argument (via ArgumentList), not a
+        // space-split Arguments string that `open` would treat as several (non-existent) paths.
+        List<ProcessStartInfo> starts = [];
+        const string baseDirectory = "/Users/jane doe/My Apps";
+        string bundle = Path.Combine(baseDirectory, "WinPrint.app");
+        string guiExecutable = Path.Combine(bundle, "Contents", "MacOS", "winprint");
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            baseDirectory,
+            dir => dir == bundle,
+            file => file == guiExecutable,
+            NoBundles,
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal(bundle, Assert.Single(start.ArgumentList));
+        Assert.Empty(start.Arguments);
+        // ArgumentList is only honored without shell-execute; otherwise the path is re-parsed as a string.
+        Assert.False(start.UseShellExecute);
     }
 
     [Fact]
@@ -128,8 +158,8 @@ public class GuiLauncherTests
             });
 
         ProcessStartInfo start = Assert.Single(starts);
-        Assert.Equal("open", start.FileName);
-        Assert.Equal(bundle, start.Arguments);
+        Assert.Equal(MacOpen, start.FileName);
+        Assert.Equal(bundle, Assert.Single(start.ArgumentList));
     }
 
     [Fact]
@@ -158,7 +188,37 @@ public class GuiLauncherTests
             });
 
         ProcessStartInfo start = Assert.Single(starts);
-        Assert.Equal(debugBundle, start.Arguments);
+        Assert.Equal(debugBundle, Assert.Single(start.ArgumentList));
+    }
+
+    [Fact]
+    public void MacOS_DetectsBuildConfigStructurally_IgnoringUnrelatedDebugSegments()
+    {
+        // A parent directory literally named "Debug" must not fool config detection: the build config is
+        // the segment right after wp's `bin`, so a Release wp opens the Release bundle — not the Debug one
+        // a naive "first Debug/Release anywhere in the path" scan would prefer.
+        List<ProcessStartInfo> starts = [];
+        const string baseDirectory = "/Users/Debug/proj/src/WinPrint.TUI/bin/Release/net10.0";
+        const string mauiBin = "/Users/Debug/proj/src/WinPrint.Maui/bin";
+        const string debugBundle =
+            "/Users/Debug/proj/src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/WinPrint.app";
+        const string releaseBundle =
+            "/Users/Debug/proj/src/WinPrint.Maui/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/WinPrint.app";
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            baseDirectory,
+            dir => dir is mauiBin or debugBundle or releaseBundle,
+            file => file.EndsWith(Path.Combine("Contents", "MacOS", "winprint"), StringComparison.Ordinal),
+            root => root == mauiBin ? [debugBundle, releaseBundle] : [],
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal(releaseBundle, Assert.Single(start.ArgumentList));
     }
 
     [Fact]
