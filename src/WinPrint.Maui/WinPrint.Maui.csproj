@@ -76,6 +76,16 @@
 		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
 	</PropertyGroup>
 
+	<!-- The Skia print backend (WindowsSkiaPrintJob, #174) packages page bitmaps into a WPF
+	     FixedDocument and spools them via System.Printing.PrintQueue / XpsDocumentWriter, so it needs
+	     the WPF framework pack (PresentationFramework + System.Printing). Reference the pack directly
+	     rather than via <UseWPF>: UseWPF flips the XAML compiler to WPF's, which can't compile WinUI's
+	     App.xaml (MauiWinUIApplication). The bare FrameworkReference gives us the WPF assemblies with
+	     the WinUI XAML pipeline intact; we reference the WPF types by full name to avoid clashes. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
+	</ItemGroup>
+
 	<!-- Mac Catalyst define -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
 		<DefineConstants>$(DefineConstants);MACCATALYST</DefineConstants>
@@ -118,12 +128,7 @@
 		<PackageReference Include="Velopack" Version="1.1.1" />
 	</ItemGroup>
 
-	<!-- Windows: System.Drawing.Common is used for PrintDocument integration. -->
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
+<ItemGroup>
 		<ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
 	</ItemGroup>
 

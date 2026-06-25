@@ -30,9 +30,10 @@ public partial class MainPage : ContentPage
         _drawable = new PrintPreviewDrawable(_viewModel);
         _printService = CreatePlatformPrintService();
 
-        // Reflow needs a text-measurement context. The Windows service returns null
-        // (System.Drawing default); the Mac service returns a Skia context — without
-        // it, every load on MacCatalyst fails with "requires a MeasurementContext".
+        // Reflow needs a text-measurement context. Both heads now return a Skia context
+        // (Windows via WindowsSkiaPrintService, Mac via MacPrintService) so measurement is
+        // paired with the Skia preview/print engine — without it, every load fails with
+        // "requires a MeasurementContext".
         _viewModel.SheetViewModel.MeasurementContext = _printService.CreateMeasurementContext();
 
         InitializeComponent();
@@ -519,7 +520,9 @@ public partial class MainPage : ContentPage
     private static IPrintService CreatePlatformPrintService()
     {
 #if WINDOWS
-        return new WinPrint.Core.Printing.WindowsPrintService();
+        // Skia for measure + preview + (XPS) print, matching MacPrintService, so MAUI Windows and
+        // macOS share one rasterizer (#174). The System.Drawing/GDI+ backend stays for the CLI/TUI.
+        return new WindowsSkiaPrintService();
 #elif MACCATALYST
         return new MacPrintService();
 #else
