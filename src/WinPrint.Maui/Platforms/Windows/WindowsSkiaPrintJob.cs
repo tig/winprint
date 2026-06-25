@@ -76,19 +76,14 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
         double widthDip = (_pageSetup.Landscape ? _pageSetup.PaperHeight : _pageSetup.PaperWidth) / 100.0 * 96.0;
         double heightDip = (_pageSetup.Landscape ? _pageSetup.PaperWidth : _pageSetup.PaperHeight) / 100.0 * 96.0;
 
-        var tcs = new TaskCompletionSource<PrintJobResult>();
-
-        // WPF imaging and XpsDocumentWriter require an STA thread; spool off the UI thread.
-        var thread = new Thread(() =>
-            tcs.SetResult(Spool(pageImages, widthDip, heightDip, printerName, documentName, sheetCount)))
-        {
-            IsBackground = true,
-            Name = "WinPrint XPS Spooler",
-        };
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-
-        return tcs.Task;
+        // Spool on a dedicated STA thread (required by WPF imaging / XpsDocumentWriter) off the UI
+        // thread. StaTaskRunner guarantees the returned task always completes — even if Spool throws an
+        // imaging/XAML exception outside Spool's own catch — and honours cancellation, so callers never
+        // hang and can cancel a queued job before it submits.
+        return StaTaskRunner.RunAsync(
+            () => Spool(pageImages, widthDip, heightDip, printerName, documentName, sheetCount),
+            ex => PrintJobResult.Failed(ex.Message),
+            cancellationToken);
     }
 
     /// <summary>
@@ -125,18 +120,27 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
                 fixedDocument.Pages.Add(pageContent);
             }
 
-            using var server = new PrintServer();
-            PrintQueue queue = string.IsNullOrEmpty(printerName)
-                ? LocalPrintServer.GetDefaultPrintQueue()
-                : server.GetPrintQueue(printerName);
+            // Only spin up a PrintServer when a specific printer was named; the default queue resolves
+            // without one. Dispose both so we don't leak spooler handles per job.
+            PrintServer? server = string.IsNullOrEmpty(printerName) ? null : new PrintServer();
+            try
+            {
+                using PrintQueue queue = server is null
+                    ? LocalPrintServer.GetDefaultPrintQueue()
+                    : server.GetPrintQueue(printerName);
 
-            // Names the spooled job in the print queue (e.g. "MyFile.cs").
-            queue.CurrentJobSettings.Description = documentName;
+                // Names the spooled job in the print queue (e.g. "MyFile.cs").
+                queue.CurrentJobSettings.Description = documentName;
 
-            XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
-            writer.Write(fixedDocument);
+                XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
+                writer.Write(fixedDocument);
 
-            return PrintJobResult.Succeeded(sheetCount);
+                return PrintJobResult.Succeeded(sheetCount);
+            }
+            finally
+            {
+                server?.Dispose();
+            }
         }
         catch (Exception ex) when (ex is PrintJobException or PrintQueueException
                                        or PrintServerException or PrintSystemException)
@@ -147,10 +151,13 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
 
     private static BitmapImage LoadBitmap(byte[] png)
     {
+        // CacheOption.OnLoad decodes fully during EndInit, so the backing stream can be disposed
+        // immediately afterwards rather than leaked for the lifetime of the (large) image.
+        using var stream = new MemoryStream(png);
         var source = new BitmapImage();
         source.BeginInit();
         source.CacheOption = BitmapCacheOption.OnLoad;
-        source.StreamSource = new MemoryStream(png);
+        source.StreamSource = stream;
         source.EndInit();
         source.Freeze();
         return source;

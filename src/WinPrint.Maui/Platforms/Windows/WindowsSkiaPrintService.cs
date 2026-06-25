@@ -7,13 +7,13 @@ namespace WinPrint.Maui.Services;
 /// <summary>
 ///     Windows (MAUI) implementation of <see cref="IPrintService" /> that unifies the GUI on SkiaSharp:
 ///     reflow/measurement and rendering both use Skia (one engine measures and draws), and jobs are
-///     spooled as vector XPS through <see cref="WindowsXpsPrintJob" />. This mirrors
-///     <c>MacPrintService</c> so MAUI Windows and MAUI macOS share one rasterizer and produce
-///     metric-identical output (issue #174).
+///     rasterized with Skia and spooled as an XPS <c>FixedDocument</c> through
+///     <see cref="WindowsSkiaPrintJob" />. This mirrors <c>MacPrintService</c> so MAUI Windows and MAUI
+///     macOS share one rasterizer and produce metric-identical output (issue #174).
 ///     <para>
 ///         Printer enumeration, default page setup, and the (headless) print dialog are unchanged from
 ///         the System.Drawing backend, so they are delegated to <see cref="WindowsPrintService" />;
-///         only measurement and job submission move to Skia/XPS.
+///         only measurement and job submission move to Skia.
 ///     </para>
 /// </summary>
 public sealed class WindowsSkiaPrintService : IPrintService
