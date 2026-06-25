@@ -21,7 +21,7 @@ public sealed class FontsEditor : View
         // would have its subviews skipped by Terminal.Gui's focus navigation).
         CanFocus = true;
 
-        ContentFont = new FontEditor("Content")
+        ContentFont = new FontEditor("Content", "_Content Font…")
         {
             X = 0,
             Y = 0,
@@ -29,7 +29,7 @@ public sealed class FontsEditor : View
         };
 
         // Overlap the upper editor's bottom border by one row; the joined LineCanvas merges them.
-        HeaderFooterFont = new FontEditor("Header/Footer")
+        HeaderFooterFont = new FontEditor("Header/Footer", "_Header Font…")
         {
             X = 0,
             Y = Pos.Bottom(ContentFont) - 1,

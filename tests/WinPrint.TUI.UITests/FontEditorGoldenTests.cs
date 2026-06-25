@@ -6,15 +6,15 @@ using Xunit;
 namespace WinPrint.TUI.UnitTests;
 
 /// <summary>
-///     Golden + behavior tests for <see cref="FontEditor" />: two side-by-side dropdowns (family and
-///     point size, no style), and edits flow back into the bound mutable <see cref="Font" />.
+///     Golden + behavior tests for <see cref="FontEditor" />: a summary line showing the current
+///     family/style/size, plus a button that opens the full <see cref="WinPrint.TUI.Views.FontChooserDialog" />.
 /// </summary>
 public class FontEditorGoldenTests
 {
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var editor = new FontEditor
+        var editor = new FontEditor("Font", "_Font…")
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
@@ -24,24 +24,25 @@ public class FontEditorGoldenTests
     }
 
     [Fact]
-    public void Render_ShowsFamilyAndSize_NotStyle()
+    public void Render_ShowsFamilyStyleSizeSummary_AndButton()
     {
-        var editor = new FontEditor
+        var editor = new FontEditor("Font", "_Font…")
         {
-            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
+            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Bold | FontStyle.Italic }
         };
         var fixture = new AppFixture(editor, 60, 6);
 
         DriverAssert.ContainsText(fixture.Screen, "Source Code Pro");
-        DriverAssert.ContainsText(fixture.Screen, "10");
-        DriverAssert.DoesNotContainText(fixture.Screen, "Bold"); // style is intentionally omitted
+        DriverAssert.ContainsText(fixture.Screen, "Bold Italic"); // the summary now reflects style
+        DriverAssert.ContainsText(fixture.Screen, "10pt");
+        DriverAssert.ContainsText(fixture.Screen, "Font…"); // the chooser button
     }
 
     [Fact]
-    public void OnValueChanged_AddsUnlistedFamilySoItDisplays()
+    public void OnValueChanged_ShowsAnyFamily()
     {
-        // A family not in FontChoices is still shown (model family is free-form).
-        var editor = new FontEditor
+        // Family is a free-form string at the model level; the summary shows whatever it is.
+        var editor = new FontEditor("Font", "_Font…")
         {
             Value = new Font { Family = "Wingdings Deluxe", Size = 10f, Style = FontStyle.Regular }
         };
