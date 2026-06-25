@@ -211,8 +211,9 @@ public sealed class FontChooserDialog : Dialog
 
             // Workaround for tui-cs/Terminal.Gui#5543: a Dialog hosting a raster ImageView leaves its
             // sixel/Kitty graphics on screen after it closes (the out-of-band image isn't part of the cell
-            // grid, so a normal redraw doesn't erase it). Force a full screen clear + redraw of the main
-            // form on the next iteration to wipe the leftover preview.
+            // grid, so a normal redraw doesn't erase it). Clearing the driver contents wipes the leftover
+            // image; ClearScreenNextIteration alone (a redraw request) is not enough on its own.
+            app.Driver?.ClearContents();
             app.ClearScreenNextIteration = true;
         }
     }
