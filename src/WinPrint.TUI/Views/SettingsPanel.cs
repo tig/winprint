@@ -51,12 +51,12 @@ public sealed class SettingsPanel : View
             Value = new SheetSettings { Columns = 2, Rows = 1, Padding = 3, PageSeparator = false }
         };
 
-        ContentFont = new FontEditor("Co_ntent Font")
+        ContentFont = new FontEditor("Content Font", "Co_ntent Font…")
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
 
-        HeaderFooterFont = new FontEditor("Hea_der/Footer Font")
+        HeaderFooterFont = new FontEditor("Header/Footer Font", "Hea_der/Footer Font…")
         {
             Value = new Font { Family = "Source Code Pro", Size = 8f, Style = FontStyle.Regular }
         };

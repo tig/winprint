@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace WinPrint.TUI;
 
@@ -21,39 +22,52 @@ internal static class GuiLauncher
 
     public static void Launch()
     {
+        Launch([]);
+    }
+
+    public static void Launch(IReadOnlyList<string> arguments)
+    {
         Launch(
             GetCurrentPlatform(),
             AppContext.BaseDirectory,
             Directory.Exists,
             File.Exists,
             EnumerateBundles,
-            StartProcess);
+            StartProcess,
+            arguments);
     }
 
+    // `arguments` (files + shared print options) are forwarded to the GUI, which parses them with the same
+    // canonical option names. It's an optional trailing parameter so the bundle-resolution tests that don't
+    // exercise forwarding can omit it.
     internal static void Launch(
         GuiPlatform platform,
         string baseDirectory,
         Func<string, bool> directoryExists,
         Func<string, bool> fileExists,
         Func<string, IEnumerable<string>> enumerateBundles,
-        Func<ProcessStartInfo, bool> startProcess)
+        Func<ProcessStartInfo, bool> startProcess,
+        IReadOnlyList<string>? arguments = null)
     {
+        IReadOnlyList<string> args = arguments ?? [];
         switch (platform)
         {
             case GuiPlatform.Windows:
                 // The Velopack package co-locates winprint.exe (GUI) with wp.exe (TUI), so the GUI that
-                // ships/builds alongside this wp is its sibling — never a global lookup.
+                // ships/builds alongside this wp is its sibling — never a global lookup. winprint.exe parses
+                // its own args and resolves relative paths against the launch CWD the child inherits.
                 Run(
                     new ProcessStartInfo
                     {
                         FileName = Path.Combine(baseDirectory, WindowsGuiExecutable),
+                        Arguments = QuoteArgs(args),
                         UseShellExecute = true
                     },
                     startProcess);
                 return;
 
             case GuiPlatform.MacOS:
-                StartMacGui(baseDirectory, directoryExists, fileExists, enumerateBundles, startProcess);
+                StartMacGui(baseDirectory, args, directoryExists, fileExists, enumerateBundles, startProcess);
                 return;
 
             default:
@@ -75,6 +89,7 @@ internal static class GuiLauncher
 
     private static void StartMacGui(
         string baseDirectory,
+        IReadOnlyList<string> arguments,
         Func<string, bool> directoryExists,
         Func<string, bool> fileExists,
         Func<string, IEnumerable<string>> enumerateBundles,
@@ -99,6 +114,17 @@ internal static class GuiLauncher
             UseShellExecute = false
         };
         startInfo.ArgumentList.Add(appPath);
+
+        // `open <bundle> --args <files…>` forwards the trailing tokens to the launched app.
+        if (arguments.Count > 0)
+        {
+            startInfo.ArgumentList.Add("--args");
+            foreach (string arg in arguments)
+            {
+                startInfo.ArgumentList.Add(arg);
+            }
+        }
+
         Run(startInfo, startProcess);
     }
 
@@ -190,6 +216,36 @@ internal static class GuiLauncher
         return Directory.Exists(root)
             ? Directory.EnumerateDirectories(root, MacGuiBundleName, SearchOption.AllDirectories)
             : [];
+    }
+
+    // UseShellExecute requires a single Arguments string (ArgumentList is ignored), so quote each token
+    // that contains whitespace or quotes and join with spaces.
+    private static string QuoteArgs(IReadOnlyList<string> arguments)
+    {
+        return string.Join(' ', arguments.Select(Quote));
+    }
+
+    private static string Quote(string value)
+    {
+        if (value.Length > 0 && !value.Any(c => char.IsWhiteSpace(c) || c == '"'))
+        {
+            return value;
+        }
+
+        var sb = new StringBuilder(value.Length + 2);
+        sb.Append('"');
+        foreach (char c in value)
+        {
+            if (c == '"')
+            {
+                sb.Append('\\');
+            }
+
+            sb.Append(c);
+        }
+
+        sb.Append('"');
+        return sb.ToString();
     }
 
     private static void Run(ProcessStartInfo startInfo, Func<ProcessStartInfo, bool> startProcess)

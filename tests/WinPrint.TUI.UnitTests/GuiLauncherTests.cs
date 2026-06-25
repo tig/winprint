@@ -31,11 +31,23 @@ public class GuiLauncherTests
     }
 
     [Fact]
+    public void GuiCommand_AcceptsFilesAndSharedOptions()
+    {
+        var command = new GuiCommand();
+
+        // wp gui ./file.cs must be accepted as a positional file, and the shared print options
+        // (e.g. --sheet) must be advertised so they parse and show in `wp help gui`.
+        Assert.True(command.AcceptsPositionalArgs);
+        Assert.Contains(command.Options, o => o.Name == "sheet");
+        Assert.Contains(command.Options, o => o.Name == "landscape");
+    }
+
+    [Fact]
     public void Windows_LaunchesWinprintExeFromBaseDirectory()
     {
-        // Windows-only: GuiLauncher relies on Path.IsPathFullyQualified, which is OS-specific — a
-        // "C:\..." drive path is fully qualified only on Windows (on Unix it falls back to the bare
-        // filename). The Windows launch path is verified on the windows-latest CI runner.
+        // Windows-only: a "C:\..." drive path round-trips through Path.Combine only on Windows (on Unix
+        // the backslashes are treated as filename chars). The Windows launch path is verified on the
+        // windows-latest CI runner.
         if (!OperatingSystem.IsWindows())
         {
             return;
@@ -58,7 +70,38 @@ public class GuiLauncherTests
         ProcessStartInfo start = Assert.Single(starts);
         Assert.Equal(@"C:\Apps\WinPrint\winprint.exe", start.FileName);
         Assert.Empty(start.ArgumentList);
+        Assert.Empty(start.Arguments);
         Assert.True(start.UseShellExecute);
+    }
+
+    [Fact]
+    public void Windows_ForwardsFileArgumentsToWinprintExe()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        List<ProcessStartInfo> starts = [];
+
+        GuiLauncher.Launch(
+            GuiPlatform.Windows,
+            @"C:\Apps\WinPrint",
+            _ => false,
+            _ => false,
+            NoBundles,
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            },
+            ["./testfiles/Program.cs", "--sheet", "Default 2-Up"]);
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal(@"C:\Apps\WinPrint\winprint.exe", start.FileName);
+        // The file is forwarded verbatim; the value containing a space is quoted (UseShellExecute needs a
+        // single Arguments string).
+        Assert.Equal("./testfiles/Program.cs --sheet \"Default 2-Up\"", start.Arguments);
     }
 
     [Fact]
@@ -156,6 +199,39 @@ public class GuiLauncherTests
         Assert.Empty(start.Arguments);
         // ArgumentList is only honored without shell-execute; otherwise the path is re-parsed as a string.
         Assert.False(start.UseShellExecute);
+    }
+
+    [Fact]
+    public void MacOS_ForwardsFilesAfterArgsSeparator()
+    {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
+        // `open <bundle> --args <files…>` forwards file arguments to the GUI; ArgumentList keeps each as a
+        // discrete argv entry after the `--args` separator.
+        List<ProcessStartInfo> starts = [];
+        const string baseDirectory = "/opt/winprint";
+        string bundle = Path.Combine(baseDirectory, "WinPrint.app");
+        string guiExecutable = Path.Combine(bundle, "Contents", "MacOS", "winprint");
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            baseDirectory,
+            dir => dir == bundle,
+            file => file == guiExecutable,
+            NoBundles,
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            },
+            ["report.cs"]);
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal(MacOpen, start.FileName);
+        Assert.Equal([bundle, "--args", "report.cs"], start.ArgumentList);
     }
 
     [Fact]

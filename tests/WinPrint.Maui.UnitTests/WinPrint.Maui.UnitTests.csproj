@@ -29,6 +29,7 @@
         <Compile Include="..\..\src\WinPrint.Maui\Views\PreviewGeometry.cs" Link="Linked\PreviewGeometry.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\FontSizeParser.cs" Link="Linked\FontSizeParser.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Packaging\WindowsUserPath.cs" Link="Linked\WindowsUserPath.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Services\StaTaskRunner.cs" Link="Linked\StaTaskRunner.cs" />
     </ItemGroup>
 
 </Project>
