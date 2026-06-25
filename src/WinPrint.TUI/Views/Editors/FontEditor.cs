@@ -70,6 +70,10 @@ public sealed class FontEditor : EditorBase<Font>
             return;
         }
 
+        // Assign a NEW Font through Value (the chooser returns a fresh instance). Font has value equality,
+        // so an unchanged selection is a no-op; a real change makes EditorBase raise ValueChanged, which is
+        // what drives the SettingsPanel reflow (the dropdown-mutation reflow path from #178 is obsolete now
+        // that selection goes through the modal chooser instead of in-place dropdown edits).
         Font seed = Value ?? new Font();
         if (FontChooserDialog.Show(app, seed) is { } chosen)
         {

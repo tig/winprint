@@ -112,6 +112,35 @@ public class SettingsBindingTests
     }
 
     [Fact]
+    public void BoundPanel_ChangingContentFontWritesThroughToModel()
+    {
+        // Regression (#178): changing the content font must route through the ContentFont.ValueChanged
+        // handler into the live sheet model (the same handler calls ReflowAsync, so this also proves the
+        // preview relayouts). The chooser hands back a fresh Font; assigning it to ContentFont.Value is what
+        // raises ValueChanged. The old in-place mutation raised none, so the handler never ran.
+        var context = SettingsContext.Create();
+        var panel = new SettingsPanel();
+        panel.Bind(context);
+        _ = new AppFixture(panel, 40, 30);
+
+        SheetSettings sheet = context.CurrentSheet!;
+        ContentSettings content = sheet.ContentSettings!;
+        var original = (Font)content.Font.Clone();
+        try
+        {
+            panel.ContentFont.Value = new Font { Family = "Courier New", Size = 16f };
+
+            Assert.Equal("Courier New", content.Font.Family);
+            Assert.Equal(16f, content.Font.Size);
+        }
+        finally
+        {
+            // Settings is a process-global singleton (ModelLocator); restore so the edit doesn't bleed.
+            content.Font = original;
+        }
+    }
+
+    [Fact]
     public void ModelMutation_FiresSettingsChanged_TriggersPreviewRefresh()
     {
         // Arrange: create a SettingsContext with a real SheetViewModel.

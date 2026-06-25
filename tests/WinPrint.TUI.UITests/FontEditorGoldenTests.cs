@@ -50,4 +50,28 @@ public class FontEditorGoldenTests
 
         DriverAssert.ContainsText(fixture.Screen, "Wingdings Deluxe");
     }
+
+    [Fact]
+    public void ChangingFont_RaisesValueChanged_SoPreviewCanReflow()
+    {
+        // Regression (#178): changing the font must raise ValueChanged so the SettingsPanel handler writes
+        // the new font and reflows. The chooser hands back a fresh Font instance; assigning it through Value
+        // is what raises the event (Font has value equality, so an identical selection is a no-op). The old
+        // in-place dropdown mutation left Value reference-identical and never reflowed.
+        var editor = new FontEditor
+        {
+            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
+        };
+        _ = new AppFixture(editor, 60, 6);
+
+        Font? changedTo = null;
+        editor.ValueChanged += (_, e) => changedTo = e.NewValue;
+
+        editor.Value = new Font { Family = "Courier New", Size = 12f, Style = FontStyle.Bold };
+
+        Assert.NotNull(changedTo);
+        Assert.Equal("Courier New", changedTo!.Family);
+        Assert.Equal(12f, changedTo.Size);
+        Assert.Equal(FontStyle.Bold, changedTo.Style);
+    }
 }
