@@ -35,7 +35,7 @@ public class TerminalScreenshotTests
             TerminalScreenshot.Save(app, window, path);
 
             Assert.True(File.Exists(path));
-            using Image image = Image.Load(path);
+            using var image = Image.Load(path);
             Assert.Equal(20 * 10, image.Width); // cols * CellWidth
             Assert.Equal(5 * 20, image.Height); // rows * CellHeight
         }
