@@ -100,6 +100,7 @@ internal sealed class FontChooserPage : ContentPage
         _preview = new Label
         {
             TextColor = InkColor,
+            FontSize = UiFonts.SidebarFontSize,
             LineBreakMode = LineBreakMode.TailTruncation,
             VerticalOptions = LayoutOptions.Center
         };
@@ -246,7 +247,7 @@ internal sealed class FontChooserPage : ContentPage
         var title = new Label
         {
             Text = "Choose Font",
-            FontSize = 18,
+            FontSize = UiFonts.SidebarFontSize,
             FontAttributes = FontAttributes.Bold,
             TextColor = InkColor
         };
@@ -290,7 +291,14 @@ internal sealed class FontChooserPage : ContentPage
                 new RowDefinition { Height = GridLength.Star }
             }
         };
-        sizePanel.Add(new Label { Text = "Size", TextColor = InkColor, FontAttributes = FontAttributes.Bold }, 0);
+        sizePanel.Add(
+            new Label
+            {
+                Text = "Size",
+                TextColor = InkColor,
+                FontSize = UiFonts.SidebarFontSize,
+                FontAttributes = FontAttributes.Bold
+            }, 0);
         sizePanel.Add(_size, 0, 1);
         sizePanel.Add(Framed(_sizeList), 0, 2);
         listsRow.Add(sizePanel, 1);
@@ -364,7 +372,8 @@ internal sealed class FontChooserPage : ContentPage
         {
             BackgroundColor = FieldColor,
             TextColor = InkColor,
-            PlaceholderColor = HintColor
+            PlaceholderColor = HintColor,
+            FontSize = UiFonts.SidebarFontSize
         };
     }
 
@@ -375,7 +384,12 @@ internal sealed class FontChooserPage : ContentPage
             SelectionMode = SelectionMode.Single,
             ItemTemplate = new DataTemplate(() =>
             {
-                var label = new Label { Padding = new Thickness(10, 6), TextColor = InkColor };
+                var label = new Label
+                {
+                    Padding = new Thickness(10, 6),
+                    TextColor = InkColor,
+                    FontSize = UiFonts.SidebarFontSize
+                };
                 label.SetBinding(Label.TextProperty, ".");
                 return label;
             })
@@ -400,7 +414,12 @@ internal sealed class FontChooserPage : ContentPage
     /// </summary>
     private View MakeToggle(string text, Func<bool> get, Action<bool> set)
     {
-        var label = new Label { TextColor = InkColor, VerticalOptions = LayoutOptions.Center };
+        var label = new Label
+        {
+            TextColor = InkColor,
+            FontSize = UiFonts.SidebarFontSize,
+            VerticalOptions = LayoutOptions.Center
+        };
         var border = new Border
         {
             StrokeThickness = 1,
@@ -437,6 +456,7 @@ internal sealed class FontChooserPage : ContentPage
         {
             Text = text,
             TextColor = foreground,
+            FontSize = UiFonts.SidebarFontSize,
             FontAttributes = FontAttributes.Bold,
             HorizontalTextAlignment = TextAlignment.Center,
             VerticalTextAlignment = TextAlignment.Center

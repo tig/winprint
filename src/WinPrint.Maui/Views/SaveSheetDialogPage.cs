@@ -37,7 +37,12 @@ internal sealed class SaveSheetDialogPage : ContentPage
             ItemsSource = _names,
             ItemTemplate = new DataTemplate(() =>
             {
-                Label label = new() { Padding = new Thickness(8, 6), TextColor = InkColor };
+                Label label = new()
+                {
+                    Padding = new Thickness(8, 6),
+                    TextColor = InkColor,
+                    FontSize = UiFonts.SidebarFontSize
+                };
                 label.SetBinding(Label.TextProperty, ".");
                 return label;
             })
@@ -53,19 +58,19 @@ internal sealed class SaveSheetDialogPage : ContentPage
             UpdateButtons();
         };
 
-        _newName = new Entry { Placeholder = "New definition name" };
+        _newName = new Entry { Placeholder = "New definition name", FontSize = UiFonts.SidebarFontSize };
         _newName.TextChanged += (_, _) => UpdateButtons();
 
-        _createButton = new Button { Text = "Create" };
+        _createButton = new Button { Text = "Create", FontSize = UiFonts.SidebarFontSize };
         _createButton.Clicked += (_, _) => Complete(SaveSheetChoice.Create);
 
-        Button cancelButton = new() { Text = "Cancel" };
+        Button cancelButton = new() { Text = "Cancel", FontSize = UiFonts.SidebarFontSize };
         cancelButton.Clicked += (_, _) => Complete(SaveSheetChoice.Cancel);
 
-        Button dontSaveButton = new() { Text = "Don't Save" };
+        Button dontSaveButton = new() { Text = "Don't Save", FontSize = UiFonts.SidebarFontSize };
         dontSaveButton.Clicked += (_, _) => Complete(SaveSheetChoice.DontSave);
 
-        _saveButton = new Button { Text = "Save" };
+        _saveButton = new Button { Text = "Save", FontSize = UiFonts.SidebarFontSize };
         _saveButton.Clicked += (_, _) => Complete(SaveSheetChoice.Save);
 
         Grid newNameRow = new()
@@ -99,6 +104,7 @@ internal sealed class SaveSheetDialogPage : ContentPage
         Label titleLabel = new()
         {
             Text = "Sheet Definition has changed. Select definition to update.",
+            FontSize = UiFonts.SidebarFontSize,
             FontAttributes = FontAttributes.Bold,
             TextColor = InkColor
         };

@@ -23,31 +23,24 @@
         </MenuBarItem>
     </ContentPage.MenuBarItems>
 
-    <!-- One base size for all the UI chrome so the panel is visually consistent. Controls
-         keep MAUI's default FontAutoScalingEnabled="True", so this base is scaled by the
-         OS text-size setting automatically on both MacCatalyst and Windows — no per-platform
-         code. (Print-output fonts — header/footer and content — are rendered by the engine,
-         not these controls, so they're unaffected and stay at their true point sizes.) -->
-    <ContentPage.Resources>
-        <OnPlatform x:Key="SidebarFontSize" x:TypeArguments="x:Double">
-            <On Platform="Default" Value="13" />
-            <On Platform="WinUI" Value="11" />
-        </OnPlatform>
-    </ContentPage.Resources>
+    <!-- The base UI-chrome font size (SidebarFontSize) is defined app-wide in App.xaml so the
+         code-built dialogs can share it via UiFonts.SidebarFontSize. -->
 
     <Grid ColumnDefinitions="Auto,Auto,*">
 
         <!-- LEFT PANEL: Settings (collapsible horizontally). Grid rows so the settings sit
              at the top (row 0) and Help/version pins to the bottom of the panel (row 1). -->
-        <Grid x:Name="LeftPanel" Grid.Column="0" WidthRequest="210" RowDefinitions="*,Auto"
+        <Grid x:Name="LeftPanel" Grid.Column="0" WidthRequest="250" RowDefinitions="*,Auto"
               BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2D2D2D}">
             <VerticalStackLayout Grid.Row="0" Padding="6,4" Spacing="1">
 
-                <!-- File / Print buttons -->
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
-                    <Button Grid.Column="0" Text="📂 File..." Command="{Binding OpenFileCommand}"
+                <!-- File / Print / Config buttons (Config opens the JSON config in the default editor, issue #165) -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="4">
+                    <Button Grid.Column="0" Text="📂 File…" Command="{Binding OpenFileCommand}"
                             FontSize="{DynamicResource SidebarFontSize}" Padding="6,2" HeightRequest="{OnPlatform Default=34, WinUI=28}" />
-                    <Button Grid.Column="1" Text="🖨 Print..." Command="{Binding PrintCommand}"
+                    <Button Grid.Column="1" Text="🖨 Print…" Command="{Binding PrintCommand}"
+                            FontSize="{DynamicResource SidebarFontSize}" Padding="6,2" HeightRequest="{OnPlatform Default=34, WinUI=28}" />
+                    <Button Grid.Column="2" Text="⚙ Config…" Command="{Binding OpenConfigCommand}"
                             FontSize="{DynamicResource SidebarFontSize}" Padding="6,2" HeightRequest="{OnPlatform Default=34, WinUI=28}" />
                 </Grid>
 
@@ -203,7 +196,7 @@
 
             <!-- Help / version, pinned to the bottom of the panel (Grid row 1). -->
             <Grid Grid.Row="1" ColumnDefinitions="*,*" Padding="6,4">
-                <Label Grid.Column="0" Text="Help &amp; about..." FontSize="{DynamicResource SidebarFontSize}"
+                <Label Grid.Column="0" Text="Help &amp; about…" FontSize="{DynamicResource SidebarFontSize}"
                        VerticalOptions="End"
                        TextColor="{AppThemeBinding Light=Blue, Dark=LightBlue}" TextDecorations="Underline">
                     <Label.GestureRecognizers>
