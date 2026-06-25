@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Serilog;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Helpers;
@@ -73,6 +74,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             /* TODO: Open settings dialog */
         });
+        OpenConfigCommand = new RelayCommand(async () => await OpenConfigAsync());
 
         // Forward AppViewModel state changes so XAML bindings update.
         _app.PropertyChanged += OnAppPropertyChanged;
@@ -536,6 +538,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ChangeHeaderFooterFontCommand { get; }
     public ICommand SettingsCommand { get; }
 
+    /// <summary>Opens the WinPrint JSON config file in the OS default editor (issue #165).</summary>
+    public ICommand OpenConfigCommand { get; }
+
     public Action? InvalidatePreview { get; set; }
 
     /// <summary>
@@ -648,6 +653,32 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             OnPropertyChanged(nameof(HeaderFooterFontDescription));
             await _app.ReflowAsync();
+        }
+    }
+
+    // Opens the JSON config file in the OS default editor (issue #165). Unlike the TUI — which edits in a
+    // modal Terminal.Gui editor (issue #166) because it can run headless/over SSH — the GUI always has a
+    // desktop session, so shelling out to the user's default editor is the least-surprising behavior.
+    private async Task OpenConfigAsync()
+    {
+        string path = ServiceLocator.Current.SettingsService.SettingsFileName;
+        try
+        {
+            // The app reads (and creates-with-defaults) the config at startup, so it normally exists; reading
+            // again here makes the button self-healing if the file was deleted while running.
+            if (!File.Exists(path))
+            {
+                ServiceLocator.Current.SettingsService.ReloadAndApplySettings();
+            }
+
+            await Launcher.Default.OpenAsync(new OpenFileRequest
+            {
+                File = new ReadOnlyFile(path)
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open config file {path} in the default editor", path);
         }
     }
 
