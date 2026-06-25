@@ -306,6 +306,17 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security import "$CERT_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # Register the signing keychain in the user search list. codesign resolves the
+          # --sign identity NAME against the search list, not the --keychain path, so without
+          # this it fails with "no identity found" even though the cert imported fine.
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
+          # Fail fast (with a clear message) if the .p12 carried the cert but not its private
+          # key — that imports as a cert, not a signing identity, and codesign can't use it.
+          if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Developer ID Application"; then
+            echo "::error::No Developer ID Application *identity* in the signing keychain — the APPLE_CERTIFICATE_BASE64 .p12 is missing its private key. Re-export from Keychain Access 'My Certificates' (cert + key) and update the secret."
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH" || true
+            exit 1
+          fi
           xcrun notarytool store-credentials winprint-notary \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
