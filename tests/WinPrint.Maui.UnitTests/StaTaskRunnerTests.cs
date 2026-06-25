@@ -27,7 +27,7 @@ public class StaTaskRunnerTests
         // The whole point: an unexpected exception on the worker thread must not leave the awaiter
         // hanging forever — it must resolve via the onError mapping. WaitAsync fails the test on hang.
         int result = await StaTaskRunner
-            .RunAsync<int>(() => throw new InvalidOperationException("boom"), _ => 99)
+            .RunAsync(() => throw new InvalidOperationException("boom"), _ => 99)
             .WaitAsync(Timeout);
 
         Assert.Equal(99, result);
@@ -50,7 +50,11 @@ public class StaTaskRunnerTests
         cts.Cancel();
         bool ran = false;
 
-        Task<int> task = StaTaskRunner.RunAsync(() => { ran = true; return 1; }, _ => 0, cts.Token);
+        Task<int> task = StaTaskRunner.RunAsync(() =>
+        {
+            ran = true;
+            return 1;
+        }, _ => 0, cts.Token);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task.WaitAsync(Timeout));
         Assert.False(ran);
@@ -61,7 +65,7 @@ public class StaTaskRunnerTests
     {
         using var cts = new CancellationTokenSource();
 
-        Task<int> task = StaTaskRunner.RunAsync<int>(() =>
+        Task<int> task = StaTaskRunner.RunAsync(() =>
         {
             cts.Cancel();
             cts.Token.ThrowIfCancellationRequested();
