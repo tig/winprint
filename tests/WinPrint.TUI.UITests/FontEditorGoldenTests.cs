@@ -49,4 +49,45 @@ public class FontEditorGoldenTests
 
         DriverAssert.ContainsText(fixture.Screen, "Wingdings Deluxe");
     }
+
+    [Fact]
+    public void ChangingFamily_RaisesValueChanged_SoPreviewCanReflow()
+    {
+        // Regression: picking a different family in the dropdown must raise ValueChanged so the
+        // SettingsPanel handler writes the new font and reflows. (Mutating the bound Font in place left
+        // Value reference-identical, so EditorBase never raised ValueChanged and the preview never reflowed.)
+        var editor = new FontEditor
+        {
+            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
+        };
+        _ = new AppFixture(editor, 60, 6);
+
+        Font? changedTo = null;
+        editor.ValueChanged += (_, e) => changedTo = e.NewValue;
+
+        editor.SelectInDropDown("_family", "Courier New");
+
+        Assert.NotNull(changedTo);
+        Assert.Equal("Courier New", changedTo!.Family);
+        Assert.Equal(10f, changedTo.Size); // size preserved
+    }
+
+    [Fact]
+    public void ChangingSize_RaisesValueChanged_SoPreviewCanReflow()
+    {
+        var editor = new FontEditor
+        {
+            Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
+        };
+        _ = new AppFixture(editor, 60, 6);
+
+        Font? changedTo = null;
+        editor.ValueChanged += (_, e) => changedTo = e.NewValue;
+
+        editor.SelectInDropDown("_size", "12");
+
+        Assert.NotNull(changedTo);
+        Assert.Equal(12f, changedTo!.Size);
+        Assert.Equal("Source Code Pro", changedTo.Family); // family preserved
+    }
 }

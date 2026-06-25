@@ -67,16 +67,23 @@ public sealed class FontEditor : EditorBase<Font>
             return;
         }
 
-        // Font is mutable; mutate the bound instance directly.
+        // Build a NEW Font and assign it through Value (rather than mutating the bound instance in place).
+        // Font is not a ModelBase and raises no PropertyChanged, so an in-place mutation left Value
+        // reference-identical: EditorBase never raised ValueChanged, so the SettingsPanel handler never ran
+        // and the preview never reflowed. Font has value equality, so an unchanged selection is a no-op.
+        var updated = (Font)Value.Clone();
+
         if (!string.IsNullOrEmpty(_family.Value))
         {
-            Value.Family = _family.Value;
+            updated.Family = _family.Value;
         }
 
         if (float.TryParse(_size.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float size))
         {
-            Value.Size = size;
+            updated.Size = size;
         }
+
+        Value = updated;
     }
 
     // The model's family/size are free-form, so a bound value may not be in the curated list; add it
