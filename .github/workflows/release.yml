@@ -339,7 +339,24 @@ jobs:
           mkdir -p artifacts/cask
           ZIP="artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip"
           if [ "${HAS_APPLE_SIGNING}" = "true" ]; then
-            codesign --force --deep --options runtime --timestamp \
+            # Sign inside-out. codesign --deep leaves some nested Mach-O dylibs unsigned (notarization
+            # rejected MonoBundle/libonigwrap.dylib + liblaunchcwd.dylib as "not signed" / "no secure
+            # timestamp"), so sign EVERY nested Mach-O binary explicitly — the GUI's MonoBundle libs and
+            # the embedded wp's ~150 CoreCLR dylibs/apphost — with the hardened runtime + secure
+            # timestamp, then seal the bundle last. The two .NET apphosts (GUI main exe, sealed via the
+            # bundle; and the embedded wp) additionally need the JIT/runtime entitlements.
+            while IFS= read -r -d '' f; do
+              if file -b "$f" | grep -q 'Mach-O'; then
+                codesign --force --options runtime --timestamp \
+                  --keychain "$APPLE_KEYCHAIN_PATH" \
+                  --sign "$APPLE_SIGNING_IDENTITY" "$f"
+              fi
+            done < <(find "$APP/Contents" -type f -print0)
+            codesign --force --options runtime --timestamp \
+              --keychain "$APPLE_KEYCHAIN_PATH" \
+              --entitlements packaging/macos/codesign.entitlements \
+              --sign "$APPLE_SIGNING_IDENTITY" "$APP/Contents/Helpers/wp/wp"
+            codesign --force --options runtime --timestamp \
               --keychain "$APPLE_KEYCHAIN_PATH" \
               --entitlements packaging/macos/codesign.entitlements \
               --sign "$APPLE_SIGNING_IDENTITY" "$APP"
