@@ -6,24 +6,22 @@ using SkiaSharp;
 namespace WinPrint.Core.Services;
 
 /// <summary>
-///     Enumerates the installed font families and detects which are fixed-pitch (monospaced).
+///     Default <see cref="IFontEnumerationService" />: enumerates the installed font families and detects
+///     which are fixed-pitch (monospaced).
 ///     <para>
 ///         Uses SkiaSharp's <see cref="SKFontManager" />, which is available on every platform WinPrint
-///         targets (DirectWrite on Windows, CoreText on macOS, FreeType/Fontconfig on Linux). This is the
-///         cross-platform font-enumeration service that <see cref="Models.FontChoices" /> noted was missing,
-///         so the font chooser can offer the user's actual fonts instead of a hard-coded list.
+///         targets (DirectWrite on Windows, CoreText on macOS, FreeType/Fontconfig on Linux), so the font
+///         chooser can offer the user's actual fonts instead of a hard-coded list (issue #173). Resolved
+///         through the abstraction (see <see cref="WinPrintServices.FontEnumerationService" />) so a front
+///         end can substitute its own source.
 ///     </para>
 /// </summary>
-public static class SystemFontEnumerator
+public sealed class SystemFontEnumerator : IFontEnumerationService
 {
-    private static IReadOnlyList<SystemFontFamily>? _cache;
+    private IReadOnlyList<SystemFontFamily>? _cache;
 
-    /// <summary>
-    ///     Returns the installed font families, de-duplicated and sorted by name, each flagged with whether
-    ///     it is fixed-pitch. The result is cached for the life of the process (the installed font set does
-    ///     not change while the app runs).
-    /// </summary>
-    public static IReadOnlyList<SystemFontFamily> GetFamilies()
+    /// <inheritdoc />
+    public IReadOnlyList<SystemFontFamily> GetFamilies()
     {
         return _cache ??= Enumerate();
     }

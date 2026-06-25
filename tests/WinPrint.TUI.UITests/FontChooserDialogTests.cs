@@ -2,6 +2,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.Drivers;
 using Terminal.Gui.Input;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.TUI.UnitTests.Testing;
 using WinPrint.TUI.Views;
 using Xunit;
@@ -31,6 +32,23 @@ public class FontChooserDialogTests
         DriverAssert.ContainsText(fixture.Screen, "Italic");
         DriverAssert.ContainsText(fixture.Screen, "OK");
         DriverAssert.ContainsText(fixture.Screen, "Cancel");
+    }
+
+    [Fact]
+    public void Render_ListsFamiliesFromInjectedEnumerator()
+    {
+        // The family list must come from the IFontEnumerationService (issue #173), not a hard-coded list.
+        // Seed the dialog with a made-up fixed-pitch family that could only appear if the dialog sourced it
+        // from the injected enumerator (the default fixed-pitch filter keeps fixed-pitch families visible).
+        var enumerator = new FakeFontEnumerationService(
+            new SystemFontFamily("Nonexistent Mono", true),
+            new SystemFontFamily("Another Test Mono", true));
+        var dialog = new FontChooserDialog(
+            new Font { Family = "Nonexistent Mono", Size = 10f }, enumerator);
+        var fixture = new AppFixture(dialog, 100, 30);
+
+        DriverAssert.ContainsText(fixture.Screen, "Nonexistent Mono");
+        DriverAssert.ContainsText(fixture.Screen, "Another Test Mono");
     }
 
     [Fact]
