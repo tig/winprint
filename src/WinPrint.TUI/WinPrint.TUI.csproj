@@ -40,6 +40,8 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\CaskaydiaCoveNFM-Regular.ttf" />
+        <!-- Curated Markdown help pages rendered by WpHelpProvider for the wp help command. -->
+        <EmbeddedResource Include="Help\*.md" />
     </ItemGroup>
 
     <ItemGroup>
