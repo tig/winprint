@@ -43,6 +43,19 @@ public class FontChooserDialogTests
     }
 
     [Fact]
+    public void Dispose_AfterPreviewRequested_CancelsDebounceCleanly()
+    {
+        // Construction requests a (debounced) preview. Disposing must cancel + dispose the debounce CTS so
+        // no delayed render fires after teardown — and must not throw (regression guard for the CTS
+        // lifecycle: dispose path, plus no accumulation of undisposed CancellationTokenSources).
+        var dialog = new FontChooserDialog(new Font { Family = "Consolas", Size = 11f });
+
+        Exception? ex = Record.Exception(() => dialog.Dispose());
+
+        Assert.Null(ex);
+    }
+
+    [Fact]
     public void Confirm_ReturnsComposedFont_PreservingFamilySizeAndStyle()
     {
         using IApplication app = Application.Create();

@@ -149,6 +149,7 @@ public sealed class FontChooserDialog : Dialog
         cancel.Accepting += (_, e) =>
         {
             e.Handled = true;
+            StopPreview();
             RequestStop();
         };
         var ok = new Button { Text = Strings.btnOk, IsDefault = true };
@@ -189,6 +190,9 @@ public sealed class FontChooserDialog : Dialog
         _italic.ValueChanged += (_, _) => RequestPreview();
 
         Initialized += (_, _) => RequestPreview();
+
+        // Ensure a pending debounced render can't fire after the dialog is torn down.
+        Disposing += (_, _) => StopPreview();
     }
 
     /// <summary>
@@ -219,6 +223,7 @@ public sealed class FontChooserDialog : Dialog
     {
         Confirmed = true;
         SelectedFont = CurrentFont();
+        StopPreview();
         RequestStop();
     }
 
@@ -283,9 +288,10 @@ public sealed class FontChooserDialog : Dialog
     // mirroring how PreviewPane refreshes the page preview.
     private void RequestPreview()
     {
-        _debounceCts?.Cancel();
-        _debounceCts = new CancellationTokenSource();
-        CancellationToken token = _debounceCts.Token;
+        StopPreview();
+        var cts = new CancellationTokenSource();
+        _debounceCts = cts;
+        CancellationToken token = cts.Token;
 
         _ = Task.Delay(DebounceMs, token).ContinueWith(_ =>
         {
@@ -294,6 +300,15 @@ public sealed class FontChooserDialog : Dialog
                 GetApp()?.Invoke(RenderPreview);
             }
         }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+    }
+
+    // Cancels and disposes any pending debounced preview, so a delayed render can't run (and touch disposed
+    // controls) after the dialog is confirmed, cancelled, or disposed, and CTSs don't accumulate.
+    private void StopPreview()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = null;
     }
 
     private void RenderPreview()
@@ -305,7 +320,13 @@ public sealed class FontChooserDialog : Dialog
         Task.Run(() => _sampleRenderer.Render(font, width, height))
             .ContinueWith(task =>
             {
-                if (version != _previewVersion || task.IsFaulted || task.IsCanceled)
+                if (task.IsFaulted)
+                {
+                    _ = task.Exception; // observe so a render failure can't surface as UnobservedTaskException
+                    return;
+                }
+
+                if (task.IsCanceled || version != _previewVersion)
                 {
                     return;
                 }

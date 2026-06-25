@@ -38,36 +38,48 @@ public static class TerminalScreenshot
         int rows = driver.Rows;
 
         using var image = new Image<Rgba32>(cols * CellWidth, rows * CellHeight);
-        image.Mutate(ctx => ctx.BackgroundColor(ImageColor.Black));
 
-        FontFamily family = FontCollectionFactory.GetCollection().Families.First();
+        // The embedded collection can be empty if its font resource is missing; fall back to a system font
+        // rather than throwing an opaque "sequence contains no elements".
+        FontFamily family = FontCollectionFactory.GetCollection().Families.FirstOrDefault();
+        if (family.Name is null)
+        {
+            family = SystemFonts.Families.First();
+        }
+
         Font font = family.CreateFont(CellHeight * 0.62f, FontStyle.Regular);
 
-        // Paint each cell's background, then its glyph in the cell's foreground color.
-        for (int y = 0; y < rows; y++)
+        // Paint the background and every cell (fill + glyph) in a single Mutate so we don't spin up an
+        // ImageSharp pipeline per cell (which is disproportionately slow on larger terminals).
+        image.Mutate(ctx =>
         {
-            for (int x = 0; x < cols; x++)
+            ctx.BackgroundColor(ImageColor.Black);
+
+            for (int y = 0; y < rows; y++)
             {
-                Cell cell = cells[y, x];
-                TgAttribute attr = cell.Attribute ?? TgAttribute.Default;
-                var rect = new RectangleF(x * CellWidth, y * CellHeight, CellWidth, CellHeight);
-                image.Mutate(ctx => ctx.Fill(ToColor(attr.Background), rect));
-
-                string grapheme = cell.Grapheme;
-                if (string.IsNullOrEmpty(grapheme) || grapheme == " ")
+                for (int x = 0; x < cols; x++)
                 {
-                    continue;
+                    Cell cell = cells[y, x];
+                    TgAttribute attr = cell.Attribute ?? TgAttribute.Default;
+                    var rect = new RectangleF(x * CellWidth, y * CellHeight, CellWidth, CellHeight);
+                    ctx.Fill(ToColor(attr.Background), rect);
+
+                    string grapheme = cell.Grapheme;
+                    if (string.IsNullOrEmpty(grapheme) || grapheme == " ")
+                    {
+                        continue;
+                    }
+
+                    var options = new RichTextOptions(font)
+                    {
+                        Origin = new PointF(x * CellWidth + CellWidth / 2f, y * CellHeight + CellHeight / 2f),
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    ctx.DrawText(options, grapheme, ToColor(attr.Foreground));
                 }
-
-                var options = new RichTextOptions(font)
-                {
-                    Origin = new PointF(x * CellWidth + CellWidth / 2f, y * CellHeight + CellHeight / 2f),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                image.Mutate(ctx => ctx.DrawText(options, grapheme, ToColor(attr.Foreground)));
             }
-        }
+        });
 
         // Overlay any raster ImageView content (the sixel region the cell grid renders as blank).
         foreach (ImageView view in RasterViews(root))
@@ -124,6 +136,7 @@ public static class TerminalScreenshot
 
     private static ImageColor ToColor(Terminal.Gui.Drawing.Color color)
     {
-        return ImageColor.FromRgba(color.R, color.G, color.B, 255);
+        // Preserve the source alpha so composited cells match the raster overlay (which respects c.A).
+        return ImageColor.FromRgba(color.R, color.G, color.B, color.A);
     }
 }
