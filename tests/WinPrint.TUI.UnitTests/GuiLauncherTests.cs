@@ -7,6 +7,8 @@ namespace WinPrint.TUI.UnitTests;
 
 public class GuiLauncherTests
 {
+    private static readonly Func<string, IEnumerable<string>> NoBundles = _ => [];
+
     [Fact]
     public void GuiCommand_AdvertisesGuiSubcommand()
     {
@@ -33,8 +35,9 @@ public class GuiLauncherTests
         GuiLauncher.Launch(
             GuiPlatform.Windows,
             @"C:\Apps\WinPrint",
-            @"C:\Work",
             _ => false,
+            _ => false,
+            NoBundles,
             startInfo =>
             {
                 starts.Add(startInfo);
@@ -48,50 +51,20 @@ public class GuiLauncherTests
     }
 
     [Fact]
-    public void MacOS_LaunchesNearbyAppBundle()
+    public void MacOS_LaunchesSiblingGuiBundle()
     {
+        // wp published next to the GUI: WinPrint.app sits beside wp in the same directory.
         List<ProcessStartInfo> starts = [];
-        string baseDirectory = Path.Combine(Path.GetTempPath(), $"winprint-gui-test-{Guid.NewGuid():N}");
+        const string baseDirectory = "/opt/winprint";
         string bundle = Path.Combine(baseDirectory, "WinPrint.app");
-        try
-        {
-            Directory.CreateDirectory(bundle);
-
-            GuiLauncher.Launch(
-                GuiPlatform.MacOS,
-                baseDirectory,
-                "/tmp",
-                Directory.Exists,
-                startInfo =>
-                {
-                    starts.Add(startInfo);
-                    return true;
-                });
-
-            ProcessStartInfo start = Assert.Single(starts);
-            Assert.Equal("open", start.FileName);
-            Assert.Equal(bundle, start.Arguments);
-            Assert.True(start.UseShellExecute);
-        }
-        finally
-        {
-            if (Directory.Exists(baseDirectory))
-            {
-                Directory.Delete(baseDirectory, true);
-            }
-        }
-    }
-
-    [Fact]
-    public void MacOS_FallsBackToApplicationName()
-    {
-        List<ProcessStartInfo> starts = [];
+        string guiExecutable = Path.Combine(bundle, "Contents", "MacOS", "winprint");
 
         GuiLauncher.Launch(
             GuiPlatform.MacOS,
-            "/opt/winprint",
-            "/tmp",
-            _ => false,
+            baseDirectory,
+            dir => dir == bundle,
+            file => file == guiExecutable,
+            NoBundles,
             startInfo =>
             {
                 starts.Add(startInfo);
@@ -100,7 +73,137 @@ public class GuiLauncherTests
 
         ProcessStartInfo start = Assert.Single(starts);
         Assert.Equal("open", start.FileName);
-        Assert.Equal("-a WinPrint", start.Arguments);
+        Assert.Equal(bundle, start.Arguments);
+        Assert.True(start.UseShellExecute);
+    }
+
+    [Fact]
+    public void MacOS_LaunchesEnclosingGuiBundleWhenWpIsEmbedded()
+    {
+        // Homebrew cask / packaged build: wp runs from WinPrint.app/Contents/Helpers, so the GUI is the
+        // enclosing bundle — found by walking up, not by any global lookup.
+        List<ProcessStartInfo> starts = [];
+        const string bundle = "/Applications/WinPrint.app";
+        string baseDirectory = Path.Combine(bundle, "Contents", "Helpers");
+        string guiExecutable = Path.Combine(bundle, "Contents", "MacOS", "winprint");
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            baseDirectory,
+            dir => dir == bundle,
+            file => file == guiExecutable,
+            NoBundles,
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal("open", start.FileName);
+        Assert.Equal(bundle, start.Arguments);
+    }
+
+    [Fact]
+    public void MacOS_LaunchesSiblingMauiProjectBuildOutput()
+    {
+        // Source-tree `dotnet build`: wp builds to src/WinPrint.TUI/bin/<config>/<tfm> while the GUI
+        // builds to the sibling src/WinPrint.Maui/bin/<config>/<tfm>/<rid>/WinPrint.app.
+        List<ProcessStartInfo> starts = [];
+        const string baseDirectory = "/repo/src/WinPrint.TUI/bin/Debug/net10.0";
+        const string mauiBin = "/repo/src/WinPrint.Maui/bin";
+        const string bundle = "/repo/src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/WinPrint.app";
+        string guiExecutable = Path.Combine(bundle, "Contents", "MacOS", "winprint");
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            baseDirectory,
+            dir => dir is mauiBin or bundle,
+            file => file == guiExecutable,
+            root => root == mauiBin ? [bundle] : [],
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal("open", start.FileName);
+        Assert.Equal(bundle, start.Arguments);
+    }
+
+    [Fact]
+    public void MacOS_PrefersDevGuiBundleMatchingBuildConfig()
+    {
+        // When both Debug and Release GUI builds exist, a Debug wp must open the Debug bundle (and not a
+        // stale Release one), regardless of enumeration order.
+        List<ProcessStartInfo> starts = [];
+        const string baseDirectory = "/repo/src/WinPrint.TUI/bin/Debug/net10.0";
+        const string mauiBin = "/repo/src/WinPrint.Maui/bin";
+        const string debugBundle =
+            "/repo/src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/WinPrint.app";
+        const string releaseBundle =
+            "/repo/src/WinPrint.Maui/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/WinPrint.app";
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            baseDirectory,
+            dir => dir is mauiBin or debugBundle or releaseBundle,
+            file => file.EndsWith(Path.Combine("Contents", "MacOS", "winprint"), StringComparison.Ordinal),
+            root => root == mauiBin ? [releaseBundle, debugBundle] : [],
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal(debugBundle, start.Arguments);
+    }
+
+    [Fact]
+    public void MacOS_IgnoresLookAlikeBundleWithoutGuiExecutable()
+    {
+        // A WinPrint.app whose Contents/MacOS lacks the `winprint` GUI executable (e.g. a stale/legacy
+        // bundle that only contains the TUI) must NOT be launched — wp gui should report the GUI missing
+        // rather than silently opening the wrong app.
+        const string bundle = "/Applications/WinPrint.app";
+        string baseDirectory = Path.Combine(bundle, "Contents", "Helpers");
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            GuiLauncher.Launch(
+                GuiPlatform.MacOS,
+                baseDirectory,
+                dir => dir == bundle, // the bundle dir exists…
+                _ => false, // …but Contents/MacOS/winprint does not.
+                NoBundles,
+                _ => true));
+
+        Assert.Contains("Could not find the WinPrint GUI", ex.Message);
+    }
+
+    [Fact]
+    public void MacOS_ReportsMissingGuiWhenNoBundleNearby()
+    {
+        // Formula-only install (TUI without the GUI cask): no WinPrint.app near wp → helpful error,
+        // never a fallback to /Applications or `open -a WinPrint`.
+        List<ProcessStartInfo> starts = [];
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            GuiLauncher.Launch(
+                GuiPlatform.MacOS,
+                "/opt/homebrew/Cellar/winprint/2.6.15/bin",
+                _ => false,
+                _ => false,
+                NoBundles,
+                startInfo =>
+                {
+                    starts.Add(startInfo);
+                    return true;
+                }));
+
+        Assert.Contains("Could not find the WinPrint GUI", ex.Message);
+        Assert.Empty(starts);
     }
 
     [Fact]
@@ -110,8 +213,9 @@ public class GuiLauncherTests
             GuiLauncher.Launch(
                 GuiPlatform.Unsupported,
                 "/opt/winprint",
-                "/tmp",
                 _ => false,
+                _ => false,
+                NoBundles,
                 _ => true));
 
         Assert.Equal("WinPrint GUI is not available on Linux yet.", ex.Message);
