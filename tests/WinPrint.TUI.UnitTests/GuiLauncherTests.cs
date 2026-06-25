@@ -204,6 +204,11 @@ public class GuiLauncherTests
     [Fact]
     public void MacOS_ForwardsFilesAfterArgsSeparator()
     {
+        if (SkipOnWindows())
+        {
+            return;
+        }
+
         // `open <bundle> --args <files…>` forwards file arguments to the GUI; ArgumentList keeps each as a
         // discrete argv entry after the `--args` separator.
         List<ProcessStartInfo> starts = [];
