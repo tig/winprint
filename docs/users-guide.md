@@ -28,7 +28,9 @@ wp [options] [file...]
 |---------|-------------|
 | `wp file.cs` | Open a file in the TUI |
 | `wp` | Launch the TUI (terminal user interface) |
+| `wp print file.cs` | Print one or more files without opening the UI |
 | `wp gui` | Launch the graphical user interface on Windows/macOS |
+| `wp gui file.cs` | Launch the GUI with a file (and options) loaded |
 
 ### Examples
 
@@ -50,10 +52,24 @@ Pass print preview options:
 wp Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
 ```
 
+Print without opening the UI (use `--what-if` to count sheets without printing):
+
+```bash
+wp print Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
+wp print *.cs --landscape
+wp print Program.cs --what-if
+```
+
 Launch the GUI:
 
 ```bash
 wp gui
+```
+
+Launch the GUI with a file (and options) loaded:
+
+```bash
+wp gui ./testfiles/Program.cs --sheet "Default 2-Up"
 ```
 
 Get help:
@@ -79,9 +95,9 @@ apply everywhere:
 | `--to-sheet` | `-t` | Last sheet to print (use with `--from-sheet`). |
 | `--content-type` | `-e` | Content type engine / language override (e.g. `text/plain`, `text/html`, or a `<language>`). |
 
-Front ends add their own *appropriate* extras: the TUI adds `--view`, `--width`, `--height`; the `wp`
-print command adds `--line-numbers`, `--what-if` (`-w`, count sheets without printing), and
-`--config`; and the GUI launches through the separate `wp gui` command. The Terminal.Gui.Cli framework
+Front ends add their own *appropriate* extras: the interactive TUI adds `--view`, `--width`,
+`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing); and the
+GUI launches through the separate `wp gui` command. The Terminal.Gui.Cli framework
 — which the `wp` CLI/TUI uses for command-line handling — also provides `--help`, `--version`,
 `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 

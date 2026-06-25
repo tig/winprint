@@ -18,6 +18,18 @@ public class GuiLauncherTests
     }
 
     [Fact]
+    public void GuiCommand_AcceptsFilesAndSharedOptions()
+    {
+        var command = new GuiCommand();
+
+        // wp gui ./file.cs must be accepted as a positional file, and the shared print options
+        // (e.g. --sheet) must be advertised so they parse and show in `wp help gui`.
+        Assert.True(command.AcceptsPositionalArgs);
+        Assert.Contains(command.Options, o => o.Name == "sheet");
+        Assert.Contains(command.Options, o => o.Name == "landscape");
+    }
+
+    [Fact]
     public void Windows_LaunchesWinprintExeFromBaseDirectory()
     {
         // Windows-only: GuiLauncher relies on Path.IsPathFullyQualified, which is OS-specific — a
@@ -34,6 +46,7 @@ public class GuiLauncherTests
             GuiPlatform.Windows,
             @"C:\Apps\WinPrint",
             @"C:\Work",
+            [],
             _ => false,
             startInfo =>
             {
@@ -45,6 +58,34 @@ public class GuiLauncherTests
         Assert.Equal(@"C:\Apps\WinPrint\winprint.exe", start.FileName);
         Assert.Equal("", start.Arguments);
         Assert.True(start.UseShellExecute);
+    }
+
+    [Fact]
+    public void Windows_ForwardsFileArgumentsToWinprintExe()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        List<ProcessStartInfo> starts = [];
+
+        GuiLauncher.Launch(
+            GuiPlatform.Windows,
+            @"C:\Apps\WinPrint",
+            @"C:\Work",
+            ["./testfiles/Program.cs", "--sheet", "Default 2-Up"],
+            _ => false,
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal(@"C:\Apps\WinPrint\winprint.exe", start.FileName);
+        // The file is forwarded verbatim; the value containing a space is quoted.
+        Assert.Equal("./testfiles/Program.cs --sheet \"Default 2-Up\"", start.Arguments);
     }
 
     [Fact]
@@ -61,6 +102,7 @@ public class GuiLauncherTests
                 GuiPlatform.MacOS,
                 baseDirectory,
                 "/tmp",
+                [],
                 Directory.Exists,
                 startInfo =>
                 {
@@ -91,6 +133,7 @@ public class GuiLauncherTests
             GuiPlatform.MacOS,
             "/opt/winprint",
             "/tmp",
+            [],
             _ => false,
             startInfo =>
             {
@@ -104,6 +147,29 @@ public class GuiLauncherTests
     }
 
     [Fact]
+    public void MacOS_ForwardsFilesAfterArgsSeparator()
+    {
+        List<ProcessStartInfo> starts = [];
+
+        GuiLauncher.Launch(
+            GuiPlatform.MacOS,
+            "/opt/winprint",
+            "/tmp",
+            ["report.cs"],
+            _ => false,
+            startInfo =>
+            {
+                starts.Add(startInfo);
+                return true;
+            });
+
+        ProcessStartInfo start = Assert.Single(starts);
+        Assert.Equal("open", start.FileName);
+        // `open` forwards trailing tokens to the app only after `--args`.
+        Assert.Equal("-a WinPrint --args report.cs", start.Arguments);
+    }
+
+    [Fact]
     public void UnsupportedPlatform_ReportsGuiUnavailable()
     {
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
@@ -111,6 +177,7 @@ public class GuiLauncherTests
                 GuiPlatform.Unsupported,
                 "/opt/winprint",
                 "/tmp",
+                [],
                 _ => false,
                 _ => true));
 

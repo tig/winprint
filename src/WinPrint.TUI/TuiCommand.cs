@@ -64,8 +64,8 @@ public sealed class TuiCommand : IViewerCommand
 
         // When an explicit --width/--height is given (e.g. tuirec driving a fixed capture size), pin the
         // driver's screen; otherwise the app fills the real terminal / PTY.
-        int width = GetInt(options, "width");
-        int height = GetInt(options, "height");
+        int width = CommandOptionsBinder.GetInt(options, "width");
+        int height = CommandOptionsBinder.GetInt(options, "height");
         if (width > 0 && height > 0)
         {
             app.Driver?.SetScreenSize(width, height);
@@ -159,38 +159,21 @@ public sealed class TuiCommand : IViewerCommand
     // Build either a single catalogued view (--view) or the full MainView bound to the file/options.
     private static View BuildContent(CommandRunOptions options)
     {
-        if (GetOption(options, "view") is { Length: > 0 } view)
+        if (CommandOptionsBinder.GetString(options, "view") is { Length: > 0 } view)
         {
             return ViewCatalog.Create(view);
         }
 
-        return new MainView(context: SettingsContext.Create(BuildOptions(options)));
-    }
-
-    // Map the parsed command options onto the shared winprint Options model so the TUI applies them
-    // through the same AppViewModel.ApplyOptions path MAUI and the CLI use.
-    private static Options BuildOptions(CommandRunOptions options)
-    {
         string? file = options.Arguments.Count > 0 ? options.Arguments[0] : null;
-        return new Options
-        {
-            Files = file is null ? null : [file],
-            Sheet = GetOption(options, "sheet"),
-            Landscape = GetFlag(options, "landscape"),
-            Portrait = GetFlag(options, "portrait"),
-            Printer = GetOption(options, "printer"),
-            PaperSize = GetOption(options, "paper-size"),
-            FromPage = GetInt(options, "from-sheet"),
-            ToPage = GetInt(options, "to-sheet"),
-            ContentType = GetOption(options, "content-type")
-        };
+        return new MainView(context: SettingsContext.Create(
+            CommandOptionsBinder.ToOptions(options, file is null ? null : [file])));
     }
 
     // --width/--height for --cat; fall back to the real terminal size, then a sane default.
     private static (int width, int height) ResolveSize(CommandRunOptions options)
     {
-        int width = GetInt(options, "width");
-        int height = GetInt(options, "height");
+        int width = CommandOptionsBinder.GetInt(options, "width");
+        int height = CommandOptionsBinder.GetInt(options, "height");
         return (width > 0 ? width : SafeWindow(() => Console.WindowWidth, 80),
             height > 0 ? height : SafeWindow(() => Console.WindowHeight, 30));
     }
@@ -241,23 +224,5 @@ public sealed class TuiCommand : IViewerCommand
     private static bool IsEnvEnabled(string name)
     {
         return Environment.GetEnvironmentVariable(name) is "1" or "true";
-    }
-
-    private static string? GetOption(CommandRunOptions options, string name)
-    {
-        return options.CommandOptions.TryGetValue(name, out string? value) ? value : null;
-    }
-
-    private static bool GetFlag(CommandRunOptions options, string name)
-    {
-        return options.CommandOptions.TryGetValue(name, out string? value)
-               && value.Equals("true", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static int GetInt(CommandRunOptions options, string name)
-    {
-        return options.CommandOptions.TryGetValue(name, out string? value) && int.TryParse(value, out int result)
-            ? result
-            : 0;
     }
 }

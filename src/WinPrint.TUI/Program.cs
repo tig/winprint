@@ -1,6 +1,6 @@
 // `wp` — winprint's Terminal.Gui front end, hosted on Terminal.Gui.Cli with real --help/--version,
-// global options, and a default command. `wp foo.cs` opens the interactive TUI for a file; `wp tui foo.cs` or
-// `wp --tui foo.cs` does the same.
+// global options, and a default command. `wp foo.cs` (or bare `wp`) opens the interactive TUI for a
+// file; `wp print foo.cs` prints headlessly; `wp gui` opens the MAUI GUI.
 
 using Serilog;
 using Terminal.Gui.Cli;
@@ -36,10 +36,18 @@ CliHost host = new(options =>
     options.DefaultCommand = "tui";
     options.GlobalOptions.Add(new GlobalOptionDescriptor("verbose", "v", "Write progress details to stderr.", true));
     options.GlobalOptions.Add(new GlobalOptionDescriptor("debug", null, "Write diagnostic details to stderr.", true));
-    options.GlobalOptions.Add(new GlobalOptionDescriptor("tui", null, "Open the interactive TUI (default).", true));
+
+    // The stock MetadataHelpProvider shows no per-command or custom-global options, so `wp help`
+    // looked empty. WpHelpProvider renders curated Markdown (from Help/*.md) with the command/option
+    // tables generated from these same descriptors so help can't drift from the real surface. `tui` is
+    // the default command (bare `wp` / `wp file` open it) and isn't advertised as its own subcommand.
+    options.HelpProvider = new WpHelpProvider(AppHostInfo.DisplayVersion, options.GlobalOptions, "tui");
 });
 
+// `tui` is registered because DefaultCommand must resolve to a real command (it backs bare `wp`),
+// but it's hidden from help — users open the TUI via `wp [file]`, print via `wp print`.
 host.Registry.Register(new TuiCommand());
+host.Registry.Register(new PrintCommand());
 host.Registry.Register(new GuiCommand());
 
 // Guard the whole run so an exception thrown during interactive teardown is logged and
