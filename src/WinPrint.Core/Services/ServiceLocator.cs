@@ -22,6 +22,8 @@ public class ServiceLocator
 
     public UpdateService UpdateService => Services.UpdateService;
 
+    public IFontEnumerationService FontEnumerationService => Services.FontEnumerationService;
+
     public static void Reset()
     {
         s_current = null;

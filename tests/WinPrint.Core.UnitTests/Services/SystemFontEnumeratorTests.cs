@@ -14,10 +14,13 @@ namespace WinPrint.Core.UnitTests.Services;
 /// </summary>
 public class SystemFontEnumeratorTests
 {
+    // A fresh instance per test (xUnit news up the class each [Fact]); the instance caches across calls.
+    private readonly IFontEnumerationService _enumerator = new SystemFontEnumerator();
+
     [Fact]
     public void GetFamilies_ReturnsInstalledFamilies()
     {
-        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = _enumerator.GetFamilies();
 
         Assert.NotEmpty(families);
         Assert.All(families, f => Assert.False(string.IsNullOrWhiteSpace(f.Name)));
@@ -26,8 +29,8 @@ public class SystemFontEnumeratorTests
     [Fact]
     public void GetFamilies_IsCachedAndSortedDistinct()
     {
-        IReadOnlyList<SystemFontFamily> first = SystemFontEnumerator.GetFamilies();
-        IReadOnlyList<SystemFontFamily> second = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> first = _enumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> second = _enumerator.GetFamilies();
 
         Assert.Same(first, second);
 
@@ -41,7 +44,7 @@ public class SystemFontEnumeratorTests
     {
         // Every platform WinPrint targets ships at least one monospaced family (Consolas/Courier New on
         // Windows, Menlo/Monaco/Courier on macOS, DejaVu/Liberation Mono on typical Linux).
-        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = _enumerator.GetFamilies();
         Assert.Contains(families, f => f.IsFixedPitch);
     }
 
@@ -50,7 +53,7 @@ public class SystemFontEnumeratorTests
     {
         // The flag must mean what it says: in a family marked fixed-pitch a narrow and a wide glyph advance
         // identically; in one marked proportional they differ. Verify both directions against Skia directly.
-        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = _enumerator.GetFamilies();
 
         SystemFontFamily? mono = families.FirstOrDefault(f => f.IsFixedPitch);
         if (mono is not null)
@@ -72,7 +75,7 @@ public class SystemFontEnumeratorTests
         // char as the same .notdef advance, which made the width-only test report them as monospace and
         // flooded the "fixed-pitch only" filter with non-mono faces. A real fixed-pitch family must contain
         // the glyphs it's being measured by.
-        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
+        IReadOnlyList<SystemFontFamily> families = _enumerator.GetFamilies();
 
         foreach (SystemFontFamily family in families.Where(f => f.IsFixedPitch))
         {

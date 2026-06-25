@@ -15,8 +15,9 @@ namespace WinPrint.TUI.Views;
 /// <summary>
 ///     Modal chooser for a content <see cref="Font" /> — family, point size, and <b>bold</b>/<b>italic</b>
 ///     style — with a <b>live preview</b> rasterized through the same render path the page preview uses
-///     (issue #177). The family list comes from the cross-platform <see cref="SystemFontEnumerator" />, with
-///     a fixed-pitch-only toggle that favors the monospaced faces source printing wants. The preview is a
+///     (issue #177). The family list comes from the cross-platform <see cref="IFontEnumerationService" />
+///     (issue #173), with a fixed-pitch-only toggle that favors the monospaced faces source printing wants.
+///     The preview is a
 ///     compact raster strip occupying the dialog's bottom <see cref="View.Padding" />, beside the buttons.
 ///     Confirm returns the chosen font; cancel/Esc discards.
 /// </summary>
@@ -64,7 +65,12 @@ public sealed class FontChooserDialog : Dialog
     public Font? SelectedFont { get; private set; }
 
     /// <summary>Creates the chooser seeded from <paramref name="current" />.</summary>
-    public FontChooserDialog(Font current)
+    /// <param name="current">The font to seed family, size, and style from.</param>
+    /// <param name="fontEnumeration">
+    ///     Installed-font source; defaults to <see cref="WinPrintServices.FontEnumerationService" />. Injectable
+    ///     so tests can supply a deterministic list instead of the host's actual fonts.
+    /// </param>
+    public FontChooserDialog(Font current, IFontEnumerationService? fontEnumeration = null)
     {
         ArgumentNullException.ThrowIfNull(current);
 
@@ -76,11 +82,9 @@ public sealed class FontChooserDialog : Dialog
         Width = Dim.Percent(72);
         Height = Dim.Auto(DimAutoStyle.Content, Dim.Absolute(14));
 
-        // Cross-platform enumeration; fall back to the curated list if the platform returns nothing.
-        IReadOnlyList<SystemFontFamily> families = SystemFontEnumerator.GetFamilies();
-        _allFamilies = families.Count > 0
-            ? families
-            : FontChoices.Families.Select(n => new SystemFontFamily(n, true)).ToList();
+        // Cross-platform enumeration of the user's actual installed fonts (issue #173).
+        IFontEnumerationService enumerator = fontEnumeration ?? WinPrintServices.Current.FontEnumerationService;
+        _allFamilies = enumerator.GetFamilies();
 
         // Top-left: fixed-pitch toggle. Source printing wants monospaced faces, so default it on — but the
         // current family is always kept selectable (see RebuildList) so a proportional pick survives.

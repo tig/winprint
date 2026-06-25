@@ -29,6 +29,13 @@ public sealed class WinPrintServices
 
     public UpdateService UpdateService { get; } = new();
 
+    /// <summary>
+    ///     Cross-platform installed-font enumeration for the font choosers (issue #173). The default is the
+    ///     SkiaSharp-backed <see cref="SystemFontEnumerator" />; the abstraction lets a front end substitute
+    ///     its own source.
+    /// </summary>
+    public IFontEnumerationService FontEnumerationService { get; } = new SystemFontEnumerator();
+
     public Options Options { get; } = new();
 
     public Settings Settings => _settings ??= SettingsService.ReadSettings() ?? Settings.CreateDefaultSettings();

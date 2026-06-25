@@ -57,7 +57,7 @@ internal sealed class FontChooserPage : ContentPage
     {
         BackgroundColor = Color.FromRgba(0, 0, 0, 0.45);
 
-        _allFamilies = SystemFontEnumerator.GetFamilies();
+        _allFamilies = WinPrintServices.Current.FontEnumerationService.GetFamilies();
         _selectedFamily = currentFamily;
         _initialSize = currentSize;
         _fixedPitchOnly = preferFixedPitch;
