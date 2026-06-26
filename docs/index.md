@@ -22,8 +22,8 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 # Install (Windows)
 winget install Kindel.WinPrint
 
-# Install (Mac)
-brew install winprint
+# Install (Mac) — GUI app, also bundles the `wp` TUI
+brew tap kindel/winprint && brew install winprint
 
 # Open a file in the TUI
 wp program.cs

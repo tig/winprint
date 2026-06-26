@@ -565,7 +565,7 @@ jobs:
               -e "s|{{sha_osx_x64}}|$(sha wp-osx-x64.tar.gz)|" \
               -e "s|{{sha_linux_x64}}|$(sha wp-linux-x64.tar.gz)|" \
               -e "s|{{sha_linux_arm}}|$(sha wp-linux-arm64.tar.gz)|" \
-              packaging/homebrew/Formula/winprint.rb > /tmp/winprint.rb
+              packaging/homebrew/Formula/wp.rb > /tmp/wp.rb
 
           sed -e "s|{{version}}|${version}|g" \
               -e "s|{{base}}|${base}|g" \
@@ -587,22 +587,26 @@ jobs:
           rm -rf "$VTAP"; mkdir -p "$VTAP/Casks" "$VTAP/Formula"
           git -C "$VTAP" init -q
           cp /tmp/winprint-cask.rb "$VTAP/Casks/winprint.rb"
-          cp /tmp/winprint.rb "$VTAP/Formula/winprint.rb"
+          cp /tmp/wp.rb "$VTAP/Formula/wp.rb"
           git -C "$VTAP" add -A
           git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm validate
           echo "Validating rendered cask + formula load under Homebrew…"
           brew info --cask kindel/winprint/winprint > /dev/null
-          brew info --formula kindel/winprint/winprint > /dev/null
+          brew info --formula kindel/winprint/wp > /dev/null
           rm -rf "$VTAP"
 
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/kindel/homebrew-winprint.git" tap
           mkdir -p tap/Formula tap/Casks
-          cp /tmp/winprint.rb tap/Formula/winprint.rb
+          cp /tmp/wp.rb tap/Formula/wp.rb
           cp /tmp/winprint-cask.rb tap/Casks/winprint.rb
           cd tap
+          # The TUI formula was renamed winprint -> wp so `brew install winprint` resolves to the
+          # GUI cask (a formula + cask sharing a name makes brew pick the formula and skip the GUI).
+          # Remove the stale formula from the tap so the old collision can't linger.
+          git rm -f --ignore-unmatch Formula/winprint.rb
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/winprint.rb Casks/winprint.rb
+          git add Formula/wp.rb Casks/winprint.rb
           git diff --cached --quiet && { echo "Tap unchanged."; exit 0; }
           git commit -m "winprint ${version}"
           git push
