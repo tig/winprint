@@ -41,8 +41,17 @@ Or use **Settings → Apps → Installed apps** and search for "WinPrint".
 ### Install with Homebrew (Recommended)
 
 ```bash
-brew install winprint    
+brew tap kindel/winprint
+brew install winprint
 ```
+
+This installs the **WinPrint GUI** (a notarized Developer ID `.app`), which **also bundles the `wp`
+terminal UI** — so one command gives you both the app and the `wp` command on your `PATH`. No
+`--cask` flag needed. (Prefer a one-liner? `brew install kindel/winprint/winprint` taps and installs
+in a single step.)
+
+> Want only the `wp` CLI, without the GUI app? `brew install kindel/winprint/wp`. (Don't install
+> both `winprint` and `wp` — they each provide `wp` and collide.)
 
 ### Prerequisites
 
@@ -60,7 +69,7 @@ brew upgrade winprint
 ### Uninstall
 
 ```bash
-brew uninstall winprint
+brew uninstall --cask winprint
 ```
 
 ---
@@ -69,8 +78,10 @@ brew uninstall winprint
 
 ### Install with Homebrew (Recommended)
 
+Linux gets the `wp` terminal UI (the GUI is Windows/macOS only):
+
 ```bash
-brew install winprint
+brew install kindel/winprint/wp
 ```
 
 ### Prerequisites
@@ -93,13 +104,13 @@ lpstat -p
 Linux installs are upgraded with Homebrew:
 
 ```bash
-brew upgrade winprint
+brew upgrade wp
 ```
 
 ### Uninstall
 
 ```bash
-brew uninstall winprint
+brew uninstall wp
 ```
 
 ---
