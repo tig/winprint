@@ -276,6 +276,29 @@ xcrun notarytool history --apple-id tig@kindel.com --team-id PXD393HTUZ --passwo
   key isn't in this keychain (cert imported without its key) — re-export from the machine that generated
   the CSR, or recreate via the Xcode path which keeps cert+key together.
 
+### CI signing-pipeline lessons (all baked into the `Sign, notarize, and zip` step)
+
+Bringing this online took five rounds; each fix is in `release.yml` and a regression if removed:
+
+1. **Register the temp signing keychain in the search list.** `codesign` resolves the `--sign` identity
+   **name** against the keychain *search list*, not the `--keychain` path, so without
+   `security list-keychains -d user -s "$KEYCHAIN_PATH" …` it fails with **`no identity found`** even
+   though the cert imported fine.
+2. **`codesign --deep` skips `Contents/MonoBundle`.** Those Mono dylibs are dynamically loaded (not
+   linked), so `--deep` never signs them and notarization rejects them ("not signed" / "no secure
+   timestamp"). **Sign the MonoBundle Mach-O explicitly** before sealing.
+3. **`--deep` is required to *seal* the bundle.** The embedded `wp` is a self-contained CoreCLR payload —
+   a directory of loose files (`.dll`/`.pdb`/`.json` + dylibs) under `Contents/Helpers`. A plain
+   (non-`--deep`) bundle sign rejects those data files as unsigned "subcomponents"; only `--deep` seals
+   them. So the recipe is: explicitly sign MonoBundle, **then** `codesign --deep` the whole bundle.
+4. **Sign only what `--deep` misses (MonoBundle), not every nested binary.** Signing all nested Mach-O
+   meant `--deep` re-timestamped the `Helpers` payload too; the two concurrent arch jobs then flooded
+   Apple's timestamp server with `--timestamp` calls and the step **stalled 30+ minutes**.
+5. **`notarytool … --wait` isn't network-resilient.** A transient blip mid-poll (`NSURLErrorDomain -1009`)
+   makes it exit non-zero and fail the release even though notarization was progressing. So **submit
+   once, retry the `wait` (no re-upload), then gate on the `info` status** and dump `notarytool log` on
+   any non-`Accepted` result so failures self-diagnose.
+
 ## Teardown (if ever needed)
 
 ```bash

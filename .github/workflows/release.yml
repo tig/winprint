@@ -370,8 +370,33 @@ jobs:
               --sign "$APPLE_SIGNING_IDENTITY" "$APP"
             codesign --verify --deep --strict --verbose=2 "$APP"
             ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
-            xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
-              --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" --wait
+            # Submit once, then poll separately. `notarytool ... --wait` exits non-zero if a transient
+            # network blip hits mid-poll (we saw NSURLErrorDomain -1009 "connection appears offline"
+            # while polling Apple's notary API), which would fail the release even though notarization
+            # was still progressing. Retry the WAIT (no re-upload) and gate on the final status from
+            # `info`; on any non-Accepted status, dump the notary log so the failure is self-diagnosing.
+            SUBMIT_ID="$(xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+              --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" \
+              --output-format json | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')"
+            echo "Notarization submission id: $SUBMIT_ID"
+            for attempt in 1 2 3 4 5; do
+              if xcrun notarytool wait "$SUBMIT_ID" \
+                   --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH"; then
+                break
+              fi
+              echo "::warning::notarytool wait attempt $attempt failed (transient?); retrying in 30s..."
+              sleep 30
+            done
+            STATUS="$(xcrun notarytool info "$SUBMIT_ID" \
+              --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" \
+              --output-format json | python3 -c 'import sys,json;print(json.load(sys.stdin)["status"])')"
+            echo "Notarization status: $STATUS"
+            if [ "$STATUS" != "Accepted" ]; then
+              echo "::error::Notarization $STATUS — notary log follows:"
+              xcrun notarytool log "$SUBMIT_ID" \
+                --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" || true
+              exit 1
+            fi
             xcrun stapler staple "$APP"
           else
             echo "::warning::Apple signing secrets absent — emitting an unsigned WinPrint.app (Gatekeeper will block it)."
