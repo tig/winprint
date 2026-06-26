@@ -359,3 +359,7 @@ Deploy/
 
 # Local git worktrees (e.g. PR checkouts) — never commit as embedded repos
 .worktrees/
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store
