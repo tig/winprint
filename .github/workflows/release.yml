@@ -149,6 +149,12 @@ jobs:
             --self-contained true `
             -o $publishDir `
             /p:PublishSingleFile=false
+          # wp is Native AOT (a single Mach-O + its P/Invoke dylibs), but the publish still drops
+          # debug symbols (*.pdb, *.dSYM) that aren't needed at runtime. Strip them so the cask-
+          # embedded wp and the formula tarball ship only code — and, critically, so codesign
+          # doesn't reject the loose .pdb/.dSYM as unsigned "subcomponents" when sealing the .app.
+          Get-ChildItem -Path $publishDir -Recurse -Filter *.pdb | Remove-Item -Force
+          Get-ChildItem -Path $publishDir -Recurse -Directory -Filter *.dSYM | Remove-Item -Recurse -Force
 
       # Capture a TUI-only tarball for the Homebrew tap BEFORE the GUI publish writes into
       # the same dir, so `wp` ships without the (separately-distributed) GUI. macOS + Linux only.
@@ -235,12 +241,11 @@ jobs:
 
       # Embed the TUI (`wp`) inside the GUI bundle so the Homebrew *cask* delivers BOTH the GUI and
       # the `wp` CLI from a single artifact (the cask's `binary` stanza symlinks the embedded wp onto
-      # PATH). `wp` is a self-contained CoreCLR publish — its own apphost + ~150 dylibs/assemblies, a
-      # different runtime from the GUI's Mono `MonoBundle` — so the WHOLE payload rides along, not a
-      # lone binary. It goes under Contents/Helpers, the Apple-blessed home for auxiliary executables
-      # (notarization rejects code in Resources). This runs BEFORE the sign/notarize step so the
-      # embedded wp is covered by `codesign --deep` + notarization. The wp-*.tar.gz formula still
-      # ships for Linux and CLI-only installs.
+      # PATH). `wp` is a Native AOT publish — a single Mach-O executable plus its two P/Invoke dylibs
+      # (libonigwrap, libSkiaSharp); a different runtime from the GUI's Mono `MonoBundle`. It goes
+      # under Contents/Helpers, the Apple-blessed home for auxiliary executables (notarization rejects
+      # code in Resources). This runs BEFORE the sign/notarize step so the embedded wp is covered by
+      # signing + notarization. The wp-*.tar.gz formula still ships for Linux and CLI-only installs.
       - name: Embed wp (TUI) into the macOS GUI bundle
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
         shell: bash
