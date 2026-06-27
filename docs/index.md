@@ -49,8 +49,8 @@ wp gui
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
-* `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
-* `wp gui` launches the MAUI GUI on Windows and macOS.
+* `wp` provides a terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the GUI on Windows and macOS.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross-platform TUI; Windows and macOS GUI

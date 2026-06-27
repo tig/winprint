@@ -8,15 +8,15 @@
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
-* `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
-* `wp gui` launches the MAUI GUI on Windows and macOS.
+* `wp` provides a terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the GUI on Windows and macOS.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
 
 ## Command Line Interface
 
-The primary command for WinPrint is `wp`. It provides a Terminal.Gui-based terminal UI.
+The primary command for WinPrint is `wp`. It provides a terminal UI.
 
 ```bash
 wp [options] [file...]
@@ -81,7 +81,7 @@ wp --help
 ### CLI Options
 
 **winprint** exposes one **canonical set of print options across every front end** — the `wp` CLI, the
-TUI, and the MAUI `gui` on Windows and macOS. The same name, short alias, and meaning
+TUI, and the `gui` on Windows and macOS. The same name, short alias, and meaning
 apply everywhere:
 
 | Option | Alias | Description |
@@ -97,12 +97,10 @@ apply everywhere:
 
 Front ends add their own *appropriate* extras: the interactive TUI adds `--view`, `--width`,
 `--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing); and the
-GUI launches through the separate `wp gui` command. The Terminal.Gui.Cli framework
-— which the `wp` CLI/TUI uses for command-line handling — also provides `--help`, `--version`,
-`--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
+GUI launches through the separate `wp gui` command. The `wp` command line also provides `--help`,
+`--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 
-This consistency is enforced by tests: the canonical surface lives in `WinPrint.Core` and every front
-end derives its parser from it (see `WinPrintOptionsConsistencyTests`).
+The same print options behave identically across the `wp` CLI, the TUI, and the GUI.
 
 ### Overriding Content Type / Language
 
@@ -132,7 +130,7 @@ The GUI provides an easy-to-use interface for previewing how a file will be prin
 
 ## Auto-Update
 
-WinPrint packages are built with Velopack, which provides the install/update engine for packaged builds.
+WinPrint's packaged builds include a built-in install/update engine.
 
 You can also update manually using your package manager:
 
@@ -219,15 +217,15 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 **winprint** supports five types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
 
-1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting and does not require Python or Pygments.
+1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting and requires no external tools (no Python).
 
-2. **`MarkdownCte`** - Renders Markdown (`text/x-markdown`; e.g. `.md` files), formatting the document via [Markdig](https://github.com/xoofx/markdig).
+2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`).
 
-3. **`AnsiCte`** - Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures). It uses the vendored, managed `libvt100` ANSI decoder — no Python and no Pygments required.
+3. **`AnsiCte`** - Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures), reflowing them for the page. Requires no external tools (no Python).
 
 4. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\f` (form feed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
 
-5. **`HtmlCte`** - Renders HTML files (`text/html`; e.g. `.html`/`.htm`, as well as `.mhtml`/`.mht` web archives) by laying out HTML/CSS through the pure-managed HtmlRenderer engine. Any CSS specified inline in the HTML file will be honored. Local (document-relative) files, `data:` URIs, and MHTML-embedded resources always load; `http(s)` resources are only fetched when `AllowRemoteResources` is enabled. `text/html` does not support line numbers.
+5. **`HtmlCte`** - Renders HTML files (`text/html`; e.g. `.html`/`.htm`, as well as `.mhtml`/`.mht` web archives) by laying out the HTML/CSS. Any CSS specified inline in the HTML file will be honored. Local (document-relative) files, `data:` URIs, and MHTML-embedded resources always load; `http(s)` resources are only fetched when `AllowRemoteResources` is enabled. `text/html` does not support line numbers.
 
 When using **winprint** from the command line, the `--content-type` (`-e`) option can be used to specify the content type / CTE to use.
 

@@ -18,7 +18,7 @@ No additional prerequisites are required on Windows. WinPrint is a self-containe
 
 ### Upgrade
 
-WinPrint packages are built with Velopack. Installed builds can use Velopack-managed updates, and winget can also upgrade the installed package:
+Installed builds include a built-in updater, and winget can also upgrade the installed package:
 
 You can also upgrade manually:
 

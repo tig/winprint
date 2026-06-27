@@ -23,7 +23,7 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 <img width="1102" alt="WinPrint GUI on macOS" src="docs/hero-gui.gif" />
 
-*The MAUI GUI on Windows and macOS: visual print preview, settings, and `wp gui` to launch from the terminal.*
+*The GUI on Windows and macOS: visual print preview, settings, and `wp gui` to launch from the terminal.*
 
 > Regenerate these demos: `scripts/record-hero-gifs.sh` (tuirec for TUI/print; macOS screen capture for GUI).
 
@@ -74,8 +74,8 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
-* `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
-* `wp gui` launches the MAUI GUI on Windows and macOS.
+* `wp` provides a terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the GUI on Windows and macOS.
 * The legacy PowerShell `Out-WinPrint` CmdLet (`WinPrint.PowerShell.dll`) has been removed; use `wp` instead.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
@@ -91,7 +91,7 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 
 ## Graphical Interface
 
-The MAUI GUI is available on Windows and macOS via `wp gui`.
+The GUI is available on Windows and macOS via `wp gui`.
 
 ![WinPrint](https://tig.github.io/winprint/winprint2.png)
 
