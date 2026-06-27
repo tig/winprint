@@ -68,7 +68,7 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 
 ## Features
 
-* Prints source code with syntax highlighting and line numbering using bundled TextMate grammars.
+* Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
@@ -76,7 +76,6 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 * Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
 * `wp` provides a terminal UI on Windows, macOS, and Linux.
 * `wp gui` launches the GUI on Windows and macOS.
-* The legacy PowerShell `Out-WinPrint` CmdLet (`WinPrint.PowerShell.dll`) has been removed; use `wp` instead.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.

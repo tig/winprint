@@ -43,7 +43,7 @@ wp gui
 
 ## Features
 
-* Prints source code with syntax highlighting and line numbering using bundled TextMate grammars.
+* Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
