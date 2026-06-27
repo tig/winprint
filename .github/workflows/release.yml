@@ -429,6 +429,17 @@ jobs:
           ditto -c -k --keepParent "$APP" "$ZIP"
           echo "Wrote $ZIP"
 
+      # Velopack signs with its BUNDLED x64 signtool.exe + Azure Code Signing dlib, which need the
+      # x64 .NET runtime present. On the windows-11-arm runner setup-dotnet only installed arm64
+      # .NET, so the x64 signtool failed silently ("Signing command failed", empty output). Install
+      # the x64 .NET 8 runtime where x64 processes probe for it on arm64 Windows (#187, velopack#85).
+      - name: Install x64 .NET runtime for Velopack signing (arm64 runner)
+        if: ${{ runner.os == 'Windows' && matrix.runtime == 'win-arm64' && env.HAS_AZURE_SIGNING == 'true' }}
+        shell: pwsh
+        run: |
+          & ([scriptblock]::Create((Invoke-RestMethod https://dot.net/v1/dotnet-install.ps1))) `
+            -Architecture x64 -Runtime dotnet -Channel 8.0 -InstallDir "$env:ProgramFiles\dotnet\x64"
+
       # Velopack packages Windows + Linux only. macOS GUI goes out as a notarized .app via the
       # Homebrew cask (above); macOS TUI ships as the wp-*.tar.gz formula tarball.
       - name: Pack with Velopack
@@ -440,6 +451,7 @@ jobs:
           $vpkArgs = @(
             "pack",
             "--yes",
+            "--verbose",
             "--packId", $env:PACK_ID,
             "--packTitle", $env:PACK_TITLE,
             "--packAuthors", "Kindel",
@@ -491,6 +503,11 @@ jobs:
     name: Publish GitHub Release
     needs: package
     runs-on: ubuntu-latest
+    # Only publish on a real tag push. A workflow_dispatch (e.g. from develop) then runs ONLY the
+    # build+sign package matrix as a safe dry-run — it won't create a release, push the tap, or
+    # submit to winget (both of which `needs: publish`, so they skip too). Used to validate the
+    # win-arm64 signing path without cutting a tag.
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - name: Download package artifacts
