@@ -440,6 +440,7 @@ jobs:
           $vpkArgs = @(
             "pack",
             "--yes",
+            "--verbose",
             "--packId", $env:PACK_ID,
             "--packTitle", $env:PACK_TITLE,
             "--packAuthors", "Kindel",
@@ -491,6 +492,11 @@ jobs:
     name: Publish GitHub Release
     needs: package
     runs-on: ubuntu-latest
+    # Only publish on a real tag push. A workflow_dispatch (e.g. from develop) then runs ONLY the
+    # build+sign package matrix as a safe dry-run — it won't create a release, push the tap, or
+    # submit to winget (both of which `needs: publish`, so they skip too). Used to validate the
+    # win-arm64 signing path without cutting a tag.
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - name: Download package artifacts
