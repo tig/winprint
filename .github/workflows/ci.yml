@@ -107,6 +107,11 @@ jobs:
           - os: windows-latest
             runtime: win-x64
             framework: net10.0-windows
+          # Native Windows arm64 runner (free for public repos) — gates the win-arm64 AOT TUI
+          # build on PRs so a regression surfaces here, not only at release (issue #187).
+          - os: windows-11-arm
+            runtime: win-arm64
+            framework: net10.0-windows
 
     steps:
       - name: Checkout source

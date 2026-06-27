@@ -21,6 +21,10 @@ jobs:
   package:
     name: Package ${{ matrix.runtime }}
     runs-on: ${{ matrix.os }}
+    # An experimental leg (e.g. win-arm64 while it's being proven out) must NOT fail the whole
+    # release: continue-on-error lets the other arches still publish if it breaks. Remove the
+    # matrix `experimental` flag once the leg is reliable.
+    continue-on-error: ${{ matrix.experimental == true }}
 
     strategy:
       fail-fast: false
@@ -35,6 +39,22 @@ jobs:
             channel: win-x64
             mainExe: winprint.exe
             icon: packaging/windows/winprint.ico
+
+          # Windows arm64 on a NATIVE arm64 runner (windows-11-arm — free for public repos), so the
+          # AOT TUI links natively and the MAUI/WinUI3 GUI builds against arm64 WindowsAppSDK packs,
+          # mirroring how linux-arm64 uses ubuntu-24.04-arm. Marked experimental (continue-on-error
+          # above) until proven on real arm64 hardware — Velopack's win-arm64 packer is newer (see
+          # velopack#85). Issue #187.
+          - os: windows-11-arm
+            runtime: win-arm64
+            tuiFramework: net10.0-windows
+            includeGui: true
+            mauiFramework: net10.0-windows10.0.19041.0
+            mauiRuntime: win-arm64
+            channel: win-arm64
+            mainExe: winprint.exe
+            icon: packaging/windows/winprint.ico
+            experimental: true
 
           - os: macos-26
             runtime: osx-x64
@@ -518,7 +538,7 @@ jobs:
           identifier: Kindel.WinPrint
           version: ${{ steps.ver.outputs.version }}
           release-tag: ${{ github.ref_name }}
-          installers-regex: 'win-x64-Setup\.exe$'
+          installers-regex: 'win-(x64|arm64)-Setup\.exe$'
           token: ${{ secrets.WINGET_TOKEN }}
 
   # Update the Homebrew tap (kindel/homebrew-winprint) with the new TUI on every STABLE
