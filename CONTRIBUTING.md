@@ -130,21 +130,29 @@ WinPrint uses [GitVersion](https://gitversion.net/) for automatic semantic versi
 
 Releases are fully automated via CI:
 
-1. Merge your changes to the release branch.
-2. Create and push a version tag:
+1. Merge `develop` → `main`. (There is no `release` branch.)
+2. Create and push a version tag **on the merge commit**. The tag **must be annotated**
+   (`git tag -a`) — a lightweight tag will not drive the release/versioning correctly:
    ```bash
-   git tag v2.6.0
+   git tag -a v2.6.0 -m "Release 2.6.0"
    git push origin v2.6.0
    ```
 3. CI automatically:
    - Builds for Windows, macOS, and Linux
-   - Signs the binaries (using configured secrets)
+   - Signs the **Windows** binaries (Azure Trusted Signing via OIDC). macOS is **not**
+     signed/notarized today — the `APPLE_*` secrets are not configured ([#162]) and the
+     `.app` ships unsigned/ad-hoc.
    - Creates a GitHub Release with all assets
    - Produces winget and Homebrew-ready artifacts/templates
 
+[#162]: https://github.com/tig/winprint/issues/162
+
 ### Signing secrets (for forks)
 
-If you fork this repository and want to produce signed builds, configure the following repository secrets:
+If you fork this repository and want to produce signed builds, configure the following repository secrets.
+
+**Windows signing works today** (Azure Trusted Signing via GitHub OIDC — no client secret).
+See [`docs/code-signing.md`](docs/code-signing.md):
 
 | Secret | Description |
 |--------|-------------|
@@ -154,6 +162,14 @@ If you fork this repository and want to produce signed builds, configure the fol
 | `AZURE_SIGNING_ACCOUNT` | Azure Trusted Signing account name |
 | `AZURE_SIGNING_PROFILE` | Azure Trusted Signing certificate profile |
 | `AZURE_SIGNING_ENDPOINT` | Azure Trusted Signing endpoint |
+
+**macOS signing is NOT configured on this repo** ([#162]): the `APPLE_*` secrets below are
+**not** set, so the macOS `.app` currently ships **unsigned/ad-hoc** (Gatekeeper warns).
+The release workflow already supports these secrets — set them on a fork to enable
+Developer ID signing + notarization:
+
+| Secret | Description |
+|--------|-------------|
 | `APPLE_CERTIFICATE_BASE64` | Base64-encoded Apple Developer ID `.p12` certificate |
 | `APPLE_CERTIFICATE_PASSWORD` | Password for the `.p12` certificate |
 | `APPLE_ID` | Apple Developer account email |
@@ -161,4 +177,4 @@ If you fork this repository and want to produce signed builds, configure the fol
 | `APPLE_TEAM_ID` | Apple Developer team ID |
 | `APPLE_SIGNING_IDENTITY` | Developer ID Application signing identity |
 
-Without these secrets, CI will still build successfully but binaries will be unsigned.
+Without these secrets, CI will still build successfully but the affected binaries will be unsigned.

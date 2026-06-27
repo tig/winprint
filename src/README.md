@@ -1,5 +1,8 @@
 # Build
 
+For full setup, build, test, and debug instructions, see [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+That is the authoritative contributor guide; the notes below cover only source-tree specifics.
+
 ## Getting source ready
 
 * `git config --global status.submoduleSummary true`
@@ -7,13 +10,9 @@
 
 # Pre-reqs
 
-* VS 2022+
-* Python/Pygments are only needed when using the legacy `AnsiCte` highlighter.
-
-# Enable telemtry/logging key
-
-* Right click on `winprint\src\WinPrint.Core\Services\TelemetryService.tt` and "Run Custom Tool" to run T4 compiler
-* MS ApplicationInsights used to be in the Kindel account, but is no longer there!
+* **.NET 10 SDK** (pinned by [`../global.json`](../global.json)) — winprint is VS Code-oriented;
+  see [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for the full prerequisites.
+* `AnsiCte` uses a vendored, managed `libvt100` ANSI decoder — **no Python/Pygments required**.
 
 # Versions
 
