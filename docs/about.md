@@ -22,7 +22,7 @@ Then, after shipping the most popular framework for building terminal (TUI) apps
 
 This is WinPrint 3.0. I hope you enjoy it!
 
--tig ([@tigkindel](twitter.com/tigkindel) on X; see my [blog](https://blog.kindel.com))
+-tig ([@tigkindel](https://twitter.com/tigkindel) on X; see my [blog](https://blog.kindel.com))
 
 ## License (MIT)
 

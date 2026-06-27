@@ -45,13 +45,18 @@ brew tap kindel/winprint
 brew install winprint
 ```
 
-This installs the **WinPrint GUI** (a notarized Developer ID `.app`), which **also bundles the `wp`
+This installs the **WinPrint GUI** cask (the `.app`), which **also bundles the `wp`
 terminal UI** — so one command gives you both the app and the `wp` command on your `PATH`. No
 `--cask` flag needed. (Prefer a one-liner? `brew install kindel/winprint/winprint` taps and installs
 in a single step.)
 
-> Want only the `wp` CLI, without the GUI app? `brew install kindel/winprint/wp`. (Don't install
-> both `winprint` and `wp` — they each provide `wp` and collide.)
+> Want only the `wp` CLI, without the GUI app? `brew install kindel/winprint/wp` installs the
+> CLI-only **formula**. (Don't install both the `winprint` cask and the `wp` formula — they each
+> provide `wp` and collide at link time; pick one on macOS.)
+
+> **Note:** the macOS `.app` is **not notarized yet** (Apple signing isn't configured), so it ships
+> ad-hoc signed and Gatekeeper may quarantine it on first launch — see
+> [Troubleshooting](#troubleshooting) below.
 
 ### Prerequisites
 
@@ -59,11 +64,11 @@ No additional prerequisites are required for basic operation. For printing, macO
 
 ### Upgrade
 
-The macOS GUI is a notarized Developer ID `.app` distributed via the Homebrew cask, so Homebrew
-handles updates (there is no in-app self-updater on macOS):
+The macOS GUI is distributed via the Homebrew cask, so Homebrew handles updates (there is no in-app
+self-updater on macOS):
 
 ```bash
-brew upgrade winprint
+brew upgrade --cask winprint
 ```
 
 ### Uninstall
@@ -134,5 +139,21 @@ wp --version
 ## Troubleshooting
 
 If `wp` is not found after installation, ensure the install location is in your `PATH`. On Windows, you may need to restart your terminal. On macOS/Linux, Homebrew handles this automatically.
+
+### macOS: "WinPrint is damaged…" / Gatekeeper quarantine
+
+The macOS `.app` is **not notarized yet**, so it ships ad-hoc signed. On first launch macOS
+Gatekeeper may quarantine it and report that **"WinPrint is damaged and can't be opened"**. Clear
+the quarantine attribute to launch it:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/WinPrint.app
+```
+
+Because the cask comes from a third-party tap, you may also need to trust it at install time:
+
+```bash
+brew install --cask kindel/winprint/winprint
+```
 
 For additional help, see [Support](support.md) or file an [issue on GitHub](https://github.com/tig/winprint/issues).

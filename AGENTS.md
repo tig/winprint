@@ -92,12 +92,16 @@ artifacts in the tap:
 
 ## Content Type Engines (CTEs)
 CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
-`ContentTypeEngineBase`. They are discovered by reflection via `SupportedContentTypes`
-(`CreateContentTypeEngine`), **not** by the static `Create()` factories (which have no
-production callers). Engines:
+`ContentTypeEngineBase`. They are discovered via an **explicit registry**
+(`ContentTypeEngineRegistry`, AOT/trim-safe explicit factories) — `GetDerivedClassesCollection`
+returns `ContentTypeEngineRegistry.CreateAll()`, and `CreateContentTypeEngine` then matches an
+engine by `SupportedContentTypes`. This replaced the old reflection scan (`GetTypes()` +
+`Activator.CreateInstance`); the static `Create()` factories have no production callers. Engines:
 - `TextCte` (`text/plain`), `MarkdownCte` (`text/x-markdown`, subclasses `TextCte` and
   flattens Markdown via Markdig), `TextMateCte` (syntax highlighting; the default),
-  `AnsiCte`/`HtmlCte` (stubs after their native deps were removed).
+  `AnsiCte` (`text/ansi`; decodes ANSI escape sequences via the vendored managed `libvt100`)
+  and `HtmlCte` (`text/html` plus `.mhtml`/`.mht`; lays out HTML/CSS via the managed HtmlRenderer,
+  with `http(s)` assets gated behind `AllowRemoteResources`).
 
 ### Cross-platform rendering — the key design
 `System.Drawing.Common` is **Windows-only** (it P/Invokes GDI+/`gdiplus.dll`, absent on
@@ -136,20 +140,24 @@ double with a deterministic fixed-pitch measurement model — so the full
 Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
 `WinPrint.Maui` is **out of scope** — MAUI does not support Native AOT.
 
-> **As of this writing the spike + most of the work below is in PR #156** (Macros hand-rolled
-> resolver, explicit CTE registry, source-gen JSON, `WinPrintServices` DI, explicit `ModelBase`
-> copies, `IsAotCompatible`/`PublishAot`, an `aot-publish` CI matrix). Check whether #156 is merged
-> before starting any of this — the "decisions" below are the design it follows, kept as the record.
+> **Largely landed (the PR #156 work has merged to main).** `<IsAotCompatible>true</IsAotCompatible>`
+> is set on `WinPrint.Core` (trim analyzers run on every build) and RID-gated `<PublishAot>true</PublishAot>`
+> is set on `WinPrint.TUI` (active only when `RuntimeIdentifier` is set). The Macros hand-rolled
+> resolver, explicit CTE registry, source-gen JSON, and `WinPrintServices` DI container are in.
+> The per-item AOT/trim inventory lives in **[`docs/aot-inventory.md`](docs/aot-inventory.md)**; the
+> "decisions" below are the design record those changes follow.
 
-Decisions made (record of intent; revisit when work actually starts):
-- **Status: track only for now.** No AOT code changes yet. When starting, the first step is a
-  *spike*: set `<IsAotCompatible>true</IsAotCompatible>` on Core + `<PublishAot>true</PublishAot>`
-  on the CLI, build, and collect the trim/AOT analyzer warnings into an inventory to size the work.
+Decisions made (design record; most are now implemented):
+- **Status: in flight / largely landed.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>`
+  on the TUI are already on main, and most inventory items are cleared. Track remaining work in
+  [`docs/aot-inventory.md`](docs/aot-inventory.md).
 - **Target = cross-platform AOT** (Windows/Linux/macOS), not Windows-only. This requires a
   **non-`System.Drawing` measurement backend** (e.g. SkiaSharp) plugged into the existing
   `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
 - **DI: drop MvvmLight `SimpleIoc`** (`ModelLocator`/`ServiceLocator`) in favor of **manual
-  construction**. MvvmLight is unmaintained and not trim-annotated.
+  construction**. MvvmLight is unmaintained and not trim-annotated. **Migration is partial:**
+  `WinPrintServices` exists, but `ModelLocator` is still used in `WinPrint.Core` (e.g.
+  `ContentTypeEngineBase`, view models) — not yet fully removed.
 - **TUI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
 - **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
   (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to
@@ -159,8 +167,9 @@ Decisions made (record of intent; revisit when work actually starts):
 - **Update-check: redesign from the ground up and remove `Octokit`** (reflection/JSON-heavy).
 - **`CommandLineParser`: remove if unused** (verify no real callers, then drop the package).
 
-Other known AOT work (fall out of the spike):
+Other known AOT work (fall out of the spike; see [`docs/aot-inventory.md`](docs/aot-inventory.md)
+for current per-item state):
 - `ModelBase.CopyPropertiesFrom` + `TypeDescriptor.GetProperties` / `GetType().GetProperties()` —
   annotate with `[DynamicallyAccessedMembers]` or replace with generated/explicit copies.
-- CTE discovery (`GetTypes()` + `Activator.CreateInstance` in `ContentTypeEngineBase`) — root the
-  engine types or replace reflection with an explicit registry.
+- CTE discovery reflection — **done**: replaced by the explicit `ContentTypeEngineRegistry`
+  (was `GetTypes()` + `Activator.CreateInstance` in `ContentTypeEngineBase`).

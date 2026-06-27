@@ -1,7 +1,17 @@
-# Native AOT inventory (issue #66, PR 0 spike)
+# Native AOT inventory (issue #66)
 
 Spike date: 2026-06-21  
 Target: `WinPrint.TUI` (`wp`) + `WinPrint.Core`, cross-platform (`net10.0` / `net10.0-windows`).
+
+**Status (current): in flight — most items landed.** `<IsAotCompatible>true</IsAotCompatible>` is set
+on `WinPrint.Core` and RID-gated `<PublishAot>true</PublishAot>` on `WinPrint.TUI` (both on main).
+The original spike build failed at `WinPrint.Core` with **35 IL diagnostics** (recorded below as the
+baseline); since then P1 (Macros), P2 (CTE registry), P5 (`Assembly.Location`), and P8 (cross-platform
+measurement wiring) are **done**, clearing the bulk of those errors. Remaining open items: P3 (JSON /
+config `.Bind()`), P4 (`ModelBase` reflection), P6 (DI — `WinPrintServices` exists but `ModelLocator`
+is **still used in Core**, so the SimpleIoc migration is partial), and link-time verification
+(P9/P10). The per-item state below is the source of truth; the "spike result" table is the historical
+baseline, not the current count.
 
 ## Infrastructure changes (this PR)
 
@@ -26,9 +36,12 @@ Without `/p:IsAotCompatible=true`, only the TUI entry-point issues surface (curr
 
 Full log: `artifacts/aot-spike/osx-arm64.log`
 
-## Spike result
+## Spike result (baseline — 2026-06-21, historical)
 
-**Build failed at `WinPrint.Core` compile** (35 IL analyzer diagnostics, promoted to errors by `TreatWarningsAsErrors`). The TUI project and Native AOT linker were never reached.
+> This is the original spike snapshot. Several items below have since been fixed (see per-item state
+> in **Findings by work item**); the counts here are the starting baseline, not the current tally.
+
+**The spike build failed at `WinPrint.Core` compile** (35 IL analyzer diagnostics, promoted to errors by `TreatWarningsAsErrors`). The TUI project and Native AOT linker were never reached.
 
 | IL code | Count | Meaning |
 |---------|-------|---------|
@@ -79,11 +92,12 @@ Replaced assembly scan with explicit `ContentTypeEngineRegistry` (AnsiCte, HtmlC
 
 Added `AppHostInfo` (`AppContext.BaseDirectory`, assembly attributes for version/company/product). Updated `SettingsService`, `LogService`, `UpdateService`, `TelemetryService`, `WinPrint.TUI/Program.cs`.
 
-### P6 — MvvmLight `SimpleIoc` (no IL warnings yet)
+### P6 — MvvmLight `SimpleIoc` (no IL warnings yet) — PARTIAL
 
-`ServiceLocator` / `ModelLocator` use `GalaSoft.MvvmLight.Ioc.SimpleIoc` — not flagged at compile time but unmaintained and not trim-annotated. Expect link-time trimming issues once Core compiles.
+`ServiceLocator` / `ModelLocator` use `GalaSoft.MvvmLight.Ioc.SimpleIoc` — not flagged at compile time but unmaintained and not trim-annotated. Expect link-time trimming issues until removed.
 
-- Fix: `WinPrintServices` with explicit manual construction (PR 4)
+- Fix: `WinPrintServices` with explicit manual construction.
+- **State:** `WinPrintServices` exists, but `ModelLocator` is **still referenced across `WinPrint.Core`** (`ContentTypeEngineBase`, view models, services). MvvmLight is not yet fully removed — migration is in progress.
 
 ### P7 — CommandLineParser on `Options` (no IL warnings)
 

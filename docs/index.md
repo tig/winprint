@@ -22,8 +22,12 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 # Install (Windows)
 winget install Kindel.WinPrint
 
-# Install (Mac) — GUI app, also bundles the `wp` TUI
+# Install (Mac) — GUI cask, which also bundles the `wp` TUI
 brew tap kindel/winprint && brew install winprint
+# Want only the `wp` CLI (no GUI)? Install the formula instead — pick one, they collide:
+#   brew install kindel/winprint/wp
+# The .app is not notarized yet; if Gatekeeper says "WinPrint is damaged", run:
+#   xattr -dr com.apple.quarantine /Applications/WinPrint.app
 
 # Open a file in the TUI
 wp program.cs

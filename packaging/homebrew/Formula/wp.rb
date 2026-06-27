@@ -10,7 +10,7 @@
 # Both provide the `wp` symlink, so installing this formula AND the cask collides — pick one on macOS.
 class Wp < Formula
   desc "Advanced source code and text file printing terminal UI"
-  homepage "https://github.com/kindel/winprint"
+  homepage "https://github.com/tig/winprint"
   version "{{version}}"
   license "MIT"
 

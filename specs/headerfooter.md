@@ -1,23 +1,26 @@
-## Planned macros
-PrintDate
-FileRevisedDate
-FileCreatedDate
-PageNumber
+> **Historical design spec.** This is an early design sketch. The macro names below have
+> been updated to match the macros winprint actually ships (see
+> `src/WinPrint.Core/Models/Macros.cs` and `MacroChoices`); a few names in the original
+> draft (e.g. `PrintDate`, `FilePath`, `PageNumber`) never shipped under those names.
+
+## Macros
+DatePrinted
+DateRevised
+DateCreated
+Page
 NumPages
 FileName
+FileNameWithoutExtension
 FileExtension
-FilePath
-FullyQualifiedPath
+FileDirectoryName
+FullPath
 FileType
-FileSize
-Printer
-PaperSize
-DocumentTitle
-Author
+Title
 Language
-UserName
-MachineName
+ContentType
+CteName
+Style
 
-## How to use .NET string formatting and leverage interpolated strings (e.g. $"{FileDate}")
+## How to use .NET string formatting and leverage interpolated strings (e.g. $"{DatePrinted:D}")
 
 E.g. $"{}
