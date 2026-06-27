@@ -217,11 +217,11 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 **winprint** supports five types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
 
-1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting and requires no external tools (no Python).
+1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting.
 
 2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`).
 
-3. **`AnsiCte`** - Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures), reflowing them for the page. Requires no external tools (no Python).
+3. **`AnsiCte`** - Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures), reflowing them for the page.
 
 4. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\f` (form feed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
 
