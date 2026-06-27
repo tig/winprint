@@ -30,16 +30,17 @@ improve the app. This is **off by default** and can be turned off at any time.
 
 ## Update checks and downloads
 
-When you download or update WinPrint (for example via the Microsoft Store, the Mac
-App Store, GitHub Releases, winget, or Homebrew), those services operate under their
-own privacy policies and may receive standard network information such as your IP
-address as an inherent part of serving the download.
+When you download or update WinPrint (for example via GitHub Releases, winget, or
+Homebrew — with app-store distribution such as the Microsoft Store or Mac App Store
+planned for the future), those services operate under their own privacy policies and
+may receive standard network information such as your IP address as an inherent part
+of serving the download.
 
 ## Third parties
 
 WinPrint relies on: Microsoft Azure Application Insights (optional diagnostics, above),
-and your chosen distribution channel (Microsoft Store, Apple App Store, GitHub,
-winget, or Homebrew) for installation and updates.
+and your chosen distribution channel (GitHub Releases, winget, or Homebrew today;
+Microsoft Store and Apple App Store planned) for installation and updates.
 
 ## Children
 

@@ -68,7 +68,7 @@ public sealed class GuiCommand : ICliCommand
     // emitted bare; valued options as `--name value`.
     private static IReadOnlyList<string> BuildArguments(CommandRunOptions options)
     {
-        List<string> args = [.. options.Arguments];
+        List<string> args = [.. ResolveFileArguments(options.Arguments)];
 
         foreach (WinPrintOption option in WinPrintOptions.Shared)
         {
@@ -92,5 +92,35 @@ public sealed class GuiCommand : ICliCommand
         }
 
         return args;
+    }
+
+    // Resolve each positional file argument to an absolute path against wp's working directory *before*
+    // forwarding it to the GUI. On macOS the GUI is launched via `open`, which starts the app through
+    // LaunchServices with its own working directory — NOT the one wp was invoked from — so a relative
+    // path like `./testfiles/MainForm.cpp` would otherwise be resolved against the wrong directory in the
+    // GUI and reported "not found". wp shares the user's shell CWD, so resolving here makes the path
+    // unambiguous; it's a harmless normalization on Windows (where the child already inherits wp's CWD).
+    internal static IReadOnlyList<string> ResolveFileArguments(IReadOnlyList<string> arguments)
+    {
+        return [.. arguments.Select(ResolveFileArgument)];
+    }
+
+    private static string ResolveFileArgument(string argument)
+    {
+        if (string.IsNullOrEmpty(argument))
+        {
+            return argument;
+        }
+
+        try
+        {
+            return Path.GetFullPath(argument);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            // Not a resolvable path (malformed/invalid characters) — forward it verbatim and let the GUI
+            // surface the error rather than crashing wp here.
+            return argument;
+        }
     }
 }

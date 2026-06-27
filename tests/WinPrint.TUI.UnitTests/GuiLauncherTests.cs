@@ -43,6 +43,30 @@ public class GuiLauncherTests
     }
 
     [Fact]
+    public void ResolveFileArguments_MakesRelativePathsAbsolute()
+    {
+        // Bug: `wp gui ./testfiles/MainForm.cpp` launched the GUI but it reported the file "not found".
+        // On macOS the GUI is launched via `open`, which resets the working directory, so a relative path
+        // must be resolved against wp's CWD *before* forwarding. The forwarded path must be absolute.
+        IReadOnlyList<string> resolved = GuiCommand.ResolveFileArguments(["./testfiles/MainForm.cpp"]);
+
+        string forwarded = Assert.Single(resolved);
+        Assert.True(Path.IsPathRooted(forwarded), $"expected an absolute path, got '{forwarded}'");
+        Assert.Equal(Path.GetFullPath("./testfiles/MainForm.cpp"), forwarded);
+    }
+
+    [Fact]
+    public void ResolveFileArguments_LeavesAbsolutePathsRooted()
+    {
+        // An already-absolute path stays absolute (and is the canonical form the GUI uses verbatim).
+        string absolute = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "report.cs"));
+
+        IReadOnlyList<string> resolved = GuiCommand.ResolveFileArguments([absolute]);
+
+        Assert.Equal(absolute, Assert.Single(resolved));
+    }
+
+    [Fact]
     public void Windows_LaunchesWinprintExeFromBaseDirectory()
     {
         // Windows-only: a "C:\..." drive path round-trips through Path.Combine only on Windows (on Unix

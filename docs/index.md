@@ -22,8 +22,12 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 # Install (Windows)
 winget install Kindel.WinPrint
 
-# Install (Mac) — GUI app, also bundles the `wp` TUI
+# Install (Mac) — GUI cask, which also bundles the `wp` TUI
 brew tap kindel/winprint && brew install winprint
+# Want only the `wp` CLI (no GUI)? Install the formula instead — pick one, they collide:
+#   brew install kindel/winprint/wp
+# The .app is not notarized yet; if Gatekeeper says "WinPrint is damaged", run:
+#   xattr -dr com.apple.quarantine /Applications/WinPrint.app
 
 # Open a file in the TUI
 wp program.cs
@@ -39,14 +43,14 @@ wp gui
 
 ## Features
 
-* Prints source code with syntax highlighting and line numbering using bundled TextMate grammars.
+* Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
 * Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
-* `wp` provides a Terminal.Gui-based terminal UI on Windows, macOS, and Linux.
-* `wp gui` launches the MAUI GUI on Windows and macOS.
+* `wp` provides a terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the GUI on Windows and macOS.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
 * Cross-platform TUI; Windows and macOS GUI
