@@ -81,6 +81,15 @@ artifacts in the tap:
   release `brew` job renders into a throwaway tap and `brew info --cask/--formula <name>` them before
   publishing (`brew audit [path]` is disabled; loading by name is the reliable check) — keep that guard.
 
+**Scoop (the approval-free Windows path).** Bucket = `kindel/scoop-winprint`, pushed by the release
+`scoop` job (needs `SCOOP_BUCKET_TOKEN`; a missing token *fails* loudly, like brew). Unlike winget it
+needs no Microsoft moderation. The job renders `packaging/scoop/winprint.json` and pushes it to
+`bucket/winprint.json`. Source artifact is the Velopack **Portable** zip
+(`Kindel.WinPrint-win-x64-Portable.zip`): root holds the stub launcher `WinPrint.exe`; `current/`
+holds the real `winprint.exe` (GUI) + `wp.exe` (TUI), so the manifest shims `wp` from
+`current\wp.exe` and shortcuts the root `WinPrint.exe` — one install gives GUI + `wp`, like the cask.
+**win-x64 only** today (win-arm64 Velopack leg is still experimental); see `packaging/scoop/README.md`.
+
 **winget & macOS notarization — known gaps (don't mistake for regressions).**
 - **winget:** `winget-releaser` only *updates* an existing winget-pkgs package, so the **first**
   submission must be bootstrapped manually. Until then the `winget` job **failing is expected**.

@@ -8,6 +8,20 @@
 winget install Kindel.WinPrint
 ```
 
+### Install with Scoop
+
+[Scoop](https://scoop.sh) installs from a bucket we own, so it needs no Microsoft approval. One
+install gives you both the `wp` terminal UI (on your `PATH`) and the **WinPrint** GUI (Start-Menu
+shortcut):
+
+```powershell
+scoop bucket add winprint https://github.com/kindel/scoop-winprint
+scoop install winprint
+```
+
+Upgrade with `scoop update winprint`; remove with `scoop uninstall winprint`. Only the x64 build is
+published via Scoop today.
+
 ### Install from GitHub Releases
 
 Download the latest installer from [GitHub Releases](https://github.com/tig/winprint/releases) and run it.

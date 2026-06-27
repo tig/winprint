@@ -635,3 +635,62 @@ jobs:
           git diff --cached --quiet && { echo "Tap unchanged."; exit 0; }
           git commit -m "winprint ${version}"
           git push
+
+  # Update the Scoop bucket (kindel/scoop-winprint) with the new Windows build on every STABLE
+  # release. Renders packaging/scoop/winprint.json with the version + win-x64 SHA256 and pushes it
+  # to bucket/winprint.json. This is the approval-free Windows channel — a Scoop bucket is just a Git
+  # repo you own, with no Microsoft moderation (unlike the winget job). Requires a classic PAT (repo
+  # scope) in SCOOP_BUCKET_TOKEN with push access to the bucket; see packaging/scoop/README.md.
+  scoop:
+    name: Update Scoop bucket
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      # A missing token must FAIL this job, never silently skip into a green check (same rule as the
+      # brew/winget jobs): a skipped publish reporting success would hide that nothing shipped.
+      - name: Require SCOOP_BUCKET_TOKEN
+        shell: bash
+        env:
+          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+        run: |
+          if [ -z "${SCOOP_TOKEN}" ]; then
+            echo "::error title=Scoop bucket not published::SCOOP_BUCKET_TOKEN is not set, so the Scoop bucket was NOT updated for this release. See packaging/scoop/README.md to create the bucket + token, then re-run this job."
+            exit 1
+          fi
+
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Render manifest and push to bucket
+        shell: bash
+        env:
+          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
+
+          # win-x64 is the only Windows arch published today (the win-arm64 Velopack leg is still
+          # experimental). Add an arm64 block + {{sha_win_arm64}} here when it graduates.
+          sed -e "s|{{version}}|${version}|g" \
+              -e "s|{{base}}|${base}|g" \
+              -e "s|{{sha_win_x64}}|$(sha Kindel.WinPrint-win-x64-Portable.zip)|" \
+              packaging/scoop/winprint.json > /tmp/winprint.json
+
+          # Scoop manifests are plain JSON (no DSL footguns like Homebrew casks), so a parse check is
+          # the meaningful pre-publish guard; loading under Scoop proper needs Windows/PowerShell.
+          jq empty /tmp/winprint.json
+
+          git clone "https://x-access-token:${SCOOP_TOKEN}@github.com/kindel/scoop-winprint.git" bucket-repo
+          mkdir -p bucket-repo/bucket
+          cp /tmp/winprint.json bucket-repo/bucket/winprint.json
+          cd bucket-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bucket/winprint.json
+          git diff --cached --quiet && { echo "Bucket unchanged."; exit 0; }
+          git commit -m "winprint ${version}"
+          git push
