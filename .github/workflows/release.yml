@@ -13,7 +13,7 @@ permissions:
 env:
   PACK_ID: Kindel.WinPrint
   PACK_TITLE: WinPrint
-  VPK_VERSION: 1.1.1
+  VPK_VERSION: 1.2.0
   HAS_AZURE_SIGNING: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_SIGNING_ACCOUNT != '' && secrets.AZURE_SIGNING_PROFILE != '' && secrets.AZURE_SIGNING_ENDPOINT != '' }}
   HAS_APPLE_SIGNING: ${{ secrets.APPLE_CERTIFICATE_BASE64 != '' && secrets.APPLE_CERTIFICATE_PASSWORD != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_SIGNING_IDENTITY != '' }}
 
