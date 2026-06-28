@@ -46,11 +46,17 @@ wp="$repo_root/src/WinPrint.TUI/bin/Release/net10.0/wp"
 
 dotnet_env=(--env "DOTNET_ROOT=$DOTNET_ROOT")
 
+# Force the Kitty graphics protocol for the preview. tuirec (>= 0.9.0) advertises Kitty by default and
+# its pinned agg renders it robustly; the sixel path is flaky under recording (desyncs into raw-escape
+# garbage — tuirec #84). Terminal.Gui's ImageView prefers Kitty when supported, and wp exposes the
+# WP_FORCE_KITTY override, so we pin it here. See Terminal.Gui Scripts/tuirec/README.md ("Raster
+# graphics: Kitty (default) and sixel"). Verify with: grep -c 'u001b_G' <cast>  (Kitty) vs 'u001bPq' (sixel).
 echo "Recording TUI hero → $out_dir/hero-tui.gif"
 "$tuirec" record \
   --binary "$wp" \
   --args "$sample" \
   "${dotnet_env[@]}" \
+  --env "WP_FORCE_KITTY=1" \
   --cols 110 --rows 34 \
   --font-size 18 --line-height 1.25 \
   --startup-delay 12000 \
