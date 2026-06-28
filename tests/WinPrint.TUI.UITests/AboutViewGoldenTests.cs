@@ -13,7 +13,7 @@ public class AboutViewGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var about = new AboutView("2.5.0");
+        var about = new AboutView("3.0.0");
         var fixture = new AppFixture(about, 44, 5);
 
         GridSnapshot.Verify(fixture.Screen, "about-view");
@@ -22,11 +22,11 @@ public class AboutViewGoldenTests
     [Fact]
     public void Render_ShowsHelpLinkAndVersion()
     {
-        var about = new AboutView("2.5.0");
+        var about = new AboutView("3.0.0");
         var fixture = new AppFixture(about, 44, 5);
 
         DriverAssert.ContainsText(fixture.Screen, "Help & about");
-        DriverAssert.ContainsText(fixture.Screen, "v2.5.0");
+        DriverAssert.ContainsText(fixture.Screen, "v3.0.0");
     }
 
     [Fact]

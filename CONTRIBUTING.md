@@ -134,8 +134,8 @@ Releases are fully automated via CI:
 2. Create and push a version tag **on the merge commit**. The tag **must be annotated**
    (`git tag -a`) — a lightweight tag will not drive the release/versioning correctly:
    ```bash
-   git tag -a v2.6.0 -m "Release 2.6.0"
-   git push origin v2.6.0
+   git tag -a v3.0.0 -m "Release 3.0.0"
+   git push origin v3.0.0
    ```
 3. CI automatically:
    - Builds for Windows, macOS, and Linux

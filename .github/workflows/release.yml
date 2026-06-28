@@ -508,8 +508,8 @@ jobs:
         with:
           files: release-artifacts/**/*
           generate_release_notes: true
-          # Tags with a pre-release label (e.g. v2.6.0-rc.1) publish as a pre-release so
-          # GitHub doesn't mark them "Latest"; stable tags (v2.6.0) become the latest release.
+          # Tags with a pre-release label (e.g. vX.Y.Z-rc.1) publish as a pre-release so
+          # GitHub doesn't mark them "Latest"; stable tags (vX.Y.Z) become the latest release.
           prerelease: ${{ contains(github.ref_name, '-') }}
 
   # Auto-update the winget-pkgs manifest on every STABLE release. Pre-releases are skipped.

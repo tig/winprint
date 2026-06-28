@@ -29,4 +29,4 @@ Source Code Pro, Regular, 8pt
 ☑ Line Numbers                                                                              
  ╭───────╮                                                                                  
 ─╯lp & ab╰────────────────────────────────                                                  
-v2.5.0                                     ☑ Footer: {FilePath}||{DatePrinted}              
+v3.0.0                                     ☑ Footer: {FilePath}||{DatePrinted}              

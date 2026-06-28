@@ -100,7 +100,7 @@ A failed run throws on the first missing piece.
 
 - **Entra federated `subject` is EXACT-match — wildcards do not work.** A credential with
   subject `repo:tig/winprint:ref:refs/tags/*` never matches a real tag token
-  (`…/refs/tags/v2.0.6`) and OIDC login fails with **AADSTS700213**. Tags therefore use a
+  (`…/refs/tags/vX.Y.Z`) and OIDC login fails with **AADSTS700213**. Tags therefore use a
   **flexible federated identity credential** (`claimsMatchingExpression`:
   `claims['sub'] matches 'repo:tig/winprint:ref:refs/tags/*'`), created via the **beta**
   Microsoft Graph endpoint (`/beta/applications/{id}/federatedIdentityCredentials`) — the
