@@ -9,7 +9,7 @@ not done. Hold every hero to the bar set by the TUI hero (the richest of the thr
 |------|------|-----------------|----------|
 | TUI (`wp`) | `docs/hero-tui.gif` | `wp <file>` in a terminal | `scripts/record-hero-gifs.sh` (tuirec) |
 | Headless print | `docs/hero-print.gif` | `wp print … --what-if` | `scripts/record-hero-gifs.sh` (tuirec) |
-| GUI on macOS | `docs/hero-gui.gif` | Mac Catalyst `winprint` | `scripts/capture-gui-hero-macos.py` |
+| GUI on macOS | `docs/hero-gui-mac.gif` | Mac Catalyst `winprint` | `scripts/capture-gui-hero-macos.py` |
 | GUI on Windows | `docs/hero-gui-win.gif` | WinUI3 `winprint.exe` | `scripts/capture-gui-hero-windows.ps1` + `scripts/assemble-gui-hero.py` |
 
 All heroes use the same sample file — `src/WinPrint.Core/ViewModels/SheetViewModel.cs` —
@@ -42,9 +42,9 @@ definitions → open another file. (The exact keystroke choreography lives in th
    "not just source code" beat).
 6. **Hold** — linger on the final page so the loop reads cleanly.
 
-The macOS producer (`capture-gui-hero-macos.py`) historically only did page/page/arrow —
-**that is the weak baseline, do not copy it.** Both GUI heroes should follow the spec above.
-Settings toggles and file-open frames linger; the zoom/pan flourish stays fast.
+Both GUI producers now drive the full choreography above (the macOS one was once a weak
+page/page/arrow baseline — don't regress it back). Settings toggles and file-open frames
+linger; the zoom/pan flourish stays fast.
 
 ## Regenerating the Windows GUI hero
 
@@ -91,18 +91,19 @@ zoom/pan/reset story actually reads.
 ## Regenerating the macOS GUI hero
 
 Producer: `scripts/capture-gui-hero-macos.py` (there is no macOS equivalent of the
-`run-maui-app` skill — this script + `osascript`/`screencapture` **is** the Mac harness).
-Today it only does the weak page/page/arrow baseline; **bring it up to the full spec above**
-(load → toggle Line Numbers → toggle Landscape → fast zoom/pan/reset → open a 2nd file → hold).
-Same sample file, same story as the Windows hero, so the two sit side by side in the README.
+`run-maui-app` skill — this script + `osascript`/`cliclick`/`screencapture` **is** the Mac
+harness). It drives the full spec above (load → toggle Line Numbers → toggle Landscape → fast
+zoom/pan/reset → open `README.md` as Markdown → hold), same sample/story as the Windows hero so
+the two sit side by side in the README. Needs `cliclick` (`brew install cliclick`) and an
+**interactive, unlocked** session with Screen-Recording + Accessibility permission.
 
 ```bash
 # 1. Build the Mac Catalyst app (arm64).
 dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Release \
   -f net10.0-maccatalyst -r maccatalyst-arm64 /p:CreatePackage=false /p:EnableCodeSigning=false
 
-# 2. Drive + capture (extend the script to the full choreography), then assemble the GIF.
-python3 scripts/capture-gui-hero-macos.py --output docs/hero-gui.gif
+# 2. Drive + capture + assemble the GIF (variable per-frame durations are baked in).
+python3 scripts/capture-gui-hero-macos.py --output docs/hero-gui-mac.gif
 ```
 
 ### macOS mechanics (the Mac analogs of the Windows gotchas — verify on a Mac)
@@ -122,19 +123,20 @@ the real screen), so there's no "force a present" dance — just keep the app **
   (identical to Windows).
 - **Pan + page with key codes** via `key code` (System Events): arrows = 123/124/125/126
   (←/→/↓/↑), Page Down = 121, Page Up = 116.
-- **Settings toggles (Line Numbers, Landscape):** same model as Windows — the sidebar *label*
-  has a `TapGestureRecognizer` that flips the bound `CheckBox`. Click it. Prefer macOS
-  Accessibility if the element is addressable (`System Events`: `click checkbox …` / `AXPress`);
-  otherwise compute the label's screen point from the window bounds
-  (`osascript … get bounds of window 1`) and click coordinates — exactly what the Windows
-  producer does via UIA `BoundingRectangle`.
-- **Open another file:** **Cmd+O** opens the File ▸ Open… panel (registered in `AppDelegate`).
-  In the open panel press **Cmd+Shift+G**, type/paste the absolute path, **Return**, then
-  **Return** to open — the Mac equivalent of the Windows clipboard-paste-into-the-filename-field
-  trick. Open `README.md` so it renders as Markdown (the "not just source code" beat).
-- **Capture just the window**, not a full-screen crop: get the window id from the window list
-  and `screencapture -o -l <windowID> frame.png` (cleaner than the current margin-crop
-  heuristic). Resize to the README hero width (1102) when assembling.
+- **Settings toggles (Line Numbers, Landscape):** the sidebar *label* has a
+  `TapGestureRecognizer` that flips the bound `CheckBox` — click it. **MAUI Catalyst does not
+  expose these via Accessibility** (`entire contents of window 1` finds nothing addressable), so
+  the producer clicks **window-relative coordinates** with `cliclick` (offsets calibrated to the
+  default 1000×820 window, added to the live window origin from `osascript … position of window 1`).
+- **Open another file:** **Cmd+O** → File ▸ Open…, then **Cmd+Shift+G** for the go-to-folder
+  sheet, **type the absolute path with `cliclick t:`**, **Return** (resolve), **Return** (open).
+  Use `cliclick` to type — synthetic **Cmd+V doesn't land** in the go-to field, and an `osascript`
+  keystroke of the path loses characters to the `/` autocomplete. Open `README.md` so it renders
+  as Markdown (the "not just source code" beat).
+- **Capture just the window** with `screencapture -x -R<x,y,w,h>` using the window's points rect
+  (`osascript … {position, size} of window 1`); `-R` outputs native (Retina ×2) pixels, no
+  CGWindowID needed (pyobjc/Quartz isn't installed). Resize to the README hero width (1102) when
+  assembling.
 
 ## Regenerating the TUI / headless-print heroes
 
