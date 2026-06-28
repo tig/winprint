@@ -9,7 +9,7 @@ not done. Hold every hero to the bar set by the TUI hero (the richest of the thr
 |------|------|-----------------|----------|
 | TUI (`wp`) | `docs/hero-tui.gif` | `wp <file>` in a terminal | `scripts/record-hero-gifs.sh` (tuirec) |
 | Headless print | `docs/hero-print.gif` | `wp print … --what-if` | `scripts/record-hero-gifs.sh` (tuirec) |
-| GUI on macOS | `docs/hero-gui.gif` | Mac Catalyst `winprint` | `scripts/capture-gui-hero-macos.py` |
+| GUI on macOS | `docs/hero-gui-mac.gif` | Mac Catalyst `winprint` | `scripts/capture-gui-hero-macos.py` |
 | GUI on Windows | `docs/hero-gui-win.gif` | WinUI3 `winprint.exe` | `scripts/capture-gui-hero-windows.ps1` + `scripts/assemble-gui-hero.py` |
 
 All heroes use the same sample file — `src/WinPrint.Core/ViewModels/SheetViewModel.cs` —
@@ -102,7 +102,7 @@ dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Release \
   -f net10.0-maccatalyst -r maccatalyst-arm64 /p:CreatePackage=false /p:EnableCodeSigning=false
 
 # 2. Drive + capture (extend the script to the full choreography), then assemble the GIF.
-python3 scripts/capture-gui-hero-macos.py --output docs/hero-gui.gif
+python3 scripts/capture-gui-hero-macos.py --output docs/hero-gui-mac.gif
 ```
 
 ### macOS mechanics (the Mac analogs of the Windows gotchas — verify on a Mac)

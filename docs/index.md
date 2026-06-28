@@ -16,7 +16,7 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 
 <p>
   <img height="330" alt="WinPrint GUI on Windows" src="hero-gui-win.gif" />
-  <img height="330" alt="WinPrint GUI on macOS" src="hero-gui.gif" />
+  <img height="330" alt="WinPrint GUI on macOS" src="hero-gui-mac.gif" />
 </p>
 
 ## Quick Start

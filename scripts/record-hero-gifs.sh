@@ -18,7 +18,7 @@
 # Writes:
 #   <output-dir>/hero-tui.gif
 #   <output-dir>/hero-print.gif
-#   <output-dir>/hero-gui.gif   (macOS only)
+#   <output-dir>/hero-gui-mac.gif   (macOS only)
 
 set -euo pipefail
 
@@ -93,9 +93,9 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     -c Release -f net10.0-maccatalyst -r maccatalyst-arm64 \
     /p:CreatePackage=false /p:EnableCodeSigning=false -tl:off -nologo >/dev/null
 
-  echo "Capturing GUI hero → $out_dir/hero-gui.gif"
+  echo "Capturing GUI hero → $out_dir/hero-gui-mac.gif"
   python3 "$repo_root/scripts/capture-gui-hero-macos.py" \
-    --output "$out_dir/hero-gui.gif"
+    --output "$out_dir/hero-gui-mac.gif"
 else
   echo "Skipping GUI hero (macOS screen capture only). Capture on macOS or Windows separately." >&2
 fi

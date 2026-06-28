@@ -23,7 +23,7 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 <p>
   <img height="330" alt="WinPrint GUI on Windows" src="docs/hero-gui-win.gif" />
-  <img height="330" alt="WinPrint GUI on macOS" src="docs/hero-gui.gif" />
+  <img height="330" alt="WinPrint GUI on macOS" src="docs/hero-gui-mac.gif" />
 </p>
 
 *The GUI on Windows (left) and macOS (right): visual print preview, settings, and `wp gui` to launch from the terminal.*

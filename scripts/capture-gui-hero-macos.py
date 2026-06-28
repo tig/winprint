@@ -73,7 +73,7 @@ def main() -> int:
         type=Path,
         default=Path("src/WinPrint.Core/ViewModels/SheetViewModel.cs"),
     )
-    parser.add_argument("--output", type=Path, default=Path("docs/hero-gui.gif"))
+    parser.add_argument("--output", type=Path, default=Path("docs/hero-gui-mac.gif"))
     parser.add_argument("--workdir", type=Path, default=Path("artifacts/hero/gui-frames"))
     parser.add_argument("--frame-ms", type=int, default=900)
     parser.add_argument("--width", type=int, default=1102, help="Resize output width (README hero size)")
