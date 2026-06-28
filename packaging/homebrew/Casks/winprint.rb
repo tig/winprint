@@ -1,9 +1,9 @@
 # Template rendered by the release pipeline (release.yml -> brew job) and pushed to the
 # kindel/homebrew-winprint tap. Placeholders are filled with each stable release's version,
 # download base URL, and per-arch SHA256s. This is the free MAUI GUI (WinPrint.app),
-# distributed directly (NOT the App Store). NOTE: the app is NOT notarized today — the
-# Apple signing secrets (APPLE_*) aren't configured (tracked in #162), so it ships as an
-# unsigned/ad-hoc build and macOS Gatekeeper quarantine applies on first launch.
+# distributed directly (NOT the App Store). The app is signed with an Apple Developer ID and
+# notarized + stapled by the release pipeline (the APPLE_* secrets are configured), so Gatekeeper
+# accepts it without a quarantine workaround.
 #
 # The GUI bundle ALSO embeds the `wp` TUI (release.yml copies the self-contained CLI payload into
 # WinPrint.app/Contents/Helpers/wp), so this single cask install delivers BOTH the GUI and the `wp`

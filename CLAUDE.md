@@ -93,11 +93,13 @@ holds the real `winprint.exe` (GUI) + `wp.exe` (TUI), so the manifest shims `wp`
 `current\wp.exe` and shortcuts the root `WinPrint.exe` — one install gives GUI + `wp`, like the cask.
 **win-x64 only** today (win-arm64 Velopack leg is still experimental); see `packaging/scoop/README.md`.
 
-**winget & macOS notarization — known gaps (don't mistake for regressions).**
+**winget gap & macOS signing — don't mistake for regressions.**
 - **winget:** `winget-releaser` only *updates* an existing winget-pkgs package, so the **first**
   submission must be bootstrapped manually. Until then the `winget` job **failing is expected**.
-- **macOS is not notarized:** the Apple signing secrets (`APPLE_*`) aren't set, so the cask ships an
-  unsigned/ad-hoc `.app` (Gatekeeper warns; 3rd-party-tap casks also need `brew trust --cask`).
+- **macOS is signed + notarized:** the Apple signing secrets (`APPLE_*`) **are** configured, so the
+  release pipeline signs the `.app` with an Apple Developer ID and notarizes + staples it (the
+  `Sign, notarize, and zip macOS GUI` step). Gatekeeper accepts the cask normally — **no**
+  quarantine/`xattr` workaround. (Set up in the 2.8.x line; #162.)
 - **Per-arch cask size differs by design:** `maccatalyst-arm64` is Mono-**AOT** (~130 MB), `-x64` is
   Mono-**JIT** (~35 MB). The SDK gates AOT to `maccatalyst-arm64` only (the `RunAOTCompilation`
   property is ignored for MacCatalyst); see the comment in `release.yml`. Not a broken x64 build.

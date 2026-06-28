@@ -30,8 +30,7 @@ scoop bucket add winprint https://github.com/kindel/scoop-winprint && scoop inst
 brew tap kindel/winprint && brew install winprint
 # Want only the `wp` CLI (no GUI)? Install the formula instead — pick one, they collide:
 #   brew install kindel/winprint/wp
-# The .app is not notarized yet; if Gatekeeper says "WinPrint is damaged", run:
-#   xattr -dr com.apple.quarantine /Applications/WinPrint.app
+# The .app is Apple Developer ID-signed and notarized, so Gatekeeper accepts it normally.
 
 # Open a file in the TUI
 wp program.cs
