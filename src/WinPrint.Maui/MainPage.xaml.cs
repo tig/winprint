@@ -305,9 +305,14 @@ public partial class MainPage : ContentPage
 #endif
 
     /// <summary>
-    ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, +, -).
+    ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, and zoom +/=/-/0).
+    ///     Zoom keys mirror the wp TUI preview (see <c>PreviewPane.IsImageZoomKey</c>): plain
+    ///     <c>+</c>/<c>=</c> zoom in, <c>-</c> zooms out, <c>0</c> fits — no modifier needed when the
+    ///     preview (rather than a text field) has focus. The <c>Ctrl</c>/<c>Cmd</c>+ variants keep
+    ///     working everywhere. <paramref name="fromTextInput" /> is true when a text entry is focused,
+    ///     so plain zoom keys never hijack typing (the TUI gets this for free via focus-scoped bindings).
     /// </summary>
-    public void HandleKeyDown(string key, bool ctrl, bool shift)
+    public void HandleKeyDown(string key, bool ctrl, bool shift, bool fromTextInput = false)
     {
         switch (key)
         {
@@ -328,9 +333,11 @@ public partial class MainPage : ContentPage
             case "End":
                 _viewModel.LastPageCommand.Execute(null);
                 break;
+            // Zoom keys match the TUI: plain +/=/-/0 zoom when the preview has focus; the Ctrl/Cmd+
+            // variants also work while a text field is focused (fromTextInput) without hijacking typing.
             case "OemPlus":
             case "Add":
-                if (ctrl)
+                if (ctrl || !fromTextInput)
                 {
                     _viewModel.ZoomInCommand.Execute(null);
                 }
@@ -338,7 +345,7 @@ public partial class MainPage : ContentPage
                 break;
             case "OemMinus":
             case "Subtract":
-                if (ctrl)
+                if (ctrl || !fromTextInput)
                 {
                     _viewModel.ZoomOutCommand.Execute(null);
                 }
@@ -346,7 +353,7 @@ public partial class MainPage : ContentPage
                 break;
             case "D0":
             case "NumPad0":
-                if (ctrl)
+                if (ctrl || !fromTextInput)
                 {
                     _viewModel.ZoomFitCommand.Execute(null);
                 }
@@ -726,8 +733,10 @@ public partial class MainPage : ContentPage
 
         string key = e.Key.ToString();
 
-        // In a text box, Home/End move the caret — that must win over page navigation.
-        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.TextBox && key is "Home" or "End")
+        // A focused text entry must keep plain keys for typing/caret: Home/End move the caret, and the
+        // plain zoom keys (+/=/-/0) must type rather than zoom. fromTextInput gates those in HandleKeyDown.
+        bool fromTextInput = e.OriginalSource is Microsoft.UI.Xaml.Controls.TextBox;
+        if (fromTextInput && key is "Home" or "End")
         {
             return;
         }
@@ -738,7 +747,7 @@ public partial class MainPage : ContentPage
         bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
-        HandleKeyDown(key, ctrl, shift);
+        HandleKeyDown(key, ctrl, shift, fromTextInput);
     }
 
     private void OnNativePointerWheel(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
