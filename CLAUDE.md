@@ -42,7 +42,10 @@ and warms NuGet restore. `global.json` pins .NET 10. The hook runs only when
 ## Release & distribution (read before cutting a release)
 **Cutting a release.** Merge `develop` → `main`, create an **annotated** tag `vX.Y.Z` on the
 merge commit, and `git push` the tag — that triggers `.github/workflows/release.yml`. There is
-no release script; tags are manual. The tag drives the brew/winget version; GitVersion drives the
+no release script; tags are manual. The pushed tag **also** triggers
+`.github/workflows/back-merge.yml`, which opens a PR merging `main` back into `develop` — **merge
+it** so `develop` doesn't silently drift behind `main` (it once fell ~43 commits behind). The tag
+drives the brew/winget version; GitVersion drives the
 Velopack `packVersion` — they coincide on a tagged commit. A pre-release label (`v…-rc.1`)
 publishes as a GitHub *pre-release* (not "Latest"). A burned tag (release failed) can't be reused
 — bump to the next patch. **A green release run can still mean "didn't publish":** if any

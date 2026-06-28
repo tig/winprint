@@ -1,0 +1,82 @@
+name: Back-merge
+
+# Cutting a release merges develop -> main and tags it, which leaves `develop` one (or more)
+# commits behind `main`. Left unattended, develop silently drifts and new PRs branch off stale
+# code (it had fallen ~43 commits behind before this was added). This workflow opens a PR to merge
+# `main` back into `develop` after every release tag, so the two branches reconverge — mirroring
+# the back-merge PR Terminal.Gui (tui-cs) opens in its finalize-release workflow.
+#
+# ACTIVATION NOTE: a tag-triggered workflow runs the workflow file AS IT EXISTS ON THE TAGGED
+# COMMIT (i.e. on `main`). So this only starts firing once it has shipped to `main` via a release;
+# from then on it is self-sustaining. Use the `workflow_dispatch` trigger to back-merge on demand
+# (e.g. the first time, or any time develop has drifted).
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: # manual main -> develop re-sync at any time
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: back-merge
+  cancel-in-progress: false
+
+jobs:
+  back-merge:
+    name: Open back-merge PR (main → develop)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # Use BACKMERGE_PAT if present so the branch push + PR are attributed to it and CI runs
+          # on the resulting PR. Falls back to GITHUB_TOKEN (works out of the box, but a PR it opens
+          # does NOT trigger CI — GitHub guards against workflow recursion).
+          token: ${{ secrets.BACKMERGE_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Open back-merge PR
+        env:
+          GH_TOKEN: ${{ secrets.BACKMERGE_PAT || secrets.GITHUB_TOKEN }}
+          # Tag push -> the tag (e.g. v3.0.1); manual run -> a unique manual-<run_id> label.
+          LABEL: ${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_id) }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main develop --quiet
+
+          # Nothing to do if develop already contains every commit on main.
+          if git merge-base --is-ancestor origin/main origin/develop; then
+            echo "develop already contains main — nothing to back-merge."
+            exit 0
+          fi
+
+          BRANCH="backmerge/${LABEL}"
+          # Branch is just main's tip; the PR (main content -> develop) carries the actual merge.
+          git checkout -B "$BRANCH" origin/main
+          git push --force origin "$BRANCH"
+
+          # Don't open a duplicate if a back-merge PR for this branch is already pending.
+          existing="$(gh pr list --head "$BRANCH" --base develop --state open --json number --jq '.[0].number' || true)"
+          if [ -n "${existing:-}" ]; then
+            echo "Back-merge PR #${existing} already open for ${BRANCH}."
+            exit 0
+          fi
+
+          body="$(printf '%s\n' \
+            "Automatic back-merge after release \`${LABEL}\`." \
+            "" \
+            "Merging this keeps \`develop\` in sync with \`main\` (the release merge commit plus any hotfixes that landed directly on \`main\`). Resolve any conflicts and **merge** — do not squash, so the merge topology stays intact." \
+            "" \
+            "_Opened by \`.github/workflows/back-merge.yml\` — mirrors the back-merge PR Terminal.Gui opens after each release._")"
+
+          gh pr create \
+            --base develop \
+            --head "$BRANCH" \
+            --title "Back-merge ${LABEL} from main into develop" \
+            --body "$body"
