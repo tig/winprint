@@ -14,7 +14,7 @@ public class SettingsPanelGoldenTests
     [Fact]
     public void InitialRender_MatchesGolden()
     {
-        var panel = new SettingsPanel("2.5.0");
+        var panel = new SettingsPanel("3.0.0");
         var fixture = new AppFixture(panel, 52, 60);
 
         GridSnapshot.Verify(fixture.Screen, "settings-panel");
@@ -23,7 +23,7 @@ public class SettingsPanelGoldenTests
     [Fact]
     public void Render_ShowsEverySectionInExpectedOrder()
     {
-        var panel = new SettingsPanel("2.5.0");
+        var panel = new SettingsPanel("3.0.0");
         var fixture = new AppFixture(panel, 52, 60);
 
         string screen = fixture.Screen;
@@ -50,7 +50,7 @@ public class SettingsPanelGoldenTests
     [Fact]
     public void BordersAutoJoin_IntoOneFrame()
     {
-        var panel = new SettingsPanel("2.5.0");
+        var panel = new SettingsPanel("3.0.0");
         var fixture = new AppFixture(panel, 52, 60);
 
         // A right-tee marks where section title borders join via the shared LineCanvas.

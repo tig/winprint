@@ -67,7 +67,7 @@ public class SettingsBindingTests
     public void BoundMainView_RendersRealDefaultSheetData()
     {
         var context = SettingsContext.Create();
-        var view = new MainView("2.5.0", context);
+        var view = new MainView("3.0.0", context);
         var fixture = new AppFixture(view, 96, 32);
 
         // Real content font + sheet from the default settings (not the sample placeholders).
@@ -176,7 +176,7 @@ public class SettingsBindingTests
         // Verify that MainView wires up the SheetVM.SettingsChanged → preview refresh path.
         // Without this subscription, model mutations via PushFromChildren are invisible to the preview.
         var context = SettingsContext.Create();
-        var view = new MainView("2.5.0", context);
+        var view = new MainView("3.0.0", context);
         _ = new AppFixture(view, 120, 40);
 
         // After Bind, the SheetVM.SettingsChanged event should have at least one subscriber

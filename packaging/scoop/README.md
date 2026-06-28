@@ -65,7 +65,7 @@ After that, every stable release auto-updates the bucket. No moderation, no queu
   don't fight. (If a future build ever calls Velopack's `UpdateManager`, it would write into Scoop's
   app dir — keep updates on the Scoop side.)
 - **arm64:** only **win-x64** ships today (the win-arm64 Velopack leg is still `experimental` in
-  `release.yml`, and v2.8.10 published no `win-arm64-Portable.zip`). When that leg graduates, add an
+  `release.yml` and has not published a `win-arm64-Portable.zip`). When that leg graduates, add an
   `arm64` block under both `architecture` and `autoupdate`, and render its SHA in the `scoop` job —
   same limitation winget currently has.
 - **Validation in CI:** the job validates the rendered manifest is well-formed JSON (`jq empty`).
