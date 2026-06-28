@@ -25,8 +25,6 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 *The GUI on Windows and macOS: visual print preview, settings, and `wp gui` to launch from the terminal.*
 
-> Regenerate these demos: `scripts/record-hero-gifs.sh` (tuirec for TUI/print; macOS screen capture for GUI).
-
 ## Installation
 
 ### Windows
