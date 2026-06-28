@@ -2,29 +2,48 @@
 
 ## Windows
 
-### Install with winget (Recommended)
+### Install with Scoop (Recommended)
 
-```bash
-winget install Kindel.WinPrint
-```
-
-### Install with Scoop
-
-[Scoop](https://scoop.sh) installs from a bucket we own, so it needs no Microsoft approval. One
-install gives you both the `wp` terminal UI (on your `PATH`) and the **WinPrint** GUI (Start-Menu
-shortcut):
+[Scoop](https://scoop.sh) installs from a bucket we own, so it needs no app-store approval and works
+the moment a release ships. One install gives you both the `wp` terminal UI (on your `PATH`) and the
+**WinPrint** GUI (Start-Menu shortcut):
 
 ```powershell
 scoop bucket add winprint https://github.com/kindel/scoop-winprint
 scoop install winprint
 ```
 
-Upgrade with `scoop update winprint`; remove with `scoop uninstall winprint`. Only the x64 build is
-published via Scoop today.
+Don't have Scoop yet? Install it first (no admin required):
 
-### Install from GitHub Releases
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+```
 
-Download the latest installer from [GitHub Releases](https://github.com/tig/winprint/releases) and run it.
+Only the x64 build is published via Scoop today.
+
+### Install from GitHub Releases (download the installer)
+
+If you'd rather not use a package manager, download and run the signed installer directly:
+
+1. Open the [latest release](https://github.com/tig/winprint/releases/latest).
+2. Under **Assets**, download **`Kindel.WinPrint-win-x64-Setup.exe`**.
+3. Run it. The installer is Authenticode-signed (Azure Trusted Signing), so Windows SmartScreen
+   should show **Kindel, LLC** as the verified publisher — no "unknown publisher" warning.
+
+This installs the GUI to the Start Menu and puts `wp` on your `PATH`, and includes a built-in
+updater for future versions.
+
+> Prefer a no-installer copy? The same release also ships **`Kindel.WinPrint-win-x64-Portable.zip`**
+> — unzip it anywhere and run `WinPrint.exe` (GUI) or `current\wp.exe` (TUI). This is the same
+> artifact Scoop uses.
+
+### Install with winget (coming soon)
+
+`winget install Kindel.WinPrint` isn't available yet — the package is pending its first submission to
+the Microsoft [winget-pkgs](https://github.com/microsoft/winget-pkgs) community repository. Until
+that lands, use **Scoop** or the **GitHub Releases** installer above. This page will be updated when
+winget goes live.
 
 ### Prerequisites
 
@@ -32,21 +51,15 @@ No additional prerequisites are required on Windows. WinPrint is a self-containe
 
 ### Upgrade
 
-Installed builds include a built-in updater, and winget can also upgrade the installed package:
-
-You can also upgrade manually:
-
-```powershell
-winget upgrade Kindel.WinPrint
-```
+- **Scoop:** `scoop update winprint`
+- **Installer / Portable:** installed builds include a built-in updater that pulls new versions
+  automatically; you can also re-download the latest `Setup.exe` and run it over the top.
 
 ### Uninstall
 
-```powershell
-winget uninstall Kindel.WinPrint
-```
-
-Or use **Settings → Apps → Installed apps** and search for "WinPrint".
+- **Scoop:** `scoop uninstall winprint`
+- **Installer:** use **Settings → Apps → Installed apps**, search for "WinPrint", and uninstall — or
+  delete the unzipped folder if you used the portable zip.
 
 ---
 
