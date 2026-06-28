@@ -76,8 +76,13 @@ public class AppDelegate : MauiUIApplicationDelegate
     ///     priority over system behavior, so they work no matter which sidebar control
     ///     UIKit hands focus to (the sheet Picker would otherwise pop its menu open on
     ///     a stray Down arrow). The one exception: while a text field is being edited,
-    ///     arrows and Home/End are NOT claimed at all, so caret movement keeps working.
-    ///     This getter is consulted per keystroke, so the check is live.
+    ///     arrows, Home/End, and the plain zoom keys are NOT claimed at all, so caret
+    ///     movement and typing keep working. This getter is consulted per keystroke, so
+    ///     the check is live.
+    ///
+    ///     Zoom keys mirror the wp TUI (plain +/=/-/0): claimed only when no text field is
+    ///     focused, so they zoom the preview but still type into entries. The Cmd+ variants
+    ///     stay claimed everywhere for Mac-standard familiarity.
     /// </summary>
     public override UIKeyCommand[] KeyCommands
     {
@@ -102,6 +107,12 @@ public class AppDelegate : MauiUIApplicationDelegate
                 commands.Add(MakeKeyCommand(UIKeyCommand.DownArrow, 0));
                 commands.Add(MakeKeyCommand(UIKeyCommand.LeftArrow, 0));
                 commands.Add(MakeKeyCommand(UIKeyCommand.RightArrow, 0));
+
+                // Plain zoom keys (no modifier), matching the TUI. Only claimed when not editing text.
+                commands.Add(MakeKeyCommand((NSString)"=", 0));
+                commands.Add(MakeKeyCommand((NSString)"+", 0));
+                commands.Add(MakeKeyCommand((NSString)"-", 0));
+                commands.Add(MakeKeyCommand((NSString)"0", 0));
             }
 
             return [.. commands];
