@@ -401,7 +401,7 @@ public class GuiLauncherTests
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
             GuiLauncher.Launch(
                 GuiPlatform.MacOS,
-                "/opt/homebrew/Cellar/winprint/2.6.15/bin",
+                "/opt/homebrew/Cellar/winprint/3.0.0/bin",
                 _ => false,
                 _ => false,
                 NoBundles,

@@ -31,7 +31,7 @@ Source Code Pro, Regular, 8pt
 Microsoft Print to PDF  ▼                           
 Paper: Letter     ▼                                 
 Help & about…                                       
-v2.5.0                                              
+v3.0.0                                              
                                                     
                                                     
                                                     

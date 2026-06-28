@@ -226,7 +226,7 @@ jobs:
 
       # macOS GUI is the MAUI MacCatalyst .app, distributed via a Homebrew *cask* (NOT Velopack —
       # Velopack's mac packer rebuilds its own .app from loose files and can't wrap a MacCatalyst
-      # bundle, which is what shipped a broken, TUI-launching app in v2.6.2). `dotnet build` (not
+      # bundle, which is what shipped a broken, TUI-launching app in an earlier release). `dotnet build` (not
       # publish) assembles a complete, runnable WinPrint.app; we sign + notarize + zip it below.
       #
       # Expected per-arch size/AOT asymmetry (do NOT mistake the x64 cask for a broken build):
@@ -240,7 +240,7 @@ jobs:
       # SdkIsDesktop, so the device-AOT default is skipped). The `RunAOTCompilation` MSBuild
       # property is an Android/WASM lever and is IGNORED here, so it cannot turn on x64 AOT. The
       # only switch that flips x64 (`MtouchInterpreter`) selects the *interpreter*, which is slower
-      # than the current JIT — so do not "fix" the size gap that way. See PR discussion for v2.6.4.
+      # than the current JIT — so do not "fix" the size gap that way. See the PR that introduced this.
       - name: Build macOS GUI (.app)
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
         shell: bash
@@ -508,8 +508,8 @@ jobs:
         with:
           files: release-artifacts/**/*
           generate_release_notes: true
-          # Tags with a pre-release label (e.g. v2.6.0-rc.1) publish as a pre-release so
-          # GitHub doesn't mark them "Latest"; stable tags (v2.6.0) become the latest release.
+          # Tags with a pre-release label (e.g. vX.Y.Z-rc.1) publish as a pre-release so
+          # GitHub doesn't mark them "Latest"; stable tags (vX.Y.Z) become the latest release.
           prerelease: ${{ contains(github.ref_name, '-') }}
 
   # Auto-update the winget-pkgs manifest on every STABLE release. Pre-releases are skipped.

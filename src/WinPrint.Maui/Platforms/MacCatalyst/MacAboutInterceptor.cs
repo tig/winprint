@@ -18,7 +18,7 @@ namespace WinPrint.Maui;
 ///         through the Objective-C runtime and override
 ///         <c>-[NSApplication orderFrontStandardAboutPanel:]</c> to present the standard panel with
 ///         options carrying the assembly version and the CPU architecture, e.g.
-///         "2.6.0 (Apple Silicon · arm64)".
+///         "3.0.0 (Apple Silicon · arm64)".
 ///     </para>
 /// </summary>
 internal static class MacAboutInterceptor
@@ -81,7 +81,7 @@ internal static class MacAboutInterceptor
     private static void ShowAboutPanel(IntPtr self, IntPtr cmd, IntPtr sender)
     {
         // "ApplicationVersion" is shown after the app name; "Version" is shown in parentheses.
-        // Unset keys (name, icon, copyright) fall back to Info.plist. => "2.6.0 (Apple Silicon · arm64)".
+        // Unset keys (name, icon, copyright) fall back to Info.plist. => "3.0.0 (Apple Silicon · arm64)".
         using var options = new NSMutableDictionary
         {
             [(NSString)"ApplicationVersion"] = (NSString)GetVersion(),

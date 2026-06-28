@@ -26,8 +26,8 @@ which smooths winget validation.
    - `komac` (recommended):
      ```bash
      komac update Kindel.WinPrint \
-       --version 2.6.0 \
-       --urls https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-x64-Setup.exe \
+       --version 3.0.0 \
+       --urls https://github.com/tig/winprint/releases/download/v3.0.0/Kindel.WinPrint-win-x64-Setup.exe \
        --token <PAT> --submit
      ```
      (For a brand-new package use `komac new Kindel.WinPrint`.)
@@ -40,13 +40,13 @@ which smooths winget validation.
 After the package exists in winget-pkgs and `WINGET_TOKEN` is set, **no further manual steps
 are needed** — each stable release auto-submits its update.
 
-## Values for the current release (v2.6.0)
+## Values for the bootstrap submission (fill from the release you bootstrap)
 
 ```
-PackageVersion:  2.6.0
-InstallerUrl:    https://github.com/tig/winprint/releases/download/v2.6.0/Kindel.WinPrint-win-x64-Setup.exe
-InstallerSha256: F19CCCE38A0AE67059343648E11C3898614507817893FD01FD3D62D875AD3CE1
-ReleaseDate:     2026-06-20
+PackageVersion:  3.0.0
+InstallerUrl:    https://github.com/tig/winprint/releases/download/v3.0.0/Kindel.WinPrint-win-x64-Setup.exe
+InstallerSha256: <sha256 of that release's win-x64 Setup.exe>
+ReleaseDate:     <release date, YYYY-MM-DD>
 ```
 
 ## Notes / things to validate on a real install
