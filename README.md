@@ -39,7 +39,9 @@ scoop install winprint
 ```
 
 Or download the signed installer **`Kindel.WinPrint-win-x64-Setup.exe`** from the
-[latest release](https://github.com/tig/winprint/releases/latest) and run it.
+[latest release](https://github.com/tig/winprint/releases/latest) and run it. (On new releases
+SmartScreen may say it "isn't commonly downloaded" — that's a reputation check, not a signing
+problem; the publisher reads *Kindel, LLC*. See the [Installation Guide](https://tig.github.io/winprint/install.html#install-from-github-releases-download-the-installer).)
 
 > `winget install Kindel.WinPrint` is **coming soon** (pending first submission to winget-pkgs).
 
