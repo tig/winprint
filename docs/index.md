@@ -14,7 +14,10 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 
 ### Graphical UI (`wp gui`)
 
-![WinPrint GUI](hero-gui.gif)
+<p>
+  <img height="330" alt="WinPrint GUI on Windows" src="hero-gui-win.gif" />
+  <img height="330" alt="WinPrint GUI on macOS" src="hero-gui.gif" />
+</p>
 
 ## Quick Start
 

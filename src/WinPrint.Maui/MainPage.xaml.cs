@@ -731,7 +731,20 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        string key = e.Key.ToString();
+        // WinUI delivers VirtualKey names that differ from the shared HandleKeyDown tokens
+        // (WPF-style, also used by the Mac path), so normalize the zoom keys — otherwise plain
+        // +/=/-/0 never match on Windows: the OEM +/- keys have no VirtualKey enum member (their
+        // ToString is the numeric vk), and 0 comes through as Number0/NumberPad0, not D0/NumPad0.
+        string key = (int)e.Key switch
+        {
+            0xBB => "OemPlus",   // VK_OEM_PLUS  ('=' and '+')
+            0xBD => "OemMinus",  // VK_OEM_MINUS ('-' and '_')
+            _ => e.Key.ToString() switch
+            {
+                "Number0" or "NumberPad0" => "D0",
+                var k => k,
+            },
+        };
 
         // A focused text entry must keep plain keys for typing/caret: Home/End move the caret, and the
         // plain zoom keys (+/=/-/0) must type rather than zoom. fromTextInput gates those in HandleKeyDown.
