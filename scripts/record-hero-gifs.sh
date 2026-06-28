@@ -18,7 +18,7 @@
 # Writes:
 #   <output-dir>/hero-tui.gif
 #   <output-dir>/hero-print.gif
-#   <output-dir>/hero-gui.gif   (macOS only)
+#   <output-dir>/hero-gui-mac.gif   (macOS only)
 
 set -euo pipefail
 
@@ -46,18 +46,30 @@ wp="$repo_root/src/WinPrint.TUI/bin/Release/net10.0/wp"
 
 dotnet_env=(--env "DOTNET_ROOT=$DOTNET_ROOT")
 
+# Force the Kitty graphics protocol for the preview. tuirec (>= 0.9.0) advertises Kitty by default and
+# its pinned agg renders it robustly; the sixel path is flaky under recording (desyncs into raw-escape
+# garbage — tuirec #84). Terminal.Gui's ImageView prefers Kitty when supported, and wp exposes the
+# WP_FORCE_KITTY override, so we pin it here. See Terminal.Gui Scripts/tuirec/README.md ("Raster
+# graphics: Kitty (default) and sixel"). Verify with: grep -c 'u001b_G' <cast>  (Kitty) vs 'u001bPq' (sixel).
+#
+# Needs agg >= v1.11.2-sixel (tuirec's pinned DefaultAggVersion): earlier agg didn't render Kitty
+# `a=p` cropped placements and over-occluded held below-text images, leaving the preview blank/flickery.
+# `--select "2.."` trims the ~2s startup lead-in (settings panel building while the preview is still
+# loading) so the GIF opens on the rendered page; keystrokes are keyboard-only (page/zoom) to keep
+# focus on the preview — mouse drag/scroll and dialogs suspend or desync it.
 echo "Recording TUI hero → $out_dir/hero-tui.gif"
 "$tuirec" record \
   --binary "$wp" \
   --args "$sample" \
   "${dotnet_env[@]}" \
+  --env "WP_FORCE_KITTY=1" \
   --cols 110 --rows 34 \
   --font-size 18 --line-height 1.25 \
-  --startup-delay 12000 \
+  --startup-delay 4000 \
+  --select "2.." \
   --trim=false \
-  --mouse-pointer clicks \
-  --keystrokes 'wait:2500,PageDown,wait:700,PageDown,wait:700,+,wait:450,+,wait:450,+,wait:900,drag:84:16:54:16,wait:900,move:70:16,wait:400,scroll:down:70:16,wait:450,scroll:up:70:16,wait:700,click:11:3,wait:2500,Tab,Tab,Tab,wait:350,CursorDown,wait:450,Enter,wait:3500,click:11:3,wait:1800,Esc,wait:1200' \
-  --drain 3500 \
+  --keystrokes 'wait:1500,PageDown,wait:1100,+,wait:800,+,wait:900,+,wait:1100,-,wait:800,-,wait:900,-,wait:1100,PageDown,wait:1500' \
+  --drain 1500 \
   --speed 1.1 \
   --output "$out_dir/hero-tui.gif" \
   --max-duration 120
@@ -81,9 +93,9 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     -c Release -f net10.0-maccatalyst -r maccatalyst-arm64 \
     /p:CreatePackage=false /p:EnableCodeSigning=false -tl:off -nologo >/dev/null
 
-  echo "Capturing GUI hero → $out_dir/hero-gui.gif"
+  echo "Capturing GUI hero → $out_dir/hero-gui-mac.gif"
   python3 "$repo_root/scripts/capture-gui-hero-macos.py" \
-    --output "$out_dir/hero-gui.gif"
+    --output "$out_dir/hero-gui-mac.gif"
 else
   echo "Skipping GUI hero (macOS screen capture only). Capture on macOS or Windows separately." >&2
 fi

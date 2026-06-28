@@ -89,9 +89,8 @@ in a single step.)
 > CLI-only **formula**. (Don't install both the `winprint` cask and the `wp` formula — they each
 > provide `wp` and collide at link time; pick one on macOS.)
 
-> **Note:** the macOS `.app` is **not notarized yet** (Apple signing isn't configured), so it ships
-> ad-hoc signed and Gatekeeper may quarantine it on first launch — see
-> [Troubleshooting](#troubleshooting) below.
+> The macOS `.app` is signed with an **Apple Developer ID** and **notarized by Apple** (and stapled),
+> so Gatekeeper accepts it normally — no quarantine/`xattr` workaround is needed.
 
 ### Prerequisites
 
@@ -175,20 +174,7 @@ wp --version
 
 If `wp` is not found after installation, ensure the install location is in your `PATH`. On Windows, you may need to restart your terminal. On macOS/Linux, Homebrew handles this automatically.
 
-### macOS: "WinPrint is damaged…" / Gatekeeper quarantine
-
-The macOS `.app` is **not notarized yet**, so it ships ad-hoc signed. On first launch macOS
-Gatekeeper may quarantine it and report that **"WinPrint is damaged and can't be opened"**. Clear
-the quarantine attribute to launch it:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/WinPrint.app
-```
-
-Because the cask comes from a third-party tap, you may also need to trust it at install time:
-
-```bash
-brew install --cask kindel/winprint/winprint
-```
+The macOS `.app` is Apple Developer ID–signed and notarized, so Gatekeeper accepts it without the
+*"WinPrint is damaged"* / quarantine errors that unsigned apps trigger — no `xattr` workaround needed.
 
 For additional help, see [Support](support.md) or file an [issue on GitHub](https://github.com/tig/winprint/issues).

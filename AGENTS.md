@@ -84,14 +84,32 @@ artifacts in the tap:
   release `brew` job renders into a throwaway tap and `brew info --cask/--formula <name>` them before
   publishing (`brew audit [path]` is disabled; loading by name is the reliable check) — keep that guard.
 
-**winget & macOS notarization — known gaps (don't mistake for regressions).**
+**winget gap & macOS signing — don't mistake for regressions.**
 - **winget:** `winget-releaser` only *updates* an existing winget-pkgs package, so the **first**
   submission must be bootstrapped manually. Until then the `winget` job **failing is expected**.
-- **macOS is not notarized:** the Apple signing secrets (`APPLE_*`) aren't set, so the cask ships an
-  unsigned/ad-hoc `.app` (Gatekeeper warns; 3rd-party-tap casks also need `brew trust --cask`).
+- **macOS is signed + notarized:** the Apple signing secrets (`APPLE_*`) **are** configured, so the
+  release pipeline signs the `.app` with an Apple Developer ID and notarizes + staples it (the
+  `Sign, notarize, and zip macOS GUI` step). Gatekeeper accepts the cask normally — **no**
+  quarantine/`xattr` workaround. (Set up in the 2.8.x line; #162.)
 - **Per-arch cask size differs by design:** `maccatalyst-arm64` is Mono-**AOT** (~130 MB), `-x64` is
   Mono-**JIT** (~35 MB). The SDK gates AOT to `maccatalyst-arm64` only (the `RunAOTCompilation`
   property is ignored for MacCatalyst); see the comment in `release.yml`. Not a broken x64 build.
+
+## Hero GIFs (README/docs marketing — read before regenerating)
+The README and `docs/index.md` lead with one hero GIF per front end (TUI, headless print,
+GUI). They are **marketing**: each must show the front end *being driven*, not a static page.
+The full spec — what each hero must show off, the producer scripts, and the sample file — is
+**[`docs/hero-gifs.md`](docs/hero-gifs.md)**. Key rules:
+- **GUI heroes must drive settings + zoom/pan + open a 2nd file** (toggle Line Numbers,
+  toggle Landscape, fast zoom→pan→reset, then open a different file), mirroring the TUI hero's
+  energy. The old macOS page/page/arrow choreography is the weak baseline — **don't copy it.**
+- All heroes render the **same** sample (`src/WinPrint.Core/ViewModels/SheetViewModel.cs`).
+- **Windows GUI:** `scripts/capture-gui-hero-windows.ps1` (drives `winprint.exe`, needs an
+  **unlocked interactive session**) → `scripts/assemble-gui-hero.py` → `docs/hero-gui-win.gif`.
+  Zoom uses the plain TUI-consistent keys (`=`/`+` in, `-` out, `0` fits); `OnNativeKeyDown`
+  normalizes the WinUI `VirtualKey` strings (`"187"`/`"189"`/`"Number0"`) so they route on
+  Windows (PR #199 added plain zoom keys but only built MacCatalyst). README shows Windows +
+  macOS side by side.
 
 ## Content Type Engines (CTEs)
 CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
