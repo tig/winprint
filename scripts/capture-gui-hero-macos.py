@@ -4,6 +4,13 @@
 tuirec only records terminal sessions, so the native MAUI GUI is captured with
 periodic window screenshots assembled into a GIF. Requires the GUI to already
 be built (Release/maccatalyst-arm64) and Pillow (`pip install --user Pillow`).
+
+NOTE: the steps below are the WEAK baseline (page/page/arrow only). The macOS hero
+should match the Windows hero's full choreography — load -> toggle Line Numbers ->
+toggle Landscape -> fast zoom/pan/reset -> open a 2nd file -> hold. See the spec and
+the macOS mechanics (plain =/-/0 zoom keys, Escape to focus the preview, Cmd+O +
+Cmd+Shift+G to open a file, label-clicks to toggle settings) in docs/hero-gifs.md
+before regenerating, and bring this script up to that spec.
 """
 
 from __future__ import annotations
