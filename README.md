@@ -31,9 +31,17 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 ### Windows
 
+Install with [Scoop](https://scoop.sh) — one command gives you both the GUI and the `wp` terminal UI:
+
 ```powershell
-winget install Kindel.WinPrint
+scoop bucket add winprint https://github.com/kindel/scoop-winprint
+scoop install winprint
 ```
+
+Or download the signed installer **`Kindel.WinPrint-win-x64-Setup.exe`** from the
+[latest release](https://github.com/tig/winprint/releases/latest) and run it.
+
+> `winget install Kindel.WinPrint` is **coming soon** (pending first submission to winget-pkgs).
 
 ### macOS
 

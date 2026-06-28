@@ -135,8 +135,8 @@ WinPrint's packaged builds include a built-in install/update engine.
 You can also update manually using your package manager:
 
 ```bash
-# Windows
-winget upgrade Kindel.WinPrint
+# Windows (Scoop; winget coming soon)
+scoop update winprint
 
 # macOS
 brew upgrade --cask winprint
