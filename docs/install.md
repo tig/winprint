@@ -28,11 +28,19 @@ If you'd rather not use a package manager, download and run the signed installer
 
 1. Open the [latest release](https://github.com/tig/winprint/releases/latest).
 2. Under **Assets**, download **`Kindel.WinPrint-win-x64-Setup.exe`**.
-3. Run it. The installer is Authenticode-signed (Azure Trusted Signing), so Windows SmartScreen
-   should show **Kindel, LLC** as the verified publisher — no "unknown publisher" warning.
+3. Run it. The installer is Authenticode-signed (Azure Trusted Signing), so Windows identifies the
+   publisher as **Kindel, LLC** — not "unknown publisher".
 
 This installs the GUI to the Start Menu and puts `wp` on your `PATH`, and includes a built-in
 updater for future versions.
+
+> **SmartScreen "isn't commonly downloaded" prompt.** On brand-new releases, Microsoft Defender
+> SmartScreen may still warn that the file *"isn't commonly downloaded"*. This is a **reputation**
+> check based on download volume — **not** a problem with the signature (the publisher line correctly
+> reads *Kindel, LLC*). It fades as each release accumulates downloads. To proceed: in Edge, on the
+> download choose **••• → Keep**, then **Show more → Keep anyway**; if Windows prompts at launch,
+> click **More info → Run anyway** and confirm the publisher is *Kindel, LLC*. Installing via
+> **Scoop** (above) avoids this prompt entirely.
 
 > Prefer a no-installer copy? The same release also ships **`Kindel.WinPrint-win-x64-Portable.zip`**
 > — unzip it anywhere and run `WinPrint.exe` (GUI) or `current\wp.exe` (TUI). This is the same
