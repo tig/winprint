@@ -10,7 +10,7 @@ not done. Hold every hero to the bar set by the TUI hero (the richest of the thr
 | TUI (`wp`) | `docs/hero-tui.gif` | `wp <file>` in a terminal | `scripts/record-hero-gifs.sh` (tuirec) |
 | Headless print | `docs/hero-print.gif` | `wp print … --what-if` | `scripts/record-hero-gifs.sh` (tuirec) |
 | GUI on macOS | `docs/hero-gui-mac.gif` | Mac Catalyst `winprint` | `scripts/capture-gui-hero-macos.py` |
-| GUI on Windows | `docs/hero-gui-win.gif` | WinUI3 `winprint.exe` | `scripts/capture-gui-hero-windows.ps1` + `scripts/assemble-gui-hero.py` |
+| GUI on Windows | `docs/hero-gui-win.gif` | Installed WinPrint (Start Menu) | `scripts/Generate-WinPrint-HeroGif.ps1` (MCEC MCP; see [`docs/winprint-hero-gif.md`](winprint-hero-gif.md)) |
 
 All heroes use the same sample file — `src/WinPrint.Core/ViewModels/SheetViewModel.cs` —
 so the three front ends are visibly rendering the *same* document. The README GUI section
@@ -40,7 +40,9 @@ definitions → open another file. (The exact keystroke choreography lives in th
 5. **Open another file** — use the File button + Open dialog to load a *different* document
    (the Windows producer opens `README.md`, which renders as formatted **Markdown** — a nice
    "not just source code" beat).
-6. **Hold** — linger on the final page so the loop reads cleanly.
+6. **Print to PDF and open** — Windows only (MCEC hero): select **Microsoft Print to PDF**, print,
+   save `winprintdemo.pdf`, open the PDF so the loop ends on a real document output.
+7. **Hold** — linger on the final page so the loop reads cleanly.
 
 Both GUI producers now drive the full choreography above (the macOS one was once a weak
 page/page/arrow baseline — don't regress it back). Settings toggles and file-open frames
@@ -48,23 +50,23 @@ linger; the zoom/pan flourish stays fast.
 
 ## Regenerating the Windows GUI hero
 
-Requires an **unlocked, interactive Windows session** (the capture injects real input) and
-Pillow (`pip install --user Pillow`).
+Requires an **unlocked, interactive Windows session** (real injected mouse/keyboard), **MCEC
+installed** (`winget install Kindel.mcec` when published, or setup.exe until then), and **WinPrint
+installed** so Start Menu search finds it. Full prerequisites and choreography:
+[`docs/winprint-hero-gif.md`](winprint-hero-gif.md) (issue [#84](https://github.com/tig/mcec/issues/84)).
 
 ```powershell
-# 1. Build the unpackaged WinUI3 app (use the RID this machine runs; win-arm64 on ARM).
-dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -f net10.0-windows10.0.19041.0 -c Release
+# From this repo root — produces docs/hero-gui-win.gif in one shot via MCEC record.
+pwsh -NoProfile -File scripts/Generate-WinPrint-HeroGif.ps1
 
-# 2. Drive the app and capture frames into artifacts/hero/gui-frames/.
-#    Pass -Exe if your RID/config differs from the default (Release win-arm64).
-scripts/capture-gui-hero-windows.ps1
-
-# 3. Assemble the frames into docs/hero-gui-win.gif at README width.
-python scripts/assemble-gui-hero.py
+# Dev MCEC build (clipboard tool not yet in a release):
+pwsh -NoProfile -File scripts/Generate-WinPrint-HeroGif.ps1 `
+  -McecInstallDir C:\path\to\mcec\src\bin\Debug\net10.0-windows
 ```
 
-Then eyeball the frames in `artifacts/hero/gui-frames/` (and the final GIF) and confirm the
-zoom/pan/reset story actually reads.
+Evidence bundles land under `artifacts/customer1/`. The legacy frame-capture path
+(`scripts/capture-gui-hero-windows.ps1` + `scripts/assemble-gui-hero.py`) is deprecated for the
+README hero — it recorded window-only frames without desktop/Start/PDF context.
 
 ### Windows capture gotchas (the producer encodes these — don't regress them)
 
