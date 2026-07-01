@@ -5,7 +5,9 @@ Windows desktop** — Start Menu launch, settings/zoom tour, Print to Microsoft 
 `winprintdemo.pdf`, open the PDF — recorded as a **desktop region** GIF with the MCEC command overlay
 narrating each step.
 
-Run from the **winprint** repo root (`scripts/Generate-WinPrint-HeroGif.ps1`; paths are repo-relative).
+The producer script is intended to live in the **winprint** repo and be run from that repo root
+(paths are repo-relative). Until that PR lands, a copy lives at `scripts/Generate-WinPrint-HeroGif.ps1`
+here and accepts `-WinPrintRoot` (default: current directory).
 
 ## Prerequisites (operator)
 
@@ -31,10 +33,14 @@ Run from the **winprint** repo root (`scripts/Generate-WinPrint-HeroGif.ps1`; pa
 From the **winprint repo root**:
 
 ```powershell
+# Until the script moves to winprint:
+pwsh -NoProfile -File C:\path\to\mcec\scripts\Generate-WinPrint-HeroGif.ps1
+
+# After the winprint PR (same repo root as cwd):
 pwsh -NoProfile -File scripts/Generate-WinPrint-HeroGif.ps1
 ```
 
-Evidence bundles land under `artifacts/customer1/` in this repo.
+Evidence bundles land under `artifacts/customer1/` in the mcec repo (see [evidence-bundles.md](evidence-bundles.md)).
 
 ## Manual MCP recipe (agent-playbook)
 
@@ -53,6 +59,7 @@ operator/harness has provisioned it (agent commands enabled in the session copy 
 | Save PDF | `clipboard { action:"set", text:"…winprintdemo.pdf" }` → Ctrl+V → Enter |
 | Open PDF | `send_command winr` → `send_command chars:<pdf path>` (backslashes doubled) → Enter |
 | Stop | `record { action:"stop", file:"docs/hero-gui-win.gif" }` |
+| Close PDF | `send_command alt_f4` — release the file lock so the next run's harness `Remove-Item` succeeds |
 
 **Not in the agent recipe:** deleting the old PDF (harness `Remove-Item` before connect), installing
 MCEC/WinPrint, copying the session dir, evidence zip — see [issue #138](https://github.com/tig/mcec/issues/138).
