@@ -21,6 +21,10 @@ jobs:
   package:
     name: Package ${{ matrix.runtime }}
     runs-on: ${{ matrix.os }}
+    # An experimental leg (e.g. win-arm64 while it's being proven out) must NOT fail the whole
+    # release: continue-on-error lets the other arches still publish if it breaks. Remove the
+    # matrix `experimental` flag once the leg is reliable.
+    continue-on-error: ${{ matrix.experimental == true }}
 
     strategy:
       fail-fast: false
@@ -32,27 +36,43 @@ jobs:
             includeGui: true
             mauiFramework: net10.0-windows10.0.19041.0
             mauiRuntime: win-x64
-            channel: win
-            mainExe: wp.exe
-            icon: src/WinPrint.cli/winprint.ico
+            channel: win-x64
+            mainExe: winprint.exe
+            icon: packaging/windows/winprint.ico
 
-          - os: macos-latest
+          # Windows arm64 on a NATIVE arm64 runner (windows-11-arm — free for public repos), so the
+          # AOT TUI links natively and the MAUI/WinUI3 GUI builds against arm64 WindowsAppSDK packs,
+          # mirroring how linux-arm64 uses ubuntu-24.04-arm. Marked experimental (continue-on-error
+          # above) until proven on real arm64 hardware — Velopack's win-arm64 packer is newer (see
+          # velopack#85). Issue #187.
+          - os: windows-11-arm
+            runtime: win-arm64
+            tuiFramework: net10.0-windows
+            includeGui: true
+            mauiFramework: net10.0-windows10.0.19041.0
+            mauiRuntime: win-arm64
+            channel: win-arm64
+            mainExe: winprint.exe
+            icon: packaging/windows/winprint.ico
+            experimental: true
+
+          - os: macos-26
             runtime: osx-x64
             tuiFramework: net10.0
             includeGui: true
             mauiFramework: net10.0-maccatalyst
             mauiRuntime: maccatalyst-x64
-            channel: osx
+            channel: osx-x64
             mainExe: wp
             icon: ''
 
-          - os: macos-latest
+          - os: macos-26
             runtime: osx-arm64
             tuiFramework: net10.0
             includeGui: true
             mauiFramework: net10.0-maccatalyst
             mauiRuntime: maccatalyst-arm64
-            channel: osx
+            channel: osx-arm64
             mainExe: wp
             icon: ''
 
@@ -60,15 +80,19 @@ jobs:
             runtime: linux-x64
             tuiFramework: net10.0
             includeGui: false
-            channel: linux
+            channel: linux-x64
             mainExe: wp
             icon: ''
 
-          - os: ubuntu-latest
+          # Build linux-arm64 on a NATIVE arm64 runner. Native AOT links with the target's
+          # binutils, and an x64 runner's ld.bfd can't emit aarch64 ("unrecognised emulation
+          # mode: aarch64linux"), so cross-AOT from ubuntu-latest (x64) fails. ubuntu-24.04-arm
+          # is a free GitHub-hosted arm64 runner (public repos) and AOT-links natively.
+          - os: ubuntu-24.04-arm
             runtime: linux-arm64
             tuiFramework: net10.0
             includeGui: false
-            channel: linux
+            channel: linux-arm64
             mainExe: wp
             icon: ''
 
@@ -85,8 +109,17 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Install MAUI workload
-        if: ${{ matrix.includeGui }}
+      # Windows: install only the maui-windows workload and build only the Windows head
+      # (WinPrintWindowsOnly below). Installing the full `maui` workload + leaving the
+      # MacCatalyst head active makes the Windows job try to cross-compile MacCatalyst from
+      # win-x64, which demands the host Mono cross-pack Microsoft.NETCore.App.Runtime.Mono.win-x64
+      # (not published on nuget.org) and fails restore (NU1102). Mirrors ci.yml.
+      - name: Install MAUI workload (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet workload install maui-windows
+
+      - name: Install MAUI workload (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
         run: dotnet workload install maui
 
       - name: Install Velopack CLI
@@ -102,8 +135,15 @@ jobs:
       - name: Restore TUI
         run: dotnet restore src/WinPrint.TUI/WinPrint.TUI.csproj
 
-      - name: Restore MAUI
-        if: ${{ matrix.includeGui }}
+      # Restore the same single head we publish. Without WinPrintWindowsOnly the csproj
+      # also exposes net10.0-maccatalyst on Windows, so a plain restore would evaluate the
+      # MacCatalyst head even though only the maui-windows workload is installed.
+      - name: Restore MAUI (Windows head only)
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj /p:WinPrintWindowsOnly=true
+
+      - name: Restore MAUI (full)
+        if: ${{ matrix.includeGui && runner.os != 'Windows' }}
         run: dotnet restore src/WinPrint.Maui/WinPrint.Maui.csproj
 
       - name: Get version
@@ -129,6 +169,29 @@ jobs:
             --self-contained true `
             -o $publishDir `
             /p:PublishSingleFile=false
+          # wp is Native AOT (a single Mach-O + its P/Invoke dylibs), but the publish still drops
+          # debug symbols (*.pdb, *.dSYM) that aren't needed at runtime. Strip them so the cask-
+          # embedded wp and the formula tarball ship only code — and, critically, so codesign
+          # doesn't reject the loose .pdb/.dSYM as unsigned "subcomponents" when sealing the .app.
+          Get-ChildItem -Path $publishDir -Recurse -Filter *.pdb | Remove-Item -Force
+          Get-ChildItem -Path $publishDir -Recurse -Directory -Filter *.dSYM | Remove-Item -Recurse -Force
+
+      # Capture a TUI-only tarball for the Homebrew tap BEFORE the GUI publish writes into
+      # the same dir, so `wp` ships without the (separately-distributed) GUI. macOS + Linux only.
+      - name: Package TUI tarball (Homebrew)
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          mkdir -p artifacts/cli
+          tar -C "artifacts/publish/${{ matrix.runtime }}" -czf "artifacts/cli/wp-${{ matrix.runtime }}.tar.gz" .
+
+      - name: Upload TUI tarball
+        if: ${{ runner.os != 'Windows' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-${{ matrix.runtime }}
+          path: artifacts/cli/wp-${{ matrix.runtime }}.tar.gz
+          if-no-files-found: error
 
       - name: Publish Windows GUI
         if: ${{ matrix.includeGui && runner.os == 'Windows' }}
@@ -141,20 +204,88 @@ jobs:
             -r "${{ matrix.mauiRuntime }}" `
             --self-contained true `
             -o $publishDir `
-            /p:WindowsPackageType=None
+            /p:WindowsPackageType=None `
+            /p:WinPrintWindowsOnly=true
 
-      - name: Publish macOS GUI
-        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+      - name: Validate Windows package inputs
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           $publishDir = "artifacts/publish/${{ matrix.runtime }}"
-          dotnet publish src/WinPrint.Maui/WinPrint.Maui.csproj `
-            -c Release `
-            -f "${{ matrix.mauiFramework }}" `
-            -r "${{ matrix.mauiRuntime }}" `
-            --self-contained true `
-            -o $publishDir `
+          $requiredFiles = @(
+            "winprint.exe", # MAUI GUI; this must be the Start Menu entrypoint.
+            "wp.exe"        # Terminal UI; exposed through the installed folder on PATH.
+          )
+
+          foreach ($file in $requiredFiles) {
+            $path = Join-Path $publishDir $file
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Windows package input is missing required executable: $path"
+            }
+          }
+
+      # macOS GUI is the MAUI MacCatalyst .app, distributed via a Homebrew *cask* (NOT Velopack —
+      # Velopack's mac packer rebuilds its own .app from loose files and can't wrap a MacCatalyst
+      # bundle, which is what shipped a broken, TUI-launching app in an earlier release). `dotnet build` (not
+      # publish) assembles a complete, runnable WinPrint.app; we sign + notarize + zip it below.
+      #
+      # Expected per-arch size/AOT asymmetry (do NOT mistake the x64 cask for a broken build):
+      #   - WinPrint-osx-arm64.app.zip is Mono-AOT-compiled (~132 MB unzipped: a ~100 MB native
+      #     apphost + *.aotdata.arm64 files).
+      #   - WinPrint-osx-x64.app.zip is Mono-JIT (~35 MB: ~6 MB apphost, no aotdata). This is a
+      #     strict subset of arm64 — same 149 assemblies in MonoBundle — and is fully functional;
+      #     JIT is the normal, performant execution mode on Intel Macs.
+      # This is dictated by the MacCatalyst SDK, not our config: Xamarin.Shared.Sdk.targets gates
+      # `_RunAotCompiler` to `RuntimeIdentifier == maccatalyst-arm64` only (MacCatalyst is
+      # SdkIsDesktop, so the device-AOT default is skipped). The `RunAOTCompilation` MSBuild
+      # property is an Android/WASM lever and is IGNORED here, so it cannot turn on x64 AOT. The
+      # only switch that flips x64 (`MtouchInterpreter`) selects the *interpreter*, which is slower
+      # than the current JIT — so do not "fix" the size gap that way. See the PR that introduced this.
+      - name: Build macOS GUI (.app)
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj \
+            -c Release \
+            -f "${{ matrix.mauiFramework }}" \
+            -r "${{ matrix.mauiRuntime }}" \
+            /p:CreatePackage=false \
             /p:EnableCodeSigning=false
+          APP="src/WinPrint.Maui/bin/Release/${{ matrix.mauiFramework }}/${{ matrix.mauiRuntime }}/WinPrint.app"
+          if [ ! -x "$APP/Contents/MacOS/winprint" ]; then
+            echo "::error::Expected GUI bundle missing or incomplete: $APP"
+            exit 1
+          fi
+          echo "GUI_APP=$APP" >> "$GITHUB_ENV"
+
+      # Embed the TUI (`wp`) inside the GUI bundle so the Homebrew *cask* delivers BOTH the GUI and
+      # the `wp` CLI from a single artifact (the cask's `binary` stanza symlinks the embedded wp onto
+      # PATH). `wp` is a Native AOT publish — a single Mach-O executable plus its two P/Invoke dylibs
+      # (libonigwrap, libSkiaSharp); a different runtime from the GUI's Mono `MonoBundle`. It goes
+      # under Contents/Helpers, the Apple-blessed home for auxiliary executables (notarization rejects
+      # code in Resources). This runs BEFORE the sign/notarize step so the embedded wp is covered by
+      # signing + notarization. The wp-*.tar.gz formula still ships for Linux and CLI-only installs.
+      - name: Embed wp (TUI) into the macOS GUI bundle
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="artifacts/publish/${{ matrix.runtime }}"
+          DEST="$GUI_APP/Contents/Helpers/wp"
+          if [ ! -x "$SRC/wp" ]; then
+            echo "::error::wp payload missing at $SRC/wp (TUI publish must precede this step)."
+            exit 1
+          fi
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          cp -R "$SRC"/. "$DEST"/
+          chmod +x "$DEST/wp"
+          if [ ! -x "$DEST/wp" ]; then
+            echo "::error::Failed to embed wp into $DEST"
+            exit 1
+          fi
+          echo "Embedded wp ($(find "$DEST" -type f | wc -l | tr -d ' ') files) into Contents/Helpers/wp"
 
       - name: Azure login for Trusted Signing
         if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
@@ -200,6 +331,17 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security import "$CERT_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # Register the signing keychain in the user search list. codesign resolves the
+          # --sign identity NAME against the search list, not the --keychain path, so without
+          # this it fails with "no identity found" even though the cert imported fine.
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
+          # Fail fast (with a clear message) if the .p12 carried the cert but not its private
+          # key — that imports as a cert, not a signing identity, and codesign can't use it.
+          if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Developer ID Application"; then
+            echo "::error::No Developer ID Application *identity* in the signing keychain — the APPLE_CERTIFICATE_BASE64 .p12 is missing its private key. Re-export from Keychain Access 'My Certificates' (cert + key) and update the secret."
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH" || true
+            exit 1
+          fi
           xcrun notarytool store-credentials winprint-notary \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
@@ -208,10 +350,90 @@ jobs:
 
           echo "APPLE_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
-      - name: Pack with Velopack
-        shell: pwsh
+      # Developer ID sign (hardened runtime) + notarize + staple the .app, then zip it for the
+      # Homebrew cask. Without the Apple secrets we still emit an (unsigned) zip so the rest of
+      # the release is exercised; Gatekeeper would block that build on a real machine.
+      - name: Sign, notarize, and zip macOS GUI (.app)
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        shell: bash
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          APP="$GUI_APP"
+          mkdir -p artifacts/cask
+          ZIP="artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip"
+          if [ "${HAS_APPLE_SIGNING}" = "true" ]; then
+            # Two-pass signing (validated locally against a representative bundle):
+            #  1. `codesign --deep` signs the linked nested code (the main exe + the embedded wp payload
+            #     under Contents/Helpers) but does NOT descend into Contents/MonoBundle — the GUI's Mono
+            #     dylibs are dynamically loaded, not linked — so it left libonigwrap.dylib /
+            #     liblaunchcwd.dylib unsigned and notarization rejected them. Explicitly sign ONLY the
+            #     MonoBundle Mach-O first (hardened runtime + secure timestamp). Signing just what --deep
+            #     misses keeps the timestamp-server round-trips low: signing EVERY nested binary made the
+            #     two concurrent macOS jobs flood Apple's TSA and stall the step for 30+ minutes.
+            #     (Use `case`, not `file ... | grep -q`: under `set -o pipefail` grep -q closes the pipe,
+            #     `file` dies with SIGPIPE, and the non-zero pipeline makes the test FALSE — silent no-op.)
+            if [ -d "$APP/Contents/MonoBundle" ]; then
+              while IFS= read -r -d '' f; do
+                case "$(file -b "$f")" in
+                  *Mach-O*)
+                    codesign --force --options runtime --timestamp \
+                      --keychain "$APPLE_KEYCHAIN_PATH" \
+                      --sign "$APPLE_SIGNING_IDENTITY" "$f"
+                    ;;
+                esac
+              done < <(find "$APP/Contents/MonoBundle" -type f -print0)
+            fi
+            #  2. Seal the whole bundle with --deep: only --deep can sign over the embedded wp's loose
+            #     CoreCLR payload under Contents/Helpers (a plain bundle sign rejects the .dll/.pdb/.json
+            #     data files as unsigned "subcomponents"). It signs the main exe + Helpers (with secure
+            #     timestamps) and applies the JIT/runtime entitlements; the MonoBundle sigs are preserved.
+            codesign --force --deep --options runtime --timestamp \
+              --keychain "$APPLE_KEYCHAIN_PATH" \
+              --entitlements packaging/macos/codesign.entitlements \
+              --sign "$APPLE_SIGNING_IDENTITY" "$APP"
+            codesign --verify --deep --strict --verbose=2 "$APP"
+            ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
+            # Submit once, then poll separately. `notarytool ... --wait` exits non-zero if a transient
+            # network blip hits mid-poll (we saw NSURLErrorDomain -1009 "connection appears offline"
+            # while polling Apple's notary API), which would fail the release even though notarization
+            # was still progressing. Retry the WAIT (no re-upload) and gate on the final status from
+            # `info`; on any non-Accepted status, dump the notary log so the failure is self-diagnosing.
+            SUBMIT_ID="$(xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+              --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" \
+              --output-format json | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')"
+            echo "Notarization submission id: $SUBMIT_ID"
+            for attempt in 1 2 3 4 5; do
+              if xcrun notarytool wait "$SUBMIT_ID" \
+                   --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH"; then
+                break
+              fi
+              echo "::warning::notarytool wait attempt $attempt failed (transient?); retrying in 30s..."
+              sleep 30
+            done
+            STATUS="$(xcrun notarytool info "$SUBMIT_ID" \
+              --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" \
+              --output-format json | python3 -c 'import sys,json;print(json.load(sys.stdin)["status"])')"
+            echo "Notarization status: $STATUS"
+            if [ "$STATUS" != "Accepted" ]; then
+              echo "::error::Notarization $STATUS — notary log follows:"
+              xcrun notarytool log "$SUBMIT_ID" \
+                --keychain-profile winprint-notary --keychain "$APPLE_KEYCHAIN_PATH" || true
+              exit 1
+            fi
+            xcrun stapler staple "$APP"
+          else
+            echo "::warning::Apple signing secrets absent — emitting an unsigned WinPrint.app (Gatekeeper will block it)."
+          fi
+          ditto -c -k --keepParent "$APP" "$ZIP"
+          echo "Wrote $ZIP"
+
+      # Velopack packages Windows + Linux only. macOS GUI goes out as a notarized .app via the
+      # Homebrew cask (above); macOS TUI ships as the wp-*.tar.gz formula tarball.
+      - name: Pack with Velopack
+        if: ${{ runner.os != 'macOS' }}
+        shell: pwsh
         run: |
           $publishDir = "artifacts/publish/${{ matrix.runtime }}"
           $releaseDir = "artifacts/velopack/${{ matrix.runtime }}"
@@ -237,28 +459,43 @@ jobs:
             $vpkArgs += @("--azureTrustedSignFile", "artifacts/azure-trusted-signing.json")
           }
 
-          if ($IsMacOS -and $env:HAS_APPLE_SIGNING -eq "true") {
-            $vpkArgs += @(
-              "--signAppIdentity", $env:APPLE_SIGNING_IDENTITY,
-              "--signInstallIdentity", $env:APPLE_SIGNING_IDENTITY,
-              "--notaryProfile", "winprint-notary",
-              "--keychain", $env:APPLE_KEYCHAIN_PATH
-            )
-          }
-
           vpk @vpkArgs
 
-      - name: Upload package artifacts
+      - name: Validate Windows Start Menu shortcut
+        if: ${{ matrix.includeGui && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          scripts\Test-WindowsVelopackShortcut.ps1 `
+            -ReleaseDir "artifacts/velopack/${{ matrix.runtime }}" `
+            -PackId $env:PACK_ID `
+            -PackTitle $env:PACK_TITLE `
+            -ExpectedMainExe "${{ matrix.mainExe }}"
+
+      - name: Upload Velopack artifacts
+        if: ${{ runner.os != 'macOS' }}
         uses: actions/upload-artifact@v4
         with:
           name: velopack-${{ matrix.runtime }}
           path: artifacts/velopack/${{ matrix.runtime }}/**/*
           if-no-files-found: error
 
+      - name: Upload macOS GUI app zip
+        if: ${{ matrix.includeGui && runner.os == 'macOS' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cask-${{ matrix.runtime }}
+          path: artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip
+          if-no-files-found: error
+
   publish:
     name: Publish GitHub Release
     needs: package
     runs-on: ubuntu-latest
+    # Only publish on a real tag push. A workflow_dispatch (e.g. from develop) then runs ONLY the
+    # build+sign package matrix as a safe dry-run — it won't create a release, push the tap, or
+    # submit to winget (both of which `needs: publish`, so they skip too). Used to validate the
+    # win-arm64 signing path without cutting a tag.
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - name: Download package artifacts
@@ -271,3 +508,189 @@ jobs:
         with:
           files: release-artifacts/**/*
           generate_release_notes: true
+          # Tags with a pre-release label (e.g. vX.Y.Z-rc.1) publish as a pre-release so
+          # GitHub doesn't mark them "Latest"; stable tags (vX.Y.Z) become the latest release.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # Auto-update the winget-pkgs manifest on every STABLE release. Pre-releases are skipped.
+  # Requires a classic PAT in the WINGET_TOKEN secret (public_repo scope) and a one-time
+  # manual bootstrap of the package into microsoft/winget-pkgs — see packaging/winget/README.md.
+  winget:
+    name: Submit to winget-pkgs
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      # A missing token must FAIL this job, never silently skip into a green check.
+      # A skipped publish that reports success hides the fact the package was never shipped.
+      - name: Require WINGET_TOKEN
+        shell: bash
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if [ -z "${WINGET_TOKEN}" ]; then
+            echo "::error title=winget not submitted::WINGET_TOKEN is not set, so this stable release was NOT submitted to winget-pkgs. Set the secret and re-run this job."
+            exit 1
+          fi
+
+      - name: Derive winget version (strip leading v)
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Submit to winget-pkgs
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Kindel.WinPrint
+          version: ${{ steps.ver.outputs.version }}
+          release-tag: ${{ github.ref_name }}
+          installers-regex: 'win-(x64|arm64)-Setup\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  # Update the Homebrew tap (kindel/homebrew-winprint) with the new TUI on every STABLE
+  # release. Renders packaging/homebrew/Formula/winprint.rb with the version + per-arch
+  # SHA256s and pushes it to the tap. Requires a classic PAT (repo scope) in HOMEBREW_TAP_TOKEN
+  # with push access to the tap; no-op until that secret is set.
+  brew:
+    name: Update Homebrew tap
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      # A missing token must FAIL this job, never silently skip into a green check.
+      # Until #153 set HOMEBREW_TAP_TOKEN, this job no-opped yet reported success, so the
+      # tap shipped only a README and `brew install` 404'd while releases looked healthy.
+      - name: Require HOMEBREW_TAP_TOKEN
+        shell: bash
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "${TAP_TOKEN}" ]; then
+            echo "::error title=Homebrew tap not published::HOMEBREW_TAP_TOKEN is not set, so the Homebrew tap was NOT updated for this release. See https://github.com/tig/winprint/issues/153 to set the secret, then re-run this job."
+            exit 1
+          fi
+
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Render formula and push to tap
+        shell: bash
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
+
+          # Formula = free TUI (wp); Cask = free MAUI GUI (WinPrint.app). Both ship via the tap.
+          sed -e "s|{{version}}|${version}|g" \
+              -e "s|{{base}}|${base}|g" \
+              -e "s|{{sha_osx_arm}}|$(sha wp-osx-arm64.tar.gz)|" \
+              -e "s|{{sha_osx_x64}}|$(sha wp-osx-x64.tar.gz)|" \
+              -e "s|{{sha_linux_x64}}|$(sha wp-linux-x64.tar.gz)|" \
+              -e "s|{{sha_linux_arm}}|$(sha wp-linux-arm64.tar.gz)|" \
+              packaging/homebrew/Formula/wp.rb > /tmp/wp.rb
+
+          sed -e "s|{{version}}|${version}|g" \
+              -e "s|{{base}}|${base}|g" \
+              -e "s|{{sha_cask_arm}}|$(sha WinPrint-osx-arm64.app.zip)|" \
+              -e "s|{{sha_cask_x64}}|$(sha WinPrint-osx-x64.app.zip)|" \
+              packaging/homebrew/Casks/winprint.rb > /tmp/winprint-cask.rb
+
+          # Validate the rendered cask + formula actually LOAD under Homebrew before publishing.
+          # `ruby -c` only checks syntax and misses invalid DSL — e.g. a cask using the formula-only
+          # `conflicts_with formula:` key, which once shipped a cask the tap couldn't even parse.
+          # Load them by name from a throwaway local tap so an invalid stanza fails this job instead.
+          # On ubuntu-latest Homebrew is pre-installed but NOT on PATH — load its shellenv first, or
+          # every `brew` call below fails with "command not found" and breaks the tap publish.
+          if ! command -v brew >/dev/null 2>&1; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_FROM_API=1
+          VTAP="$(brew --repository)/Library/Taps/kindel/homebrew-winprint"
+          rm -rf "$VTAP"; mkdir -p "$VTAP/Casks" "$VTAP/Formula"
+          git -C "$VTAP" init -q
+          cp /tmp/winprint-cask.rb "$VTAP/Casks/winprint.rb"
+          cp /tmp/wp.rb "$VTAP/Formula/wp.rb"
+          git -C "$VTAP" add -A
+          git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm validate
+          echo "Validating rendered cask + formula load under Homebrew…"
+          brew info --cask kindel/winprint/winprint > /dev/null
+          brew info --formula kindel/winprint/wp > /dev/null
+          rm -rf "$VTAP"
+
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/kindel/homebrew-winprint.git" tap
+          mkdir -p tap/Formula tap/Casks
+          cp /tmp/wp.rb tap/Formula/wp.rb
+          cp /tmp/winprint-cask.rb tap/Casks/winprint.rb
+          cd tap
+          # The TUI formula was renamed winprint -> wp so `brew install winprint` resolves to the
+          # GUI cask (a formula + cask sharing a name makes brew pick the formula and skip the GUI).
+          # Remove the stale formula from the tap so the old collision can't linger.
+          git rm -f --ignore-unmatch Formula/winprint.rb
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/wp.rb Casks/winprint.rb
+          git diff --cached --quiet && { echo "Tap unchanged."; exit 0; }
+          git commit -m "winprint ${version}"
+          git push
+
+  # Update the Scoop bucket (kindel/scoop-winprint) with the new Windows build on every STABLE
+  # release. Renders packaging/scoop/winprint.json with the version + win-x64 SHA256 and pushes it
+  # to bucket/winprint.json. This is the approval-free Windows channel — a Scoop bucket is just a Git
+  # repo you own, with no Microsoft moderation (unlike the winget job). Requires a classic PAT (repo
+  # scope) in SCOOP_BUCKET_TOKEN with push access to the bucket; see packaging/scoop/README.md.
+  scoop:
+    name: Update Scoop bucket
+    needs: publish
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      # A missing token must FAIL this job, never silently skip into a green check (same rule as the
+      # brew/winget jobs): a skipped publish reporting success would hide that nothing shipped.
+      - name: Require SCOOP_BUCKET_TOKEN
+        shell: bash
+        env:
+          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+        run: |
+          if [ -z "${SCOOP_TOKEN}" ]; then
+            echo "::error title=Scoop bucket not published::SCOOP_BUCKET_TOKEN is not set, so the Scoop bucket was NOT updated for this release. See packaging/scoop/README.md to create the bucket + token, then re-run this job."
+            exit 1
+          fi
+
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Render manifest and push to bucket
+        shell: bash
+        env:
+          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
+
+          # win-x64 is the only Windows arch published today (the win-arm64 Velopack leg is still
+          # experimental). Add an arm64 block + {{sha_win_arm64}} here when it graduates.
+          sed -e "s|{{version}}|${version}|g" \
+              -e "s|{{base}}|${base}|g" \
+              -e "s|{{sha_win_x64}}|$(sha Kindel.WinPrint-win-x64-Portable.zip)|" \
+              packaging/scoop/winprint.json > /tmp/winprint.json
+
+          # Scoop manifests are plain JSON (no DSL footguns like Homebrew casks), so a parse check is
+          # the meaningful pre-publish guard; loading under Scoop proper needs Windows/PowerShell.
+          jq empty /tmp/winprint.json
+
+          git clone "https://x-access-token:${SCOOP_TOKEN}@github.com/kindel/scoop-winprint.git" bucket-repo
+          mkdir -p bucket-repo/bucket
+          cp /tmp/winprint.json bucket-repo/bucket/winprint.json
+          cd bucket-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bucket/winprint.json
+          git diff --cached --quiet && { echo "Bucket unchanged."; exit 0; }
+          git commit -m "winprint ${version}"
+          git push

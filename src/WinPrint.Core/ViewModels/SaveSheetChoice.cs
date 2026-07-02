@@ -2,7 +2,7 @@ namespace WinPrint.Core.ViewModels;
 
 /// <summary>
 ///     The action a user chose in a front end's "save sheet definition" exit prompt. Shared by the
-///     TUI, WinForms, and MAUI prompts so the choice handling is consistent across front ends.
+///     TUI and MAUI prompts so the choice handling is consistent across front ends.
 /// </summary>
 public enum SaveSheetChoice
 {

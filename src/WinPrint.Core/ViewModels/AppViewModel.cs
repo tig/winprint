@@ -13,7 +13,7 @@ namespace WinPrint.Core.ViewModels;
 
 /// <summary>
 ///     UI-agnostic application view model that owns the bug-prone state and persistence
-///     logic shared by all WinPrint frontends (WinForms, MAUI, CLI, future).
+///     logic shared by all WinPrint frontends (MAUI, TUI, CLI, future).
 ///
 ///     Responsibilities:
 ///     <list type="bullet">
@@ -55,8 +55,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private string? _selectedPaperSize;
 
     /// <summary>
-    ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the GDI-backed
-    ///     preview/reflow engine used by WinForms/MAUI for live preview).
+    ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the preview/reflow
+    ///     engine used by MAUI for live preview).
     /// </summary>
     public AppViewModel(SheetViewModel sheetVM, PrintPageSetup pageSetup)
         : this(pageSetup, sheetVM ?? throw new ArgumentNullException(nameof(sheetVM)))
@@ -152,6 +152,39 @@ public sealed class AppViewModel : INotifyPropertyChanged
     {
         get => _selectedPaperSize;
         set => SetField(ref _selectedPaperSize, value);
+    }
+
+    public void SetPrinterSetup(string? printerName, string? paperSizeName, int fromSheet, int toSheet)
+    {
+        SetPrinterName(printerName);
+        _pageSetup.FromSheet = fromSheet;
+        _pageSetup.ToSheet = toSheet;
+        SetPaperSize(paperSizeName);
+    }
+
+    public void SetPrinterName(string? printerName)
+    {
+        string value = printerName ?? string.Empty;
+        SelectedPrinter = value;
+        _pageSetup.PrinterName = value;
+    }
+
+    public void SetPaperSize(string? paperSizeName)
+    {
+        string value = paperSizeName ?? string.Empty;
+        int oldWidth = _pageSetup.PaperWidth;
+        int oldHeight = _pageSetup.PaperHeight;
+        bool changed = !string.Equals(_pageSetup.PaperSizeName, value, StringComparison.Ordinal) ||
+                       SelectedPaperSize != value;
+
+        SelectedPaperSize = value;
+        PrinterChoices.ApplyPaperSize(_pageSetup, value);
+        changed = changed || _pageSetup.PaperWidth != oldWidth || _pageSetup.PaperHeight != oldHeight;
+
+        if (changed)
+        {
+            _ = ReflowAsync();
+        }
     }
 
     // ----- Sheet enumeration / selection -----
@@ -378,6 +411,65 @@ public sealed class AppViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    ///     Shared "save on exit" guard. Walks every sheet definition with unsaved edits, asks the supplied
+    ///     <paramref name="promptAsync" /> delegate what to do with each, and applies the choice
+    ///     (save / create / discard). Returns <c>true</c> when the app may exit (everything resolved or
+    ///     nothing was dirty) or <c>false</c> if the user cancelled and wants to keep editing.
+    ///     <para>
+    ///         This is the single, front-end-agnostic decision path. Each front end wires its own platform
+    ///         "about to exit" event — MAUI WinUI <c>AppWindow.Closing</c>, Mac Catalyst Quit, and the
+    ///         TUI Quit command — to this method and only owns presenting the dialog
+    ///         (via <paramref name="promptAsync" />). Keeping the logic here is what makes the behavior
+    ///         identical across platforms instead of silently diverging.
+    ///     </para>
+    /// </summary>
+    /// <param name="promptAsync">
+    ///     Presents the per-definition save prompt and returns the user's <see cref="SaveSheetResolution" />.
+    ///     Called once per dirty definition, with the current <see cref="SheetDefinitions" /> and the
+    ///     <see cref="CurrentSheetDefinitionIndex" /> of the definition being resolved.
+    /// </param>
+    public async Task<bool> ResolveUnsavedSheetsOnExitAsync(
+        Func<IReadOnlyList<SheetDefinitionInfo>, int, Task<SaveSheetResolution>> promptAsync)
+    {
+        ArgumentNullException.ThrowIfNull(promptAsync);
+
+        // Snapshot the dirty keys: applying a choice mutates the tracker's live dirty set.
+        foreach (string key in DirtySheetDefinitionKeys.ToArray())
+        {
+            // A prior Save-to-other may have already resolved this definition as a side effect.
+            if (!IsSheetDefinitionDirty(key))
+            {
+                continue;
+            }
+
+            SetCurrentSheetDefinition(key);
+
+            SaveSheetResolution resolution =
+                await promptAsync(SheetDefinitions, CurrentSheetDefinitionIndex).ConfigureAwait(false);
+
+            switch (resolution.Choice)
+            {
+                case SaveSheetChoice.Save:
+                    SaveSheetChangesToIndex(resolution.SelectedIndex);
+                    break;
+
+                case SaveSheetChoice.Create:
+                    CreateSheetDefinition(resolution.NewName);
+                    break;
+
+                case SaveSheetChoice.DontSave:
+                    DiscardSheetChanges();
+                    break;
+
+                default:
+                    return false; // Cancel — abort the exit.
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Re-captures the baseline of every sheet definition from their current state, so subsequent
     ///     change detection compares against "now". Front ends call this after applying command-line
     ///     <see cref="Options" /> (e.g. <c>--landscape</c>/<c>--sheet</c>) so those startup overrides are
@@ -397,8 +489,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     /// <remarks>
     ///     The "Error:" prefix is part of the contract — the MAUI preview drawable looks
-    ///     for it to render the message as an overlay. WinForms displays it via the
-    ///     status bar / message box path.
+    ///     for it to render the message as an overlay.
     /// </remarks>
     public async Task<bool> LoadFileAsync(string filePath)
     {
@@ -703,8 +794,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// </summary>
     public void RestorePrinterSelection(IList<string> availablePrinters, string? systemDefault)
     {
-        SelectedPrinter = PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
-            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList());
+        SetPrinterName(PrinterSelection.ResolvePrinter(Settings.LastPrinter, systemDefault,
+            availablePrinters as IReadOnlyList<string> ?? availablePrinters?.ToList()));
     }
 
     /// <summary>
@@ -717,7 +808,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         string? saved = Settings.LastPaperSize;
         if (!string.IsNullOrEmpty(saved) && availablePaperSizes != null && availablePaperSizes.Contains(saved))
         {
-            SelectedPaperSize = saved;
+            SetPaperSize(saved);
         }
     }
 
@@ -800,7 +891,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     /// <summary>
     ///     Applies <see cref="Options"/> parsed from the command line to this view model.
-    ///     Mirrors the WinForms behavior used in <c>Program.cs</c> / <c>MainWindow</c>.
+    ///     Shared by the MAUI and TUI command-line option paths.
     /// </summary>
     /// <param name="options">Parsed CLI options.</param>
     /// <param name="availablePrinters">Printer names known to the platform (may be null).</param>
@@ -838,15 +929,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
             if (!string.IsNullOrEmpty(options.Printer) &&
                 (availablePrinters == null || availablePrinters.Contains(options.Printer)))
             {
-                SelectedPrinter = options.Printer;
-                _pageSetup.PrinterName = options.Printer;
+                SetPrinterName(options.Printer);
             }
 
             if (!string.IsNullOrEmpty(options.PaperSize) &&
                 (availablePaperSizes == null || availablePaperSizes.Contains(options.PaperSize)))
             {
-                SelectedPaperSize = options.PaperSize;
-                _pageSetup.PaperSizeName = options.PaperSize;
+                SetPaperSize(options.PaperSize);
             }
 
             // --from-sheet / --to-sheet print range (0 = default/all).
@@ -873,14 +962,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// <summary>
     ///     Persists window state plus current sheet/printer/paper-size selections.
     ///     When maximized, leaves the previously saved normal Size/Location untouched so
-    ///     restoring from maximized returns the user to their last normal bounds —
-    ///     this mirrors the WinForms <c>RestoreBounds</c> semantics.
+    ///     restoring from maximized returns the user to their last normal bounds.
     /// </summary>
     public void SaveWindowState(double x, double y, double width, double height, bool isMaximized)
     {
         FormWindowState state = isMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
 
-        // While maximized, leave the remembered normal bounds untouched (mirrors WinForms RestoreBounds).
+        // While maximized, leave the remembered normal bounds untouched.
         WindowSize? size = isMaximized ? null : new WindowSize((int)width, (int)height);
         WindowLocation? location = isMaximized ? null : new WindowLocation((int)x, (int)y);
 

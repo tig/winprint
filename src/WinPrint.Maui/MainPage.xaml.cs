@@ -17,18 +17,40 @@ public partial class MainPage : ContentPage
     private readonly PrintPreviewDrawable _drawable;
     private readonly IPrintService _printService;
 
+    /// <summary>
+    ///     The live page instance, so platform key handlers (e.g. the MacCatalyst
+    ///     AppDelegate's UIKeyCommands) can route shortcuts here regardless of focus.
+    /// </summary>
+    public static MainPage? Current { get; private set; }
+
     public MainPage()
     {
+        Current = this;
         _viewModel = new MainViewModel();
         _drawable = new PrintPreviewDrawable(_viewModel);
         _printService = CreatePlatformPrintService();
 
-        // Reflow needs a text-measurement context. The Windows service returns null
-        // (System.Drawing default); the Mac service returns a Skia context — without
-        // it, every load on MacCatalyst fails with "requires a MeasurementContext".
+        // Reflow needs a text-measurement context. Both heads now return a Skia context
+        // (Windows via WindowsSkiaPrintService, Mac via MacPrintService) so measurement is
+        // paired with the Skia preview/print engine — without it, every load fails with
+        // "requires a MeasurementContext".
         _viewModel.SheetViewModel.MeasurementContext = _printService.CreateMeasurementContext();
 
         InitializeComponent();
+
+#if MACCATALYST
+        // The XAML MenuBarItems drive the Windows menu strip, but on Catalyst MAUI also
+        // renders them — duplicating the File ▸ Open…/Print… items that the AppDelegate's
+        // native UIMenuBuilder already adds (and merges correctly into the system File
+        // menu). Drop the MAUI copy here so the Mac shows a single File menu.
+        MenuBarItems.Clear();
+
+        // The native File ▸ Print… item is greyed out when PrintCommand can't execute (see the
+        // AppDelegate's BuildMenu). Rebuild the menu whenever that changes — e.g. a file loads —
+        // so the item enables/disables in step with CanPrint.
+        _viewModel.PrintCommand.CanExecuteChanged += (_, _) =>
+            MainThread.BeginInvokeOnMainThread(() => UIKit.UIMenuSystem.MainSystem.SetNeedsRebuild());
+#endif
 
         BindingContext = _viewModel;
         PreviewGraphicsView.Drawable = _drawable;
@@ -58,12 +80,107 @@ public partial class MainPage : ContentPage
         // Populate printer list from platform service
         PopulatePrinters();
 
-        // Apply command-line options (same pattern as WinForms)
+        // Apply command-line options through the shared Options model.
         ApplyCommandLineOptions();
 
         // Subscribe to window lifecycle for state save
         Unloaded += OnPageUnloaded;
+
+#if MACCATALYST
+        // Make the preview the initial keyboard target (its platform view is focusable
+        // via FocusablePlatformGraphicsView) and hook the scroll wheel, which MAUI
+        // doesn't surface.
+        Loaded += (_, _) => Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(250), () =>
+        {
+            FocusPreview();
+            HookScrollWheel();
+        });
+#endif
     }
+
+#if MACCATALYST
+    /// <summary>
+    ///     Moves keyboard focus to the preview. Becoming first responder implicitly
+    ///     resigns whatever sidebar control held it (Picker, Entry, …).
+    /// </summary>
+    internal void FocusPreview()
+    {
+        if (PreviewGraphicsView.Handler?.PlatformView is UIKit.UIView nativeView)
+        {
+            nativeView.BecomeFirstResponder();
+        }
+    }
+
+    private UIKit.UIPanGestureRecognizer? _scrollRecognizer;
+    private float _scrollFlipAccum;
+    private float _scrollStartPanX;
+    private float _scrollStartPanY;
+
+    /// <summary>Scroll travel (view units) per page flip when the preview is at fit zoom.</summary>
+    private const float ScrollPageThreshold = 50f;
+
+    /// <summary>
+    ///     MAUI has no scroll-wheel event, but Catalyst delivers mouse-wheel and two-finger
+    ///     trackpad scrolls to a UIPanGestureRecognizer with a scroll mask and NO touch
+    ///     types (so it never competes with the drag-to-pan PanGestureRecognizer).
+    /// </summary>
+    private void HookScrollWheel()
+    {
+        if (_scrollRecognizer is not null ||
+            PreviewGraphicsView.Handler?.PlatformView is not UIKit.UIView nativeView)
+        {
+            return;
+        }
+
+        _scrollRecognizer = new UIKit.UIPanGestureRecognizer(OnNativeScroll)
+        {
+            AllowedScrollTypesMask = UIKit.UIScrollTypeMask.All,
+            AllowedTouchTypes = []
+        };
+        nativeView.AddGestureRecognizer(_scrollRecognizer);
+    }
+
+    private void OnNativeScroll(UIKit.UIPanGestureRecognizer recognizer)
+    {
+        CoreGraphics.CGPoint translation = recognizer.TranslationInView(recognizer.View);
+        switch (recognizer.State)
+        {
+            case UIKit.UIGestureRecognizerState.Began:
+                _scrollFlipAccum = 0;
+                _scrollStartPanX = _viewModel.PanX;
+                _scrollStartPanY = _viewModel.PanY;
+                break;
+
+            case UIKit.UIGestureRecognizerState.Changed when IsPreviewZoomed:
+                // Zoomed: scroll pans, content follows the scroll direction.
+                _viewModel.PanX = PrintPreviewDrawable.ClampPanOffset(
+                    _scrollStartPanX + (float)translation.X, _drawable.BaseX, _drawable.PageW, _drawable.ViewW);
+                _viewModel.PanY = PrintPreviewDrawable.ClampPanOffset(
+                    _scrollStartPanY + (float)translation.Y, _drawable.BaseY, _drawable.PageH, _drawable.ViewH);
+                break;
+
+            case UIKit.UIGestureRecognizerState.Changed:
+                // Fit zoom: page-flip per ScrollPageThreshold of travel. Scrolling forward
+                // (content moving up, translation negative) goes to the next page.
+                float delta = (float)translation.Y - _scrollFlipAccum;
+                while (delta <= -ScrollPageThreshold)
+                {
+                    _viewModel.NextPageCommand.Execute(null);
+                    _scrollFlipAccum -= ScrollPageThreshold;
+                    delta += ScrollPageThreshold;
+                }
+
+                while (delta >= ScrollPageThreshold)
+                {
+                    _viewModel.PreviousPageCommand.Execute(null);
+                    _scrollFlipAccum += ScrollPageThreshold;
+                    delta -= ScrollPageThreshold;
+                }
+
+                break;
+        }
+    }
+#endif
 
     /// <summary>
     ///     Pushes the view-model title to the native window. The title can change before
@@ -85,7 +202,7 @@ public partial class MainPage : ContentPage
 
         SyncWindowTitle();
 
-        // Restore saved window size and state (mirrors WinForms pattern)
+        // Restore saved window size and state.
         Settings settings = ModelLocator.Current.Settings;
 
         // First set the normal size/location (this is the "restore bounds" if maximized)
@@ -131,9 +248,71 @@ public partial class MainPage : ContentPage
     }
 
     /// <summary>
-    ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, +, -).
+    ///     Trigger the Open command. MacCatalyst's native File ▸ Open… menu item routes
+    ///     here via <see cref="Current" /> (MAUI's MenuBarItems don't reach the Catalyst
+    ///     menu bar, so the menu is built natively in the AppDelegate).
     /// </summary>
-    public void HandleKeyDown(string key, bool ctrl, bool shift)
+    public void InvokeOpenFile() => _viewModel.OpenFileCommand.Execute(null);
+
+    /// <summary>
+    ///     Trigger the Print command from the native File ▸ Print… menu item. Guarded so a
+    ///     stray invoke with no document loaded is a no-op (the command's CanExecute gate).
+    /// </summary>
+    public void InvokePrint()
+    {
+        if (_viewModel.PrintCommand.CanExecute(null))
+        {
+            _viewModel.PrintCommand.Execute(null);
+        }
+    }
+
+    /// <summary>Whether Print is currently available — drives native menu-item enablement.</summary>
+    public bool CanPrint => _viewModel.PrintCommand.CanExecute(null);
+
+#if MACCATALYST
+    private bool _macQuitInProgress;
+
+    /// <summary>Whether there are unsaved sheet edits — checked by the Mac quit interceptor before deferring
+    ///     termination to run the save prompt.</summary>
+    public bool HasUnsavedSheetChangesForExit => _viewModel.HasUnsavedSheetChanges;
+
+    /// <summary>
+    ///     Runs the shared save-on-exit prompt in response to a Mac quit (⌘Q / App ▸ Quit), then tells AppKit
+    ///     whether to proceed. The interceptor already returned <c>NSTerminateLater</c>, so termination is
+    ///     paused until <see cref="MacQuitInterceptor.ReplyToTerminate" /> is called here. This gives the Mac
+    ///     the same behavior as the Windows <c>AppWindow.Closing</c> handler.
+    /// </summary>
+    public async void BeginExitPromptThenReply()
+    {
+        if (_macQuitInProgress)
+        {
+            // A prompt is already up; abort this extra termination request and let the in-flight one decide.
+            MacQuitInterceptor.ReplyToTerminate(false);
+            return;
+        }
+
+        _macQuitInProgress = true;
+        try
+        {
+            bool mayQuit = await _viewModel.PromptSaveSheetOnExitAsync(this);
+            MacQuitInterceptor.ReplyToTerminate(mayQuit);
+        }
+        finally
+        {
+            _macQuitInProgress = false;
+        }
+    }
+#endif
+
+    /// <summary>
+    ///     Handle keyboard shortcuts (F5, PgUp, PgDn, Home, End, and zoom +/=/-/0).
+    ///     Zoom keys mirror the wp TUI preview (see <c>PreviewPane.IsImageZoomKey</c>): plain
+    ///     <c>+</c>/<c>=</c> zoom in, <c>-</c> zooms out, <c>0</c> fits — no modifier needed when the
+    ///     preview (rather than a text field) has focus. The <c>Ctrl</c>/<c>Cmd</c>+ variants keep
+    ///     working everywhere. <paramref name="fromTextInput" /> is true when a text entry is focused,
+    ///     so plain zoom keys never hijack typing (the TUI gets this for free via focus-scoped bindings).
+    /// </summary>
+    public void HandleKeyDown(string key, bool ctrl, bool shift, bool fromTextInput = false)
     {
         switch (key)
         {
@@ -154,9 +333,11 @@ public partial class MainPage : ContentPage
             case "End":
                 _viewModel.LastPageCommand.Execute(null);
                 break;
+            // Zoom keys match the TUI: plain +/=/-/0 zoom when the preview has focus; the Ctrl/Cmd+
+            // variants also work while a text field is focused (fromTextInput) without hijacking typing.
             case "OemPlus":
             case "Add":
-                if (ctrl)
+                if (ctrl || !fromTextInput)
                 {
                     _viewModel.ZoomInCommand.Execute(null);
                 }
@@ -164,7 +345,7 @@ public partial class MainPage : ContentPage
                 break;
             case "OemMinus":
             case "Subtract":
-                if (ctrl)
+                if (ctrl || !fromTextInput)
                 {
                     _viewModel.ZoomOutCommand.Execute(null);
                 }
@@ -172,11 +353,104 @@ public partial class MainPage : ContentPage
                 break;
             case "D0":
             case "NumPad0":
-                if (ctrl)
+                if (ctrl || !fromTextInput)
                 {
                     _viewModel.ZoomFitCommand.Execute(null);
                 }
 
+                break;
+            // Arrow keys: pan the zoomed preview (scroll convention: Down reveals lower
+            // content); at fit zoom they page-navigate, like Preview.app.
+            case "Up":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(0, ArrowPanStep);
+                }
+                else
+                {
+                    _viewModel.PreviousPageCommand.Execute(null);
+                }
+
+                break;
+            case "Down":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(0, -ArrowPanStep);
+                }
+                else
+                {
+                    _viewModel.NextPageCommand.Execute(null);
+                }
+
+                break;
+            case "Left":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(ArrowPanStep, 0);
+                }
+                else
+                {
+                    _viewModel.PreviousPageCommand.Execute(null);
+                }
+
+                break;
+            case "Right":
+                if (IsPreviewZoomed)
+                {
+                    PanPreview(-ArrowPanStep, 0);
+                }
+                else
+                {
+                    _viewModel.NextPageCommand.Execute(null);
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>True when the preview is zoomed in past fit (pan becomes meaningful).</summary>
+    public bool IsPreviewZoomed => _viewModel.ZoomFactor > 1.01f;
+
+    private const float ArrowPanStep = 60f;
+
+    private void PanPreview(float dx, float dy)
+    {
+        if (!IsPreviewZoomed)
+        {
+            return;
+        }
+
+        _viewModel.PanX = PrintPreviewDrawable.ClampPanOffset(
+            _viewModel.PanX + dx, _drawable.BaseX, _drawable.PageW, _drawable.ViewW);
+        _viewModel.PanY = PrintPreviewDrawable.ClampPanOffset(
+            _viewModel.PanY + dy, _drawable.BaseY, _drawable.PageH, _drawable.ViewH);
+    }
+
+    private float _panGestureStartX;
+    private float _panGestureStartY;
+
+    /// <summary>
+    ///     Drag-to-pan on the zoomed preview. <see cref="PanUpdatedEventArgs.TotalX" /> is
+    ///     cumulative since the gesture started, so capture the offsets at Started.
+    /// </summary>
+    private void OnPreviewPanUpdated(object? sender, PanUpdatedEventArgs e)
+    {
+        if (!IsPreviewZoomed)
+        {
+            return;
+        }
+
+        switch (e.StatusType)
+        {
+            case GestureStatus.Started:
+                _panGestureStartX = _viewModel.PanX;
+                _panGestureStartY = _viewModel.PanY;
+                break;
+            case GestureStatus.Running:
+                _viewModel.PanX = PrintPreviewDrawable.ClampPanOffset(
+                    _panGestureStartX + (float)e.TotalX, _drawable.BaseX, _drawable.PageW, _drawable.ViewW);
+                _viewModel.PanY = PrintPreviewDrawable.ClampPanOffset(
+                    _panGestureStartY + (float)e.TotalY, _drawable.BaseY, _drawable.PageH, _drawable.ViewH);
                 break;
         }
     }
@@ -253,7 +527,9 @@ public partial class MainPage : ContentPage
     private static IPrintService CreatePlatformPrintService()
     {
 #if WINDOWS
-        return new WinPrint.Core.Printing.WindowsPrintService();
+        // Skia for measure + preview + (XPS) print, matching MacPrintService, so MAUI Windows and
+        // macOS share one rasterizer (#174). The System.Drawing/GDI+ backend stays for the CLI/TUI.
+        return new WindowsSkiaPrintService();
 #elif MACCATALYST
         return new MacPrintService();
 #else
@@ -270,26 +546,49 @@ public partial class MainPage : ContentPage
         return result?.FullPath;
     }
 
+    /// <summary>
+    ///     Shows the cross-platform <see cref="Views.FontChooserPage" /> (family list + Bold/Italic + size
+    ///     + fixed-pitch filter + live preview). <paramref name="preferFixedPitch" /> seeds the
+    ///     "fixed-pitch only" filter — on for content (source printing favors monospace), off for
+    ///     headers/footers (whose default is a proportional face). The user can still toggle it either way.
+    /// </summary>
     private async Task<(string Family, float Size, string Style)?> PickFontAsync(
-        string currentFamily, float currentSize, string currentStyle)
+        string currentFamily, float currentSize, string currentStyle, bool preferFixedPitch)
     {
-        // MAUI doesn't have a built-in font picker dialog.
-        // Use a simple prompt as a placeholder — platform-specific dialogs
-        // can be added later via dependency injection.
-        string? input = await DisplayPromptAsync(
-            "Font",
-            $"Current: {currentFamily}, {currentSize}pt, {currentStyle}\nEnter: Family, Size",
-            initialValue: $"{currentFamily}, {currentSize}");
+        Views.FontChooserPage dialog = new(currentFamily, currentSize, currentStyle, preferFixedPitch);
+        await Navigation.PushModalAsync(dialog);
+        (string Family, float Size, string Style)? result = await dialog.Completion;
 
-        if (string.IsNullOrWhiteSpace(input))
+        // The dialog may already be off the modal stack (back gesture / programmatic pop, which
+        // OnDisappearing surfaces as a null result). Only pop when it's still the top modal.
+        IReadOnlyList<Page> modalStack = Navigation.ModalStack;
+        if (modalStack.Count > 0 && ReferenceEquals(modalStack[^1], dialog))
         {
-            return null;
+            await Navigation.PopModalAsync();
         }
 
-        string[] parts = input.Split(',', StringSplitOptions.TrimEntries);
-        string family = parts.Length > 0 ? parts[0] : currentFamily;
-        float size = parts.Length > 1 && float.TryParse(parts[1], out float s) ? s : currentSize;
-        return (family, size, currentStyle);
+        return result;
+    }
+
+    /// <summary>
+    ///     Exaggerates the raw pinch delta (an exponent in log-zoom space) — trackpad
+    ///     pinches report small per-update scale changes, which made reaching 4x feel
+    ///     like rowing.
+    /// </summary>
+    private const float PinchSensitivity = 2.5f;
+
+    /// <summary>
+    ///     Pinch-to-zoom on the preview. <see cref="PinchGestureUpdatedEventArgs.Scale" />
+    ///     is the relative change since the previous update, so accumulate it
+    ///     multiplicatively, clamped to the same range as the zoom commands.
+    /// </summary>
+    private void OnPreviewPinchUpdated(object? sender, PinchGestureUpdatedEventArgs e)
+    {
+        if (e.Status == GestureStatus.Running)
+        {
+            float amplified = MathF.Pow((float)e.Scale, PinchSensitivity);
+            _viewModel.ZoomFactor = Math.Clamp(_viewModel.ZoomFactor * amplified, 0.25f, 4.0f);
+        }
     }
 
     /// <summary>
@@ -301,6 +600,13 @@ public partial class MainPage : ContentPage
         {
             await _viewModel.OpenFileAsync();
         }
+#if MACCATALYST
+        else
+        {
+            // Clicking the preview gives it keyboard focus, like any native view.
+            FocusPreview();
+        }
+#endif
     }
 
     // --- Collapsible section handlers ---
@@ -316,7 +622,7 @@ public partial class MainPage : ContentPage
     }
 
     /// <summary>
-    ///     MAUI's CheckBox has no built-in Text/label, and unlike WinForms a Label
+    ///     MAUI's CheckBox has no built-in Text/label, and a Label
     ///     sitting next to a CheckBox is not click-connected to it. Wire this
     ///     handler to a TapGestureRecognizer on each "checkbox label" so clicking
     ///     the label toggles the sibling CheckBox -- the behavior users (rightly)
@@ -394,21 +700,67 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        content.KeyDown += OnNativeKeyDown;
+        // handledEventsToo: a focused WinUI TextBox (Entry) marks PageUp/PageDown/Home/End
+        // handled for caret movement, so a plain KeyDown subscription never sees them and
+        // the paging shortcuts go dead whenever an Entry has focus.
+        content.AddHandler(
+            Microsoft.UI.Xaml.UIElement.KeyDownEvent,
+            new Microsoft.UI.Xaml.Input.KeyEventHandler(OnNativeKeyDown),
+            true);
         content.PointerWheelChanged += OnNativePointerWheel;
+
+        // Nothing has keyboard focus at startup, and key events don't route without a
+        // focused element — shortcuts appeared dead until the user clicked somewhere.
+        if (Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(content)
+            is Microsoft.UI.Xaml.UIElement firstFocusable)
+        {
+            _ = Microsoft.UI.Xaml.Input.FocusManager.TryFocusAsync(
+                firstFocusable, Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
     }
 
     private void OnNativeKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-        var window = sender as Microsoft.UI.Xaml.UIElement;
+        // An OPEN ComboBox dropdown uses paging/Home/End for selection; don't also act.
+        // A merely-focused (closed) ComboBox must NOT suppress shortcuts — that would
+        // kill keyboard nav/zoom after every picker click. ComboBoxItem only exists
+        // while the dropdown is open.
+        if (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBoxItem ||
+            (e.OriginalSource is Microsoft.UI.Xaml.Controls.ComboBox combo && combo.IsDropDownOpen))
+        {
+            return;
+        }
+
+        // WinUI delivers VirtualKey names that differ from the shared HandleKeyDown tokens
+        // (WPF-style, also used by the Mac path), so normalize the zoom keys — otherwise plain
+        // +/=/-/0 never match on Windows: the OEM +/- keys have no VirtualKey enum member (their
+        // ToString is the numeric vk), and 0 comes through as Number0/NumberPad0, not D0/NumPad0.
+        string key = (int)e.Key switch
+        {
+            0xBB => "OemPlus",   // VK_OEM_PLUS  ('=' and '+')
+            0xBD => "OemMinus",  // VK_OEM_MINUS ('-' and '_')
+            _ => e.Key.ToString() switch
+            {
+                "Number0" or "NumberPad0" => "D0",
+                var k => k,
+            },
+        };
+
+        // A focused text entry must keep plain keys for typing/caret: Home/End move the caret, and the
+        // plain zoom keys (+/=/-/0) must type rather than zoom. fromTextInput gates those in HandleKeyDown.
+        bool fromTextInput = e.OriginalSource is Microsoft.UI.Xaml.Controls.TextBox;
+        if (fromTextInput && key is "Home" or "End")
+        {
+            return;
+        }
+
         bool ctrl = Microsoft.UI.Input.InputKeyboardSource
             .GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         bool shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
-        string key = e.Key.ToString();
-        HandleKeyDown(key, ctrl, shift);
+        HandleKeyDown(key, ctrl, shift, fromTextInput);
     }
 
     private void OnNativePointerWheel(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)

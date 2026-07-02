@@ -11,6 +11,6 @@
 * Suggest improvements: Use [GitHub Issues](https://github.com/tig/winprint/issues).
 * Download the source and submit pull requests: [winprint on GitHub](https://github.com/tig/winprint).
 
-**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using `winprint`, specify `--debug`. The deprecated PowerShell command line (`out-winprint`) still supports `-Debug`.
+**winprint** writes diagnostic logs to a `logs` folder alongside its settings. On Windows that's `%appdata%\Kindel\winprint\logs` (or next to the executable when running in portable mode); on macOS and Linux the `logs` folder sits next to the `wp` executable (inside `WinPrint.app` for the GUI). Run the `wp` command line with `--debug` for more detail.
 
-Additional printing diagnostics can be turned on via settings in the `WinPrint.Config.json` configuration file.
+Additional printing diagnostics can be turned on via settings in the `WinPrint.config.json` configuration file.

@@ -1,0 +1,11 @@
+{
+  "name": "Brainfuck",
+  "scopeName": "source.brainfuck",
+  "patterns": [
+    { "name": "keyword.control.loop.brainfuck", "match": "[\\[\\]]" },
+    { "name": "keyword.operator.pointer.brainfuck", "match": "[<>]" },
+    { "name": "keyword.operator.arithmetic.brainfuck", "match": "[+\\-]" },
+    { "name": "support.function.io.brainfuck", "match": "[.,]" },
+    { "name": "comment.line.brainfuck", "match": "[^<>+\\-.,\\[\\]]+" }
+  ]
+}

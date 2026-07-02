@@ -47,4 +47,17 @@ public interface IGraphicsContext
     void DrawRectangle(IGraphicsPen pen, float x, float y, float width, float height);
     void FillRectangle(IGraphicsBrush brush, GraphicsRectF rect);
     void FillRectangle(IGraphicsBrush brush, float x, float y, float width, float height);
+
+    /// <summary>
+    ///     Decodes an image from <paramref name="stream" /> into a backend-specific
+    ///     <see cref="IGraphicsImage" />, or returns <see langword="null" /> if the data can't be
+    ///     decoded. The caller owns the result and must dispose it.
+    /// </summary>
+    IGraphicsImage? LoadImage(Stream stream);
+
+    /// <summary>
+    ///     Paints <paramref name="image" /> into the rectangle (<paramref name="x" />,
+    ///     <paramref name="y" />, <paramref name="width" />, <paramref name="height" />), scaling to fit.
+    /// </summary>
+    void DrawImage(IGraphicsImage image, float x, float y, float width, float height);
 }

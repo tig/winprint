@@ -89,10 +89,10 @@ directly.** Do not round-trip through ANSI.
 First correct render showed margins as raw hundredths-of-an-inch (`50`, `75`, …) with a "1/100"
 label. The human's instruction:
 
-> Suppose to be in a … editor and decimal. No 1/100. See how the OG winforms did it.
+> Suppose to be in a ... editor and decimal. No 1/100. See how the legacy GUI did it.
 
-The agent looked at the original WinForms editor (`MainWindow.Designer.cs`: `DecimalPlaces = 2`;
-`MainWindow.cs`: displays `Margins.Top / 100M`, writes back `* 100M`) and reworked the editor to show
+The agent looked at the legacy editor (`DecimalPlaces = 2`;
+displaying `Margins.Top / 100M` and writing back `* 100M`) and reworked the editor to show
 **decimal inches** while keeping hundredths-inch storage. Result:
 
 ```
@@ -107,9 +107,9 @@ The agent looked at the original WinForms editor (`MainWindow.Designer.cs`: `Dec
 
 ### Round 2 — "arrange it in a diamond"
 
-> See how the winforms app and the thickness editor arrange the elements in a Diamond?
+> See how the legacy GUI and the thickness editor arrange the elements in a Diamond?
 
-The agent read the WinForms group-box coordinates (Top centered up top, Left/Right facing each other
+The agent read the legacy group-box coordinates (Top centered up top, Left/Right facing each other
 on the middle row, Bottom centered at the bottom — the same arrangement as Terminal.Gui's
 adornment/thickness editor) and switched `MarginEditor` to a relative diamond layout using
 `Pos.Center()`, `Pos.AnchorEnd()`, and `Pos.Bottom(...)`. Current render:
@@ -455,7 +455,7 @@ So the loop wants **two layers**, kept side by side:
 | Layer | Source | Captures | Role |
 |---|---|---|---|
 | **Plain-text grid** | in-process `IDriver.ToString()` → `.txt` | glyphs + layout | fast, diffable CI regression check (every run) |
-| **Full-fidelity image** | [tuirec](https://github.com/gui-cs/tuirec) `.cast` → image | color, underline, hotkey, attrs | human review + appearance regressions |
+| **Full-fidelity image** | [tuirec](https://github.com/tui-cs/tuirec) `.cast` → image | color, underline, hotkey, attrs | human review + appearance regressions |
 
 The full-fidelity layer is **tuirec's** job, not a bespoke rasterizer's. tuirec already drives a real
 binary through a PTY and records an asciinema `.cast` — which *is* the full-fidelity capture (ANSI

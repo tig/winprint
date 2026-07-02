@@ -51,10 +51,32 @@ Signals:
 - `Graphics.CopyFromScreen` returns wallpaper/black if the session is locked
   (`Get-Process LogonUI` running ⇒ locked) — don't trust it.
 - `PrintWindow` flag must be `2` (`PW_RENDERFULLCONTENT`) or WinUI3 composition content
-  comes back black. The first capture right after launch can still be black; retry a few
-  seconds after the file loads.
+  comes back black. Even then, captures stay black until the composition surface is
+  poked — a **UIA `SetFocus` on any element in the window** reliably unsticks it
+  (waiting and resizing do NOT). The script detects an all-black result, pokes focus,
+  and recaptures automatically.
 - **Look at the screenshot**: a loaded file shows the rendered page with header
   (date | filename | language), line numbers, and footer ("Page x of y").
+
+## Inject keyboard input (works on a locked session)
+
+`SendInput`/`SendKeys` can't reach a locked desktop, but posting `WM_KEYDOWN`/`WM_KEYUP`
+to the app's **`InputSiteWindowClass`** child hwnd does enter the WinUI3 keyboard
+pipeline (posting to the top-level hwnd or `DesktopChildSiteBridge` does NOT). Keys
+route only if some XAML element has focus — use UIA `SetFocus` first if needed.
+
+```powershell
+# Find the input-site child hwnd via EnumChildWindows (class "InputSiteWindowClass"),
+# then e.g. PageDown (VK_NEXT=0x22, scan 0x51, extended):
+$lpDown = [IntPtr](0x1 -bor (0x51 -shl 16) -bor 0x01000000)
+$lpUp   = [IntPtr]([long]0x1 -bor (0x51 -shl 16) -bor 0x01000000 -bor 0xC0000000)
+[Win32]::PostMessage($inputSite, 0x0100, [IntPtr]0x22, $lpDown)  # WM_KEYDOWN
+[Win32]::PostMessage($inputSite, 0x0101, [IntPtr]0x22, $lpUp)    # WM_KEYUP
+```
+
+Verify paging took effect by capturing and reading the drawn footer ("Page x of y").
+Note: `GetKeyStateForCurrentThread`-based modifier checks (Ctrl/Shift) won't see
+modifiers this way — posted messages don't update the thread keyboard state.
 
 ## Drive the File button + Open dialog
 

@@ -75,6 +75,51 @@ public class SettingsServiceTests : TestServicesBase
     }
 
     [Fact]
+    public void ReadSettings_RecreatesFileOnDisk_WhenMissing()
+    {
+        // The MAUI "open config" button self-heals a deleted config by calling ReadSettings (NOT
+        // ReloadAndApplySettings, which only reads). ReadSettings must write defaults back to disk so the
+        // editor has a file to open.
+        var settingsService = new SettingsService
+        {
+            SettingsFileName = $"WinPrint.{Guid.NewGuid():N}.json"
+        };
+        if (File.Exists(settingsService.SettingsFileName))
+        {
+            File.Delete(settingsService.SettingsFileName);
+        }
+
+        try
+        {
+            Settings? settings = settingsService.ReadSettings();
+
+            Assert.NotNull(settings);
+            Assert.True(File.Exists(settingsService.SettingsFileName));
+        }
+        finally
+        {
+            File.Delete(settingsService.SettingsFileName);
+        }
+    }
+
+    [Fact]
+    public void ReloadAndApplySettings_Throws_WhenFileMissing()
+    {
+        // Documents why the open-config button cannot use ReloadAndApplySettings to recreate a deleted
+        // config: it reads via File.ReadAllText and throws when the file is absent.
+        var settingsService = new SettingsService
+        {
+            SettingsFileName = $"WinPrint.{Guid.NewGuid():N}.json"
+        };
+        if (File.Exists(settingsService.SettingsFileName))
+        {
+            File.Delete(settingsService.SettingsFileName);
+        }
+
+        Assert.Throws<FileNotFoundException>(() => settingsService.ReloadAndApplySettings());
+    }
+
+    [Fact]
     public void TestReadMicrosoftExtensionsConfigurationSchema()
     {
         string settingsFileName = $"WinPrint.{GetType().Name}.Mec.json";
@@ -136,7 +181,7 @@ public class SettingsServiceTests : TestServicesBase
     [Fact]
     public void PersistExitStateIfChanged_DefaultSheetAlone_SavesOnce()
     {
-        // Regression: WinForms used to mutate Settings.DefaultSheet live and rely on an unconditional
+        // Regression: one front end used to mutate Settings.DefaultSheet live and rely on an unconditional
         // exit save. With the shared conditional write, a sheet change with no geometry/printer change
         // must still be detected and persisted.
         SettingsService svc = NewService();

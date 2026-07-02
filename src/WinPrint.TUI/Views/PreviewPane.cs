@@ -7,6 +7,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core;
 using WinPrint.TUI.Graphics;
+using Attribute = Terminal.Gui.Drawing.Attribute;
 using TgColor = Terminal.Gui.Drawing.Color;
 
 namespace WinPrint.TUI.Views;
@@ -27,14 +28,12 @@ public sealed class PreviewPane : View
     private const int ApproximateCellPixelWidth = 10;
     private const int ApproximateCellPixelHeight = 20;
     private const double MaxPreviewSourcePixels = 24_000_000d;
-    private const string CanvasSchemeName = "WinPrint.Preview.Canvas";
-    private static readonly TgColor CanvasBackgroundColor = new(224, 224, 224);
-    private static readonly TgColor CanvasForegroundColor = new(0, 0);
+    private static readonly TgColor s_canvasBackgroundColor = new(224, 224, 224);
+    private static readonly TgColor s_canvasForegroundColor = new(0, 0);
 
-    private SheetViewModel? _sheetVM;
+    private SheetViewModel? _sheetVm;
     private PageRenderer? _renderer;
     private int _currentPage;
-    private int _totalPages;
     private CancellationTokenSource? _debounceCts;
     private int _renderVersion;
 
@@ -43,11 +42,7 @@ public sealed class PreviewPane : View
     {
         Width = Dim.Fill();
         Height = Dim.Fill();
-        BorderStyle = LineStyle.Single;
-        SuperViewRendersLineCanvas = true;
         CanFocus = true;
-        EnsureCanvasScheme();
-        SchemeName = CanvasSchemeName;
 
         Image = new ImageView
         {
@@ -55,17 +50,34 @@ public sealed class PreviewPane : View
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            UseSixel = true,
+            UseRasterGraphics = true,
             CanFocus = true,
-            SchemeName = CanvasSchemeName
         };
         Image.KeyDown += (_, e) =>
         {
             if (OnKeyDown(e))
             {
                 e.Handled = true;
+                return;
+            }
+
+            if (IsImageZoomKey(e))
+            {
+                RequestRender();
             }
         };
+
+        GettingAttributeForRole += (_, e) =>
+        {
+            if (e.Role != VisualRole.Normal)
+            {
+                return;
+            }
+
+            e.Result = new Attribute(s_canvasForegroundColor, s_canvasBackgroundColor);
+            e.Handled = true;
+        };
+
         Add(Image);
         ConfigureNavigationBindings();
 
@@ -88,14 +100,13 @@ public sealed class PreviewPane : View
             CanFocus = false,
             Style = new SpinnerStyle.Aesthetic2(),
             Visible = false,
-            SchemeName = CanvasSchemeName
         };
         Add(RenderSpinner);
 
         Initialized += (_, _) => RequestRender();
     }
 
-    /// <summary>The hosted image view (sixel-enabled).</summary>
+    /// <summary>The hosted image view (raster-graphics-enabled: Kitty/Ghostty or Sixel).</summary>
     public ImageView Image { get; }
 
     /// <summary>No-file/error overlay label.</summary>
@@ -103,9 +114,6 @@ public sealed class PreviewPane : View
 
     /// <summary>Rendering progress overlay.</summary>
     public SpinnerView RenderSpinner { get; }
-
-    /// <summary>Scheme name whose background matches the rendered preview canvas.</summary>
-    public static string PreviewCanvasSchemeName => CanvasSchemeName;
 
     /// <summary>Raised when the no-file placeholder is clicked.</summary>
     public event EventHandler? OpenFileRequested;
@@ -130,7 +138,7 @@ public sealed class PreviewPane : View
         get => _currentPage;
         set
         {
-            int clamped = Math.Clamp(value, 0, Math.Max(0, _totalPages - 1));
+            int clamped = Math.Clamp(value, 0, Math.Max(0, TotalPages - 1));
             if (clamped != _currentPage)
             {
                 _currentPage = clamped;
@@ -140,7 +148,7 @@ public sealed class PreviewPane : View
     }
 
     /// <summary>Total number of pages available.</summary>
-    public int TotalPages => _totalPages;
+    public int TotalPages { get; private set; }
 
     /// <summary>Preview DPI (configurable, default 96).</summary>
     public float Dpi
@@ -160,10 +168,10 @@ public sealed class PreviewPane : View
     ///     Binds the preview to a <see cref="SheetViewModel" /> and triggers the initial render.
     ///     Call after <c>RenderAsync</c> has completed (so page count is known).
     /// </summary>
-    public void Bind(SheetViewModel sheetVM, int totalPages, float dpi = PageRenderer.DefaultDpi)
+    public void Bind(SheetViewModel sheetVm, int totalPages, float dpi = PageRenderer.DefaultDpi)
     {
-        _sheetVM = sheetVM ?? throw new ArgumentNullException(nameof(sheetVM));
-        _totalPages = totalPages;
+        _sheetVm = sheetVm ?? throw new ArgumentNullException(nameof(sheetVm));
+        TotalPages = totalPages;
         _currentPage = 0;
         _renderer = new PageRenderer(dpi);
         RenderCurrentPage();
@@ -203,21 +211,9 @@ public sealed class PreviewPane : View
             return LastPage() == true;
         }
 
-        if (key == Key.PageUp.WithCtrl)
-        {
-            return ZoomIn() == true;
-        }
-
-        if (key == Key.PageDown.WithCtrl)
-        {
-            return ZoomOut() == true;
-        }
-
-        if (key == Key.Home.WithCtrl)
-        {
-            return ResetZoom() == true;
-        }
-
+        // Zoom keys are owned by Terminal.Gui's ImageView (see tui-cs/Terminal.Gui#5494) rather than
+        // overridden here — the old Ctrl+PageUp/Down/Home bindings were intercepted by macOS Mission
+        // Control and never reached the app. Mouse Ctrl+wheel zoom is still handled in HandlePreviewMouse.
         if (key == Key.CursorUp)
         {
             return Pan(Command.ScrollUp);
@@ -241,14 +237,18 @@ public sealed class PreviewPane : View
         return false;
     }
 
+    private static bool IsImageZoomKey(Key key)
+    {
+        return key == new Key('+') || key == new Key('=') || key == new Key('-') || key == Key.D0;
+    }
+
     private void ConfigureNavigationBindings()
     {
+        // Free PageUp/PageDown/Home from ImageView's zoom so the preview can use them for page
+        // navigation. Zoom keys themselves are left to ImageView (tui-cs/Terminal.Gui#5494).
         Image.KeyBindings.Remove(Key.PageDown);
         Image.KeyBindings.Remove(Key.PageUp);
         Image.KeyBindings.Remove(Key.Home);
-        Image.KeyBindings.Remove(Key.PageDown.WithCtrl);
-        Image.KeyBindings.Remove(Key.PageUp.WithCtrl);
-        Image.KeyBindings.Remove(Key.Home.WithCtrl);
         Image.KeyBindings.Remove(Key.CursorUp);
         Image.KeyBindings.Remove(Key.CursorDown);
         Image.KeyBindings.Remove(Key.CursorLeft);
@@ -321,42 +321,46 @@ public sealed class PreviewPane : View
 
     private bool? LastPage()
     {
-        CurrentPage = _totalPages - 1;
+        CurrentPage = TotalPages - 1;
         return true;
     }
 
+    // Zoom is applied natively by the hosted ImageView (it re-scales the existing bitmap in place, the
+    // same way the Terminal.Gui Images scenario does), so manipulation stays smooth. The page is only
+    // re-rasterized on a debounce — once zooming settles — to refine sharpness at the new scale.
+    // Re-rasterizing on every step (with the spinner + a fresh Image array) is what caused the flicker.
     private bool? ZoomIn()
     {
         bool? handled = Zoom(Command.ZoomIn, null);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomIn(Mouse mouse)
     {
         bool? handled = Zoom(Command.ZoomIn, mouse);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomOut()
     {
         bool? handled = Zoom(Command.ZoomOut, null);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ZoomOut(Mouse mouse)
     {
         bool? handled = Zoom(Command.ZoomOut, mouse);
-        RenderCurrentPage();
+        RequestRender();
         return handled ?? true;
     }
 
     private bool? ResetZoom()
     {
         Image.ZoomLevel = 1d;
-        RenderCurrentPage();
+        RequestRender();
         return true;
     }
 
@@ -381,7 +385,7 @@ public sealed class PreviewPane : View
         return Image.InvokeCommand(command, context);
     }
 
-    private bool IsNoFilePreview => _sheetVM is null && _renderer is null;
+    private bool IsNoFilePreview => _sheetVm is null && _renderer is null;
 
     private void RequestRender()
     {
@@ -393,19 +397,19 @@ public sealed class PreviewPane : View
         {
             if (!token.IsCancellationRequested)
             {
-                GetApp()?.Invoke(() => RenderCurrentPage());
+                GetApp()?.Invoke(RenderCurrentPage);
             }
         }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
     }
 
     private void RenderCurrentPage()
     {
-        if (_sheetVM is null || _renderer is null)
+        if (_sheetVm is null || _renderer is null)
         {
             return;
         }
 
-        SheetViewModel sheetVM = _sheetVM;
+        SheetViewModel sheetVm = _sheetVm;
         PageRenderer renderer = _renderer;
         int page = _currentPage;
         int version = Interlocked.Increment(ref _renderVersion);
@@ -417,7 +421,11 @@ public sealed class PreviewPane : View
         {
             (width, height) = GetPreviewPixelSize();
             renderScale = GetRenderScale(width, height);
-            SetRenderingVisible(true);
+
+            // Only show the spinner when there is nothing to display yet (initial load). For a refine
+            // re-render (zoom settle, settings change, page nav) keep the current image visible and swap
+            // it in when ready — flashing a spinner over an existing preview reads as flicker.
+            SetRenderingVisible(Image.Image is null);
         }
         catch (Exception ex)
         {
@@ -425,7 +433,7 @@ public sealed class PreviewPane : View
             return;
         }
 
-        Task.Run(() => renderer.RenderPageForViewport(sheetVM, page, width, height, renderScale))
+        Task.Run(() => renderer.RenderPageForViewport(sheetVm, page, width, height, renderScale))
             .ContinueWith(task =>
             {
                 IApplication? app = GetApp();
@@ -461,7 +469,6 @@ public sealed class PreviewPane : View
 
         Image.Image = task.Result;
         Image.SetNeedsDraw();
-        PageLabel.SchemeName = null;
         PageLabel.Visible = false;
     }
 
@@ -469,7 +476,6 @@ public sealed class PreviewPane : View
     {
         if (visible)
         {
-            PageLabel.SchemeName = null;
             PageLabel.Visible = false;
         }
 
@@ -488,19 +494,19 @@ public sealed class PreviewPane : View
 
     private (int width, int height) GetPreviewPixelSize()
     {
-        if (Image.IsUsingSixel)
+        if (Image.IsUsingRasterGraphics)
         {
             try
             {
                 Rectangle viewport = Image.ViewportToScreenInPixels();
-                if (viewport.Width > 0 && viewport.Height > 0)
+                if (viewport is { Width: > 0, Height: > 0 })
                 {
                     return (viewport.Width, viewport.Height);
                 }
             }
             catch (InvalidOperationException)
             {
-                // Fall back to deterministic cell estimates in tests and non-sixel terminals.
+                // Fall back to deterministic cell estimates in tests and non-raster terminals.
             }
         }
 
@@ -521,21 +527,5 @@ public sealed class PreviewPane : View
 
         double cappedScale = Math.Sqrt(MaxPreviewSourcePixels / Math.Max(1d, viewportWidth * viewportHeight));
         return (float)Math.Max(1d, cappedScale);
-    }
-
-    private static void EnsureCanvasScheme()
-    {
-        if (SchemeManager.TryGetScheme(CanvasSchemeName, out _))
-        {
-            return;
-        }
-
-        SchemeManager.AddScheme(CanvasSchemeName, new Scheme
-        {
-            Normal = new Terminal.Gui.Drawing.Attribute(CanvasForegroundColor, CanvasBackgroundColor),
-            HotNormal = new Terminal.Gui.Drawing.Attribute(CanvasForegroundColor, CanvasBackgroundColor),
-            Focus = new Terminal.Gui.Drawing.Attribute(CanvasForegroundColor, CanvasBackgroundColor),
-            HotFocus = new Terminal.Gui.Drawing.Attribute(CanvasForegroundColor, CanvasBackgroundColor)
-        });
     }
 }

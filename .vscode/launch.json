@@ -2,28 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // winprint CLI. net10.0-windows today, so this runs on Windows.
-            // Put CLI arguments (e.g. a file to print, "--what-if") in "args".
-            "name": "WinPrint.cli",
+            // Terminal UI / CLI app (`wp`). Put arguments (for example a file to print)
+            // in "args".
+            "name": "WinPrint.TUI",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build-cli",
-            "program": "${workspaceFolder}/src/WinPrint.cli/bin/Debug/net10.0-windows/winprint.dll",
+            "preLaunchTask": "build-tui",
+            "program": "${workspaceFolder}/src/WinPrint.TUI/bin/Debug/net10.0/wp.dll",
+            "windows": {
+                "program": "${workspaceFolder}/src/WinPrint.TUI/bin/Debug/net10.0-windows/wp.dll"
+            },
             "args": [],
-            "cwd": "${workspaceFolder}/src/WinPrint.cli",
+            "cwd": "${workspaceFolder}/src/WinPrint.TUI",
             "console": "integratedTerminal",
-            "stopAtEntry": false
-        },
-        {
-            // winprint WinForms GUI (winprintgui). Windows only.
-            "name": "WinPrint.WinForms (Windows)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-winforms",
-            "program": "${workspaceFolder}/src/WinPrint.WinForms/bin/x64/Debug/net10.0-windows/winprintgui.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/WinPrint.WinForms",
-            "console": "internalConsole",
             "stopAtEntry": false
         },
         {

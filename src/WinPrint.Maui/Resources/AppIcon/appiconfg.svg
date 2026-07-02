@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <!-- Foreground: WP text -->
-    <text x="228" y="300" font-family="Arial, sans-serif" font-size="200" font-weight="bold"
-          fill="white" text-anchor="middle" dominant-baseline="central">WP</text>
+<!-- Foreground intentionally empty: the complete icon art lives in appicon.svg so the
+     composited result is predictable across platforms (no foreground safe-zone scaling). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1">
+  <rect x="0" y="0" width="1024" height="1024" fill="none"/>
 </svg>

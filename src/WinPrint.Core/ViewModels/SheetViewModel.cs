@@ -88,6 +88,25 @@ public class SheetViewModel : ViewModelBase
         set => SetField(ref _footerVM, value);
     }
 
+    /// <summary>
+    ///     Applies a font to <b>both</b> the header and footer. The font is written to the underlying
+    ///     <see cref="HeaderFooter" /> models — not the <see cref="Header" />/<see cref="Footer" />
+    ///     view-models — so it raises the model <c>PropertyChanged</c> the view-models subscribe to. That
+    ///     updates the live font, flags the sheet definition dirty, and (because the models belong to the
+    ///     sheet definition) persists the change. Callers still trigger a reflow to repaint.
+    /// </summary>
+    public void SetHeaderFooterFont(Font font)
+    {
+        ArgumentNullException.ThrowIfNull(font);
+        if (_sheet?.Header == null || _sheet.Footer == null)
+        {
+            return;
+        }
+
+        _sheet.Header.Font = (Font)font.Clone();
+        _sheet.Footer.Font = (Font)font.Clone();
+    }
+
     public int Rows
     {
         get => _rows;
@@ -533,6 +552,7 @@ public class SheetViewModel : ViewModelBase
 
             ContentEngine.MeasurementContext = MeasurementContext;
             ContentEngine.Encoding = Encoding;
+            ContentEngine.SourceFileName = File;
             retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
         }
         catch

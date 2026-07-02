@@ -70,13 +70,36 @@ public class AnsiCteTests
         type = ContentTypeEngineBase.GetContentType(path);
         Assert.Equal("text/x-csharp", type);
 
+        // .mhtml/.mht web archives map to HTML (they used to be mis-typed as Mason).
+        Assert.Equal("text/html", ContentTypeEngineBase.GetContentType("page.mhtml"));
+        Assert.Equal("text/html", ContentTypeEngineBase.GetContentType("page.mht"));
+
+        // Esoteric languages with WinPrint-bundled TextMate grammars.
+        Assert.Equal("application/x-brainfuck", ContentTypeEngineBase.GetContentType("hello.bf"));
+        Assert.Equal("application/x-intercal", ContentTypeEngineBase.GetContentType("hello.intercal"));
+        Assert.Equal("application/x-intercal", ContentTypeEngineBase.GetContentType("hello.ick"));
+
+        // ANSI (.an/.ans/.ansi) → text/ansi (handled by AnsiCte)
+        path = "foo.an";
+        type = ContentTypeEngineBase.GetContentType(path);
+        Assert.Equal("text/ansi", type);
+
+        path = "foo.ans";
+        type = ContentTypeEngineBase.GetContentType(path);
+        Assert.Equal("text/ansi", type);
+
+        path = "foo.ansi";
+        type = ContentTypeEngineBase.GetContentType(path);
+        Assert.Equal("text/ansi", type);
+
         // Default
         path = "foo.xxxx";
         type = ContentTypeEngineBase.GetContentType(path);
         Assert.Equal("text/plain", type);
     }
 
-    [Fact(Skip = "AnsiCte is a stub - libvt100 submodule removed")]
+    [Fact(Skip =
+        "Windows-only (constructs System.Drawing.Graphics in test); AnsiCte rendering is covered cross-platform by CteRenderingTests")]
     public async Task RenderAsyncTest_FixedPitch()
     {
         string shortLine = "This is a line 0123456789";
@@ -177,7 +200,8 @@ public class AnsiCteTests
         Assert.Equal(3, await svm.ContentEngine!.RenderAsync(new PrintResolution { X = 96, Y = 96 }, null));
     }
 
-    [Fact(Skip = "AnsiCte is a stub - libvt100 submodule removed")]
+    [Fact(Skip =
+        "Windows-only (constructs System.Drawing.Graphics in test); AnsiCte rendering is covered cross-platform by CteRenderingTests")]
     public async Task RenderAsyncTest_LineWrap()
     {
         string text = "1";

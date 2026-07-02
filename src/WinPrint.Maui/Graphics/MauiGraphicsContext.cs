@@ -1,5 +1,6 @@
 using Microsoft.Maui.Graphics;
 using WinPrint.Core.Abstractions;
+using IImage = Microsoft.Maui.Graphics.IImage;
 
 namespace WinPrint.Maui.Graphics;
 
@@ -152,7 +153,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
     ///     1. Whitespace-only tokens collapse to zero width, so adjacent tokens
     ///        run together in the preview ("using System" -> "usingSystem").
     ///     2. The advance width is tighter than GDI+'s <c>Graphics.MeasureString</c>
-    ///        (which the WinForms preview and the actual print path use). The text
+    ///        (which the actual print path uses). The text
     ///        engine in <c>TextMateCte</c> uses the measured width to advance xPos
     ///        for the next token, so a tighter measurement makes tokens visually
     ///        butt together with no whitespace between them.
@@ -160,7 +161,7 @@ public sealed class MauiGraphicsContext : IGraphicsContext
     ///     We round-trip whitespace with sentinel bookends (fix #1) and then add
     ///     the same trailing padding GDI+ reports (~1/6 em per character that
     ///     GDI+ adds as overhang). This makes the MAUI preview spacing match the
-    ///     WinForms preview and the actual printed output.
+    ///     actual printed output.
     /// </summary>
     private SizeF MeasurePreservingWhitespace(string text, Microsoft.Maui.Graphics.Font mFont, float fontSize)
     {
@@ -270,6 +271,27 @@ public sealed class MauiGraphicsContext : IGraphicsContext
         var mauiBrush = (MauiBrush)brush;
         _canvas.FillColor = mauiBrush.Color;
         _canvas.FillRectangle(x, y, width, height);
+    }
+
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            IImage? image = Microsoft.Maui.Graphics.Platform.PlatformImage.FromStream(stream);
+            return image is null ? null : new MauiImage((IImage)image);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (image is MauiImage mi)
+        {
+            _canvas.DrawImage(mi.Image, x, y, width, height);
+        }
     }
 
     private void ApplyPen(IGraphicsPen pen)

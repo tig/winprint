@@ -63,7 +63,7 @@ public class PrintMarginsRegressionTests
     [Fact]
     public void FullFileOpenFlow_NoInvalidCastException()
     {
-        // This test simulates the full WinForms file-open flow:
+        // This test simulates the full file-open flow:
         // 1. Settings loaded, SetSheet called
         // 2. LoadFileAsync called
         // 3. SetPrinterPageSettings(PageSettings) called

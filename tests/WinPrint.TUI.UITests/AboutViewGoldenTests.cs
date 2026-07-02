@@ -1,0 +1,40 @@
+using WinPrint.TUI.UnitTests.Testing;
+using WinPrint.TUI.Views;
+using Xunit;
+
+namespace WinPrint.TUI.UnitTests;
+
+/// <summary>
+///     Golden + behavior tests for <see cref="AboutView" />: the help/about link and the product
+///     version footer. A fixed version is passed so the golden render is deterministic across builds.
+/// </summary>
+public class AboutViewGoldenTests
+{
+    [Fact]
+    public void InitialRender_MatchesGolden()
+    {
+        var about = new AboutView("3.0.0");
+        var fixture = new AppFixture(about, 44, 5);
+
+        GridSnapshot.Verify(fixture.Screen, "about-view");
+    }
+
+    [Fact]
+    public void Render_ShowsHelpLinkAndVersion()
+    {
+        var about = new AboutView("3.0.0");
+        var fixture = new AppFixture(about, 44, 5);
+
+        DriverAssert.ContainsText(fixture.Screen, "Help & about");
+        DriverAssert.ContainsText(fixture.Screen, "v3.0.0");
+    }
+
+    [Fact]
+    public void ProductVersion_StripsSourceLinkGitSuffix()
+    {
+        // The runtime version must not include the SourceLink "+<git-sha>" metadata.
+        string version = AboutView.ProductVersion();
+
+        Assert.DoesNotContain('+', version);
+    }
+}

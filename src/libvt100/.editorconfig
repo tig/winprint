@@ -1,0 +1,5 @@
+# Vendored third-party source (https://github.com/tig/libvt100). Treat as generated so formatters
+# (dotnet format) and analyzers skip it — we don't reformat upstream code to winprint house style.
+[*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

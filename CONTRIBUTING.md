@@ -72,13 +72,12 @@ signed in/activated.
 | Task             | What it does                                                              |
 | ---------------- | ------------------------------------------------------------------------- |
 | `build` *(default)* | **Windows:** full solution. **macOS/Linux:** `WinPrint.Core` only.     |
-| `build-cli`      | Builds `WinPrint.cli` (`winprint`).                                        |
+| `build-tui`      | Builds `WinPrint.TUI` (`wp`).                                             |
 | `build-solution` | Builds the whole `WinPrint.slnx` (needs the MAUI workload).           |
-| `build-winforms` | Builds the WinForms GUI directly for debugging; does not require MAUI.    |
 | `build-maui-windows` | Builds `WinPrint.Maui` for Windows (needs the MAUI workload).        |
 | `restore-maui-workloads` | Restores the MAUI workloads required by `WinPrint.Maui`.        |
 | `test`           | Runs the `WinPrint.Core.UnitTests` suite.                                 |
-| `publish-cli`    | `dotnet publish -c Release` of the CLI.                                   |
+| `publish-tui`    | `dotnet publish -c Release -f net10.0` of the `wp` command.               |
 
 Or from a terminal:
 
@@ -91,8 +90,7 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 
 | Profile                         | Notes                                              |
 | ------------------------------- | -------------------------------------------------- |
-| **WinPrint.cli**                | Legacy CLI debugging profile.                      |
-| **WinPrint.WinForms (Windows)** | The GUI (`winprintgui`). Windows only.             |
+| **WinPrint.TUI**                | Terminal.Gui front end and `wp` command.           |
 | **WinPrint.Maui (Windows)**     | Directly launches the unpackaged Windows MAUI EXE. Needs the MAUI workload. |
 | **WinPrint.Maui (Mac Catalyst)**| MAUI app on macOS. Needs the MAUI workload.        |
 
@@ -102,8 +100,7 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 | -------------------- | :-----: | ------------------------------------------------ |
 | `WinPrint.Core`      |   ✅    | ✅ (`net10.0`)                                   |
 | `WinPrint.Core.UnitTests` | ✅ | ✅ cross-platform suite; some Windows/GDI+ tests are skipped or env-dependent (see [CLAUDE.md](CLAUDE.md)) |
-| `WinPrint.cli`       |   ✅    | 🟡 compiles (`net10.0-windows` via `EnableWindowsTargeting`) but won't run — printing is `System.Drawing.Printing`/Windows-only. Tracked in #64 |
-| `WinPrint.WinForms`  |   ✅    | 🟡 compiles via `EnableWindowsTargeting`; Windows-only at runtime by design |
+| `WinPrint.TUI`       |   ✅    | ✅ (`net10.0`)                                   |
 | `WinPrint.Maui`      |   ✅    | ✅ `net10.0-maccatalyst` builds with the MAUI workload + Xcode 26.5; the Windows head only builds on Windows. Runtime not yet verified (#64) |
 
 ## Before you push
@@ -113,7 +110,7 @@ fails the build on any diff. Match it locally:
 
 ```bash
 dotnet tool restore
-dotnet jb cleanupcode WinPrint.slnx --profile="WinPrintCleanup" --exclude="**/MainPage.xaml.cs"
+dotnet jb cleanupcode WinPrint.slnx --profile="WinPrintCleanup" --exclude="**/*.xaml.cs"
 dotnet format WinPrint.slnx
 git diff --exit-code
 ```
@@ -133,21 +130,29 @@ WinPrint uses [GitVersion](https://gitversion.net/) for automatic semantic versi
 
 Releases are fully automated via CI:
 
-1. Merge your changes to the release branch.
-2. Create and push a version tag:
+1. Merge `develop` → `main`. (There is no `release` branch.)
+2. Create and push a version tag **on the merge commit**. The tag **must be annotated**
+   (`git tag -a`) — a lightweight tag will not drive the release/versioning correctly:
    ```bash
-   git tag v2.6.0
-   git push origin v2.6.0
+   git tag -a v3.0.0 -m "Release 3.0.0"
+   git push origin v3.0.0
    ```
 3. CI automatically:
    - Builds for Windows, macOS, and Linux
-   - Signs the binaries (using configured secrets)
+   - Signs the **Windows** binaries (Azure Trusted Signing via OIDC). macOS is **not**
+     signed/notarized today — the `APPLE_*` secrets are not configured ([#162]) and the
+     `.app` ships unsigned/ad-hoc.
    - Creates a GitHub Release with all assets
    - Produces winget and Homebrew-ready artifacts/templates
 
+[#162]: https://github.com/tig/winprint/issues/162
+
 ### Signing secrets (for forks)
 
-If you fork this repository and want to produce signed builds, configure the following repository secrets:
+If you fork this repository and want to produce signed builds, configure the following repository secrets.
+
+**Windows signing works today** (Azure Trusted Signing via GitHub OIDC — no client secret).
+See [`docs/code-signing.md`](docs/code-signing.md):
 
 | Secret | Description |
 |--------|-------------|
@@ -157,6 +162,14 @@ If you fork this repository and want to produce signed builds, configure the fol
 | `AZURE_SIGNING_ACCOUNT` | Azure Trusted Signing account name |
 | `AZURE_SIGNING_PROFILE` | Azure Trusted Signing certificate profile |
 | `AZURE_SIGNING_ENDPOINT` | Azure Trusted Signing endpoint |
+
+**macOS signing is NOT configured on this repo** ([#162]): the `APPLE_*` secrets below are
+**not** set, so the macOS `.app` currently ships **unsigned/ad-hoc** (Gatekeeper warns).
+The release workflow already supports these secrets — set them on a fork to enable
+Developer ID signing + notarization:
+
+| Secret | Description |
+|--------|-------------|
 | `APPLE_CERTIFICATE_BASE64` | Base64-encoded Apple Developer ID `.p12` certificate |
 | `APPLE_CERTIFICATE_PASSWORD` | Password for the `.p12` certificate |
 | `APPLE_ID` | Apple Developer account email |
@@ -164,4 +177,4 @@ If you fork this repository and want to produce signed builds, configure the fol
 | `APPLE_TEAM_ID` | Apple Developer team ID |
 | `APPLE_SIGNING_IDENTITY` | Developer ID Application signing identity |
 
-Without these secrets, CI will still build successfully but binaries will be unsigned.
+Without these secrets, CI will still build successfully but the affected binaries will be unsigned.

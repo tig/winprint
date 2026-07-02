@@ -30,6 +30,8 @@ public class StickyPrinterRestoreTests
 
             Assert.Equal("SavedPrinter", context.App.CurrentPageSetup.PrinterName);
             Assert.Equal("A4", context.App.CurrentPageSetup.PaperSizeName);
+            Assert.Equal(827, context.App.CurrentPageSetup.PaperWidth);
+            Assert.Equal(1169, context.App.CurrentPageSetup.PaperHeight);
         }
         finally
         {
@@ -76,6 +78,29 @@ public class StickyPrinterRestoreTests
         finally
         {
             settings.LastPrinter = prevPrinter;
+        }
+    }
+
+    [Fact]
+    public void SettingsContext_CommandLinePaperOverridesSavedAndUpdatesDimensions()
+    {
+        Settings settings = ModelLocator.Current.Settings;
+        string? prevPaper = settings.LastPaperSize;
+        try
+        {
+            settings.LastPaperSize = "A4";
+            var svc = new ConfigurablePrintService(["Other"], "Other");
+
+            var context = SettingsContext.Create(
+                new Options { Files = ["x.cs"], PaperSize = "Legal" }, svc);
+
+            Assert.Equal("Legal", context.App.CurrentPageSetup.PaperSizeName);
+            Assert.Equal(850, context.App.CurrentPageSetup.PaperWidth);
+            Assert.Equal(1400, context.App.CurrentPageSetup.PaperHeight);
+        }
+        finally
+        {
+            settings.LastPaperSize = prevPaper;
         }
     }
 }

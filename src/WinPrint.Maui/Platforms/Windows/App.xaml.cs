@@ -1,6 +1,9 @@
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
+using Velopack;
+using WinPrint.Maui.Packaging;
+
 namespace WinPrint.Maui.WinUI;
 
 /// <summary>
@@ -14,6 +17,12 @@ public partial class App : MauiWinUIApplication
     /// </summary>
     public App()
     {
+        VelopackApp.Build()
+            .OnAfterInstallFastCallback(_ => WindowsUserPath.AddCurrentDirectory())
+            .OnAfterUpdateFastCallback(_ => WindowsUserPath.AddCurrentDirectory())
+            .OnBeforeUninstallFastCallback(_ => WindowsUserPath.RemoveCurrentDirectory())
+            .Run();
+
         InitializeComponent();
     }
 

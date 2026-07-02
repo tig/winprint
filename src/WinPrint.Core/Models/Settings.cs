@@ -301,6 +301,15 @@ public class Settings : ModelBase
             monoSpaceFamily = "Consolas";
             sansSerifFamily = "Calibri";
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // Real, always-present macOS faces (the generic "monospace"/"sansserif" aliases don't resolve
+            // through the MAUI/CoreText render path). Menlo is the Terminal default and ships Regular/Bold/
+            // Italic; Helvetica Neue is the standard proportional UI face. SF Mono/SF Pro are deliberately
+            // not used — Apple hides the system fonts from enumeration so they can't be picked or measured.
+            monoSpaceFamily = "Menlo";
+            sansSerifFamily = "Helvetica Neue";
+        }
 
         string defaultContentFontFamily = monoSpaceFamily;
         float defaultContentFontSize = 8F;
@@ -503,5 +512,110 @@ public class Settings : ModelBase
         };
 
         return settings;
+    }
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not Settings src)
+        {
+            return;
+        }
+
+        Location = src.Location is null
+            ? null
+            : new WindowLocation(src.Location.X, src.Location.Y);
+        Size = src.Size is null ? null : new WindowSize(src.Size.Width, src.Size.Height);
+        WindowState = src.WindowState;
+        DefaultSheet = src.DefaultSheet;
+        DefaultContentType = src.DefaultContentType;
+        DefaultCteClassName = src.DefaultCteClassName;
+        DefaultSyntaxHighlighterCteNameClassName = src.DefaultSyntaxHighlighterCteNameClassName;
+
+        foreach (KeyValuePair<string, SheetSettings> sheet in src.Sheets)
+        {
+            if (Sheets.TryGetValue(sheet.Key, out SheetSettings? existing))
+            {
+                existing.CopyPropertiesFrom(sheet.Value);
+            }
+            else
+            {
+                var created = new SheetSettings();
+                created.CopyPropertiesFrom(sheet.Value);
+                Sheets[sheet.Key] = created;
+            }
+        }
+
+        AnsiContentTypeEngineSettings.CopyPropertiesFrom(src.AnsiContentTypeEngineSettings);
+        TextMateContentTypeEngineSettings.CopyPropertiesFrom(src.TextMateContentTypeEngineSettings);
+        TextContentTypeEngineSettings.CopyPropertiesFrom(src.TextContentTypeEngineSettings);
+        MarkdownContentTypeEngineSettings.CopyPropertiesFrom(src.MarkdownContentTypeEngineSettings);
+        HtmlContentTypeEngineSettings.CopyPropertiesFrom(src.HtmlContentTypeEngineSettings);
+        FileTypeMapping.CopyPropertiesFrom(src.FileTypeMapping);
+        ModelCopyHelpers.CopyFont(DiagnosticRulesFont, src.DiagnosticRulesFont);
+
+        PreviewPrintableArea = src.PreviewPrintableArea;
+        PrintPrintableArea = src.PrintPrintableArea;
+        PreviewPaperSize = src.PreviewPaperSize;
+        PrintPaperSize = src.PrintPaperSize;
+        PreviewMargins = src.PreviewMargins;
+        PrintMargins = src.PrintMargins;
+        PreviewHardMargins = src.PreviewHardMargins;
+        PrintHardMargins = src.PrintHardMargins;
+        PrintBounds = src.PrintBounds;
+        PreviewBounds = src.PreviewBounds;
+        PrintContentBounds = src.PrintContentBounds;
+        PreviewContentBounds = src.PreviewContentBounds;
+        PrintHeaderFooterBounds = src.PrintHeaderFooterBounds;
+        PreviewHeaderFooterBounds = src.PreviewHeaderFooterBounds;
+        PreviewPageBounds = src.PreviewPageBounds;
+        PrintPageBounds = src.PrintPageBounds;
+        ShowPrintDialog = src.ShowPrintDialog;
+        LastPrinter = src.LastPrinter;
+        LastPaperSize = src.LastPaperSize;
+    }
+
+    public override IDictionary<string, string?> GetTelemetryDictionary()
+    {
+        Dictionary<string, string?> dictionary = TelemetryCollector.Create();
+        if (Location is not null)
+        {
+            TelemetryCollector.Add(dictionary, nameof(Location), Location);
+        }
+
+        if (Size is not null)
+        {
+            TelemetryCollector.Add(dictionary, nameof(Size), Size);
+        }
+
+        TelemetryCollector.Add(dictionary, nameof(WindowState), WindowState);
+        TelemetryCollector.Add(dictionary, nameof(DefaultSheet), DefaultSheet);
+        TelemetryCollector.Add(dictionary, nameof(NumSheets), NumSheets);
+        TelemetryCollector.Add(dictionary, nameof(DefaultContentType), DefaultContentType);
+        TelemetryCollector.Add(dictionary, nameof(DefaultCteClassName), DefaultCteClassName);
+        TelemetryCollector.Add(dictionary, nameof(DefaultSyntaxHighlighterCteNameClassName),
+            DefaultSyntaxHighlighterCteNameClassName);
+        TelemetryCollector.Add(dictionary, nameof(NumFilesAssociations), NumFilesAssociations);
+        TelemetryCollector.Add(dictionary, nameof(NumLanguages), NumLanguages);
+        TelemetryCollector.Add(dictionary, nameof(DiagnosticRulesFont), DiagnosticRulesFont);
+        TelemetryCollector.Add(dictionary, nameof(PreviewPrintableArea), PreviewPrintableArea);
+        TelemetryCollector.Add(dictionary, nameof(PrintPrintableArea), PrintPrintableArea);
+        TelemetryCollector.Add(dictionary, nameof(PreviewPaperSize), PreviewPaperSize);
+        TelemetryCollector.Add(dictionary, nameof(PrintPaperSize), PrintPaperSize);
+        TelemetryCollector.Add(dictionary, nameof(PreviewMargins), PreviewMargins);
+        TelemetryCollector.Add(dictionary, nameof(PrintMargins), PrintMargins);
+        TelemetryCollector.Add(dictionary, nameof(PreviewHardMargins), PreviewHardMargins);
+        TelemetryCollector.Add(dictionary, nameof(PrintHardMargins), PrintHardMargins);
+        TelemetryCollector.Add(dictionary, nameof(PrintBounds), PrintBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewBounds), PreviewBounds);
+        TelemetryCollector.Add(dictionary, nameof(PrintContentBounds), PrintContentBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewContentBounds), PreviewContentBounds);
+        TelemetryCollector.Add(dictionary, nameof(PrintHeaderFooterBounds), PrintHeaderFooterBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewHeaderFooterBounds), PreviewHeaderFooterBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewPageBounds), PreviewPageBounds);
+        TelemetryCollector.Add(dictionary, nameof(PrintPageBounds), PrintPageBounds);
+        TelemetryCollector.Add(dictionary, nameof(ShowPrintDialog), ShowPrintDialog);
+        TelemetryCollector.Add(dictionary, nameof(LastPrinter), LastPrinter);
+        TelemetryCollector.Add(dictionary, nameof(LastPaperSize), LastPaperSize);
+        return dictionary;
     }
 }

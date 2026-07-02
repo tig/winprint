@@ -19,4 +19,15 @@ public class FileTypeMapping : ModelBase
     public Dictionary<string, string> FilesAssociations { get; set; } = [];
 
     public IList<ContentType> ContentTypes { get; set; } = [];
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not FileTypeMapping src)
+        {
+            return;
+        }
+
+        FilesAssociations = new Dictionary<string, string>(src.FilesAssociations);
+        ContentTypes = [.. src.ContentTypes];
+    }
 }

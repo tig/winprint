@@ -1,18 +1,22 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
+using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.ViewModels;
 
 namespace WinPrint.Maui.Views;
 
 /// <summary>
-///     Modal prompt shown when the user exits with unsaved sheet-definition edits. Mirrors the TUI and
-///     WinForms prompts: a list of existing definitions to update, plus a "New name" field + Create to
+///     Modal prompt shown when the user exits with unsaved sheet-definition edits. Mirrors the TUI prompt:
+///     a list of existing definitions to update, plus a "New name" field + Create to
 ///     spin off a new definition, and Don't Save / Cancel / Save buttons. Await <see cref="Completion" />
 ///     for the user's choice.
 /// </summary>
 internal sealed class SaveSheetDialogPage : ContentPage
 {
+    private static readonly Color InkColor = Color.FromArgb("#1C1C1E");
+    private static readonly Color HintColor = Color.FromArgb("#8E8E93");
+
     private readonly TaskCompletionSource<SaveSheetChoice> _completion = new();
     private readonly List<string> _names;
     private readonly CollectionView _list;
@@ -33,7 +37,12 @@ internal sealed class SaveSheetDialogPage : ContentPage
             ItemsSource = _names,
             ItemTemplate = new DataTemplate(() =>
             {
-                Label label = new() { Padding = new Thickness(8, 6) };
+                Label label = new()
+                {
+                    Padding = new Thickness(8, 6),
+                    TextColor = InkColor,
+                    FontSize = UiFonts.SidebarFontSize
+                };
                 label.SetBinding(Label.TextProperty, ".");
                 return label;
             })
@@ -49,19 +58,19 @@ internal sealed class SaveSheetDialogPage : ContentPage
             UpdateButtons();
         };
 
-        _newName = new Entry { Placeholder = "New definition name" };
+        _newName = new Entry { Placeholder = "New definition name", FontSize = UiFonts.SidebarFontSize };
         _newName.TextChanged += (_, _) => UpdateButtons();
 
-        _createButton = new Button { Text = "Create" };
+        _createButton = new Button { Text = "Create", FontSize = UiFonts.SidebarFontSize };
         _createButton.Clicked += (_, _) => Complete(SaveSheetChoice.Create);
 
-        Button cancelButton = new() { Text = "Cancel" };
+        Button cancelButton = new() { Text = "Cancel", FontSize = UiFonts.SidebarFontSize };
         cancelButton.Clicked += (_, _) => Complete(SaveSheetChoice.Cancel);
 
-        Button dontSaveButton = new() { Text = "Don't Save" };
+        Button dontSaveButton = new() { Text = "Don't Save", FontSize = UiFonts.SidebarFontSize };
         dontSaveButton.Clicked += (_, _) => Complete(SaveSheetChoice.DontSave);
 
-        _saveButton = new Button { Text = "Save" };
+        _saveButton = new Button { Text = "Save", FontSize = UiFonts.SidebarFontSize };
         _saveButton.Clicked += (_, _) => Complete(SaveSheetChoice.Save);
 
         Grid newNameRow = new()
@@ -95,7 +104,9 @@ internal sealed class SaveSheetDialogPage : ContentPage
         Label titleLabel = new()
         {
             Text = "Sheet Definition has changed. Select definition to update.",
-            FontAttributes = FontAttributes.Bold
+            FontSize = UiFonts.SidebarFontSize,
+            FontAttributes = FontAttributes.Bold,
+            TextColor = InkColor
         };
 
         Grid root = new()
@@ -115,7 +126,23 @@ internal sealed class SaveSheetDialogPage : ContentPage
         root.Add(newNameRow, 0, 2);
         root.Add(buttonRow, 0, 3);
 
-        Content = root;
+        // Present as a centered card over a dimmed backdrop (matching the font chooser) rather than a
+        // full-screen modal page.
+        BackgroundColor = Color.FromRgba(0, 0, 0, 0.45);
+        Border card = new()
+        {
+            BackgroundColor = Colors.White,
+            Stroke = HintColor,
+            StrokeThickness = 1,
+            StrokeShape = new RoundRectangle { CornerRadius = 10 },
+            Margin = new Thickness(24),
+            WidthRequest = 480,
+            HeightRequest = 460,
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center,
+            Content = root
+        };
+        Content = new Grid { card };
 
         UpdateButtons();
     }

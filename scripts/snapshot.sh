@@ -14,7 +14,7 @@
 #   scripts/snapshot.sh settings 62 28 /tmp/settings.png
 #
 # Prerequisites / gotchas learned the hard way:
-#   - tuirec >= 0.5.0 on PATH (or set TUIREC).            https://github.com/gui-cs/tuirec
+#   - tuirec >= 0.5.0 on PATH (or set TUIREC).            https://github.com/tui-cs/tuirec
 #   - agg on PATH or set AGG (tuirec auto-downloads it if it can reach the network).
 #   - DOTNET_ROOT must be exported so the wp apphost finds the runtime *inside tuirec's
 #     child process* — it is not otherwise inherited.

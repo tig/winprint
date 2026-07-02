@@ -128,4 +128,41 @@ public class ContentSettings : ModelBase
         get => _diagnostics;
         set => SetField(ref _diagnostics, value);
     }
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not ContentSettings src)
+        {
+            return;
+        }
+
+        ModelCopyHelpers.CopyFont(Font, src.Font);
+        PrintBackground = src.PrintBackground;
+        Grayscale = src.Grayscale;
+        Darkness = src.Darkness;
+        Style = src.Style;
+        DisableFontStyles = src.DisableFontStyles;
+        LineNumbers = src.LineNumbers;
+        LineNumberSeparator = src.LineNumberSeparator;
+        TabSpaces = src.TabSpaces;
+        NewPageOnFormFeed = src.NewPageOnFormFeed;
+        Diagnostics = src.Diagnostics;
+    }
+
+    public override IDictionary<string, string?> GetTelemetryDictionary()
+    {
+        Dictionary<string, string?> dictionary = TelemetryCollector.Create();
+        TelemetryCollector.Add(dictionary, nameof(Font), Font);
+        TelemetryCollector.Add(dictionary, nameof(PrintBackground), PrintBackground);
+        TelemetryCollector.Add(dictionary, nameof(Grayscale), Grayscale);
+        TelemetryCollector.Add(dictionary, nameof(Darkness), Darkness);
+        TelemetryCollector.Add(dictionary, nameof(Style), Style);
+        TelemetryCollector.Add(dictionary, nameof(DisableFontStyles), DisableFontStyles);
+        TelemetryCollector.Add(dictionary, nameof(LineNumbers), LineNumbers);
+        TelemetryCollector.Add(dictionary, nameof(LineNumberSeparator), LineNumberSeparator);
+        TelemetryCollector.Add(dictionary, nameof(TabSpaces), TabSpaces);
+        TelemetryCollector.Add(dictionary, nameof(NewPageOnFormFeed), NewPageOnFormFeed);
+        TelemetryCollector.Add(dictionary, nameof(Diagnostics), Diagnostics);
+        return dictionary;
+    }
 }

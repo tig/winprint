@@ -1,0 +1,28 @@
+{
+  "//": "StoreBroker config for WinPrint (Microsoft Store). StoreBroker reads packaging",
+  "//1": "inputs from `packageParameters` and the submission template from `appSubmission`.",
+  "//2": "The Store ID is NOT in this file — pass it to the cmdlets, e.g.:",
+  "//3": "  New-SubmissionPackage -ConfigPath config.json -OutPath out -OutName winprint",
+  "//4": "  Update-ApplicationSubmission -AppId <PartnerCenterStoreId> -SubmissionDataPath out\\winprint.json -PackagePath out\\winprint.zip",
+
+  "packageParameters": {
+    "//pdp": "Listing text lives in PDP/<lang>/PDP.xml; screenshots under ../screenshots/<lang>/.",
+    "PDPRootPath": "PDP\\",
+    "PDPInclude": [ "PDP.xml" ],
+    "ImagesRootPath": "..\\screenshots\\",
+    "MediaFallbackLanguage": "en-us",
+
+    "//appx": "For a packaged (MSIX) submission point AppxPath at the .msixupload. For an",
+    "//appx2": "unpackaged MSI/EXE submission, manage the installer in Partner Center and use",
+    "//appx3": "this config for listing metadata + screenshots only (omit AppxPath).",
+    "AppxPath": [ "REPLACE_WITH_PATH_TO_MSIXUPLOAD_OR_OMIT" ],
+
+    "DisableAutoPackageNameFormatting": true
+  },
+
+  "appSubmission": {
+    "//": "Submission defaults; review before publishing. Pricing/age-rating are in Partner Center.",
+    "targetPublishMode": "Manual",
+    "visibility": "Public"
+  }
+}

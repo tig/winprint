@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+        <NoWarn>1701;1702</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.9.1" />
+        <PackageReference Include="coverlet.collector" Version="6.0.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    </ItemGroup>
+
+    <!-- WinPrint.Maui is a MAUI app head (maccatalyst/windows only) and can't be ProjectReference'd
+         from a plain net10.0 test assembly. Pure, MAUI-free logic from the app is linked in as source
+         so it can be tested cross-platform and in CI (windows-latest). Keep linked files dependency-free. -->
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\WinPrint.Core\WinPrint.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\src\WinPrint.Maui\CommandLineOptions.cs" Link="Linked\CommandLineOptions.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Views\PreviewGeometry.cs" Link="Linked\PreviewGeometry.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\FontSizeParser.cs" Link="Linked\FontSizeParser.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Packaging\WindowsUserPath.cs" Link="Linked\WindowsUserPath.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Services\StaTaskRunner.cs" Link="Linked\StaTaskRunner.cs" />
+    </ItemGroup>
+
+</Project>

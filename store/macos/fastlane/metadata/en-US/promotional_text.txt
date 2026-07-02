@@ -1,0 +1,1 @@
+Beautiful source-code & text printing: syntax highlighting, line numbers, headers/footers, and paper-saving n-up layouts, with an accurate print preview.

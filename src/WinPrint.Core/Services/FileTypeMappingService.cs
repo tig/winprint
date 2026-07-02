@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using System.Text.Json;
 using WinPrint.Core.Models;
 using WinPrint.Core.Properties;
+using WinPrint.Core.Serialization;
 
 namespace WinPrint.Core.Services;
 
@@ -29,17 +29,8 @@ public class FileTypeMappingService
     /// <returns></returns>
     public FileTypeMapping Load()
     {
-        var jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true,
-            //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip
-        };
-
-        FileTypeMapping associations = JsonSerializer.Deserialize<FileTypeMapping>(Resources.languages, jsonOptions) ??
-                                       new FileTypeMapping();
+        FileTypeMapping associations =
+            WinPrintJson.DeserializeFileTypeMapping(Resources.languages) ?? new FileTypeMapping();
 
         // TODO: Consider calling into lang-map and/or Pygments to update extensions at runtime?
         // https://github.com/jonschlinkert/lang-map

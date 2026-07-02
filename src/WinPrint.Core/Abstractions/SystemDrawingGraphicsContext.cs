@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Text;
+using SkiaSharp;
 
 namespace WinPrint.Core.Abstractions;
 
@@ -84,8 +86,52 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
     {
         GraphicsUnit graphicsUnit = unit == GraphicsFontUnit.Pixel ? GraphicsUnit.Pixel : GraphicsUnit.Point;
         FontStyle nativeStyle = ToSystemFontStyle(style);
-        return new SystemDrawingFont(new Font(family, size, nativeStyle, graphicsUnit));
+        return new SystemDrawingFont(new Font(ResolveGdiFamily(family), size, nativeStyle, graphicsUnit));
     }
+
+    // GDI+ resolves only legacy GDI family names (e.g. "CaskaydiaCove NF"); modern config stores the
+    // typographic family name (e.g. "CaskaydiaCove Nerd Font"), which GDI+ silently swaps for a generic
+    // proportional fallback — corrupting measurement and painting. DirectWrite (via SkiaSharp, already a
+    // dependency) knows both, so when a requested family isn't a GDI-installed family we map it to the
+    // GDI-compatible family name DirectWrite reports, but only if that name is itself installed (so a
+    // genuinely missing font still falls through to GDI+'s own fallback rather than being hijacked).
+    private static string ResolveGdiFamily(string family)
+    {
+        if (string.IsNullOrEmpty(family) || s_installedFamilies.Value.Contains(family))
+        {
+            return family;
+        }
+
+        return s_familyAliases.GetOrAdd(family, static requested =>
+        {
+            try
+            {
+                using var typeface = SKTypeface.FromFamilyName(requested);
+                string? resolved = typeface?.FamilyName;
+                if (!string.IsNullOrEmpty(resolved) &&
+                    !string.Equals(resolved, requested, StringComparison.OrdinalIgnoreCase) &&
+                    s_installedFamilies.Value.Contains(resolved))
+                {
+                    return resolved;
+                }
+            }
+            catch (Exception)
+            {
+                // SkiaSharp unavailable or threw — leave GDI+ to do its own (proportional) fallback.
+            }
+
+            return requested;
+        });
+    }
+
+    private static readonly Lazy<HashSet<string>> s_installedFamilies = new(() =>
+    {
+        using var installed = new InstalledFontCollection();
+        return installed.Families.Select(f => f.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    });
+
+    private static readonly ConcurrentDictionary<string, string> s_familyAliases =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public IGraphicsBrush CreateSolidBrush(GraphicsColor color)
     {
@@ -163,6 +209,30 @@ public sealed class SystemDrawingGraphicsContext : IGraphicsContext
     public void FillRectangle(IGraphicsBrush brush, float x, float y, float width, float height)
     {
         Graphics.FillRectangle(GetBrush(brush), x, y, width, height);
+    }
+
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            // Image.FromStream keeps a reference to the source stream and reads pixels lazily, so it
+            // would fault once the caller disposes/rewinds the stream. Copy into an owned Bitmap so the
+            // returned image is fully decoded and independent of the stream.
+            using var decoded = Image.FromStream(stream);
+            return new SystemDrawingImage(new Bitmap(decoded));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (image is SystemDrawingImage sdi)
+        {
+            Graphics.DrawImage(sdi.Image, x, y, width, height);
+        }
     }
 
     public static GraphicsRectF FromRectangleF(RectangleF rect)

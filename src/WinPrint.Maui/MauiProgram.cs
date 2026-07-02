@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
-using Velopack;
 using WinPrint.Core.Models;
+
 #if WINDOWS
+using Microsoft.Maui.Handlers;
 using WinPrint.Core.Services;
 #endif
 
@@ -21,13 +22,6 @@ public static class MauiProgram
 
     public static MauiApp CreateMauiApp()
     {
-#if !MACCATALYST
-        // Velopack's locator throws PlatformNotSupportedException on MacCatalyst (it
-        // doesn't recognize the platform). The Mac app is installed/updated via the
-        // Homebrew cask instead, so only hook Velopack up elsewhere (Windows).
-        VelopackApp.Build().Run();
-#endif
-
         // Capture the *invocation* CWD before we change it below, so relative file
         // arguments passed on the command line can be resolved against the directory
         // the user launched the app from rather than the install directory. Prefer
@@ -43,18 +37,18 @@ public static class MauiProgram
         }
 
 #if WINDOWS
-        // Initialize services (same as WinForms Program.cs)
+        // Initialize services for the Windows head.
         ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
 #endif
 
-        // Parse command-line arguments using same Options model as WinForms/CLI.
+        // Parse command-line arguments using the same Options model as the CLI.
         // macOS may inject non-winprint args (e.g. -psn_… when launched from Finder);
         // those simply fail to parse and WithParsed never fires, which is fine.
         string[] args = [.. Environment.GetCommandLineArgs().Skip(1)];
         if (args.Length > 0)
         {
             var parser = new Parser(with => with.EnableDashDash = true);
-            parser.ParseArguments<Options>(args)
+            parser.ParseArguments<CommandLineOptions>(args)
                 .WithParsed(o =>
                 {
                     // Resolve relative file paths against the launch CWD, not the
@@ -66,7 +60,7 @@ public static class MauiProgram
                             .ToList();
                     }
 
-                    ModelLocator.Current.Options.CopyPropertiesFrom(o);
+                    o.ApplyTo(ModelLocator.Current.Options);
                     Log.Information("MAUI Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
                 });
             parser.Dispose();
@@ -80,6 +74,48 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
+
+#if MACCATALYST
+        builder.ConfigureMauiHandlers(handlers =>
+        {
+            // The preview must be able to take keyboard focus (see FocusablePlatformGraphicsView).
+            handlers.AddHandler<GraphicsView, FocusableGraphicsViewHandler>();
+
+            // Render Picker as a native Mac pop-up button — MAUI's UIPickerView crashes in the
+            // Mac idiom (#133).
+            handlers.AddHandler<Picker, MacPickerHandler>();
+        });
+#endif
+
+#if WINDOWS
+        builder.ConfigureMauiHandlers(_ =>
+        {
+            ButtonHandler.Mapper.AppendToMapping("CompactDesktopLayout", (handler, _) =>
+            {
+                handler.PlatformView.MinHeight = 0;
+                handler.PlatformView.Padding = new Microsoft.UI.Xaml.Thickness(6, 2, 6, 2);
+            });
+
+            CheckBoxHandler.Mapper.AppendToMapping("CompactDesktopLayout", (handler, _) =>
+            {
+                handler.PlatformView.MinWidth = 0;
+                handler.PlatformView.MinHeight = 0;
+                handler.PlatformView.Padding = new Microsoft.UI.Xaml.Thickness(0);
+            });
+
+            EntryHandler.Mapper.AppendToMapping("CompactDesktopLayout", (handler, _) =>
+            {
+                handler.PlatformView.MinHeight = 0;
+                handler.PlatformView.Padding = new Microsoft.UI.Xaml.Thickness(4, 0, 4, 0);
+            });
+
+            PickerHandler.Mapper.AppendToMapping("CompactDesktopLayout", (handler, _) =>
+            {
+                handler.PlatformView.MinHeight = 0;
+                handler.PlatformView.Padding = new Microsoft.UI.Xaml.Thickness(4, 0, 4, 0);
+            });
+        });
+#endif
 
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddSingleton<MainPage>();
