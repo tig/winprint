@@ -2,25 +2,17 @@
 
 ## Windows
 
-### Install with Scoop (Recommended)
+### Install with winget (Recommended)
 
-[Scoop](https://scoop.sh) installs from a bucket we own, so it needs no app-store approval and works
-the moment a release ships. One install gives you both the `wp` terminal UI (on your `PATH`) and the
-**WinPrint** GUI (Start-Menu shortcut):
-
-```powershell
-scoop bucket add winprint https://github.com/kindel/scoop-winprint
-scoop install winprint
-```
-
-Don't have Scoop yet? Install it first (no admin required):
+[winget](https://learn.microsoft.com/windows/package-manager/winget/) ships with Windows 10/11, so
+there's nothing to install first (no admin required — the package installs per-user). One install
+gives you both the `wp` terminal UI (on your `PATH`) and the **WinPrint** GUI (Start-Menu shortcut):
 
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+winget install Kindel.WinPrint
 ```
 
-Only the x64 build is published via Scoop today.
+Only the x64 build is published via winget today.
 
 ### Install from GitHub Releases (download the installer)
 
@@ -40,18 +32,10 @@ updater for future versions.
 > reads *Kindel, LLC*). It fades as each release accumulates downloads. To proceed: in Edge, on the
 > download choose **••• → Keep**, then **Show more → Keep anyway**; if Windows prompts at launch,
 > click **More info → Run anyway** and confirm the publisher is *Kindel, LLC*. Installing via
-> **Scoop** (above) avoids this prompt entirely.
+> **winget** (above) avoids this prompt entirely.
 
 > Prefer a no-installer copy? The same release also ships **`Kindel.WinPrint-win-x64-Portable.zip`**
-> — unzip it anywhere and run `WinPrint.exe` (GUI) or `current\wp.exe` (TUI). This is the same
-> artifact Scoop uses.
-
-### Install with winget (coming soon)
-
-`winget install Kindel.WinPrint` isn't available yet — the package is pending its first submission to
-the Microsoft [winget-pkgs](https://github.com/microsoft/winget-pkgs) community repository. Until
-that lands, use **Scoop** or the **GitHub Releases** installer above. This page will be updated when
-winget goes live.
+> — unzip it anywhere and run `WinPrint.exe` (GUI) or `current\wp.exe` (TUI).
 
 ### Prerequisites
 
@@ -59,13 +43,13 @@ No additional prerequisites are required on Windows. WinPrint is a self-containe
 
 ### Upgrade
 
-- **Scoop:** `scoop update winprint`
+- **winget:** `winget upgrade Kindel.WinPrint`
 - **Installer / Portable:** installed builds include a built-in updater that pulls new versions
   automatically; you can also re-download the latest `Setup.exe` and run it over the top.
 
 ### Uninstall
 
-- **Scoop:** `scoop uninstall winprint`
+- **winget:** `winget uninstall Kindel.WinPrint`
 - **Installer:** use **Settings → Apps → Installed apps**, search for "WinPrint", and uninstall — or
   delete the unzipped folder if you used the portable zip.
 

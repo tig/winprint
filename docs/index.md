@@ -22,9 +22,9 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 ## Quick Start
 
 ```bash
-# Install (Windows) — Scoop gives you the GUI + `wp` TUI in one command
-scoop bucket add winprint https://github.com/kindel/scoop-winprint && scoop install winprint
-# (or download Kindel.WinPrint-win-x64-Setup.exe from the latest GitHub release; winget coming soon)
+# Install (Windows) — winget gives you the GUI + `wp` TUI in one command
+winget install Kindel.WinPrint
+# (or download Kindel.WinPrint-win-x64-Setup.exe from the latest GitHub release)
 
 # Install (Mac) — GUI cask, which also bundles the `wp` TUI
 brew tap kindel/winprint && brew install winprint
