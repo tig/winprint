@@ -87,12 +87,16 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    each so the re-render reads.
 8. **Open `README.md`** (renders as Markdown -- the "not just source code" beat). Same as step 5, with the
    README's path. Dwell ~1.4 s.
-9. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. The printer defaults
-   to **Microsoft Print to PDF**. Click the toolbar **Print** button (`🖨 Print…`). Find the save dialog with
-   `windows { "window": "Save Print Output As", "timeout": 5000 }` and use its **live** bounds (it does not
-   always open at the same spot -- a hardcoded pixel is what made an earlier take miss the field); `query`
-   for the filename `Edit` + **Save** button, `click` the field, type the PDF path with `chars:` (doubled
-   backslashes), `click` **Save**. Assert the PDF now exists.
+9. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Select the printer
+   explicitly -- do NOT assume the default.** WinPrint restores the saved/system-default printer and
+   `PrintOrchestrator.PrintAsync` prints to `viewModel.SelectedPrinter`, so on a machine whose default is not
+   **Microsoft Print to PDF** the job goes elsewhere and the save-dialog wait times out. `query` the sidebar
+   **Printer** `ComboBox` (bottom-left), `click` it, and `invoke`/`click` the **Microsoft Print to PDF**
+   item; re-`query` to confirm it reads that. Then click the toolbar **Print** button (`🖨 Print…`). Find the
+   save dialog with `windows { "window": "Save Print Output As", "timeout": 5000 }` and use its **live**
+   bounds (it does not always open at the same spot -- a hardcoded pixel is what made an earlier take miss
+   the field); `query` for the filename `Edit` + **Save** button, `click` the field, type the PDF path with
+   `chars:` (doubled backslashes), `click` **Save**. Assert the PDF now exists.
 10. **Hold**, then **stop and write the GIF.** `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }`
     (absolute path -- a relative one lands in the controller's temp copy and is lost). Assert `result.frames`
     (~25) and `result.bytes` (~3 MB).
