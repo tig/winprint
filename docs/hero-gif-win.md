@@ -1,0 +1,131 @@
+# Recreating the Windows GUI hero (`docs/hero-gui-win.gif`)
+
+`docs/hero-gui-win.gif` is the Windows half of the README's side-by-side GUI hero (the macOS half is
+`docs/hero-gui-mac.gif`). It is **MCEC driving installed WinPrint** through the print-preview story and
+recording the window as a GIF:
+
+> launch -> load `SheetViewModel.cs` (2-up landscape, line numbers) -> toggle **Line Numbers** -> toggle
+> **Landscape** (reflow to 1-up portrait and back) -> open `README.md` as **Markdown** -> **Print to PDF** ->
+> hold on the result.
+
+Unlike the MCEC hero, the on-screen command **overlay is OFF** here: the MCEC hero narrates with the
+overlay because it is dogfooding MCEC, but this hero's marketing subject is **WinPrint**, so the window is
+shown clean, with no narration.
+
+## How it is made
+
+This reuses MCEC's agent-driven flow; **read
+[mcec's `docs/hero-gif.md`](https://github.com/tig/mcec/blob/develop/docs/hero-gif.md) first** -- it owns
+the MCP mechanics (standing up the controller, the double-wrapped result envelope, integer pixels, absolute
+paths, the keyboard primitives, teardown). This page only adds the **WinPrint-specific** parts.
+
+Differences from the MCEC hero:
+
+- The subject is your **installed WinPrint**, launched by exe path -- so there is **no `provision-session` /
+  `end-session` of the subject**, and nothing to reap. Only the disposable MCEC **controller** is torn down.
+- The **overlay is disabled** (see the controller-config note below).
+- **Window placement/sizing is done with the mouse** (drag the title bar to move, drag a sizing border to
+  resize) -- there is no move/resize tool. For the hero, WinPrint's default position is fine as-is.
+
+The agent connects to the controller and drives WinPrint with `launch`, `windows`, `query`, `click`,
+`drag`, `record`, `capture`, and `send_command`.
+
+## Setup (the only script lives in the mcec repo)
+
+There is **no hero script in this repo**. Stand up the controller from a clone of
+[tig/mcec](https://github.com/tig/mcec):
+
+```powershell
+# from the mcec repo root
+pwsh -NoProfile -File scripts/Generate-HeroGif.ps1     # prints HERO_MCP_URL=http://127.0.0.1:<port>/mcp
+# ... drive the playbook below ...
+pwsh -NoProfile -File scripts/Generate-HeroGif.ps1 -Stop
+```
+
+**Controller config for this hero.** `Generate-HeroGif.ps1` is tuned for the *MCEC* hero: overlay ON, and
+only ~10 commands enabled. For the WinPrint hero, adjust the throwaway controller it stands up (its temp
+dir is `%TEMP%\mcec-hero-controller-*`):
+
+- **`mcec.settings`**: set `<CommandOverlayEnabled>false</CommandOverlayEnabled>` (overlay is read at
+  startup, so relaunch the controller's `mcec.exe` after editing).
+- **`mcec.commands`**: enable the commands the tour uses beyond the bootstrap's set --
+  **`windows`** (dialog discovery, issue #77) and the `send_input` VK builtins **`right` / `down` / `enter`
+  / `run`** (the `mcec.commands` file is hot-reloaded by the controller's file watcher). Ideally the mcec
+  bootstrap grows a `-NoOverlay` switch and enables these by default (an mcec-side improvement).
+
+**Prerequisites (operator):** an **unlocked, interactive Windows session** (real injected mouse/keyboard)
+and **WinPrint installed** at `%LOCALAPPDATA%\Kindel.WinPrint\current\winprint.exe` (Velopack/winget; do not
+build from source for the hero).
+
+## The playbook (the agent drives, all via MCEC's MCP tools)
+
+Send **integer** pixels. For envelope-unwrapping, keyboard primitives, and the JSON-RPC driver, follow
+mcec's `hero-gif.md`. Two WinPrint-specific input rules:
+
+- **Paths go through `chars:` with DOUBLED backslashes.** `chars:` runs `Regex.Unescape` on its argument,
+  so a raw `C:\Users\...\tig\...` gets mangled (`\t` becomes a TAB). Send `C:\\Users\\...\\tig\\...`.
+- **`chars:` is text; `send_input` (VK builtins) is a keydown.** Use `chars:` for filenames; use the VK
+  builtins (`right`, `down`, `enter`, `run`, ...) for keys/shortcuts.
+
+1. **Screen size.** `displays` -> primary `bounds` as `SX, SY, SW, SH`.
+2. **Clear the backdrop.** Win+D (`shiftdown:lwin` + `d` + `shiftup:lwin`) so only WinPrint is in frame.
+3. **Launch WinPrint.** `launch { "path": "<abs %LOCALAPPDATA%>\\Kindel.WinPrint\\current\\winprint.exe",
+   "timeout": 8000 }` -> `result.handle`. Drive by that `handle`. Wait ~2 s for the window + preview.
+4. **Read its bounds.** `query { "handle": <handle>, "maxDepth": 1 }` (or `windows { "process": "winprint" }`)
+   -> `WX, WY, WW, WH`.
+5. **Load `SheetViewModel.cs`.** Click WinPrint's **File** button (its UIA name is `📂 File…`, so match by
+   bounds). Find the Open dialog with `windows { "window": "Open", "timeout": 5000 }` (classic `#32770`),
+   `query` it for the **File name** `Edit` and the **Open** button (`automationId:"1"`), `click` the field,
+   `send_command { "command": "chars:<doubled-backslash abs path>" }`, then `click` **Open**. ~1.5 s to render.
+6. **Start recording -- the window only** (no overlay band to include):
+   `record { "action": "start", "x": WX-8, "y": WY-8, "width": WW+16, "height": WH+16, "fps": 2,
+   "maxWidth": 820 }`. Then `capture { "handle": <handle> }` and dwell ~0.9 s. (Syntax-highlighted code is a
+   worst case for the GIF palette; `fps:2`/`maxWidth:820` lands ~2.8 MB. See Tuning.)
+7. **Toggle Line Numbers, then Landscape.** Each is a sidebar **label** (its `TapGestureRecognizer` flips the
+   bound checkbox; no automation id -- target its bounding rectangle). Click **Line Numbers** twice (gutter
+   off, then on) and **Landscape** twice (reflow to 1-up portrait, then back to 2-up landscape), ~1 s dwell
+   each so the re-render reads.
+8. **Open `README.md`** (renders as Markdown -- the "not just source code" beat). Same as step 5, with the
+   README's path. Dwell ~1.4 s.
+9. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. The printer defaults
+   to **Microsoft Print to PDF**. Click the toolbar **Print** button (`🖨 Print…`). Find the save dialog with
+   `windows { "window": "Save Print Output As", "timeout": 5000 }` and use its **live** bounds (it does not
+   always open at the same spot -- a hardcoded pixel is what made an earlier take miss the field); `query`
+   for the filename `Edit` + **Save** button, `click` the field, type the PDF path with `chars:` (doubled
+   backslashes), `click` **Save**. Assert the PDF now exists.
+10. **Hold**, then **stop and write the GIF.** `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }`
+    (absolute path -- a relative one lands in the controller's temp copy and is lost). Assert `result.frames`
+    (~25) and `result.bytes` (~3 MB).
+11. **Tidy.** Close WinPrint; tear down the controller: `pwsh -NoProfile -File scripts/Generate-HeroGif.ps1 -Stop`.
+
+**Zoom/pan is intentionally omitted.** The macOS hero and the choreography spec include a zoom/pan flourish,
+but WinPrint's zoom (`+`/`-`/`0`) only fires when its MAUI `FocusablePlatformGraphicsView` has keyboard
+focus, and a synthetic MCEC `click` does not set that focus -- so even a correct `VK_OEM_PLUS` keydown never
+reaches the zoom handler. Restore this beat if MCEC gains a focus-setting click (or WinPrint exposes a zoom
+control).
+
+## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
+
+- **`chars:` paths need doubled backslashes** (see above) -- the single most common way a load/save silently
+  does nothing.
+- **Open/Save are classic `#32770` dialogs** (title **Open** / **Save Print Output As**), each with a real
+  **File name** `Edit`. Discover them (and their live bounds) with `windows`; don't hardcode a pixel.
+- **Settings are sidebar labels, not checkboxes** -- click the **label** (no automation id; target by
+  bounding rectangle).
+- **Close the PDF viewer** if you add an open-the-PDF beat, or its file lock blocks the next run's delete of
+  `winprintdemo.pdf`.
+
+## Verify, then commit
+
+Spot-check keyframes (extract with the snippet in mcec's `hero-gif.md`). Confirm the story is legible: the
+2-up landscape load, the Line Numbers gutter toggling, the Landscape reflow to portrait and back, the
+`README.md` Markdown render, and the save-to-PDF dialog. It must sit convincingly beside `hero-gui-mac.gif`
+in the README (same sample, same story, matched width). Commit `docs/hero-gui-win.gif` on the operator's
+say-so.
+
+## Tuning size
+
+File size ~= frame count x frame area, and syntax-highlighted code is a GIF worst case: `fps:4`/`maxWidth:1102`
+produced **~17 MB**, while `fps:2`/`maxWidth:820` produced **~2.8 MB** (near the macOS hero's ~1.7 MB) with the
+tour still legible. Lower `fps`/`maxWidth` or trim dwells to shrink; raise them to enrich. Keep it in the
+same ballpark as `hero-gui-mac.gif` so the README pair matches.

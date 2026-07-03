@@ -10,7 +10,7 @@ not done. Hold every hero to the bar set by the TUI hero (the richest of the thr
 | TUI (`wp`) | `docs/hero-tui.gif` | `wp <file>` in a terminal | `scripts/record-hero-gifs.sh` (tuirec) |
 | Headless print | `docs/hero-print.gif` | `wp print … --what-if` | `scripts/record-hero-gifs.sh` (tuirec) |
 | GUI on macOS | `docs/hero-gui-mac.gif` | Mac Catalyst `winprint` | `scripts/capture-gui-hero-macos.py` |
-| GUI on Windows | `docs/hero-gui-win.gif` | Installed WinPrint (Start Menu) | `scripts/Generate-WinPrint-HeroGif.ps1` (MCEC MCP; see [`docs/winprint-hero-gif.md`](winprint-hero-gif.md)) |
+| GUI on Windows | `docs/hero-gui-win.gif` | Installed WinPrint, driven by MCEC | agent-driven MCEC MCP tour; see [`docs/hero-gif-win.md`](hero-gif-win.md) |
 
 All heroes use the same sample file — `src/WinPrint.Core/ViewModels/SheetViewModel.cs` —
 so the three front ends are visibly rendering the *same* document. The README GUI section
@@ -50,45 +50,13 @@ linger; the zoom/pan flourish stays fast.
 
 ## Regenerating the Windows GUI hero
 
-Requires an **unlocked, interactive Windows session** (real injected mouse/keyboard), **MCEC
-installed** (`winget install Kindel.mcec` when published, or setup.exe until then), and **WinPrint
-installed** so Start Menu search finds it. Full prerequisites and choreography:
-[`docs/winprint-hero-gif.md`](winprint-hero-gif.md) (issue [#84](https://github.com/tig/mcec/issues/84)).
-
-```powershell
-# From this repo root — produces docs/hero-gui-win.gif in one shot via MCEC record.
-pwsh -NoProfile -File scripts/Generate-WinPrint-HeroGif.ps1
-
-# Dev MCEC build (clipboard tool not yet in a release):
-pwsh -NoProfile -File scripts/Generate-WinPrint-HeroGif.ps1 `
-  -McecInstallDir C:\path\to\mcec\src\bin\Debug\net10.0-windows
-```
-
-Evidence bundles land under `artifacts/customer1/`. The legacy frame-capture path
-(`scripts/capture-gui-hero-windows.ps1` + `scripts/assemble-gui-hero.py`) is deprecated for the
-README hero — it recorded window-only frames without desktop/Start/PDF context.
-
-### Windows capture gotchas (the producer encodes these — don't regress them)
-
-- **Zoom uses the plain TUI-consistent keys** (`=`/`+` in, `-` out, `0` fits). On Windows
-  WinUI sends `VirtualKey` strings that don't match the handler's WPF-style tokens — the OEM
-  `+`/`-` keys arrive as `"187"`/`"189"` and `0` as `"Number0"`/`"NumberPad0"` — so
-  `OnNativeKeyDown` normalizes them to `OemPlus`/`OemMinus`/`D0` before dispatch. (This was a
-  real bug: PR #199 made the GUI accept plain `+/-/0` like the TUI but only built MacCatalyst,
-  so the keys still didn't route on Windows until the normalization landed.)
-- **Reset-to-fit is plain `0`** (matches the TUI's fit key).
-- **Focus the preview with a real mouse click first.** Keys only route when a XAML
-  element has focus; the click on the `FocusablePlatformGraphicsView` both focuses it and
-  forces a re-present. UIA `SetFocus` is unreliable here (it can land on a ComboBox, which
-  then eats arrows/zoom).
-- **Settings toggles are driven by clicking the sidebar *label*** (its `TapGestureRecognizer`
-  flips the bound `CheckBox`), located via UIA `BoundingRectangle` — there's no automation id.
-- **The Open dialog has no UIA-settable filename field.** It's the modern `IFileOpenDialog`:
-  autoid `1148`/`1` are Panes, and cross-process `ValuePattern.SetValue` times out. The
-  filename field has focus on open, so the producer pastes the path from the clipboard
-  (`Set-Clipboard` + `Ctrl`+V) and presses Enter.
-- **Screenshots use `PrintWindow` + `PW_RENDERFULLCONTENT`** (WinUI3 composition); see
-  `.claude/skills/run-maui-app/scripts/Capture-Window.ps1`.
+The Windows hero is **agent-driven**: MCEC drives installed WinPrint over MCP through the full
+choreography and records the desktop region — there is **no producer script in this repo**. The whole
+recipe (stand up the MCEC controller from the mcec repo, then the numbered WinPrint tour) lives in
+[`docs/hero-gif-win.md`](hero-gif-win.md). Requires an **unlocked, interactive Windows session** and
+**WinPrint installed** (Velopack/winget). The legacy frame-capture path
+(`scripts/capture-gui-hero-windows.ps1` + `scripts/assemble-gui-hero.py`) is deprecated for the README
+hero — it recorded window-only frames without desktop/PDF context.
 
 ## Regenerating the macOS GUI hero
 

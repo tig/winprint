@@ -104,12 +104,12 @@ The full spec — what each hero must show off, the producer scripts, and the sa
   toggle Landscape, fast zoom→pan→reset, then open a different file), mirroring the TUI hero's
   energy. The old macOS page/page/arrow choreography is the weak baseline — **don't copy it.**
 - All heroes render the **same** sample (`src/WinPrint.Core/ViewModels/SheetViewModel.cs`).
-- **Windows GUI:** `scripts/Generate-WinPrint-HeroGif.ps1` — MCEC drives an **installed** WinPrint
-  from the Start Menu through settings/zoom, Print to PDF, and open PDF; records a **desktop region**
-  GIF (`docs/hero-gui-win.gif`). Needs an **unlocked interactive session**, MCEC installed, WinPrint
-  installed. See [`docs/winprint-hero-gif.md`](docs/winprint-hero-gif.md). Legacy
-  `capture-gui-hero-windows.ps1` + `assemble-gui-hero.py` is deprecated for the README hero.
-  README shows Windows + macOS side by side.
+- **Windows GUI:** **agent-driven, no script in this repo** — MCEC drives **installed** WinPrint over
+  MCP through settings/zoom, Print to PDF, and open PDF, recording a **desktop region** GIF
+  (`docs/hero-gui-win.gif`). Needs an **unlocked interactive session** and WinPrint installed; the MCEC
+  controller is stood up from the mcec repo's `scripts/Generate-HeroGif.ps1`. See
+  [`docs/hero-gif-win.md`](docs/hero-gif-win.md). Legacy `capture-gui-hero-windows.ps1` +
+  `assemble-gui-hero.py` is deprecated for the README hero. README shows Windows + macOS side by side.
 
 ## Content Type Engines (CTEs)
 CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
