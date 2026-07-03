@@ -73,11 +73,22 @@ smoke-runs the packaged `wp.exe` (`scripts/Test-WindowsVelopackShortcut.ps1`, cu
 **Homebrew (the free distribution path).** Tap = `kindel/homebrew-winprint`, pushed by the release
 `brew` job (needs the `HOMEBREW_TAP_TOKEN` PAT; a missing-token skip now *fails* loudly). TWO
 artifacts in the tap:
-- **Formula** `winprint` → the `wp` TUI (Linux + CLI-only macOS).
+- **Formula** `wp` → the `wp` TUI (Linux + CLI-only macOS).
 - **Cask** `winprint` → the MAUI GUI, which **also embeds `wp`** at `WinPrint.app/Contents/Helpers/wp`
   (release.yml copies the self-contained CLI in *before* signing; a `binary` stanza symlinks it onto
   PATH), so one cask install gives GUI + `wp`. Both provide `wp`, so installing formula + cask
   collides on the symlink — pick one on macOS (casks **cannot** declare `conflicts_with formula:`).
+- **The `wp` formula carries an `x86_64_linux` bottle** (issue #211). `wp` compiles nothing — the
+  "install" just extracts the prebuilt AOT tarball — but Homebrew treats a *bottle-less* formula as a
+  source build and **refuses it on any host with no C compiler** (fresh containers, minimal WSL). The
+  bottle makes `brew install` *pour* a prebuilt tree, so toolchain-less Linux installs cleanly. Bottles
+  are **formula-only**, so this does **not** touch the cask or the GUI+TUI dual install. The `brew` job
+  source-builds the bottle on ubuntu-latest (it has gcc), uploads `wp-<ver>.x86_64_linux.bottle.tar.gz`
+  to the release, renders its SHA into the formula, then **pour-tests** it (guards on `Pouring`) before
+  pushing. **Only `x86_64_linux` is tagged**: every other platform has NO tag and keeps installing from
+  the `url` blocks (macOS has Clang; arm64 Linux source-builds). **Never declare a bottle tag without
+  publishing + pour-testing its file** — a declared-but-missing bottle hard-fails that platform with no
+  source fallback. (arm64 Linux bottle = follow-up; needs bottling on an arm64 runner.)
 - **Validate a cask by LOADING it, never `ruby -c`.** `ruby -c` checks Ruby *syntax* and happily
   passes invalid cask **DSL** (e.g. `conflicts_with formula:` — that key is cask-only-`cask:`), which
   once shipped a tap cask Homebrew couldn't parse and broke `brew install --cask` for everyone. The
