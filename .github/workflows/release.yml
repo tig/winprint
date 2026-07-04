@@ -98,12 +98,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: |
             8.0.x
@@ -187,7 +187,7 @@ jobs:
 
       - name: Upload TUI tarball
         if: ${{ runner.os != 'Windows' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: wp-${{ matrix.runtime }}
           path: artifacts/cli/wp-${{ matrix.runtime }}.tar.gz
@@ -289,7 +289,7 @@ jobs:
 
       - name: Azure login for Trusted Signing
         if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
-        uses: azure/login@v2
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -473,7 +473,7 @@ jobs:
 
       - name: Upload Velopack artifacts
         if: ${{ runner.os != 'macOS' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: velopack-${{ matrix.runtime }}
           path: artifacts/velopack/${{ matrix.runtime }}/**/*
@@ -481,7 +481,7 @@ jobs:
 
       - name: Upload macOS GUI app zip
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cask-${{ matrix.runtime }}
           path: artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip
@@ -499,12 +499,12 @@ jobs:
 
     steps:
       - name: Download package artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: release-artifacts
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: release-artifacts/**/*
           generate_release_notes: true
@@ -538,7 +538,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Submit to winget-pkgs
-        uses: vedantmgoyal9/winget-releaser@v2
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           identifier: Kindel.WinPrint
           version: ${{ steps.ver.outputs.version }}
@@ -570,7 +570,7 @@ jobs:
           fi
 
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Render formula and push to tap
         shell: bash
