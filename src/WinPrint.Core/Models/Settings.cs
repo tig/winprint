@@ -480,9 +480,6 @@ public class Settings : ModelBase
                     Size = defaultContentFontSize,
                     Style = defaultContentFontStyle
                 },
-                Darkness = 100,
-                Grayscale = false,
-                PrintBackground = true,
                 LineNumbers = false
             }
         };
@@ -526,9 +523,6 @@ public class Settings : ModelBase
                     Size = defaultContentFontSize,
                     Style = defaultContentFontStyle
                 },
-                Darkness = 100,
-                Grayscale = false,
-                PrintBackground = true,
                 LineNumbers = false
             }
         };
