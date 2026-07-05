@@ -613,6 +613,44 @@ public class CteRenderingTests
         Assert.Contains(paint.DrawnStrings, s => s.Text == "diagram");
     }
 
+    [Theory]
+    [InlineData("![spinner](octocat-spinner-32.gif)")]
+    [InlineData("<img src=\"octocat-spinner-32.gif\" alt=\"spinner\" />")]
+    [InlineData("<p><img src=\"octocat-spinner-32.gif\" alt=\"spinner\" /></p>")]
+    public async Task MarkdownCte_RendersImage_FromLocalGif_FirstFrame(string markdown)
+    {
+        string gifPath = FindTestFile("pull request_files/octocat-spinner-32.gif");
+        string gifDir = Path.GetDirectoryName(gifPath)!;
+
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000),
+            SourceFileName = Path.Combine(gifDir, "readme.md")
+        };
+
+        Assert.True(await cte.SetDocumentAsync(markdown + "\n"));
+        int pages = await cte.RenderAsync(Dpi96, null);
+        Assert.True(pages >= 1);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        RecordedImage drawn = Assert.Single(paint.DrawnImages);
+        Assert.True(drawn.Width > 0);
+        Assert.True(drawn.Height > 0);
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("🖼", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task MarkdownCte_CodeBlock_HonorsTabSpacesSetting()
     {
