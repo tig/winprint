@@ -71,6 +71,13 @@ public class Settings : ModelBase
     /// </summary>
     public Dictionary<string, SheetSettings> Sheets { get; set; } = [];
 
+    /// <summary>
+    ///     Content-type id → sheet definition key (GUID string). When a file resolves to this content
+    ///     type and no explicit <c>--sheet</c> override is given, this sheet is applied transiently on
+    ///     open. Missing key falls back to <see cref="DefaultSheet" />.
+    /// </summary>
+    public Dictionary<string, string> DefaultSheetByContentType { get; set; } = [];
+
     [JsonIgnore]
     [SafeForTelemetry]
     public int NumSheets
@@ -320,6 +327,7 @@ public class Settings : ModelBase
         FontStyle defaultHFFontStyle = FontStyle.Bold;
 
         string defaultHeaderText = "{DateRevised:D}|{FileName}|Language: {Language}";
+        string proportionalHeaderText = "{DateRevised:D}|{FileName}|{Language}";
         string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
         var settings = new Settings
@@ -455,6 +463,104 @@ public class Settings : ModelBase
         sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
         settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
 
+        // Proportional 2-Up — sans-serif prose/HTML layout
+        sheet = new SheetSettings
+        {
+            Name = "Proportional 2-Up",
+            Columns = 2,
+            Rows = 1,
+            Landscape = true,
+            Padding = 3,
+            PageSeparator = true,
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font
+                {
+                    Family = sansSerifFamily,
+                    Size = defaultContentFontSize,
+                    Style = defaultContentFontStyle
+                },
+                Darkness = 100,
+                Grayscale = false,
+                PrintBackground = true,
+                LineNumbers = false
+            }
+        };
+        sheet.Header.Enabled = true;
+        sheet.Header.Text = proportionalHeaderText;
+        sheet.Header.BottomBorder = true;
+        sheet.Header.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Header.VerticalPadding = 1;
+        sheet.Footer.Enabled = true;
+        sheet.Footer.TopBorder = true;
+        sheet.Footer.Text = defualtFooterText;
+        sheet.Footer.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Footer.VerticalPadding = 1;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        settings.Sheets.Add(Uuid.ProportionalSheet2Up.ToString(), sheet);
+
+        // Proportional 1-Up — sans-serif prose/HTML layout
+        sheet = new SheetSettings
+        {
+            Name = "Proportional 1-Up",
+            Columns = 1,
+            Rows = 1,
+            Landscape = false,
+            Padding = 3,
+            PageSeparator = true,
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font
+                {
+                    Family = sansSerifFamily,
+                    Size = defaultContentFontSize,
+                    Style = defaultContentFontStyle
+                },
+                Darkness = 100,
+                Grayscale = false,
+                PrintBackground = true,
+                LineNumbers = false
+            }
+        };
+        sheet.Header.Enabled = true;
+        sheet.Header.Text = proportionalHeaderText;
+        sheet.Header.BottomBorder = true;
+        sheet.Header.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Header.VerticalPadding = 1;
+        sheet.Footer.Enabled = true;
+        sheet.Footer.Text = defualtFooterText;
+        sheet.Footer.TopBorder = true;
+        sheet.Footer.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Footer.VerticalPadding = 1;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        settings.Sheets.Add(Uuid.ProportionalSheet1Up.ToString(), sheet);
+
+        settings.DefaultSheetByContentType = new Dictionary<string, string>
+        {
+            ["text/x-markdown"] = Uuid.ProportionalSheet2Up.ToString(),
+            ["text/html"] = Uuid.ProportionalSheet2Up.ToString()
+        };
+
         settings.FileTypeMapping = new FileTypeMapping
         {
             FilesAssociations = new Dictionary<string, string>
@@ -515,6 +621,15 @@ public class Settings : ModelBase
         Size = src.Size is null ? null : new WindowSize(src.Size.Width, src.Size.Height);
         WindowState = src.WindowState;
         DefaultSheet = src.DefaultSheet;
+        DefaultSheetByContentType.Clear();
+        if (src.DefaultSheetByContentType is not null)
+        {
+            foreach (KeyValuePair<string, string> entry in src.DefaultSheetByContentType)
+            {
+                DefaultSheetByContentType[entry.Key] = entry.Value;
+            }
+        }
+
         DefaultContentType = src.DefaultContentType;
         DefaultCteClassName = src.DefaultCteClassName;
         DefaultSyntaxHighlighterCteNameClassName = src.DefaultSyntaxHighlighterCteNameClassName;
