@@ -71,10 +71,10 @@ internal sealed class SaveSheetDialogPage : ContentPage
         };
         _newName.TextChanged += (_, _) => UpdateButtons();
 
-        _createButton = MakeButton("Create", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Create));
-        Button cancelButton = MakeButton("Cancel", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Cancel));
-        Button dontSaveButton = MakeButton("Don't Save", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.DontSave));
-        _saveButton = MakeButton("Save", DialogPalette.Accent, Colors.White, (_, _) => Complete(SaveSheetChoice.Save));
+        _createButton = DialogButton.Make("Create", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Create));
+        Button cancelButton = DialogButton.Make("Cancel", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Cancel));
+        Button dontSaveButton = DialogButton.Make("Don't Save", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.DontSave));
+        _saveButton = DialogButton.Make("Save", DialogPalette.Accent, Colors.White, (_, _) => Complete(SaveSheetChoice.Save));
 
         Grid newNameRow = new()
         {
@@ -156,26 +156,5 @@ internal sealed class SaveSheetDialogPage : ContentPage
     {
         _saveButton.IsEnabled = SelectedIndex >= 0;
         _createButton.IsEnabled = NewName.Length > 0;
-    }
-
-    /// <summary>
-    ///     A native <see cref="Button" /> with explicit colors. Native (rather than a tap-only Border pill) so
-    ///     the actions keep the button role, tab focus, and Enter/Space activation — the prompt can be opened
-    ///     from a keyboard close (Alt+F4/⌘Q). Explicit colors keep it legible on the white card regardless of
-    ///     the OS theme (issue #216); the app-wide Button style sets no colors, so nothing overrides these.
-    /// </summary>
-    private static Button MakeButton(string text, Color background, Color foreground, EventHandler onClick)
-    {
-        var button = new Button
-        {
-            Text = text,
-            BackgroundColor = background,
-            TextColor = foreground,
-            FontSize = UiFonts.SidebarFontSize,
-            Padding = new Thickness(18, 8),
-            CornerRadius = 6
-        };
-        button.Clicked += onClick;
-        return button;
     }
 }

@@ -16,10 +16,11 @@ namespace WinPrint.Maui.Views;
 ///     one consistent dialog, presented as a centered card over a dimmed backdrop. Await
 ///     <see cref="Completion" /> for the chosen <c>(Family, Size, Style)</c>, or <c>null</c> if cancelled.
 ///     <para>
-///         Toggles and buttons are tap-driven <see cref="Border" />+<see cref="Label" /> affordances so they
-///         render and theme consistently on the white card across platforms — a plain <see cref="CheckBox" />
-///         is near-invisible here and a custom-colored <see cref="Button" /> looks washed-out under Mac
-///         Catalyst.
+///         The toggles are tap-driven <see cref="Border" />+<see cref="Label" /> affordances so they render
+///         and theme consistently on the white card (a plain <see cref="CheckBox" /> is near-invisible here).
+///         The action buttons are native <see cref="Button" />s with explicit colors (via
+///         <see cref="DialogButton" />) so they stay legible on the card yet keep the button role, tab focus,
+///         and Enter/Space activation (issue #216).
 ///     </para>
 /// </summary>
 internal sealed class FontChooserPage : ContentPage
@@ -48,7 +49,7 @@ internal sealed class FontChooserPage : ContentPage
     private readonly FontStyle _preservedStyleBits;
 
     private string _selectedFamily;
-    private Border? _okButton;
+    private Button? _okButton;
     private bool _fixedPitchOnly;
     private bool _bold;
     private bool _italic;
@@ -316,7 +317,7 @@ internal sealed class FontChooserPage : ContentPage
             Content = _preview
         };
 
-        _okButton = MakePill("OK", AccentColor, Colors.White, () => Complete(BuildResult()));
+        _okButton = DialogButton.Make("OK", AccentColor, Colors.White, (_, _) => Complete(BuildResult()));
 
         var buttonRow = new HorizontalStackLayout
         {
@@ -324,7 +325,7 @@ internal sealed class FontChooserPage : ContentPage
             HorizontalOptions = LayoutOptions.End,
             Children =
             {
-                MakePill("Cancel", FieldColor, InkColor, () => Complete(null)),
+                DialogButton.Make("Cancel", FieldColor, InkColor, (_, _) => Complete(null)),
                 _okButton
             }
         };
@@ -431,33 +432,6 @@ internal sealed class FontChooserPage : ContentPage
         border.GestureRecognizers.Add(tap);
 
         Render();
-        return border;
-    }
-
-    /// <summary>A tap-driven button (Button replacement that renders consistently on Mac Catalyst).</summary>
-    private Border MakePill(string text, Color background, Color foreground, Action onTap)
-    {
-        var label = new Label
-        {
-            Text = text,
-            TextColor = foreground,
-            FontSize = UiFonts.SidebarFontSize,
-            FontAttributes = FontAttributes.Bold,
-            HorizontalTextAlignment = TextAlignment.Center,
-            VerticalTextAlignment = TextAlignment.Center
-        };
-        var border = new Border
-        {
-            BackgroundColor = background,
-            StrokeThickness = 0,
-            StrokeShape = new RoundRectangle { CornerRadius = 6 },
-            Padding = new Thickness(22, 10),
-            Content = label
-        };
-
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += (_, _) => onTap();
-        border.GestureRecognizers.Add(tap);
         return border;
     }
 
