@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Serilog;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 
@@ -53,6 +54,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
     private string? _selectedPrinter;
     private string? _selectedPaperSize;
+
+    private bool _sessionSheetLocked;
+    private bool _explicitSheetFromOptions;
 
     /// <summary>
     ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the preview/reflow
@@ -217,7 +221,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
         if (idx >= 0)
         {
-            SelectSheetByIndex(idx);
+            SelectSheetByIndex(idx, userInitiated: false);
         }
     }
 
@@ -229,7 +233,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     ///     and raises <see cref="SheetApplied"/>.
     /// </summary>
     /// <returns>true if a sheet was applied.</returns>
-    public bool SelectSheetByIndex(int index)
+    public bool SelectSheetByIndex(int index, bool userInitiated = true)
     {
         if (index < 0 || index >= _sheetKeys.Count)
         {
@@ -242,6 +246,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
 
         bool changed = _selectedSheetIndex != index;
+        if (userInitiated && changed)
+        {
+            _sessionSheetLocked = true;
+        }
+
         _selectedSheetIndex = index;
         _currentSheet = sheetSettings;
         if (_changeTracker is not null)
@@ -295,6 +304,16 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Selects a sheet by its persisted settings key (GUID string).
+    /// </summary>
+    public bool TrySelectSheetByGuid(Guid sheetGuid, bool userInitiated = true)
+    {
+        string key = sheetGuid.ToString();
+        int index = _sheetKeys.IndexOf(key);
+        return index >= 0 && SelectSheetByIndex(index, userInitiated);
     }
 
     // ----- Sheet definition save / create (exit prompt) -----
@@ -515,6 +534,19 @@ public sealed class AppViewModel : INotifyPropertyChanged
             return true;
         }
 
+        bool openingNewFile = !string.Equals(filePath, _activeFile, StringComparison.OrdinalIgnoreCase);
+        if (openingNewFile && !_explicitSheetFromOptions)
+        {
+            _sessionSheetLocked = false;
+        }
+
+        if (openingNewFile && !_sessionSheetLocked)
+        {
+            string contentType = ContentTypeEngineBase.GetContentType(filePath);
+            Guid sheetGuid = SheetResolution.ResolveSheetForOpen(Settings, contentType);
+            TrySelectSheetByGuid(sheetGuid, userInitiated: false);
+        }
+
         IsBusy = true;
         StatusText = $"Loading {Path.GetFileName(filePath)}...";
 
@@ -553,6 +585,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
         finally
         {
+            if (_explicitSheetFromOptions)
+            {
+                _explicitSheetFromOptions = false;
+            }
+
             IsBusy = false;
         }
     }
@@ -910,7 +947,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
         // Apply sheet first so subsequent overrides land on the right sheet.
         if (!string.IsNullOrEmpty(options.Sheet))
         {
-            SelectSheetByNameOrId(options.Sheet);
+            if (SelectSheetByNameOrId(options.Sheet))
+            {
+                _explicitSheetFromOptions = true;
+                _sessionSheetLocked = true;
+            }
         }
 
         // --landscape / --portrait. Suppress reflow until file load.

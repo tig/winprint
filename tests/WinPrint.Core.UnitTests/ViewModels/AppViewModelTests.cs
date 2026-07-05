@@ -1,6 +1,7 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
+using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
@@ -32,6 +33,12 @@ public class AppViewModelTests : TestServicesBase
         }
 
         live.DefaultSheet = fresh.DefaultSheet;
+        live.DefaultSheetByContentType.Clear();
+        foreach (KeyValuePair<string, string> entry in fresh.DefaultSheetByContentType)
+        {
+            live.DefaultSheetByContentType[entry.Key] = entry.Value;
+        }
+
         live.LastPrinter = null;
         live.LastPaperSize = null;
         live.WindowState = FormWindowState.Normal;
@@ -502,6 +509,187 @@ public class AppViewModelTests : TestServicesBase
 
         Assert.False(ok);
         Assert.StartsWith("Error:", vm.StatusText);
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_Markdown_SelectsProportional2Up()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_sheet_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Hello\n\nWorld.");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+            Assert.Equal("Proportional 2-Up", vm.SheetNames[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_Html_SelectsProportional2Up()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_html_sheet_{Guid.NewGuid():N}.html");
+        await File.WriteAllTextAsync(file, "<p>Hello</p>");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_Mhtml_SelectsProportional2Up()
+    {
+        string? file = FindMhtmlFixture();
+        Assert.True(file is not null, "Could not locate testfiles/pull request.mhtml");
+
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+        Assert.True(await vm.LoadFileAsync(file!));
+        Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_UnmappedContentType_UsesSettingsDefaultSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_txt_sheet_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(file, "hello");
+
+        try
+        {
+            Settings live = ModelLocator.Current.Settings;
+            live.DefaultSheet = Uuid.DefaultSheet1Up;
+
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.DefaultSheet1Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_DoesNotPersistSettingsDefaultSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_persist_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            Guid persistedDefault = ModelLocator.Current.Settings.DefaultSheet;
+
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+            Assert.Equal(persistedDefault, ModelLocator.Current.Settings.DefaultSheet);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_ExplicitSheetOverride_IgnoresContentTypeMap()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_override_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            vm.ApplyOptions(new Options { Sheet = "Default 2-Up" });
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_UserSheetChoice_SurvivesRefresh()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_refresh_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+
+            int default2UpIndex = -1;
+            for (int i = 0; i < vm.SheetKeys.Count; i++)
+            {
+                if (string.Equals(vm.SheetKeys[i], Uuid.DefaultSheet.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    default2UpIndex = i;
+                    break;
+                }
+            }
+
+            Assert.True(default2UpIndex >= 0);
+            vm.SelectSheetByIndex(default2UpIndex);
+
+            Assert.True(await vm.RefreshAsync());
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    private static string? FindMhtmlFixture()
+    {
+        DirectoryInfo? dir = new(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            string candidate = Path.Combine(dir.FullName, "testfiles", "pull request.mhtml");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     [Fact]
