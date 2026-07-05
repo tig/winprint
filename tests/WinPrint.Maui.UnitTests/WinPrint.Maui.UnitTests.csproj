@@ -33,6 +33,7 @@
         <Compile Include="..\..\src\WinPrint.Maui\Views\PreviewGeometry.cs" Link="Linked\PreviewGeometry.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Views\DialogPalette.cs" Link="Linked\DialogPalette.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Views\DialogReadablePair.cs" Link="Linked\DialogReadablePair.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Views\DialogCardSizing.cs" Link="Linked\DialogCardSizing.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\FontSizeParser.cs" Link="Linked\FontSizeParser.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Packaging\WindowsUserPath.cs" Link="Linked\WindowsUserPath.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Services\StaTaskRunner.cs" Link="Linked\StaTaskRunner.cs" />

@@ -220,27 +220,11 @@ internal sealed class FontChooserPage : ContentPage
         }
     }
 
+    // Centered card over the dimmed backdrop, clamped to the window so a short window doesn't clip the
+    // buttons off the bottom (issue #216).
     private Grid BuildCard()
     {
-        var card = new Border
-        {
-            BackgroundColor = CardColor,
-            Stroke = HintColor,
-            StrokeThickness = 1,
-            StrokeShape = new RoundRectangle { CornerRadius = 10 },
-            Padding = new Thickness(18),
-            Margin = new Thickness(24),
-            WidthRequest = 580,
-            HeightRequest = 600,
-            HorizontalOptions = LayoutOptions.Center,
-            VerticalOptions = LayoutOptions.Center,
-            Content = BuildBody()
-        };
-
-        // The page fills the window; the dimmed background + centered card read as a modal dialog.
-        var root = new Grid();
-        root.Add(card);
-        return root;
+        return DialogModalCard.Build(this, BuildBody(), preferredWidth: 580, preferredHeight: 600);
     }
 
     private Grid BuildBody()

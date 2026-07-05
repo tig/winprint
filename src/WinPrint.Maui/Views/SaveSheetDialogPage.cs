@@ -106,7 +106,6 @@ internal sealed class SaveSheetDialogPage : ContentPage
 
         Grid root = new()
         {
-            Padding = new Thickness(16),
             RowSpacing = 12,
             RowDefinitions =
             {
@@ -121,23 +120,10 @@ internal sealed class SaveSheetDialogPage : ContentPage
         root.Add(newNameRow, 0, 2);
         root.Add(buttonRow, 0, 3);
 
-        // Present as a centered card over a dimmed backdrop (matching the font chooser) rather than a
-        // full-screen modal page.
+        // Present as a centered card over a dimmed backdrop (matching the font chooser), clamped to the
+        // window so a short window doesn't clip the buttons off the bottom (issue #216).
         BackgroundColor = DialogPalette.Backdrop;
-        Border card = new()
-        {
-            BackgroundColor = DialogPalette.Card,
-            Stroke = DialogPalette.Hint,
-            StrokeThickness = 1,
-            StrokeShape = new RoundRectangle { CornerRadius = 10 },
-            Margin = new Thickness(24),
-            WidthRequest = 480,
-            HeightRequest = 460,
-            HorizontalOptions = LayoutOptions.Center,
-            VerticalOptions = LayoutOptions.Center,
-            Content = root
-        };
-        Content = new Grid { card };
+        Content = DialogModalCard.Build(this, root, preferredWidth: 480, preferredHeight: 460);
 
         UpdateButtons();
     }
