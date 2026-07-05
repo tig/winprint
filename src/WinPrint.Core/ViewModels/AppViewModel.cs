@@ -222,7 +222,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
         if (idx >= 0)
         {
-            SelectSheetByIndex(idx, userInitiated: false);
+            SelectSheetByIndex(idx, false);
         }
     }
 
@@ -553,7 +553,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         {
             string contentType = ContentTypeEngineBase.GetContentType(filePath);
             Guid sheetGuid = SheetResolution.ResolveSheetForOpen(Settings, contentType);
-            if (TrySelectSheetByGuid(sheetGuid, userInitiated: false))
+            if (TrySelectSheetByGuid(sheetGuid, false))
             {
                 _transientContentTypeSheetSelection = true;
             }
