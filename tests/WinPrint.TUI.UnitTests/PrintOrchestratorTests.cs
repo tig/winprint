@@ -1,6 +1,7 @@
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.TUI;
 using Xunit;
 
@@ -14,7 +15,7 @@ public class PrintOrchestratorTests
         string file = Path.Combine(Path.GetTempPath(), $"wp_tui_print_{Guid.NewGuid():N}.txt");
         await File.WriteAllTextAsync(file, "hello\nworld\n");
 
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         SheetSettings sheet = settings.Sheets[settings.DefaultSheet.ToString()];
         var originalMargins = (PrintMargins)sheet.Margins.Clone();
         try

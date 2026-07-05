@@ -369,7 +369,7 @@ public class SheetViewModel : ViewModelBase
         LogService.TraceMessage($"{newSheet.Name}");
         // TODO: Add font info 
         // TODO: Add header footer details (borders etc...). 
-        ServiceLocator.Current.TelemetryService.TrackEvent("Set Sheet Settings", newSheet.GetTelemetryDictionary());
+        WinPrintServices.Current.TelemetryService.TrackEvent("Set Sheet Settings", newSheet.GetTelemetryDictionary());
 
         if (newSheet is null)
         {
@@ -385,7 +385,7 @@ public class SheetViewModel : ViewModelBase
 
         _sheet = newSheet;
         Landscape = newSheet.Landscape;
-        DiagnosticRulesFont = (Font)ModelLocator.Current!.Settings.DiagnosticRulesFont.Clone();
+        DiagnosticRulesFont = (Font)WinPrintServices.Current!.Settings.DiagnosticRulesFont.Clone();
         Rows = newSheet.Rows;
         Columns = newSheet.Columns;
         Padding = newSheet.Padding;
@@ -833,19 +833,19 @@ public class SheetViewModel : ViewModelBase
     public SheetSettings FindSheet(string sheetName, out string sheetID)
     {
         SheetSettings? sheet = null;
-        if (ModelLocator.Current.Settings == null)
+        if (WinPrintServices.Current.Settings == null)
         {
             throw new InvalidOperationException("Find Sheet failed. Settings are invalid.");
         }
 
-        sheetID = ModelLocator.Current.Settings.DefaultSheet.ToString();
+        sheetID = WinPrintServices.Current.Settings.DefaultSheet.ToString();
         if (!string.IsNullOrEmpty(sheetName) &&
             !sheetName.Equals("default", StringComparison.InvariantCultureIgnoreCase))
         {
-            if (!ModelLocator.Current.Settings.Sheets.TryGetValue(sheetName, out sheet))
+            if (!WinPrintServices.Current.Settings.Sheets.TryGetValue(sheetName, out sheet))
             {
                 // Wasn't a GUID or isn't valid
-                KeyValuePair<string, SheetSettings> s = ModelLocator.Current.Settings.Sheets
+                KeyValuePair<string, SheetSettings> s = WinPrintServices.Current.Settings.Sheets
                     .Where(s => s.Value.Name.Equals(sheetName, StringComparison.InvariantCultureIgnoreCase))
                     .FirstOrDefault();
 
@@ -860,7 +860,7 @@ public class SheetViewModel : ViewModelBase
         }
         else
         {
-            sheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(sheetID);
+            sheet = WinPrintServices.Current.Settings.Sheets.GetValueOrDefault(sheetID);
         }
 
         return sheet ?? throw new InvalidOperationException($"Sheet definiton not found ({sheetName}).");
@@ -885,7 +885,7 @@ public class SheetViewModel : ViewModelBase
                     break;
 
                 case "DiagnosticRulesFont":
-                    DiagnosticRulesFont = ModelLocator.Current.Settings.DiagnosticRulesFont;
+                    DiagnosticRulesFont = WinPrintServices.Current.Settings.DiagnosticRulesFont;
                     break;
 
                 case "Rows":
@@ -1247,7 +1247,7 @@ public class SheetViewModel : ViewModelBase
             // Move origin to page's x & y
             g.TranslateTransform(xPos, yPos);
 
-            if (ModelLocator.Current.Settings.PrintPageBounds || ModelLocator.Current.Settings.PreviewPageBounds)
+            if (WinPrintServices.Current.Settings.PrintPageBounds || WinPrintServices.Current.Settings.PreviewPageBounds)
             {
                 PaintPageNum(g, pageOnSheet);
             }
@@ -1314,7 +1314,7 @@ public class SheetViewModel : ViewModelBase
                         GraphicsUnit.Point);
                 string msg =
                     $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
-                ServiceLocator.Current.TelemetryService.TrackEvent("Margins of of bounds",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Margins of of bounds",
                     new Dictionary<string, string?> { ["Message"] = msg });
                 SizeF size = g.MeasureString(msg, font);
                 using var fmt = new StringFormat(StringFormat.GenericDefault)
@@ -1344,7 +1344,7 @@ public class SheetViewModel : ViewModelBase
     /// <param name="pageNum"></param>
     internal void PaintPageNum(Graphics g, int pageNum)
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
 
         System.Drawing.Font font;
 
@@ -1384,7 +1384,7 @@ public class SheetViewModel : ViewModelBase
     /// <param name="g"></param>
     internal void PaintRules(Graphics g)
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         bool preview = g.PageUnit != GraphicsUnit.Display;
         System.Drawing.Font font;
         if (g.PageUnit == GraphicsUnit.Display)

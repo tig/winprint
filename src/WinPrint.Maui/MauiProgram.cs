@@ -38,7 +38,7 @@ public static class MauiProgram
 
 #if WINDOWS
         // Initialize services for the Windows head.
-        ServiceLocator.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
+        WinPrintServices.Current.TelemetryService.Start(AppDomain.CurrentDomain.FriendlyName);
 #endif
 
         // Parse command-line arguments using the same Options model as the CLI.
@@ -60,7 +60,7 @@ public static class MauiProgram
                             .ToList();
                     }
 
-                    o.ApplyTo(ModelLocator.Current.Options);
+                    o.ApplyTo(WinPrintServices.Current.Options);
                     Log.Information("MAUI Command Line: {cmd}", Parser.Default.FormatCommandLine(o));
                 });
             parser.Dispose();
@@ -120,8 +120,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddSingleton<MainPage>();
 #if WINDOWS
-        builder.Services.AddSingleton(_ => ServiceLocator.Current);
-        builder.Services.AddSingleton(_ => ModelLocator.Current!);
+        builder.Services.AddSingleton(_ => WinPrintServices.Current);
 #endif
 
 #if DEBUG
