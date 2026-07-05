@@ -72,7 +72,7 @@ internal static class DialogPalette
 
     private static double RelativeLuminance(Color color)
     {
-        return (0.2126 * Linearize(color.Red)) + (0.7152 * Linearize(color.Green)) + (0.0722 * Linearize(color.Blue));
+        return 0.2126 * Linearize(color.Red) + 0.7152 * Linearize(color.Green) + 0.0722 * Linearize(color.Blue);
     }
 
     private static double Linearize(double channel)

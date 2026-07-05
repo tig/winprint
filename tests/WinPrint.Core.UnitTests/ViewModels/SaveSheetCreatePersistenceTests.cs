@@ -25,7 +25,7 @@ public class SaveSheetCreatePersistenceTests : TestServicesBase
     [Fact]
     public void CreateNew_WritesEditedFontToNewProfileOnDisk_AndRevertsOriginal()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
         string currentKey = settings.DefaultSheet.ToString();
         string originalFamily = settings.Sheets[currentKey].ContentSettings!.Font.Family;
 

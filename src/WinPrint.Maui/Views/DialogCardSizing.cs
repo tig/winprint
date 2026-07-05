@@ -30,6 +30,6 @@ internal static class DialogCardSizing
         }
 
         double max = Math.Max(preferred, MinLength);
-        return Math.Clamp(available - (2 * Margin), MinLength, max);
+        return Math.Clamp(available - 2 * Margin, MinLength, max);
     }
 }

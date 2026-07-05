@@ -71,10 +71,14 @@ internal sealed class SaveSheetDialogPage : ContentPage
         };
         _newName.TextChanged += (_, _) => UpdateButtons();
 
-        _createButton = DialogButton.Make("Create", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Create));
-        Button cancelButton = DialogButton.Make("Cancel", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Cancel));
-        Button dontSaveButton = DialogButton.Make("Don't Save", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.DontSave));
-        _saveButton = DialogButton.Make("Save", DialogPalette.Accent, Colors.White, (_, _) => Complete(SaveSheetChoice.Save));
+        _createButton = DialogButton.Make("Create", DialogPalette.Field, DialogPalette.Ink,
+            (_, _) => Complete(SaveSheetChoice.Create));
+        Button cancelButton = DialogButton.Make("Cancel", DialogPalette.Field, DialogPalette.Ink,
+            (_, _) => Complete(SaveSheetChoice.Cancel));
+        Button dontSaveButton = DialogButton.Make("Don't Save", DialogPalette.Field, DialogPalette.Ink,
+            (_, _) => Complete(SaveSheetChoice.DontSave));
+        _saveButton = DialogButton.Make("Save", DialogPalette.Accent, Colors.White,
+            (_, _) => Complete(SaveSheetChoice.Save));
 
         Grid newNameRow = new()
         {
@@ -122,7 +126,7 @@ internal sealed class SaveSheetDialogPage : ContentPage
         // Present as a centered card over a dimmed backdrop (matching the font chooser), clamped to the
         // window so a short window doesn't clip the buttons off the bottom (issue #216).
         BackgroundColor = DialogPalette.Backdrop;
-        Content = DialogModalCard.Build(this, root, preferredWidth: 480, preferredHeight: 460);
+        Content = DialogModalCard.Build(this, root, 480, 460);
 
         UpdateButtons();
     }

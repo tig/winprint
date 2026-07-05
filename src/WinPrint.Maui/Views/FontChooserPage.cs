@@ -224,7 +224,7 @@ internal sealed class FontChooserPage : ContentPage
     // buttons off the bottom (issue #216).
     private Grid BuildCard()
     {
-        return DialogModalCard.Build(this, BuildBody(), preferredWidth: 580, preferredHeight: 600);
+        return DialogModalCard.Build(this, BuildBody(), 580, 600);
     }
 
     private Grid BuildBody()
