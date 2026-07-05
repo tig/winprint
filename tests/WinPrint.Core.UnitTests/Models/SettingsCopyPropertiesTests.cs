@@ -12,7 +12,7 @@ public class SettingsCopyPropertiesTests
         var source = Settings.CreateDefaultSettings();
         source.DefaultSheetByContentType = null!;
 
-        var exception = Record.Exception(() => target.CopyPropertiesFrom(source));
+        Exception? exception = Record.Exception(() => target.CopyPropertiesFrom(source));
 
         Assert.Null(exception);
     }

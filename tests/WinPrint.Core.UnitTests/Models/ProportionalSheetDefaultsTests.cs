@@ -9,7 +9,7 @@ public class ProportionalSheetDefaultsTests
     [Fact]
     public void CreateDefaultSettings_IncludesProportionalSheets()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
 
         Assert.True(settings.Sheets.ContainsKey(Uuid.ProportionalSheet2Up.ToString()));
         Assert.True(settings.Sheets.ContainsKey(Uuid.ProportionalSheet1Up.ToString()));
@@ -37,7 +37,7 @@ public class ProportionalSheetDefaultsTests
     [Fact]
     public void CreateDefaultSettings_SeedsDefaultSheetByContentType()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
 
         Assert.Equal(
             Uuid.ProportionalSheet2Up.ToString(),

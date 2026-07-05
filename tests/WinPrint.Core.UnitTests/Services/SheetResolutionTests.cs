@@ -11,7 +11,7 @@ public class SheetResolutionTests
     [Fact]
     public void ResolveSheetForOpen_Markdown_ReturnsProportional2Up()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
 
         Guid sheet = SheetResolution.ResolveSheetForOpen(settings, "text/x-markdown");
 
@@ -21,7 +21,7 @@ public class SheetResolutionTests
     [Fact]
     public void ResolveSheetForOpen_Html_ReturnsProportional2Up()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
 
         Guid sheet = SheetResolution.ResolveSheetForOpen(settings, "text/html");
 
@@ -31,7 +31,7 @@ public class SheetResolutionTests
     [Fact]
     public void ResolveSheetForOpen_Mhtml_ReturnsProportional2Up()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
 
         Guid sheet = SheetResolution.ResolveSheetForOpen(settings, ContentTypeEngineBase.GetContentType("page.mht"));
 
@@ -41,7 +41,7 @@ public class SheetResolutionTests
     [Fact]
     public void ResolveSheetForOpen_UnmappedContentType_ReturnsSettingsDefaultSheet()
     {
-        Settings settings = Settings.CreateDefaultSettings();
+        var settings = Settings.CreateDefaultSettings();
         settings.DefaultSheet = Uuid.DefaultSheet1Up;
 
         Guid sheet = SheetResolution.ResolveSheetForOpen(settings, "text/plain");
