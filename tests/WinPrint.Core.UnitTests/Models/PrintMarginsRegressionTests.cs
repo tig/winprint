@@ -1,5 +1,6 @@
 using System.Drawing.Printing;
 using WinPrint.Core;
+using WinPrint.Core.Services;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using Xunit;
@@ -13,7 +14,7 @@ public class PrintMarginsRegressionTests
     {
         // Arrange - simulate what happens during file open
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         SheetSettings sheetSettings = settings.Sheets.Values.First();
@@ -48,7 +49,7 @@ public class PrintMarginsRegressionTests
     {
         // Arrange
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
         var svm = new SheetViewModel();
         SheetSettings sheetSettings = settings.Sheets.Values.First();
 
@@ -71,7 +72,7 @@ public class PrintMarginsRegressionTests
         // 5. PropertyChanged fires for Margins - handler converts to System.Drawing.Printing.Margins
 
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         SheetSettings sheetSettings = settings.Sheets.Values.First();

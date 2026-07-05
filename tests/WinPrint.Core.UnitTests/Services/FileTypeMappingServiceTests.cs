@@ -14,17 +14,17 @@ public class FileTypeMappingServiceTests : TestServicesBase
     [Fact]
     public void TestDefaultConfigFiletypeMappkng()
     {
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         // There are three assocations defined in default .config
         // settings.LanguageAssociations = new FileAssociations() 
         // ...
 
-        Dictionary<string, string> files = ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations;
+        Dictionary<string, string> files = WinPrintServices.Current.Settings.FileTypeMapping.FilesAssociations;
         Assert.NotNull(files);
         Assert.Equal(4, files.Count);
 
@@ -41,17 +41,17 @@ public class FileTypeMappingServiceTests : TestServicesBase
     [Fact]
     public void TestDefaultConfigLanguages()
     {
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         // We define these file types in default settings:
         // text/plain - because it is not defined by Pygments
         // text/ansi- because it is not defined by Pygments
         // icon - Icon is so esoteric it makes a good test
-        FileTypeMapping ftm = ModelLocator.Current.Settings.FileTypeMapping;
+        FileTypeMapping ftm = WinPrintServices.Current.Settings.FileTypeMapping;
         Assert.NotNull(ftm);
         IList<ContentType> langs = ftm.ContentTypes;
         Assert.NotNull(langs);
@@ -77,13 +77,13 @@ public class FileTypeMappingServiceTests : TestServicesBase
     [Fact]
     public void TestLanguages()
     {
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
-        FileTypeMapping ftm = ServiceLocator.Current.FileTypeMappingService.Load();
+        FileTypeMapping ftm = WinPrintServices.Current.FileTypeMappingService.Load();
         Assert.NotNull(ftm);
         IList<ContentType> langs = ftm.ContentTypes;
         Assert.NotNull(langs);

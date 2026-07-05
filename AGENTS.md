@@ -179,15 +179,13 @@ Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim
 > gates trim regressions per RID. The "decisions" below are the design record those changes follow.
 
 Decisions made (design record; most are now implemented):
-- **Status: largely complete.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>` on the TUI are
-  on main; CI `aot-publish` is green. Remaining cleanup: [#215](https://github.com/tig/winprint/issues/215)
-  (remove `ModelLocator`/`ServiceLocator` facades).
+- **Status: complete.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>` on the TUI are on main;
+  CI `aot-publish` is green. Call sites use `WinPrintServices` directly (#215).
 - **Target = cross-platform AOT** (Windows/Linux/macOS), not Windows-only. This requires a
   **non-`System.Drawing` measurement backend** (e.g. SkiaSharp) plugged into the existing
   `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
-- **DI: drop MvvmLight `SimpleIoc`** — **done** (`WinPrintServices` replaces SimpleIoc). **Facade
-  cleanup remains:** `ModelLocator`/`ServiceLocator` are thin wrappers over `WinPrintServices` but
-  still referenced across Core; track in [#215](https://github.com/tig/winprint/issues/215).
+- **DI: drop MvvmLight `SimpleIoc`** — **done** (`WinPrintServices` replaces SimpleIoc and the former
+  `ModelLocator`/`ServiceLocator` facades; #215).
 - **TUI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
 - **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
   (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to
