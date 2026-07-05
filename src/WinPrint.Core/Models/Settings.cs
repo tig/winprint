@@ -340,9 +340,6 @@ public class Settings : ModelBase
                 // This font will be overriddent by Sheet defined fonts (if any)
                 //ContentSettings = new ContentSettings() {
                 //    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
                 //},
                 //LineNumbers = true,
                 //LineNumberSeparator = false,
@@ -359,9 +356,6 @@ public class Settings : ModelBase
             {
                 //ContentSettings = new ContentSettings() {
                 //    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
                 //},
             },
             DefaultSheet = Uuid.DefaultSheet,
@@ -385,10 +379,7 @@ public class Settings : ModelBase
                     Size = defaultContentFontSize,
                     Style = defaultContentFontStyle
                 },
-                Style = "pastie",
-                Darkness = 100,
-                Grayscale = false,
-                PrintBackground = true
+                Style = "pastie"
             }
         };
         sheet.Header.Enabled = true;
@@ -434,9 +425,6 @@ public class Settings : ModelBase
                     Style = defaultContentFontStyle
                 },
                 Style = "pastie",
-                Darkness = 100,
-                Grayscale = false,
-                PrintBackground = true,
                 LineNumberSeparator = true,
                 LineNumbers = true
             }

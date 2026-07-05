@@ -933,21 +933,6 @@ public class SheetViewModel : ViewModelBase
                     reflow = true;
                     break;
 
-                case "PrintBackground":
-                    ContentSettings.PrintBackground = ContentSettings.PrintBackground;
-                    reflow = false;
-                    break;
-
-                case "Grayscale":
-                    ContentSettings.Grayscale = ContentSettings.Grayscale;
-                    reflow = false;
-                    break;
-
-                case "Darkness":
-                    ContentSettings.Darkness = ContentSettings.Darkness;
-                    reflow = false;
-                    break;
-
                 case "LineNumbers":
                     ContentSettings.LineNumbers = ContentSettings.LineNumbers;
                     reflow = true;
