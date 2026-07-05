@@ -12,17 +12,21 @@ namespace WinPrint.Maui.Views;
 ///     spin off a new definition, and Don't Save / Cancel / Save buttons. Await <see cref="Completion" />
 ///     for the user's choice.
 /// </summary>
+/// <remarks>
+///     Presented as a centered card over a dimmed backdrop (matching the font chooser). Because the card is
+///     forced light regardless of the OS theme, every control carries an explicit color from
+///     <see cref="DialogPalette" /> and the buttons are tap-driven <see cref="Border" />+<see cref="Label" />
+///     pills rather than native <see cref="Button" />s — a native button renders washed-out/invisible and
+///     theme-inherited input text is unreadable on the white card (issue #216).
+/// </remarks>
 internal sealed class SaveSheetDialogPage : ContentPage
 {
-    private static readonly Color InkColor = Color.FromArgb("#1C1C1E");
-    private static readonly Color HintColor = Color.FromArgb("#8E8E93");
-
     private readonly TaskCompletionSource<SaveSheetChoice> _completion = new();
     private readonly List<string> _names;
     private readonly CollectionView _list;
     private readonly Entry _newName;
-    private readonly Button _createButton;
-    private readonly Button _saveButton;
+    private readonly Border _createButton;
+    private readonly Border _saveButton;
 
     public SaveSheetDialogPage(IReadOnlyList<SheetDefinitionInfo> definitions, int currentIndex)
     {
@@ -40,7 +44,7 @@ internal sealed class SaveSheetDialogPage : ContentPage
                 Label label = new()
                 {
                     Padding = new Thickness(8, 6),
-                    TextColor = InkColor,
+                    TextColor = DialogPalette.Ink,
                     FontSize = UiFonts.SidebarFontSize
                 };
                 label.SetBinding(Label.TextProperty, ".");
@@ -58,20 +62,20 @@ internal sealed class SaveSheetDialogPage : ContentPage
             UpdateButtons();
         };
 
-        _newName = new Entry { Placeholder = "New definition name", FontSize = UiFonts.SidebarFontSize };
+        _newName = new Entry
+        {
+            Placeholder = "New definition name",
+            BackgroundColor = DialogPalette.Field,
+            TextColor = DialogPalette.Ink,
+            PlaceholderColor = DialogPalette.Hint,
+            FontSize = UiFonts.SidebarFontSize
+        };
         _newName.TextChanged += (_, _) => UpdateButtons();
 
-        _createButton = new Button { Text = "Create", FontSize = UiFonts.SidebarFontSize };
-        _createButton.Clicked += (_, _) => Complete(SaveSheetChoice.Create);
-
-        Button cancelButton = new() { Text = "Cancel", FontSize = UiFonts.SidebarFontSize };
-        cancelButton.Clicked += (_, _) => Complete(SaveSheetChoice.Cancel);
-
-        Button dontSaveButton = new() { Text = "Don't Save", FontSize = UiFonts.SidebarFontSize };
-        dontSaveButton.Clicked += (_, _) => Complete(SaveSheetChoice.DontSave);
-
-        _saveButton = new Button { Text = "Save", FontSize = UiFonts.SidebarFontSize };
-        _saveButton.Clicked += (_, _) => Complete(SaveSheetChoice.Save);
+        _createButton = MakePill("Create", DialogPalette.Field, DialogPalette.Ink, () => Complete(SaveSheetChoice.Create));
+        Border cancelButton = MakePill("Cancel", DialogPalette.Field, DialogPalette.Ink, () => Complete(SaveSheetChoice.Cancel));
+        Border dontSaveButton = MakePill("Don't Save", DialogPalette.Field, DialogPalette.Ink, () => Complete(SaveSheetChoice.DontSave));
+        _saveButton = MakePill("Save", DialogPalette.Accent, Colors.White, () => Complete(SaveSheetChoice.Save));
 
         Grid newNameRow = new()
         {
@@ -85,28 +89,19 @@ internal sealed class SaveSheetDialogPage : ContentPage
         newNameRow.Add(_newName);
         newNameRow.Add(_createButton, 1);
 
-        Grid buttonRow = new()
+        HorizontalStackLayout buttonRow = new()
         {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition { Width = GridLength.Star },
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Auto }
-            },
-            ColumnSpacing = 8
+            Spacing = 8,
+            HorizontalOptions = LayoutOptions.End,
+            Children = { cancelButton, dontSaveButton, _saveButton }
         };
-        buttonRow.Add(new BoxView { Color = Colors.Transparent });
-        buttonRow.Add(cancelButton, 1);
-        buttonRow.Add(dontSaveButton, 2);
-        buttonRow.Add(_saveButton, 3);
 
         Label titleLabel = new()
         {
             Text = "Sheet Definition has changed. Select definition to update.",
             FontSize = UiFonts.SidebarFontSize,
             FontAttributes = FontAttributes.Bold,
-            TextColor = InkColor
+            TextColor = DialogPalette.Ink
         };
 
         Grid root = new()
@@ -128,11 +123,11 @@ internal sealed class SaveSheetDialogPage : ContentPage
 
         // Present as a centered card over a dimmed backdrop (matching the font chooser) rather than a
         // full-screen modal page.
-        BackgroundColor = Color.FromRgba(0, 0, 0, 0.45);
+        BackgroundColor = DialogPalette.Backdrop;
         Border card = new()
         {
-            BackgroundColor = Colors.White,
-            Stroke = HintColor,
+            BackgroundColor = DialogPalette.Card,
+            Stroke = DialogPalette.Hint,
             StrokeThickness = 1,
             StrokeShape = new RoundRectangle { CornerRadius = 10 },
             Margin = new Thickness(24),
@@ -174,7 +169,44 @@ internal sealed class SaveSheetDialogPage : ContentPage
 
     private void UpdateButtons()
     {
-        _saveButton.IsEnabled = SelectedIndex >= 0;
-        _createButton.IsEnabled = NewName.Length > 0;
+        SetPillEnabled(_saveButton, SelectedIndex >= 0);
+        SetPillEnabled(_createButton, NewName.Length > 0);
+    }
+
+    /// <summary>
+    ///     A tap-driven button (native-Button replacement that renders legibly on the white card across
+    ///     platforms; see the type remarks).
+    /// </summary>
+    private static Border MakePill(string text, Color background, Color foreground, Action onTap)
+    {
+        Label label = new()
+        {
+            Text = text,
+            TextColor = foreground,
+            FontSize = UiFonts.SidebarFontSize,
+            FontAttributes = FontAttributes.Bold,
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Center
+        };
+        Border border = new()
+        {
+            BackgroundColor = background,
+            StrokeThickness = 0,
+            StrokeShape = new RoundRectangle { CornerRadius = 6 },
+            Padding = new Thickness(18, 8),
+            Content = label
+        };
+
+        TapGestureRecognizer tap = new();
+        tap.Tapped += (_, _) => onTap();
+        border.GestureRecognizers.Add(tap);
+        return border;
+    }
+
+    // Disabling a pill both blocks its tap (Border.IsEnabled cascades to its gesture recognizers) and dims it.
+    private static void SetPillEnabled(Border pill, bool enabled)
+    {
+        pill.IsEnabled = enabled;
+        pill.Opacity = enabled ? 1 : 0.45;
     }
 }

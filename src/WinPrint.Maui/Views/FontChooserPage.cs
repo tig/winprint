@@ -25,12 +25,13 @@ namespace WinPrint.Maui.Views;
 internal sealed class FontChooserPage : ContentPage
 {
     // Explicit palette so the dialog looks consistent regardless of the OS light/dark theme — the controls
-    // live on a white card.
-    private static readonly Color CardColor = Colors.White;
-    private static readonly Color InkColor = Color.FromArgb("#1C1C1E");
-    private static readonly Color FieldColor = Color.FromArgb("#F2F2F7");
-    private static readonly Color HintColor = Color.FromArgb("#8E8E93");
-    private static readonly Color AccentColor = Color.FromArgb("#0A84FF");
+    // live on a white card. Shared with the save-sheet prompt via DialogPalette so the two dialogs can't
+    // drift apart (issue #216).
+    private static readonly Color CardColor = DialogPalette.Card;
+    private static readonly Color InkColor = DialogPalette.Ink;
+    private static readonly Color FieldColor = DialogPalette.Field;
+    private static readonly Color HintColor = DialogPalette.Hint;
+    private static readonly Color AccentColor = DialogPalette.Accent;
 
     private readonly TaskCompletionSource<(string Family, float Size, string Style)?> _completion = new();
 
@@ -55,7 +56,7 @@ internal sealed class FontChooserPage : ContentPage
 
     public FontChooserPage(string currentFamily, float currentSize, string currentStyle, bool preferFixedPitch)
     {
-        BackgroundColor = Color.FromRgba(0, 0, 0, 0.45);
+        BackgroundColor = DialogPalette.Backdrop;
 
         _allFamilies = WinPrintServices.Current.FontEnumerationService.GetFamilies();
         _selectedFamily = currentFamily;

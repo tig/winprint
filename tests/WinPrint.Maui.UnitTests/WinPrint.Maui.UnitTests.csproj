@@ -15,11 +15,15 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
         <PackageReference Include="xunit" Version="2.9.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <!-- Microsoft.Maui.Graphics is a lightweight standalone package (Color/graphics primitives, no MAUI
+             workload or controls), so a linked graphics-only source file (DialogPalette) compiles here. -->
+        <PackageReference Include="Microsoft.Maui.Graphics" Version="10.0.20" />
     </ItemGroup>
 
     <!-- WinPrint.Maui is a MAUI app head (maccatalyst/windows only) and can't be ProjectReference'd
-         from a plain net10.0 test assembly. Pure, MAUI-free logic from the app is linked in as source
-         so it can be tested cross-platform and in CI (windows-latest). Keep linked files dependency-free. -->
+         from a plain net10.0 test assembly. Pure logic from the app is linked in as source so it can be
+         tested cross-platform and in CI (windows-latest). Keep linked files free of MAUI *controls*; a
+         linked file may use Microsoft.Maui.Graphics primitives (referenced above). -->
     <ItemGroup>
         <ProjectReference Include="..\..\src\WinPrint.Core\WinPrint.Core.csproj" />
     </ItemGroup>
@@ -27,6 +31,8 @@
     <ItemGroup>
         <Compile Include="..\..\src\WinPrint.Maui\CommandLineOptions.cs" Link="Linked\CommandLineOptions.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Views\PreviewGeometry.cs" Link="Linked\PreviewGeometry.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Views\DialogPalette.cs" Link="Linked\DialogPalette.cs" />
+        <Compile Include="..\..\src\WinPrint.Maui\Views\DialogReadablePair.cs" Link="Linked\DialogReadablePair.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\FontSizeParser.cs" Link="Linked\FontSizeParser.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Packaging\WindowsUserPath.cs" Link="Linked\WindowsUserPath.cs" />
         <Compile Include="..\..\src\WinPrint.Maui\Services\StaTaskRunner.cs" Link="Linked\StaTaskRunner.cs" />
