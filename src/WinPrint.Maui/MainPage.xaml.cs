@@ -4,6 +4,7 @@ using Microsoft.UI.Windowing;
 #endif
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.Maui.Services;
 using WinPrint.Maui.ViewModels;
 using WinPrint.Maui.Views;

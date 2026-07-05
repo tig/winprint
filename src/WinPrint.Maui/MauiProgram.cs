@@ -2,10 +2,10 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using Serilog;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 #if WINDOWS
 using Microsoft.Maui.Handlers;
-using WinPrint.Core.Services;
 #endif
 
 namespace WinPrint.Maui;
