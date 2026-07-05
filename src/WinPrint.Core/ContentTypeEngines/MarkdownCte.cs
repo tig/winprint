@@ -2,9 +2,11 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System.Globalization;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Markdig;
 using Markdig.Extensions.Tables;
 using Markdig.Syntax;
@@ -22,9 +24,10 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     bulleted/numbered/nested lists, blockquotes (indented with a bar), fenced/indented code blocks
 ///     (monospace on a shaded background), horizontal rules, and links (colored). Reflow word-wraps
 ///     styled runs into variable-height <see cref="MarkdownLine" />s and paginates by cumulative height.
-///     Images that sit alone in a paragraph (<c>![alt](src)</c>) are decoded and drawn through
-///     <see cref="IGraphicsContext.DrawImage" />, scaled to fit the page; local files (resolved relative
-///     to <see cref="ContentTypeEngineBase.SourceFileName" />), <c>data:</c> URIs, and <c>http(s)</c>
+///     Images that sit alone in a paragraph (<c>![alt](src)</c> or a standalone HTML <c>&lt;img&gt;</c>)
+///     are decoded and drawn through <see cref="IGraphicsContext.DrawImage" />, scaled to fit the page;
+///     GIFs render their first frame. Local files (resolved relative to
+///     <see cref="ContentTypeEngineBase.SourceFileName" />), <c>data:</c> URIs, and <c>http(s)</c>
 ///     URLs are supported. Anything that fails to load (and inline images mixed with text) falls back
 ///     to alt text.
 /// </summary>
@@ -36,6 +39,18 @@ public class MarkdownCte : ContentTypeEngineBase
         new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
     private static readonly HttpClient s_http = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    private static readonly Regex s_htmlImgTagRegex = new(
+        @"<img\b(?<attrs>[^>]*)/?>",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex s_htmlImgAttrRegex = new(
+        @"(?<name>src|alt)\s*=\s*(?:""(?<dq>[^""]*)""|'(?<sq>[^']*)'|(?<uq>[^\s""'/>]+))",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex s_htmlCommentRegex = new(
+        @"<!--.*?-->",
+        RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     /// <summary>Decoded image bytes keyed by source URL/path; null marks a load that failed (don't retry).</summary>
     private readonly Dictionary<string, byte[]?> _imageCache = new(StringComparer.Ordinal);
@@ -254,10 +269,24 @@ public class MarkdownCte : ContentTypeEngineBase
                         quoteDepth > 0 ? QuoteColor : TextColor, indentLevel, quoteDepth,
                         _baseLineHeight * (h.Level <= 2 ? 1.0f : 0.7f));
                     break;
+                case ParagraphBlock p when GetStandaloneHtmlImages(p) is { } htmlImages:
+                    foreach ((string src, string alt) in htmlImages)
+                    {
+                        EmitImage(src, alt, g, fonts, indentLevel, quoteDepth);
+                    }
+
+                    break;
                 case ParagraphBlock p when GetStandaloneImages(p) is { } images:
                     foreach (LinkInline image in images)
                     {
                         EmitImage(image.Url ?? string.Empty, GetInlineText(image), g, fonts, indentLevel, quoteDepth);
+                    }
+
+                    break;
+                case HtmlBlock html when !IsHtmlComment(html):
+                    foreach ((string src, string alt) in ParseHtmlImages(html))
+                    {
+                        EmitImage(src, alt, g, fonts, indentLevel, quoteDepth);
                     }
 
                     break;
@@ -637,26 +666,142 @@ public class MarkdownCte : ContentTypeEngineBase
         return images.Count > 0 ? images : null;
     }
 
+    /// <summary>
+    ///     Returns <c>&lt;img&gt;</c> tags from a paragraph that contains only HTML images and whitespace.
+    /// </summary>
+    private static List<(string Src, string Alt)>? GetStandaloneHtmlImages(ParagraphBlock paragraph)
+    {
+        if (paragraph.Inline is null)
+        {
+            return null;
+        }
+
+        var images = new List<(string Src, string Alt)>();
+        foreach (Inline node in paragraph.Inline)
+        {
+            switch (node)
+            {
+                case HtmlInline html:
+                    foreach ((string src, string alt) in ParseHtmlImgTags(html.Tag))
+                    {
+                        images.Add((src, alt));
+                    }
+
+                    break;
+                case LiteralInline lit when string.IsNullOrWhiteSpace(lit.Content.ToString()):
+                case LineBreakInline:
+                    break;
+                default:
+                    return null;
+            }
+        }
+
+        return images.Count > 0 ? images : null;
+    }
+
+    private static IEnumerable<(string Src, string Alt)> ParseHtmlImages(HtmlBlock block)
+    {
+        if (IsHtmlComment(block))
+        {
+            yield break;
+        }
+
+        foreach ((string src, string alt) in ParseHtmlImgTags(block.Lines.ToString()))
+        {
+            yield return (src, alt);
+        }
+    }
+
+    private static bool IsHtmlComment(HtmlBlock block)
+    {
+        string text = block.Lines.ToString().Trim();
+        return text.StartsWith("<!--", StringComparison.Ordinal)
+               && text.EndsWith("-->", StringComparison.Ordinal);
+    }
+
+    private static string StripHtmlComments(string html)
+    {
+        return s_htmlCommentRegex.Replace(html, string.Empty);
+    }
+
+    private static IEnumerable<(string Src, string Alt)> ParseHtmlImgTags(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            yield break;
+        }
+
+        foreach (Match tag in s_htmlImgTagRegex.Matches(StripHtmlComments(html)))
+        {
+            string attrs = tag.Groups["attrs"].Value;
+            string? src = null;
+            string alt = string.Empty;
+            foreach (Match attr in s_htmlImgAttrRegex.Matches(attrs))
+            {
+                string name = attr.Groups["name"].Value;
+                string value = WebUtility.HtmlDecode(attr.Groups["dq"].Success ? attr.Groups["dq"].Value
+                    : attr.Groups["sq"].Success ? attr.Groups["sq"].Value
+                    : attr.Groups["uq"].Value);
+                if (name.Equals("src", StringComparison.OrdinalIgnoreCase))
+                {
+                    src = value;
+                }
+                else if (name.Equals("alt", StringComparison.OrdinalIgnoreCase))
+                {
+                    alt = value;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(src))
+            {
+                yield return (src, alt);
+            }
+        }
+    }
+
     private async Task PreloadImagesAsync(MarkdownDocument ast)
     {
         foreach (ParagraphBlock paragraph in ast.Descendants<ParagraphBlock>())
         {
-            if (GetStandaloneImages(paragraph) is not { } images)
+            if (GetStandaloneImages(paragraph) is { } images)
+            {
+                foreach (LinkInline image in images)
+                {
+                    await PreloadImageUrlAsync(image.Url ?? string.Empty);
+                }
+            }
+
+            if (GetStandaloneHtmlImages(paragraph) is { } htmlImages)
+            {
+                foreach ((string src, _) in htmlImages)
+                {
+                    await PreloadImageUrlAsync(src);
+                }
+            }
+        }
+
+        foreach (HtmlBlock html in ast.Descendants<HtmlBlock>())
+        {
+            if (IsHtmlComment(html))
             {
                 continue;
             }
 
-            foreach (LinkInline image in images)
+            foreach ((string src, _) in ParseHtmlImages(html))
             {
-                string url = image.Url ?? string.Empty;
-                if (url.Length == 0 || _imageCache.ContainsKey(url))
-                {
-                    continue;
-                }
-
-                _imageCache[url] = await LoadImageBytesAsync(url);
+                await PreloadImageUrlAsync(src);
             }
         }
+    }
+
+    private async Task PreloadImageUrlAsync(string url)
+    {
+        if (url.Length == 0 || _imageCache.ContainsKey(url))
+        {
+            return;
+        }
+
+        _imageCache[url] = await LoadImageBytesAsync(url);
     }
 
     private async Task<byte[]?> LoadImageBytesAsync(string url)
