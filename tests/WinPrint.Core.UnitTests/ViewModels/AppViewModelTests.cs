@@ -576,7 +576,7 @@ public class AppViewModelTests : TestServicesBase
 
         try
         {
-            Settings live = ModelLocator.Current.Settings;
+            Settings live = WinPrintServices.Current.Settings;
             live.DefaultSheet = Uuid.DefaultSheet1Up;
 
             AppViewModel vm = CreateVm();
@@ -600,7 +600,7 @@ public class AppViewModelTests : TestServicesBase
 
         try
         {
-            Guid persistedDefault = ModelLocator.Current.Settings.DefaultSheet;
+            Guid persistedDefault = WinPrintServices.Current.Settings.DefaultSheet;
 
             AppViewModel vm = CreateVm();
             vm.LoadSheets();
@@ -608,11 +608,102 @@ public class AppViewModelTests : TestServicesBase
 
             Assert.True(await vm.LoadFileAsync(file));
             Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
-            Assert.Equal(persistedDefault, ModelLocator.Current.Settings.DefaultSheet);
+            Assert.Equal(persistedDefault, WinPrintServices.Current.Settings.DefaultSheet);
         }
         finally
         {
             File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task PersistExitStateIfChanged_AfterContentTypeAutoSelect_DoesNotPersistSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_exit_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            Guid originalDefault = WinPrintServices.Current.Settings.DefaultSheet;
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+            Assert.False(vm.SelectedSheetDiffersFromDefault);
+
+            int saves = 0;
+            Assert.False(vm.PersistSelectedSheetIfChanged(_ => saves++));
+            Assert.False(vm.PersistExitStateIfChanged(null, null, _ => saves++));
+            Assert.Equal(0, saves);
+            Assert.Equal(originalDefault, WinPrintServices.Current.Settings.DefaultSheet);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task SaveWindowState_AfterContentTypeAutoSelect_DoesNotChangeDefaultSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_window_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        string settingsFile = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
+        try
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = settingsFile;
+
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            Guid originalDefault = WinPrintServices.Current.Settings.DefaultSheet;
+
+            Assert.True(await vm.LoadFileAsync(file));
+            vm.SaveWindowState(0, 0, 800, 600, false);
+
+            Assert.Equal(originalDefault, WinPrintServices.Current.Settings.DefaultSheet);
+        }
+        finally
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(settingsFile))
+            {
+                File.Delete(settingsFile);
+            }
+
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_ExplicitSheetOverride_PersistsAcrossMultipleFiles()
+    {
+        string md = Path.Combine(Path.GetTempPath(), $"wp_md_multi_{Guid.NewGuid():N}.md");
+        string txt = Path.Combine(Path.GetTempPath(), $"wp_txt_multi_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(md, "# Title");
+        await File.WriteAllTextAsync(txt, "plain");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            vm.ApplyOptions(new Options { Sheet = "Default 2-Up" });
+
+            Assert.True(await vm.LoadFileAsync(md));
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+
+            Assert.True(await vm.LoadFileAsync(txt));
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(md);
+            File.Delete(txt);
         }
     }
 

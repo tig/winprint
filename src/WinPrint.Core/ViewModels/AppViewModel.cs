@@ -56,7 +56,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private string? _selectedPaperSize;
 
     private bool _sessionSheetLocked;
-    private bool _explicitSheetFromOptions;
+    private bool _sessionSheetLockedByOptions;
+    private bool _transientContentTypeSheetSelection;
 
     /// <summary>
     ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the preview/reflow
@@ -249,6 +250,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         if (userInitiated && changed)
         {
             _sessionSheetLocked = true;
+            _transientContentTypeSheetSelection = false;
         }
 
         _selectedSheetIndex = index;
@@ -312,8 +314,15 @@ public sealed class AppViewModel : INotifyPropertyChanged
     public bool TrySelectSheetByGuid(Guid sheetGuid, bool userInitiated = true)
     {
         string key = sheetGuid.ToString();
-        int index = _sheetKeys.IndexOf(key);
-        return index >= 0 && SelectSheetByIndex(index, userInitiated);
+        for (int i = 0; i < _sheetKeys.Count; i++)
+        {
+            if (string.Equals(_sheetKeys[i], key, StringComparison.OrdinalIgnoreCase))
+            {
+                return SelectSheetByIndex(i, userInitiated);
+            }
+        }
+
+        return false;
     }
 
     // ----- Sheet definition save / create (exit prompt) -----
@@ -535,16 +544,19 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
 
         bool openingNewFile = !string.Equals(filePath, _activeFile, StringComparison.OrdinalIgnoreCase);
-        if (openingNewFile && !_explicitSheetFromOptions)
+        if (openingNewFile && !_sessionSheetLockedByOptions)
         {
             _sessionSheetLocked = false;
         }
 
-        if (openingNewFile && !_sessionSheetLocked)
+        if (openingNewFile && !_sessionSheetLocked && !_sessionSheetLockedByOptions)
         {
             string contentType = ContentTypeEngineBase.GetContentType(filePath);
             Guid sheetGuid = SheetResolution.ResolveSheetForOpen(Settings, contentType);
-            TrySelectSheetByGuid(sheetGuid, userInitiated: false);
+            if (TrySelectSheetByGuid(sheetGuid, userInitiated: false))
+            {
+                _transientContentTypeSheetSelection = true;
+            }
         }
 
         IsBusy = true;
@@ -585,11 +597,6 @@ public sealed class AppViewModel : INotifyPropertyChanged
         }
         finally
         {
-            if (_explicitSheetFromOptions)
-            {
-                _explicitSheetFromOptions = false;
-            }
-
             IsBusy = false;
         }
     }
@@ -881,9 +888,8 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// <returns><see langword="true" /> if a value changed and settings were saved; otherwise <see langword="false" />.</returns>
     public bool PersistExitStateIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
     {
-        Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
         return WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
-            Settings, printer, paperSize, sheet, save: save);
+            Settings, printer, paperSize, GetDefaultSheetForPersistence(), save: save);
     }
 
     /// <summary>
@@ -898,13 +904,14 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// <returns><see langword="true"/> if the default changed and settings were saved; otherwise <see langword="false"/>.</returns>
     public bool PersistSelectedSheetIfChanged(Action<Settings>? save = null)
     {
-        if (!TryGetSelectedSheetGuid(out Guid selected))
+        Guid? sheet = GetDefaultSheetForPersistence();
+        if (sheet is null)
         {
             return false;
         }
 
         return WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
-            Settings, defaultSheet: selected, save: save);
+            Settings, defaultSheet: sheet, save: save);
     }
 
     /// <summary>
@@ -912,7 +919,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     ///     <see cref="Settings.DefaultSheet"/> (i.e. exiting would change the remembered default).
     /// </summary>
     public bool SelectedSheetDiffersFromDefault =>
-        TryGetSelectedSheetGuid(out Guid selected) && Settings.DefaultSheet != selected;
+        GetDefaultSheetForPersistence() is { } selected && Settings.DefaultSheet != selected;
 
     // Resolve the selected sheet key to a Guid, returning false when nothing is selected or the
     // key is not a Guid (sheet keys are normally the definition's Guid in string form).
@@ -922,6 +929,17 @@ public sealed class AppViewModel : INotifyPropertyChanged
         return _selectedSheetIndex >= 0
                && _selectedSheetIndex < _sheetKeys.Count
                && Guid.TryParse(_sheetKeys[_selectedSheetIndex], out guid);
+    }
+
+    // Content-type auto-selection is transient: do not treat it as the user's remembered default.
+    private Guid? GetDefaultSheetForPersistence()
+    {
+        if (_transientContentTypeSheetSelection)
+        {
+            return null;
+        }
+
+        return TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
     }
 
     // ----- Command-line options -----
@@ -949,8 +967,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
         {
             if (SelectSheetByNameOrId(options.Sheet))
             {
-                _explicitSheetFromOptions = true;
+                _sessionSheetLockedByOptions = true;
                 _sessionSheetLocked = true;
+                _transientContentTypeSheetSelection = false;
             }
         }
 
@@ -1013,13 +1032,11 @@ public sealed class AppViewModel : INotifyPropertyChanged
         WindowSize? size = isMaximized ? null : new WindowSize((int)width, (int)height);
         WindowLocation? location = isMaximized ? null : new WindowLocation((int)x, (int)y);
 
-        Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
-
         WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
             Settings,
             _selectedPrinter,
             _selectedPaperSize,
-            sheet,
+            GetDefaultSheetForPersistence(),
             size,
             location,
             state);

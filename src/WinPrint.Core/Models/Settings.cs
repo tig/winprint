@@ -634,9 +634,12 @@ public class Settings : ModelBase
         WindowState = src.WindowState;
         DefaultSheet = src.DefaultSheet;
         DefaultSheetByContentType.Clear();
-        foreach (KeyValuePair<string, string> entry in src.DefaultSheetByContentType)
+        if (src.DefaultSheetByContentType is not null)
         {
-            DefaultSheetByContentType[entry.Key] = entry.Value;
+            foreach (KeyValuePair<string, string> entry in src.DefaultSheetByContentType)
+            {
+                DefaultSheetByContentType[entry.Key] = entry.Value;
+            }
         }
 
         DefaultContentType = src.DefaultContentType;
