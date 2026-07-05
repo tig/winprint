@@ -11,10 +11,11 @@
 #
 # Usage:
 #   scripts/verify-style.sh              # local: restore + build the target, then check style
-#   scripts/verify-style.sh --ci         # CI: assume already restored/built (adds --no-build/--no-restore)
+#   scripts/verify-style.sh --ci         # CI: skip restore/build (--no-build for jb, --no-restore for format)
 #   scripts/verify-style.sh <path>       # target one .csproj instead of the whole solution —
 #                                        # use this on Linux/Mac, where WinPrint.Maui can't build
 #                                        # (e.g. scripts/verify-style.sh src/WinPrint.Core/WinPrint.Core.csproj)
+#   scripts/verify-style.sh --help       # print this usage and exit
 #
 # WinPrintCleanup is a custom profile (in WinPrint.slnx.DotSettings) = Full Cleanup minus
 # "Optimize usings"/"Shorten references"/"Reorder members". Those fight this solution's
@@ -24,12 +25,17 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Print the usage block (the leading comment lines) and exit.
+usage() { sed -n '3,17p' "$0" | sed 's/^# \{0,1\}//'; }
+
 TARGET="WinPrint.slnx"
 CI=0
 for arg in "$@"; do
   case "$arg" in
-    --ci) CI=1 ;;
-    *)    TARGET="$arg" ;;
+    --ci)          CI=1 ;;
+    -h|--help)     usage; exit 0 ;;
+    --*)           echo "verify-style.sh: unknown option '$arg'" >&2; usage >&2; exit 2 ;;
+    *)             TARGET="$arg" ;;
   esac
 done
 
