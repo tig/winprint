@@ -554,11 +554,11 @@ public class MacrosTests : TestModelsBase
         var macros = new Macros(svm);
 
         // TODO: Mock this out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         foreach (ContentTypeEngineBase cte in ContentTypeEngineBase.GetDerivedClassesCollection())
         {
@@ -578,11 +578,11 @@ public class MacrosTests : TestModelsBase
         var macros = new Macros(svm);
 
         // TODO: Mock out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
         string input;
         string expectedLang;
         string contentType;
@@ -678,11 +678,11 @@ public class MacrosTests : TestModelsBase
         var macros = new Macros(svm);
 
         // TODO: Mock out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         string input = "text/plain";
         (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);

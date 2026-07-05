@@ -49,7 +49,7 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable
     public static AnsiCte Create()
     {
         var engine = new AnsiCte();
-        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.AnsiContentTypeEngineSettings);
+        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.AnsiContentTypeEngineSettings);
         return engine;
     }
 

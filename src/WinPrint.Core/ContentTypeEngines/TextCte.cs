@@ -47,7 +47,7 @@ public class TextCte : ContentTypeEngineBase, IDisposable
     {
         var engine = new TextCte();
         // Populate it with the common settings
-        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextContentTypeEngineSettings);
+        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.TextContentTypeEngineSettings);
         return engine;
     }
 

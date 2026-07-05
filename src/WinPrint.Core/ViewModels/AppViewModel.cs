@@ -102,7 +102,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     public SheetViewModel? SheetViewModel => _sheetVM;
 
     public PrintPageSetup CurrentPageSetup => _pageSetup;
-    public Settings Settings => ModelLocator.Current.Settings;
+    public Settings Settings => WinPrintServices.Current.Settings;
 
     public IReadOnlyList<string> SheetKeys => _sheetKeys;
     public ObservableCollection<string> SheetNames { get; }
@@ -579,7 +579,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
         {
             Log.Error(ex, "AppViewModel.LoadFileAsync failed for {file}", filePath);
             StatusText = $"Error: {ex.Message}";
-            ServiceLocator.Current.TelemetryService.TrackException(ex, true);
+            WinPrintServices.Current.TelemetryService.TrackException(ex, true);
             PreviewInvalidated?.Invoke(this, EventArgs.Empty);
             return false;
         }
@@ -864,7 +864,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// <returns><see langword="true"/> if a value changed and settings were saved; otherwise <see langword="false"/>.</returns>
     public bool PersistPrinterAndPaperIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
     {
-        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+        return WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
             Settings, printer, paperSize, save: save);
     }
 
@@ -882,7 +882,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
     public bool PersistExitStateIfChanged(string? printer, string? paperSize, Action<Settings>? save = null)
     {
         Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
-        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+        return WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
             Settings, printer, paperSize, sheet, save: save);
     }
 
@@ -903,7 +903,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
             return false;
         }
 
-        return ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+        return WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
             Settings, defaultSheet: selected, save: save);
     }
 
@@ -1015,7 +1015,7 @@ public sealed class AppViewModel : INotifyPropertyChanged
 
         Guid? sheet = TryGetSelectedSheetGuid(out Guid selected) ? selected : null;
 
-        ServiceLocator.Current.SettingsService.PersistExitStateIfChanged(
+        WinPrintServices.Current.SettingsService.PersistExitStateIfChanged(
             Settings,
             _selectedPrinter,
             _selectedPaperSize,

@@ -21,14 +21,4 @@ public class FontEnumerationServiceWiringTests
         Assert.IsType<SystemFontEnumerator>(service);
         Assert.NotEmpty(service.GetFamilies());
     }
-
-    [Fact]
-    public void ServiceLocator_ReturnsSameInstanceAsWinPrintServices()
-    {
-        // ServiceLocator is the front-end-facing facade; it must delegate to the one WinPrintServices
-        // singleton so every caller shares the (cached) enumerator.
-        Assert.Same(
-            WinPrintServices.Current.FontEnumerationService,
-            ServiceLocator.Current.FontEnumerationService);
-    }
 }

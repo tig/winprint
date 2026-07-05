@@ -22,10 +22,10 @@ public class AppViewModelTests : TestServicesBase
 {
     public AppViewModelTests(ITestOutputHelper output) : base(output)
     {
-        // Reset the singleton Settings to a known baseline. ModelLocator.Settings is
+        // Reset the singleton Settings to a known baseline. WinPrintServices.Settings is
         // read-only (IoC), so mutate the existing instance in place.
         var fresh = Settings.CreateDefaultSettings();
-        Settings live = ModelLocator.Current.Settings;
+        Settings live = WinPrintServices.Current.Settings;
         live.Sheets.Clear();
         foreach (KeyValuePair<string, SheetSettings> kvp in fresh.Sheets)
         {
@@ -69,7 +69,7 @@ public class AppViewModelTests : TestServicesBase
         Assert.True(vm.SelectedSheetIndex >= 0);
         Assert.NotNull(vm.CurrentSheet);
         Assert.Equal(
-            ModelLocator.Current.Settings.DefaultSheet.ToString(),
+            WinPrintServices.Current.Settings.DefaultSheet.ToString(),
             vm.SheetKeys[vm.SelectedSheetIndex]);
     }
 
@@ -168,9 +168,9 @@ public class AppViewModelTests : TestServicesBase
 
         // Mutating CurrentSheet must mutate the live Settings.Sheets entry.
         string key = vm.SheetKeys[vm.SelectedSheetIndex];
-        bool original = ModelLocator.Current.Settings.Sheets[key].Landscape;
+        bool original = WinPrintServices.Current.Settings.Sheets[key].Landscape;
         vm.CurrentSheet!.Landscape = !original;
-        Assert.Equal(!original, ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.Equal(!original, WinPrintServices.Current.Settings.Sheets[key].Landscape);
     }
 
     [Fact]
@@ -181,11 +181,11 @@ public class AppViewModelTests : TestServicesBase
         string key = vm.SheetKeys[vm.SelectedSheetIndex];
 
         vm.SetLandscape(true);
-        Assert.True(ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.True(WinPrintServices.Current.Settings.Sheets[key].Landscape);
         Assert.True(vm.CurrentPageSetup.Landscape);
 
         vm.SetLandscape(false);
-        Assert.False(ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.False(WinPrintServices.Current.Settings.Sheets[key].Landscape);
         Assert.False(vm.CurrentPageSetup.Landscape);
     }
 
@@ -200,9 +200,9 @@ public class AppViewModelTests : TestServicesBase
         vm.SetColumns(4);
         vm.SetPadding(250);
 
-        Assert.Equal(3, ModelLocator.Current.Settings.Sheets[key].Rows);
-        Assert.Equal(4, ModelLocator.Current.Settings.Sheets[key].Columns);
-        Assert.Equal(250, ModelLocator.Current.Settings.Sheets[key].Padding);
+        Assert.Equal(3, WinPrintServices.Current.Settings.Sheets[key].Rows);
+        Assert.Equal(4, WinPrintServices.Current.Settings.Sheets[key].Columns);
+        Assert.Equal(250, WinPrintServices.Current.Settings.Sheets[key].Padding);
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public class AppViewModelTests : TestServicesBase
         var margins = new PrintMargins(10, 20, 30, 40);
         vm.SetMargins(margins);
 
-        PrintMargins saved = ModelLocator.Current.Settings.Sheets[key].Margins;
+        PrintMargins saved = WinPrintServices.Current.Settings.Sheets[key].Margins;
         Assert.Equal(10, saved.Left);
         Assert.Equal(20, saved.Right);
         Assert.Equal(30, saved.Top);
@@ -239,7 +239,7 @@ public class AppViewModelTests : TestServicesBase
         vm.SetFooterEnabled(true);
         vm.SetFooterText("CUSTOM-F");
 
-        SheetSettings s = ModelLocator.Current.Settings.Sheets[key];
+        SheetSettings s = WinPrintServices.Current.Settings.Sheets[key];
         Assert.False(s.Header.Enabled);
         Assert.Equal("CUSTOM-H", s.Header.Text);
         Assert.True(s.Footer.Enabled);
@@ -383,10 +383,10 @@ public class AppViewModelTests : TestServicesBase
         Assert.True(vm.HasAnyUnsavedSheetChanges);
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
 
             bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, currentIndex) =>
                 Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Save, currentIndex, string.Empty)));
@@ -396,7 +396,7 @@ public class AppViewModelTests : TestServicesBase
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
@@ -417,29 +417,29 @@ public class AppViewModelTests : TestServicesBase
         vm.SelectSheetByIndex(0);
         string displayedKey = vm.SheetKeys[0];
         string otherKey = vm.SheetKeys[1];
-        string displayedName = ModelLocator.Current.Settings.Sheets[displayedKey].Name;
+        string displayedName = WinPrintServices.Current.Settings.Sheets[displayedKey].Name;
 
-        Assert.NotEqual(displayedName, ModelLocator.Current.Settings.Sheets[otherKey].Name);
+        Assert.NotEqual(displayedName, WinPrintServices.Current.Settings.Sheets[otherKey].Name);
 
-        int newRows = ModelLocator.Current.Settings.Sheets[otherKey].Rows + 3;
-        ModelLocator.Current.Settings.Sheets[otherKey].Rows = newRows;
+        int newRows = WinPrintServices.Current.Settings.Sheets[otherKey].Rows + 3;
+        WinPrintServices.Current.Settings.Sheets[otherKey].Rows = newRows;
         vm.SetCurrentSheetDefinition(otherKey);
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
 
             vm.SaveSheetChangesToKey(displayedKey);
 
-            SheetSettings displayed = ModelLocator.Current.Settings.Sheets[displayedKey];
+            SheetSettings displayed = WinPrintServices.Current.Settings.Sheets[displayedKey];
             Assert.Equal(newRows, displayed.Rows); // edits were copied across
             Assert.Equal(displayedName, displayed.Name); // target keeps its own name
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
@@ -461,24 +461,24 @@ public class AppViewModelTests : TestServicesBase
         vm.SetCurrentSheetDefinition(originalKey);
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
 
             string? newKey = vm.CreateSheetDefinition("My New Definition");
 
             Assert.False(string.IsNullOrEmpty(newKey));
-            SheetSettings created = ModelLocator.Current.Settings.Sheets[newKey!];
+            SheetSettings created = WinPrintServices.Current.Settings.Sheets[newKey!];
             Assert.Equal(originalColumns + 2, created.Columns); // the edits live in the new definition
             Assert.Equal("My New Definition", created.Name);
 
             // The original definition is reverted so the edits don't leak into it.
-            Assert.Equal(originalColumns, ModelLocator.Current.Settings.Sheets[originalKey].Columns);
+            Assert.Equal(originalColumns, WinPrintServices.Current.Settings.Sheets[originalKey].Columns);
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
@@ -769,7 +769,7 @@ public class AppViewModelTests : TestServicesBase
         string[] printers = ["Brother", "Canon", "HP"];
 
         // No saved, no default → first.
-        ModelLocator.Current.Settings.LastPrinter = null;
+        WinPrintServices.Current.Settings.LastPrinter = null;
         vm.RestorePrinterSelection(printers, null);
         Assert.Equal("Brother", vm.SelectedPrinter);
 
@@ -778,12 +778,12 @@ public class AppViewModelTests : TestServicesBase
         Assert.Equal("Canon", vm.SelectedPrinter);
 
         // Saved available → saved (wins over default).
-        ModelLocator.Current.Settings.LastPrinter = "HP";
+        WinPrintServices.Current.Settings.LastPrinter = "HP";
         vm.RestorePrinterSelection(printers, "Canon");
         Assert.Equal("HP", vm.SelectedPrinter);
 
         // Saved unavailable → default.
-        ModelLocator.Current.Settings.LastPrinter = "Epson";
+        WinPrintServices.Current.Settings.LastPrinter = "Epson";
         vm.RestorePrinterSelection(printers, "Canon");
         Assert.Equal("Canon", vm.SelectedPrinter);
     }
@@ -795,13 +795,13 @@ public class AppViewModelTests : TestServicesBase
         vm.LoadSheets();
         vm.SelectedPaperSize = "Initial";
 
-        ModelLocator.Current.Settings.LastPaperSize = "A4";
+        WinPrintServices.Current.Settings.LastPaperSize = "A4";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
         Assert.Equal("A4", vm.SelectedPaperSize);
         Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
         Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
 
-        ModelLocator.Current.Settings.LastPaperSize = "Foolscap";
+        WinPrintServices.Current.Settings.LastPaperSize = "Foolscap";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
         Assert.Equal("A4", vm.SelectedPaperSize); // unchanged
     }
@@ -811,8 +811,8 @@ public class AppViewModelTests : TestServicesBase
     {
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
-        ModelLocator.Current.Settings.LastPrinter = "Old";
-        ModelLocator.Current.Settings.LastPaperSize = "Letter";
+        WinPrintServices.Current.Settings.LastPrinter = "Old";
+        WinPrintServices.Current.Settings.LastPaperSize = "Letter";
 
         int saves = 0;
         Settings? saved = null;
@@ -824,9 +824,9 @@ public class AppViewModelTests : TestServicesBase
 
         Assert.True(changed);
         Assert.Equal(1, saves);
-        Assert.Same(ModelLocator.Current.Settings, saved);
-        Assert.Equal("New", ModelLocator.Current.Settings.LastPrinter);
-        Assert.Equal("A4", ModelLocator.Current.Settings.LastPaperSize);
+        Assert.Same(WinPrintServices.Current.Settings, saved);
+        Assert.Equal("New", WinPrintServices.Current.Settings.LastPrinter);
+        Assert.Equal("A4", WinPrintServices.Current.Settings.LastPaperSize);
     }
 
     [Fact]
@@ -834,8 +834,8 @@ public class AppViewModelTests : TestServicesBase
     {
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
-        ModelLocator.Current.Settings.LastPrinter = "Same";
-        ModelLocator.Current.Settings.LastPaperSize = "Letter";
+        WinPrintServices.Current.Settings.LastPrinter = "Same";
+        WinPrintServices.Current.Settings.LastPaperSize = "Letter";
 
         int saves = 0;
         bool changed = vm.PersistPrinterAndPaperIfChanged("Same", "Letter", _ => saves++);
@@ -849,16 +849,16 @@ public class AppViewModelTests : TestServicesBase
     {
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
-        ModelLocator.Current.Settings.LastPrinter = "Keep";
-        ModelLocator.Current.Settings.LastPaperSize = "Letter";
+        WinPrintServices.Current.Settings.LastPrinter = "Keep";
+        WinPrintServices.Current.Settings.LastPaperSize = "Letter";
 
         int saves = 0;
         bool changed = vm.PersistPrinterAndPaperIfChanged(null, "", _ => saves++);
 
         Assert.False(changed);
         Assert.Equal(0, saves);
-        Assert.Equal("Keep", ModelLocator.Current.Settings.LastPrinter);
-        Assert.Equal("Letter", ModelLocator.Current.Settings.LastPaperSize);
+        Assert.Equal("Keep", WinPrintServices.Current.Settings.LastPrinter);
+        Assert.Equal("Letter", WinPrintServices.Current.Settings.LastPaperSize);
     }
 
     [Fact]
@@ -870,13 +870,13 @@ public class AppViewModelTests : TestServicesBase
         vm.SelectedPaperSize = "Letter";
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
             vm.SaveWindowState(100, 200, 1024, 768, false);
 
-            Settings s = ModelLocator.Current.Settings;
+            Settings s = WinPrintServices.Current.Settings;
             Assert.Equal(FormWindowState.Normal, s.WindowState);
             Assert.Equal(100, s.Location!.X);
             Assert.Equal(200, s.Location.Y);
@@ -887,7 +887,7 @@ public class AppViewModelTests : TestServicesBase
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
@@ -902,16 +902,16 @@ public class AppViewModelTests : TestServicesBase
         vm.LoadSheets();
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
 
             // First record normal bounds, then close while maximized.
             vm.SaveNormalBounds(50, 60, 1280, 720);
             vm.SaveWindowState(0, 0, 1920, 1080, true);
 
-            Settings s = ModelLocator.Current.Settings;
+            Settings s = WinPrintServices.Current.Settings;
             Assert.Equal(FormWindowState.Maximized, s.WindowState);
             // Crucially: maximized save MUST NOT overwrite the normal bounds.
             Assert.Equal(50, s.Location!.X);
@@ -921,7 +921,7 @@ public class AppViewModelTests : TestServicesBase
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
@@ -951,8 +951,8 @@ public class AppViewModelTests : TestServicesBase
         Assert.True(changed);
         Assert.True(!vm.SelectedSheetDiffersFromDefault);
         Assert.Equal(1, saves);
-        Assert.Same(ModelLocator.Current.Settings, saved);
-        Assert.Equal(expected, ModelLocator.Current.Settings.DefaultSheet);
+        Assert.Same(WinPrintServices.Current.Settings, saved);
+        Assert.Equal(expected, WinPrintServices.Current.Settings.DefaultSheet);
     }
 
     [Fact]
@@ -979,14 +979,14 @@ public class AppViewModelTests : TestServicesBase
 
         // Simulate an edit to the current sheet so creating a new definition is meaningful.
         string currentKey = vm.SheetKeys[vm.SelectedSheetIndex];
-        ModelLocator.Current.Settings.Sheets[currentKey].Columns += 1;
+        WinPrintServices.Current.Settings.Sheets[currentKey].Columns += 1;
 
         string? key = vm.CreateSheetDefinition("Quattro");
 
         Assert.NotNull(key);
         // The new definition is the persisted default and the active selection, so exiting (which
         // remembers the selected sheet) keeps it as the default rather than reverting to the original.
-        Assert.Equal(Guid.Parse(key!), ModelLocator.Current.Settings.DefaultSheet);
+        Assert.Equal(Guid.Parse(key!), WinPrintServices.Current.Settings.DefaultSheet);
         Assert.False(vm.SelectedSheetDiffersFromDefault);
         Assert.Equal(key, vm.SheetKeys[vm.SelectedSheetIndex]);
         Assert.Equal("Quattro", vm.SheetNames[vm.SelectedSheetIndex]);
@@ -1004,17 +1004,17 @@ public class AppViewModelTests : TestServicesBase
         string expectedKey = vm.SheetKeys[targetIdx];
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
             vm.SaveWindowState(0, 0, 800, 600, false);
 
-            Assert.Equal(Guid.Parse(expectedKey), ModelLocator.Current.Settings.DefaultSheet);
+            Assert.Equal(Guid.Parse(expectedKey), WinPrintServices.Current.Settings.DefaultSheet);
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);

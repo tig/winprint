@@ -1,4 +1,5 @@
 using WinPrint.Core;
+using WinPrint.Core.Services;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
@@ -31,7 +32,7 @@ public class PrintPlannerTests
     private static async Task<SheetViewModel> CreateOneSheetDocumentAsync()
     {
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var sheet = new SheetViewModel();
         SheetSettings sheetSettings = settings.Sheets.Values.First();
