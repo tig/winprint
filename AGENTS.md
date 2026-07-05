@@ -172,36 +172,31 @@ double with a deterministic fixed-pitch measurement model — so the full
 Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
 `WinPrint.Maui` is **out of scope** — MAUI does not support Native AOT.
 
-> **Largely landed (the PR #156 work has merged to main).** `<IsAotCompatible>true</IsAotCompatible>`
-> is set on `WinPrint.Core` (trim analyzers run on every build) and RID-gated `<PublishAot>true</PublishAot>`
-> is set on `WinPrint.TUI` (active only when `RuntimeIdentifier` is set). The Macros hand-rolled
-> resolver, explicit CTE registry, source-gen JSON, and `WinPrintServices` DI container are in.
-> The per-item AOT/trim inventory lives in **[`docs/aot-inventory.md`](docs/aot-inventory.md)**; the
-> "decisions" below are the design record those changes follow.
+> **Largely landed (#66 closed; PR #156 merged).** `<IsAotCompatible>true</IsAotCompatible>` is set on
+> `WinPrint.Core` (trim analyzers run on every build) and RID-gated `<PublishAot>true</PublishAot>` is
+> set on `WinPrint.TUI` (active only when `RuntimeIdentifier` is set). The Macros hand-rolled resolver,
+> explicit CTE registry, source-gen JSON, and `WinPrintServices` DI container are in. CI `aot-publish`
+> gates trim regressions per RID. The "decisions" below are the design record those changes follow.
 
 Decisions made (design record; most are now implemented):
-- **Status: in flight / largely landed.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>`
-  on the TUI are already on main, and most inventory items are cleared. Track remaining work in
-  [`docs/aot-inventory.md`](docs/aot-inventory.md).
+- **Status: largely complete.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>` on the TUI are
+  on main; CI `aot-publish` is green. Remaining cleanup: [#215](https://github.com/tig/winprint/issues/215)
+  (remove `ModelLocator`/`ServiceLocator` facades).
 - **Target = cross-platform AOT** (Windows/Linux/macOS), not Windows-only. This requires a
   **non-`System.Drawing` measurement backend** (e.g. SkiaSharp) plugged into the existing
   `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
-- **DI: drop MvvmLight `SimpleIoc`** (`ModelLocator`/`ServiceLocator`) in favor of **manual
-  construction**. MvvmLight is unmaintained and not trim-annotated. **Migration is partial:**
-  `WinPrintServices` exists, but `ModelLocator` is still used in `WinPrint.Core` (e.g.
-  `ContentTypeEngineBase`, view models) — not yet fully removed.
+- **DI: drop MvvmLight `SimpleIoc`** — **done** (`WinPrintServices` replaces SimpleIoc). **Facade
+  cleanup remains:** `ModelLocator`/`ServiceLocator` are thin wrappers over `WinPrintServices` but
+  still referenced across Core; track in [#215](https://github.com/tig/winprint/issues/215).
 - **TUI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
 - **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
   (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to
   what's actually used.
-- **JSON: move to source-generated `System.Text.Json`** (`JsonSerializerContext`); also replace
-  the reflection-based `Microsoft.Extensions.Configuration` `.Bind()` path.
-- **Update-check: redesign from the ground up and remove `Octokit`** (reflection/JSON-heavy).
+- **JSON: move to source-generated `System.Text.Json`** (`WinPrintJsonSerializerContext`) — **done**.
+- **Update-check: redesign from the ground up and remove `Octokit`** — **done**.
 - **`CommandLineParser`: remove if unused** (verify no real callers, then drop the package).
 
-Other known AOT work (fall out of the spike; see [`docs/aot-inventory.md`](docs/aot-inventory.md)
-for current per-item state):
-- `ModelBase.CopyPropertiesFrom` + `TypeDescriptor.GetProperties` / `GetType().GetProperties()` —
-  annotate with `[DynamicallyAccessedMembers]` or replace with generated/explicit copies.
+Other AOT work from the original spike:
+- `ModelBase.CopyPropertiesFrom` + telemetry — **done** (explicit per-type copies; no reflection).
 - CTE discovery reflection — **done**: replaced by the explicit `ContentTypeEngineRegistry`
   (was `GetTypes()` + `Activator.CreateInstance` in `ContentTypeEngineBase`).
