@@ -2,6 +2,7 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System.Globalization;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -46,6 +47,10 @@ public class MarkdownCte : ContentTypeEngineBase
     private static readonly Regex s_htmlImgAttrRegex = new(
         @"(?<name>src|alt)\s*=\s*(?:""(?<dq>[^""]*)""|'(?<sq>[^']*)'|(?<uq>[^\s""'/>]+))",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex s_htmlCommentRegex = new(
+        @"<!--.*?-->",
+        RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     /// <summary>Decoded image bytes keyed by source URL/path; null marks a load that failed (don't retry).</summary>
     private readonly Dictionary<string, byte[]?> _imageCache = new(StringComparer.Ordinal);
@@ -278,7 +283,7 @@ public class MarkdownCte : ContentTypeEngineBase
                     }
 
                     break;
-                case HtmlBlock html:
+                case HtmlBlock html when !IsHtmlComment(html):
                     foreach ((string src, string alt) in ParseHtmlImages(html))
                     {
                         EmitImage(src, alt, g, fonts, indentLevel, quoteDepth);
@@ -696,8 +701,25 @@ public class MarkdownCte : ContentTypeEngineBase
 
     private static IEnumerable<(string Src, string Alt)> ParseHtmlImages(HtmlBlock block)
     {
-        return ParseHtmlImgTags(block.Lines.ToString());
+        if (IsHtmlComment(block))
+        {
+            yield break;
+        }
+
+        foreach ((string src, string alt) in ParseHtmlImgTags(block.Lines.ToString()))
+        {
+            yield return (src, alt);
+        }
     }
+
+    private static bool IsHtmlComment(HtmlBlock block)
+    {
+        string text = block.Lines.ToString().Trim();
+        return text.StartsWith("<!--", StringComparison.Ordinal)
+               && text.EndsWith("-->", StringComparison.Ordinal);
+    }
+
+    private static string StripHtmlComments(string html) => s_htmlCommentRegex.Replace(html, string.Empty);
 
     private static IEnumerable<(string Src, string Alt)> ParseHtmlImgTags(string html)
     {
@@ -706,7 +728,7 @@ public class MarkdownCte : ContentTypeEngineBase
             yield break;
         }
 
-        foreach (Match tag in s_htmlImgTagRegex.Matches(html))
+        foreach (Match tag in s_htmlImgTagRegex.Matches(StripHtmlComments(html)))
         {
             string attrs = tag.Groups["attrs"].Value;
             string? src = null;
@@ -714,9 +736,9 @@ public class MarkdownCte : ContentTypeEngineBase
             foreach (Match attr in s_htmlImgAttrRegex.Matches(attrs))
             {
                 string name = attr.Groups["name"].Value;
-                string value = attr.Groups["dq"].Success ? attr.Groups["dq"].Value
+                string value = WebUtility.HtmlDecode(attr.Groups["dq"].Success ? attr.Groups["dq"].Value
                     : attr.Groups["sq"].Success ? attr.Groups["sq"].Value
-                    : attr.Groups["uq"].Value;
+                    : attr.Groups["uq"].Value);
                 if (name.Equals("src", StringComparison.OrdinalIgnoreCase))
                 {
                     src = value;
@@ -757,6 +779,11 @@ public class MarkdownCte : ContentTypeEngineBase
 
         foreach (HtmlBlock html in ast.Descendants<HtmlBlock>())
         {
+            if (IsHtmlComment(html))
+            {
+                continue;
+            }
+
             foreach ((string src, _) in ParseHtmlImages(html))
             {
                 await PreloadImageUrlAsync(src);

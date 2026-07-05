@@ -652,6 +652,85 @@ public class CteRenderingTests
     }
 
     [Fact]
+    public async Task MarkdownCte_HtmlCommentWithImg_DoesNotRenderCommentedImage()
+    {
+        string gifPath = FindTestFile("pull request_files/octocat-spinner-32.gif");
+        string gifDir = Path.GetDirectoryName(gifPath)!;
+
+        var measure = new RecordingGraphicsContext();
+        var cte = new MarkdownCte
+        {
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font { Family = "Courier New", Size = 10 },
+                TabSpaces = 4
+            },
+            MeasurementContext = measure,
+            PageSize = new System.Drawing.SizeF(400, 4000),
+            SourceFileName = Path.Combine(gifDir, "readme.md")
+        };
+
+        const string md = "<!-- <img src=\"octocat-spinner-32.gif\" alt=\"hidden\" /> -->\n";
+
+        Assert.True(await cte.SetDocumentAsync(md));
+        int pages = await cte.RenderAsync(Dpi96, null);
+
+        var paint = new RecordingGraphicsContext();
+        for (int p = 1; p <= pages; p++)
+        {
+            cte.PaintPage(paint, p);
+        }
+
+        Assert.Empty(paint.DrawnImages);
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("hidden", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task MarkdownCte_HtmlImg_DecodesEntitiesInSrcAndAlt()
+    {
+        string gifPath = FindTestFile("pull request_files/octocat-spinner-32.gif");
+        string tempDir = Path.Combine(Path.GetTempPath(), "wp213-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string encodedName = "a&b.gif";
+            File.Copy(gifPath, Path.Combine(tempDir, encodedName));
+
+            var measure = new RecordingGraphicsContext();
+            var cte = new MarkdownCte
+            {
+                ContentSettings = new ContentSettings
+                {
+                    Font = new Font { Family = "Courier New", Size = 10 },
+                    TabSpaces = 4
+                },
+                MeasurementContext = measure,
+                PageSize = new System.Drawing.SizeF(400, 4000),
+                SourceFileName = Path.Combine(tempDir, "readme.md")
+            };
+
+            const string md = "<img src=\"a&amp;b.gif\" alt=\"R&amp;D spinner\" />\n";
+
+            Assert.True(await cte.SetDocumentAsync(md));
+            int pages = await cte.RenderAsync(Dpi96, null);
+            Assert.True(pages >= 1);
+
+            var paint = new RecordingGraphicsContext();
+            for (int p = 1; p <= pages; p++)
+            {
+                cte.PaintPage(paint, p);
+            }
+
+            Assert.Single(paint.DrawnImages);
+            Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("🖼", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task MarkdownCte_CodeBlock_HonorsTabSpacesSetting()
     {
         var measure = new RecordingGraphicsContext();
