@@ -21,5 +21,4 @@ public class FontEnumerationServiceWiringTests
         Assert.IsType<SystemFontEnumerator>(service);
         Assert.NotEmpty(service.GetFamilies());
     }
-
 }

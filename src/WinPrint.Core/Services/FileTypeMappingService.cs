@@ -40,7 +40,8 @@ public class FileTypeMappingService
         Debug.Assert(WinPrintServices.Current.Settings.FileTypeMapping.ContentTypes != null);
         if (WinPrintServices.Current.Settings.FileTypeMapping.FilesAssociations != null)
         {
-            foreach (KeyValuePair<string, string> fa in WinPrintServices.Current.Settings.FileTypeMapping.FilesAssociations)
+            foreach (KeyValuePair<string, string> fa in WinPrintServices.Current.Settings.FileTypeMapping
+                         .FilesAssociations)
             {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }

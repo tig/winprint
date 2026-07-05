@@ -1247,7 +1247,8 @@ public class SheetViewModel : ViewModelBase
             // Move origin to page's x & y
             g.TranslateTransform(xPos, yPos);
 
-            if (WinPrintServices.Current.Settings.PrintPageBounds || WinPrintServices.Current.Settings.PreviewPageBounds)
+            if (WinPrintServices.Current.Settings.PrintPageBounds ||
+                WinPrintServices.Current.Settings.PreviewPageBounds)
             {
                 PaintPageNum(g, pageOnSheet);
             }
