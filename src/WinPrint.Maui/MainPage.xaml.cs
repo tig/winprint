@@ -4,6 +4,7 @@ using Microsoft.UI.Windowing;
 #endif
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.Maui.Services;
 using WinPrint.Maui.ViewModels;
 using WinPrint.Maui.Views;
@@ -203,7 +204,7 @@ public partial class MainPage : ContentPage
         SyncWindowTitle();
 
         // Restore saved window size and state.
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
 
         // First set the normal size/location (this is the "restore bounds" if maximized)
         if (settings.Size is { Width: > 0, Height: > 0 } && Window != null)
@@ -511,7 +512,7 @@ public partial class MainPage : ContentPage
     /// </summary>
     private void ApplyCommandLineOptions()
     {
-        Options options = ModelLocator.Current.Options;
+        Options options = WinPrintServices.Current.Options;
         string? file = _viewModel.App.ApplyOptions(options, _viewModel.PrinterNames, _viewModel.PaperSizes);
 
         // Treat startup overrides (e.g. --sheet/--landscape) as the baseline so they aren't mistaken

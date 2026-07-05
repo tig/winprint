@@ -94,7 +94,7 @@ public class SettingsService
                     SettingsFileName);
                 settings = Settings.CreateDefaultSettings();
 
-                ServiceLocator.Current.TelemetryService.TrackEvent("Create Default Settings",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Create Default Settings",
                     settings.GetTelemetryDictionary());
 
                 SaveSettings(settings);
@@ -104,7 +104,7 @@ public class SettingsService
                 Log.Debug("ReadSettings: Deserializing {settingsFileName}", SettingsFileName);
                 settings = LoadSettings();
 
-                ServiceLocator.Current.TelemetryService.TrackEvent("Read Settings",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Read Settings",
                     settings.GetTelemetryDictionary());
             }
         }
@@ -146,8 +146,8 @@ public class SettingsService
     }
 
     /// <summary>
-    ///     Reloads the settings file from disk and applies it to the live <see cref="ModelLocator" />
-    ///     instance (the same propagation the file watcher does), so a save made elsewhere — e.g. the TUI
+    ///     Reloads the settings file from disk and applies it to the live <see cref="WinPrintServices" />
+    ///     settings instance (the same propagation the file watcher does), so a save made elsewhere — e.g. the TUI
     ///     config editor — takes effect immediately (issue #85). Throws if the file can't be parsed; the
     ///     caller is expected to surface that so the user can fix it.
     /// </summary>
@@ -155,14 +155,11 @@ public class SettingsService
     {
         Settings changedSettings = LoadSettings();
 
-        if (ModelLocator.Current?.Settings == null)
-        {
-            // This can happen if settings failed to load when the app started.
-            WinPrintServices.Current.EnsureSettingsInstance();
-        }
+        WinPrintServices services = WinPrintServices.Current;
+        services.EnsureSettingsInstance();
 
         // CopyPropertiesFrom does a deep, property-by-property copy, raising PropertyChanged as it goes.
-        ModelLocator.Current?.Settings.CopyPropertiesFrom(changedSettings);
+        services.Settings.CopyPropertiesFrom(changedSettings);
     }
 
     /// <summary>
@@ -194,20 +191,20 @@ public class SettingsService
     private void ReportUnknownFileError(Exception ex)
     {
         // TODO: Graceful error handling for .config file 
-        ServiceLocator.Current.TelemetryService.TrackException(ex);
+        WinPrintServices.Current.TelemetryService.TrackException(ex);
         Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
     }
 
     private void ReportConfigurationError(InvalidDataException ex)
     {
-        ServiceLocator.Current.TelemetryService.TrackException(ex);
+        WinPrintServices.Current.TelemetryService.TrackException(ex);
         Log.Error(ex, "Error parsing {file}", SettingsFileName);
     }
 
     private void Watcher_ChangedEvent(object? sender, EventArgs e)
     {
         Log.Debug("Settings file changed: {file}", SettingsFileName);
-        ServiceLocator.Current.TelemetryService.TrackEvent("Settings File Changed");
+        WinPrintServices.Current.TelemetryService.TrackEvent("Settings File Changed");
 
         try
         {
@@ -216,7 +213,7 @@ public class SettingsService
         catch (FileNotFoundException fnfe)
         {
             // TODO: Graceful error handling for .config file 
-            ServiceLocator.Current.TelemetryService.TrackException(fnfe);
+            WinPrintServices.Current.TelemetryService.TrackException(fnfe);
             Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
         }
         catch (JsonException jex)
@@ -242,7 +239,7 @@ public class SettingsService
     /// <param name="watchChanges">If true the file change watcher will be activated </param>
     public void SaveSettings(Settings settings, bool saveCTESettings = true, bool watchChanges = false)
     {
-        ServiceLocator.Current.TelemetryService.TrackEvent("Save Settings", settings.GetTelemetryDictionary());
+        WinPrintServices.Current.TelemetryService.TrackEvent("Save Settings", settings.GetTelemetryDictionary());
 
         // Disable file watcher
         if (_watcher != null)
@@ -371,7 +368,7 @@ public class SettingsService
     public static Settings? Create()
     {
         LogService.TraceMessage();
-        Settings? settingsService = ServiceLocator.Current.SettingsService.ReadSettings();
+        Settings? settingsService = WinPrintServices.Current.SettingsService.ReadSettings();
         return settingsService;
     }
 }

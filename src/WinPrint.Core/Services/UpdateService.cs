@@ -111,7 +111,7 @@ public class UpdateService
         {
             ErrorMessage = $"({ReleasePageUri}) {e.Message}";
             Log.Warning("Update: {msg}", ErrorMessage);
-            ServiceLocator.Current.TelemetryService.TrackException(e);
+            WinPrintServices.Current.TelemetryService.TrackException(e);
         }
 
         OnGotLatestVersion(LatestVersion);

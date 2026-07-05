@@ -1,5 +1,6 @@
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
 using WinPrint.TUI;
 using WinPrint.TUI.UnitTests.Testing;
@@ -32,8 +33,8 @@ public class CommandLineFlowTests
     [Fact]
     public void SettingsContext_AppliesEveryOption()
     {
-        // Snapshot/restore the global sheet (ModelLocator singleton) — ApplyOptions mutates it.
-        Settings settings = ModelLocator.Current.Settings;
+        // Snapshot/restore the global sheet (WinPrintServices singleton) — ApplyOptions mutates it.
+        Settings settings = WinPrintServices.Current.Settings;
         SheetSettings def = settings.Sheets[settings.DefaultSheet.ToString()];
         bool landscape = def.Landscape;
         try
@@ -61,7 +62,7 @@ public class CommandLineFlowTests
     [Fact]
     public void PortraitOption_ClearsLandscape()
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         SheetSettings def = settings.Sheets[settings.DefaultSheet.ToString()];
         bool landscape = def.Landscape;
         try
@@ -78,7 +79,7 @@ public class CommandLineFlowTests
     [Fact]
     public void BoundMainView_ReflectsSheetAndRangeFromOptions()
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         SheetSettings def = settings.Sheets[settings.DefaultSheet.ToString()];
         bool landscape = def.Landscape;
         try

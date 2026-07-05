@@ -21,9 +21,22 @@ dotnet test  tests/WinPrint.Core.UnitTests/WinPrint.Core.UnitTests.csproj
 dotnet test  ... --filter "FullyQualifiedName~CteRenderingTests"   # single class
 ```
 CI (`.github/workflows/ci.yml`) runs on **windows-latest**, installs the `maui`
-workload, builds `WinPrint.slnx`, then enforces a **style gate**:
-`dotnet jb cleanupcode` + `dotnet format` with `git diff --exit-code`. Run those
-before pushing if you touched many files. Code-style analyzers also enforce
+workload, builds `WinPrint.slnx`, then enforces a **style gate**. **Always run the gate
+locally and get a clean tree before you push any C# change** — a failed style gate is the
+single most common way agents waste a push/CI round-trip. There is exactly one command:
+
+```bash
+scripts/verify-style.sh                                            # whole solution
+scripts/verify-style.sh src/WinPrint.Core/WinPrint.Core.csproj     # one project (Linux/Mac: MAUI won't build)
+```
+
+`scripts/verify-style.sh` **is** the CI gate (CI calls it via `--ci`), so a clean run there
+means a clean run in CI. **Do not** hand-run bare `dotnet jb cleanupcode` / `dotnet format`:
+they omit the exact profile/exclude flags CI uses (`--profile="WinPrintCleanup"
+--exclude="**/*.xaml.cs"`), so they "pass" locally and still fail CI. If the script rewrites
+files, commit those changes — that *is* the fix; re-run until `git diff` is empty. On Linux/Mac
+(where `WinPrint.Maui` can't build) scope the script to the project(s) you touched; the full
+solution gate over MAUI files is still verified by Windows CI. Code-style analyzers also enforce
 **one top-level type per file** (WPA0001) and **no nested types** (WPA0002).
 
 **CI mechanics & flakiness (don't mistake a flake for a real failure).** Every PR triggers
@@ -185,15 +198,13 @@ Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim
 > gates trim regressions per RID. The "decisions" below are the design record those changes follow.
 
 Decisions made (design record; most are now implemented):
-- **Status: largely complete.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>` on the TUI are
-  on main; CI `aot-publish` is green. Remaining cleanup: [#215](https://github.com/tig/winprint/issues/215)
-  (remove `ModelLocator`/`ServiceLocator` facades).
+- **Status: complete.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>` on the TUI are on main;
+  CI `aot-publish` is green. Call sites use `WinPrintServices` directly (#215).
 - **Target = cross-platform AOT** (Windows/Linux/macOS), not Windows-only. This requires a
   **non-`System.Drawing` measurement backend** (e.g. SkiaSharp) plugged into the existing
   `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
-- **DI: drop MvvmLight `SimpleIoc`** — **done** (`WinPrintServices` replaces SimpleIoc). **Facade
-  cleanup remains:** `ModelLocator`/`ServiceLocator` are thin wrappers over `WinPrintServices` but
-  still referenced across Core; track in [#215](https://github.com/tig/winprint/issues/215).
+- **DI: drop MvvmLight `SimpleIoc`** — **done** (`WinPrintServices` replaces SimpleIoc and the former
+  `ModelLocator`/`ServiceLocator` facades; #215).
 - **TUI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
 - **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
   (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to

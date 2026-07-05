@@ -32,7 +32,7 @@ public sealed class SheetDefinitionChangeTracker
     public SheetDefinitionChangeTracker(Settings settings, Action<Settings>? save = null)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        _save = save ?? (s => ServiceLocator.Current.SettingsService.SaveSettings(s, false));
+        _save = save ?? (s => WinPrintServices.Current.SettingsService.SaveSettings(s, false));
     }
 
     /// <summary>The dictionary key of the sheet definition currently being edited.</summary>
