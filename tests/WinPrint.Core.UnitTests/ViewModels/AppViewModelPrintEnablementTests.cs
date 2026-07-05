@@ -24,8 +24,10 @@ public class AppViewModelPrintEnablementTests
 {
     // No SheetViewModel => LoadFileAsync records the file without reflow (the GDI+-free front-end path),
     // so these stay deterministic and run on any OS.
-    private static AppViewModel CreatePreviewlessVm() =>
-        new(new PrintPageSetup { PaperWidth = 850, PaperHeight = 1100, DpiX = 96, DpiY = 96 });
+    private static AppViewModel CreatePreviewlessVm()
+    {
+        return new AppViewModel(new PrintPageSetup { PaperWidth = 850, PaperHeight = 1100, DpiX = 96, DpiY = 96 });
+    }
 
     [Fact]
     public void IsFileLoaded_IsFalseAtStartup_SoPrintIsDisabled()
