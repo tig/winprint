@@ -426,7 +426,7 @@ public sealed class SettingsPanel : View
             return;
         }
 
-        SettingsService settings = ServiceLocator.Current.SettingsService;
+        SettingsService settings = WinPrintServices.Current.SettingsService;
 
         // Edit in a modal Terminal.Gui editor (issue #166) rather than shelling out to the OS default
         // editor, so it works headless/over SSH and the config is validated before the file is written.
@@ -448,7 +448,7 @@ public sealed class SettingsPanel : View
     // Reloads the just-saved config into the running app and refreshes the preview (issue #85).
     private void ApplySavedConfig()
     {
-        ServiceLocator.Current.SettingsService.ReloadAndApplySettings();
+        WinPrintServices.Current.SettingsService.ReloadAndApplySettings();
         if (_context is not null)
         {
             _context.App.LoadSheets();

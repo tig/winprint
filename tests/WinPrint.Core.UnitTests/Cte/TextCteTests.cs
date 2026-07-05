@@ -18,7 +18,7 @@ public class TextCteTests
 
     public TextCteTests(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start(GetType().Name,
+        WinPrintServices.Current.LogService.Start(GetType().Name,
             new TestOutputSink(output, new MessageTemplateTextFormatter("{Message:lj}")), true, true);
     }
 
@@ -51,7 +51,7 @@ public class TextCteTests
         //
         // Setup FileAssocaitons service
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         // obviouslly text
         string path = "foo.txt";
@@ -100,7 +100,7 @@ public class TextCteTests
         string longLine = "This is a line 01234567890";
 
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         (svm.ContentEngine, svm.ContentType, svm.Language) =
@@ -170,7 +170,7 @@ public class TextCteTests
         string longLine = "2 01234567890123456789A";
 
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         (svm.ContentEngine, svm.ContentType, svm.Language) =

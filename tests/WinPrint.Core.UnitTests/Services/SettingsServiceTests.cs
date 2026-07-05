@@ -39,7 +39,7 @@ public class SettingsServiceTests : TestServicesBase
         {
             SettingsFileName = $"WinPrint.{GetType().Name}.json"
         };
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
         settingsService.SaveSettings(settings);
 

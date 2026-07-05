@@ -65,7 +65,7 @@ public class Print : IDisposable
             try
             {
                 PrintDocument.PrinterSettings.PrinterName = printerName;
-                ServiceLocator.Current.TelemetryService.TrackEvent("Set Printer",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Set Printer",
                     new Dictionary<string, string?> { ["printerName"] = printerName });
             }
             catch (NullReferenceException)
@@ -117,7 +117,7 @@ public class Print : IDisposable
                 throw new Exception(sb.ToString());
             }
 
-            ServiceLocator.Current.TelemetryService.TrackEvent("Set Paper Size",
+            WinPrintServices.Current.TelemetryService.TrackEvent("Set Paper Size",
                 new Dictionary<string, string?> { ["paperSizeName"] = paperSizeName });
         }
     }
@@ -134,7 +134,7 @@ public class Print : IDisposable
         await SheetViewModel.ReflowAsync().ConfigureAwait(false);
         int sheetsPrinted = CountSheetRange(SheetViewModel.NumSheets, fromSheet, toSheet);
 
-        ServiceLocator.Current.TelemetryService.TrackEvent("Count Sheets",
+        WinPrintServices.Current.TelemetryService.TrackEvent("Count Sheets",
             new Dictionary<string, string?>
             {
                 ["type"] = SheetViewModel.ContentEngine?.GetType().Name,
@@ -180,7 +180,7 @@ public class Print : IDisposable
         _curSheet = PrintDocument.PrinterSettings.FromPage;
         PrintDocument.Print();
 
-        ServiceLocator.Current.TelemetryService.TrackEvent("Print Complete",
+        WinPrintServices.Current.TelemetryService.TrackEvent("Print Complete",
             new Dictionary<string, string?>
             {
                 ["type"] = SheetViewModel.ContentEngine?.GetType().Name,

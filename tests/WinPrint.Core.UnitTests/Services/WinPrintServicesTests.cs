@@ -10,7 +10,6 @@ public class WinPrintServicesTests
     public void Settings_AfterInvalidConfigRead_IsNeverNull()
     {
         WinPrintServices.Reset();
-        ModelLocator.Reset();
 
         string settingsFileName = $"WinPrint.{GetType().Name}.invalid.json";
         File.WriteAllText(settingsFileName, "{ not-valid-json");
@@ -24,13 +23,12 @@ public class WinPrintServicesTests
 
             Assert.NotNull(settings);
             Assert.NotEmpty(settings.Sheets);
-            Assert.Equal(ModelLocator.Current.Settings, settings);
+            Assert.Equal(WinPrintServices.Current.Settings, settings);
         }
         finally
         {
             File.Delete(settingsFileName);
             WinPrintServices.Reset();
-            ModelLocator.Reset();
         }
     }
 }

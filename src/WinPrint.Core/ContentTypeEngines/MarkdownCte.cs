@@ -77,7 +77,7 @@ public class MarkdownCte : ContentTypeEngineBase
     public static MarkdownCte Create()
     {
         var engine = new MarkdownCte();
-        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.MarkdownContentTypeEngineSettings);
+        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.MarkdownContentTypeEngineSettings);
         return engine;
     }
 
