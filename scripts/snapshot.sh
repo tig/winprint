@@ -2,8 +2,7 @@
 #
 # Capture a full-fidelity PNG of a wp view using tuirec 0.5.0 + agg.
 #
-# This is the "rich" layer of the agent/human TUI design loop (see
-# docs/proposals/tui-agent-design-loop.md): tuirec drives the real `wp` binary through
+# This is the "rich" layer of the agent/human TUI design loop: tuirec drives the real `wp` binary through
 # a PTY, records an asciinema .cast, and agg renders one frame to PNG with true terminal
 # colors, font, and glyphs. (The fast "plain grid" layer is `wp --view <view> --cat`.)
 #

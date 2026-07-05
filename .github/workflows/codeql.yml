@@ -1,0 +1,38 @@
+name: CodeQL
+
+# Static analysis (code scanning) for the C# codebase. WinPrint is a cross-platform .NET app, so we
+# analyze in build-mode "none" (source-based, no compile) on a Linux runner; this avoids needing a
+# platform build just to scan. The many other languages in the tree are print/highlighting sample
+# fixtures, not application code, so only C# is analyzed.
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  schedule:
+    - cron: '41 4 * * 1' # weekly, Monday 04:41 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze C#
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@411c4c9a36b3fca4d674f06b6396b2c6d23522c6 # v3
+        with:
+          languages: csharp
+          build-mode: none
+      - name: Analyze
+        uses: github/codeql-action/analyze@411c4c9a36b3fca4d674f06b6396b2c6d23522c6 # v3
+        with:
+          category: "/language:csharp"

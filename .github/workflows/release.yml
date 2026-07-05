@@ -98,12 +98,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: |
             8.0.x
@@ -187,7 +187,7 @@ jobs:
 
       - name: Upload TUI tarball
         if: ${{ runner.os != 'Windows' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: wp-${{ matrix.runtime }}
           path: artifacts/cli/wp-${{ matrix.runtime }}.tar.gz
@@ -289,7 +289,7 @@ jobs:
 
       - name: Azure login for Trusted Signing
         if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
-        uses: azure/login@v2
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -473,7 +473,7 @@ jobs:
 
       - name: Upload Velopack artifacts
         if: ${{ runner.os != 'macOS' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: velopack-${{ matrix.runtime }}
           path: artifacts/velopack/${{ matrix.runtime }}/**/*
@@ -481,7 +481,7 @@ jobs:
 
       - name: Upload macOS GUI app zip
         if: ${{ matrix.includeGui && runner.os == 'macOS' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cask-${{ matrix.runtime }}
           path: artifacts/cask/WinPrint-${{ matrix.runtime }}.app.zip
@@ -499,12 +499,12 @@ jobs:
 
     steps:
       - name: Download package artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: release-artifacts
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: release-artifacts/**/*
           generate_release_notes: true
@@ -538,7 +538,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Submit to winget-pkgs
-        uses: vedantmgoyal9/winget-releaser@v2
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           identifier: Kindel.WinPrint
           version: ${{ steps.ver.outputs.version }}
@@ -570,12 +570,13 @@ jobs:
           fi
 
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Render formula and push to tap
         shell: bash
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -584,6 +585,8 @@ jobs:
           sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
 
           # Formula = free TUI (wp); Cask = free MAUI GUI (WinPrint.app). Both ship via the tap.
+          # The formula's x86_64_linux {{sha_bottle_linux_x64}} is filled AFTER we build the bottle
+          # below (we don't know its SHA until it exists); every other placeholder is filled now.
           sed -e "s|{{version}}|${version}|g" \
               -e "s|{{base}}|${base}|g" \
               -e "s|{{sha_osx_arm}}|$(sha wp-osx-arm64.tar.gz)|" \
@@ -598,10 +601,6 @@ jobs:
               -e "s|{{sha_cask_x64}}|$(sha WinPrint-osx-x64.app.zip)|" \
               packaging/homebrew/Casks/winprint.rb > /tmp/winprint-cask.rb
 
-          # Validate the rendered cask + formula actually LOAD under Homebrew before publishing.
-          # `ruby -c` only checks syntax and misses invalid DSL — e.g. a cask using the formula-only
-          # `conflicts_with formula:` key, which once shipped a cask the tap couldn't even parse.
-          # Load them by name from a throwaway local tap so an invalid stanza fails this job instead.
           # On ubuntu-latest Homebrew is pre-installed but NOT on PATH — load its shellenv first, or
           # every `brew` call below fails with "command not found" and breaks the tap publish.
           if ! command -v brew >/dev/null 2>&1; then
@@ -612,12 +611,54 @@ jobs:
           rm -rf "$VTAP"; mkdir -p "$VTAP/Casks" "$VTAP/Formula"
           git -C "$VTAP" init -q
           cp /tmp/winprint-cask.rb "$VTAP/Casks/winprint.rb"
-          cp /tmp/wp.rb "$VTAP/Formula/wp.rb"
+
+          # --- Build the x86_64_linux bottle (issue #211) --------------------------------------
+          # We build the bottle from a source install of the formula. `wp` compiles nothing (the
+          # "install" just extracts the prebuilt AOT tarball), but Homebrew classifies a bottle-less
+          # formula as a source build and needs a compiler present on THIS runner — ubuntu-latest
+          # ships gcc, so the gate passes (no code is actually compiled). End users then POUR this
+          # bottle and never need a toolchain. Strip the rendered bottle block via its sentinels so
+          # the build formula is bottle-less (its {{sha_bottle_linux_x64}} isn't a valid SHA yet).
+          sed '/# >>> winprint:bottle/,/# <<< winprint:bottle/d' /tmp/wp.rb > "$VTAP/Formula/wp.rb"
           git -C "$VTAP" add -A
-          git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm validate
-          echo "Validating rendered cask + formula load under Homebrew…"
+          git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm build
+          echo "Validating cask + (bottle-less) formula load under Homebrew…"
           brew info --cask kindel/winprint/winprint > /dev/null
           brew info --formula kindel/winprint/wp > /dev/null
+          echo "Building x86_64_linux bottle…"
+          brew install --build-bottle --verbose kindel/winprint/wp
+          # --skip-relocation makes the built bottle match the formula's :any_skip_relocation DSL
+          # (correct: the payload bakes in no Cellar/prefix paths). --no-rebuild keeps the filename
+          # suffix-free (wp-<version>.<tag>.bottle.tar.gz) for the first bottle of this version.
+          brew bottle --no-rebuild --skip-relocation --root-url="$base" kindel/winprint/wp
+          # `brew bottle` writes <name>--<version>.<tag>.bottle.tar.gz (double dash) into CWD; the
+          # download name Homebrew fetches is single-dash. Content (and thus SHA) is identical.
+          local_bottle="$(ls wp--"${version}".*.bottle.tar.gz)"
+          up_bottle="wp-${version}.x86_64_linux.bottle.tar.gz"
+          mv "$local_bottle" "$up_bottle"
+          bottle_sha="$(sha256sum "$up_bottle" | awk '{print $1}')"
+          echo "Uploading $up_bottle (sha256=$bottle_sha) to release $TAG…"
+          gh release upload "$TAG" "$up_bottle" --clobber
+          brew uninstall --force wp
+
+          # Fill the freshly-built bottle's SHA into the final formula, then re-stage it.
+          sed -i "s|{{sha_bottle_linux_x64}}|${bottle_sha}|" /tmp/wp.rb
+          cp /tmp/wp.rb "$VTAP/Formula/wp.rb"
+          git -C "$VTAP" add -A
+          git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm final
+
+          # Validate the FINAL cask + formula LOAD, then POUR-TEST end to end. `brew info` alone
+          # can't catch a missing/mismatched bottle (it never fetches one), so actually install: it
+          # must POUR the bottle we just uploaded (no compiler) and run. Guard on "Pouring" so a
+          # silent fall-back to a source build fails this job instead of shipping a broken bottle.
+          echo "Validating final cask + formula load…"
+          brew info --cask kindel/winprint/winprint > /dev/null
+          brew info --formula kindel/winprint/wp > /dev/null
+          echo "Pour-testing the uploaded bottle…"
+          brew install --verbose kindel/winprint/wp 2>&1 | tee /tmp/pour.log
+          grep -q "Pouring" /tmp/pour.log || { echo "::error title=Bottle pour failed::wp installed without pouring its bottle — the x86_64_linux bottle is missing or mismatched."; exit 1; }
+          wp --version
+          brew uninstall --force wp
           rm -rf "$VTAP"
 
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/kindel/homebrew-winprint.git" tap
@@ -633,64 +674,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Formula/wp.rb Casks/winprint.rb
           git diff --cached --quiet && { echo "Tap unchanged."; exit 0; }
-          git commit -m "winprint ${version}"
-          git push
-
-  # Update the Scoop bucket (kindel/scoop-winprint) with the new Windows build on every STABLE
-  # release. Renders packaging/scoop/winprint.json with the version + win-x64 SHA256 and pushes it
-  # to bucket/winprint.json. This is the approval-free Windows channel — a Scoop bucket is just a Git
-  # repo you own, with no Microsoft moderation (unlike the winget job). Requires a classic PAT (repo
-  # scope) in SCOOP_BUCKET_TOKEN with push access to the bucket; see packaging/scoop/README.md.
-  scoop:
-    name: Update Scoop bucket
-    needs: publish
-    runs-on: ubuntu-latest
-    if: ${{ !contains(github.ref_name, '-') }}
-    steps:
-      # A missing token must FAIL this job, never silently skip into a green check (same rule as the
-      # brew/winget jobs): a skipped publish reporting success would hide that nothing shipped.
-      - name: Require SCOOP_BUCKET_TOKEN
-        shell: bash
-        env:
-          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-        run: |
-          if [ -z "${SCOOP_TOKEN}" ]; then
-            echo "::error title=Scoop bucket not published::SCOOP_BUCKET_TOKEN is not set, so the Scoop bucket was NOT updated for this release. See packaging/scoop/README.md to create the bucket + token, then re-run this job."
-            exit 1
-          fi
-
-      - name: Checkout source
-        uses: actions/checkout@v5
-
-      - name: Render manifest and push to bucket
-        shell: bash
-        env:
-          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          version="${TAG#v}"
-          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
-          sha() { curl -fsSL "$base/$1" | sha256sum | awk '{print $1}'; }
-
-          # win-x64 is the only Windows arch published today (the win-arm64 Velopack leg is still
-          # experimental). Add an arm64 block + {{sha_win_arm64}} here when it graduates.
-          sed -e "s|{{version}}|${version}|g" \
-              -e "s|{{base}}|${base}|g" \
-              -e "s|{{sha_win_x64}}|$(sha Kindel.WinPrint-win-x64-Portable.zip)|" \
-              packaging/scoop/winprint.json > /tmp/winprint.json
-
-          # Scoop manifests are plain JSON (no DSL footguns like Homebrew casks), so a parse check is
-          # the meaningful pre-publish guard; loading under Scoop proper needs Windows/PowerShell.
-          jq empty /tmp/winprint.json
-
-          git clone "https://x-access-token:${SCOOP_TOKEN}@github.com/kindel/scoop-winprint.git" bucket-repo
-          mkdir -p bucket-repo/bucket
-          cp /tmp/winprint.json bucket-repo/bucket/winprint.json
-          cd bucket-repo
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bucket/winprint.json
-          git diff --cached --quiet && { echo "Bucket unchanged."; exit 0; }
           git commit -m "winprint ${version}"
           git push

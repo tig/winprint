@@ -4,6 +4,8 @@
 
 * Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
+* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, and inline images).
+* Prints ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
@@ -135,8 +137,8 @@ WinPrint's packaged builds include a built-in install/update engine.
 You can also update manually using your package manager:
 
 ```bash
-# Windows (Scoop; winget coming soon)
-scoop update winprint
+# Windows
+winget upgrade Kindel.WinPrint
 
 # macOS
 brew upgrade --cask winprint

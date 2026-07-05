@@ -73,11 +73,22 @@ smoke-runs the packaged `wp.exe` (`scripts/Test-WindowsVelopackShortcut.ps1`, cu
 **Homebrew (the free distribution path).** Tap = `kindel/homebrew-winprint`, pushed by the release
 `brew` job (needs the `HOMEBREW_TAP_TOKEN` PAT; a missing-token skip now *fails* loudly). TWO
 artifacts in the tap:
-- **Formula** `winprint` → the `wp` TUI (Linux + CLI-only macOS).
+- **Formula** `wp` → the `wp` TUI (Linux + CLI-only macOS).
 - **Cask** `winprint` → the MAUI GUI, which **also embeds `wp`** at `WinPrint.app/Contents/Helpers/wp`
   (release.yml copies the self-contained CLI in *before* signing; a `binary` stanza symlinks it onto
   PATH), so one cask install gives GUI + `wp`. Both provide `wp`, so installing formula + cask
   collides on the symlink — pick one on macOS (casks **cannot** declare `conflicts_with formula:`).
+- **The `wp` formula carries an `x86_64_linux` bottle** (issue #211). `wp` compiles nothing — the
+  "install" just extracts the prebuilt AOT tarball — but Homebrew treats a *bottle-less* formula as a
+  source build and **refuses it on any host with no C compiler** (fresh containers, minimal WSL). The
+  bottle makes `brew install` *pour* a prebuilt tree, so toolchain-less Linux installs cleanly. Bottles
+  are **formula-only**, so this does **not** touch the cask or the GUI+TUI dual install. The `brew` job
+  source-builds the bottle on ubuntu-latest (it has gcc), uploads `wp-<ver>.x86_64_linux.bottle.tar.gz`
+  to the release, renders its SHA into the formula, then **pour-tests** it (guards on `Pouring`) before
+  pushing. **Only `x86_64_linux` is tagged**: every other platform has NO tag and keeps installing from
+  the `url` blocks (macOS has Clang; arm64 Linux source-builds). **Never declare a bottle tag without
+  publishing + pour-testing its file** — a declared-but-missing bottle hard-fails that platform with no
+  source fallback. (arm64 Linux bottle = follow-up; needs bottling on an arm64 runner.)
 - **Validate a cask by LOADING it, never `ruby -c`.** `ruby -c` checks Ruby *syntax* and happily
   passes invalid cask **DSL** (e.g. `conflicts_with formula:` — that key is cask-only-`cask:`), which
   once shipped a tap cask Homebrew couldn't parse and broke `brew install --cask` for everyone. The
@@ -104,12 +115,12 @@ The full spec — what each hero must show off, the producer scripts, and the sa
   toggle Landscape, fast zoom→pan→reset, then open a different file), mirroring the TUI hero's
   energy. The old macOS page/page/arrow choreography is the weak baseline — **don't copy it.**
 - All heroes render the **same** sample (`src/WinPrint.Core/ViewModels/SheetViewModel.cs`).
-- **Windows GUI:** `scripts/capture-gui-hero-windows.ps1` (drives `winprint.exe`, needs an
-  **unlocked interactive session**) → `scripts/assemble-gui-hero.py` → `docs/hero-gui-win.gif`.
-  Zoom uses the plain TUI-consistent keys (`=`/`+` in, `-` out, `0` fits); `OnNativeKeyDown`
-  normalizes the WinUI `VirtualKey` strings (`"187"`/`"189"`/`"Number0"`) so they route on
-  Windows (PR #199 added plain zoom keys but only built MacCatalyst). README shows Windows +
-  macOS side by side.
+- **Windows GUI:** **agent-driven, no script in this repo** — MCEC drives **installed** WinPrint over
+  MCP through settings/zoom, Print to PDF, and open PDF, recording a **desktop region** GIF
+  (`docs/hero-gui-win.gif`). Needs an **unlocked interactive session** and WinPrint installed; the MCEC
+  controller is stood up from the mcec repo's `scripts/Generate-HeroGif.ps1`. See
+  [`docs/hero-gif-win.md`](docs/hero-gif-win.md). Legacy `capture-gui-hero-windows.ps1` +
+  `assemble-gui-hero.py` is deprecated for the README hero. README shows Windows + macOS side by side.
 
 ## Content Type Engines (CTEs)
 CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
@@ -161,36 +172,31 @@ double with a deterministic fixed-pitch measurement model — so the full
 Goal: ship **`WinPrint.TUI`/`wp` as Native AOT** with **`WinPrint.Core` AOT/trim-compatible**.
 `WinPrint.Maui` is **out of scope** — MAUI does not support Native AOT.
 
-> **Largely landed (the PR #156 work has merged to main).** `<IsAotCompatible>true</IsAotCompatible>`
-> is set on `WinPrint.Core` (trim analyzers run on every build) and RID-gated `<PublishAot>true</PublishAot>`
-> is set on `WinPrint.TUI` (active only when `RuntimeIdentifier` is set). The Macros hand-rolled
-> resolver, explicit CTE registry, source-gen JSON, and `WinPrintServices` DI container are in.
-> The per-item AOT/trim inventory lives in **[`docs/aot-inventory.md`](docs/aot-inventory.md)**; the
-> "decisions" below are the design record those changes follow.
+> **Largely landed (#66 closed; PR #156 merged).** `<IsAotCompatible>true</IsAotCompatible>` is set on
+> `WinPrint.Core` (trim analyzers run on every build) and RID-gated `<PublishAot>true</PublishAot>` is
+> set on `WinPrint.TUI` (active only when `RuntimeIdentifier` is set). The Macros hand-rolled resolver,
+> explicit CTE registry, source-gen JSON, and `WinPrintServices` DI container are in. CI `aot-publish`
+> gates trim regressions per RID. The "decisions" below are the design record those changes follow.
 
 Decisions made (design record; most are now implemented):
-- **Status: in flight / largely landed.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>`
-  on the TUI are already on main, and most inventory items are cleared. Track remaining work in
-  [`docs/aot-inventory.md`](docs/aot-inventory.md).
+- **Status: largely complete.** `<IsAotCompatible>` on Core and RID-gated `<PublishAot>` on the TUI are
+  on main; CI `aot-publish` is green. Remaining cleanup: [#215](https://github.com/tig/winprint/issues/215)
+  (remove `ModelLocator`/`ServiceLocator` facades).
 - **Target = cross-platform AOT** (Windows/Linux/macOS), not Windows-only. This requires a
   **non-`System.Drawing` measurement backend** (e.g. SkiaSharp) plugged into the existing
   `IGraphicsContext`/`MeasurementContext` seam — `System.Drawing` stays the Windows default.
-- **DI: drop MvvmLight `SimpleIoc`** (`ModelLocator`/`ServiceLocator`) in favor of **manual
-  construction**. MvvmLight is unmaintained and not trim-annotated. **Migration is partial:**
-  `WinPrintServices` exists, but `ModelLocator` is still used in `WinPrint.Core` (e.g.
-  `ContentTypeEngineBase`, view models) — not yet fully removed.
+- **DI: drop MvvmLight `SimpleIoc`** — **done** (`WinPrintServices` replaces SimpleIoc). **Facade
+  cleanup remains:** `ModelLocator`/`ServiceLocator` are thin wrappers over `WinPrintServices` but
+  still referenced across Core; track in [#215](https://github.com/tig/winprint/issues/215).
 - **TUI arg parsing stays on `Terminal.Gui.Cli`** (vet Terminal.Gui itself for AOT/trim).
 - **`Macros.cs`: rewrite with a hand-rolled resolver**, removing **`System.Linq.Dynamic.Core`**
   (runtime expression compiling — the one hard AOT blocker). May narrow exotic macro syntax to
   what's actually used.
-- **JSON: move to source-generated `System.Text.Json`** (`JsonSerializerContext`); also replace
-  the reflection-based `Microsoft.Extensions.Configuration` `.Bind()` path.
-- **Update-check: redesign from the ground up and remove `Octokit`** (reflection/JSON-heavy).
+- **JSON: move to source-generated `System.Text.Json`** (`WinPrintJsonSerializerContext`) — **done**.
+- **Update-check: redesign from the ground up and remove `Octokit`** — **done**.
 - **`CommandLineParser`: remove if unused** (verify no real callers, then drop the package).
 
-Other known AOT work (fall out of the spike; see [`docs/aot-inventory.md`](docs/aot-inventory.md)
-for current per-item state):
-- `ModelBase.CopyPropertiesFrom` + `TypeDescriptor.GetProperties` / `GetType().GetProperties()` —
-  annotate with `[DynamicallyAccessedMembers]` or replace with generated/explicit copies.
+Other AOT work from the original spike:
+- `ModelBase.CopyPropertiesFrom` + telemetry — **done** (explicit per-type copies; no reflection).
 - CTE discovery reflection — **done**: replaced by the explicit `ContentTypeEngineRegistry`
   (was `GetTypes()` + `Activator.CreateInstance` in `ContentTypeEngineBase`).
