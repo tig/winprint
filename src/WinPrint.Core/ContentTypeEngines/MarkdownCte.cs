@@ -719,7 +719,10 @@ public class MarkdownCte : ContentTypeEngineBase
                && text.EndsWith("-->", StringComparison.Ordinal);
     }
 
-    private static string StripHtmlComments(string html) => s_htmlCommentRegex.Replace(html, string.Empty);
+    private static string StripHtmlComments(string html)
+    {
+        return s_htmlCommentRegex.Replace(html, string.Empty);
+    }
 
     private static IEnumerable<(string Src, string Alt)> ParseHtmlImgTags(string html)
     {
