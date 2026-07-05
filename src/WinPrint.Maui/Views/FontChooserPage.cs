@@ -2,7 +2,6 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System.Globalization;
-using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using FontStyle = WinPrint.Core.Models.FontStyle;
@@ -394,45 +393,39 @@ internal sealed class FontChooserPage : ContentPage
     }
 
     /// <summary>
-    ///     A tap-driven toggle (checkbox replacement). Shows a check glyph + label and fills with the accent
-    ///     color when on. <paramref name="get" />/<paramref name="set" /> read and write the backing field;
-    ///     <paramref name="set" /> performs the side effect (re-filter / re-preview).
+    ///     A native <see cref="CheckBox" /> + label toggle, so it keeps the checkbox role, tab focus, and
+    ///     Space activation (issue #216). An explicit accent <see cref="CheckBox.Color" /> keeps it visible on
+    ///     the white card, and tapping the label toggles it too. <paramref name="get" />/<paramref name="set" />
+    ///     read and write the backing field; <paramref name="set" /> performs the side effect (re-filter /
+    ///     re-preview).
     /// </summary>
     private View MakeToggle(string text, Func<bool> get, Action<bool> set)
     {
+        var check = new CheckBox
+        {
+            Color = AccentColor,
+            VerticalOptions = LayoutOptions.Center
+        };
+        // Seed the initial state before wiring CheckedChanged so seeding doesn't fire the side effect.
+        check.IsChecked = get();
+        check.CheckedChanged += (_, e) => set(e.Value);
+
         var label = new Label
         {
+            Text = text,
             TextColor = InkColor,
             FontSize = UiFonts.SidebarFontSize,
             VerticalOptions = LayoutOptions.Center
         };
-        var border = new Border
-        {
-            StrokeThickness = 1,
-            Stroke = HintColor,
-            StrokeShape = new RoundRectangle { CornerRadius = 6 },
-            Padding = new Thickness(10, 6),
-            Content = label
-        };
-
-        void Render()
-        {
-            bool on = get();
-            label.Text = (on ? "☑  " : "☐  ") + text;
-            label.TextColor = on ? Colors.White : InkColor;
-            border.BackgroundColor = on ? AccentColor : FieldColor;
-        }
-
         var tap = new TapGestureRecognizer();
-        tap.Tapped += (_, _) =>
-        {
-            set(!get());
-            Render();
-        };
-        border.GestureRecognizers.Add(tap);
+        tap.Tapped += (_, _) => check.IsChecked = !check.IsChecked;
+        label.GestureRecognizers.Add(tap);
 
-        Render();
-        return border;
+        return new HorizontalStackLayout
+        {
+            Spacing = 4,
+            Children = { check, label }
+        };
     }
 
     private void SetOkEnabled(bool enabled)
