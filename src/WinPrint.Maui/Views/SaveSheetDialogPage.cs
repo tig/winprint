@@ -1,7 +1,6 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
-using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.ViewModels;
 
 namespace WinPrint.Maui.Views;
@@ -15,9 +14,9 @@ namespace WinPrint.Maui.Views;
 /// <remarks>
 ///     Presented as a centered card over a dimmed backdrop (matching the font chooser). Because the card is
 ///     forced light regardless of the OS theme, every control carries an explicit color from
-///     <see cref="DialogPalette" /> and the buttons are tap-driven <see cref="Border" />+<see cref="Label" />
-///     pills rather than native <see cref="Button" />s — a native button renders washed-out/invisible and
-///     theme-inherited input text is unreadable on the white card (issue #216).
+///     <see cref="DialogPalette" /> — theme-inherited input text and colorless native buttons are
+///     unreadable/invisible on the white card (issue #216). The actions stay native <see cref="Button" />s
+///     (with explicit colors) so they keep keyboard focus and Enter/Space activation for the keyboard close path.
 /// </remarks>
 internal sealed class SaveSheetDialogPage : ContentPage
 {
@@ -25,8 +24,8 @@ internal sealed class SaveSheetDialogPage : ContentPage
     private readonly List<string> _names;
     private readonly CollectionView _list;
     private readonly Entry _newName;
-    private readonly Border _createButton;
-    private readonly Border _saveButton;
+    private readonly Button _createButton;
+    private readonly Button _saveButton;
 
     public SaveSheetDialogPage(IReadOnlyList<SheetDefinitionInfo> definitions, int currentIndex)
     {
@@ -72,10 +71,10 @@ internal sealed class SaveSheetDialogPage : ContentPage
         };
         _newName.TextChanged += (_, _) => UpdateButtons();
 
-        _createButton = MakePill("Create", DialogPalette.Field, DialogPalette.Ink, () => Complete(SaveSheetChoice.Create));
-        Border cancelButton = MakePill("Cancel", DialogPalette.Field, DialogPalette.Ink, () => Complete(SaveSheetChoice.Cancel));
-        Border dontSaveButton = MakePill("Don't Save", DialogPalette.Field, DialogPalette.Ink, () => Complete(SaveSheetChoice.DontSave));
-        _saveButton = MakePill("Save", DialogPalette.Accent, Colors.White, () => Complete(SaveSheetChoice.Save));
+        _createButton = MakeButton("Create", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Create));
+        Button cancelButton = MakeButton("Cancel", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.Cancel));
+        Button dontSaveButton = MakeButton("Don't Save", DialogPalette.Field, DialogPalette.Ink, (_, _) => Complete(SaveSheetChoice.DontSave));
+        _saveButton = MakeButton("Save", DialogPalette.Accent, Colors.White, (_, _) => Complete(SaveSheetChoice.Save));
 
         Grid newNameRow = new()
         {
@@ -155,44 +154,28 @@ internal sealed class SaveSheetDialogPage : ContentPage
 
     private void UpdateButtons()
     {
-        SetPillEnabled(_saveButton, SelectedIndex >= 0);
-        SetPillEnabled(_createButton, NewName.Length > 0);
+        _saveButton.IsEnabled = SelectedIndex >= 0;
+        _createButton.IsEnabled = NewName.Length > 0;
     }
 
     /// <summary>
-    ///     A tap-driven button (native-Button replacement that renders legibly on the white card across
-    ///     platforms; see the type remarks).
+    ///     A native <see cref="Button" /> with explicit colors. Native (rather than a tap-only Border pill) so
+    ///     the actions keep the button role, tab focus, and Enter/Space activation — the prompt can be opened
+    ///     from a keyboard close (Alt+F4/⌘Q). Explicit colors keep it legible on the white card regardless of
+    ///     the OS theme (issue #216); the app-wide Button style sets no colors, so nothing overrides these.
     /// </summary>
-    private static Border MakePill(string text, Color background, Color foreground, Action onTap)
+    private static Button MakeButton(string text, Color background, Color foreground, EventHandler onClick)
     {
-        Label label = new()
+        var button = new Button
         {
             Text = text,
+            BackgroundColor = background,
             TextColor = foreground,
             FontSize = UiFonts.SidebarFontSize,
-            FontAttributes = FontAttributes.Bold,
-            HorizontalTextAlignment = TextAlignment.Center,
-            VerticalTextAlignment = TextAlignment.Center
-        };
-        Border border = new()
-        {
-            BackgroundColor = background,
-            StrokeThickness = 0,
-            StrokeShape = new RoundRectangle { CornerRadius = 6 },
             Padding = new Thickness(18, 8),
-            Content = label
+            CornerRadius = 6
         };
-
-        TapGestureRecognizer tap = new();
-        tap.Tapped += (_, _) => onTap();
-        border.GestureRecognizers.Add(tap);
-        return border;
-    }
-
-    // Disabling a pill both blocks its tap (Border.IsEnabled cascades to its gesture recognizers) and dims it.
-    private static void SetPillEnabled(Border pill, bool enabled)
-    {
-        pill.IsEnabled = enabled;
-        pill.Opacity = enabled ? 1 : 0.45;
+        button.Clicked += onClick;
+        return button;
     }
 }

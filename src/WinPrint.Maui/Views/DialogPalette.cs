@@ -32,16 +32,19 @@ internal static class DialogPalette
     /// <summary>Muted color for placeholders and hairline strokes (intentionally low emphasis).</summary>
     public static readonly Color Hint = Color.FromArgb("#8E8E93");
 
-    /// <summary>Accent fill for the primary (default) action button; pairs with white label text.</summary>
-    public static readonly Color Accent = Color.FromArgb("#0A84FF");
+    /// <summary>
+    ///     Accent fill for the primary (default) action button; pairs with white label text at ≥ 4.5:1
+    ///     (a touch darker than the iOS system blue, which only reaches ~3.65:1 with white).
+    /// </summary>
+    public static readonly Color Accent = Color.FromArgb("#0A6CE0");
 
     /// <summary>The dimmed backdrop the centered card floats over, so the page reads as a modal.</summary>
     public static readonly Color Backdrop = Color.FromRgba(0, 0, 0, 0.45);
 
-    // Minimum WCAG contrast ratios. Body text uses the AA bar (4.5:1); bold button labels are "large text"
-    // and use the AA-large bar (3:1). The bug this palette fixes rendered these pairings at ~1:1.
+    // Every dialog label is normal-size text (button pills render at UiFonts.SidebarFontSize, 11-13pt — below
+    // the 14pt-bold "large text" cutoff), so every pairing must clear the WCAG AA normal-text bar (4.5:1).
+    // The bug this palette fixes rendered these pairings at ~1:1.
     private const double BodyTextMinimumContrast = 4.5;
-    private const double LargeTextMinimumContrast = 3.0;
 
     /// <summary>
     ///     Every foreground/background pairing the dialogs rely on to be legible, with the minimum contrast
@@ -52,7 +55,7 @@ internal static class DialogPalette
     [
         new DialogReadablePair("Title / list / body on card", Ink, Card, BodyTextMinimumContrast),
         new DialogReadablePair("Input / neutral-button label on field", Ink, Field, BodyTextMinimumContrast),
-        new DialogReadablePair("Primary-button label on accent", Colors.White, Accent, LargeTextMinimumContrast)
+        new DialogReadablePair("Primary-button label on accent", Colors.White, Accent, BodyTextMinimumContrast)
     ];
 
     /// <summary>
