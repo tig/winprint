@@ -58,15 +58,9 @@ jobs:
 
       - name: Verify code style
         shell: bash
-        run: |
-          # WinPrintCleanup is a custom profile (in WinPrint.slnx.DotSettings) = Full Cleanup minus
-          # "Optimize usings"/"Shorten references"/"Reorder members". Those fight this solution's
-          # multi-TFM #if WINDOWS conditional usings (hoisting them out of #if and breaking the other
-          # TFM). MAUI XAML code-behind files are excluded because generated partial declarations must
-          # stay partial, and jb's redundancy cleanup removes them; dotnet format still applies spacing.
-          dotnet jb cleanupcode WinPrint.slnx --no-build --profile="WinPrintCleanup" --exclude="**/*.xaml.cs" --verbosity=WARN
-          dotnet format WinPrint.slnx --no-restore
-          git diff --exit-code
+        # Single source of truth for the style gate — the same script agents run locally
+        # before pushing (see scripts/verify-style.sh for the WinPrintCleanup rationale).
+        run: scripts/verify-style.sh --ci
 
       # Core + every front end's unit tests, plus the UI tests that run on a Windows desktop session:
       # TUI (headless render). The MAUI Appium UI tests run on the macOS job below;
