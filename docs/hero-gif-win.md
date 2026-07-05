@@ -62,10 +62,13 @@ build from source for the hero).
 Send **integer** pixels. For envelope-unwrapping, keyboard primitives, and the JSON-RPC driver, follow
 mcec's `hero-gif.md`. Two WinPrint-specific input rules:
 
-- **Paths go through `chars:` with DOUBLED backslashes.** `chars:` runs `Regex.Unescape` on its argument,
-  so a raw `C:\Users\...\tig\...` gets mangled (`\t` becomes a TAB). Send `C:\\Users\\...\\tig\\...`.
+- **Paths go through `chars:` as raw text (single backslashes).** As of mcec #269 `chars:` types its
+  argument **verbatim** (no `Regex.Unescape`), so send `C:\Users\...\tig\...` as-is. (Do NOT double the
+  backslashes — older guidance did, back when `chars:` unescaped and mangled `\t` into a TAB; that is gone.)
 - **`chars:` is text; `send_input` (VK builtins) is a keydown.** Use `chars:` for filenames; use the VK
-  builtins (`right`, `down`, `enter`, `run`, ...) for keys/shortcuts.
+  builtins (`right`, `down`, `enter`, `run`, ...) for keys/shortcuts. Submit the Open/Save (`#32770`)
+  dialogs with **`enter`** rather than clicking the button, since each has three `Open`/`Save`-named
+  split-button parts that trip up by-name matching.
 
 1. **Screen size.** `displays` -> primary `bounds` as `SX, SY, SW, SH`.
 2. **Clear the backdrop.** Win+D (`shiftdown:lwin` + `d` + `shiftup:lwin`) so only WinPrint is in frame.
@@ -110,8 +113,10 @@ control).
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
 
-- **`chars:` paths need doubled backslashes** (see above) -- the single most common way a load/save silently
-  does nothing.
+- **`chars:` types verbatim -- send raw single-backslash paths** (see above); doubling them (old guidance)
+  now yields a literal `\\` and the load/save silently does nothing.
+- **Submit `#32770` dialogs with `enter`**, not a click -- the Open/Save button is a split button with
+  three `Open`/`Save`-named parts, so a by-name click can land on the dropdown arrow and never submit.
 - **Open/Save are classic `#32770` dialogs** (title **Open** / **Save Print Output As**), each with a real
   **File name** `Edit`. Discover them (and their live bounds) with `windows`; don't hardcode a pixel.
 - **Settings are sidebar labels, not checkboxes** -- click the **label** (no automation id; target by
