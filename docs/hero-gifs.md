@@ -110,5 +110,15 @@ the real screen), so there's no "force a present" dance — just keep the app **
 
 ## Regenerating the TUI / headless-print heroes
 
-`scripts/record-hero-gifs.sh` regenerates the TUI and print heroes on any OS with tuirec
+`scripts/record-hero-gifs.sh` regenerates the TUI and print heroes — **on macOS/Linux only**
 (it also invokes the macOS GUI capture when run on macOS).
+
+**Windows cannot record the TUI hero.** Under tuirec's ConPTY, Terminal.Gui's default
+`windows` driver sees a console output handle without `ENABLE_VIRTUAL_TERMINAL_PROCESSING`
+and flags it `IsLegacyConsole`, which disables all raster graphics (Kitty/sixel) and
+truecolor — the preview pane records as a blank box. Even forcing the `dotnet` driver
+(`"Application.ForceDriver": "dotnet"` via wp's `.tui/wp.config.json`, honored now that wp
+enables Terminal.Gui's ConfigurationManager) restores truecolor and clears the legacy flag,
+but the Kitty image emission still never reaches the recorded output. The document loads and
+the settings panel renders fine — it's specifically the raster preview that's lost, which is
+the whole point of the hero. Record on macOS or Linux.

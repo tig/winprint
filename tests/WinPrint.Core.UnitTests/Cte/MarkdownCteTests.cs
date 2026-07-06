@@ -15,7 +15,7 @@ public class MarkdownCteTests
 
     public MarkdownCteTests(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start(GetType().Name,
+        WinPrintServices.Current.LogService.Start(GetType().Name,
             new TestOutputSink(output, new MessageTemplateTextFormatter("{Message:lj}")), true, true);
     }
 
@@ -43,7 +43,7 @@ public class MarkdownCteTests
     public void CreateContentTypeEngine_RoutesMarkdownContentTypeToMarkdownCte()
     {
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         (ContentTypeEngineBase? cte, string contentType, string language) =
             ContentTypeEngineBase.CreateContentTypeEngine("text/x-markdown");
@@ -58,7 +58,7 @@ public class MarkdownCteTests
     public void GetContentTypeTest_MdExtensionMapsToMarkdown()
     {
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         Assert.Equal("text/x-markdown", ContentTypeEngineBase.GetContentType("README.md"));
     }

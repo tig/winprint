@@ -18,7 +18,7 @@ public class AnsiCteTests
 
     public AnsiCteTests(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start(GetType().Name,
+        WinPrintServices.Current.LogService.Start(GetType().Name,
             new TestOutputSink(output, new MessageTemplateTextFormatter("{Message:lj}")), true, true);
     }
 
@@ -49,7 +49,7 @@ public class AnsiCteTests
         //
         // Setup FileAssocaitons service
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         // obviouslly text
         string path = "foo.txt";
@@ -106,7 +106,7 @@ public class AnsiCteTests
         string longLine = "This is a line 01234567890";
 
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         (svm.ContentEngine, svm.ContentType, svm.Language) =
@@ -208,7 +208,7 @@ public class AnsiCteTests
         string ansiText = "[38;2;0;0;207;01m1[39;00m";
 
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         (svm.ContentEngine, svm.ContentType, svm.Language) =
@@ -259,7 +259,7 @@ public class AnsiCteTests
     //    string longLine = "2 01234567890123456789A";
 
     //    Settings settings = Settings.CreateDefaultSettings();
-    //    ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+    //    WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
     //    SheetViewModel svm = new SheetViewModel();
     //    (svm.ContentEngine, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(CteClassName);

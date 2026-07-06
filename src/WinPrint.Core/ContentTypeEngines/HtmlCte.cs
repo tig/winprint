@@ -54,7 +54,7 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
     public static HtmlCte Create()
     {
         var content = new HtmlCte();
-        content.CopyPropertiesFrom(ModelLocator.Current.Settings.HtmlContentTypeEngineSettings);
+        content.CopyPropertiesFrom(WinPrintServices.Current.Settings.HtmlContentTypeEngineSettings);
         return content;
     }
 

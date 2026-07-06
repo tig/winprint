@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 
 namespace WinPrint {
     static class Program {
@@ -23,11 +24,11 @@ namespace WinPrint {
                 result
                     .WithParsed<Options>(o => {
                         // copy Files
-                        ModelLocator.Current.Options.Files = o.Files.ToList();
-                        ModelLocator.Current.Options.Landscape = o.Landscape;
-                        ModelLocator.Current.Options.Printer = o.Printer;
-                        ModelLocator.Current.Options.PaperSize = o.PaperSize;
-                        ModelLocator.Current.Options.Gui = o.Gui;
+                        WinPrintServices.Current.Options.Files = o.Files.ToList();
+                        WinPrintServices.Current.Options.Landscape = o.Landscape;
+                        WinPrintServices.Current.Options.Printer = o.Printer;
+                        WinPrintServices.Current.Options.PaperSize = o.PaperSize;
+                        WinPrintServices.Current.Options.Gui = o.Gui;
                         // TODO: Add other command line options supported by command line version
                     })
                     .WithNotParsed((errs) => DisplayHelp(result, errs));

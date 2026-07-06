@@ -25,7 +25,7 @@ public class SettingsBindingTests
 
         Assert.NotNull(app.CurrentSheet);
 
-        // Snapshot to restore — Settings is a process-global singleton (ModelLocator), so leaving it
+        // Snapshot to restore — Settings is a process-global singleton (WinPrintServices), so leaving it
         // mutated would bleed into other tests/runs.
         SheetSettings sheet = app.CurrentSheet!;
         (int cols, int rows, var margins, string? header) =
@@ -135,7 +135,7 @@ public class SettingsBindingTests
         }
         finally
         {
-            // Settings is a process-global singleton (ModelLocator); restore so the edit doesn't bleed.
+            // Settings is a process-global singleton (WinPrintServices); restore so the edit doesn't bleed.
             content.Font = original;
         }
     }
