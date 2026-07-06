@@ -18,10 +18,20 @@ shows Windows and macOS **side by side**.
 
 ## What each hero must show off
 
-**TUI (`wp`)** — the full interactive story (the bar):
-page through the document → **zoom in** → **pan** with the mouse → switch sheet
-definitions → open another file. (The exact keystroke choreography lives in the
-`--keystrokes` string in `scripts/record-hero-gifs.sh`; keep it rich.)
+**TUI (`wp`)** — the full interactive story (the bar), recorded under the **`Anders`** theme:
+show the source file and **zoom in/out** (no pan) → open **`./testfiles/demo.md`** through the
+File dialog (it renders as formatted **Markdown** — the "not just source code" beat) → page
+through it → switch the **Sheet Definition** to **Proportional 1-Up** (single-column reflow) → open
+the **Content Font** dialog and bump the size to **12pt** → page again → **quit** (Esc → *Don't
+Save*). The exact keystroke choreography — button hotkeys (`Alt+F`/`Alt+N`), the Sheet-Definition
+dropdown pick, and the pixel-calibrated Content-Font-dialog clicks — lives in the `--keystrokes`
+string in `scripts/record-hero-gifs.sh`; keep it rich. To open `demo.md` robustly, the choreography
+clicks the Open dialog's **search (Find) box** and types `demo.md`: that box does a **recursive**
+search, so after a couple of seconds the tree narrows to the single matching file (no dependency on
+where it sorts in the listing), which a double-click then opens. Note that **switching the sheet
+reloads the document**, so the script waits a beat before driving the font dialog — otherwise the
+clicks race the reload and desync. (Settings edits dirty the sheet, so the quit raises the save
+prompt — the hero answers *Don't Save*.)
 
 **Headless print (`wp print`)** — that printing needs no UI: show the command
 (`wp print SheetViewModel.cs --what-if --sheet "Default 2-Up"`) and its output. Short.
@@ -112,6 +122,35 @@ the real screen), so there's no "force a present" dance — just keep the app **
 
 `scripts/record-hero-gifs.sh` regenerates the TUI and print heroes — **on macOS/Linux only**
 (it also invokes the macOS GUI capture when run on macOS).
+
+### Theming the hero (`TUI_CONFIG`)
+
+**The TUI hero must be recorded under the `Anders` theme.** This is the standard going
+forward — always regenerate the hero with `Anders`, never the default, so the hero stays
+visually consistent across regenerations. `wp` enables Terminal.Gui's `ConfigurationManager`
+(`ConfigLocations.All`, see `src/WinPrint.TUI/Program.cs`), which includes the **`TUI_CONFIG`
+environment variable** as a config source. `record-hero-gifs.sh` themes the app by passing it to
+tuirec:
+
+```bash
+--env 'TUI_CONFIG={"Theme":"Anders"}'
+```
+
+**Gotcha — `TUI_CONFIG` holds the JSON *inline*, not a file path.** Terminal.Gui routes the env
+var's value through its JSON-*content* loader (`SourcesManager.cs`, the same `Load` overload used
+for `RuntimeConfig`), **not** the file-*path* loader that the `./.tui/…` and `~/.tui/…` locations
+use. So `TUI_CONFIG=/path/to/config.json` is parsed as JSON literally, fails, and is **silently
+ignored** — you must give it the JSON document itself (`TUI_CONFIG={"Theme":"Anders"}`).
+
+We deliberately use the env var rather than a `./.tui/wp.config.json` file: a `.tui/` dir in the
+working directory **shows up in wp's Open-file dialog** and shifts the row the choreography
+double-clicks to open `demo.md`. The env var themes the app while writing **nothing** to disk, so
+the cwd (and the file dialog's listing) stays clean. Keep `Anders` — do not change the theme when
+regenerating unless you are deliberately restyling every hero.
+
+(For a persistent, non-hero theme you can instead drop `{"Theme":"Anders"}` at `~/.tui/config.json`
+(user-wide) or `./.tui/wp.config.json` (per-directory) — those locations *are* file paths and can
+also carry other Terminal.Gui settings, e.g. `"Application.ForceDriver": "dotnet"`.)
 
 **Windows cannot record the TUI hero.** Under tuirec's ConPTY, Terminal.Gui's default
 `windows` driver sees a console output handle without `ENABLE_VIRTUAL_TERMINAL_PROCESSING`
