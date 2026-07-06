@@ -1,12 +1,17 @@
 # Recreating the Windows GUI hero (`docs/hero-gui-win.gif`)
 
 `docs/hero-gui-win.gif` is the Windows half of the README's side-by-side GUI hero (the macOS half is
-`docs/hero-gui-mac.gif`). It is **MCEC driving installed WinPrint** through the print-preview story and
+`docs/hero-gui-mac.gif`). It is **MCEC driving WinPrint** through the full print-preview story and
 recording the window as a GIF:
 
 > launch -> load `SheetViewModel.cs` (2-up landscape, line numbers) -> toggle **Line Numbers** -> toggle
-> **Landscape** (reflow to 1-up portrait and back) -> open `README.md` as **Markdown** -> **Print to PDF** ->
-> hold on the result.
+> **Landscape** (reflow to 1-up portrait and back) -> **zoom in, pan, reset** -> open `README.md` and switch
+> to the **Proportional 2-Up** sheet so Markdown reads as prose (with images) -> **Print to PDF** -> hold.
+
+Needs a WinPrint new enough to have the **Proportional** sheet definitions and the markdown/HTML defaults
+(recent `develop`); the Velopack-installed release may be older, so run a `develop` build as the subject
+(see `.claude/skills/run-maui-app`). The MCEC **controller** must also be recent `develop` (the `focus` tool
+that the zoom beat needs, and the literal-`chars:` fix, both postdate v3.0.17).
 
 Unlike the MCEC hero, the on-screen command **overlay is OFF** here: the MCEC hero narrates with the
 overlay because it is dogfooding MCEC, but this hero's marketing subject is **WinPrint**, so the window is
@@ -78,8 +83,9 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    -> `WX, WY, WW, WH`.
 5. **Load `SheetViewModel.cs`.** Click WinPrint's **File** button (its UIA name is `📂 File…`, so match by
    bounds). Find the Open dialog with `windows { "window": "Open", "timeout": 5000 }` (classic `#32770`),
-   `query` it for the **File name** `Edit` and the **Open** button (`automationId:"1"`), `click` the field,
-   `send_command { "command": "chars:<doubled-backslash abs path>" }`, then `click` **Open**. ~1.5 s to render.
+   `query` it for the **File name** `Edit`, `click` the field,
+   `send_command { "command": "chars:<abs path, single backslashes>" }`, then submit with **`enter`**
+   (not a click -- the button is a split button with three `Open`-named parts). ~1.5 s to render.
 6. **Start recording -- the window only** (no overlay band to include):
    `record { "action": "start", "x": WX-8, "y": WY-8, "width": WW+16, "height": WH+16, "fps": 2,
    "maxWidth": 820 }`. Then `capture { "handle": <handle> }` and dwell ~0.9 s. (Syntax-highlighted code is a
@@ -88,28 +94,25 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    bound checkbox; no automation id -- target its bounding rectangle). Click **Line Numbers** twice (gutter
    off, then on) and **Landscape** twice (reflow to 1-up portrait, then back to 2-up landscape), ~1 s dwell
    each so the re-render reads.
-8. **Open `README.md`** (renders as Markdown -- the "not just source code" beat). Same as step 5, with the
-   README's path. Dwell ~1.4 s.
-9. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Select the printer
-   explicitly -- do NOT assume the default.** WinPrint restores the saved/system-default printer and
-   `PrintOrchestrator.PrintAsync` prints to `viewModel.SelectedPrinter`, so on a machine whose default is not
-   **Microsoft Print to PDF** the job goes elsewhere and the save-dialog wait times out. `query` the sidebar
-   **Printer** `ComboBox` (bottom-left), `click` it, and `invoke`/`click` the **Microsoft Print to PDF**
-   item; re-`query` to confirm it reads that. Then click the toolbar **Print** button (`🖨 Print…`). Find the
-   save dialog with `windows { "window": "Save Print Output As", "timeout": 5000 }` and use its **live**
-   bounds (it does not always open at the same spot -- a hardcoded pixel is what made an earlier take miss
-   the field); `query` for the filename `Edit` + **Save** button, `click` the field, type the PDF path with
-   `chars:` (doubled backslashes), `click` **Save**. Assert the PDF now exists.
-10. **Hold**, then **stop and write the GIF.** `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }`
+8. **Zoom in, pan, reset (FAST).** WinPrint's zoom (`=`/`+` in, `0` fit) only fires when its MAUI
+   `FocusablePlatformGraphicsView` has keyboard focus, which a bare `click` does not set -- so first
+   `focus { "handle": <handle>, "at": { "x": <preview-x>, "y": <preview-y> } }` (the `focus` tool clicks the
+   surface and verifies real keyboard focus; #91/#270). Then `key_equals` x3 (zoom in), an arrow or two to
+   pan, and `key_0` to fit. Keep dwells short -- this is a snappy flourish, not a crawl.
+9. **Open `README.md`, then switch to `Proportional 2-Up`.** Open the file as in step 5. Markdown/HTML default
+   to a proportional sheet, but select it explicitly to be sure: `click` the **Sheet Definition** `ComboBox`
+   (top of the sidebar), then `click` the **Proportional 2-Up** `ListItem` in the dropdown. The preview
+   reflows to prose with a proportional font and rendered images -- the "not just source code" beat. Dwell ~1.5 s.
+10. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Confirm the printer
+    is Microsoft Print to PDF** -- WinPrint prints to `viewModel.SelectedPrinter`; if the machine default is
+    something else, `query` the sidebar **Printer** `ComboBox`, `click` it, and `click` the **Microsoft Print
+    to PDF** item. Click the toolbar **Print** button (`🖨 Print…`), find the save dialog with
+    `windows { "window": "Save Print Output As", "timeout": 5000 }`, `query` its filename `Edit`, `click` it,
+    type the PDF path with `chars:` (**single** backslashes), and submit with **`enter`**. Assert the PDF exists.
+11. **Hold**, then **stop and write the GIF.** `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }`
     (absolute path -- a relative one lands in the controller's temp copy and is lost). Assert `result.frames`
-    (~25) and `result.bytes` (~3 MB).
-11. **Tidy.** Close WinPrint; tear down the controller: `pwsh -NoProfile -File scripts/Generate-HeroGif.ps1 -Stop`.
-
-**Zoom/pan is intentionally omitted.** The macOS hero and the choreography spec include a zoom/pan flourish,
-but WinPrint's zoom (`+`/`-`/`0`) only fires when its MAUI `FocusablePlatformGraphicsView` has keyboard
-focus, and a synthetic MCEC `click` does not set that focus -- so even a correct `VK_OEM_PLUS` keydown never
-reaches the zoom handler. Restore this beat if MCEC gains a focus-setting click (or WinPrint exposes a zoom
-control).
+    (~35-40) and `result.bytes` (~4 MB).
+12. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
 
