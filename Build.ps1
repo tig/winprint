@@ -10,11 +10,7 @@ $env:winprint_telemetryId="put Kindel Systems key here"
 texttransform .\src\WinPrint.Core\Services\TelemetryService.tt
 msbuild /p:Configuration=$configuration /p:Platform=$platform WinPrint.slnx
 
-$cliPath = ".\src\WinPrint.cli\bin\$platform\$configuration\$targetFramework\winprint.exe"
-$guiPath = ".\src\WinPrint.WinForms\bin\$platform\$configuration\$targetFramework\winprintgui.exe"
+$tuiPath = ".\src\WinPrint.TUI\bin\$platform\$configuration\$targetFramework\wp.exe"
 
-echo "Testing winprint CLI"
-& $cliPath .\testfiles\Program.cs --what-if
-
-echo "Testing winprintgui"
-& $guiPath .\testfiles\Program.cs 
+echo "Testing wp CLI"
+& $tuiPath --help

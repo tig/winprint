@@ -13,6 +13,10 @@
 
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="GitVersion.MsBuild" Version="6.4.0" PrivateAssets="all" />
+  </ItemGroup>
+
   <!-- House-style analyzers (one type per file, no nested types). Excluded from the
        analyzer project itself to avoid a circular reference. -->
   <ItemGroup Condition="'$(MSBuildProjectName)' != 'WinPrint.Analyzers'">
@@ -20,6 +24,7 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Analyzer</OutputItemType>
       <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+      <GlobalPropertiesToRemove>RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained;PublishSingleFile;PublishAot;IsAotCompatible;Platform;PlatformTarget</GlobalPropertiesToRemove>
       <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
   </ItemGroup>

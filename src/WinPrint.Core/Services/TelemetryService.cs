@@ -2,14 +2,17 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
+#endif
+#if WINDOWS
 using Microsoft.Win32;
 #endif
 using Serilog;
+using WinPrint.Core;
 
 namespace WinPrint.Core.Services;
 
@@ -17,12 +20,12 @@ public class TelemetryService
 {
     private Stopwatch runtime = null!;
 
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
     private TelemetryClient telemetry = null!;
 #endif
     public bool TelemetryEnabled { get; set; }
 
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
     public TelemetryClient GetTelemetryClient()
     {
         return telemetry;
@@ -33,7 +36,7 @@ public class TelemetryService
     {
         runtime = Stopwatch.StartNew();
 
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
         object? val = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Kindel\winprint", "Telemetry", 0);
         TelemetryEnabled = val != null && val.ToString() == "1" ? true : false;
 
@@ -56,8 +59,7 @@ public class TelemetryService
 #endif
 
         telemetry = new TelemetryClient(config);
-        telemetry.Context.Component.Version = FileVersionInfo
-            .GetVersionInfo(Assembly.GetAssembly(typeof(TelemetryService))!.Location).FileVersion;
+        telemetry.Context.Component.Version = AppHostInfo.FileVersion;
         telemetry.Context.Session.Id = Guid.NewGuid().ToString();
         telemetry.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
         // Anonymyize user ID
@@ -91,7 +93,7 @@ public class TelemetryService
 
     public void Stop()
     {
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
         TrackEvent("Application Stopped", metrics: new Dictionary<string, double>
             { { "runTime", runtime.Elapsed.TotalMilliseconds } });
 
@@ -104,7 +106,7 @@ public class TelemetryService
 
     public void SetUser(string user)
     {
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
         telemetry.Context.User.AuthenticatedUserId = user;
 #endif
     }
@@ -112,7 +114,7 @@ public class TelemetryService
     public void TrackEvent(string key, IDictionary<string, string?>? properties = null,
         IDictionary<string, double>? metrics = null)
     {
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
         if (TelemetryEnabled && telemetry != null)
         {
             telemetry.TrackEvent(key, properties, metrics);
@@ -127,7 +129,7 @@ public class TelemetryService
             Log.Error(ex, "{msg}", ex.Message);
         }
 
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
         if (telemetry != null && ex != null && TelemetryEnabled)
         {
             var telex = new ExceptionTelemetry(ex);
@@ -139,7 +141,7 @@ public class TelemetryService
 
     internal void Flush()
     {
-#if WINDOWS
+#if WINDOWS && !NATIVE_AOT
         if (telemetry != null)
         {
             telemetry.Flush();

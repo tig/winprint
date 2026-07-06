@@ -1,0 +1,1 @@
+First App Store release of WinPrint. Source & text printing with syntax highlighting, line numbers, headers/footers, n-up layouts, and an accurate preview.

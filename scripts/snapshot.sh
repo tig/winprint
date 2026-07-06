@@ -2,8 +2,7 @@
 #
 # Capture a full-fidelity PNG of a wp view using tuirec 0.5.0 + agg.
 #
-# This is the "rich" layer of the agent/human TUI design loop (see
-# docs/proposals/tui-agent-design-loop.md): tuirec drives the real `wp` binary through
+# This is the "rich" layer of the agent/human TUI design loop: tuirec drives the real `wp` binary through
 # a PTY, records an asciinema .cast, and agg renders one frame to PNG with true terminal
 # colors, font, and glyphs. (The fast "plain grid" layer is `wp --view <view> --cat`.)
 #
@@ -14,7 +13,7 @@
 #   scripts/snapshot.sh settings 62 28 /tmp/settings.png
 #
 # Prerequisites / gotchas learned the hard way:
-#   - tuirec >= 0.5.0 on PATH (or set TUIREC).            https://github.com/gui-cs/tuirec
+#   - tuirec >= 0.5.0 on PATH (or set TUIREC).            https://github.com/tui-cs/tuirec
 #   - agg on PATH or set AGG (tuirec auto-downloads it if it can reach the network).
 #   - DOTNET_ROOT must be exported so the wp apphost finds the runtime *inside tuirec's
 #     child process* — it is not otherwise inherited.

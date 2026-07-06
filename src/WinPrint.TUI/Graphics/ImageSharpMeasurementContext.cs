@@ -142,6 +142,16 @@ public sealed class ImageSharpMeasurementContext : IGraphicsContext, IDisposable
         _inner.FillRectangle(brush, x, y, width, height);
     }
 
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        return _inner.LoadImage(stream);
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        _inner.DrawImage(image, x, y, width, height);
+    }
+
     public void Dispose()
     {
         _image.Dispose();

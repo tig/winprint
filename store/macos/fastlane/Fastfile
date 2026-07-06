@@ -1,0 +1,41 @@
+# fastlane lanes for WinPrint's Mac App Store listing.
+#
+# Auth: set an App Store Connect API key via env before running —
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_CONTENT (base64 of the .p8)
+# (or fall back to APPLE_ID + an app-specific password).
+#
+# These lanes manage the *listing*. Building, signing, sandboxing and
+# notarizing the .pkg is a separate pipeline — see store/README.md.
+
+default_platform(:mac)
+
+def asc_api_key
+  return nil unless ENV["ASC_KEY_ID"] && ENV["ASC_ISSUER_ID"] && ENV["ASC_KEY_CONTENT"]
+  app_store_connect_api_key(
+    key_id: ENV["ASC_KEY_ID"],
+    issuer_id: ENV["ASC_ISSUER_ID"],
+    key_content: ENV["ASC_KEY_CONTENT"],
+    is_key_content_base64: true
+  )
+end
+
+platform :mac do
+  desc "Validate the listing metadata locally (no upload)."
+  lane :verify do
+    deliver(api_key: asc_api_key, run_precheck_before_submit: false,
+            verify_only: true, force: true)
+  end
+
+  desc "Upload metadata + screenshots only (no binary, no review submission)."
+  lane :metadata do
+    deliver(api_key: asc_api_key, skip_binary_upload: true,
+            skip_screenshots: false, submit_for_review: false, force: true)
+  end
+
+  desc "Upload a built/notarized .pkg (path via PKG_PATH) without submitting."
+  lane :upload do
+    deliver(api_key: asc_api_key, pkg: ENV.fetch("PKG_PATH"),
+            skip_metadata: true, skip_screenshots: true,
+            submit_for_review: false, force: true)
+  end
+end

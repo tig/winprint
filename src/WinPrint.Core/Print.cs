@@ -11,8 +11,7 @@ namespace WinPrint.Core;
 
 /// <summary>
 ///     The Print class is the top-level class for initiating print jobs with winprint. It is the
-///     primary class apps like winprint.exe, Out-WinPrint, and winprintgui use to configure, start,
-///     and manage print jobs.
+///     primary class front ends use to configure, start, and manage print jobs.
 /// </summary>
 public class Print : IDisposable
 {
@@ -66,7 +65,7 @@ public class Print : IDisposable
             try
             {
                 PrintDocument.PrinterSettings.PrinterName = printerName;
-                ServiceLocator.Current.TelemetryService.TrackEvent("Set Printer",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Set Printer",
                     new Dictionary<string, string?> { ["printerName"] = printerName });
             }
             catch (NullReferenceException)
@@ -118,7 +117,7 @@ public class Print : IDisposable
                 throw new Exception(sb.ToString());
             }
 
-            ServiceLocator.Current.TelemetryService.TrackEvent("Set Paper Size",
+            WinPrintServices.Current.TelemetryService.TrackEvent("Set Paper Size",
                 new Dictionary<string, string?> { ["paperSizeName"] = paperSizeName });
         }
     }
@@ -131,11 +130,11 @@ public class Print : IDisposable
     /// <returns>The number of sheets that would have been printed.</returns>
     public async Task<int> CountSheets(int fromSheet = 1, int toSheet = 0)
     {
-        // BUGBUG: Ignores from/to
         SheetViewModel.SetPrinterPageSettings(PrintDocument.DefaultPageSettings);
         await SheetViewModel.ReflowAsync().ConfigureAwait(false);
+        int sheetsPrinted = CountSheetRange(SheetViewModel.NumSheets, fromSheet, toSheet);
 
-        ServiceLocator.Current.TelemetryService.TrackEvent("Count Sheets",
+        WinPrintServices.Current.TelemetryService.TrackEvent("Count Sheets",
             new Dictionary<string, string?>
             {
                 ["type"] = SheetViewModel.ContentEngine?.GetType().Name,
@@ -145,9 +144,21 @@ public class Print : IDisposable
                 ["fromSheet"] = fromSheet.ToString(),
                 ["toSheet"] = toSheet.ToString()
             },
-            new Dictionary<string, double> { ["sheetsPrinted"] = SheetViewModel.NumSheets });
+            new Dictionary<string, double> { ["sheetsPrinted"] = sheetsPrinted });
         ;
-        return SheetViewModel.NumSheets;
+        return sheetsPrinted;
+    }
+
+    public static int CountSheetRange(int totalSheets, int fromSheet = 1, int toSheet = 0)
+    {
+        if (totalSheets <= 0)
+        {
+            return 0;
+        }
+
+        int first = fromSheet <= 0 ? 1 : fromSheet;
+        int last = toSheet <= 0 ? totalSheets : Math.Min(toSheet, totalSheets);
+        return first > last ? 0 : last - first + 1;
     }
 
     /// <summary>
@@ -169,7 +180,7 @@ public class Print : IDisposable
         _curSheet = PrintDocument.PrinterSettings.FromPage;
         PrintDocument.Print();
 
-        ServiceLocator.Current.TelemetryService.TrackEvent("Print Complete",
+        WinPrintServices.Current.TelemetryService.TrackEvent("Print Complete",
             new Dictionary<string, string?>
             {
                 ["type"] = SheetViewModel.ContentEngine?.GetType().Name,

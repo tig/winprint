@@ -4,6 +4,10 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+        <!-- Only active during RID-specific publish (dotnet publish -r …), so plain dotnet build/test stay clean. -->
+        <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
+        <StripSymbols Condition="'$(RuntimeIdentifier)' != ''">true</StripSymbols>
+        <InvariantGlobalization Condition="'$(RuntimeIdentifier)' != ''">true</InvariantGlobalization>
         <AssemblyName>wp</AssemblyName>
         <RootNamespace>WinPrint.TUI</RootNamespace>
         <Description>winprint Terminal.Gui full-screen TUI front end (wp)</Description>
@@ -17,9 +21,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui" Version="2.4.4" />
-        <PackageReference Include="Terminal.Gui.Cli" Version="0.1.0-develop.5" />
-        <PackageReference Include="Terminal.Gui.Editor" Version="2.5.0" />
+        <PackageReference Include="Terminal.Gui" Version="2.4.13" />
+        <PackageReference Include="Terminal.Gui.Cli" Version="0.3.0" />
+        <PackageReference Include="Terminal.Gui.Editor" Version="2.5.5" />
+        <PackageReference Include="Velopack" Version="1.1.1" />
         <!-- Cross-platform, pure-managed image decode/draw for the sixel preview (no System.Drawing). -->
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
@@ -27,11 +32,25 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj" />
+        <!-- Forward PublishAot so Core can drop trim-unsafe Windows-only deps (ApplicationInsights). -->
+        <ProjectReference Include="..\WinPrint.Core\WinPrint.Core.csproj">
+            <AdditionalProperties Condition="'$(PublishAot)' == 'true'">PublishAot=true</AdditionalProperties>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\CaskaydiaCoveNFM-Regular.ttf" />
+        <!-- Curated Markdown help pages rendered by WpHelpProvider for the wp help command. -->
+        <EmbeddedResource Include="Help\*.md" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>WinPrint.TUI.UnitTests</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>WinPrint.TUI.UITests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>

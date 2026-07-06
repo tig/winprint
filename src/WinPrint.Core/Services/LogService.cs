@@ -1,5 +1,4 @@
-using System.Diagnostics;
-using System.Reflection;
+using WinPrint.Core;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Serilog;
@@ -42,8 +41,7 @@ public class LogService
             // TODO: Keep this at Debug until after Beta, then change it to Information
             FileLevelSwitch.MinimumLevel = LogEventLevel.Debug;
 #endif
-        string? productVersion = FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(LogService))!.Location)
-            .FileVersion;
+        string? productVersion = AppHostInfo.FileVersion;
         LogPath =
             $"{SettingsService.SettingsPath}{Path.DirectorySeparatorChar}logs{Path.DirectorySeparatorChar}{appName}.log"
                 .Replace(@"file:\", "");
@@ -75,7 +73,7 @@ public class LogService
         }
 
         Log.Debug("--------- {app} {v} ---------", appName, productVersion);
-        if (ServiceLocator.Current.TelemetryService.TelemetryEnabled)
+        if (WinPrintServices.Current.TelemetryService.TelemetryEnabled)
         {
 #if CI_BUILD
                 var msg = "CI_BUILD so no telemetry will be tracked.";
@@ -87,7 +85,7 @@ public class LogService
             Log.Debug($"Telemetry is enabled. {msg}");
         }
 
-        Log.Debug("Logging to {path}", ServiceLocator.Current.LogService.LogPath);
+        Log.Debug("Logging to {path}", WinPrintServices.Current.LogService.LogPath);
         Log.Debug("OS Environment: {os}, architecture: {arch}, .NET version: {dotnet}",
             Environment.OSVersion, Environment.Is64BitProcess ? "x64" : "x86", Environment.Version);
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

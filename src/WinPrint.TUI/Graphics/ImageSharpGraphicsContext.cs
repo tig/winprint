@@ -19,6 +19,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
     private readonly Image<Rgba32> _image;
     private readonly FontCollection _fontCollection;
     private readonly Stack<ImageSharpState> _stateStack = new();
+    private readonly float _fontDpiY;
 
     private float _translateX;
     private float _translateY;
@@ -27,12 +28,13 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
     private RectangleF? _clip;
 
     public ImageSharpGraphicsContext(Image<Rgba32> image, float dpiX, float dpiY,
-        FontCollection fontCollection, bool isDisplayUnit = false)
+        FontCollection fontCollection, bool isDisplayUnit = false, float? fontDpiY = null)
     {
         _image = image ?? throw new ArgumentNullException(nameof(image));
         _fontCollection = fontCollection ?? throw new ArgumentNullException(nameof(fontCollection));
         DpiX = dpiX;
         DpiY = dpiY;
+        _fontDpiY = fontDpiY ?? dpiY;
         IsDisplayUnit = isDisplayUnit;
     }
 
@@ -114,7 +116,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
 
     public IGraphicsFont CreateFont(string family, float size, GraphicsFontStyle style, GraphicsFontUnit unit)
     {
-        float pointSize = unit == GraphicsFontUnit.Pixel ? size * 72f / DpiY : size;
+        float pointSize = unit == GraphicsFontUnit.Pixel ? size * 72f / _fontDpiY : size;
         FontStyle fontStyle = ToImageSharpFontStyle(style);
 
         if (_fontCollection.TryGet(family, out FontFamily fontFamily))
@@ -154,7 +156,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
     {
         Font nativeFont = GetFont(font);
         TextOptions options = CreateTextOptions(nativeFont);
-        FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
+        FontRectangle bounds = TextMeasurer.MeasureAdvance(text, options);
         // Convert from pixels to hundredths of inch (matching System.Drawing PageUnit=Display)
         float scale = 100f / DpiX;
         return new GraphicsSizeF(bounds.Width * scale, bounds.Height * scale);
@@ -166,7 +168,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         // width is in hundredths — convert to pixels for TextMeasurer
         int widthPixels = (int)(width * DpiX / 100f);
         TextOptions options = CreateTextOptions(nativeFont, widthPixels, format);
-        FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
+        FontRectangle bounds = TextMeasurer.MeasureAdvance(text, options);
         float scale = 100f / DpiX;
         return new GraphicsSizeF(bounds.Width * scale, bounds.Height * scale);
     }
@@ -180,7 +182,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         int widthPixels = (int)(proposedSize.Width * pixelScale);
         TextOptions options = CreateTextOptions(nativeFont, widthPixels, format);
 
-        FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
+        FontRectangle bounds = TextMeasurer.MeasureAdvance(text, options);
 
         // Approximate linesFilled from the measured bounds (in pixels)
         float lineHeight = nativeFont.Size * DpiY / 72f *
@@ -338,6 +340,34 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         _image.Mutate(ctx => ctx.Fill(color, rect));
     }
 
+    public IGraphicsImage? LoadImage(Stream stream)
+    {
+        try
+        {
+            return new ImageSharpImage(Image.Load(stream));
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public void DrawImage(IGraphicsImage image, float x, float y, float width, float height)
+    {
+        if (image is not ImageSharpImage isi)
+        {
+            return;
+        }
+
+        RectangleF dest = TransformRect(x, y, width, height);
+        int w = Math.Max(1, (int)MathF.Round(dest.Width));
+        int h = Math.Max(1, (int)MathF.Round(dest.Height));
+        var location = new Point((int)MathF.Round(dest.X), (int)MathF.Round(dest.Y));
+
+        using Image resized = isi.Image.Clone(ctx => ctx.Resize(w, h));
+        _image.Mutate(ctx => ctx.DrawImage(resized, location, 1f));
+    }
+
     #region Helpers
 
     private PointF TransformPoint(float x, float y)
@@ -371,7 +401,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
     private string TruncateToWidth(string text, Font font, float availableWidth, GraphicsStringFormat? format)
     {
         TextOptions options = CreateTextOptions(font, format: format, forDrawing: true);
-        FontRectangle bounds = TextMeasurer.MeasureSize(text, options);
+        FontRectangle bounds = TextMeasurer.MeasureAdvance(text, options);
         if (bounds.Width <= availableWidth)
         {
             return text;
@@ -384,7 +414,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         while (lo <= hi)
         {
             int mid = (lo + hi) / 2;
-            bounds = TextMeasurer.MeasureSize(text[..mid], options);
+            bounds = TextMeasurer.MeasureAdvance(text[..mid], options);
             if (bounds.Width <= availableWidth)
             {
                 result = mid;
@@ -475,7 +505,7 @@ public sealed class ImageSharpGraphicsContext : IGraphicsContext
         while (lo <= hi)
         {
             int mid = (lo + hi) / 2;
-            FontRectangle bounds = TextMeasurer.MeasureSize(text[..mid], options);
+            FontRectangle bounds = TextMeasurer.MeasureAdvance(text[..mid], options);
             if (bounds.Width <= proposedSize.Width && bounds.Height <= proposedSize.Height)
             {
                 result = mid;

@@ -35,7 +35,7 @@ If applicable, add screenshots to help explain your problem.
 **Version Information**
 Include the first line from the log (`%appdata%\Kindel Systems\winprintlogs`), like this:
 ```
-2020-03-29 16:42:20,435 INFO  - winprint v2.0.0.4000 - OS: Microsoft Windows NT 10.0.18363.0 on x64 - .NET: 4.0.30319.42000
+2026-06-27 16:42:20,435 INFO  - winprint v3.0.0.0 - OS: Microsoft Windows NT 10.0.22631.0 on x64 - .NET: 10.0.0
 ```
 
 Or, from running `winprint --debug` (or deprecated `out-winprint -verbose` if you are using the legacy PowerShell module).

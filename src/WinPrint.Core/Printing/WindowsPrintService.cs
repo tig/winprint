@@ -8,8 +8,8 @@ namespace WinPrint.Core.Printing;
 ///     Windows implementation of <see cref="IPrintService" /> using <c>System.Drawing.Printing</c>.
 ///     This is the headless, shared backend used by both the CLI and MAUI-Windows.
 ///     <para>
-///         Note: this service does <b>not</b> show a WinForms <c>PrintDialog</c>. Keeping WinForms out
-///         of Core avoids a <c>UseWindowsForms</c>/STA dependency that would hurt headless CLI and test
+///         Note: this service does <b>not</b> show a UI print dialog. Keeping desktop UI dependencies out
+///         of Core avoids an STA dependency that would hurt headless CLI and test
 ///         hosts. <see cref="ShowPrintDialog" /> is therefore a passthrough; UI front-ends that want a
 ///         native dialog (MAUI-Windows) present their own and pass the resulting setup to
 ///         <see cref="CreateJob" />.
@@ -60,7 +60,7 @@ public sealed class WindowsPrintService : IPrintService
     }
 
     /// <summary>
-    ///     Headless passthrough — Core does not present a WinForms dialog. Returns the supplied setup
+    ///     Headless passthrough — Core does not present a UI dialog. Returns the supplied setup
     ///     unchanged so callers that do not have (or want) a native dialog can proceed.
     /// </summary>
     public PrintPageSetup ShowPrintDialog(PrintDialogOptions options, PrintPageSetup currentSetup)

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- UI-level tests for the MAUI front end. These launch the built app as a subprocess (see
+         WindowsCheckboxSpacingUITests) and assert on window/layout behavior; they self-guard by OS and
+         no-op (pass) where they don't apply, so the solution build stays green everywhere. This is a plain
+         net10.0 project with no ProjectReference to the platform app. The MacCatalyst File-menu enablement
+         logic that used to be Appium-driven here is now covered deterministically by
+         WinPrint.Core.UnitTests (AppViewModelPrintEnablementTests). -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+        <NoWarn>1701;1702</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    </ItemGroup>
+
+</Project>

@@ -41,9 +41,8 @@
     <Style TargetType="CheckBox">
         <!--
             No Color setter: use the platform's native accent so the checkbox looks
-            like the OS standard. No MinimumWidth/HeightRequest either: the touch-
-            target sizing makes the checkbox's layout slot huge on a desktop app
-            (~44pt) and leaves a big gap before any adjacent label.
+            like the OS standard. WinUI's native minimum width is reduced in
+            MauiProgram so checkbox labels can sit next to the visible glyph.
         -->
     </Style>
 

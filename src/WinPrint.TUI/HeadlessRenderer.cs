@@ -21,7 +21,7 @@ namespace WinPrint.TUI;
 ///     <para>
 ///         This is exactly the "render a view to a grid string" one-liner that Terminal.Gui could
 ///         expose as a first-class API (e.g. <c>Application.RenderToString(view, width, height)</c>);
-///         having to hand-roll it here is a finding worth feeding back to gui-cs.
+///         having to hand-roll it here is a finding worth feeding back to tui-cs.
 ///     </para>
 /// </remarks>
 public static class HeadlessRenderer
@@ -33,6 +33,11 @@ public static class HeadlessRenderer
     public static string RenderToGrid(View content, int width, int height)
     {
         ArgumentNullException.ThrowIfNull(content);
+
+        // Render without touching the real terminal so SetScreenSize is authoritative. Without this the
+        // ANSI driver reads the host console size on Windows (ignoring SetScreenSize), which makes the
+        // grid — and the golden snapshots — platform-dependent. (The `wp --cat` path sets this too.)
+        Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
 
         using IApplication app = Application.Create();
         app.AppModel = AppModel.FullScreen;

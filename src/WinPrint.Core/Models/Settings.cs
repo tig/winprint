@@ -71,6 +71,13 @@ public class Settings : ModelBase
     /// </summary>
     public Dictionary<string, SheetSettings> Sheets { get; set; } = [];
 
+    /// <summary>
+    ///     Content-type id → sheet definition key (GUID string). When a file resolves to this content
+    ///     type and no explicit <c>--sheet</c> override is given, this sheet is applied transiently on
+    ///     open. Missing key falls back to <see cref="DefaultSheet" />.
+    /// </summary>
+    public Dictionary<string, string> DefaultSheetByContentType { get; set; } = [];
+
     [JsonIgnore]
     [SafeForTelemetry]
     public int NumSheets
@@ -301,6 +308,15 @@ public class Settings : ModelBase
             monoSpaceFamily = "Consolas";
             sansSerifFamily = "Calibri";
         }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // Real, always-present macOS faces (the generic "monospace"/"sansserif" aliases don't resolve
+            // through the MAUI/CoreText render path). Menlo is the Terminal default and ships Regular/Bold/
+            // Italic; Helvetica Neue is the standard proportional UI face. SF Mono/SF Pro are deliberately
+            // not used — Apple hides the system fonts from enumeration so they can't be picked or measured.
+            monoSpaceFamily = "Menlo";
+            sansSerifFamily = "Helvetica Neue";
+        }
 
         string defaultContentFontFamily = monoSpaceFamily;
         float defaultContentFontSize = 8F;
@@ -311,6 +327,7 @@ public class Settings : ModelBase
         FontStyle defaultHFFontStyle = FontStyle.Bold;
 
         string defaultHeaderText = "{DateRevised:D}|{FileName}|Language: {Language}";
+        string proportionalHeaderText = "{DateRevised:D}|{FileName}|{Language}";
         string defualtFooterText = "Printed with love by WinPrint||Page {Page} of {NumPages}";
 
         var settings = new Settings
@@ -331,9 +348,6 @@ public class Settings : ModelBase
                 // This font will be overriddent by Sheet defined fonts (if any)
                 //ContentSettings = new ContentSettings() {
                 //    Font = new Font() { Family = defaultContentFontFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
                 //},
                 //LineNumbers = true,
                 //LineNumberSeparator = false,
@@ -350,9 +364,6 @@ public class Settings : ModelBase
             {
                 //ContentSettings = new ContentSettings() {
                 //    Font = new Font() { Family = sansSerifFamily, Size = defaultContentFontSize, Style = defaultContentFontStyle },
-                //    Darkness = 100,
-                //    Grayscale = false,
-                //    PrintBackground = true
                 //},
             },
             DefaultSheet = Uuid.DefaultSheet,
@@ -376,10 +387,7 @@ public class Settings : ModelBase
                     Size = defaultContentFontSize,
                     Style = defaultContentFontStyle
                 },
-                Style = "pastie",
-                Darkness = 100,
-                Grayscale = false,
-                PrintBackground = true
+                Style = "pastie"
             }
         };
         sheet.Header.Enabled = true;
@@ -425,9 +433,6 @@ public class Settings : ModelBase
                     Style = defaultContentFontStyle
                 },
                 Style = "pastie",
-                Darkness = 100,
-                Grayscale = false,
-                PrintBackground = true,
                 LineNumberSeparator = true,
                 LineNumbers = true
             }
@@ -457,6 +462,98 @@ public class Settings : ModelBase
 
         sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
         settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
+
+        // Proportional 2-Up — sans-serif prose/HTML layout
+        sheet = new SheetSettings
+        {
+            Name = "Proportional 2-Up",
+            Columns = 2,
+            Rows = 1,
+            Landscape = true,
+            Padding = 3,
+            PageSeparator = true,
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font
+                {
+                    Family = sansSerifFamily,
+                    Size = defaultContentFontSize,
+                    Style = defaultContentFontStyle
+                },
+                LineNumbers = false
+            }
+        };
+        sheet.Header.Enabled = true;
+        sheet.Header.Text = proportionalHeaderText;
+        sheet.Header.BottomBorder = true;
+        sheet.Header.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Header.VerticalPadding = 1;
+        sheet.Footer.Enabled = true;
+        sheet.Footer.TopBorder = true;
+        sheet.Footer.Text = defualtFooterText;
+        sheet.Footer.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Footer.VerticalPadding = 1;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        settings.Sheets.Add(Uuid.ProportionalSheet2Up.ToString(), sheet);
+
+        // Proportional 1-Up — sans-serif prose/HTML layout
+        sheet = new SheetSettings
+        {
+            Name = "Proportional 1-Up",
+            Columns = 1,
+            Rows = 1,
+            Landscape = false,
+            Padding = 3,
+            PageSeparator = true,
+            ContentSettings = new ContentSettings
+            {
+                Font = new Font
+                {
+                    Family = sansSerifFamily,
+                    Size = defaultContentFontSize,
+                    Style = defaultContentFontStyle
+                },
+                LineNumbers = false
+            }
+        };
+        sheet.Header.Enabled = true;
+        sheet.Header.Text = proportionalHeaderText;
+        sheet.Header.BottomBorder = true;
+        sheet.Header.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Header.VerticalPadding = 1;
+        sheet.Footer.Enabled = true;
+        sheet.Footer.Text = defualtFooterText;
+        sheet.Footer.TopBorder = true;
+        sheet.Footer.Font = new Font
+        {
+            Family = defaultHFFontFamily,
+            Size = defaultHFFontSize,
+            Style = defaultHFFontStyle
+        };
+        sheet.Footer.VerticalPadding = 1;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        settings.Sheets.Add(Uuid.ProportionalSheet1Up.ToString(), sheet);
+
+        settings.DefaultSheetByContentType = new Dictionary<string, string>
+        {
+            ["text/x-markdown"] = Uuid.ProportionalSheet2Up.ToString(),
+            ["text/html"] = Uuid.ProportionalSheet2Up.ToString()
+        };
 
         settings.FileTypeMapping = new FileTypeMapping
         {
@@ -503,5 +600,119 @@ public class Settings : ModelBase
         };
 
         return settings;
+    }
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not Settings src)
+        {
+            return;
+        }
+
+        Location = src.Location is null
+            ? null
+            : new WindowLocation(src.Location.X, src.Location.Y);
+        Size = src.Size is null ? null : new WindowSize(src.Size.Width, src.Size.Height);
+        WindowState = src.WindowState;
+        DefaultSheet = src.DefaultSheet;
+        DefaultSheetByContentType.Clear();
+        if (src.DefaultSheetByContentType is not null)
+        {
+            foreach (KeyValuePair<string, string> entry in src.DefaultSheetByContentType)
+            {
+                DefaultSheetByContentType[entry.Key] = entry.Value;
+            }
+        }
+
+        DefaultContentType = src.DefaultContentType;
+        DefaultCteClassName = src.DefaultCteClassName;
+        DefaultSyntaxHighlighterCteNameClassName = src.DefaultSyntaxHighlighterCteNameClassName;
+
+        foreach (KeyValuePair<string, SheetSettings> sheet in src.Sheets)
+        {
+            if (Sheets.TryGetValue(sheet.Key, out SheetSettings? existing))
+            {
+                existing.CopyPropertiesFrom(sheet.Value);
+            }
+            else
+            {
+                var created = new SheetSettings();
+                created.CopyPropertiesFrom(sheet.Value);
+                Sheets[sheet.Key] = created;
+            }
+        }
+
+        AnsiContentTypeEngineSettings.CopyPropertiesFrom(src.AnsiContentTypeEngineSettings);
+        TextMateContentTypeEngineSettings.CopyPropertiesFrom(src.TextMateContentTypeEngineSettings);
+        TextContentTypeEngineSettings.CopyPropertiesFrom(src.TextContentTypeEngineSettings);
+        MarkdownContentTypeEngineSettings.CopyPropertiesFrom(src.MarkdownContentTypeEngineSettings);
+        HtmlContentTypeEngineSettings.CopyPropertiesFrom(src.HtmlContentTypeEngineSettings);
+        FileTypeMapping.CopyPropertiesFrom(src.FileTypeMapping);
+        ModelCopyHelpers.CopyFont(DiagnosticRulesFont, src.DiagnosticRulesFont);
+
+        PreviewPrintableArea = src.PreviewPrintableArea;
+        PrintPrintableArea = src.PrintPrintableArea;
+        PreviewPaperSize = src.PreviewPaperSize;
+        PrintPaperSize = src.PrintPaperSize;
+        PreviewMargins = src.PreviewMargins;
+        PrintMargins = src.PrintMargins;
+        PreviewHardMargins = src.PreviewHardMargins;
+        PrintHardMargins = src.PrintHardMargins;
+        PrintBounds = src.PrintBounds;
+        PreviewBounds = src.PreviewBounds;
+        PrintContentBounds = src.PrintContentBounds;
+        PreviewContentBounds = src.PreviewContentBounds;
+        PrintHeaderFooterBounds = src.PrintHeaderFooterBounds;
+        PreviewHeaderFooterBounds = src.PreviewHeaderFooterBounds;
+        PreviewPageBounds = src.PreviewPageBounds;
+        PrintPageBounds = src.PrintPageBounds;
+        ShowPrintDialog = src.ShowPrintDialog;
+        LastPrinter = src.LastPrinter;
+        LastPaperSize = src.LastPaperSize;
+    }
+
+    public override IDictionary<string, string?> GetTelemetryDictionary()
+    {
+        Dictionary<string, string?> dictionary = TelemetryCollector.Create();
+        if (Location is not null)
+        {
+            TelemetryCollector.Add(dictionary, nameof(Location), Location);
+        }
+
+        if (Size is not null)
+        {
+            TelemetryCollector.Add(dictionary, nameof(Size), Size);
+        }
+
+        TelemetryCollector.Add(dictionary, nameof(WindowState), WindowState);
+        TelemetryCollector.Add(dictionary, nameof(DefaultSheet), DefaultSheet);
+        TelemetryCollector.Add(dictionary, nameof(NumSheets), NumSheets);
+        TelemetryCollector.Add(dictionary, nameof(DefaultContentType), DefaultContentType);
+        TelemetryCollector.Add(dictionary, nameof(DefaultCteClassName), DefaultCteClassName);
+        TelemetryCollector.Add(dictionary, nameof(DefaultSyntaxHighlighterCteNameClassName),
+            DefaultSyntaxHighlighterCteNameClassName);
+        TelemetryCollector.Add(dictionary, nameof(NumFilesAssociations), NumFilesAssociations);
+        TelemetryCollector.Add(dictionary, nameof(NumLanguages), NumLanguages);
+        TelemetryCollector.Add(dictionary, nameof(DiagnosticRulesFont), DiagnosticRulesFont);
+        TelemetryCollector.Add(dictionary, nameof(PreviewPrintableArea), PreviewPrintableArea);
+        TelemetryCollector.Add(dictionary, nameof(PrintPrintableArea), PrintPrintableArea);
+        TelemetryCollector.Add(dictionary, nameof(PreviewPaperSize), PreviewPaperSize);
+        TelemetryCollector.Add(dictionary, nameof(PrintPaperSize), PrintPaperSize);
+        TelemetryCollector.Add(dictionary, nameof(PreviewMargins), PreviewMargins);
+        TelemetryCollector.Add(dictionary, nameof(PrintMargins), PrintMargins);
+        TelemetryCollector.Add(dictionary, nameof(PreviewHardMargins), PreviewHardMargins);
+        TelemetryCollector.Add(dictionary, nameof(PrintHardMargins), PrintHardMargins);
+        TelemetryCollector.Add(dictionary, nameof(PrintBounds), PrintBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewBounds), PreviewBounds);
+        TelemetryCollector.Add(dictionary, nameof(PrintContentBounds), PrintContentBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewContentBounds), PreviewContentBounds);
+        TelemetryCollector.Add(dictionary, nameof(PrintHeaderFooterBounds), PrintHeaderFooterBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewHeaderFooterBounds), PreviewHeaderFooterBounds);
+        TelemetryCollector.Add(dictionary, nameof(PreviewPageBounds), PreviewPageBounds);
+        TelemetryCollector.Add(dictionary, nameof(PrintPageBounds), PrintPageBounds);
+        TelemetryCollector.Add(dictionary, nameof(ShowPrintDialog), ShowPrintDialog);
+        TelemetryCollector.Add(dictionary, nameof(LastPrinter), LastPrinter);
+        TelemetryCollector.Add(dictionary, nameof(LastPaperSize), LastPaperSize);
+        return dictionary;
     }
 }

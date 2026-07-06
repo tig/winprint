@@ -9,6 +9,17 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- One base size for all UI chrome (sidebar + dialogs) so the app is visually consistent.
+                 Controls keep MAUI's default FontAutoScalingEnabled="True", so this base is scaled by the
+                 OS text-size setting automatically on both MacCatalyst and Windows — no per-platform code.
+                 (Print-output fonts — header/footer and content — are rendered by the engine, not these
+                 controls, so they're unaffected and stay at their true point sizes.) Kept app-wide (rather
+                 than per-page) so the code-built dialogs can read the same value via UiFonts.SidebarFontSize. -->
+            <OnPlatform x:Key="SidebarFontSize" x:TypeArguments="x:Double">
+                <On Platform="Default" Value="13" />
+                <On Platform="WinUI" Value="11" />
+            </OnPlatform>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Vendored third-party library: a managed VT100/ANSI escape-sequence decoder
+    (https://github.com/tig/libvt100), trimmed to the ANSI decode path used by WinPrint's AnsiCte.
+    The GDI+ ToBitmap renderer was removed so this assembly depends only on managed
+    System.Drawing.Primitives (Color/Point/Size) — no System.Drawing.Common/GDI+ — keeping it
+    cross-platform and AOT/trim friendly. House style rules (analyzers, nullable, warnings-as-errors,
+    implicit usings) are intentionally relaxed here because this is upstream source we don't reformat.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <RunAnalyzers>false</RunAnalyzers>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <IsAotCompatible>true</IsAotCompatible>
+    <NoWarn>$(NoWarn);CS0168;CS0169;CS0219;CS0414;CS0649;CS8981;CS0660;CS0661;IDE0005</NoWarn>
+  </PropertyGroup>
+
+</Project>

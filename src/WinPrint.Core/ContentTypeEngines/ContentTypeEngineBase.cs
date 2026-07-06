@@ -116,6 +116,13 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     }
 
     /// <summary>
+    ///     Path of the source file being rendered, when known. Used to resolve document-relative
+    ///     references (e.g. local images in Markdown). May be empty/null for string-loaded content.
+    /// </summary>
+    [JsonIgnore]
+    public string? SourceFileName { get; set; }
+
+    /// <summary>
     ///     The contents encoding of the file to be printed.
     /// </summary>
     [JsonIgnore]
@@ -154,19 +161,12 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     }
 
     /// <summary>
-    ///     https://stackoverflow.com/questions/5411694/get-all-inherited-classes-of-an-abstract-class
+    ///     All concrete content-type engines shipped in this assembly (see
+    ///     <see cref="ContentTypeEngineRegistry" />).
     /// </summary>
-    public static ICollection<ContentTypeEngineBase> GetDerivedClassesCollection()
+    public static IReadOnlyList<ContentTypeEngineBase> GetDerivedClassesCollection()
     {
-        var objects = new List<ContentTypeEngineBase>();
-        foreach (Type type in typeof(ContentTypeEngineBase).Assembly.GetTypes()
-                     .Where(myType =>
-                         myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(ContentTypeEngineBase))))
-        {
-            objects.Add((ContentTypeEngineBase)Activator.CreateInstance(type)!);
-        }
-
-        return objects;
+        return ContentTypeEngineRegistry.CreateAll();
     }
 
     /// <summary>
@@ -231,10 +231,10 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         LogService.TraceMessage();
 
         contentType = string.IsNullOrEmpty(contentType)
-            ? ModelLocator.Current.Settings.DefaultContentType
+            ? WinPrintServices.Current.Settings.DefaultContentType
             : contentType;
-        Debug.Assert(ModelLocator.Current.FileTypeMapping != null);
-        Debug.Assert(ModelLocator.Current.FileTypeMapping.ContentTypes != null);
+        Debug.Assert(WinPrintServices.Current.FileTypeMapping != null);
+        Debug.Assert(WinPrintServices.Current.FileTypeMapping.ContentTypes != null);
 
         // If contentType matches one of our CTE Names, this will succeed.
         ContentTypeEngineBase? cte = GetDerivedClassesCollection()
@@ -245,7 +245,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         if (cte != null)
         {
             languageId = cte.SupportedContentTypes[0];
-            language = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(lang =>
+            language = WinPrintServices.Current.FileTypeMapping.ContentTypes.FirstOrDefault(lang =>
                 lang.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))?.Title ?? languageId;
             return (cte, languageId, language);
         }
@@ -264,7 +264,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         // },
         // Is it a file extension? (*.an)
 
-        ContentType? extension = ModelLocator.Current.FileTypeMapping.ContentTypes
+        ContentType? extension = WinPrintServices.Current.FileTypeMapping.ContentTypes
             .FirstOrDefault(l => l.Extensions.Any(i =>
                 CultureInfo.CurrentCulture.CompareInfo.Compare(i, contentType, CompareOptions.IgnoreCase) == 0));
         if (extension != null && !string.IsNullOrEmpty(extension.Id))
@@ -283,7 +283,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         else
         {
             // Is it a content type (Landuage.Id)? (text/ansi)
-            ContentType? lang = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
+            ContentType? lang = WinPrintServices.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
                 l.Id.Equals(contentType, StringComparison.OrdinalIgnoreCase));
             if (lang != null)
             {
@@ -292,7 +292,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             }
 
             // Is it a language Title?
-            lang = ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
+            lang = WinPrintServices.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
                 l.Title.Equals(contentType, StringComparison.OrdinalIgnoreCase));
             if (lang != null)
             {
@@ -301,7 +301,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             }
 
             // Is it a language name found in a Language alias? (ansi)
-            lang = ModelLocator.Current.FileTypeMapping.ContentTypes
+            lang = WinPrintServices.Current.FileTypeMapping.ContentTypes
                 .FirstOrDefault(l => l.Aliases.Any(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i,
                     contentType,
                     CompareOptions.IgnoreCase) == 0));
@@ -321,13 +321,13 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
                 ContentTypeEngineBase[] contentTypeEngineBases = ctes as ContentTypeEngineBase[] ?? [.. ctes];
                 cte = contentTypeEngineBases.Count() > 1
                     ? contentTypeEngineBases.First(c =>
-                        c.GetType().Name == ModelLocator.Current.Settings.DefaultCteClassName)
+                        c.GetType().Name == WinPrintServices.Current.Settings.DefaultCteClassName)
                     : contentTypeEngineBases.FirstOrDefault();
 
                 if (cte != null)
                 {
                     return (cte, languageId,
-                        ModelLocator.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
+                        WinPrintServices.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
                             l.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))!.Title);
                 }
 
@@ -341,9 +341,9 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         {
             // Didn't find a content type so use default CTE
             cte = GetDerivedClassesCollection().FirstOrDefault(c =>
-                c.SupportedContentTypes.Contains(ModelLocator.Current.Settings.DefaultContentType));
-            languageId = cte?.SupportedContentTypes[0] ?? ModelLocator.Current.Settings.DefaultContentType;
-            language = ModelLocator.Current.FileTypeMapping.ContentTypes
+                c.SupportedContentTypes.Contains(WinPrintServices.Current.Settings.DefaultContentType));
+            languageId = cte?.SupportedContentTypes[0] ?? WinPrintServices.Current.Settings.DefaultContentType;
+            language = WinPrintServices.Current.FileTypeMapping.ContentTypes
                 .FirstOrDefault(l => l.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))
                 ?.Title ?? languageId;
         }
@@ -351,7 +351,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         {
             // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
             cte = GetDerivedClassesCollection().FirstOrDefault(c =>
-                c.GetType().Name.Equals(ModelLocator.Current.Settings.DefaultSyntaxHighlighterCteNameClassName,
+                c.GetType().Name.Equals(WinPrintServices.Current.Settings.DefaultSyntaxHighlighterCteNameClassName,
                     StringComparison.OrdinalIgnoreCase));
             //if (string.IsNullOrWhiteSpace(language)) {
             //    language = contentType;
@@ -369,7 +369,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     /// <returns>The content type</returns>
     public static string GetContentType(string filePath)
     {
-        string contentType = ModelLocator.Current.Settings.DefaultContentType;
+        string contentType = WinPrintServices.Current.Settings.DefaultContentType;
 
         if (string.IsNullOrEmpty(filePath))
         {
@@ -384,18 +384,18 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         if (ext != string.Empty)
         {
             // BUGBUG: This assumes all extensions in FilesAssociations are lowercase
-            if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue("*" + ext, out string? ct))
+            if (WinPrintServices.Current.FileTypeMapping.FilesAssociations.TryGetValue("*" + ext, out string? ct))
             {
                 // Now find Id in Languages
-                contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
+                contentType = WinPrintServices.Current.FileTypeMapping.ContentTypes
                     .Where(lang => lang.Id.Equals(ct, StringComparison.OrdinalIgnoreCase))
-                    .DefaultIfEmpty(new ContentType { Id = ModelLocator.Current.Settings.DefaultContentType })
+                    .DefaultIfEmpty(new ContentType { Id = WinPrintServices.Current.Settings.DefaultContentType })
                     .First().Id;
             }
             else
             {
                 // No direct file extension, look in Languages
-                contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
+                contentType = WinPrintServices.Current.FileTypeMapping.ContentTypes
                     .Where(lang => lang.Extensions
                         .Count(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i, "*" + ext,
                                         CompareOptions.IgnoreCase) ==
@@ -403,14 +403,14 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
                                     CultureInfo.CurrentCulture.CompareInfo.Compare(i, ext,
                                         CompareOptions.IgnoreCase) ==
                                     0) > 0)
-                    .DefaultIfEmpty(new ContentType { Id = ModelLocator.Current.Settings.DefaultContentType })
+                    .DefaultIfEmpty(new ContentType { Id = WinPrintServices.Current.Settings.DefaultContentType })
                     .First().Id;
             }
         }
         else
         {
             // Empty means no extension (e.g. .\.ssh\config) - use filename
-            if (ModelLocator.Current.FileTypeMapping.FilesAssociations.TryGetValue("*" + Path.GetFileName(filePath),
+            if (WinPrintServices.Current.FileTypeMapping.FilesAssociations.TryGetValue("*" + Path.GetFileName(filePath),
                     out string? ct))
             {
                 contentType = ct;
@@ -418,11 +418,11 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             else
             {
                 // No direct file extension, look in Languages
-                contentType = ModelLocator.Current.FileTypeMapping.ContentTypes
+                contentType = WinPrintServices.Current.FileTypeMapping.ContentTypes
                     .Where(lang => lang.Extensions.Count(i => CultureInfo.CurrentCulture.CompareInfo.Compare(i,
                         Path.GetFileName(filePath),
                         CompareOptions.IgnoreCase) == 0) > 0)
-                    .DefaultIfEmpty(new ContentType { Id = ModelLocator.Current.Settings.DefaultContentType })
+                    .DefaultIfEmpty(new ContentType { Id = WinPrintServices.Current.Settings.DefaultContentType })
                     .First().Id;
             }
         }
@@ -430,11 +430,35 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
         // If not text or html, is it a language?
         //if (!contentType.Equals("text/plain") && !contentType.Equals("text/html")) {
         //    // Technically, because we got the assocation from FilesAssocation, this should always work 
-        //    if (!((List<Language>)ModelLocator.Current.Associations.Languages).Exists(lang => lang.Id == contentType))
+        //    if (!((List<Language>)WinPrintServices.Current.Associations.Languages).Exists(lang => lang.Id == contentType))
         //        contentType = "text/plain";
         //}
         return contentType;
     }
 
     public abstract Task<bool> SetDocumentAsync(string document);
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        if (source is not ContentTypeEngineBase src)
+        {
+            return;
+        }
+
+        PageSize = src.PageSize;
+        MeasurementContext = src.MeasurementContext;
+        Document = src.Document;
+        SourceFileName = src.SourceFileName;
+        Encoding = src.Encoding;
+
+        if (src.ContentSettings is null)
+        {
+            ContentSettings = null;
+        }
+        else
+        {
+            ContentSettings ??= new ContentSettings();
+            ContentSettings.CopyPropertiesFrom(src.ContentSettings);
+        }
+    }
 }

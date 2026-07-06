@@ -6,11 +6,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Serilog;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
+using WinPrintFont = WinPrint.Core.Models.Font;
 
 namespace WinPrint.Maui.ViewModels;
 
@@ -26,6 +29,7 @@ namespace WinPrint.Maui.ViewModels;
 public sealed class MainViewModel : INotifyPropertyChanged
 {
     private readonly AppViewModel _app;
+    private readonly OpenFilePickerFolder _openFilePickerFolder = new();
 
     private readonly PrintPageSetup _currentPageSetup = new()
     {
@@ -70,11 +74,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             /* TODO: Open settings dialog */
         });
+        OpenConfigCommand = new RelayCommand(async () => await OpenConfigAsync());
 
         // Forward AppViewModel state changes so XAML bindings update.
         _app.PropertyChanged += OnAppPropertyChanged;
         _app.PreviewInvalidated += (_, _) =>
         {
+            // Content (not just zoom/page) changed — rendered-page caches are stale.
+            PreviewContentGeneration++;
             if (MainThread.IsMainThread)
             {
                 InvalidatePreview?.Invoke();
@@ -148,6 +155,44 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set
         {
             if (SetField(ref _zoomFactor, value))
+            {
+                if (value <= 1.01f)
+                {
+                    // Back at fit — recenter so the next zoom-in starts from a sane spot.
+                    _panX = 0;
+                    _panY = 0;
+                }
+
+                InvalidatePreview?.Invoke();
+            }
+        }
+    }
+
+    // --- Preview panning (only meaningful when ZoomFactor > 1) ---
+
+    private float _panX;
+    private float _panY;
+
+    /// <summary>Horizontal pan offset of the zoomed preview page, in view units.</summary>
+    public float PanX
+    {
+        get => _panX;
+        set
+        {
+            if (SetField(ref _panX, value))
+            {
+                InvalidatePreview?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>Vertical pan offset of the zoomed preview page, in view units.</summary>
+    public float PanY
+    {
+        get => _panY;
+        set
+        {
+            if (SetField(ref _panY, value))
             {
                 InvalidatePreview?.Invoke();
             }
@@ -442,13 +487,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (_app.SelectedPaperSize != value)
             {
-                _app.SelectedPaperSize = value;
-                if (value != null)
-                {
-                    UpdatePageSetupForPaper(value);
-                    _ = _app.ReflowAsync();
-                }
-
+                _app.SetPaperSize(value);
                 OnPropertyChanged();
             }
         }
@@ -499,25 +538,49 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ChangeHeaderFooterFontCommand { get; }
     public ICommand SettingsCommand { get; }
 
+    /// <summary>Opens the WinPrint JSON config file in the OS default editor (issue #165).</summary>
+    public ICommand OpenConfigCommand { get; }
+
     public Action? InvalidatePreview { get; set; }
+
+    /// <summary>
+    ///     Incremented whenever the page CONTENT changes (reflow, sheet/margin edits,
+    ///     file load) — but not on zoom or page navigation. Lets the preview drawable
+    ///     know when its cached page rendering is stale.
+    /// </summary>
+    public int PreviewContentGeneration { get; private set; }
+
     public Func<Task<string?>>? PickFileAsync { get; set; }
     public Func<Task>? PerformPrintAsync { get; set; }
-    public Func<string, float, string, Task<(string Family, float Size, string Style)?>>? PickFontAsync { get; set; }
+
+    public Func<string, float, string, bool, Task<(string Family, float Size, string Style)?>>? PickFontAsync
+    {
+        get;
+        set;
+    }
 
     // --- Actions ---
 
     public async Task OpenFileAsync()
     {
-        string? filePath = PickFileAsync != null ? await PickFileAsync() : null;
+        string? filePath = PickFileAsync != null
+            ? await _openFilePickerFolder.RunFromRememberedDirectoryAsync(PickFileAsync)
+            : null;
         if (!string.IsNullOrEmpty(filePath))
         {
             await LoadFileAsync(filePath);
         }
     }
 
-    public Task<bool> LoadFileAsync(string filePath)
+    public async Task<bool> LoadFileAsync(string filePath)
     {
-        return _app.LoadFileAsync(filePath);
+        bool loaded = await _app.LoadFileAsync(filePath);
+        if (loaded)
+        {
+            _openFilePickerFolder.RememberFile(filePath);
+        }
+
+        return loaded;
     }
 
     public async Task PrintAsync()
@@ -541,11 +604,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // preferFixedPitch: true — source/document printing favors monospace, so seed the chooser's
+        // "fixed-pitch only" filter on. The user can still turn it off to pick a proportional face.
         (string Family, float Size, string Style)? result =
-            await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString());
+            await PickFontAsync(cs.Font.Family, cs.Font.Size, cs.Font.Style.ToString(), true);
         if (result.HasValue)
         {
-            cs.Font = new Core.Models.Font
+            cs.Font = new WinPrintFont
             {
                 Family = result.Value.Family,
                 Size = result.Value.Size,
@@ -566,11 +631,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // preferFixedPitch: false — headers/footers default to a proportional face (see Settings defaults),
+        // so seed the chooser's "fixed-pitch only" filter off. The user can still turn it on.
         (string Family, float Size, string Style)? result =
-            await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString());
+            await PickFontAsync(header.Font.Family, header.Font.Size, header.Font.Style.ToString(), false);
         if (result.HasValue)
         {
-            var newFont = new Core.Models.Font
+            var newFont = new WinPrintFont
             {
                 Family = result.Value.Family,
                 Size = result.Value.Size,
@@ -578,14 +645,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     ? style
                     : FontStyle.Regular
             };
-            header.Font = newFont;
-            if (SheetViewModel.Footer != null)
-            {
-                SheetViewModel.Footer.Font = (Core.Models.Font)newFont.Clone();
-            }
+
+            // Write to the header/footer MODELS (not the view-models). Setting the view-model's Font
+            // directly never propagated to the model, so the choice didn't reflow correctly and was lost
+            // on save — that's why picking a header/footer font appeared to do nothing.
+            SheetViewModel.SetHeaderFooterFont(newFont);
 
             OnPropertyChanged(nameof(HeaderFooterFontDescription));
             await _app.ReflowAsync();
+        }
+    }
+
+    // Opens the JSON config file in the OS default editor (issue #165). Unlike the TUI — which edits in a
+    // modal Terminal.Gui editor (issue #166) because it can run headless/over SSH — the GUI always has a
+    // desktop session, so shelling out to the user's default editor is the least-surprising behavior.
+    private async Task OpenConfigAsync()
+    {
+        string path = WinPrintServices.Current.SettingsService.SettingsFileName;
+        try
+        {
+            // The app reads (and creates-with-defaults) the config at startup, so it normally exists; if it
+            // was deleted while running, ReadSettings recreates it on disk with defaults so there is always
+            // a file to open. (ReloadAndApplySettings only *reads* — it throws when the file is missing.)
+            if (!File.Exists(path))
+            {
+                WinPrintServices.Current.SettingsService.ReadSettings();
+            }
+
+            await Launcher.Default.OpenAsync(new OpenFileRequest
+            {
+                File = new ReadOnlyFile(path)
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open config file {path} in the default editor", path);
         }
     }
 
@@ -613,6 +707,40 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public void SaveNormalBounds(double x, double y, double width, double height)
     {
         _app.SaveNormalBounds(x, y, width, height);
+    }
+
+    /// <summary>
+    ///     True when any sheet definition has unsaved edits. The window-close handler checks this before
+    ///     prompting.
+    /// </summary>
+    public bool HasUnsavedSheetChanges => _app.HasAnyUnsavedSheetChanges;
+
+    /// <summary>
+    ///     Shows the "save sheet definition" prompt for each definition with unsaved edits and applies the
+    ///     user's choice. Returns <c>true</c> if the app may close (everything saved/created or nothing to
+    ///     save) or <c>false</c> if the user cancelled and wants to keep editing.
+    /// </summary>
+    public Task<bool> PromptSaveSheetOnExitAsync(Page host)
+    {
+        // The decision logic (which definitions to prompt for, and how to apply each choice) lives in the
+        // shared AppViewModel guard so every front end behaves identically. Here we only present the dialog.
+        return _app.ResolveUnsavedSheetsOnExitAsync(async (definitions, currentIndex) =>
+        {
+            Views.SaveSheetDialogPage dialog = new(definitions, currentIndex);
+            await host.Navigation.PushModalAsync(dialog);
+            SaveSheetChoice choice = await dialog.Completion;
+
+            // The dialog may already be off the modal stack (back gesture / programmatic pop, which
+            // OnDisappearing surfaces as Cancel). Only pop when it's still the top modal so we never
+            // pop the wrong page or throw.
+            IReadOnlyList<Page> modalStack = host.Navigation.ModalStack;
+            if (modalStack.Count > 0 && ReferenceEquals(modalStack[^1], dialog))
+            {
+                await host.Navigation.PopModalAsync();
+            }
+
+            return new SaveSheetResolution(choice, dialog.SelectedIndex, dialog.NewName);
+        });
     }
 
     // --- Internals ---
@@ -736,25 +864,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 (int)(top * 100),
                 (int)(bottom * 100));
             _app.SetMargins(margins);
-        }
-    }
-
-    private void UpdatePageSetupForPaper(string paperName)
-    {
-        if (paperName.StartsWith("Letter"))
-        {
-            _currentPageSetup.PaperWidth = 850;
-            _currentPageSetup.PaperHeight = 1100;
-        }
-        else if (paperName.StartsWith("Legal"))
-        {
-            _currentPageSetup.PaperWidth = 850;
-            _currentPageSetup.PaperHeight = 1400;
-        }
-        else if (paperName.StartsWith("A4"))
-        {
-            _currentPageSetup.PaperWidth = 827;
-            _currentPageSetup.PaperHeight = 1169;
         }
     }
 

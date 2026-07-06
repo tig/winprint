@@ -6,7 +6,7 @@ using WinPrint.Core.Models;
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Feeds winprint's header/footer macro names (see <see cref="MacroChoices" />) to the gui-cs
+///     Feeds winprint's header/footer macro names (see <see cref="MacroChoices" />) to the tui-cs
 ///     <c>Editor</c> autocomplete popup. Typing a macro name — or pressing <c>Ctrl+Space</c> on an
 ///     empty field — offers the known macros; accepting one inserts the braced token, e.g.
 ///     <c>{FileName}</c>.

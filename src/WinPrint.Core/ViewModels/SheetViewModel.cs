@@ -88,6 +88,25 @@ public class SheetViewModel : ViewModelBase
         set => SetField(ref _footerVM, value);
     }
 
+    /// <summary>
+    ///     Applies a font to <b>both</b> the header and footer. The font is written to the underlying
+    ///     <see cref="HeaderFooter" /> models — not the <see cref="Header" />/<see cref="Footer" />
+    ///     view-models — so it raises the model <c>PropertyChanged</c> the view-models subscribe to. That
+    ///     updates the live font, flags the sheet definition dirty, and (because the models belong to the
+    ///     sheet definition) persists the change. Callers still trigger a reflow to repaint.
+    /// </summary>
+    public void SetHeaderFooterFont(Font font)
+    {
+        ArgumentNullException.ThrowIfNull(font);
+        if (_sheet?.Header == null || _sheet.Footer == null)
+        {
+            return;
+        }
+
+        _sheet.Header.Font = (Font)font.Clone();
+        _sheet.Footer.Font = (Font)font.Clone();
+    }
+
     public int Rows
     {
         get => _rows;
@@ -184,6 +203,14 @@ public class SheetViewModel : ViewModelBase
         get => _contentEngine;
         set => SetField(ref _contentEngine, value);
     }
+
+    /// <summary>
+    ///     Measurement context handed to every content engine this view model creates, so
+    ///     reflow can measure text without System.Drawing. Required on non-Windows
+    ///     platforms (e.g. Skia on MacCatalyst); leave null on Windows to use the
+    ///     System.Drawing default.
+    /// </summary>
+    public IGraphicsContext? MeasurementContext { get; set; }
 
     // These properties are all either calculated or dependent on printer settings
     /// <summary>
@@ -342,7 +369,7 @@ public class SheetViewModel : ViewModelBase
         LogService.TraceMessage($"{newSheet.Name}");
         // TODO: Add font info 
         // TODO: Add header footer details (borders etc...). 
-        ServiceLocator.Current.TelemetryService.TrackEvent("Set Sheet Settings", newSheet.GetTelemetryDictionary());
+        WinPrintServices.Current.TelemetryService.TrackEvent("Set Sheet Settings", newSheet.GetTelemetryDictionary());
 
         if (newSheet is null)
         {
@@ -358,7 +385,7 @@ public class SheetViewModel : ViewModelBase
 
         _sheet = newSheet;
         Landscape = newSheet.Landscape;
-        DiagnosticRulesFont = (Font)ModelLocator.Current!.Settings.DiagnosticRulesFont.Clone();
+        DiagnosticRulesFont = (Font)WinPrintServices.Current!.Settings.DiagnosticRulesFont.Clone();
         Rows = newSheet.Rows;
         Columns = newSheet.Columns;
         Padding = newSheet.Padding;
@@ -523,26 +550,9 @@ public class SheetViewModel : ViewModelBase
 
             ContentEngine.ContentSettings.CopyPropertiesFrom(ContentSettings);
 
-            if (ContentEngine.SupportedContentTypes.Contains("text/ansi") &&
-                !ContentEngine.SupportedContentTypes.Contains(ContentType))
-            {
-                (bool pygmentsInstalled, string message) =
-                    ServiceLocator.Current.PygmentsConverterService.CheckInstall();
-                if (pygmentsInstalled)
-                {
-                    // Convert the document to ANSI using Pygments
-                    // TODO: Spin up a thread
-                    Log.Information("Applying source code formatting.");
-                    document = await ServiceLocator.Current.PygmentsConverterService
-                        .ConvertAsync(document, ContentEngine.ContentSettings.Style, Language).ConfigureAwait(true);
-                }
-                else
-                {
-                    Log.Information("Treating file as plain text.");
-                }
-            }
-
+            ContentEngine.MeasurementContext = MeasurementContext;
             ContentEngine.Encoding = Encoding;
+            ContentEngine.SourceFileName = File;
             retval = await ContentEngine.SetDocumentAsync(document).ConfigureAwait(true);
         }
         catch
@@ -823,19 +833,19 @@ public class SheetViewModel : ViewModelBase
     public SheetSettings FindSheet(string sheetName, out string sheetID)
     {
         SheetSettings? sheet = null;
-        if (ModelLocator.Current.Settings == null)
+        if (WinPrintServices.Current.Settings == null)
         {
             throw new InvalidOperationException("Find Sheet failed. Settings are invalid.");
         }
 
-        sheetID = ModelLocator.Current.Settings.DefaultSheet.ToString();
+        sheetID = WinPrintServices.Current.Settings.DefaultSheet.ToString();
         if (!string.IsNullOrEmpty(sheetName) &&
             !sheetName.Equals("default", StringComparison.InvariantCultureIgnoreCase))
         {
-            if (!ModelLocator.Current.Settings.Sheets.TryGetValue(sheetName, out sheet))
+            if (!WinPrintServices.Current.Settings.Sheets.TryGetValue(sheetName, out sheet))
             {
                 // Wasn't a GUID or isn't valid
-                KeyValuePair<string, SheetSettings> s = ModelLocator.Current.Settings.Sheets
+                KeyValuePair<string, SheetSettings> s = WinPrintServices.Current.Settings.Sheets
                     .Where(s => s.Value.Name.Equals(sheetName, StringComparison.InvariantCultureIgnoreCase))
                     .FirstOrDefault();
 
@@ -850,7 +860,7 @@ public class SheetViewModel : ViewModelBase
         }
         else
         {
-            sheet = ModelLocator.Current.Settings.Sheets.GetValueOrDefault(sheetID);
+            sheet = WinPrintServices.Current.Settings.Sheets.GetValueOrDefault(sheetID);
         }
 
         return sheet ?? throw new InvalidOperationException($"Sheet definiton not found ({sheetName}).");
@@ -875,7 +885,7 @@ public class SheetViewModel : ViewModelBase
                     break;
 
                 case "DiagnosticRulesFont":
-                    DiagnosticRulesFont = ModelLocator.Current.Settings.DiagnosticRulesFont;
+                    DiagnosticRulesFont = WinPrintServices.Current.Settings.DiagnosticRulesFont;
                     break;
 
                 case "Rows":
@@ -898,7 +908,12 @@ public class SheetViewModel : ViewModelBase
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
+                    // Properties the view model does not mirror (e.g. Name, or values applied in bulk by
+                    // ModelBase.CopyPropertiesFrom when a sheet definition is saved/reverted/created on
+                    // exit) need no view-model action. Ignore them rather than throwing, which would crash
+                    // the app mid-save and leave definitions in an inconsistent state.
+                    LogService.TraceMessage($"sheet.PropertyChanged ignored: {e.PropertyName}");
+                    return;
             }
 
             OnSettingsChanged(reflow, e.PropertyName);
@@ -916,21 +931,6 @@ public class SheetViewModel : ViewModelBase
                 case "Font":
                     ContentSettings.Font = ContentSettings.Font;
                     reflow = true;
-                    break;
-
-                case "PrintBackground":
-                    ContentSettings.PrintBackground = ContentSettings.PrintBackground;
-                    reflow = false;
-                    break;
-
-                case "Grayscale":
-                    ContentSettings.Grayscale = ContentSettings.Grayscale;
-                    reflow = false;
-                    break;
-
-                case "Darkness":
-                    ContentSettings.Darkness = ContentSettings.Darkness;
-                    reflow = false;
                     break;
 
                 case "LineNumbers":
@@ -969,7 +969,10 @@ public class SheetViewModel : ViewModelBase
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Property change not handled: {e.PropertyName}");
+                    // See OnSheetPropertyChanged: tolerate properties not mirrored by the view model
+                    // (including bulk copies via ModelBase.CopyPropertiesFrom) instead of throwing.
+                    LogService.TraceMessage($"ContentSettings.PropertyChanged ignored: {e.PropertyName}");
+                    return;
             }
 
             OnSettingsChanged(reflow, e.PropertyName);
@@ -1229,7 +1232,8 @@ public class SheetViewModel : ViewModelBase
             // Move origin to page's x & y
             g.TranslateTransform(xPos, yPos);
 
-            if (ModelLocator.Current.Settings.PrintPageBounds || ModelLocator.Current.Settings.PreviewPageBounds)
+            if (WinPrintServices.Current.Settings.PrintPageBounds ||
+                WinPrintServices.Current.Settings.PreviewPageBounds)
             {
                 PaintPageNum(g, pageOnSheet);
             }
@@ -1296,7 +1300,7 @@ public class SheetViewModel : ViewModelBase
                         GraphicsUnit.Point);
                 string msg =
                     $"Margins are set outside of printable area {Environment.NewLine}Maximum values: Left: {leftMax / 100F}\", Right: {rightMax / 100F}\", Top: {topMax / 100F}\", Bottom: {bottomMax / 100F}\"";
-                ServiceLocator.Current.TelemetryService.TrackEvent("Margins of of bounds",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Margins of of bounds",
                     new Dictionary<string, string?> { ["Message"] = msg });
                 SizeF size = g.MeasureString(msg, font);
                 using var fmt = new StringFormat(StringFormat.GenericDefault)
@@ -1326,7 +1330,7 @@ public class SheetViewModel : ViewModelBase
     /// <param name="pageNum"></param>
     internal void PaintPageNum(Graphics g, int pageNum)
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
 
         System.Drawing.Font font;
 
@@ -1366,7 +1370,7 @@ public class SheetViewModel : ViewModelBase
     /// <param name="g"></param>
     internal void PaintRules(Graphics g)
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         bool preview = g.PageUnit != GraphicsUnit.Display;
         System.Drawing.Font font;
         if (g.PageUnit == GraphicsUnit.Display)

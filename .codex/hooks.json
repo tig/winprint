@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/tig/s/tig/winprint/.codex/hooks/session-start.sh'"
+          }
+        ]
+      }
+    ]
+  }
+}

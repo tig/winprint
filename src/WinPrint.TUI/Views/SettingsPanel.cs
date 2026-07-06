@@ -5,23 +5,25 @@ using Terminal.Gui.Views;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Printing;
+using WinPrint.Core.Services;
 using WinPrint.Core.ViewModels;
 using WinPrint.TUI.Views.Editors;
 
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     Composes the winprint left settings column: Sheet Settings, Printer, and About.
+///     Composes the winprint left settings column: Sheet Definition, Printer, and About.
 /// </summary>
 public sealed class SettingsPanel : View
 {
-    private const int MinContentWidth = 33;
+    private const int MinContentWidth = 42;
 
     /// <summary>Creates the composed settings panel with sample-populated editors.</summary>
     /// <param name="version">
     ///     Version text for the About footer (without the leading <c>v</c>). Defaults to the runtime
     ///     product version; pass a fixed value for deterministic rendering (e.g. golden tests).
     /// </param>
+    /// <param name="fillHeight"></param>
     public SettingsPanel(string? version = null, bool fillHeight = false)
     {
         Width = Dim.Auto(DimAutoStyle.Content, Dim.Absolute(MinContentWidth));
@@ -36,6 +38,12 @@ public sealed class SettingsPanel : View
         ];
         Sheet = new SheetPicker(sheets) { Value = sheets[0] };
 
+        Landscape = new CheckBox
+        {
+            Text = "_Landscape",
+            Value = CheckState.UnChecked
+        };
+
         Margins = new MarginEditor { Value = new PrintMargins(75, 100, 50, 25) };
 
         Pages = new MultiPageEditor
@@ -43,14 +51,20 @@ public sealed class SettingsPanel : View
             Value = new SheetSettings { Columns = 2, Rows = 1, Padding = 3, PageSeparator = false }
         };
 
-        ContentFont = new FontEditor("Co_ntent Font")
+        ContentFont = new FontEditor("Content Font", "Co_ntent Font…")
         {
             Value = new Font { Family = "Source Code Pro", Size = 10f, Style = FontStyle.Regular }
         };
 
-        HeaderFooterFont = new FontEditor("Hea_der/Footer Font")
+        HeaderFooterFont = new FontEditor("Header/Footer Font", "Hea_der/Footer Font…")
         {
             Value = new Font { Family = "Source Code Pro", Size = 8f, Style = FontStyle.Regular }
+        };
+
+        LineNumbers = new CheckBox
+        {
+            Text = "Line N_umbers",
+            Value = CheckState.Checked
         };
 
         Printer = new PrinterEditor
@@ -61,29 +75,39 @@ public sealed class SettingsPanel : View
 
         About = new AboutView(version);
 
-        FileButton = new Button { Text = "_File..." };
-        PrintButton = new Button { Text = "_Print...", X = Pos.Right(FileButton) };
+        FileButton = new Button { Text = "📁 _File…" };
+        PrintButton = new Button { Text = "🖨 _Print…", X = Pos.Right(FileButton) };
+        ConfigButton = new Button { Title = "⚙ Conf_ig…", X = Pos.Right(PrintButton) };
+
         var buttonRow = new View
         {
             CanFocus = true,
             Width = Dim.Fill(),
             Height = Dim.Auto(DimAutoStyle.Content)
         };
-        buttonRow.Add(FileButton, PrintButton);
+        buttonRow.Add(FileButton, PrintButton, ConfigButton);
 
         Add(buttonRow);
 
         Sheet.X = 0;
         Sheet.Y = Pos.Bottom(buttonRow);
         Add(Sheet);
-        StackJoinedAfter(Sheet, Margins, Pages, ContentFont, HeaderFooterFont);
+        Landscape.X = 0;
+        Landscape.Y = Pos.Bottom(Sheet);
+        Add(Landscape);
+        StackJoinedAfter(Landscape, Margins, Pages, ContentFont, HeaderFooterFont);
+
+        LineNumbers.X = 0;
+        LineNumbers.Y = Pos.Bottom(HeaderFooterFont);
+        Add(LineNumbers);
 
         Printer.X = 0;
-        Printer.Y = Pos.Bottom(HeaderFooterFont);
+        Printer.Y = Pos.Bottom(LineNumbers);
         Add(Printer);
 
         About.X = 0;
         About.Y = fillHeight ? Pos.AnchorEnd() : Pos.Bottom(Printer) - 1;
+
         Add(About);
     }
 
@@ -111,6 +135,13 @@ public sealed class SettingsPanel : View
                 app.SelectSheetByNameOrId(name);
             }
         };
+        Landscape.ValueChanged += (_, _) =>
+        {
+            if (!_seeding)
+            {
+                app.SetLandscape(Landscape.Value == CheckState.Checked);
+            }
+        };
 
         Margins.ValueChanged += (_, _) =>
         {
@@ -133,42 +164,42 @@ public sealed class SettingsPanel : View
         };
         HeaderFooterFont.ValueChanged += (_, _) =>
         {
-            if (!_seeding && HeaderFooterFont.Value is { } font && _context?.CurrentSheet?.Header != null)
+            if (_seeding || HeaderFooterFont.Value is not { } font || _context?.CurrentSheet?.Header == null)
             {
-                _context.CurrentSheet.Header.Font = font;
-                if (_context.CurrentSheet.Footer != null)
-                {
-                    _context.CurrentSheet.Footer.Font = font;
-                }
-
-                _ = app.ReflowAsync();
+                return;
             }
+
+            _context.CurrentSheet.Header.Font = font;
+            _context.CurrentSheet.Footer.Font = font;
+
+            _ = app.ReflowAsync();
         };
         ContentFont.ValueChanged += (_, _) =>
         {
-            if (!_seeding && ContentFont.Value is { } font && _context?.CurrentSheet?.ContentSettings != null)
+            if (_seeding || ContentFont.Value is not { } font || _context?.CurrentSheet?.ContentSettings == null)
             {
-                _context.CurrentSheet.ContentSettings.Font = font;
-                _ = app.ReflowAsync();
+                return;
+            }
+
+            _context.CurrentSheet.ContentSettings.Font = font;
+            _ = app.ReflowAsync();
+        };
+        LineNumbers.ValueChanged += (_, _) =>
+        {
+            if (!_seeding)
+            {
+                app.SetLineNumbers(LineNumbers.Value == CheckState.Checked);
+            }
+        };
+        Printer.Edited += (_, _) =>
+        {
+            if (!_seeding && Printer.Value is { } setup)
+            {
+                app.SetPrinterSetup(setup.PrinterName, setup.PaperSizeName, setup.FromSheet, setup.ToSheet);
             }
         };
 
-        FileButton.Accepting += (_, _) =>
-        {
-            RunnableOpening?.Invoke(this, EventArgs.Empty);
-            var dlg = new OpenDialog
-            {
-                Title = "Open File",
-                AllowsMultipleSelection = false
-            };
-            GetApp()!.Run(dlg);
-            RunnableClosed?.Invoke(this, EventArgs.Empty);
-            if (!dlg.Canceled && dlg.FilePaths.Count > 0)
-            {
-                string file = dlg.FilePaths[0];
-                _ = app.LoadFileAsync(file);
-            }
-        };
+        FileButton.Accepting += (_, _) => OpenFile();
 
         PrintButton.Accepting += (_, _) =>
         {
@@ -187,6 +218,7 @@ public sealed class SettingsPanel : View
 
             _ = PrintCurrentAsync();
         };
+        ConfigButton.Accepting += (_, _) => OpenConfigFile();
 
         app.SheetApplied += (_, _) => SeedFromCurrentSheet();
 
@@ -250,14 +282,6 @@ public sealed class SettingsPanel : View
 
     private void UpdatePrintStatus(string message)
     {
-        void Update()
-        {
-            if (_context is not null)
-            {
-                _context.App.StatusText = message;
-            }
-        }
-
         try
         {
             if (GetApp() is { } application)
@@ -272,6 +296,16 @@ public sealed class SettingsPanel : View
         catch (InvalidOperationException)
         {
             Update();
+        }
+
+        return;
+
+        void Update()
+        {
+            if (_context is not null)
+            {
+                _context.App.StatusText = message;
+            }
         }
     }
 
@@ -292,10 +326,12 @@ public sealed class SettingsPanel : View
         try
         {
             Sheet.Value = sheet;
+            Landscape.Value = sheet.Landscape ? CheckState.Checked : CheckState.UnChecked;
             Margins.Value = sheet.Margins;
             Pages.Value = sheet;
             HeaderFooterFont.Value = sheet.Header.Font ?? new Font();
             ContentFont.Value = (sheet.ContentSettings ??= new ContentSettings()).Font;
+            LineNumbers.Value = sheet.ContentSettings.LineNumbers ? CheckState.Checked : CheckState.UnChecked;
             PrintPageSetup setup = _context.App.CurrentPageSetup;
             Printer.Value = setup;
             Printer.SetRange(new PageRange { From = setup.FromSheet > 0 ? setup.FromSheet : 1, To = setup.ToSheet });
@@ -309,6 +345,9 @@ public sealed class SettingsPanel : View
     /// <summary>The predefined-sheet picker.</summary>
     public SheetPicker Sheet { get; }
 
+    /// <summary>The landscape orientation toggle.</summary>
+    public CheckBox Landscape { get; }
+
     /// <summary>The page margins editor.</summary>
     public MarginEditor Margins { get; }
 
@@ -320,6 +359,9 @@ public sealed class SettingsPanel : View
 
     /// <summary>The content font editor.</summary>
     public FontEditor ContentFont { get; }
+
+    /// <summary>The line-number rendering toggle.</summary>
+    public CheckBox LineNumbers { get; }
 
     /// <summary>The printer / paper / pages editor.</summary>
     public PrinterEditor Printer { get; }
@@ -333,23 +375,14 @@ public sealed class SettingsPanel : View
     /// <summary>The Print button (initiates print).</summary>
     public Button PrintButton { get; }
 
+    /// <summary>The Config button (gear glyph; opens the JSON config file in a modal Terminal.Gui editor).</summary>
+    public Button ConfigButton { get; }
+
     /// <summary>Raised before a dialog/runnable opens (suspend sixel rendering).</summary>
     public event EventHandler? RunnableOpening;
 
     /// <summary>Raised after a dialog/runnable closes (resume sixel rendering).</summary>
     public event EventHandler? RunnableClosed;
-
-    private void StackJoined(params View[] sections)
-    {
-        View? previous = null;
-        foreach (View section in sections)
-        {
-            section.X = 0;
-            section.Y = previous is null ? 0 : Pos.Bottom(previous);
-            Add(section);
-            previous = section;
-        }
-    }
 
     private void StackJoinedAfter(View anchor, params View[] sections)
     {
@@ -360,6 +393,66 @@ public sealed class SettingsPanel : View
             section.Y = Pos.Bottom(previous);
             Add(section);
             previous = section;
+        }
+    }
+
+    /// <summary>Shows the open-file dialog and loads the selected file.</summary>
+    public void OpenFile()
+    {
+        if (_context is null)
+        {
+            return;
+        }
+
+        RunnableOpening?.Invoke(this, EventArgs.Empty);
+        var dlg = new OpenDialog
+        {
+            Title = "Open File",
+            AllowsMultipleSelection = false
+        };
+        GetApp()!.Run(dlg);
+        RunnableClosed?.Invoke(this, EventArgs.Empty);
+        if (dlg is { Canceled: false, FilePaths.Count: > 0 })
+        {
+            string file = dlg.FilePaths[0];
+            _ = _context.App.LoadFileAsync(file);
+        }
+    }
+
+    private void OpenConfigFile()
+    {
+        if (GetApp() is not { } app)
+        {
+            return;
+        }
+
+        SettingsService settings = WinPrintServices.Current.SettingsService;
+
+        // Edit in a modal Terminal.Gui editor (issue #166) rather than shelling out to the OS default
+        // editor, so it works headless/over SSH and the config is validated before the file is written.
+        RunnableOpening?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            ConfigEditorDialog.Show(
+                app,
+                settings.SettingsFileName,
+                text => SettingsService.TryValidateSettingsJson(text, out string? error) ? null : error,
+                ApplySavedConfig);
+        }
+        finally
+        {
+            RunnableClosed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    // Reloads the just-saved config into the running app and refreshes the preview (issue #85).
+    private void ApplySavedConfig()
+    {
+        WinPrintServices.Current.SettingsService.ReloadAndApplySettings();
+        if (_context is not null)
+        {
+            _context.App.LoadSheets();
+            _ = _context.App.ReflowAsync();
         }
     }
 }

@@ -27,14 +27,14 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
         Border.Thickness = new Thickness(0, 2, 0, 0);
         Padding.Thickness = new Thickness(0, 0, 0, 1);
         SuperViewRendersLineCanvas = true;
-        Title = "Sheet Settings";
+        Title = "Sheet Definition";
 
         var savedLabel = new Label { X = 0, Y = 0, Text = "_Saved:" };
         _sheet = new DropDownList
         {
             X = Pos.Right(savedLabel) + 1,
             Y = 0,
-            Width = Dim.Fill(),
+            Width = EditorMetrics.DropDownWidth(_sheets.Select(s => s.Name ?? string.Empty)),
             Source = new ListWrapper<string>(
                 new ObservableCollection<string>(_sheets.Select(s => s.Name ?? string.Empty)))
         };
@@ -56,6 +56,7 @@ public sealed class SheetPicker : EditorBase<SheetSettings>
         _sheets = [.. sheets];
         _sheet.Source = new ListWrapper<string>(
             new ObservableCollection<string>(_sheets.Select(s => s.Name ?? string.Empty)));
+        _sheet.Width = EditorMetrics.DropDownWidth(_sheets.Select(s => s.Name ?? string.Empty));
     }
 
     /// <inheritdoc />

@@ -48,11 +48,66 @@ public class MacrosTests : TestModelsBase
         }
     }
 
-    private string InvalidFileName =>
-        Path.GetTempFileName().Replace(@"\tmp", @$"\{Path.GetInvalidFileNameChars()[0]}mp");
+    private static char PickInvalidFileNameChar()
+    {
+        foreach (char c in Path.GetInvalidFileNameChars())
+        {
+            if (c != '\0')
+            {
+                return c;
+            }
+        }
 
-    private string InvalidDirectoryName =>
-        Path.GetTempFileName().Replace(@"\Temp", $@"\{Path.GetInvalidPathChars()[0]}emp");
+        return '/';
+    }
+
+    /// <summary>
+    ///     On Unix <see cref="Path.GetInvalidPathChars" /> is often only <c>\0</c>, which breaks
+    ///     <see cref="Path.GetFullPath(string)" /> in test expectations. Fall back to a file-name
+    ///     invalid char embedded in the directory segment.
+    /// </summary>
+    private static char PickInvalidPathCharForTests()
+    {
+        foreach (char c in Path.GetInvalidPathChars())
+        {
+            if (c != '\0')
+            {
+                return c;
+            }
+        }
+
+        return PickInvalidFileNameChar();
+    }
+
+    private string InvalidFileName
+    {
+        get
+        {
+            string file = Path.GetTempFileName();
+            string? dir = Path.GetDirectoryName(file);
+            string name = Path.GetFileName(file);
+            char invalid = PickInvalidFileNameChar();
+            return string.IsNullOrEmpty(dir) ? $"{invalid}{name}" : Path.Combine(dir, $"{invalid}{name}");
+        }
+    }
+
+    private string InvalidDirectoryName
+    {
+        get
+        {
+            string file = Path.GetTempFileName();
+            string? dir = Path.GetDirectoryName(file);
+            if (string.IsNullOrEmpty(dir))
+            {
+                return file;
+            }
+
+            char invalid = PickInvalidPathCharForTests();
+            int insertAt = Math.Max(1, dir.Length / 2);
+            string badDir = dir.Insert(insertAt, invalid.ToString());
+            return Path.Combine(badDir, Path.GetFileName(file));
+        }
+    }
 
     private string? NullName => null;
 
@@ -108,8 +163,8 @@ public class MacrosTests : TestModelsBase
         string file = Path.GetTempFileName();
         File.Delete(file);
 
-        // Relpace the T in Temp with an invalid char
-        file = file.Replace('T', Path.GetInvalidPathChars()[0]);
+        // Replace the T in Temp with an invalid path char (skip \0 — Path APIs reject it on Unix).
+        file = file.Replace('T', PickInvalidPathCharForTests());
 
         var svm = new SheetViewModel
         {
@@ -123,7 +178,7 @@ public class MacrosTests : TestModelsBase
         Assert.Equal(Path.GetFileNameWithoutExtension(file), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
         // return original path
         Assert.Equal(Path.GetDirectoryName(file), macros.ReplaceMacros(@"{FileDirectoryName}"));
-        Assert.Equal(Path.GetFullPath(file), macros.ReplaceMacros(@"{FullPath}"));
+        Assert.Equal(file, macros.ReplaceMacros(@"{FullPath}"));
         // it's not a real file so, dates should be minvalue
         Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateRevised}"));
         Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateCreated}"));
@@ -135,8 +190,11 @@ public class MacrosTests : TestModelsBase
         string file = Path.GetTempFileName();
         File.Delete(file);
 
-        // Make filename invalid 
-        file = file.Replace(@"\tmp", @$"\{Path.GetInvalidFileNameChars()[0]}mp");
+        // Make filename invalid (cross-platform: inject into the basename, not a Windows \tmp segment).
+        string? dir = Path.GetDirectoryName(file);
+        string name = Path.GetFileName(file);
+        char invalid = PickInvalidFileNameChar();
+        file = string.IsNullOrEmpty(dir) ? $"{invalid}{name}" : Path.Combine(dir, $"{invalid}{name}");
 
         var svm = new SheetViewModel
         {
@@ -150,7 +208,7 @@ public class MacrosTests : TestModelsBase
         Assert.Equal(Path.GetFileName(file), macros.ReplaceMacros(@"{FileName}"));
         Assert.Equal(Path.GetFileNameWithoutExtension(file), macros.ReplaceMacros(@"{FileNameWithoutExtension}"));
         Assert.Equal(Path.GetDirectoryName(file), macros.ReplaceMacros(@"{FileDirectoryName}"));
-        Assert.Equal(Path.GetFullPath(file), macros.ReplaceMacros(@"{FullPath}"));
+        Assert.Equal(file, macros.ReplaceMacros(@"{FullPath}"));
         // it's not a real file so, dates should be minvalue
         Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateRevised}"));
         Assert.Equal($"{DateTime.MinValue}", macros.ReplaceMacros(@"{DateCreated}"));
@@ -357,12 +415,10 @@ public class MacrosTests : TestModelsBase
             macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod()!.Name}}}"));
 
         svm.File = InvalidFileName;
-        Assert.Equal(Path.GetFullPath(svm.File),
-            macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod()!.Name}}}"));
+        Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod()!.Name}}}"));
 
         svm.File = InvalidDirectoryName;
-        Assert.Equal(Path.GetFullPath(svm.File),
-            macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod()!.Name}}}"));
+        Assert.Equal(svm.File, macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod()!.Name}}}"));
 
         svm.File = NullName!; // Intentional null input exercises macro fallback.
         Assert.Equal("", macros.ReplaceMacros($"{{{MethodBase.GetCurrentMethod()!.Name}}}"));
@@ -498,11 +554,11 @@ public class MacrosTests : TestModelsBase
         var macros = new Macros(svm);
 
         // TODO: Mock this out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         foreach (ContentTypeEngineBase cte in ContentTypeEngineBase.GetDerivedClassesCollection())
         {
@@ -522,11 +578,11 @@ public class MacrosTests : TestModelsBase
         var macros = new Macros(svm);
 
         // TODO: Mock out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
         string input;
         string expectedLang;
         string contentType;
@@ -622,11 +678,11 @@ public class MacrosTests : TestModelsBase
         var macros = new Macros(svm);
 
         // TODO: Mock out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         string input = "text/plain";
         (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine(input);

@@ -146,14 +146,12 @@ public class PageRendererTests
         int width = pixels.GetLength(0);
         int height = pixels.GetLength(1);
 
-        // The shadow is drawn offset from the page. Look for pixels that are darker than
+        // The shadow is drawn offset from the centered page. Look for pixels that are darker than
         // the canvas background but not white (page) and not pure black (text).
-        // Shadow color is rgba(0,0,0,76) blended with canvas (#E0E0E0).
-        // Expected blended value: R/G/B ≈ 224 * (1 - 76/255) + 0 * (76/255) ≈ 157
         bool hasShadowPixels = false;
-        for (int y = height - 10; y < height && !hasShadowPixels; y++)
+        for (int y = 0; y < height && !hasShadowPixels; y++)
         {
-            for (int x = width - 10; x < width && !hasShadowPixels; x++)
+            for (int x = 0; x < width && !hasShadowPixels; x++)
             {
                 TgColor p = pixels[x, y];
                 // Shadow pixels should be darker than canvas background (224) but not white
@@ -164,9 +162,80 @@ public class PageRendererTests
             }
         }
 
-        Assert.True(hasShadowPixels, "Bottom-right region should contain shadow pixels");
+        Assert.True(hasShadowPixels, "Rendered canvas should contain shadow pixels");
     }
 
+    [Fact]
+    public async Task RenderPageForViewport_LargeViewportFitsAndCentersPage()
+    {
+        SettingsContext ctx = await CreateContextWithDocumentAsync();
+        PageRenderer renderer = ctx.Renderer;
+        renderer.CanvasPadding = 20;
+        renderer.ShadowOffset = 0;
+
+        TgColor[,] pixels = renderer.RenderPageForViewport(ctx.SheetVM, 0, 1200, 1400);
+
+        Assert.Equal(1200, pixels.GetLength(0));
+        Assert.Equal(1400, pixels.GetLength(1));
+
+        (int minX, int maxX, int minY, int maxY) = FindWhitePageBounds(pixels);
+        int pageWidth = maxX - minX + 1;
+        int pageHeight = maxY - minY + 1;
+        int leftMargin = minX;
+        int rightMargin = pixels.GetLength(0) - maxX - 1;
+        int topMargin = minY;
+        int bottomMargin = pixels.GetLength(1) - maxY - 1;
+
+        Assert.True(Math.Max(pageWidth, pageHeight) > 1100,
+            $"Expected the page's long edge to fit the large viewport, got {pageWidth}x{pageHeight}");
+        Assert.True(Math.Min(pageWidth, pageHeight) > 800,
+            $"Expected the page's short edge to scale with the large viewport, got {pageWidth}x{pageHeight}");
+        Assert.InRange(Math.Abs(leftMargin - rightMargin), 0, 2);
+        Assert.InRange(Math.Abs(topMargin - bottomMargin), 0, 2);
+    }
+
+    [Fact]
+    public async Task RenderPageForViewport_FitIncludesScaledShadow()
+    {
+        SettingsContext ctx = await CreateContextWithDocumentAsync();
+        PageRenderer renderer = ctx.Renderer;
+        renderer.CanvasPadding = 20;
+        renderer.ShadowOffset = 20;
+
+        TgColor[,] pixels = renderer.RenderPageForViewport(ctx.SheetVM, 0, 1200, 1400);
+
+        (int minX, int maxX, int minY, int maxY) = FindNonCanvasBounds(pixels);
+
+        Assert.True(minX >= 0);
+        Assert.True(minY >= 0);
+        Assert.True(maxX < pixels.GetLength(0) - 1, $"Expected shadow/page to fit within width, maxX={maxX}");
+        Assert.True(maxY < pixels.GetLength(1) - 1, $"Expected shadow/page to fit within height, maxY={maxY}");
+    }
+
+    [Fact]
+    public async Task RenderPageForViewport_SmallViewportUsesExactCanvasSize()
+    {
+        SettingsContext ctx = await CreateContextWithDocumentAsync();
+        PageRenderer renderer = ctx.Renderer;
+
+        TgColor[,] viewportPixels = renderer.RenderPageForViewport(ctx.SheetVM, 0, 300, 300);
+
+        Assert.Equal(300, viewportPixels.GetLength(0));
+        Assert.Equal(300, viewportPixels.GetLength(1));
+    }
+
+    [Fact]
+    public async Task RenderPageForViewport_RenderScaleIncreasesSourceResolution()
+    {
+        SettingsContext ctx = await CreateContextWithDocumentAsync();
+        PageRenderer renderer = ctx.Renderer;
+
+        TgColor[,] nativePixels = renderer.RenderPageForViewport(ctx.SheetVM, 0, 300, 300);
+        TgColor[,] scaledPixels = renderer.RenderPageForViewport(ctx.SheetVM, 0, 300, 300, 2f);
+
+        Assert.Equal(nativePixels.GetLength(0) * 2, scaledPixels.GetLength(0));
+        Assert.Equal(nativePixels.GetLength(1) * 2, scaledPixels.GetLength(1));
+    }
 
     [Fact]
     public async Task RenderPage_HasNonCanvasContent()
@@ -219,5 +288,59 @@ public class PageRendererTests
             GraphicsFontStyle.Regular,
             GraphicsFontUnit.Point);
         Assert.NotNull(font);
+    }
+
+    private static (int minX, int maxX, int minY, int maxY) FindWhitePageBounds(TgColor[,] pixels)
+    {
+        int minX = pixels.GetLength(0);
+        int minY = pixels.GetLength(1);
+        int maxX = -1;
+        int maxY = -1;
+
+        for (int y = 0; y < pixels.GetLength(1); y++)
+        {
+            for (int x = 0; x < pixels.GetLength(0); x++)
+            {
+                TgColor p = pixels[x, y];
+                if (p.R == 255 && p.G == 255 && p.B == 255)
+                {
+                    minX = Math.Min(minX, x);
+                    maxX = Math.Max(maxX, x);
+                    minY = Math.Min(minY, y);
+                    maxY = Math.Max(maxY, y);
+                }
+            }
+        }
+
+        Assert.True(maxX >= minX && maxY >= minY, "Expected to find white page pixels.");
+        return (minX, maxX, minY, maxY);
+    }
+
+    private static (int minX, int maxX, int minY, int maxY) FindNonCanvasBounds(TgColor[,] pixels)
+    {
+        int minX = pixels.GetLength(0);
+        int minY = pixels.GetLength(1);
+        int maxX = -1;
+        int maxY = -1;
+
+        for (int y = 0; y < pixels.GetLength(1); y++)
+        {
+            for (int x = 0; x < pixels.GetLength(0); x++)
+            {
+                TgColor p = pixels[x, y];
+                if (p.R == 224 && p.G == 224 && p.B == 224)
+                {
+                    continue;
+                }
+
+                minX = Math.Min(minX, x);
+                maxX = Math.Max(maxX, x);
+                minY = Math.Min(minY, y);
+                maxY = Math.Max(maxY, y);
+            }
+        }
+
+        Assert.True(maxX >= minX && maxY >= minY, "Expected to find non-canvas pixels.");
+        return (minX, maxX, minY, maxY);
     }
 }

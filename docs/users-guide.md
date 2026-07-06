@@ -2,188 +2,150 @@
 
 ## Features
 
-* Prints source code with syntax highlighting and line numbering using bundled TextMate grammars.
+* Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
+* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, and inline images).
+* Prints ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
-* Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc...
+* Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
-* Simple and elegant graphical user interface with accurate print preview.
-* `winprint` provides a Terminal.Gui.Cli-based command line with JSON output and OpenCLI metadata for agents.
-* The legacy PowerShell `out-winprint` CmdLet remains available as `WinPrint.PowerShell.dll`, but is deprecated in favor of `winprint.exe`.
+* Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
+* `wp` provides a terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the GUI on Windows and macOS.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Cross platform. Even though it's named **win**print, it works on Windows, Linux (command line only; some assembly required), and (not yet tested) Mac OS.
+* Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
 
-## Command Line Interfaces
+## Command Line Interface
 
-**winprint** has two command line surfaces:
+The primary command for WinPrint is `wp`. It provides a terminal UI.
 
-* **`winprint`** - a Terminal.Gui.Cli-based executable intended for scripts, automation, and agents. It can return a JSON envelope and exposes OpenCLI metadata.
-* **`out-winprint`** - a deprecated PowerShell CmdLet designed as a stand-in for PowerShell's built-in `out-printer`.
-
-### `winprint`
-
-Use `winprint` to print files or redirected text without importing a PowerShell module.
-
-Count sheets without printing:
-
-```powershell
-winprint Program.cs --what-if
+```bash
+wp [options] [file...]
 ```
 
-Return a JSON envelope:
+### Launching Modes
 
-```powershell
-winprint Program.cs --what-if --json
+| Command | Description |
+|---------|-------------|
+| `wp file.cs` | Open a file in the TUI |
+| `wp` | Launch the TUI (terminal user interface) |
+| `wp print file.cs` | Print one or more files without opening the UI |
+| `wp gui` | Launch the graphical user interface on Windows/macOS |
+| `wp gui file.cs` | Launch the GUI with a file (and options) loaded |
+
+### Examples
+
+Check the installed version:
+
+```bash
+wp --version
 ```
 
-Print to a named printer and override the detected language:
+Open a file in the terminal UI:
 
-```powershell
-winprint Program.cs --printer "Microsoft Print to PDF" --language csharp --title "Program.cs"
+```bash
+wp Program.cs
 ```
 
-Pipe text through stdin:
+Pass print preview options:
 
-```powershell
-Get-Content $profile.CurrentUserAllHosts | winprint --language powershell --title "PowerShell profile"
+```bash
+wp Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
 ```
 
-Open the GUI preview for a file:
+Print without opening the UI (use `--what-if` to count sheets without printing):
 
-```powershell
-winprint Program.cs --gui
+```bash
+wp print Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
+wp print *.cs --landscape
+wp print Program.cs --what-if
 ```
 
-Expose machine-readable command metadata:
+Launch the GUI:
 
-```powershell
-winprint --opencli
+```bash
+wp gui
 ```
 
-Common `winprint` options include `--printer`, `--paper-size`, `--sheet`, `--language`, `--content-type`, `--orientation`, `--line-numbers`, `--from-sheet`, `--to-sheet`, `--what-if`, `--gui`, and `--config`. The Terminal.Gui.Cli framework also provides `--help`, `--version`, `--json`, `--output`, `--initial`, `--timeout`, and `--opencli`.
+Launch the GUI with a file (and options) loaded:
 
-### Deprecated PowerShell CmdLet
-
-The PowerShell CmdLet (`out-winprint`) is deprecated. Prefer the `winprint` executable for new scripts and automation.
-
-**`out-winprint`** is designed to be a stand-in for the `out-printer` CmdLet built into PowerShell.
-
-If you still need the deprecated CmdLet, import it into PowerShell by adding an `import-module` statement in the Powershell profile:
-
-```powershell
-import-module '.\src\WinPrint.PowerShell\bin\x64\Debug\net10.0-windows\WinPrint.PowerShell.dll'
+```bash
+wp gui ./testfiles/Program.cs --sheet "Default 2-Up"
 ```
 
-There is no installer in this branch; import the module from the build output folder if you still need the deprecated CmdLet.
+Get help:
 
-Invoke the deprecated CmdLet using either `out-winprint`, `winprint`, or the shortcut, `wp`.
-
-Specify the `-Verbose` parameter switch to have **winprint** show progress. Otherwise, **winprint** is pretty darn quiet, respecting the norms of PowerShell.
-
-#### Examples
-
-See what version is installed:
-
-```powershell
-PS > out-winprint -verbose
-VERBOSE: Out-WinPrint 2.0.4.1 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-PS >
+```bash
+wp --help
 ```
 
-Print `Program.cs` using the default sheet definition and default printer:
+### CLI Options
 
-```powershell
-get-content Program.cs | out-winprint
-```
+**winprint** exposes one **canonical set of print options across every front end** — the `wp` CLI, the
+TUI, and the `gui` on Windows and macOS. The same name, short alias, and meaning
+apply everywhere:
 
-Or, more tersely:
+| Option | Alias | Description |
+| --- | --- | --- |
+| `--sheet` | `-s` | Sheet definition to use (ID or friendly name). |
+| `--landscape` | `-l` | Force landscape orientation. |
+| `--portrait` | `-r` | Force portrait orientation. |
+| `--printer` | `-p` | Printer name. |
+| `--paper-size` | `-z` | Paper size name. |
+| `--from-sheet` | `-f` | First sheet to print (use with `--to-sheet`). |
+| `--to-sheet` | `-t` | Last sheet to print (use with `--from-sheet`). |
+| `--content-type` | `-e` | Content type engine / language override (e.g. `text/plain`, `text/html`, or a `<language>`). |
 
-```powershell
-cat program.cs | wp
-```
+Front ends add their own *appropriate* extras: the interactive TUI adds `--view`, `--width`,
+`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing); and the
+GUI launches through the separate `wp gui` command. The `wp` command line also provides `--help`,
+`--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 
-```powershell
-cat $profile.CurrentUserAllHosts | wp -Language powershell
-```
+The same print options behave identically across the `wp` CLI, the TUI, and the GUI.
 
-Or, using more features:
+### Overriding Content Type / Language
 
-```powershell
-PS > cat Program.cs | wp -PrinterName PDF -Orientation Portrait -Verbose -Title Program.cs
-VERBOSE: Out-WinPrint 2.0.0.3912 - Copyright Kindel Systems, LLC - https://tig.github.io/winprint
-VERBOSE:     Printer:          PDF
-VERBOSE:     Paper Size:       Letter
-VERBOSE:     Orientation:      Portrait
-VERBOSE:     Sheet Definition: Default 2-Up (0002a500-0000-0000-c000-000000000046)
-VERBOSE: Printing sheet 1
-VERBOSE: Printing sheet 2
-VERBOSE: Printed a total of 2 sheets.
-PS >
-```
+Use `--content-type` (alias `-e`) to override **winprint**'s automatic content type and language
+detection. The value can be a content type (e.g. `text/plain`, `text/html`) or a language alias:
 
-The following all do the same thing:
-
-```powershell
-out-winprint -FileName program.cs
-wp program.cs
-winprint program.cs
-cat program.cs | wp -Title "program.cs"
-```
-
-Print all `.c` and `.h` files in the current directory to the "HP LaserJet" printer, ensuring the `{Title`} in the header/footers shows the filename. Present verbose output along the way:
-
-```powershell
-ls .\* -include ('*.c', '*.h') | foreach { cat $_.FullName | out-winPrint -p "HP LaserJet" -title $_.FullName -verbose}
-```
-
-Some **`out-winprint`** parameters support *Intellisense*, meaning that you can use `tab` on the command line to automatically cycle through possible options instead of typing. These paramters support *Intellisense*:
-
-* **`-PrinterName`** - *Intellisense* values are the names of all currently installed printers.
-
-* **`-PaperSize`** - *Intellisense* values are the names of all papers sizes supported by whatever printer has been specified by `-PrinterName`.
-
-* **`-SheetDefinition`** - *Intellisense* values are the names of all current Sheet Definitions defined in the `WinPrint.config.json` file. E.g. `"Default 2-Up"`.
-
-* **`-ContentTypeEngine`** - *Intellisense* values are the names of all current Content Type Engines **winprint** supports (`text/plain`, `text/html`, and `text/ansi`).
-
-* **`-Language`** - *Intellisense* values are the names of languages supported for syntax highlighting.
-
-#### CmdLet Help
-
-Access the built-in help by typing `get-help out-winprint` or `get-help out-winprint -full`.
-
-To create a nice PDF version of the help, do this:
-
-```powershell
-get-help out-winprint -full | out-winprint -p 'Microsoft Print to PDF' -s 'Default 1-Up' -Title 'winprint Help' -LineNumbers No
-```
-
-```powershell
-
-NAME
-    Out-WinPrint
-
-SYNTAX
-    Out-WinPrint [<CommonParameters>]
-
-    Out-WinPrint [[-FileName] <string>] [-PrinterName <string>] [-Orientation {Portrait | Landscape}] [-LineNumbers {No | Yes}] [-Language <string>] [-Title <string>] [-FromSheet <int>] [-ToSheet <int>] [-Gui] [-InputObject <psobject>] [-WhatIf] [-PaperSize <string>] [-SheetDefinition {Default 2-Up | Default 1-Up}] [-ContentTypeEngine {text/html | text/ansi | text/plain}] [<CommonParameters>]
-
-    Out-WinPrint [-InstallUpdate] [-Force] [<CommonParameters>]
-
-    Out-WinPrint [-Config] [<CommonParameters>]
-
+```bash
+wp print README --content-type text/x-markdown
+wp print notes.txt -e text/html
 ```
 
 ## Graphical User Interface
 
-When run as a Windows app (`winprintgui.exe`), **winprint** provides an easy to use GUI for previewing how a file will be printed and changing many settings. Start **winprint** from the Windows Start Menu like any other app.
+Launch the GUI with:
 
-The **File button** opens a File Open Dialog for choosing the file to preview and/or print. The GUI app can print a single file at a time. Use the `winprint` command line to print multiple files at once.
+```bash
+wp gui
+```
 
-The **Print button** prints the currently selected file.
+Or find **WinPrint** in the Start Menu (Windows) or via Spotlight (macOS).
 
-The **Settings (⚙) button** will open `WinPrint.config.json` in your favorite text editor. Changes made to the file will be reflected in the GUI automatically.
+The GUI provides an easy-to-use interface for previewing how a file will be printed and changing settings.
+
+* **File button** — Opens a File Open Dialog for choosing the file to preview and/or print.
+* **Print button** — Prints the currently selected file.
+* **Settings (⚙) button** — Opens `WinPrint.config.json` in your text editor. Changes are reflected automatically.
+
+## Auto-Update
+
+WinPrint's packaged builds include a built-in install/update engine.
+
+You can also update manually using your package manager:
+
+```bash
+# Windows
+winget upgrade Kindel.WinPrint
+
+# macOS
+brew upgrade --cask winprint
+
+# Linux
+brew upgrade winprint
+```
 
 ## Sheet Definitions
 
@@ -191,9 +153,9 @@ Font choices, header/footer options, and other print-job settings are defined in
 
 This is called "n-up" printing. The most common form of "n-up" printing is "2-up" where the page orientation is set to landscape and there are two columns of pages.
 
-The layout and format of the **Sheet** is defined by a set of configuration settings called a **Sheet Definition**. Out of the box **winprint** comes with two: `Default 1 Up` and `Default 2 Up`.
+The layout and format of the **Sheet** is defined by a set of configuration settings called a **Sheet Definition**. Out of the box **winprint** comes with two: `Default 1-Up` and `Default 2-Up`.
 
-**Sheet Definitions** are defined and stored in the `WinPrint.config.json` configuration file found in `%appdata%\Kindel Systems\winprint`.
+**Sheet Definitions** are defined and stored in the `WinPrint.config.json` configuration file. On Windows this file lives in `%appdata%\Kindel\winprint`; on macOS and Linux **winprint** runs in portable mode and the file sits next to the application (the `wp` executable, or inside `WinPrint.app` for the GUI).
 
 ### Headers & Footers Macros
 
@@ -219,7 +181,7 @@ The following macros are supported:
 
 * **`{FileNameWithoutExtension}`** - The file name of the file without the extension and period ".".
 
-* **`{FileName}`** - The name of file without the extension.
+* **`{FileName}`** - The name of the file including the extension. If a Title was not provided, the Title will be used.
 
 * **`{Title}`** - The Title of the print request. If Title was not provided, the FileName will be used.
 
@@ -232,6 +194,8 @@ The following macros are supported:
 * **`{ContentType}`** - The file's content type (e.g. `text/plain`, `text/x-csharp`, or `text/x-smalltalk`).
 
 * **`{CteName}`** - The name of the **winprint** Content Type Engine used to render the file.
+
+* **`{Style}`** - The style used for formatting (e.g. `default` or `colorful`).
 
 * **`{DatePrinted}`** - The current date & time (see formatting below).
 
@@ -253,19 +217,21 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 ## Content Types
 
-**winprint** supports three types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
+**winprint** supports five types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
 
-1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting and does not require Python or Pygments.
+1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting.
 
-2. **`AnsiCte`** - This legacy CTE can format `text/plain` files and files with embedded `ANSI Escape Sequences`. It uses [Pygments](https://pygments.org/) for syntax highlighting when explicitly configured as the default syntax highlighter.
+2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`).
 
-3. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\r` (formfeed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
+3. **`AnsiCte`** - Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures), reflowing them for the page.
 
-4. **`text/html`** - This CTE can render html files. Any CSS specified inline in the HTML file will be honored. External CSS files must be local. For HTML without CSS, the default CSS used can be overridden by providing a file named `winprint.css` in the `%appdata%\Kindel Systems\winprint` folder. `text/html` does not support line numbers.
+4. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\f` (form feed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
 
-When using **winprint** from the command line, the `-ContentTypeEngine` parameter can be used specify a CTE to use.
+5. **`HtmlCte`** - Renders HTML files (`text/html`; e.g. `.html`/`.htm`, as well as `.mhtml`/`.mht` web archives) by laying out the HTML/CSS. Any CSS specified inline in the HTML file will be honored. Local (document-relative) files, `data:` URIs, and MHTML-embedded resources always load; `http(s)` resources are only fetched when `AllowRemoteResources` is enabled. `text/html` does not support line numbers.
 
-The extension of the file being printed (e.g. `.cs`) determines which Content Type rendering engine will be used. **winprint** has a built-in library of hundreds of file extension to content type/language mappings. When using **winprint** from the command line, the `-Langauge` parameter can be used to override this behavior.
+When using **winprint** from the command line, the `--content-type` (`-e`) option can be used to specify the content type / CTE to use.
+
+The extension of the file being printed (e.g. `.cs`) determines which Content Type rendering engine will be used. **winprint** has a built-in library of hundreds of file extension to content type/language mappings. When using **winprint** from the command line, the `--content-type` (`-e`) option can be used to override this behavior.
 
 To associate a file extension with a particular Content Type Engine, modify the `fileTypeMapping.filesAssociations` section of `WinPrint.config.json`. For example, to associate files with a `.htm` extension with the `text/html` Content Type Engine add a line as shown below:
 
@@ -279,7 +245,7 @@ To associate a file extension with a particular Content Type Engine, modify the 
 
 For associating file extensions with a particular programming language see below.
 
-The `out-winprint` parameter `-ContentTypeEngine` and the `winprint --content-type` option override content type and language detection.
+The `wp --content-type` (`-e`) option overrides content type and language detection.
 
 ## Language Associations
 
@@ -287,32 +253,32 @@ The `out-winprint` parameter `-ContentTypeEngine` and the `winprint --content-ty
 
 ### Adding or Changing Language Associations
 
-To associate a file extension with a language, modify the `fileTypeMapping.filesAssociations` and `fileTypeMapping.contentTypes` sections of `WinPrint.config.json`. For example, to associate files with a `.INTERCAL` extension with the JSON language add a line as shown below:
+To associate a file extension with a content type, modify the `fileTypeMapping.filesAssociations` section of `WinPrint.config.json`. For example, to associate files with a `.json5` extension with the JSON content type add a line as shown below:
 
 ```json
     "fileTypeMapping": {
       "filesAssociations": {
-        "*.intercal": "JSON"
+        "*.json5": "text/x-json"
       }
     }
 ```
 
-A new language can be defined by modifying the `fileTypeMapping.contentTypes` section of `WinPrint.config.json`. For example, to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29), the `fileTypeMapping.filesAssociations` and `fileTypeMapping.contentTypes` sections would look like the following:
+A new content type can be defined by modifying the `fileTypeMapping.contentTypes` section of `WinPrint.config.json`. For example, to enable the [Icon Programming Language](https://en.wikipedia.org/wiki/Icon_%28programming_language%29), the `fileTypeMapping.filesAssociations` and `fileTypeMapping.contentTypes` sections would look like the following:
 
 ```json
     "fileTypeMapping": {
       "filesAssociations": {
-        "*.intercal": "text/x-INTERCAL"
+        "*.icn": "text/x-icon"
       },
       "contentTypes": [
         {
-          "id": "text/x-INTERCAL",
-          "title": "Compiler Language With No Pronounceable Acronym",
+          "id": "text/x-icon",
+          "title": "Icon Programming Language",
           "extensions": [
-            "*.intercal"
+            "*.icn"
           ],
           "aliases": [
-              "INTERCAL"
+              "icon"
           ]
         }
       ]
@@ -321,25 +287,9 @@ A new language can be defined by modifying the `fileTypeMapping.contentTypes` se
 
 For TextMate highlighting to work, the mapped language must resolve to a bundled TextMate grammar. If it does not, **winprint** still prints the file as plain text.
 
-
-```json
-    "languages": [
-      {
-        "id": "text/x-INTERCAL",
-        "title": "Smalltalk",
-        "extensions": [
-          "*.intercal"
-        ],
-        "aliases": [
-            "INTERCAL"
-        ]
-      }
-    ]
-```
-
 ## Logging & Diagnostics
 
-**winprint** writes extensive diagnostic logs to `%appdata%/Kindel Systems/WinPrint/logs`. When using `winprint`, specify `--debug`. The deprecated PowerShell CmdLet still supports `-Debug`.
+**winprint** writes diagnostic logs to a `logs` folder alongside its settings. On Windows that's `%appdata%\Kindel\winprint\logs` (or next to the executable when running in portable mode); on macOS and Linux the `logs` folder sits next to the `wp` executable (inside `WinPrint.app` for the GUI). Run the `wp` command line with `--debug` for more detail.
 
 Additional printing diagnostics can be turned on via settings in the configuration file.
 

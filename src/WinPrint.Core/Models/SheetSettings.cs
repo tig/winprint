@@ -10,9 +10,7 @@ public class SheetSettings : ModelBase
     private int _columns = 1;
 
     private ContentSettings? _contentSettings;
-    private int _darkness;
     private Footer _footer = new();
-    private bool _grayscale;
 
     private Header _header = new();
 
@@ -23,7 +21,6 @@ public class SheetSettings : ModelBase
     private string _name = "";
     private int _padding = 3;
     private bool _pageSeparator;
-    private bool _printBackground = true;
     private int _rows = 1;
 
     /// <summary>
@@ -126,32 +123,52 @@ public class SheetSettings : ModelBase
         set => SetField(ref _footer, value);
     }
 
-    // The following members are runtime-only and do NOT get persisted, hence "internal"
-    /// <summary>
-    ///     if True, print content background, if present. Otherwise, all backgrounds will be paper color.
-    /// </summary>
-    internal bool PrintBackground
+    public override void CopyPropertiesFrom(ModelBase? source)
     {
-        get => _printBackground;
-        set => SetField(ref _printBackground, value);
+        if (source is not SheetSettings src)
+        {
+            return;
+        }
+
+        Name = src.Name;
+        Landscape = src.Landscape;
+        Rows = src.Rows;
+        Columns = src.Columns;
+        Padding = src.Padding;
+        PageSeparator = src.PageSeparator;
+        ModelCopyHelpers.CopyMargins(Margins, src.Margins);
+
+        if (src.ContentSettings is null)
+        {
+            ContentSettings = null;
+        }
+        else
+        {
+            ContentSettings ??= new ContentSettings();
+            ContentSettings.CopyPropertiesFrom(src.ContentSettings);
+        }
+
+        Header.CopyPropertiesFrom(src.Header);
+        Footer.CopyPropertiesFrom(src.Footer);
     }
 
-    /// <summary>
-    ///     If True, all content will be printed in grayscale. Use Darkness property to change how
-    ///     dark the grey is.
-    /// </summary>
-    internal bool Grayscale
+    public override IDictionary<string, string?> GetTelemetryDictionary()
     {
-        get => _grayscale;
-        set => SetField(ref _grayscale, value);
-    }
+        Dictionary<string, string?> dictionary = TelemetryCollector.Create();
+        TelemetryCollector.Add(dictionary, nameof(Name), Name);
+        TelemetryCollector.Add(dictionary, nameof(Landscape), Landscape);
+        TelemetryCollector.Add(dictionary, nameof(Rows), Rows);
+        TelemetryCollector.Add(dictionary, nameof(Columns), Columns);
+        TelemetryCollector.Add(dictionary, nameof(Padding), Padding);
+        TelemetryCollector.Add(dictionary, nameof(PageSeparator), PageSeparator);
+        TelemetryCollector.Add(dictionary, nameof(Margins), Margins.ToString());
+        if (ContentSettings is not null)
+        {
+            TelemetryCollector.AddNested(dictionary, nameof(ContentSettings), ContentSettings);
+        }
 
-    /// <summary>
-    ///     Darkness factor. 0 = RGB. 100 = black.
-    /// </summary>
-    internal int Darkness
-    {
-        get => _darkness;
-        set => SetField(ref _darkness, value);
+        TelemetryCollector.AddNested(dictionary, nameof(Header), Header);
+        TelemetryCollector.AddNested(dictionary, nameof(Footer), Footer);
+        return dictionary;
     }
 }

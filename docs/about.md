@@ -4,7 +4,7 @@ I've had a thing for printing since I started programming on an Apple ][+ in 198
 
 In 1988, as a college junior at the University of Arizona (Go Cats!), I decided Windows was going to win over OS/2 and I was going to work for Microsoft. I bought Charles Petzold's [Programming Windows](https://www.amazon.com/Programming-Windows-Writing-Developer-Reference/dp/0735671761?tag=ceklog-20) and conned my dad into buying me a copy of the Windows 2.0 SDK (which was like $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first useful app I wrote was **WinSpit**. In a rare moment of adulting, I renamed the app [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For over ten years I received $25 checks the mail from folks all over the world. Even better, WinPrint demonstrated to Microsoft I could actually, really write code and they hired me.
 
-![WinPrint 1.54](winprint-154.gif)
+![WinPrint 1.54](winprint-154.png)
 
 Several times in the early 1990s I started writing WinPrint 2.0. Each time I had the basics working and realized three things: 1) Nobody cares about printing source code, 3) I'd over-engineered things, and 2) the technology I choose was already dated (e.g. MFC). Two of those abandoned efforts can be found in my GitHub archive [here (1992)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRINT) and [here (1994)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRT20).
 
@@ -16,9 +16,13 @@ This all led to me re-discovering my old WinPrint 2.0 source code. Reminiscing o
 2) I over-engineered it. It has a full GUI with print preview. Headers and Footers with *Macros*. PowerShell and scriptable command-line interfaces. It can syntax-highlight source code with bundled TextMate grammars. It's written in C# using modern .NET. And more.
 3) I used .NET and C#. Ok, this part I can defend (assuming you get past point #1 and #2): First, I know C# well and it is awesome. Second, no other modern language/app-framework can even SPELL "print". I tried both Electron and Flutter and both suck when it comes to printing.
 
-So, there you are: I present to you WinPrint 2.0. I hope you enjoy it.
+That was WinPrint 2.0.
 
--tig ([@ckindel](twitter.com/ckindel) on twitter; see my [blog](https://ceklog.kindel.com))
+Then, after shipping the most popular framework for building terminal (TUI) apps, [Terminal.Gui](https://github.com/tui-cs/Terminal.Gui), and adding graphics support, I realized WinPrint would be really cool as a terminal app... imagine Print Preview IN THE TERMINAL. I also rewrote the GUI to work as well on the Mac as it did on Windows. 
+
+This is WinPrint 3.0. I hope you enjoy it!
+
+-tig ([@tigkindel](https://twitter.com/tigkindel) on X; see my [blog](https://blog.kindel.com))
 
 ## License (MIT)
 

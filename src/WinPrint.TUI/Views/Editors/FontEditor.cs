@@ -1,25 +1,26 @@
-using System.Collections.ObjectModel;
 using System.Globalization;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core.Models;
+using WinPrint.TUI.Views;
 
 namespace WinPrint.TUI.Views.Editors;
 
 /// <summary>
-///     Edits a <see cref="Font" /> (family and point size) via two dropdowns.
+///     Edits a <see cref="Font" />: shows the current family, style, and size as a summary line and opens
+///     the full <see cref="FontChooserDialog" /> (issue #177) — with its live preview and real installed-
+///     font list — to change it. The section header carries no hotkey; the button does.
 /// </summary>
 public sealed class FontEditor : EditorBase<Font>
 {
-    private readonly DropDownList _family;
-    private readonly ObservableCollection<string> _families;
-    private readonly DropDownList _size;
-    private readonly ObservableCollection<string> _sizes;
+    private readonly Label _summary;
+    private readonly Button _button;
 
     /// <summary>Creates a font editor.</summary>
-    /// <param name="title">Title text; the underscore marks the hotkey.</param>
-    public FontEditor(string title = "Font")
+    /// <param name="title">Section header text (no hotkey marker — the button owns the hotkey).</param>
+    /// <param name="buttonText">Button caption; the underscore marks the hotkey (e.g. <c>Co_ntent Font…</c>).</param>
+    public FontEditor(string title = "Font", string buttonText = "_Font…")
     {
         Width = Dim.Fill();
         Height = Dim.Auto(DimAutoStyle.Content);
@@ -29,70 +30,67 @@ public sealed class FontEditor : EditorBase<Font>
         SuperViewRendersLineCanvas = true;
         Title = title;
 
-        _families = new ObservableCollection<string>(FontChoices.Families);
-        _family = new DropDownList
+        _summary = new Label
         {
+            X = 0,
+            Y = 0,
             Width = Dim.Fill(),
-            Source = new ListWrapper<string>(_families)
+            Height = 1,
+            Text = Describe(null)
         };
-
-        // Family and size on their own rows so the editor stays narrow.
-        _sizes = new ObservableCollection<string>(FontChoices.Sizes.Select(FormatSize));
-        var sizeLabel = new Label { X = 0, Y = 1, Text = "Size (pt):" };
-        _size = new DropDownList
+        _button = new Button
         {
-            Y = Pos.Bottom(_family),
-            Width = EditorMetrics.SizeFieldWidth,
-            Source = new ListWrapper<string>(_sizes)
+            X = 0,
+            Y = Pos.Bottom(_summary),
+            Text = buttonText,
+            ShadowStyle = ShadowStyles.None
+        };
+        _button.Accepting += (_, e) =>
+        {
+            e.Handled = true;
+            OpenChooser();
         };
 
-        _family.ValueChanged += (_, _) => PushFromChildren();
-        _size.ValueChanged += (_, _) => PushFromChildren();
-
-        Add(_family, sizeLabel, _size);
+        Add(_summary, _button);
     }
 
     /// <inheritdoc />
     protected override void OnValueChanged(Font? newValue)
     {
-        Font font = newValue ?? new Font();
-        _family.Value = Ensure(_families, font.Family);
-        _size.Value = Ensure(_sizes, FormatSize(font.Size));
+        _summary.Text = Describe(newValue);
     }
 
-    private void PushFromChildren()
+    // Opens the live-preview chooser seeded with the current font; on confirm, replaces Value with the
+    // chosen font. A fresh instance (differing by family/size/style) makes EditorBase raise ValueChanged
+    // so the bound settings reflow.
+    private void OpenChooser()
     {
-        if (Suppressing || Value is null)
+        if (GetApp() is not { } app)
         {
             return;
         }
 
-        // Font is mutable; mutate the bound instance directly.
-        if (!string.IsNullOrEmpty(_family.Value))
+        // Assign a NEW Font through Value (the chooser returns a fresh instance). Font has value equality,
+        // so an unchanged selection is a no-op; a real change makes EditorBase raise ValueChanged, which is
+        // what drives the SettingsPanel reflow (the dropdown-mutation reflow path from #178 is obsolete now
+        // that selection goes through the modal chooser instead of in-place dropdown edits).
+        Font seed = Value ?? new Font();
+        if (FontChooserDialog.Show(app, seed) is { } chosen)
         {
-            Value.Family = _family.Value;
-        }
-
-        if (float.TryParse(_size.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float size))
-        {
-            Value.Size = size;
+            Value = chosen;
         }
     }
 
-    // The model's family/size are free-form, so a bound value may not be in the curated list; add it
-    // so the dropdown can show it as the current selection.
-    private static string Ensure(ObservableCollection<string> items, string value)
+    private static string Describe(Font? font)
     {
-        if (!items.Contains(value))
+        font ??= new Font();
+        string style = (font.Style & (FontStyle.Bold | FontStyle.Italic)) switch
         {
-            items.Insert(0, value);
-        }
-
-        return value;
-    }
-
-    private static string FormatSize(float size)
-    {
-        return size.ToString("0.#", CultureInfo.InvariantCulture);
+            FontStyle.Bold | FontStyle.Italic => "Bold Italic",
+            FontStyle.Bold => "Bold",
+            FontStyle.Italic => "Italic",
+            _ => "Regular"
+        };
+        return $"{font.Family}, {style}, {font.Size.ToString("0.#", CultureInfo.InvariantCulture)}pt";
     }
 }

@@ -24,17 +24,39 @@ public static class PrintOrchestrator
             return PrintJobResult.Succeeded(0);
         }
 
+        PrintRequest request = await BuildRequestAsync(context).ConfigureAwait(false);
+        return await PrintPipeline.PrintAsync(printService, request, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Reflows the document and returns the resulting <see cref="PrintPlan" /> without printing —
+    ///     the engine behind <c>wp print --what-if</c> (count sheets without touching a printer).
+    /// </summary>
+    public static async Task<PrintPlan> PlanAsync(IPrintService printService, SettingsContext context)
+    {
+        ArgumentNullException.ThrowIfNull(printService);
+        ArgumentNullException.ThrowIfNull(context);
+
+        if (string.IsNullOrWhiteSpace(context.App.ActiveFile))
+        {
+            return new PrintPlan(context.App.CurrentPageSetup, 0, 0, 0);
+        }
+
+        PrintRequest request = await BuildRequestAsync(context).ConfigureAwait(false);
+        return await PrintPipeline.PlanAsync(printService, request).ConfigureAwait(false);
+    }
+
+    private static async Task<PrintRequest> BuildRequestAsync(SettingsContext context)
+    {
         SheetViewModel printSheet = await CreatePrintSheetAsync(context).ConfigureAwait(false);
         PrintPageSetup pageSetup = CopyPageSetup(context.App.CurrentPageSetup);
         string documentName = Path.GetFileName(context.App.ActiveFile);
 
-        var request = new PrintRequest(printSheet, pageSetup, documentName)
+        return new PrintRequest(printSheet, pageSetup, documentName)
         {
             FromSheet = pageSetup.FromSheet,
-            ToSheet = pageSetup.ToSheet,
+            ToSheet = pageSetup.ToSheet
         };
-
-        return await PrintPipeline.PrintAsync(printService, request, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<SheetViewModel> CreatePrintSheetAsync(SettingsContext context)

@@ -1,18 +1,18 @@
-using System.Diagnostics;
-using System.Net;
-using System.Reflection;
-using Octokit;
+using System.Runtime.InteropServices;
+using WinPrint.Core;
 using Serilog;
+using Velopack;
+using Velopack.Sources;
 
 namespace WinPrint.Core.Services;
 
 /// <summary>
-///     Implements version checks, updated version downloads, and installs.
+///     Implements version checks and updates through Velopack.
 /// </summary>
 public class UpdateService
 {
-    private static readonly HttpClient s_httpClient = new();
-    private string? _tempFilename;
+    private const string RepositoryUrl = "https://github.com/tig/winprint";
+    private UpdateInfo? _pendingUpdate;
 
     /// <summary>
     ///     Any error messages from failed update checks or downloads
@@ -22,8 +22,7 @@ public class UpdateService
     /// <summary>
     ///     Provides the current version number
     /// </summary>
-    public static Version CurrentVersion =>
-        new(FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(UpdateService))!.Location).FileVersion!);
+    public static Version CurrentVersion => AppHostInfo.FileVersionParsed;
 
     /// <summary>
     ///     Contains the version number of the latest version found online (only valid after GotLatestVersion)
@@ -37,7 +36,7 @@ public class UpdateService
     public Uri? ReleasePageUri { get; set; }
 
     /// <summary>
-    ///     Uri to the installer file (only valid after GotLatestVersion)
+    ///     Uri to the release artifact feed (only valid after GotLatestVersion)
     /// </summary>
     public Uri? InstallerUri { get; set; }
 
@@ -52,7 +51,7 @@ public class UpdateService
     }
 
     /// <summary>
-    ///     Fired when a download kicked off by StartUpgrade completes
+    ///     Fired when a download kicked off by StartUpgrade completes.
     /// </summary>
     public event EventHandler<string>? DownloadComplete;
 
@@ -61,12 +60,7 @@ public class UpdateService
         DownloadComplete?.Invoke(this, path);
     }
 
-    public event EventHandler<DownloadProgressChangedEventArgs>? DownloadProgressChanged;
-
-    protected void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e)
-    {
-        DownloadProgressChanged?.Invoke(this, e);
-    }
+    public event EventHandler<int>? DownloadProgressChanged;
 
     /// <summary>
     ///     Compares current version ot latest online version.
@@ -87,51 +81,37 @@ public class UpdateService
     public async Task<Version> GetLatestVersionAsync(CancellationToken token)
     {
         LogService.TraceMessage();
-        InstallerUri = new Uri("https://github.com/tig/winprint/releases");
+        ReleasePageUri = new Uri($"{RepositoryUrl}/releases");
+        InstallerUri = ReleasePageUri;
+
         try
         {
-            var github = new GitHubClient(new ProductHeaderValue("tig-winprint"));
-            IReadOnlyList<Release>? allReleases =
-                await github.Repository.Release.GetAll("tig", "winprint").ConfigureAwait(false);
-
-            //#if DEBUG
-            //                Debug.WriteLine("Pausing 2s to simulate version check taking a long time...");
-            //                Thread.Sleep(2000);
-            //                Debug.WriteLine("Done pausing.");
-            //#endif
             token.ThrowIfCancellationRequested();
-
-            // Get all releases and pre-releases
-#if DEBUG
-            Release[] releases =
-            [
-                .. allReleases.Where(r => r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' ')))
-            ];
-#else
-                var releases =
- allReleases.Where(r => !r.Prerelease).OrderByDescending(r => new Version(r.TagName.Replace('v', ' '))).ToArray();
-#endif
-            //Log.Debug("Releases {releases}", JsonSerializer.Serialize(releases, options: new JsonSerializerOptions() { WriteIndented = true }));
-            if (releases.Length > 0)
+            UpdateManager manager = CreateUpdateManager();
+            if (!manager.IsInstalled)
             {
-                Log.Debug(
-                    "The latest release is tagged at {TagName} and is named {Name}. Download Url: {BrowserDownloadUrl}",
-                    releases[0].TagName, releases[0].Name, releases[0].Assets[0].BrowserDownloadUrl);
-
-                LatestVersion = new Version(releases[0].TagName.Replace('v', ' '));
-                ReleasePageUri = new Uri(releases[0].HtmlUrl);
-                InstallerUri = new Uri(releases[0].Assets[0].BrowserDownloadUrl);
+                ErrorMessage =
+                    "Velopack updates are only available when WinPrint is installed from a Velopack package.";
+                LatestVersion = CurrentVersion;
+                Log.Information("Update: {msg}", ErrorMessage);
             }
             else
             {
-                ErrorMessage = "No release found.";
+                _pendingUpdate = await manager.CheckForUpdatesAsync().ConfigureAwait(false);
+                LatestVersion = _pendingUpdate is null
+                    ? ToVersion(manager.CurrentVersion)
+                    : ToVersion(_pendingUpdate.TargetFullRelease.Version);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception e)
         {
             ErrorMessage = $"({ReleasePageUri}) {e.Message}";
             Log.Warning("Update: {msg}", ErrorMessage);
-            ServiceLocator.Current.TelemetryService.TrackException(e);
+            WinPrintServices.Current.TelemetryService.TrackException(e);
         }
 
         OnGotLatestVersion(LatestVersion);
@@ -143,47 +123,72 @@ public class UpdateService
     /// </summary>
     public async Task<string> StartUpgradeAsync()
     {
-        Debug.WriteLine("StartUpgradeAsync");
-        // Download file
-        _tempFilename = Path.GetTempFileName() + ".msi";
-        //Log.Information($"{this.GetType().Name}: Downloading {InstallerUri.AbsoluteUri} to {_tempFilename}...");
+        UpdateInfo pendingUpdate = _pendingUpdate ??
+                                   throw new InvalidOperationException("No Velopack update is available.");
 
-        if (InstallerUri is null)
+        UpdateManager manager = CreateUpdateManager();
+        await manager.DownloadUpdatesAsync(pendingUpdate, progress => DownloadProgressChanged?.Invoke(this, progress))
+            .ConfigureAwait(false);
+
+        manager.ApplyUpdatesAndRestart(pendingUpdate.TargetFullRelease);
+        return pendingUpdate.TargetFullRelease.FileName;
+    }
+
+    private static UpdateManager CreateUpdateManager()
+    {
+        var source = new GithubSource(RepositoryUrl, string.Empty, IncludePrerelease, new HttpClientFileDownloader());
+        // The release workflow packs a separate Velopack channel per runtime (win-x64, osx-x64,
+        // osx-arm64, linux-x64, linux-arm64), so each install must ask for its own arch's channel.
+        // Without this, Velopack falls back to the per-OS default channel (win/osx/linux) and would
+        // miss the release feed entirely on macOS/Linux.
+        var options = new UpdateOptions { ExplicitChannel = GetUpdateChannel() };
+        return new UpdateManager(source, options);
+    }
+
+    /// <summary>
+    ///     Builds the Velopack channel name for the running process, matching the per-runtime
+    ///     channels produced by the release workflow (e.g. <c>osx-arm64</c>).
+    /// </summary>
+    private static string GetUpdateChannel()
+    {
+        // The macOS GUI ships as a MAUI Mac Catalyst build, which reports as MacCatalyst (not
+        // macOS), so map it to the same "osx" channel as the plain-net10.0 TUI.
+        string os = OperatingSystem.IsWindows() ? "win"
+            : OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst() ? "osx"
+            : OperatingSystem.IsLinux() ? "linux"
+            : throw new PlatformNotSupportedException("WinPrint updates are not supported on this OS.");
+
+        string arch = RuntimeInformation.ProcessArchitecture switch
         {
-            throw new InvalidOperationException("Installer URI is not available.");
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "arm64",
+            var other => throw new PlatformNotSupportedException($"WinPrint updates are not supported on {other}.")
+        };
+
+        return $"{os}-{arch}";
+    }
+
+    private static bool IncludePrerelease
+    {
+        get
+        {
+#if DEBUG
+            return true;
+#else
+            return false;
+#endif
+        }
+    }
+
+    private static Version ToVersion(object? version)
+    {
+        string? value = version?.ToString();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return CurrentVersion;
         }
 
-        await File.WriteAllBytesAsync(_tempFilename,
-            await s_httpClient.GetByteArrayAsync(InstallerUri).ConfigureAwait(false)).ConfigureAwait(false);
-        OnDownloadComplete(_tempFilename);
-        return _tempFilename;
-    }
-
-    private void Client_DownloadProgressChanged(object? sender, DownloadProgressChangedEventArgs e)
-    {
-        //Log.Debug($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
-        //if (e.ProgressPercentage % 33 == 0) {
-        //    Log.Information($"{this.GetType().Name}: Download progress {e.ProgressPercentage}%");
-        //}
-        OnDownloadProgressChanged(e);
-    }
-
-    private void Client_DownloadDataCompleted(object? sender, DownloadDataCompletedEventArgs e)
-    {
-        //try {
-        //    // If the request was not canceled and did not throw
-        //    // an exception, display the resource.
-        //    if (!e.Cancelled && e.Error == null) {
-        //        //File.WriteAllBytes(_tempFilename, (byte[])e.Result);
-        //    }
-        //}
-        //finally {
-
-        //}
-        ////Log.Information($"{this.GetType().Name}: Download complete");
-        ////Log.Information($"{this.GetType().Name}: Exiting and running installer ({_tempFilename})...");
-
-
-        OnDownloadComplete(_tempFilename!);
+        string versionPart = value.TrimStart('v').Split('-', '+')[0];
+        return Version.TryParse(versionPart, out Version? parsed) ? parsed : CurrentVersion;
     }
 }

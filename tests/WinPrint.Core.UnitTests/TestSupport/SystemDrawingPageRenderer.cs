@@ -29,7 +29,7 @@ public static class SystemDrawingPageRenderer
         using (var g = Graphics.FromImage(bitmap))
         {
             g.Clear(Color.White);
-            g.PageUnit = GraphicsUnit.Display; // 1/100" — same as the WinForms preview
+            g.PageUnit = GraphicsUnit.Display; // 1/100" units
             var context = new SystemDrawingGraphicsContext(g);
             cte.PaintPage(context, pageNum);
         }

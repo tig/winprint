@@ -4,6 +4,8 @@ namespace WinPrint.Core.Models;
 
 public class Font : ICloneable
 {
+    private const FontStyle AllStyles = FontStyle.Bold | FontStyle.Italic | FontStyle.Underline | FontStyle.Strikeout;
+
     private FontStyle _style = FontStyle.Regular;
 
     /// <summary>
@@ -24,16 +26,8 @@ public class Font : ICloneable
     public FontStyle Style
     {
         get => _style;
-        set
-        {
-            if (!Enum.IsDefined(typeof(FontStyle), value))
-            {
-                value = FontStyle.Bold | FontStyle.Italic;
-            }
-
-            _style = value;
-            //                SetField(ref style, value);
-        }
+        set => _style = value & AllStyles;
+        //                SetField(ref style, value);
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using Terminal.Gui.Configuration;
 using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views.Editors;
@@ -53,10 +54,19 @@ public sealed class MainView : View
             Width = Dim.Fill(),
             Height = Dim.Fill() - Dim.Height(Footer)
         };
-        Preview.Border.Thickness = new Thickness(0);
-        Preview.SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Dialog);
+        Preview.OpenFileRequested += (_, _) => Settings.OpenFile();
+        Preview.BindNavigationKeys(this);
+        KeyBindings.AddApp(Key.PageDown, Preview, Command.PageDown);
+        KeyBindings.AddApp(Key.PageUp, Preview, Command.PageUp);
+        KeyBindings.AddApp(Key.Home, Preview, Command.Home);
+        // Zoom keybindings are owned by Terminal.Gui's ImageView (tui-cs/Terminal.Gui#5494); the old
+        // Ctrl+PageUp/Down/Home app bindings were dead on macOS (intercepted by Mission Control).
 
         Add(Settings, Header, Preview, Footer);
+
+        // The preview ImageView owns the zoom/pan keys (tui-cs/Terminal.Gui#5494), so give it focus by
+        // default — otherwise the keys do nothing until the user tabs into the preview.
+        Initialized += (_, _) => Preview.SetFocus();
 
         if (context is not null)
         {
@@ -68,24 +78,29 @@ public sealed class MainView : View
     {
         Settings.Bind(context);
         Core.ViewModels.AppViewModel app = context.App;
+        AppViewModel = app;
 
         SeedHeaderFooter(context);
 
         Header.ValueChanged += (_, _) =>
         {
-            if (Header.Value is { } h)
+            if (Header.Value is not { } h)
             {
-                app.SetHeaderEnabled(h.Enabled);
-                app.SetHeaderText(h.Text ?? string.Empty);
+                return;
             }
+
+            app.SetHeaderEnabled(h.Enabled);
+            app.SetHeaderText(h.Text ?? string.Empty);
         };
         Footer.ValueChanged += (_, _) =>
         {
-            if (Footer.Value is { } f)
+            if (Footer.Value is not { } f)
             {
-                app.SetFooterEnabled(f.Enabled);
-                app.SetFooterText(f.Text ?? string.Empty);
+                return;
             }
+
+            app.SetFooterEnabled(f.Enabled);
+            app.SetFooterText(f.Text ?? string.Empty);
         };
 
         app.SheetApplied += (_, _) =>
@@ -180,4 +195,7 @@ public sealed class MainView : View
 
     /// <summary>The page preview (fills the right, between header and footer).</summary>
     public PreviewPane Preview { get; }
+
+    /// <summary>The shared application view model, or <see langword="null" /> when bound to sample data.</summary>
+    public Core.ViewModels.AppViewModel? AppViewModel { get; private set; }
 }

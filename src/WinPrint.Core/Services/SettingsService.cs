@@ -1,37 +1,22 @@
-using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using GalaSoft.MvvmLight.Ioc;
-using Microsoft.Extensions.Configuration;
+using WinPrint.Core;
 using Serilog;
 using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
+using WinPrint.Core.Serialization;
 
 namespace WinPrint.Core.Services;
 
 // TODO: Implement settings validation with appropriate alerting
 public class SettingsService
 {
-    private readonly JsonSerializerOptions _jsonOptions;
-
     private FileWatcher? _watcher;
 
     public SettingsService()
     {
         SettingsFileName = $"{SettingsPath}{Path.DirectorySeparatorChar}{SettingsFileName}";
         Log.Debug("Settings file path: {settingsFileName}", SettingsFileName);
-
-        _jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip
-        };
-        _jsonOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
     }
 
     public string SettingsFileName { get; set; } = "WinPrint.config.json";
@@ -42,50 +27,55 @@ public class SettingsService
     ///     However, if the exe was started from somewhere else, work in "portable mode" and
     ///     use the dir containing the exe as the path.
     /// </summary>
-    public static string? SettingsPath
+    public static string? SettingsPath => ResolveSettingsPath(
+        AppHostInfo.BaseDirectory,
+        AppHostInfo.AssemblyDirectory,
+        AppHostInfo.CompanyName,
+        AppHostInfo.ProductName,
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+    internal static string? ResolveSettingsPath(
+        string? baseDirectory,
+        string? assemblyDirectory,
+        string? companyName,
+        string? productName,
+        bool isWindows)
     {
-        get
+        string? path = baseDirectory;
+
+        if (!isWindows)
         {
-            // Get dir of .exe — use AppContext.BaseDirectory as fallback for MAUI/single-file apps
-            string assemblyLocation = Assembly.GetAssembly(typeof(SettingsService))!.Location;
-            string? path = !string.IsNullOrEmpty(assemblyLocation)
-                ? Path.GetDirectoryName(assemblyLocation)
-                : AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
-            string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                // Your OSX code here.
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                // 
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(assemblyLocation))
-                {
-                    var fvi = FileVersionInfo.GetVersionInfo(assemblyLocation);
-
-                    // is this in Kindel\winprint?
-                    if (path is not null &&
-                        path.Contains($@"{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}"))
-                    {
-                        // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
-                        path =
-                            $@"{appdata}{Path.DirectorySeparatorChar}{fvi.CompanyName}{Path.DirectorySeparatorChar}{fvi.ProductName}";
-                    }
-
-                    // TODO: Remove internal knowledge of Out-WinPrint from here
-                    if (path is not null && path.Contains($@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
-                    {
-                        path = Path.GetDirectoryName(assemblyLocation);
-                    }
-                }
-            }
-
             return path;
         }
+
+        string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+        // is this in Kindel\winprint?
+        if (path is not null && !string.IsNullOrEmpty(companyName) && !string.IsNullOrEmpty(productName) &&
+            ContainsPathSegment(path, $"{companyName}{Path.DirectorySeparatorChar}{productName}"))
+        {
+            // We're running %programfiles%\Kindel\winprint; use %appdata%\Kindel\winprint.
+            path = $@"{appdata}{Path.DirectorySeparatorChar}{companyName}{Path.DirectorySeparatorChar}{productName}";
+        }
+
+        // TODO: Remove internal knowledge of Out-WinPrint from here
+        if (path is not null && ContainsPathSegment(path, $@"Program Files{Path.DirectorySeparatorChar}PowerShell"))
+        {
+            path = assemblyDirectory ?? baseDirectory;
+        }
+
+        return path;
+    }
+
+    private static bool ContainsPathSegment(string path, string segment)
+    {
+        return NormalizePathSeparators(path)
+            .Contains(NormalizePathSeparators(segment), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizePathSeparators(string path)
+    {
+        return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
     }
 
     /// <summary>
@@ -104,20 +94,23 @@ public class SettingsService
                     SettingsFileName);
                 settings = Settings.CreateDefaultSettings();
 
-                ServiceLocator.Current.TelemetryService.TrackEvent("Create Default Settings",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Create Default Settings",
                     settings.GetTelemetryDictionary());
 
                 SaveSettings(settings);
             }
             else
             {
-                Log.Debug("ReadSettings: Binding {settingsFileName} with Microsoft.Extensions.Configuration",
-                    SettingsFileName);
-                settings = BindSettings();
+                Log.Debug("ReadSettings: Deserializing {settingsFileName}", SettingsFileName);
+                settings = LoadSettings();
 
-                ServiceLocator.Current.TelemetryService.TrackEvent("Read Settings",
+                WinPrintServices.Current.TelemetryService.TrackEvent("Read Settings",
                     settings.GetTelemetryDictionary());
             }
+        }
+        catch (JsonException jex)
+        {
+            ReportConfigurationError(new InvalidDataException($"Invalid JSON in {SettingsFileName}", jex));
         }
         catch (InvalidDataException ide)
         {
@@ -146,66 +139,86 @@ public class SettingsService
         return settings;
     }
 
-    private Settings BindSettings()
+    private Settings LoadSettings()
     {
-        var settings = Settings.CreateDefaultSettings();
-        IConfigurationRoot configuration = BuildConfiguration();
-        configuration.Bind(settings);
-        return settings;
+        string json = File.ReadAllText(SettingsFileName);
+        return WinPrintJson.LoadSettingsWithDefaults(json);
     }
 
-    private IConfigurationRoot BuildConfiguration()
+    /// <summary>
+    ///     Reloads the settings file from disk and applies it to the live <see cref="WinPrintServices" />
+    ///     settings instance (the same propagation the file watcher does), so a save made elsewhere — e.g. the TUI
+    ///     config editor — takes effect immediately (issue #85). Throws if the file can't be parsed; the
+    ///     caller is expected to surface that so the user can fix it.
+    /// </summary>
+    public void ReloadAndApplySettings()
     {
-        string fullPath = Path.GetFullPath(SettingsFileName);
-        string? directory = Path.GetDirectoryName(fullPath);
-        if (string.IsNullOrEmpty(directory))
-        {
-            directory = Directory.GetCurrentDirectory();
-        }
+        Settings changedSettings = LoadSettings();
 
-        return new ConfigurationBuilder()
-            .SetBasePath(directory)
-            .AddJsonFile(Path.GetFileName(fullPath), false, false)
-            .Build();
+        WinPrintServices services = WinPrintServices.Current;
+        services.EnsureSettingsInstance();
+
+        // CopyPropertiesFrom does a deep, property-by-property copy, raising PropertyChanged as it goes.
+        services.Settings.CopyPropertiesFrom(changedSettings);
+    }
+
+    /// <summary>
+    ///     Validates that <paramref name="json" /> loads as settings using the same path the app uses at
+    ///     startup (<see cref="WinPrintJson.LoadSettingsWithDefaults" />): well-formed JSON that merges
+    ///     onto the defaults. An empty/whitespace document is valid (the loader falls back to defaults).
+    ///     Returns <see langword="true" /> when it loads; otherwise <paramref name="error" /> describes why.
+    /// </summary>
+    public static bool TryValidateSettingsJson(string? json, out string? error)
+    {
+        try
+        {
+            WinPrintJson.LoadSettingsWithDefaults(json ?? string.Empty);
+            error = null;
+            return true;
+        }
+        catch (JsonException ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+        catch (NotSupportedException ex)
+        {
+            error = ex.Message;
+            return false;
+        }
     }
 
     private void ReportUnknownFileError(Exception ex)
     {
         // TODO: Graceful error handling for .config file 
-        ServiceLocator.Current.TelemetryService.TrackException(ex);
+        WinPrintServices.Current.TelemetryService.TrackException(ex);
         Log.Error(ex, "SettingsService: Error with {settingsFileName}", SettingsFileName);
     }
 
     private void ReportConfigurationError(InvalidDataException ex)
     {
-        ServiceLocator.Current.TelemetryService.TrackException(ex);
+        WinPrintServices.Current.TelemetryService.TrackException(ex);
         Log.Error(ex, "Error parsing {file}", SettingsFileName);
     }
 
     private void Watcher_ChangedEvent(object? sender, EventArgs e)
     {
         Log.Debug("Settings file changed: {file}", SettingsFileName);
-        ServiceLocator.Current.TelemetryService.TrackEvent("Settings File Changed");
+        WinPrintServices.Current.TelemetryService.TrackEvent("Settings File Changed");
 
         try
         {
-            Settings changedSettings = BindSettings();
-
-            if (ModelLocator.Current?.Settings == null)
-            {
-                // This can happen if settings failed to load when app started. 
-                SimpleIoc.Default.Unregister<Settings>();
-                SimpleIoc.Default.Register<Settings>();
-            }
-
-            // CopyPropertiesFrom does a deep, property-by property copy from the passed instance
-            ModelLocator.Current?.Settings.CopyPropertiesFrom(changedSettings);
+            ReloadAndApplySettings();
         }
         catch (FileNotFoundException fnfe)
         {
             // TODO: Graceful error handling for .config file 
-            ServiceLocator.Current.TelemetryService.TrackException(fnfe);
+            WinPrintServices.Current.TelemetryService.TrackException(fnfe);
             Log.Error(fnfe, "Settings file changed but was then not found.", SettingsFileName);
+        }
+        catch (JsonException jex)
+        {
+            ReportConfigurationError(new InvalidDataException($"Invalid JSON in {SettingsFileName}", jex));
         }
         catch (InvalidDataException ide)
         {
@@ -226,7 +239,7 @@ public class SettingsService
     /// <param name="watchChanges">If true the file change watcher will be activated </param>
     public void SaveSettings(Settings settings, bool saveCTESettings = true, bool watchChanges = false)
     {
-        ServiceLocator.Current.TelemetryService.TrackEvent("Save Settings", settings.GetTelemetryDictionary());
+        WinPrintServices.Current.TelemetryService.TrackEvent("Save Settings", settings.GetTelemetryDictionary());
 
         // Disable file watcher
         if (_watcher != null)
@@ -242,7 +255,7 @@ public class SettingsService
             Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllText(SettingsFileName, JsonSerializer.Serialize(settings, _jsonOptions) + Environment.NewLine);
+        File.WriteAllText(SettingsFileName, WinPrintJson.SerializeSettings(settings) + Environment.NewLine);
 
         if (watchChanges)
         {
@@ -252,11 +265,110 @@ public class SettingsService
         }
     }
 
+    /// <summary>
+    ///     Centralizes "save on exit" persistence shared by every front end (TUI and MAUI).
+    ///     Each candidate value is compared against what is already stored in <paramref name="settings" />
+    ///     and only the fields that actually changed are mutated. The settings file is written at most
+    ///     once, and only when something changed, so callers can invoke this unconditionally on exit
+    ///     without rewriting an unchanged file.
+    /// </summary>
+    /// <param name="settings">The settings instance to update and persist.</param>
+    /// <param name="lastPrinter">Sticky printer name to remember (ignored when null/empty).</param>
+    /// <param name="lastPaperSize">Sticky paper-size name to remember (ignored when null/empty).</param>
+    /// <param name="defaultSheet">Selected sheet definition to remember (ignored when null).</param>
+    /// <param name="size">Window size to remember (ignored when null, e.g. while maximized).</param>
+    /// <param name="location">Window location to remember (ignored when null, e.g. while maximized).</param>
+    /// <param name="windowState">Window state to remember (ignored when null).</param>
+    /// <param name="saveCteSettings">
+    ///     When the default <paramref name="save" /> path is used, controls whether Content Type Engine
+    ///     settings are written too. Defaults to <see langword="false" /> for the interactive front ends.
+    /// </param>
+    /// <param name="save">
+    ///     Persistence callback; defaults to <see cref="SaveSettings(Settings, bool, bool)" /> using
+    ///     <paramref name="saveCteSettings" />. Injectable for tests.
+    /// </param>
+    /// <returns><see langword="true" /> if something changed and settings were saved; otherwise <see langword="false" />.</returns>
+    public bool PersistExitStateIfChanged(
+        Settings settings,
+        string? lastPrinter = null,
+        string? lastPaperSize = null,
+        Guid? defaultSheet = null,
+        WindowSize? size = null,
+        WindowLocation? location = null,
+        FormWindowState? windowState = null,
+        bool saveCteSettings = false,
+        Action<Settings>? save = null)
+    {
+        if (settings is null)
+        {
+            return false;
+        }
+
+        bool changed = false;
+
+        if (!string.IsNullOrEmpty(lastPrinter) &&
+            !string.Equals(settings.LastPrinter, lastPrinter, StringComparison.Ordinal))
+        {
+            settings.LastPrinter = lastPrinter;
+            changed = true;
+        }
+
+        if (!string.IsNullOrEmpty(lastPaperSize) &&
+            !string.Equals(settings.LastPaperSize, lastPaperSize, StringComparison.Ordinal))
+        {
+            settings.LastPaperSize = lastPaperSize;
+            changed = true;
+        }
+
+        if (defaultSheet is { } sheet && settings.DefaultSheet != sheet)
+        {
+            settings.DefaultSheet = sheet;
+            changed = true;
+        }
+
+        if (windowState is { } state && settings.WindowState != state)
+        {
+            settings.WindowState = state;
+            changed = true;
+        }
+
+        if (size is { } newSize && !SameSize(settings.Size, newSize))
+        {
+            settings.Size = new WindowSize(newSize.Width, newSize.Height);
+            changed = true;
+        }
+
+        if (location is { } newLocation && !SameLocation(settings.Location, newLocation))
+        {
+            settings.Location = new WindowLocation(newLocation.X, newLocation.Y);
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        Action<Settings> persist = save ?? (s => SaveSettings(s, saveCteSettings));
+        persist(settings);
+        return true;
+    }
+
+    private static bool SameSize(WindowSize? current, WindowSize candidate)
+    {
+        return current is not null && current.Width == candidate.Width && current.Height == candidate.Height;
+    }
+
+    private static bool SameLocation(WindowLocation? current, WindowLocation candidate)
+    {
+        return current is not null && current.X == candidate.X && current.Y == candidate.Y;
+    }
+
     // Factory - creates 
     public static Settings? Create()
     {
         LogService.TraceMessage();
-        Settings? settingsService = ServiceLocator.Current.SettingsService.ReadSettings();
+        Settings? settingsService = WinPrintServices.Current.SettingsService.ReadSettings();
         return settingsService;
     }
 }

@@ -1,10 +1,12 @@
 // Copyright Kindel, LLC - http://www.kindel.com
 // Published under the MIT License at https://github.com/tig/winprint
 
+using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.UnitTests.Services;
+using WinPrint.Core.UnitTests.TestSupport;
 using WinPrint.Core.ViewModels;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,17 +15,17 @@ namespace WinPrint.Core.UnitTests.ViewModels;
 
 /// <summary>
 ///     Exercises the shared <see cref="AppViewModel"/> directly so the bug-prone
-///     state and persistence paths used by every WinPrint frontend (WinForms,
-///     MAUI, CLI) can be verified without a UI runtime.
+///     state and persistence paths used by every WinPrint frontend (MAUI,
+///     TUI, CLI) can be verified without a UI runtime.
 /// </summary>
 public class AppViewModelTests : TestServicesBase
 {
     public AppViewModelTests(ITestOutputHelper output) : base(output)
     {
-        // Reset the singleton Settings to a known baseline. ModelLocator.Settings is
+        // Reset the singleton Settings to a known baseline. WinPrintServices.Settings is
         // read-only (IoC), so mutate the existing instance in place.
         var fresh = Settings.CreateDefaultSettings();
-        Settings live = ModelLocator.Current.Settings;
+        Settings live = WinPrintServices.Current.Settings;
         live.Sheets.Clear();
         foreach (KeyValuePair<string, SheetSettings> kvp in fresh.Sheets)
         {
@@ -31,6 +33,12 @@ public class AppViewModelTests : TestServicesBase
         }
 
         live.DefaultSheet = fresh.DefaultSheet;
+        live.DefaultSheetByContentType.Clear();
+        foreach (KeyValuePair<string, string> entry in fresh.DefaultSheetByContentType)
+        {
+            live.DefaultSheetByContentType[entry.Key] = entry.Value;
+        }
+
         live.LastPrinter = null;
         live.LastPaperSize = null;
         live.WindowState = FormWindowState.Normal;
@@ -61,8 +69,95 @@ public class AppViewModelTests : TestServicesBase
         Assert.True(vm.SelectedSheetIndex >= 0);
         Assert.NotNull(vm.CurrentSheet);
         Assert.Equal(
-            ModelLocator.Current.Settings.DefaultSheet.ToString(),
+            WinPrintServices.Current.Settings.DefaultSheet.ToString(),
             vm.SheetKeys[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
+    public void SetPaperSize_KnownPaper_UpdatesSelectionNameAndDimensions()
+    {
+        AppViewModel vm = CreateVm();
+
+        vm.SetPaperSize("Legal");
+
+        Assert.Equal("Legal", vm.SelectedPaperSize);
+        Assert.Equal("Legal", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPaperSize_DisplayPaperName_UpdatesDimensions()
+    {
+        AppViewModel vm = CreateVm();
+
+        vm.SetPaperSize("A4 (210 x 297mm)");
+
+        Assert.Equal("A4 (210 x 297mm)", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPaperSize_UnknownPaper_PreservesExistingDimensions()
+    {
+        AppViewModel vm = CreateVm();
+        vm.SetPaperSize("Legal");
+
+        vm.SetPaperSize("Letterhead");
+
+        Assert.Equal("Letterhead", vm.CurrentPageSetup.PaperSizeName);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+    }
+
+    [Fact]
+    public void SetPrinterSetup_AfterDirectPaperNameMutation_UpdatesDimensions()
+    {
+        AppViewModel vm = CreateVm();
+        vm.SetPaperSize("Letter");
+
+        vm.CurrentPageSetup.PaperSizeName = "Legal";
+        vm.SetPrinterSetup("Printer", "Legal", 2, 3);
+
+        Assert.Equal("Printer", vm.CurrentPageSetup.PrinterName);
+        Assert.Equal("Legal", vm.SelectedPaperSize);
+        Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
+        Assert.Equal(2, vm.CurrentPageSetup.FromSheet);
+        Assert.Equal(3, vm.CurrentPageSetup.ToSheet);
+    }
+
+    [Fact]
+    public async Task SetPaperSize_LoadedFile_ReflowsPreviewBounds()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_paper_reflow_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(file, "hello\nworld\n");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SetLandscape(false);
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(850, vm.SheetViewModel.Bounds.Width);
+            Assert.Equal(1100, vm.SheetViewModel.Bounds.Height);
+
+            var reflowed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            vm.ReflowCompleted += (_, _) => reflowed.TrySetResult();
+
+            vm.SetPaperSize("Legal");
+
+            await reflowed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Equal(850, vm.SheetViewModel.Bounds.Width);
+            Assert.Equal(1400, vm.SheetViewModel.Bounds.Height);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 
     [Fact]
@@ -73,9 +168,9 @@ public class AppViewModelTests : TestServicesBase
 
         // Mutating CurrentSheet must mutate the live Settings.Sheets entry.
         string key = vm.SheetKeys[vm.SelectedSheetIndex];
-        bool original = ModelLocator.Current.Settings.Sheets[key].Landscape;
+        bool original = WinPrintServices.Current.Settings.Sheets[key].Landscape;
         vm.CurrentSheet!.Landscape = !original;
-        Assert.Equal(!original, ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.Equal(!original, WinPrintServices.Current.Settings.Sheets[key].Landscape);
     }
 
     [Fact]
@@ -86,11 +181,11 @@ public class AppViewModelTests : TestServicesBase
         string key = vm.SheetKeys[vm.SelectedSheetIndex];
 
         vm.SetLandscape(true);
-        Assert.True(ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.True(WinPrintServices.Current.Settings.Sheets[key].Landscape);
         Assert.True(vm.CurrentPageSetup.Landscape);
 
         vm.SetLandscape(false);
-        Assert.False(ModelLocator.Current.Settings.Sheets[key].Landscape);
+        Assert.False(WinPrintServices.Current.Settings.Sheets[key].Landscape);
         Assert.False(vm.CurrentPageSetup.Landscape);
     }
 
@@ -105,9 +200,9 @@ public class AppViewModelTests : TestServicesBase
         vm.SetColumns(4);
         vm.SetPadding(250);
 
-        Assert.Equal(3, ModelLocator.Current.Settings.Sheets[key].Rows);
-        Assert.Equal(4, ModelLocator.Current.Settings.Sheets[key].Columns);
-        Assert.Equal(250, ModelLocator.Current.Settings.Sheets[key].Padding);
+        Assert.Equal(3, WinPrintServices.Current.Settings.Sheets[key].Rows);
+        Assert.Equal(4, WinPrintServices.Current.Settings.Sheets[key].Columns);
+        Assert.Equal(250, WinPrintServices.Current.Settings.Sheets[key].Padding);
     }
 
     [Fact]
@@ -120,7 +215,7 @@ public class AppViewModelTests : TestServicesBase
         var margins = new PrintMargins(10, 20, 30, 40);
         vm.SetMargins(margins);
 
-        PrintMargins saved = ModelLocator.Current.Settings.Sheets[key].Margins;
+        PrintMargins saved = WinPrintServices.Current.Settings.Sheets[key].Margins;
         Assert.Equal(10, saved.Left);
         Assert.Equal(20, saved.Right);
         Assert.Equal(30, saved.Top);
@@ -144,7 +239,7 @@ public class AppViewModelTests : TestServicesBase
         vm.SetFooterEnabled(true);
         vm.SetFooterText("CUSTOM-F");
 
-        SheetSettings s = ModelLocator.Current.Settings.Sheets[key];
+        SheetSettings s = WinPrintServices.Current.Settings.Sheets[key];
         Assert.False(s.Header.Enabled);
         Assert.Equal("CUSTOM-H", s.Header.Text);
         Assert.True(s.Footer.Enabled);
@@ -163,6 +258,232 @@ public class AppViewModelTests : TestServicesBase
         bool ok = vm.SelectSheetByNameOrId(targetName);
         Assert.True(ok);
         Assert.Equal(targetName, vm.SheetNames[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
+    public void HasUnsavedSheetChanges_DetectsEditAndClearsAfterRecapture()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+
+        Assert.True(vm.HasUnsavedSheetChanges);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        // Re-baselining (as front ends do after applying CLI options) clears the dirty state.
+        vm.RecaptureSheetBaselines();
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+    }
+
+    [Fact]
+    public void HasAnyUnsavedSheetChanges_CatchesEditsToSwitchedAwaySheet()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetNames.Count > 1);
+
+        int first = vm.SelectedSheetIndex;
+        int other = first == 0 ? 1 : 0;
+
+        // Edit the first sheet, then switch away to another sheet without saving.
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+        string editedKey = vm.SheetKeys[first];
+        vm.SelectSheetByIndex(other);
+
+        // The current sheet is clean, but the switched-away sheet is still dirty.
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+        Assert.Contains(editedKey, vm.DirtySheetDefinitionKeys);
+        Assert.True(vm.IsSheetDefinitionDirty(editedKey));
+    }
+
+    [Fact]
+    public void DiscardSheetChanges_RevertsCurrentEdit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        int originalColumns = vm.CurrentSheet!.Columns;
+
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasUnsavedSheetChanges);
+
+        vm.DiscardSheetChanges();
+
+        Assert.False(vm.HasUnsavedSheetChanges);
+        Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
+    }
+
+    // ResolveUnsavedSheetsOnExitAsync is the shared, front-end-agnostic save-on-exit guard. Each front end
+    // wires its own platform "about to exit" event (MAUI AppWindow.Closing / Mac Quit, TUI Quit command)
+    // to it and supplies a prompt delegate. These tests pin the decision logic so every
+    // front end behaves identically — the gap that left MAUI/Mac silently exiting without prompting.
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_NothingDirty_DoesNotPromptAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+
+        int prompts = 0;
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+        {
+            prompts++;
+            return Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Cancel, -1, string.Empty));
+        });
+
+        Assert.True(mayExit);
+        Assert.Equal(0, prompts);
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_Cancel_BlocksExitAndKeepsChanges()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SetColumns(vm.CurrentSheet!.Columns + 1);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+            Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Cancel, -1, string.Empty)));
+
+        Assert.False(mayExit);
+        Assert.True(vm.HasAnyUnsavedSheetChanges); // user cancelled — edits kept, exit blocked
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_DontSave_DiscardsAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        int originalColumns = vm.CurrentSheet!.Columns;
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, _) =>
+            Task.FromResult(new SaveSheetResolution(SaveSheetChoice.DontSave, -1, string.Empty)));
+
+        Assert.True(mayExit);
+        Assert.False(vm.HasAnyUnsavedSheetChanges);
+        Assert.Equal(originalColumns, vm.CurrentSheet!.Columns);
+    }
+
+    [Fact]
+    public async Task ResolveUnsavedSheetsOnExitAsync_Save_PersistsAndAllowsExit()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SelectSheetByIndex(0);
+        vm.SetColumns(vm.CurrentSheet!.Columns + 2);
+        Assert.True(vm.HasAnyUnsavedSheetChanges);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
+        try
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
+
+            bool mayExit = await vm.ResolveUnsavedSheetsOnExitAsync((_, currentIndex) =>
+                Task.FromResult(new SaveSheetResolution(SaveSheetChoice.Save, currentIndex, string.Empty)));
+
+            Assert.True(mayExit);
+            Assert.False(vm.HasAnyUnsavedSheetChanges); // saved → no longer dirty
+        }
+        finally
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+    [Fact]
+    public void SaveSheetChangesToKey_TargetIsDisplayedSheet_DoesNotThrowAndCopies()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetKeys.Count > 1);
+
+        // Sheet 0 is the displayed sheet, so the SheetViewModel is subscribed to its
+        // PropertyChanged. Saving another definition's edits *onto* it copies every
+        // property (including Name) via ModelBase.CopyPropertiesFrom, which must not crash.
+        vm.SelectSheetByIndex(0);
+        string displayedKey = vm.SheetKeys[0];
+        string otherKey = vm.SheetKeys[1];
+        string displayedName = WinPrintServices.Current.Settings.Sheets[displayedKey].Name;
+
+        Assert.NotEqual(displayedName, WinPrintServices.Current.Settings.Sheets[otherKey].Name);
+
+        int newRows = WinPrintServices.Current.Settings.Sheets[otherKey].Rows + 3;
+        WinPrintServices.Current.Settings.Sheets[otherKey].Rows = newRows;
+        vm.SetCurrentSheetDefinition(otherKey);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
+        try
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
+
+            vm.SaveSheetChangesToKey(displayedKey);
+
+            SheetSettings displayed = WinPrintServices.Current.Settings.Sheets[displayedKey];
+            Assert.Equal(newRows, displayed.Rows); // edits were copied across
+            Assert.Equal(displayedName, displayed.Name); // target keeps its own name
+        }
+        finally
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+    [Fact]
+    public void CreateSheetDefinition_FromDisplayedSheet_PersistsNewAndRevertsOriginal()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SelectSheetByIndex(0);
+        string originalKey = vm.SheetKeys[0];
+        int originalColumns = vm.CurrentSheet!.Columns;
+
+        vm.SetColumns(originalColumns + 2);
+        Assert.True(vm.HasUnsavedSheetChanges);
+        vm.SetCurrentSheetDefinition(originalKey);
+
+        string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
+        try
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
+
+            string? newKey = vm.CreateSheetDefinition("My New Definition");
+
+            Assert.False(string.IsNullOrEmpty(newKey));
+            SheetSettings created = WinPrintServices.Current.Settings.Sheets[newKey!];
+            Assert.Equal(originalColumns + 2, created.Columns); // the edits live in the new definition
+            Assert.Equal("My New Definition", created.Name);
+
+            // The original definition is reverted so the edits don't leak into it.
+            Assert.Equal(originalColumns, WinPrintServices.Current.Settings.Sheets[originalKey].Columns);
+        }
+        finally
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
     }
 
     [Fact]
@@ -188,6 +509,278 @@ public class AppViewModelTests : TestServicesBase
 
         Assert.False(ok);
         Assert.StartsWith("Error:", vm.StatusText);
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_Markdown_SelectsProportional2Up()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_sheet_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Hello\n\nWorld.");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+            Assert.Equal("Proportional 2-Up", vm.SheetNames[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_Html_SelectsProportional2Up()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_html_sheet_{Guid.NewGuid():N}.html");
+        await File.WriteAllTextAsync(file, "<p>Hello</p>");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_Mhtml_SelectsProportional2Up()
+    {
+        string? file = FindMhtmlFixture();
+        Assert.True(file is not null, "Could not locate testfiles/pull request.mhtml");
+
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+        Assert.True(await vm.LoadFileAsync(file!));
+        Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_UnmappedContentType_UsesSettingsDefaultSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_txt_sheet_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(file, "hello");
+
+        try
+        {
+            Settings live = WinPrintServices.Current.Settings;
+            live.DefaultSheet = Uuid.DefaultSheet1Up;
+
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.DefaultSheet1Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_DoesNotPersistSettingsDefaultSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_persist_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            Guid persistedDefault = WinPrintServices.Current.Settings.DefaultSheet;
+
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+            Assert.Equal(persistedDefault, WinPrintServices.Current.Settings.DefaultSheet);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task PersistExitStateIfChanged_AfterContentTypeAutoSelect_DoesNotPersistSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_exit_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            Guid originalDefault = WinPrintServices.Current.Settings.DefaultSheet;
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+            Assert.False(vm.SelectedSheetDiffersFromDefault);
+
+            int saves = 0;
+            Assert.False(vm.PersistSelectedSheetIfChanged(_ => saves++));
+            Assert.False(vm.PersistExitStateIfChanged(null, null, _ => saves++));
+            Assert.Equal(0, saves);
+            Assert.Equal(originalDefault, WinPrintServices.Current.Settings.DefaultSheet);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task SaveWindowState_AfterContentTypeAutoSelect_DoesNotChangeDefaultSheet()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_window_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        string settingsFile = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
+        try
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = settingsFile;
+
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            Guid originalDefault = WinPrintServices.Current.Settings.DefaultSheet;
+
+            Assert.True(await vm.LoadFileAsync(file));
+            vm.SaveWindowState(0, 0, 800, 600, false);
+
+            Assert.Equal(originalDefault, WinPrintServices.Current.Settings.DefaultSheet);
+        }
+        finally
+        {
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
+            if (File.Exists(settingsFile))
+            {
+                File.Delete(settingsFile);
+            }
+
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_ExplicitSheetOverride_PersistsAcrossMultipleFiles()
+    {
+        string md = Path.Combine(Path.GetTempPath(), $"wp_md_multi_{Guid.NewGuid():N}.md");
+        string txt = Path.Combine(Path.GetTempPath(), $"wp_txt_multi_{Guid.NewGuid():N}.txt");
+        await File.WriteAllTextAsync(md, "# Title");
+        await File.WriteAllTextAsync(txt, "plain");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            vm.ApplyOptions(new Options { Sheet = "Default 2-Up" });
+
+            Assert.True(await vm.LoadFileAsync(md));
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+
+            Assert.True(await vm.LoadFileAsync(txt));
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(md);
+            File.Delete(txt);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_ExplicitSheetOverride_IgnoresContentTypeMap()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_override_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+            vm.ApplyOptions(new Options { Sheet = "Default 2-Up" });
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public async Task LoadFileAsync_UserSheetChoice_SurvivesRefresh()
+    {
+        string file = Path.Combine(Path.GetTempPath(), $"wp_md_refresh_{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title");
+
+        try
+        {
+            AppViewModel vm = CreateVm();
+            vm.LoadSheets();
+            vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+            Assert.True(await vm.LoadFileAsync(file));
+            Assert.Equal(Uuid.ProportionalSheet2Up.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+
+            int default2UpIndex = -1;
+            for (int i = 0; i < vm.SheetKeys.Count; i++)
+            {
+                if (string.Equals(vm.SheetKeys[i], Uuid.DefaultSheet.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    default2UpIndex = i;
+                    break;
+                }
+            }
+
+            Assert.True(default2UpIndex >= 0);
+            vm.SelectSheetByIndex(default2UpIndex);
+
+            Assert.True(await vm.RefreshAsync());
+            Assert.Equal(Uuid.DefaultSheet.ToString(), vm.SheetKeys[vm.SelectedSheetIndex]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    private static string? FindMhtmlFixture()
+    {
+        DirectoryInfo? dir = new(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            string candidate = Path.Combine(dir.FullName, "testfiles", "pull request.mhtml");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     [Fact]
@@ -267,7 +860,7 @@ public class AppViewModelTests : TestServicesBase
         string[] printers = ["Brother", "Canon", "HP"];
 
         // No saved, no default → first.
-        ModelLocator.Current.Settings.LastPrinter = null;
+        WinPrintServices.Current.Settings.LastPrinter = null;
         vm.RestorePrinterSelection(printers, null);
         Assert.Equal("Brother", vm.SelectedPrinter);
 
@@ -276,12 +869,12 @@ public class AppViewModelTests : TestServicesBase
         Assert.Equal("Canon", vm.SelectedPrinter);
 
         // Saved available → saved (wins over default).
-        ModelLocator.Current.Settings.LastPrinter = "HP";
+        WinPrintServices.Current.Settings.LastPrinter = "HP";
         vm.RestorePrinterSelection(printers, "Canon");
         Assert.Equal("HP", vm.SelectedPrinter);
 
         // Saved unavailable → default.
-        ModelLocator.Current.Settings.LastPrinter = "Epson";
+        WinPrintServices.Current.Settings.LastPrinter = "Epson";
         vm.RestorePrinterSelection(printers, "Canon");
         Assert.Equal("Canon", vm.SelectedPrinter);
     }
@@ -293,13 +886,70 @@ public class AppViewModelTests : TestServicesBase
         vm.LoadSheets();
         vm.SelectedPaperSize = "Initial";
 
-        ModelLocator.Current.Settings.LastPaperSize = "A4";
+        WinPrintServices.Current.Settings.LastPaperSize = "A4";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
         Assert.Equal("A4", vm.SelectedPaperSize);
+        Assert.Equal(827, vm.CurrentPageSetup.PaperWidth);
+        Assert.Equal(1169, vm.CurrentPageSetup.PaperHeight);
 
-        ModelLocator.Current.Settings.LastPaperSize = "Foolscap";
+        WinPrintServices.Current.Settings.LastPaperSize = "Foolscap";
         vm.RestorePaperSize(new[] { "Letter", "A4" });
         Assert.Equal("A4", vm.SelectedPaperSize); // unchanged
+    }
+
+    [Fact]
+    public void PersistPrinterAndPaperIfChanged_SavesOnceWhenChanged()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        WinPrintServices.Current.Settings.LastPrinter = "Old";
+        WinPrintServices.Current.Settings.LastPaperSize = "Letter";
+
+        int saves = 0;
+        Settings? saved = null;
+        bool changed = vm.PersistPrinterAndPaperIfChanged("New", "A4", s =>
+        {
+            saves++;
+            saved = s;
+        });
+
+        Assert.True(changed);
+        Assert.Equal(1, saves);
+        Assert.Same(WinPrintServices.Current.Settings, saved);
+        Assert.Equal("New", WinPrintServices.Current.Settings.LastPrinter);
+        Assert.Equal("A4", WinPrintServices.Current.Settings.LastPaperSize);
+    }
+
+    [Fact]
+    public void PersistPrinterAndPaperIfChanged_DoesNotSaveWhenUnchanged()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        WinPrintServices.Current.Settings.LastPrinter = "Same";
+        WinPrintServices.Current.Settings.LastPaperSize = "Letter";
+
+        int saves = 0;
+        bool changed = vm.PersistPrinterAndPaperIfChanged("Same", "Letter", _ => saves++);
+
+        Assert.False(changed);
+        Assert.Equal(0, saves);
+    }
+
+    [Fact]
+    public void PersistPrinterAndPaperIfChanged_IgnoresNullOrEmptySelection()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        WinPrintServices.Current.Settings.LastPrinter = "Keep";
+        WinPrintServices.Current.Settings.LastPaperSize = "Letter";
+
+        int saves = 0;
+        bool changed = vm.PersistPrinterAndPaperIfChanged(null, "", _ => saves++);
+
+        Assert.False(changed);
+        Assert.Equal(0, saves);
+        Assert.Equal("Keep", WinPrintServices.Current.Settings.LastPrinter);
+        Assert.Equal("Letter", WinPrintServices.Current.Settings.LastPaperSize);
     }
 
     [Fact]
@@ -311,13 +961,13 @@ public class AppViewModelTests : TestServicesBase
         vm.SelectedPaperSize = "Letter";
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
             vm.SaveWindowState(100, 200, 1024, 768, false);
 
-            Settings s = ModelLocator.Current.Settings;
+            Settings s = WinPrintServices.Current.Settings;
             Assert.Equal(FormWindowState.Normal, s.WindowState);
             Assert.Equal(100, s.Location!.X);
             Assert.Equal(200, s.Location.Y);
@@ -328,7 +978,7 @@ public class AppViewModelTests : TestServicesBase
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
@@ -343,16 +993,16 @@ public class AppViewModelTests : TestServicesBase
         vm.LoadSheets();
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
 
             // First record normal bounds, then close while maximized.
             vm.SaveNormalBounds(50, 60, 1280, 720);
             vm.SaveWindowState(0, 0, 1920, 1080, true);
 
-            Settings s = ModelLocator.Current.Settings;
+            Settings s = WinPrintServices.Current.Settings;
             Assert.Equal(FormWindowState.Maximized, s.WindowState);
             // Crucially: maximized save MUST NOT overwrite the normal bounds.
             Assert.Equal(50, s.Location!.X);
@@ -362,12 +1012,75 @@ public class AppViewModelTests : TestServicesBase
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);
             }
         }
+    }
+
+    [Fact]
+    public void PersistSelectedSheetIfChanged_SavesWhenSelectionDiffersFromDefault()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+        Assert.True(vm.SheetNames.Count > 1);
+
+        int targetIdx = vm.SelectedSheetIndex == 0 ? 1 : 0;
+        vm.SelectSheetByIndex(targetIdx);
+        var expected = Guid.Parse(vm.SheetKeys[targetIdx]);
+
+        int saves = 0;
+        Settings? saved = null;
+        bool changed = vm.PersistSelectedSheetIfChanged(s =>
+        {
+            saves++;
+            saved = s;
+        });
+
+        Assert.True(changed);
+        Assert.True(!vm.SelectedSheetDiffersFromDefault);
+        Assert.Equal(1, saves);
+        Assert.Same(WinPrintServices.Current.Settings, saved);
+        Assert.Equal(expected, WinPrintServices.Current.Settings.DefaultSheet);
+    }
+
+    [Fact]
+    public void PersistSelectedSheetIfChanged_DoesNotSaveWhenSelectionMatchesDefault()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        // LoadSheets selects DefaultSheet, so the selection already matches the persisted default.
+        Assert.False(vm.SelectedSheetDiffersFromDefault);
+
+        int saves = 0;
+        bool changed = vm.PersistSelectedSheetIfChanged(_ => saves++);
+
+        Assert.False(changed);
+        Assert.Equal(0, saves);
+    }
+
+    [Fact]
+    public void CreateSheetDefinition_MakesNewDefinitionSelectedDefault()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        // Simulate an edit to the current sheet so creating a new definition is meaningful.
+        string currentKey = vm.SheetKeys[vm.SelectedSheetIndex];
+        WinPrintServices.Current.Settings.Sheets[currentKey].Columns += 1;
+
+        string? key = vm.CreateSheetDefinition("Quattro");
+
+        Assert.NotNull(key);
+        // The new definition is the persisted default and the active selection, so exiting (which
+        // remembers the selected sheet) keeps it as the default rather than reverting to the original.
+        Assert.Equal(Guid.Parse(key!), WinPrintServices.Current.Settings.DefaultSheet);
+        Assert.False(vm.SelectedSheetDiffersFromDefault);
+        Assert.Equal(key, vm.SheetKeys[vm.SelectedSheetIndex]);
+        Assert.Equal("Quattro", vm.SheetNames[vm.SelectedSheetIndex]);
     }
 
     [Fact]
@@ -382,17 +1095,17 @@ public class AppViewModelTests : TestServicesBase
         string expectedKey = vm.SheetKeys[targetIdx];
 
         string fileName = $"WinPrint.{nameof(AppViewModelTests)}.{Guid.NewGuid():N}.json";
-        string prevName = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string prevName = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = fileName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = fileName;
             vm.SaveWindowState(0, 0, 800, 600, false);
 
-            Assert.Equal(Guid.Parse(expectedKey), ModelLocator.Current.Settings.DefaultSheet);
+            Assert.Equal(Guid.Parse(expectedKey), WinPrintServices.Current.Settings.DefaultSheet);
         }
         finally
         {
-            ServiceLocator.Current.SettingsService.SettingsFileName = prevName;
+            WinPrintServices.Current.SettingsService.SettingsFileName = prevName;
             if (File.Exists(fileName))
             {
                 File.Delete(fileName);

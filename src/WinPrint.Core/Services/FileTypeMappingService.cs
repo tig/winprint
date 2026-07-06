@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using System.Text.Json;
 using WinPrint.Core.Models;
 using WinPrint.Core.Properties;
+using WinPrint.Core.Serialization;
 
 namespace WinPrint.Core.Services;
 
@@ -18,7 +18,7 @@ public class FileTypeMappingService
     {
         // 
         LogService.TraceMessage("FileAssociationsService.Create()");
-        return ServiceLocator.Current.FileTypeMappingService.Load();
+        return WinPrintServices.Current.FileTypeMappingService.Load();
     }
 
     /// <summary>
@@ -29,27 +29,19 @@ public class FileTypeMappingService
     /// <returns></returns>
     public FileTypeMapping Load()
     {
-        var jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true,
-            //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReadCommentHandling = JsonCommentHandling.Skip
-        };
-
-        FileTypeMapping associations = JsonSerializer.Deserialize<FileTypeMapping>(Resources.languages, jsonOptions) ??
-                                       new FileTypeMapping();
+        FileTypeMapping associations =
+            WinPrintJson.DeserializeFileTypeMapping(Resources.languages) ?? new FileTypeMapping();
 
         // TODO: Consider calling into lang-map and/or Pygments to update extensions at runtime?
         // https://github.com/jonschlinkert/lang-map
 
         // Merge in any associations set in settings file
-        Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping != null);
-        Debug.Assert(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes != null);
-        if (ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations != null)
+        Debug.Assert(WinPrintServices.Current.Settings.FileTypeMapping != null);
+        Debug.Assert(WinPrintServices.Current.Settings.FileTypeMapping.ContentTypes != null);
+        if (WinPrintServices.Current.Settings.FileTypeMapping.FilesAssociations != null)
         {
-            foreach (KeyValuePair<string, string> fa in ModelLocator.Current.Settings.FileTypeMapping.FilesAssociations)
+            foreach (KeyValuePair<string, string> fa in WinPrintServices.Current.Settings.FileTypeMapping
+                         .FilesAssociations)
             {
                 associations.FilesAssociations[fa.Key] = fa.Value;
             }
@@ -57,7 +49,7 @@ public class FileTypeMappingService
 
         // Merge in any language defintions set in settings file
         var langs = new List<ContentType>(associations.ContentTypes);
-        var langsSettings = new List<ContentType>(ModelLocator.Current.Settings.FileTypeMapping.ContentTypes);
+        var langsSettings = new List<ContentType>(WinPrintServices.Current.Settings.FileTypeMapping.ContentTypes);
         // TODO: override Equals and GetHashCode for Language
         var result = langsSettings.Union(langs).ToList();
 

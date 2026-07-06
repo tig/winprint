@@ -32,8 +32,7 @@ public readonly record struct SizeConstraint(
     }
 
     /// <summary>
-    ///     Default constraint for a page margin: 0" to 4", stepping 0.05", shown to 2 decimal places —
-    ///     matching the original WinForms margin editor's decimal-inch presentation.
+    ///     Default constraint for a page margin: 0" to 4", stepping 0.05", shown to 2 decimal places.
     /// </summary>
     public static SizeConstraint Margin { get; } = new(0m, 4m, 0.05m, 2, MeasurementUnit.Inch);
 }

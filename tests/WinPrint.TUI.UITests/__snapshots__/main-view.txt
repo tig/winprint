@@ -1,0 +1,32 @@
+─┤<no file>├────────────────────────────────────────────────────────────────────────────────
+⟦ 📁 File… ⟧▖⟦ 🖨 Print… ⟧▖⟦ ⚙ Config… ⟧▖   ☑ Header: {FileName}|{Title}|Page {Page}         
+▝▀▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▘▝▀▀▀▀▀▀▀▀▀▀▀▀▘                                                    
+ ╭────────────────╮                                                                         
+─╯Sheet Definition╰───────────────────────                                                  
+Saved: Default 1-Up  ▼                                                                      
+                                                                                            
+☐ Landscape                                                                                 
+┄┤Margins├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
+               Top: ▼0.50▲                                                                  
+Left: ▼0.75▲                 Right: ▼1.00▲                                                  
+              Bottom: ▼0.25▲                                                                
+                                                                                            
+┄┤Multiple Pages Up├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
+Columns: ▼2▲  Rows: ▼1▲                                                                     
+Padding: ▼0.03▲                                                                             
+☐ Page Separator                                  Hello. Click here to open a file...       
+                                                                                            
+┄┤Content Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
+Source Code Pro, Regular, 10pt                                                              
+⟦ Content Font… ⟧                                                                           
+                                                                                            
+                                                                                            
+┄┤Header/Footer Font├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄                                                  
+Source Code Pro, Regular, 8pt                                                               
+⟦ Header/Footer Font… ⟧                                                                     
+                                                                                            
+                                                                                            
+☑ Line Numbers                                                                              
+ ╭───────╮                                                                                  
+─╯lp & ab╰────────────────────────────────                                                  
+v3.0.0                                     ☑ Footer: {FilePath}||{DatePrinted}              

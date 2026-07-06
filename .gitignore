@@ -4,7 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Local Terminal.Gui checkout (CI checks out here; local devs may symlink or clone)
-gui-cs/
+tui-cs/
 
 
 # User-specific files
@@ -356,3 +356,10 @@ Deploy/
 *.CA.dll
 # TUI golden snapshot mismatch artifacts (transient, written on test failure)
 *.txt.actual
+
+# Local git worktrees (e.g. PR checkouts) — never commit as embedded repos
+.worktrees/
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store

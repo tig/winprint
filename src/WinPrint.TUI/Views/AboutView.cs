@@ -6,14 +6,14 @@ using Terminal.Gui.Views;
 namespace WinPrint.TUI.Views;
 
 /// <summary>
-///     The "about" footer, mirroring the WinForms <c>panelAbout</c>: a help/about <see cref="Link" />
+///     The "about" footer: a help/about <see cref="Link" />
 ///     to the winprint home page plus the product version. The version is read from the entry
 ///     assembly's informational or assembly version at runtime. <see cref="Link" /> opens the URL
-///     itself when activated (the cross-platform equivalent of the WinForms LinkLabel).
+///     itself when activated.
 /// </summary>
 public sealed class AboutView : View
 {
-    /// <summary>winprint home / help page (matches the WinForms help-about link target).</summary>
+    /// <summary>winprint home / help page.</summary>
     public const string HomePageUrl = "https://tig.github.io/winprint";
 
     /// <summary>Creates the about footer.</summary>
@@ -37,8 +37,8 @@ public sealed class AboutView : View
 
         var versionLabel = new Label
         {
-            X = Pos.Right(help) + 3,
-            Y = 0,
+            X = 0,
+            Y = 1,
             Text = $"v{version ?? ProductVersion()}"
         };
 

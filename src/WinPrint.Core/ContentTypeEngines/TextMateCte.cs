@@ -44,7 +44,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     public static TextMateCte Create()
     {
         var engine = new TextMateCte();
-        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextMateContentTypeEngineSettings);
+        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.TextMateContentTypeEngineSettings);
         return engine;
     }
 
@@ -263,27 +263,47 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     {
         ThemeName theme = ParseTheme(ContentSettings?.Style);
         var options = new RegistryOptions(theme);
-        _registry = new Registry(options);
+        _registry = new Registry(new WinPrintRegistryOptions(options));
         _resolvedScopeName = ResolveScopeName(options);
-        _grammar = string.IsNullOrEmpty(_resolvedScopeName) ? null : _registry.LoadGrammar(_resolvedScopeName);
+        try
+        {
+            _grammar = string.IsNullOrEmpty(_resolvedScopeName) ? null : _registry.LoadGrammar(_resolvedScopeName);
+        }
+        catch (Exception ex)
+        {
+            // A missing/broken grammar must not abort printing — fall back to plain (unhighlighted) text.
+            Log.Warning(ex, "TextMate: failed to load grammar {scope}; rendering as plain text.", _resolvedScopeName);
+            _grammar = null;
+            _resolvedScopeName = null;
+        }
+
         Log.Debug("TextMate grammar: {scope}", _resolvedScopeName ?? "(plain text)");
     }
 
     private string? ResolveScopeName(RegistryOptions options)
     {
-        if (!string.IsNullOrEmpty(_filePath))
+        string? fileExtension = string.IsNullOrEmpty(_filePath) ? null : Path.GetExtension(_filePath);
+
+        // 1. WinPrint's own grammars (Brainfuck, INTERCAL) resolved from the *content type/language* —
+        // this is the normal path (LoadFileAsync sets ContentType from the extension) and, crucially,
+        // honors an explicit --content-type / fileTypeMapping override before the extension is consulted.
+        string? customByType = WinPrintGrammars.ResolveScope(null, ContentType, Language);
+        if (customByType is not null)
         {
-            string extension = Path.GetExtension(_filePath);
-            if (!string.IsNullOrEmpty(extension))
+            return customByType;
+        }
+
+        // 2. Bundled grammar by file extension.
+        if (!string.IsNullOrEmpty(fileExtension))
+        {
+            string? scope = options.GetScopeByExtension(fileExtension);
+            if (!string.IsNullOrEmpty(scope))
             {
-                string? scope = options.GetScopeByExtension(extension);
-                if (!string.IsNullOrEmpty(scope))
-                {
-                    return scope;
-                }
+                return scope;
             }
         }
 
+        // 3. Bundled grammar by content type / language.
         List<Language>? languages = options.GetAvailableLanguages();
         string? normalizedContentType = Normalize(ContentType);
         string? normalizedLanguage = Normalize(Language);
@@ -292,8 +312,16 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
             Matches(l.Id, normalizedContentType) ||
             (l.Aliases?.Any(a => Matches(a, normalizedLanguage) || Matches(a, normalizedContentType)) ?? false) ||
             (l.MimeTypes?.Any(m => Matches(m, normalizedContentType)) ?? false));
+        if (match is not null)
+        {
+            return options.GetScopeByLanguageId(match.Id);
+        }
 
-        return match is null ? null : options.GetScopeByLanguageId(match.Id);
+        // 4. Esolang fallback by extension — only when no explicit content type/language was given, so an
+        // override (even to plain text or another grammar) is never overridden by the file extension.
+        return string.IsNullOrEmpty(ContentType) && string.IsNullOrEmpty(Language)
+            ? WinPrintGrammars.ResolveScope(fileExtension, null, null)
+            : null;
     }
 
     private static bool Matches(string? value, string? normalized)
