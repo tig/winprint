@@ -4,6 +4,7 @@
 
 using Serilog;
 using Terminal.Gui.Cli;
+using Terminal.Gui.Configuration;
 using Velopack;
 using WinPrint.Core;
 using WinPrint.TUI;
@@ -28,6 +29,12 @@ AppDomain.CurrentDomain.UnhandledException += (_, e) =>
 };
 
 VelopackApp.Build().Run();
+
+// Terminal.Gui's ConfigurationManager is opt-in; without this call wp silently ignores the
+// standard .tui config locations (~/.tui/config.json, ./.tui/wp.config.json, TUI_CONFIG), so
+// users — and the hero-GIF recorder, which themes wp via ./.tui/wp.config.json — couldn't
+// restyle the app.
+ConfigurationManager.Enable(ConfigLocations.All);
 
 CliHost host = new(options =>
 {
