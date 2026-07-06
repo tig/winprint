@@ -102,15 +102,18 @@ artifacts in the tap:
   the `url` blocks (macOS has Clang; arm64 Linux source-builds). **Never declare a bottle tag without
   publishing + pour-testing its file** — a declared-but-missing bottle hard-fails that platform with no
   source fallback. (arm64 Linux bottle = follow-up; needs bottling on an arm64 runner.)
-  **Two hard-won gotchas (they made v3.0.6–v3.0.9 ship no tap update — brew stuck at 3.0.5):**
-  (1) the formula's `install` **must drop `wp.dbg`** (`rm_f Dir["*.dbg"]`). Homebrew's Linux
-  install *and* pour scan every ELF in the keg (`load_tab` → `undeclared_runtime_dependencies`
-  → `LinkageChecker`), and the vendored `elftools` hangs/crashes on that 48 MB AOT debug file
-  (`undefined method 'header' for nil`) — the *actual* cause of the failed bottle job, not rpath
-  relocation. `wp` itself pours fine; the `.dbg` is useless to users anyway. (2) the bottle build
-  is now **best-effort**: it runs in an isolated subshell, and on any failure the job publishes a
-  **bottle-less** formula so the formula+cask tap push still lands. Never gate the tap update on
-  the (fragile) bottle again.
+  **Two hard-won gotchas (they left the tap stuck at 3.0.5 while releases reached 3.0.9 —
+  the bottle step crashed the v3.0.6/v3.0.8/v3.0.9 brew jobs deterministically; v3.0.7's was
+  skipped for unrelated reasons):** (1) the formula's `install` **must drop `wp.dbg`**
+  (`rm_f Dir["*.dbg"]`). Homebrew's Linux install *and* pour scan every ELF in the keg
+  (`load_tab` → `undeclared_runtime_dependencies` → `LinkageChecker`), and the vendored
+  `elftools` crashes — or worse, **hangs** — on that 48 MB AOT debug file (`undefined method
+  'header' for nil`) — the *actual* cause of the failed bottle job, not rpath relocation.
+  `wp` itself pours fine; the `.dbg` is useless to users anyway. (2) the bottle build is now
+  **best-effort**: it runs in an isolated subshell with `timeout`-bounded brew calls (a hang
+  would otherwise outlive the job and strand the tap anyway), and on any failure the job
+  publishes a **bottle-less** formula so the formula+cask tap push still lands. Never gate
+  the tap update on the (fragile) bottle again.
 - **Validate a cask by LOADING it, never `ruby -c`.** `ruby -c` checks Ruby *syntax* and happily
   passes invalid cask **DSL** (e.g. `conflicts_with formula:` — that key is cask-only-`cask:`), which
   once shipped a tap cask Homebrew couldn't parse and broke `brew install --cask` for everyone. The

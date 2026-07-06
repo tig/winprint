@@ -619,13 +619,20 @@ jobs:
           #
           # This block is deliberately BEST-EFFORT and isolated in a subshell so a bottle failure
           # can NOT strand the tap. The tap update is what actually ships wp + the GUI cask to
-          # macOS/arm64 users; gating it behind the (fragile) x86_64_linux bottle once pinned every
-          # platform at an old version for four releases (v3.0.6–v3.0.9). If the bottle build or its
-          # pour-test fails, we publish a BOTTLE-LESS formula instead — x86_64 Linux then falls back
-          # to the source `url` (exactly the pre-#211 behavior: needs a compiler; no worse for anyone
-          # else) — and the tap still advances. We keep the declared bottle block ONLY when the
-          # bottle was built, uploaded, AND pour-tested: never declare a tag whose file is
-          # missing/mismatched (that hard-fails the platform with no source fallback).
+          # macOS/arm64 users; gating it behind the (fragile) x86_64_linux bottle deterministically
+          # crashed the v3.0.6/v3.0.8/v3.0.9 brew jobs (elftools choking on wp.dbg — re-running never
+          # helped) and pinned every platform at 3.0.5. If the bottle build or its pour-test fails,
+          # we publish a BOTTLE-LESS formula instead — x86_64 Linux then falls back to the source
+          # `url` (exactly the pre-#211 behavior: needs a compiler; no worse for anyone else) — and
+          # the tap still advances. We keep the declared bottle block ONLY when the bottle was
+          # built, uploaded, AND pour-tested: never declare a tag whose file is missing/mismatched
+          # (that hard-fails the platform with no source fallback).
+          #
+          # The `timeout` wrappers matter: elftools can HANG on a pathological ELF instead of
+          # crashing (observed locally on wp.dbg). A hang inside this subshell would ride out the
+          # 6-hour job timeout and strand the tap push anyway — a bounded kill turns it into just
+          # another best-effort failure. 15 min is generous: a healthy build/pour of this formula
+          # is seconds (it only extracts a ~40 MB tarball).
           rm -f /tmp/bottle_sha
           set +e
           (
@@ -638,7 +645,7 @@ jobs:
             echo "Validating (bottle-less) formula load under Homebrew…"
             brew info --formula kindel/winprint/wp > /dev/null
             echo "Building x86_64_linux bottle…"
-            brew install --build-bottle --verbose kindel/winprint/wp
+            timeout 900 brew install --build-bottle --verbose kindel/winprint/wp
             # --skip-relocation matches the formula's :any_skip_relocation DSL (the payload bakes in
             # no Cellar/prefix paths). --no-rebuild keeps the filename suffix-free for the first
             # bottle of this version.
@@ -663,7 +670,7 @@ jobs:
             git -C "$VTAP" -c user.email=ci@example.com -c user.name=ci commit -qm final
             brew info --formula kindel/winprint/wp > /dev/null
             echo "Pour-testing the uploaded bottle…"
-            brew install --verbose kindel/winprint/wp 2>&1 | tee /tmp/pour.log
+            timeout 900 brew install --verbose kindel/winprint/wp 2>&1 | tee /tmp/pour.log
             grep -q "Pouring" /tmp/pour.log
             wp --version
             brew uninstall --force wp
