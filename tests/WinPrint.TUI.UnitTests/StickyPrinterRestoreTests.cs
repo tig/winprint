@@ -3,6 +3,7 @@
 
 using WinPrint.Core;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.TUI;
 using Xunit;
 
@@ -17,7 +18,7 @@ public class StickyPrinterRestoreTests
     [Fact]
     public void SettingsContext_RestoresSavedPrinterAndPaper()
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         string? prevPrinter = settings.LastPrinter;
         string? prevPaper = settings.LastPaperSize;
         try
@@ -43,7 +44,7 @@ public class StickyPrinterRestoreTests
     [Fact]
     public void SettingsContext_FallsBackToSystemDefaultWhenSavedPrinterMissing()
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         string? prevPrinter = settings.LastPrinter;
         try
         {
@@ -63,7 +64,7 @@ public class StickyPrinterRestoreTests
     [Fact]
     public void SettingsContext_CommandLinePrinterOverridesSaved()
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         string? prevPrinter = settings.LastPrinter;
         try
         {
@@ -84,7 +85,7 @@ public class StickyPrinterRestoreTests
     [Fact]
     public void SettingsContext_CommandLinePaperOverridesSavedAndUpdatesDimensions()
     {
-        Settings settings = ModelLocator.Current.Settings;
+        Settings settings = WinPrintServices.Current.Settings;
         string? prevPaper = settings.LastPaperSize;
         try
         {

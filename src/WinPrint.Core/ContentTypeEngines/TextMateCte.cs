@@ -44,7 +44,7 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
     public static TextMateCte Create()
     {
         var engine = new TextMateCte();
-        engine.CopyPropertiesFrom(ModelLocator.Current.Settings.TextMateContentTypeEngineSettings);
+        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.TextMateContentTypeEngineSettings);
         return engine;
     }
 

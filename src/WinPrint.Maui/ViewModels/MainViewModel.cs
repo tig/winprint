@@ -661,7 +661,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     // desktop session, so shelling out to the user's default editor is the least-surprising behavior.
     private async Task OpenConfigAsync()
     {
-        string path = ServiceLocator.Current.SettingsService.SettingsFileName;
+        string path = WinPrintServices.Current.SettingsService.SettingsFileName;
         try
         {
             // The app reads (and creates-with-defaults) the config at startup, so it normally exists; if it
@@ -669,7 +669,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             // a file to open. (ReloadAndApplySettings only *reads* — it throws when the file is missing.)
             if (!File.Exists(path))
             {
-                ServiceLocator.Current.SettingsService.ReadSettings();
+                WinPrintServices.Current.SettingsService.ReadSettings();
             }
 
             await Launcher.Default.OpenAsync(new OpenFileRequest

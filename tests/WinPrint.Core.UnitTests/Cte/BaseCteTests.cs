@@ -12,7 +12,7 @@ public class BaseCteTests
 {
     public BaseCteTests(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start(GetType().Name,
+        WinPrintServices.Current.LogService.Start(GetType().Name,
             new TestOutputSink(output, new MessageTemplateTextFormatter("{Message:lj}")), true, true);
     }
 
@@ -35,11 +35,11 @@ public class BaseCteTests
     [Fact]
     public void GetContentTypeOrLanguageTest()
     {
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
-        FileTypeMapping ftm = ServiceLocator.Current.FileTypeMappingService.Load();
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
+        FileTypeMapping ftm = WinPrintServices.Current.FileTypeMappingService.Load();
         Assert.NotNull(ftm);
         IList<ContentType> langs = ftm.ContentTypes;
         Assert.NotNull(langs);
@@ -118,11 +118,11 @@ public class BaseCteTests
     public void CreateContentTypeEngineTests()
     {
         // TODO: Mock this out
-        ServiceLocator.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
-        File.Delete(ServiceLocator.Current.SettingsService.SettingsFileName);
+        WinPrintServices.Current.SettingsService.SettingsFileName = $"WinPrint.{GetType().Name}.json";
+        File.Delete(WinPrintServices.Current.SettingsService.SettingsFileName);
 
-        Settings? settings = ServiceLocator.Current.SettingsService.ReadSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        Settings? settings = WinPrintServices.Current.SettingsService.ReadSettings();
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         // (ContentTypeEngineBase cte, string language) CreateContentTypeEngine(string contentType)
         ContentTypeEngineBase? cte;
@@ -151,7 +151,7 @@ public class BaseCteTests
         input = "text";
         (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
         Assert.NotNull(cte);
-        Assert.Equal(ModelLocator.Current.Settings.DefaultCteClassName, cte.GetType().Name);
+        Assert.Equal(WinPrintServices.Current.Settings.DefaultCteClassName, cte.GetType().Name);
         Assert.Equal("text/plain", contentType);
         Assert.Equal("Plain Text", language);
 
@@ -194,7 +194,7 @@ public class BaseCteTests
         input = "text/plain";
         (cte, contentType, language) = ContentTypeEngineBase.CreateContentTypeEngine(input);
         Assert.NotNull(cte);
-        Assert.Equal(ModelLocator.Current.Settings.DefaultCteClassName, cte.GetType().Name);
+        Assert.Equal(WinPrintServices.Current.Settings.DefaultCteClassName, cte.GetType().Name);
         Assert.Equal(input, contentType);
         Assert.Equal("Plain Text", language);
 

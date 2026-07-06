@@ -1,0 +1,13 @@
+# Docs-site menu. One entry per button, rendered by _layouts/default.html.
+- title: Overview
+  url: index.html
+- title: Install
+  url: install.html
+- title: User's Guide
+  url: users-guide.html
+- title: Support
+  url: support.html
+- title: About & History
+  url: about.html
+- title: View On GitHub
+  url: https://github.com/tig/winprint

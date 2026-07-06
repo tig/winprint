@@ -2,7 +2,6 @@
 // Published under the MIT License at https://github.com/tig/winprint
 
 using System.Globalization;
-using Microsoft.Maui.Controls.Shapes;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using FontStyle = WinPrint.Core.Models.FontStyle;
@@ -16,21 +15,23 @@ namespace WinPrint.Maui.Views;
 ///     one consistent dialog, presented as a centered card over a dimmed backdrop. Await
 ///     <see cref="Completion" /> for the chosen <c>(Family, Size, Style)</c>, or <c>null</c> if cancelled.
 ///     <para>
-///         Toggles and buttons are tap-driven <see cref="Border" />+<see cref="Label" /> affordances so they
-///         render and theme consistently on the white card across platforms — a plain <see cref="CheckBox" />
-///         is near-invisible here and a custom-colored <see cref="Button" /> looks washed-out under Mac
-///         Catalyst.
+///         The toggles are tap-driven <see cref="Border" />+<see cref="Label" /> affordances so they render
+///         and theme consistently on the white card (a plain <see cref="CheckBox" /> is near-invisible here).
+///         The action buttons are native <see cref="Button" />s with explicit colors (via
+///         <see cref="DialogButton" />) so they stay legible on the card yet keep the button role, tab focus,
+///         and Enter/Space activation (issue #216).
 ///     </para>
 /// </summary>
 internal sealed class FontChooserPage : ContentPage
 {
     // Explicit palette so the dialog looks consistent regardless of the OS light/dark theme — the controls
-    // live on a white card.
-    private static readonly Color CardColor = Colors.White;
-    private static readonly Color InkColor = Color.FromArgb("#1C1C1E");
-    private static readonly Color FieldColor = Color.FromArgb("#F2F2F7");
-    private static readonly Color HintColor = Color.FromArgb("#8E8E93");
-    private static readonly Color AccentColor = Color.FromArgb("#0A84FF");
+    // live on a white card. Shared with the save-sheet prompt via DialogPalette so the two dialogs can't
+    // drift apart (issue #216).
+    private static readonly Color CardColor = DialogPalette.Card;
+    private static readonly Color InkColor = DialogPalette.Ink;
+    private static readonly Color FieldColor = DialogPalette.Field;
+    private static readonly Color HintColor = DialogPalette.Hint;
+    private static readonly Color AccentColor = DialogPalette.Accent;
 
     private readonly TaskCompletionSource<(string Family, float Size, string Style)?> _completion = new();
 
@@ -47,7 +48,7 @@ internal sealed class FontChooserPage : ContentPage
     private readonly FontStyle _preservedStyleBits;
 
     private string _selectedFamily;
-    private Border? _okButton;
+    private Button? _okButton;
     private bool _fixedPitchOnly;
     private bool _bold;
     private bool _italic;
@@ -55,7 +56,7 @@ internal sealed class FontChooserPage : ContentPage
 
     public FontChooserPage(string currentFamily, float currentSize, string currentStyle, bool preferFixedPitch)
     {
-        BackgroundColor = Color.FromRgba(0, 0, 0, 0.45);
+        BackgroundColor = DialogPalette.Backdrop;
 
         _allFamilies = WinPrintServices.Current.FontEnumerationService.GetFamilies();
         _selectedFamily = currentFamily;
@@ -219,27 +220,11 @@ internal sealed class FontChooserPage : ContentPage
         }
     }
 
+    // Centered card over the dimmed backdrop, clamped to the window so a short window doesn't clip the
+    // buttons off the bottom (issue #216).
     private Grid BuildCard()
     {
-        var card = new Border
-        {
-            BackgroundColor = CardColor,
-            Stroke = HintColor,
-            StrokeThickness = 1,
-            StrokeShape = new RoundRectangle { CornerRadius = 10 },
-            Padding = new Thickness(18),
-            Margin = new Thickness(24),
-            WidthRequest = 580,
-            HeightRequest = 600,
-            HorizontalOptions = LayoutOptions.Center,
-            VerticalOptions = LayoutOptions.Center,
-            Content = BuildBody()
-        };
-
-        // The page fills the window; the dimmed background + centered card read as a modal dialog.
-        var root = new Grid();
-        root.Add(card);
-        return root;
+        return DialogModalCard.Build(this, BuildBody(), 580, 600);
     }
 
     private Grid BuildBody()
@@ -331,7 +316,7 @@ internal sealed class FontChooserPage : ContentPage
             Content = _preview
         };
 
-        _okButton = MakePill("OK", AccentColor, Colors.White, () => Complete(BuildResult()));
+        _okButton = DialogButton.Make("OK", AccentColor, Colors.White, (_, _) => Complete(BuildResult()));
 
         var buttonRow = new HorizontalStackLayout
         {
@@ -339,7 +324,7 @@ internal sealed class FontChooserPage : ContentPage
             HorizontalOptions = LayoutOptions.End,
             Children =
             {
-                MakePill("Cancel", FieldColor, InkColor, () => Complete(null)),
+                DialogButton.Make("Cancel", FieldColor, InkColor, (_, _) => Complete(null)),
                 _okButton
             }
         };
@@ -408,72 +393,39 @@ internal sealed class FontChooserPage : ContentPage
     }
 
     /// <summary>
-    ///     A tap-driven toggle (checkbox replacement). Shows a check glyph + label and fills with the accent
-    ///     color when on. <paramref name="get" />/<paramref name="set" /> read and write the backing field;
-    ///     <paramref name="set" /> performs the side effect (re-filter / re-preview).
+    ///     A native <see cref="CheckBox" /> + label toggle, so it keeps the checkbox role, tab focus, and
+    ///     Space activation (issue #216). An explicit accent <see cref="CheckBox.Color" /> keeps it visible on
+    ///     the white card, and tapping the label toggles it too. <paramref name="get" />/<paramref name="set" />
+    ///     read and write the backing field; <paramref name="set" /> performs the side effect (re-filter /
+    ///     re-preview).
     /// </summary>
     private View MakeToggle(string text, Func<bool> get, Action<bool> set)
     {
+        var check = new CheckBox
+        {
+            Color = AccentColor,
+            VerticalOptions = LayoutOptions.Center
+        };
+        // Seed the initial state before wiring CheckedChanged so seeding doesn't fire the side effect.
+        check.IsChecked = get();
+        check.CheckedChanged += (_, e) => set(e.Value);
+
         var label = new Label
         {
+            Text = text,
             TextColor = InkColor,
             FontSize = UiFonts.SidebarFontSize,
             VerticalOptions = LayoutOptions.Center
         };
-        var border = new Border
-        {
-            StrokeThickness = 1,
-            Stroke = HintColor,
-            StrokeShape = new RoundRectangle { CornerRadius = 6 },
-            Padding = new Thickness(10, 6),
-            Content = label
-        };
-
-        void Render()
-        {
-            bool on = get();
-            label.Text = (on ? "☑  " : "☐  ") + text;
-            label.TextColor = on ? Colors.White : InkColor;
-            border.BackgroundColor = on ? AccentColor : FieldColor;
-        }
-
         var tap = new TapGestureRecognizer();
-        tap.Tapped += (_, _) =>
-        {
-            set(!get());
-            Render();
-        };
-        border.GestureRecognizers.Add(tap);
+        tap.Tapped += (_, _) => check.IsChecked = !check.IsChecked;
+        label.GestureRecognizers.Add(tap);
 
-        Render();
-        return border;
-    }
-
-    /// <summary>A tap-driven button (Button replacement that renders consistently on Mac Catalyst).</summary>
-    private Border MakePill(string text, Color background, Color foreground, Action onTap)
-    {
-        var label = new Label
+        return new HorizontalStackLayout
         {
-            Text = text,
-            TextColor = foreground,
-            FontSize = UiFonts.SidebarFontSize,
-            FontAttributes = FontAttributes.Bold,
-            HorizontalTextAlignment = TextAlignment.Center,
-            VerticalTextAlignment = TextAlignment.Center
+            Spacing = 4,
+            Children = { check, label }
         };
-        var border = new Border
-        {
-            BackgroundColor = background,
-            StrokeThickness = 0,
-            StrokeShape = new RoundRectangle { CornerRadius = 6 },
-            Padding = new Thickness(22, 10),
-            Content = label
-        };
-
-        var tap = new TapGestureRecognizer();
-        tap.Tapped += (_, _) => onTap();
-        border.GestureRecognizers.Add(tap);
-        return border;
     }
 
     private void SetOkEnabled(bool enabled)

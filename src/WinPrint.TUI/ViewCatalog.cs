@@ -67,7 +67,9 @@ public static class ViewCatalog
         SheetSettings[] sheets =
         [
             new() { Name = "Default 1-Up", Columns = 1, Rows = 1, Landscape = false },
-            new() { Name = "Default 2-Up", Columns = 2, Rows = 1, Landscape = true }
+            new() { Name = "Default 2-Up", Columns = 2, Rows = 1, Landscape = true },
+            new() { Name = "Proportional 1-Up", Columns = 1, Rows = 1, Landscape = false },
+            new() { Name = "Proportional 2-Up", Columns = 2, Rows = 1, Landscape = true }
         ];
 
         return new SheetPicker(sheets) { Value = sheets[0] };

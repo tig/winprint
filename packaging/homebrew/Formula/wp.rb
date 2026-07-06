@@ -36,6 +36,27 @@ class Wp < Formula
     end
   end
 
+  # Homebrew bottle for x86_64 Linux (issue #211). `wp` is a self-contained, prebuilt Native AOT
+  # binary, so the "install" is just extracting the tarball above — no compiler is ever invoked.
+  # But Homebrew treats a formula with NO bottle as a *source* build and refuses it on any host
+  # without a C compiler (fresh containers, minimal WSL). This bottle makes `brew install` POUR a
+  # prebuilt tree instead, so a toolchain-less Linux host installs cleanly. :any_skip_relocation is
+  # correct because the payload bakes in no Cellar paths.
+  #
+  # ONLY x86_64_linux is tagged on purpose. Every other platform intentionally has NO tag and keeps
+  # installing from the `url` blocks above (macOS has Clang via the Command Line Tools; arm64 Linux
+  # source-builds). A declared tag whose bottle file is missing makes Homebrew HARD-FAIL that
+  # platform with no source fallback — so never add a tag here without also publishing AND
+  # pour-testing its bottle file in the release `brew` job. The block below is rendered + built +
+  # uploaded by .github/workflows/release.yml; the sentinel markers let that job strip it to build
+  # the bottle from source first. Do not hand-edit the SHA.
+  # >>> winprint:bottle (rendered by release.yml — do not hand-edit)
+  bottle do
+    root_url "{{base}}"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "{{sha_bottle_linux_x64}}"
+  end
+  # <<< winprint:bottle
+
   def install
     libexec.install Dir["*"]
     bin.install_symlink libexec/"wp"

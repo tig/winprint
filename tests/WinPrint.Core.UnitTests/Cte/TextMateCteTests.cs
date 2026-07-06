@@ -21,7 +21,7 @@ public class TextMateCteTests
 
     public TextMateCteTests(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start(GetType().Name,
+        WinPrintServices.Current.LogService.Start(GetType().Name,
             new TestOutputSink(output, new Serilog.Formatting.Display.MessageTemplateTextFormatter("{Message:lj}")),
             true, true);
     }
@@ -51,7 +51,7 @@ public class TextMateCteTests
     public void SourceLanguageUsesTextMateByDefaultTest()
     {
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         (ContentTypeEngineBase? cte, string contentType, string language) =
             ContentTypeEngineBase.CreateContentTypeEngine("csharp");
@@ -65,7 +65,7 @@ public class TextMateCteTests
     public async Task RenderAsyncTest()
     {
         var settings = Settings.CreateDefaultSettings();
-        ModelLocator.Current.Settings.CopyPropertiesFrom(settings);
+        WinPrintServices.Current.Settings.CopyPropertiesFrom(settings);
 
         var svm = new SheetViewModel();
         (svm.ContentEngine, svm.ContentType, svm.Language) = ContentTypeEngineBase.CreateContentTypeEngine("csharp");

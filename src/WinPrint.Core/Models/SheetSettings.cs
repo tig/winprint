@@ -10,9 +10,7 @@ public class SheetSettings : ModelBase
     private int _columns = 1;
 
     private ContentSettings? _contentSettings;
-    private int _darkness;
     private Footer _footer = new();
-    private bool _grayscale;
 
     private Header _header = new();
 
@@ -23,7 +21,6 @@ public class SheetSettings : ModelBase
     private string _name = "";
     private int _padding = 3;
     private bool _pageSeparator;
-    private bool _printBackground = true;
     private int _rows = 1;
 
     /// <summary>
@@ -126,35 +123,6 @@ public class SheetSettings : ModelBase
         set => SetField(ref _footer, value);
     }
 
-    // The following members are runtime-only and do NOT get persisted, hence "internal"
-    /// <summary>
-    ///     if True, print content background, if present. Otherwise, all backgrounds will be paper color.
-    /// </summary>
-    internal bool PrintBackground
-    {
-        get => _printBackground;
-        set => SetField(ref _printBackground, value);
-    }
-
-    /// <summary>
-    ///     If True, all content will be printed in grayscale. Use Darkness property to change how
-    ///     dark the grey is.
-    /// </summary>
-    internal bool Grayscale
-    {
-        get => _grayscale;
-        set => SetField(ref _grayscale, value);
-    }
-
-    /// <summary>
-    ///     Darkness factor. 0 = RGB. 100 = black.
-    /// </summary>
-    internal int Darkness
-    {
-        get => _darkness;
-        set => SetField(ref _darkness, value);
-    }
-
     public override void CopyPropertiesFrom(ModelBase? source)
     {
         if (source is not SheetSettings src)
@@ -182,9 +150,6 @@ public class SheetSettings : ModelBase
 
         Header.CopyPropertiesFrom(src.Header);
         Footer.CopyPropertiesFrom(src.Footer);
-        PrintBackground = src.PrintBackground;
-        Grayscale = src.Grayscale;
-        Darkness = src.Darkness;
     }
 
     public override IDictionary<string, string?> GetTelemetryDictionary()

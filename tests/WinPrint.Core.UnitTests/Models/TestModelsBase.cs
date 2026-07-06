@@ -13,7 +13,7 @@ public class TestModelsBase
 
     public TestModelsBase(ITestOutputHelper output)
     {
-        ServiceLocator.Current.LogService.Start(GetType().Name,
+        WinPrintServices.Current.LogService.Start(GetType().Name,
             new TestOutputSink(output, new MessageTemplateTextFormatter("{Message:lj}")), true, true);
 
         jsonOptions = new JsonSerializerOptions

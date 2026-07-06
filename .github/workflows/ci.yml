@@ -22,12 +22,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: '10.0.x'
 
@@ -36,7 +36,7 @@ jobs:
         run: dotnet workload install maui-windows
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', 'Directory.Build.props', 'Directory.Build.targets', 'global.json') }}
@@ -58,15 +58,9 @@ jobs:
 
       - name: Verify code style
         shell: bash
-        run: |
-          # WinPrintCleanup is a custom profile (in WinPrint.slnx.DotSettings) = Full Cleanup minus
-          # "Optimize usings"/"Shorten references"/"Reorder members". Those fight this solution's
-          # multi-TFM #if WINDOWS conditional usings (hoisting them out of #if and breaking the other
-          # TFM). MAUI XAML code-behind files are excluded because generated partial declarations must
-          # stay partial, and jb's redundancy cleanup removes them; dotnet format still applies spacing.
-          dotnet jb cleanupcode WinPrint.slnx --no-build --profile="WinPrintCleanup" --exclude="**/*.xaml.cs" --verbosity=WARN
-          dotnet format WinPrint.slnx --no-restore
-          git diff --exit-code
+        # Single source of truth for the style gate — the same script agents run locally
+        # before pushing (see scripts/verify-style.sh for the WinPrintCleanup rationale).
+        run: scripts/verify-style.sh --ci
 
       # Core + every front end's unit tests, plus the UI tests that run on a Windows desktop session:
       # TUI (headless render). The MAUI Appium UI tests run on the macOS job below;
@@ -115,17 +109,17 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: '10.0.x'
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', 'Directory.Build.props', 'Directory.Build.targets', 'global.json') }}
@@ -178,12 +172,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: '10.0.x'
 
@@ -191,7 +185,7 @@ jobs:
         run: dotnet workload install maui
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', 'Directory.Build.props', 'Directory.Build.targets', 'global.json') }}
@@ -204,54 +198,14 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_26.5.app
 
       - name: Build MacCatalyst app
-        # We only need a launchable Debug bundle for the Appium UI tests. MtouchLink=None asks for the
-        # lightest link mode; with Xcode 26.5 present the Apple linker's SDK check (MT0180) now passes.
+        # Compile-check the MacCatalyst app on every PR (it doesn't build on the Windows/Linux legs).
+        # MtouchLink=None asks for the lightest link mode; with Xcode 26.5 present the Apple linker's
+        # SDK check (MT0180) passes.
         run: dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Debug -f net10.0-maccatalyst -p:MtouchLink=None
 
-      - name: Install Appium + mac2 driver
-        run: |
-          npm install -g appium
-          appium driver install mac2
-
-      - name: Start Appium server
-        run: |
-          appium --base-path / --port 4723 > appium.log 2>&1 &
-          # Wait for the server to accept connections.
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:4723/status >/dev/null; then echo "Appium up"; break; fi
-            sleep 1
-          done
-
-      - name: Locate MacCatalyst app bundle
-        # Don't hardcode the runtime-identifier subfolder — Debug's default RID differs by host/arch
-        # (maccatalyst-x64 vs -arm64). Find the bundle the build actually produced.
-        run: |
-          app=$(find "$PWD/src/WinPrint.Maui/bin/Debug/net10.0-maccatalyst" -maxdepth 2 -name 'WinPrint.app' -type d | head -1)
-          echo "Found app bundle: $app"
-          # Absolute path: the Appium server runs as a separate background process, so a relative path
-          # would resolve against its CWD, not the test's.
-          echo "APPIUM_APP=$app" >> "$GITHUB_ENV"
-
-      - name: Test (MAUI UI / Appium)
-        env:
-          APPIUM_SERVER: http://127.0.0.1:4723
-          MENU_TREE_DUMP_DIR: ${{ github.workspace }}
+      - name: Test (MAUI UI)
+        # The UI tests self-guard by OS and no-op where they don't apply (the Windows-only checkbox/layout
+        # tests skip on macOS), so this mainly asserts the test project builds and runs. The MacCatalyst
+        # File-menu enablement that used to be Appium-driven here is now covered by WinPrint.Core.UnitTests
+        # (AppViewModelPrintEnablementTests), which is deterministic and needs no running app.
         run: dotnet test tests/WinPrint.Maui.UITests/WinPrint.Maui.UITests.csproj --configuration Debug --verbosity normal
-
-      - name: Upload Appium log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: appium-log
-          path: appium.log
-          if-no-files-found: ignore
-
-      - name: Upload menu accessibility tree
-        # Written by the UI test when a menu item locator misses — the actual XCUITest tree for the
-        # Catalyst File menu, so the locator can be corrected from real data rather than guesswork.
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: menu-tree
-          path: menu-tree.xml
-          if-no-files-found: ignore
