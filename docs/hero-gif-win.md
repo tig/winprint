@@ -5,8 +5,9 @@
 recording the window as a GIF:
 
 > launch -> load `SheetViewModel.cs` (2-up landscape, line numbers) -> toggle **Line Numbers** -> toggle
-> **Landscape** (reflow to 1-up portrait and back) -> **zoom in, pan, reset** -> open `README.md` and switch
-> to the **Proportional 2-Up** sheet so Markdown reads as prose (with images) -> **Print to PDF** -> hold.
+> **Landscape** (reflow to 1-up portrait and back) -> **zoom in, pan, reset** -> open `docs/about.md` and
+> switch to the **Proportional 2-Up** sheet so Markdown reads as prose -> **Print to PDF and open the result
+> in the browser** -> hold on the PDF.
 
 Needs a WinPrint new enough to have the **Proportional** sheet definitions and the markdown/HTML defaults
 (recent `develop`); the Velopack-installed release may be older, so run a `develop` build as the subject
@@ -99,19 +100,23 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    `focus { "handle": <handle>, "at": { "x": <preview-x>, "y": <preview-y> } }` (the `focus` tool clicks the
    surface and verifies real keyboard focus; #91/#270). Then `key_equals` x3 (zoom in), an arrow or two to
    pan, and `key_0` to fit. Keep dwells short -- this is a snappy flourish, not a crawl.
-9. **Open `README.md`, then switch to `Proportional 2-Up`.** Open the file as in step 5. Markdown/HTML default
-   to a proportional sheet, but select it explicitly to be sure: `click` the **Sheet Definition** `ComboBox`
-   (top of the sidebar), then `click` the **Proportional 2-Up** `ListItem` in the dropdown. The preview
-   reflows to prose with a proportional font and rendered images -- the "not just source code" beat. Dwell ~1.5 s.
+9. **Open `docs/about.md`, then switch to `Proportional 2-Up`.** Open the file as in step 5, then select the
+   sheet explicitly: `click` the **Sheet Definition** `ComboBox` (top of the sidebar), then `click` the
+   **Proportional 2-Up** `ListItem` in the dropdown. The preview reflows to prose with a proportional font --
+   the "not just source code" beat. Use **`about.md`, not `README.md`**: the README is now gif-heavy and
+   renders as a wall of images, while about.md is clean prose with one vintage screenshot. Dwell ~1.5 s.
 10. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Confirm the printer
     is Microsoft Print to PDF** -- WinPrint prints to `viewModel.SelectedPrinter`; if the machine default is
     something else, `query` the sidebar **Printer** `ComboBox`, `click` it, and `click` the **Microsoft Print
     to PDF** item. Click the toolbar **Print** button (`🖨 Print…`), find the save dialog with
     `windows { "window": "Save Print Output As", "timeout": 5000 }`, `query` its filename `Edit`, `click` it,
     type the PDF path with `chars:` (**single** backslashes), and submit with **`enter`**. Assert the PDF exists.
-11. **Hold**, then **stop and write the GIF.** `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }`
-    (absolute path -- a relative one lands in the controller's temp copy and is lost). Assert `result.frames`
-    (~35-40) and `result.bytes` (~4 MB).
+11. **Open and show the printed PDF (final beat).** Open `winprintdemo.pdf` in the browser (the default
+    handler is Edge) so the loop ends on a real document output; maximize it so the PDF fills the frame and
+    dwell ~1.5 s. Then **stop and write the GIF:**
+    `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }` (absolute path -- a
+    relative one lands in the controller's temp copy and is lost). Assert `result.frames` (~45) and
+    `result.bytes` (~4-5 MB). After the stop, close the PDF **tab** with `ctrl-f4` (not the whole browser).
 12. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
