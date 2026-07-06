@@ -4,7 +4,7 @@ I've had a thing for printing since I started programming on an Apple ][+ in 198
 
 In 1988, as a college junior at the University of Arizona (Go Cats!), I decided Windows was going to win over OS/2 and I was going to work for Microsoft. I bought Charles Petzold's [Programming Windows](https://www.amazon.com/Programming-Windows-Writing-Developer-Reference/dp/0735671761?tag=ceklog-20) and conned my dad into buying me a copy of the Windows 2.0 SDK (which was like $300 back then!). On my amazeballs ALR 386/33 PC I set about becoming a Windows programmer. The first useful app I wrote was **WinSpit**. In a rare moment of adulting, I renamed the app [WinPrint and listed it on CompuServe](http://www.kindel.com/products/winprint/) as shareware ($25). For over ten years I received $25 checks the mail from folks all over the world. Even better, WinPrint demonstrated to Microsoft I could actually, really write code and they hired me.
 
-![WinPrint 1.54](winprint-154.gif)
+![WinPrint 1.54](winprint-154.png)
 
 Several times in the early 1990s I started writing WinPrint 2.0. Each time I had the basics working and realized three things: 1) Nobody cares about printing source code, 3) I'd over-engineered things, and 2) the technology I choose was already dated (e.g. MFC). Two of those abandoned efforts can be found in my GitHub archive [here (1992)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRINT) and [here (1994)](https://github.com/tig/Tigger/tree/master/Shareware/WINPRT2/WINPRT20).
 
