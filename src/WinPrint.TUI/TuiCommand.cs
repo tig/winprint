@@ -79,8 +79,7 @@ public sealed class TuiCommand : IViewerCommand
         {
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            BorderStyle = LineStyle.None,
-            SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Accent)
+            BorderStyle = LineStyle.None
         };
         window.Add(content);
 
