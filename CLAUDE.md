@@ -65,6 +65,25 @@ publishes as a GitHub *pre-release* (not "Latest"). A burned tag (release failed
 `Package <rid>` job fails, `Publish` / `winget` / `brew` are **skipped** and nothing ships, even
 though the overall run may look done — always confirm a real GitHub release + tap update exist.
 
+**Red release run? Triage before declaring the tag burned** (both bitten cutting v3.0.10):
+- **A failed run is NOT a burned tag until a re-run also fails.** `gh run rerun --failed
+  <run-id>` re-runs the failed `Package` legs and *resumes the skipped downstream jobs*
+  (`Publish`/`winget`/`brew`) from the **same tag** — v3.0.10 shipped completely this way. Only
+  a *deterministic* failure (fails identically on re-run) burns the tag and needs a patch bump.
+- **Known release flake:** `Package win-x64` can die in the Velopack smoke test
+  (`Test-WindowsVelopackShortcut.ps1`) with `Program 'wp.exe' failed to run:
+  StandardOutputEncoding is only supported when standard output is redirected`. That is an
+  intermittent **PowerShell** native-launch bug (oh-my-posh #1967, starship #6331) thrown in the
+  *parent* before `wp` code runs — not a product regression; re-run it. If it ever fails this way
+  **twice in a row**, then suspect the packaged `wp.exe` (e.g. PE subsystem flipped console→GUI
+  by the merged-publish dir) before blaming PowerShell.
+- **The back-merge workflow can fail at PR creation** with "GitHub Actions is not permitted to
+  create or approve pull requests" (repo/org Actions setting; it regressed mid-day 2026-07-06).
+  The workflow has already pushed `backmerge/vX.Y.Z` by then — recover with
+  `gh pr create --base develop --head backmerge/vX.Y.Z`, then merge. Durable fix: Settings →
+  Actions → General → Workflow permissions → allow PR creation. Don't skip the recovery:
+  `develop` drifting behind `main` is exactly what this workflow exists to prevent.
+
 **Windows code signing.** Windows installers are signed with **Azure Trusted Signing** via
 **GitHub OIDC** (no client secret). The full, reproducible setup lives in `scripts/`
 (`Azure.Config.ps1` = single source of truth, `SetupAzure.ps1` = idempotent one-shot creator,
