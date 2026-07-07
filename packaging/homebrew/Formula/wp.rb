@@ -58,6 +58,13 @@ class Wp < Formula
   # <<< winprint:bottle
 
   def install
+    # Drop the separated debug-symbol file (wp.dbg) before installing. It is useless to end
+    # users and — critically — Homebrew's Linux install/pour path scans every ELF in the keg
+    # (load_tab -> undeclared_runtime_dependencies -> LinkageChecker), and the vendored
+    # elftools gem hangs/crashes parsing this AOT .dbg file ("undefined method 'header' for
+    # nil"). That crash is what kept the x86_64_linux bottle from ever pouring (issue #211).
+    # Removing it here keeps it out of both the poured bottle and the url/source install path.
+    rm_f Dir["*.dbg"]
     libexec.install Dir["*"]
     bin.install_symlink libexec/"wp"
   end

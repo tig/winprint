@@ -41,8 +41,7 @@ public sealed class HeaderFooterEditor : EditorBase<HeaderFooter>
             Height = 1,
             Multiline = false,
             GutterOptions = GutterOptions.None,
-            CompletionProvider = new MacroCompletionProvider(),
-            SchemeName = SchemeManager.SchemesToSchemeName(Schemes.Accent)
+            CompletionProvider = new MacroCompletionProvider()
         };
         Terminal.Gui.Input.Key? tabKey = _text.KeyBindings.GetFirstFromCommands(Terminal.Gui.Input.Command.InsertTab);
         if (tabKey is { })
