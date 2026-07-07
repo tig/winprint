@@ -9,7 +9,8 @@ Screen-Recording and Accessibility permission for the terminal running this.
 
 Choreography (mirrors the Windows hero + the spec in docs/hero-gifs.md):
   load -> toggle Line Numbers off/on -> toggle Landscape off/on ->
-  focus + fast zoom-in/pan/reset -> open README.md (Markdown) -> hold.
+  focus + fast zoom-in/pan/reset -> open README.md (Markdown) ->
+  print to PDF -> open PDF in Preview -> hold.
 
 macOS mechanics (see docs/hero-gifs.md):
   - Zoom uses the plain TUI keys: `=`/`+` in, `-` out, `0` fit. Only claimed when
@@ -18,6 +19,9 @@ macOS mechanics (see docs/hero-gifs.md):
     the bound CheckBox). MAUI Catalyst doesn't expose these via Accessibility, so
     we click window-relative coordinates (calibrated below).
   - Open a file: Cmd+O, then Cmd+Shift+G, paste the path, Return, Return.
+  - Print to PDF: Cmd+P -> click "PDF" button in print panel -> "Save as PDF..." ->
+    type path -> Return. UIPrintInteractionController bridges to NSPrintPanel on
+    Mac Catalyst; the PDF button is found via Accessibility across all process windows.
   - Capture: screencapture -R <window rect in points> (outputs native pixels).
 """
 
@@ -120,11 +124,108 @@ def open_file(path: Path) -> None:
     time.sleep(2.0)
 
 
+def capture_rect(path: Path, x: int, y: int, w: int, h: int) -> None:
+    run(["screencapture", "-x", "-R%d,%d,%d,%d" % (x, y, w, h), str(path)])
+
+
 def capture(path: Path) -> None:
     activate()
     time.sleep(0.3)
     x, y, w, h = window_rect()
-    run(["screencapture", "-x", "-R%d,%d,%d,%d" % (x, y, w, h), str(path)])
+    capture_rect(path, x, y, w, h)
+
+
+def print_to_pdf(pdf_path: Path) -> bool:
+    """Trigger Cmd+P -> PDF -> Save as PDF... -> type path -> Return.
+
+    UIPrintInteractionController on Mac Catalyst bridges to NSPrintPanel. The panel
+    may appear as a sheet on window 1 or as a floating panel depending on macOS
+    version; we search all process windows for the PDF popup button via Accessibility.
+
+    Returns True if the PDF was written, False if something went wrong.
+    """
+    if pdf_path.exists():
+        pdf_path.unlink()
+
+    activate()
+    # Cmd+P: AppDelegate.KeyCommands routes this to MainPage.InvokePrint() ->
+    # PerformPrintAsync() -> MacPrintJob.EndAsync() -> UIPrintInteractionController.Present()
+    key_combo("p", "command down")
+    time.sleep(4.0)  # SkiaPdfRenderer renders the document, then the panel appears
+
+    # Find and click the "PDF" popup button in the print panel. Search all windows
+    # because the panel may appear as a sheet (window 1) or a separate window.
+    clicked = osa(
+        'tell application "System Events"\n'
+        '    tell process "winprint"\n'
+        '        repeat with w in windows\n'
+        '            try\n'
+        '                click button "PDF" of w\n'
+        '                return "ok"\n'
+        '            end try\n'
+        '        end repeat\n'
+        '        return "not found"\n'
+        '    end tell\n'
+        'end tell'
+    )
+    if "ok" not in clicked:
+        print(
+            "WARNING: could not find PDF button in print dialog "
+            "(got: %r) — dismissing print dialog" % clicked,
+            file=sys.stderr,
+        )
+        key_code(53)  # Escape: dismiss the dialog so the script can continue
+        return False
+
+    time.sleep(0.7)
+
+    # Click "Save as PDF…" in the PDF popup menu.
+    osa(
+        'tell application "System Events"\n'
+        '    tell process "winprint"\n'
+        '        repeat with w in windows\n'
+        '            try\n'
+        '                click menu item "Save as PDF…" of menu 1 of button "PDF" of w\n'
+        '                return "ok"\n'
+        '            end try\n'
+        '        end repeat\n'
+        '    end tell\n'
+        'end tell'
+    )
+    time.sleep(1.5)  # NSSavePanel animates in
+
+    # Select any pre-filled filename and replace with the output path.
+    key_combo("a", "command down")
+    time.sleep(0.2)
+    run(["cliclick", "-w", "20", "t:" + str(pdf_path)])
+    time.sleep(0.4)
+    key_code(36)   # Return: confirm the save
+    time.sleep(2.5)  # wait for the PDF to be written and the dialog to dismiss
+
+    if not pdf_path.exists():
+        print(f"WARNING: PDF not found at {pdf_path} — print may have failed", file=sys.stderr)
+        return False
+
+    print(f"PDF written: {pdf_path} ({pdf_path.stat().st_size} bytes)")
+    return True
+
+
+def open_pdf_in_preview(pdf_path: Path) -> tuple[int, int, int, int] | None:
+    """Open a PDF with `open` (Preview), wait for it to load, return its window rect."""
+    run(["open", str(pdf_path)])
+    print("Waiting for Preview to load the PDF…")
+    time.sleep(3.5)
+
+    out = osa(
+        'tell application "System Events" to tell process "Preview" '
+        "to get {position, size} of window 1"
+    )
+    try:
+        nums = [int(n) for n in out.replace(" ", "").split(",")]
+        return nums[0], nums[1], nums[2], nums[3]
+    except (ValueError, IndexError):
+        print("WARNING: could not get Preview window bounds", file=sys.stderr)
+        return None
 
 
 def main() -> int:
@@ -139,6 +240,12 @@ def main() -> int:
     )
     ap.add_argument("--sample", type=Path, default=Path("src/WinPrint.Core/ViewModels/SheetViewModel.cs"))
     ap.add_argument("--second-file", type=Path, default=Path("README.md"))
+    ap.add_argument(
+        "--pdf-out",
+        type=Path,
+        default=Path.home() / "Documents" / "winprintdemo.pdf",
+        help="Where to save the printed PDF (deleted before each run)",
+    )
     ap.add_argument("--output", type=Path, default=Path("docs/hero-gui-mac.gif"))
     ap.add_argument("--workdir", type=Path, default=Path("artifacts/hero/gui-frames-mac"))
     ap.add_argument("--width", type=int, default=1102, help="README hero width")
@@ -177,6 +284,16 @@ def main() -> int:
         frames.append((img, ms))
         print(f"captured {p.name} ({img.size[0]}x{img.size[1]})")
 
+    def shot_rect(label: str, ms: int, x: int, y: int, w: int, h: int) -> None:
+        p = args.workdir / f"{len(frames):02d}-{label}.png"
+        capture_rect(p, x, y, w, h)
+        img = Image.open(p).convert("RGB")
+        if args.width and img.width != args.width:
+            r = args.width / img.width
+            img = img.resize((args.width, int(img.height * r)), Image.LANCZOS)
+        frames.append((img, ms))
+        print(f"captured {p.name} ({img.size[0]}x{img.size[1]})")
+
     shot("loaded", 1200)
 
     # Toggle Line Numbers off then on (preview loses/regains the gutter).
@@ -199,6 +316,36 @@ def main() -> int:
     shot("markdown", 1300)
     key_code(121); shot("markdown2", 1100)            # Page Down through it
 
+    # Print to PDF and open — mirrors the Windows hero's final beat.
+    # Capture the WinPrint window while the print dialog is visible, then
+    # switch to Preview to show the printed output.
+    wx, wy, ww, wh = window_rect()
+    pdf_ok = print_to_pdf(args.pdf_out)
+    if pdf_ok:
+        # Capture the WinPrint window region immediately after the dialog dismisses
+        # (print job just finished; app is back in its normal state).
+        shot("printed", 1100)
+
+        # Open the PDF in Preview and capture its window.
+        preview_rect = open_pdf_in_preview(args.pdf_out)
+        if preview_rect is not None:
+            run(["osascript", "-e", 'tell application "Preview" to activate'])
+            time.sleep(0.5)
+            px, py, pw, ph = preview_rect
+            shot_rect("pdf-page1", 1300, px, py, pw, ph)
+            # Page through the PDF to show the full printed output.
+            osa('tell application "System Events" to tell process "Preview" to key code 121')
+            time.sleep(0.5)
+            shot_rect("pdf-page2", 1200, px, py, pw, ph)
+            # Close Preview (don't leave it open for the next run).
+            run(["osascript", "-e", 'tell application "Preview" to close window 1'])
+        else:
+            print("Skipping PDF frames (Preview window not found).", file=sys.stderr)
+    else:
+        print("Skipping PDF frames (print failed).", file=sys.stderr)
+
+    # Return focus to WinPrint for the hold frame.
+    activate()
     shot("hold", 1600)
 
     imgs = [f[0] for f in frames]
