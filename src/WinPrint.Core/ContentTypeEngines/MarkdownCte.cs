@@ -468,7 +468,9 @@ public class MarkdownCte : ContentTypeEngineBase
                 };
                 if (seg.Length > 0)
                 {
-                    line.Runs.Add(new MarkdownRun { Text = seg, Scale = 0.92f, Color = CodeColor });
+                    var r = new MarkdownRun { Text = seg, Scale = 0.92f, Color = CodeColor };
+                    r.X = indent;
+                    line.Runs.Add(r);
                 }
 
                 _lines.Add(line);
@@ -670,13 +672,16 @@ public class MarkdownCte : ContentTypeEngineBase
                         continue;
                     }
 
-                    bool firstInCell = true;
+                    float cellLeft = edges[c] + pad;
                     foreach (MarkdownRun run in cellLines[c][k].Runs)
                     {
-                        if (firstInCell)
+                        if (run.X.HasValue)
                         {
-                            run.X = edges[c] + pad;
-                            firstInCell = false;
+                            run.X = cellLeft + run.X.Value;
+                        }
+                        else
+                        {
+                            run.X = cellLeft;
                         }
 
                         rowLine.Runs.Add(run);
@@ -1226,6 +1231,7 @@ public class MarkdownCte : ContentTypeEngineBase
                     continue; // drop leading space
                 }
 
+                tok.X = line.Indent + x;
                 line.Runs.Add(tok);
                 x += w;
                 maxHeight = Math.Max(maxHeight, h);
@@ -1259,8 +1265,10 @@ public class MarkdownCte : ContentTypeEngineBase
                     }
 
                     string piece = remaining[..fit];
-                    line.Runs.Add(new MarkdownRun
-                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color });
+                    var pieceRun = new MarkdownRun
+                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color };
+                    pieceRun.X = line.Indent + x;
+                    line.Runs.Add(pieceRun);
                     x += Measure(g, piece, font).Width;
                     maxHeight = Math.Max(maxHeight, h);
                     any = true;
@@ -1274,6 +1282,7 @@ public class MarkdownCte : ContentTypeEngineBase
                 continue;
             }
 
+            tok.X = line.Indent + x;
             line.Runs.Add(tok);
             x += w;
             maxHeight = Math.Max(maxHeight, h);
