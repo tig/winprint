@@ -62,11 +62,11 @@ public sealed class LprClient : ILprClient
                 return PrinterDestinationResult.Ok(defaultPrinter);
             }
 
-            return ResolveFromInputs(printerName, defaultPrinter: null, ListAcceptingQueueNames());
+            return ResolveFromInputs(printerName, null, ListAcceptingQueueNames());
         }
 
         // Named queue: one `lpstat -a` for validation (skip if list empty / lpstat failed → let lpr decide).
-        return ResolveFromInputs(printerName, defaultPrinter: null, ListAcceptingQueueNames());
+        return ResolveFromInputs(printerName, null, ListAcceptingQueueNames());
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public sealed class LprClient : ILprClient
     private static bool IsSystemDefaultRequest(string? printerName)
     {
         return string.IsNullOrEmpty(printerName) ||
-            string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase);
+               string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

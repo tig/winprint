@@ -65,7 +65,7 @@ public class UnixPrintBackendTests
             DefaultPrinter = "PDF",
             Result = PrintJobResult.Failed("lpr: destination not found"),
         };
-        var job = new UnixPrintJob(LetterSetup("PDF"), "doc", lpr);
+        var job = new UnixPrintJob(LetterSetup(), "doc", lpr);
 
         job.Begin();
         job.PrintPage(1, (ctx, _) => ctx.DrawLine(ctx.BlackPen, 0, 0, 10, 10));
@@ -161,7 +161,7 @@ public class UnixPrintBackendTests
     public void ResolveFromInputs_SystemDefault_WithNoQueues_FailsWithActionableMessage()
     {
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            LprClient.SystemDefaultPrinter, defaultPrinter: null, queueNames: []);
+            LprClient.SystemDefaultPrinter, null, []);
 
         Assert.False(result.Success);
         Assert.Null(result.PrinterName);
@@ -173,7 +173,7 @@ public class UnixPrintBackendTests
     public void ResolveFromInputs_SystemDefault_WithQueuesButNoDefault_ListsThem()
     {
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            null, defaultPrinter: null, queueNames: ["PDF", "Office"]);
+            null, null, ["PDF", "Office"]);
 
         Assert.False(result.Success);
         Assert.Null(result.PrinterName);
@@ -186,7 +186,7 @@ public class UnixPrintBackendTests
     public void ResolveFromInputs_SystemDefault_UsesSpoolerDefault()
     {
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            LprClient.SystemDefaultPrinter, defaultPrinter: "PDF", queueNames: []);
+            LprClient.SystemDefaultPrinter, "PDF", []);
 
         Assert.True(result.Success);
         Assert.Equal("PDF", result.PrinterName);
@@ -197,7 +197,7 @@ public class UnixPrintBackendTests
     public void ResolveFromInputs_EmptyName_TreatedAsSystemDefault()
     {
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            string.Empty, defaultPrinter: "Brother", queueNames: []);
+            string.Empty, "Brother", []);
 
         Assert.True(result.Success);
         Assert.Equal("Brother", result.PrinterName);
@@ -207,7 +207,7 @@ public class UnixPrintBackendTests
     public void ResolveFromInputs_NamedQueue_RejectsUnknownWhenListKnown()
     {
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            "NoSuchQueue", defaultPrinter: null, queueNames: ["PDF"]);
+            "NoSuchQueue", null, ["PDF"]);
 
         Assert.False(result.Success);
         Assert.Null(result.PrinterName);
@@ -219,7 +219,7 @@ public class UnixPrintBackendTests
     public void ResolveFromInputs_NamedQueue_AcceptedWhenListed()
     {
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            "PDF", defaultPrinter: null, queueNames: ["PDF"]);
+            "PDF", null, ["PDF"]);
 
         Assert.True(result.Success);
         Assert.Equal("PDF", result.PrinterName);
@@ -231,7 +231,7 @@ public class UnixPrintBackendTests
     {
         // Empty list ⇒ lpstat failed; do not block — let lpr decide.
         PrinterDestinationResult result = LprClient.ResolveFromInputs(
-            "MaybeExists", defaultPrinter: null, queueNames: []);
+            "MaybeExists", null, []);
 
         Assert.True(result.Success);
         Assert.Equal("MaybeExists", result.PrinterName);
