@@ -139,9 +139,10 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     `$env:PATH`, one `Ctrl+Plus` font bump, `cls`, `ls`. Then Win+D again and restore/focus ONLY the
     demo terminal (`focus`, not a bare click -- a coordinate click lands on whatever is on top).
     **On-record** (full screen, `fps: 2`, `maxWidth: 700`):
-    type `wp print mermaid.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"` (chunked
-    `chars:` sends read as typing); handle the **Save Print Output As** dialog as in step 10, saving to
-    `~/wpdemo/mermaid.pdf`; type `& 'C:\Program Files\Mozilla Firefox\firefox.exe' -kiosk .\mermaid.pdf`
+    type `wp print mermaid.md --pdf mermaid.pdf --sheet "Proportional 1-Up"` (chunked `chars:` sends
+    read as typing) -- no dialog appears; wait for the PDF file to finish (mermaid.ink round-trips take
+    a few seconds), then type `ls` so the new file is the visible payoff; type
+    `& 'C:\Program Files\Mozilla Firefox\firefox.exe' -kiosk .\mermaid.pdf`
     (kiosk = chromeless full-screen PDF; the default handler and Edge both bring popups/promos into
     frame); zoom out until the whole page fits (`Ctrl+Minus` x5, ~350 ms apart -- pdf.js steps ~10%
     per press and re-renders lazily, so fast presses overshoot); `ctrl-home`, `key_pagedown` through
