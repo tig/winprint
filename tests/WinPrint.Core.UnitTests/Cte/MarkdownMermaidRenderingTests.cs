@@ -154,6 +154,42 @@ public class MarkdownMermaidRenderingTests
     }
 
     [Fact]
+    public async Task PaintDuringReRender_PaintsPreviousRender_NoCollectionRace()
+    {
+        // Regression: RenderAsync awaits the mermaid renderer (a network call in production) for
+        // seconds mid-render. The TUI keeps repainting during that window; before the build/paint
+        // split, RenderAsync cleared _lines/_imageCache up front and PaintPage enumerated them
+        // mid-mutation ("Collection was modified; enumeration operation may not execute" — it
+        // blanked the preview while recording the TUI hero).
+        MarkdownCte cte = MakeCte(new RecordingGraphicsContext());
+        cte.RenderMermaidDiagrams = true;
+        cte.MermaidRenderer = new StubMermaidRenderer(FakePng);
+
+        Assert.True(await cte.SetDocumentAsync(MermaidDoc));
+        await cte.RenderAsync(Dpi96, null);
+
+        // Start a re-render that parks inside the mermaid await.
+        var gated = new GatedMermaidRenderer(FakePng);
+        cte.MermaidRenderer = gated;
+        Task<int> rerender = cte.RenderAsync(Dpi96, null);
+        await gated.Entered;
+
+        // Painting now must draw the PREVIOUS completed render — image and all — not throw or blank.
+        var paint = new RecordingGraphicsContext();
+        cte.PaintPage(paint, 1);
+        Assert.Single(paint.DrawnImages);
+        Assert.Contains(paint.DrawnStrings, s => s.Text == "Title");
+
+        gated.Release();
+        Assert.True(await rerender >= 1);
+
+        // And after the re-render completes, painting shows the new render.
+        var paintAfter = new RecordingGraphicsContext();
+        cte.PaintPage(paintAfter, 1);
+        Assert.Single(paintAfter.DrawnImages);
+    }
+
+    [Fact]
     public void CreateContentTypeEngine_AppliesPersistedMermaidSettings()
     {
         // Regression: the normal load path (SheetViewModel -> CreateContentTypeEngine -> registry)

@@ -56,8 +56,17 @@ public class MarkdownCte : ContentTypeEngineBase
         @"<!--.*?-->",
         RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    /// <summary>Decoded image bytes keyed by source URL/path; null marks a load that failed (don't retry).</summary>
-    private readonly Dictionary<string, byte[]?> _imageCache = new(StringComparer.Ordinal);
+    /// <summary>
+    ///     Decoded image bytes keyed by source URL/path; null marks a load that failed (don't retry).
+    ///     This is the render-side BUILD cache: <see cref="RenderAsync" /> replaces it with a fresh
+    ///     instance at the start of every render and publishes it to <see cref="_paintCache" /> only on
+    ///     completion, so a paint racing a re-render (the TUI repaints while the mermaid/image preloads
+    ///     await the network) never observes a half-built cache.
+    /// </summary>
+    private Dictionary<string, byte[]?> _imageCache = new(StringComparer.Ordinal);
+
+    /// <summary>The last completed render's image cache — the only cache <see cref="PaintImage" /> reads.</summary>
+    private Dictionary<string, byte[]?> _paintCache = new(StringComparer.Ordinal);
 
     /// <summary>Prefix distinguishing rendered mermaid diagrams from image URLs in <see cref="_imageCache" />.</summary>
     private const string MermaidCachePrefix = "mermaid:";
@@ -72,7 +81,15 @@ public class MarkdownCte : ContentTypeEngineBase
     private static readonly GraphicsColor RuleColor = GraphicsColor.FromRgb(0xc7, 0xcc, 0xd6);
     private static readonly GraphicsColor TableHeaderColor = GraphicsColor.FromRgb(0xee, 0xf1, 0xf6);
 
-    private readonly List<MarkdownLine> _lines = [];
+    /// <summary>
+    ///     Render-side BUILD list (see <see cref="_imageCache" /> for the build/paint split); published
+    ///     to <see cref="_paintLines" /> only when a render completes.
+    /// </summary>
+    private List<MarkdownLine> _lines = [];
+
+    /// <summary>The last completed render's lines — the only list <see cref="PaintPage" /> enumerates.</summary>
+    private List<MarkdownLine> _paintLines = [];
+
     private float _baseLineHeight;
     private float _baseSizePx;
     private int _dpiY = 96;
@@ -132,8 +149,10 @@ public class MarkdownCte : ContentTypeEngineBase
         }
 
         _dpiY = dpiY;
-        _lines.Clear();
-        _imageCache.Clear();
+        // Fresh build instances: the previous render's lines/cache stay published (and safe to
+        // paint) until this render completes — never mutate what PaintPage may be enumerating.
+        _lines = [];
+        _imageCache = new Dictionary<string, byte[]?>(StringComparer.Ordinal);
 
         IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
         var fontCache = new Dictionary<string, IGraphicsFont>();
@@ -156,6 +175,9 @@ public class MarkdownCte : ContentTypeEngineBase
             WalkBlocks(ast, g, fontCache, 0, 0);
 
             _pageCount = Paginate();
+            // Publish for painting only now that the build is complete.
+            _paintLines = _lines;
+            _paintCache = _imageCache;
             Log.Debug("Rendered {pages} Markdown pages from {lines} lines.", _pageCount, _lines.Count);
             return await Task.FromResult(_pageCount);
         }
@@ -173,7 +195,10 @@ public class MarkdownCte : ContentTypeEngineBase
     public override void PaintPage(IGraphicsContext g, int pageNum)
     {
         LogService.TraceMessage($"{pageNum}");
-        if (_lines.Count == 0)
+        // Snapshot the published render: a concurrent re-render swaps _paintLines/_paintCache as
+        // complete units, so painting from locals can never see a half-built collection.
+        List<MarkdownLine> lines = _paintLines;
+        if (lines.Count == 0)
         {
             return;
         }
@@ -188,7 +213,7 @@ public class MarkdownCte : ContentTypeEngineBase
         using IGraphicsPen rulePen = g.CreatePen(RuleColor, 2f);
         using IGraphicsPen gridPen = g.CreatePen(RuleColor);
 
-        foreach (MarkdownLine line in _lines)
+        foreach (MarkdownLine line in lines)
         {
             if (line.Page != pageNum)
             {
@@ -263,7 +288,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
     private void PaintImage(IGraphicsContext g, MarkdownLine line, MarkdownImage image)
     {
-        if (_imageCache.TryGetValue(image.CacheKey, out byte[]? bytes) && bytes is { Length: > 0 })
+        if (_paintCache.TryGetValue(image.CacheKey, out byte[]? bytes) && bytes is { Length: > 0 })
         {
             using var ms = new MemoryStream(bytes);
             using IGraphicsImage? decoded = g.LoadImage(ms);
