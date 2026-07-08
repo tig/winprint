@@ -19,9 +19,12 @@ macOS mechanics (see docs/hero-gifs.md):
     the bound CheckBox). MAUI Catalyst doesn't expose these via Accessibility, so
     we click window-relative coordinates (calibrated below).
   - Open a file: Cmd+O, then Cmd+Shift+G, paste the path, Return, Return.
-  - Print to PDF: Cmd+P -> click "PDF" button in print panel -> "Save as PDF..." ->
-    type path -> Return. UIPrintInteractionController bridges to NSPrintPanel on
-    Mac Catalyst; the PDF button is found via Accessibility across all process windows.
+  - Print to PDF: Cmd+P opens the NSPrintPanel as a sheet on window 1.
+      - PDF button:  menu button 1 of group 2 of splitter group 1 of sheet 1 of window 1
+      - Save as PDF: menu item "Save as PDF…" of menu 1 of that menu button
+      - Save dialog: sheet 1 of sheet 1 of window 1 (nested sheet on the print sheet)
+      - Filename field: text field "Save As:" of splitter group 1 of that nested sheet
+      - Directory via Cmd+Shift+G in the save dialog
   - Capture: screencapture -R <window rect in points> (outputs native pixels).
 """
 
@@ -135,83 +138,89 @@ def capture(path: Path) -> None:
     capture_rect(path, x, y, w, h)
 
 
-def print_to_pdf(pdf_path: Path) -> bool:
-    """Trigger Cmd+P -> PDF -> Save as PDF... -> type path -> Return.
+def trigger_print_dialog() -> bool:
+    """Send Cmd+P and wait for the NSPrintPanel sheet to appear on window 1.
 
-    UIPrintInteractionController on Mac Catalyst bridges to NSPrintPanel. The panel
-    may appear as a sheet on window 1 or as a floating panel depending on macOS
-    version; we search all process windows for the PDF popup button via Accessibility.
-
-    Returns True if the PDF was written, False if something went wrong.
+    Returns True if the print sheet appeared, False on timeout.
+    AppDelegate maps Cmd+P to InvokePrint() -> PerformPrintAsync() ->
+    MacPrintJob.EndAsync() (SkiaPdfRenderer renders the whole doc) ->
+    UIPrintInteractionController.Present(), which bridges to NSPrintPanel
+    and shows it as a sheet on window 1.
     """
-    if pdf_path.exists():
-        pdf_path.unlink()
-
     activate()
-    # Cmd+P: AppDelegate.KeyCommands routes this to MainPage.InvokePrint() ->
-    # PerformPrintAsync() -> MacPrintJob.EndAsync() -> UIPrintInteractionController.Present()
     key_combo("p", "command down")
-    time.sleep(4.0)  # SkiaPdfRenderer renders the document, then the panel appears
-
-    # Find and click the "PDF" popup button in the print panel. Search all windows
-    # because the panel may appear as a sheet (window 1) or a separate window.
-    clicked = osa(
-        'tell application "System Events"\n'
-        '    tell process "winprint"\n'
-        '        repeat with w in windows\n'
-        '            try\n'
-        '                click button "PDF" of w\n'
-        '                return "ok"\n'
-        '            end try\n'
-        '        end repeat\n'
-        '        return "not found"\n'
-        '    end tell\n'
-        'end tell'
+    # SkiaPdfRenderer renders the document first, THEN the sheet appears;
+    # allow enough time for both steps.
+    time.sleep(5.5)
+    count = osa(
+        'tell application "System Events" to tell process "winprint" '
+        'to return count of sheets of window 1'
     )
-    if "ok" not in clicked:
-        print(
-            "WARNING: could not find PDF button in print dialog "
-            "(got: %r) — dismissing print dialog" % clicked,
-            file=sys.stderr,
-        )
-        key_code(53)  # Escape: dismiss the dialog so the script can continue
-        return False
+    return count.strip() == "1"
 
+
+def save_print_as_pdf(pdf_path: Path) -> bool:
+    """With the NSPrintPanel sheet already open, click PDF -> Save as PDF… and save.
+
+    Accessibility paths verified against Mac Catalyst on macOS Sequoia:
+      Print sheet:  sheet 1 of window 1
+      PDF button:   menu button 1 of group 2 of splitter group 1 of sheet 1 of window 1
+      Save as PDF…: menu item "Save as PDF…" of menu 1 of that menu button
+      Save dialog:  sheet 1 of sheet 1 of window 1  (nested sheet)
+      Filename:     text field "Save As:" of splitter group 1 of that nested sheet
+    """
+    # Click the PDF popup menu button in the print sheet.
+    osa(
+        'tell application "System Events" to tell process "winprint" '
+        'to click menu button 1 of group 2 of splitter group 1 of sheet 1 of window 1'
+    )
     time.sleep(0.7)
 
-    # Click "Save as PDF…" in the PDF popup menu.
+    # Select "Save as PDF…" from the dropdown.
     osa(
-        'tell application "System Events"\n'
-        '    tell process "winprint"\n'
-        '        repeat with w in windows\n'
-        '            try\n'
-        '                click menu item "Save as PDF…" of menu 1 of button "PDF" of w\n'
-        '                return "ok"\n'
-        '            end try\n'
-        '        end repeat\n'
-        '    end tell\n'
-        'end tell'
+        'tell application "System Events" to tell process "winprint" '
+        'to click menu item "Save as PDF…" of menu 1 '
+        'of menu button 1 of group 2 of splitter group 1 of sheet 1 of window 1'
     )
-    time.sleep(1.5)  # NSSavePanel animates in
+    time.sleep(1.5)  # nested save sheet animates in
 
-    # Select any pre-filled filename and replace with the output path.
-    key_combo("a", "command down")
+    # Focus the "Save As:" filename field and replace its content.
+    osa(
+        'tell application "System Events" to tell process "winprint" '
+        'to set focused of (text field "Save As:" of splitter group 1 '
+        'of sheet 1 of sheet 1 of window 1) to true'
+    )
+    time.sleep(0.3)
+    key_combo("a", "command down")  # select all existing text
     time.sleep(0.2)
-    run(["cliclick", "-w", "20", "t:" + str(pdf_path)])
+    # Type the stem only — the "Save as PDF…" panel auto-appends ".pdf",
+    # so "winprintdemo" -> "winprintdemo.pdf"; "winprintdemo.pdf" -> double extension.
+    run(["cliclick", "-w", "20", "t:" + pdf_path.stem])
+    time.sleep(0.3)
+
+    # Navigate to the target directory via the Go to Folder sheet (Cmd+Shift+G).
+    key_combo("g", "command down, shift down")
+    time.sleep(1.0)
+    run(["cliclick", "-w", "20", "t:" + str(pdf_path.parent)])
     time.sleep(0.4)
-    key_code(36)   # Return: confirm the save
-    time.sleep(2.5)  # wait for the PDF to be written and the dialog to dismiss
+    key_code(36)   # Return: navigate to the folder
+    time.sleep(0.8)
+    key_code(36)   # Return: confirm Save
+    time.sleep(3.0)  # wait for the PDF to be written and both sheets to dismiss
 
     if not pdf_path.exists():
         print(f"WARNING: PDF not found at {pdf_path} — print may have failed", file=sys.stderr)
         return False
 
-    print(f"PDF written: {pdf_path} ({pdf_path.stat().st_size} bytes)")
+    print(f"PDF written: {pdf_path} ({pdf_path.stat().st_size:,} bytes)")
     return True
 
 
 def open_pdf_in_preview(pdf_path: Path) -> tuple[int, int, int, int] | None:
-    """Open a PDF with `open` (Preview), wait for it to load, return its window rect."""
+    """Open a PDF with `open` (defaults to Preview), wait for it to load.
+
+    Returns the Preview window rect as (x, y, w, h), or None if not found.
+    """
     run(["open", str(pdf_path)])
     print("Waiting for Preview to load the PDF…")
     time.sleep(3.5)
@@ -265,6 +274,9 @@ def main() -> int:
     sample = args.sample.resolve()
     second = args.second_file.resolve()
 
+    if args.pdf_out.exists():
+        args.pdf_out.unlink()
+
     quit_app()
     launch(args.exe.resolve(), sample)
     print("Waiting for GUI to load…")
@@ -317,34 +329,38 @@ def main() -> int:
     key_code(121); shot("markdown2", 1100)            # Page Down through it
 
     # Print to PDF and open — mirrors the Windows hero's final beat.
-    # Capture the WinPrint window while the print dialog is visible, then
-    # switch to Preview to show the printed output.
-    wx, wy, ww, wh = window_rect()
-    pdf_ok = print_to_pdf(args.pdf_out)
-    if pdf_ok:
-        # Capture the WinPrint window region immediately after the dialog dismisses
-        # (print job just finished; app is back in its normal state).
-        shot("printed", 1100)
+    print("Triggering print dialog…")
+    dialog_visible = trigger_print_dialog()
+    if dialog_visible:
+        # Capture one frame with the print sheet visible (proves printing is driven).
+        shot("print-dialog", 1200)
 
-        # Open the PDF in Preview and capture its window.
-        preview_rect = open_pdf_in_preview(args.pdf_out)
-        if preview_rect is not None:
-            run(["osascript", "-e", 'tell application "Preview" to activate'])
-            time.sleep(0.5)
-            px, py, pw, ph = preview_rect
-            shot_rect("pdf-page1", 1300, px, py, pw, ph)
-            # Page through the PDF to show the full printed output.
-            osa('tell application "System Events" to tell process "Preview" to key code 121')
-            time.sleep(0.5)
-            shot_rect("pdf-page2", 1200, px, py, pw, ph)
-            # Close Preview (don't leave it open for the next run).
-            run(["osascript", "-e", 'tell application "Preview" to close window 1'])
+        pdf_ok = save_print_as_pdf(args.pdf_out)
+        if pdf_ok:
+            # App is back to its normal state after the sheets dismiss.
+            shot("printed", 1000)
+
+            # Open the PDF in Preview and capture its window.
+            preview_rect = open_pdf_in_preview(args.pdf_out)
+            if preview_rect is not None:
+                run(["osascript", "-e", 'tell application "Preview" to activate'])
+                time.sleep(0.5)
+                px, py, pw, ph = preview_rect
+                shot_rect("pdf-page1", 1300, px, py, pw, ph)
+                # Page through the PDF to show the full printed output.
+                osa('tell application "System Events" to tell process "Preview" to key code 121')
+                time.sleep(0.5)
+                shot_rect("pdf-page2", 1200, px, py, pw, ph)
+                # Close Preview so its file lock doesn't block the next run's delete.
+                run(["osascript", "-e", 'tell application "Preview" to close window 1'])
+            else:
+                print("Skipping PDF preview frames (Preview window not found).", file=sys.stderr)
         else:
-            print("Skipping PDF frames (Preview window not found).", file=sys.stderr)
+            print("Skipping PDF preview frames (save failed).", file=sys.stderr)
     else:
-        print("Skipping PDF frames (print failed).", file=sys.stderr)
+        print("WARNING: print dialog did not appear — skipping PDF beat.", file=sys.stderr)
 
-    # Return focus to WinPrint for the hold frame.
+    # Return focus to WinPrint for the final hold frame.
     activate()
     shot("hold", 1600)
 
@@ -358,7 +374,7 @@ def main() -> int:
         loop=0,
         optimize=True,
     )
-    print(f"wrote {args.output} ({args.output.stat().st_size} bytes, {len(imgs)} frames)")
+    print(f"wrote {args.output} ({args.output.stat().st_size:,} bytes, {len(imgs)} frames)")
     return 0
 
 
