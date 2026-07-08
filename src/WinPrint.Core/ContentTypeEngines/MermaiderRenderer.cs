@@ -44,7 +44,7 @@ public sealed class MermaiderRenderer : IMermaidRenderer
                 return Task.FromResult<byte[]?>(null);
             }
 
-            using SKSurface surface = SKSurface.Create(info);
+            using var surface = SKSurface.Create(info);
             surface.Canvas.Clear(SKColors.White);
             surface.Canvas.Scale(RasterScale);
             surface.Canvas.DrawPicture(picture);

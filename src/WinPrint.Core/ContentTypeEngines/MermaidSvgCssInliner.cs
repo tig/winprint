@@ -21,10 +21,12 @@ internal static partial class MermaidSvgCssInliner
     [GeneratedRegex(@"(--[\w-]+)\s*:\s*([^;]+);", RegexOptions.CultureInvariant)]
     private static partial Regex DeclRegex();
 
-    [GeneratedRegex(@"var\((--[\w-]+)(?:\s*,\s*((?:[^()]|\((?:[^()]|\([^()]*\))*\))*))?\)", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"var\((--[\w-]+)(?:\s*,\s*((?:[^()]|\((?:[^()]|\([^()]*\))*\))*))?\)",
+        RegexOptions.CultureInvariant)]
     private static partial Regex VarRegex();
 
-    [GeneratedRegex(@"color-mix\(\s*in\s+srgb\s*,\s*(#[0-9a-fA-F]{3,8})\s+([\d.]+)%\s*,\s*(#[0-9a-fA-F]{3,8})\s*\)", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"color-mix\(\s*in\s+srgb\s*,\s*(#[0-9a-fA-F]{3,8})\s+([\d.]+)%\s*,\s*(#[0-9a-fA-F]{3,8})\s*\)",
+        RegexOptions.CultureInvariant)]
     private static partial Regex ColorMixRegex();
 
     [GeneratedRegex(@"([\d.]+)rem", RegexOptions.CultureInvariant)]
@@ -61,7 +63,8 @@ internal static partial class MermaidSvgCssInliner
             double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture) / 100.0,
             m.Groups[3].Value));
         return RemRegex().Replace(result, m =>
-            (double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) * 16).ToString(CultureInfo.InvariantCulture));
+            (double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) * 16)
+            .ToString(CultureInfo.InvariantCulture));
     }
 
     private static void CollectDeclarations(string css, Dictionary<string, string> vars)
@@ -104,9 +107,9 @@ internal static partial class MermaidSvgCssInliner
     {
         (byte r1, byte g1, byte b1) = ParseHex(colorA);
         (byte r2, byte g2, byte b2) = ParseHex(colorB);
-        byte r = (byte)Math.Round((r1 * weightA) + (r2 * (1 - weightA)));
-        byte g = (byte)Math.Round((g1 * weightA) + (g2 * (1 - weightA)));
-        byte b = (byte)Math.Round((b1 * weightA) + (b2 * (1 - weightA)));
+        byte r = (byte)Math.Round(r1 * weightA + r2 * (1 - weightA));
+        byte g = (byte)Math.Round(g1 * weightA + g2 * (1 - weightA));
+        byte b = (byte)Math.Round(b1 * weightA + b2 * (1 - weightA));
         return $"#{r:X2}{g:X2}{b:X2}";
     }
 
