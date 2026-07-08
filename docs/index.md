@@ -8,10 +8,6 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
 
 ![wp TUI — sixel print preview](hero-tui.gif)
 
-### Headless print (`wp print`)
-
-![wp print — CLI without the UI](hero-print.gif)
-
 ### Graphical UI (`wp gui`)
 
 <p>
@@ -19,11 +15,15 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
   <img height="330" alt="WinPrint GUI on macOS" src="hero-gui-mac.gif" />
 </p>
 
-### Markdown, printed properly
+## How to turn Markdown into a PDF
 
-![Markdown with mermaid diagrams in the print preview](mermaid.gif)
+One command. Markdown goes in; a formatted, paginated PDF comes out: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud).
 
-*Markdown prints as a formatted document: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud).*
+```powershell
+wp print mermaid.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
+```
+
+![wp print turning mermaid.md into a PDF, then viewing it](cli.gif)
 
 ## Quick Start
 

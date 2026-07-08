@@ -13,12 +13,6 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 *The `wp` terminal UI renders true print previews as sixel/kitty graphics, without leaving the terminal: page through a document, zoom in, pan with the mouse, switch sheet definitions, and open another file.*
 
-### Headless print (`wp print`)
-
-<img width="880" alt="wp print — CLI without the UI" src="docs/hero-print.gif" />
-
-*Print (or dry-run with `--what-if`) straight from the shell — same sheet/printer options as the TUI and GUI.*
-
 ### Windows GUI
 
   <img height="330" alt="WinPrint GUI on Windows" src="docs/hero-gui-win.gif" />
@@ -27,11 +21,17 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
   <img height="330" alt="WinPrint GUI on macOS" src="docs/hero-gui-mac.gif" />
 
-### Markdown, printed properly
+## How to turn Markdown into a PDF
 
-<img width="700" alt="Markdown with mermaid diagrams in the print preview" src="docs/mermaid.gif" />
+One command. Markdown goes in; a formatted, paginated PDF comes out: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud).
 
-*Markdown prints as a formatted document: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud). Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per diagram type.*
+```powershell
+wp print mermaid.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
+```
+
+<img width="700" alt="wp print turning mermaid.md into a PDF, then viewing it" src="docs/cli.gif" />
+
+*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer.*
 
 ## Installation
 
