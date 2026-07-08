@@ -181,6 +181,83 @@ the real screen), so there's no "force a present" dance — just keep the app **
   delete of `winprintdemo.pdf`. The `--pdf-out` flag sets the destination (default:
   `~/Documents/winprintdemo.pdf`).
 
+## The CLI showcase (`docs/cli.gif`) and printing to PDF on macOS
+
+`docs/cli.gif` is the README's **"How to turn Markdown into a PDF"** beat — `wp print` turning
+`testfiles/mermaid.md` into a paginated PDF from a real shell, then opening the result. It is
+**produced on Windows** (`--printer "Microsoft Print to PDF"`); the full recording recipe is
+[`docs/hero-gif-win.md`](hero-gif-win.md) step 12. This section documents the **macOS analog** —
+how to give `wp print --printer …` a real "print to PDF" target on a Mac.
+
+**Why a printer is needed at all.** On macOS/Linux `wp print` renders the *entire* document to a
+PDF in-process (`SkiaPdfRenderer`, mermaid already rasterized) and then hands that PDF to CUPS with
+`lpr -P "<printer>" -T <doc>` (see `LprClient`/`UnixPrintJob`). So `--printer` must name a CUPS
+queue, and to capture a file you need a queue whose backend *writes the job to disk*. macOS ships
+**no** such queue, and **`brew install cups-pdf` does not exist** — `cups-pdf` is a Linux package
+(`printer-driver-cups-pdf`); there is no Homebrew formula and macOS provides no `file`/`pdf` CUPS
+backend (`/usr/libexec/cups/backend/` has only network/usb backends). The macOS drop-in is
+**RWTS PDFwriter**, a virtual-PDF print driver (the CutePDF/​cups-pdf analog).
+
+**Setup (one time).**
+
+1. **Install the driver:** `brew install --cask rwts-pdfwriter` (v3.1d; it drops a signed `.pkg`,
+   so it prompts for admin). This installs the PPD only — it does **not** create a printer queue.
+2. **Add the queue:** System Settings ▸ **Printers & Scanners** ▸ **Add Printer** ▸ pick the
+   **PDFwriter** driver. In the **Name** field type **`CUPS-PDF`** so it matches the README command
+   verbatim (or leave it `PDFwriter` and pass `--printer "PDFwriter"`).
+   - CLI alternative: `lpadmin -p CUPS-PDF -E -v pdfwriter:/ -P <PDFwriter.ppd>` — but first confirm
+     the exact device URI (`lpinfo -v | grep -i pdfwriter`) and PPD path
+     (`/Library/Printers/PPDs/…` or `lpinfo -m | grep -i pdfwriter`); these weren't verified on a Mac
+     here, so check them before scripting.
+
+**Record the beat** (mirrors the Windows step-12 choreography):
+
+```bash
+wp print mermaid.md --printer "CUPS-PDF" --sheet "Proportional 1-Up"
+open /var/spool/pdfwriter/$USER/mermaid.pdf     # then page through it on-record
+```
+
+Use a **`net10.0`-TFM `wp`** (the macOS CLI print path is `lpr`; the portable build is the correct
+one here — unlike Windows there is no separate `-windows` TFM to worry about). The Homebrew `wp`
+may be too old to have the in-process Mermaider renderer — build `develop` if the diagrams print as
+code (`dotnet build src/WinPrint.TUI/WinPrint.TUI.csproj -f net10.0` → `bin/Debug/net10.0/wp`).
+
+**Gotchas.**
+
+- **Output path is fixed:** PDFwriter always writes to **`/var/spool/pdfwriter/<username>/`**, named
+  after the CUPS job title (`wp` passes `-T mermaid.md`). macOS driver sandboxing makes this
+  location **unchangeable** — you can't tell it to write next to the source file; symlink/alias it
+  if the recording needs the file elsewhere.
+- **It round-trips the PDF:** the job goes PDF → PostScript → PDF through the CUPS filter chain
+  (ghostscript). `wp`'s mermaid diagrams are embedded raster and survive as raster; text stays
+  vector — fine for a screen-recorded viewer. Remember `wp` already produced a finished PDF; the
+  printer only exists to make the `wp print --printer` path *real* for the gif.
+- **Verified vs. not:** the `wp` render → `lpr` half was verified on this Mac by capturing the exact
+  bytes `wp` pipes to `lpr -P "CUPS-PDF"` (10-page PDF, every mermaid type rendered in-process, the
+  unsupported **gantt** falling back to a code block, Proportional 1-Up reflow). The PDFwriter
+  install + round-trip is documented from upstream and **not yet exercised on a Mac in this repo** —
+  confirm the queue name, output path, and fidelity on the first real run before recording.
+
+### Linux
+
+Linux is the easy case — the `wp` print path is identical (`lpr -P …`), and `cups-pdf` is a **real
+distro package** here (this is where the name comes from; it never existed on macOS/Homebrew).
+
+- **Install:** `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu) or `sudo dnf install
+  cups-pdf` (Fedora). It **auto-creates the CUPS queue** on install — no manual "Add Printer".
+- **Queue name differs from the README command:** it is **`PDF`** on Debian/Ubuntu and **`Cups-PDF`**
+  on Fedora — **not** `CUPS-PDF`. So the command is `wp print mermaid.md --printer "PDF" --sheet
+  "Proportional 1-Up"` (adjust the name per distro, or `lpadmin`-create a `CUPS-PDF` alias). Confirm
+  with `lpstat -p` after install.
+- **Output:** default **`~/PDF/`** on Debian/Ubuntu (upstream default is
+  `/var/spool/cups-pdf/${USER}/`); set in `/etc/cups/cups-pdf.conf`. **AppArmor caveat:** if you
+  change the output dir there, you must also edit `/etc/apparmor.d/usr.sbin.cupsd` or the writes are
+  blocked.
+- **`wp`:** the `net10.0` build (SkiaSharp render path — no `libgdiplus`/System.Drawing needed here).
+
+The `wp` render → `lpr` half is the *same code* verified on macOS, so it should behave identically; a
+real end-to-end run against `cups-pdf` on Linux is tracked separately (needs a Linux box with CUPS).
+
 ## Regenerating the TUI / headless-print heroes
 
 `scripts/record-hero-gifs.sh` regenerates the TUI and print heroes — **on macOS/Linux only**

@@ -149,6 +149,9 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     close firefox **on-record** with `alt-f4` so the loop ends back at the terminal;
     `record { "action": "stop", "file": "<winprint repo abs>\\docs\\cli.gif" }`. Expect ~40 frames /
     ~4 MB. Tidy: `exit` the terminal, delete `~/wpdemo`.
+    *(macOS analog — `wp print --printer` needs a real print-to-PDF queue there too; `brew install
+    cups-pdf` does not exist on macOS. See [`hero-gifs.md` § "The CLI showcase … printing to PDF on
+    macOS"](hero-gifs.md#the-cli-showcase-docscligif-and-printing-to-pdf-on-macos).)*
 13. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
