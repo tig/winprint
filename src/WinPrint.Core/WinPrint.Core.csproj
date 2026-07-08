@@ -85,6 +85,8 @@
              publishes the TUI and GUI into one directory; if the GUI publishes an older Markdig.dll
              after the TUI, `wp` fails during Terminal.Gui configuration startup. -->
         <PackageReference Include="Markdig" Version="1.3.2" />
+        <PackageReference Include="Mermaider" Version="0.8.0" />
+        <PackageReference Include="Svg.Skia" Version="5.1.1" />
         <PackageReference Include="HtmlRenderer.Core.NetStandard2" Version="1.5.1.3" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
 
@@ -96,7 +98,7 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-        <PackageReference Include="SkiaSharp" Version="3.116.1" />
+        <PackageReference Include="SkiaSharp" Version="3.119.2" />
         <!-- Float the patch (2.0.*) so this stays in lockstep with whatever TextMateSharp.Grammars
              version Terminal.Gui.Cli / Terminal.Gui.Editor pull in transitively. The release
              publishes the TUI and the GUI into one directory; if Core pinned an older exact patch,
@@ -117,8 +119,8 @@
 
     <!-- Non-Windows: SkiaSharp native binaries for the cross-platform PDF print path (lpr/CUPS) -->
     <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0-windows'))">
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
-        <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.116.1" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" />
+        <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.2" />
     </ItemGroup>
 
 

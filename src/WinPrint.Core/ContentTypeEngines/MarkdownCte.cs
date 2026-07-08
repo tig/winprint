@@ -30,10 +30,12 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     GIFs render their first frame. Local files (resolved relative to
 ///     <see cref="ContentTypeEngineBase.SourceFileName" />), <c>data:</c> URIs, and <c>http(s)</c>
 ///     URLs are supported. Anything that fails to load (and inline images mixed with text) falls back
-///     to alt text. When <see cref="RenderMermaidDiagrams" /> is enabled, <c>```mermaid</c> fences are
-///     rendered to images via <see cref="MermaidRenderer" /> (default: the mermaid.ink-compatible
-///     service at <see cref="MermaidServiceUrl" />); a diagram that fails to render falls back to a
-///     plain code block.
+///     to alt text. When <see cref="RenderMermaidDiagrams" /> is enabled (the default),
+///     <c>```mermaid</c> fences are rendered to images via <see cref="MermaidRenderer" /> (by default
+///     the in-process <see cref="MermaiderRenderer" />); set <see cref="MermaidBackend" /> to
+///     <c>service</c> for the remote mermaid.ink-compatible service at
+///     <see cref="MermaidServiceUrl" />. A diagram that fails to render falls back to a plain code
+///     block.
 /// </summary>
 public class MarkdownCte : ContentTypeEngineBase
 {
@@ -99,15 +101,26 @@ public class MarkdownCte : ContentTypeEngineBase
     public override string[] SupportedContentTypes => s_supportedContentTypes;
 
     /// <summary>
-    ///     When false (the default), <c>```mermaid</c> fences render as plain code blocks. When true,
-    ///     each fence is rendered to an image via <see cref="MermaidRenderer" /> (by default the remote
-    ///     mermaid.ink-compatible service at <see cref="MermaidServiceUrl" />), which means the diagram
-    ///     source is sent to that service; off by default for the same reason as
-    ///     <see cref="HtmlCte.AllowRemoteResources" />.
+    ///     When true (the default), each <c>```mermaid</c> fence is rendered to an image via
+    ///     <see cref="MermaidRenderer" />; when false, fences render as plain code blocks. On by
+    ///     default because the default backend (<see cref="MermaiderRenderer" />) renders entirely
+    ///     in-process; nothing is sent anywhere unless <see cref="MermaidBackend" /> is switched to
+    ///     the remote service.
     /// </summary>
-    public bool RenderMermaidDiagrams { get; set; }
+    public bool RenderMermaidDiagrams { get; set; } = true;
 
-    /// <summary>Base URL of the mermaid.ink-compatible service used when no <see cref="MermaidRenderer" /> is set.</summary>
+    /// <summary>
+    ///     Selects the diagram backend when no <see cref="MermaidRenderer" /> is injected:
+    ///     <c>builtin</c> (the default) renders in-process via <see cref="MermaiderRenderer" />;
+    ///     <c>service</c> renders via the remote mermaid.ink-compatible service at
+    ///     <see cref="MermaidServiceUrl" />, which sends the diagram source to that service (the same
+    ///     consideration as <see cref="HtmlCte.AllowRemoteResources" />, so it is opt-in). The remote
+    ///     service supports more diagram types than the builtin renderer; builtin failures fall back
+    ///     to a code block, never silently to the network.
+    /// </summary>
+    public string MermaidBackend { get; set; } = "builtin";
+
+    /// <summary>Base URL of the mermaid.ink-compatible service used when <see cref="MermaidBackend" /> is <c>service</c>.</summary>
     public string MermaidServiceUrl { get; set; } = "https://mermaid.ink";
 
     /// <summary>Diagram renderer override (tests / alternate backends); null uses <see cref="MermaidInkRenderer" />.</summary>
@@ -120,6 +133,7 @@ public class MarkdownCte : ContentTypeEngineBase
         if (source is MarkdownCte src)
         {
             RenderMermaidDiagrams = src.RenderMermaidDiagrams;
+            MermaidBackend = src.MermaidBackend;
             MermaidServiceUrl = src.MermaidServiceUrl;
             MermaidRenderer = src.MermaidRenderer;
         }
@@ -854,10 +868,10 @@ public class MarkdownCte : ContentTypeEngineBase
 
     /// <summary>
     ///     Renders every <c>```mermaid</c> fence to image bytes (via <see cref="MermaidRenderer" /> or
-    ///     the default <see cref="MermaidInkRenderer" />) into <see cref="_imageCache" />, keyed by
-    ///     <see cref="MermaidCachePrefix" /> + source so identical diagrams render once. No-op unless
-    ///     <see cref="RenderMermaidDiagrams" /> is enabled; a null result marks a failed render so the
-    ///     fence falls back to a plain code block.
+    ///     the <see cref="MermaidBackend" />-selected default) into <see cref="_imageCache" />, keyed
+    ///     by <see cref="MermaidCachePrefix" /> + source so identical diagrams render once. No-op
+    ///     unless <see cref="RenderMermaidDiagrams" /> is enabled; a null result marks a failed render
+    ///     so the fence falls back to a plain code block.
     /// </summary>
     private async Task PreloadMermaidDiagramsAsync(MarkdownDocument ast)
     {
@@ -881,9 +895,27 @@ public class MarkdownCte : ContentTypeEngineBase
                 continue;
             }
 
-            renderer ??= MermaidRenderer ?? new MermaidInkRenderer(MermaidServiceUrl);
+            renderer ??= ResolveMermaidRenderer();
             _imageCache[key] = await renderer.RenderAsync(diagram);
         }
+    }
+
+    /// <summary>
+    ///     The renderer the preload uses: an injected <see cref="MermaidRenderer" /> wins; otherwise
+    ///     <see cref="MermaidBackend" /> picks the in-process <see cref="MermaiderRenderer" />
+    ///     (<c>builtin</c>, the default) or the remote <see cref="MermaidInkRenderer" /> (<c>service</c>).
+    ///     Unrecognized backend values fall back to builtin so a config typo never causes network I/O.
+    /// </summary>
+    internal IMermaidRenderer ResolveMermaidRenderer()
+    {
+        if (MermaidRenderer is not null)
+        {
+            return MermaidRenderer;
+        }
+
+        return string.Equals(MermaidBackend, "service", StringComparison.OrdinalIgnoreCase)
+            ? new MermaidInkRenderer(MermaidServiceUrl)
+            : new MermaiderRenderer();
     }
 
     /// <summary>

@@ -104,9 +104,9 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    the sheet explicitly: `click` the **Sheet Definition** `ComboBox` (top of the sidebar), then `click` the
    **Proportional 2-Up** `ListItem` in the dropdown. The preview reflows to prose with a proportional font --
    the "not just source code" beat. `demo.md` is a purpose-built Markdown showcase (~3 printed pages:
-   headings, lists, a table, syntax-highlighted code, an image, and a Mermaid block rendered as a live
-   diagram -- set `renderMermaidDiagrams: true` in the subject's co-located `WinPrint.config.json` first, or
-   the fence prints as code), chosen over `README.md` (now gif-heavy, a wall of images). Dwell ~1.5 s.
+   headings, lists, a table, syntax-highlighted code, an image, and a Mermaid block rendered in-process
+   as a live diagram -- on by default, no config needed), chosen over `README.md` (now gif-heavy, a wall
+   of images). Dwell ~1.5 s.
 10. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Confirm the printer
     is Microsoft Print to PDF** -- WinPrint prints to `viewModel.SelectedPrinter`; if the machine default is
     something else, `query` the sidebar **Printer** `ComboBox`, `click` it, and `click` the **Microsoft Print

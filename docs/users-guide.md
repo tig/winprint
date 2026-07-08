@@ -221,11 +221,12 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting.
 
-2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks can be rendered as diagrams: set `renderMermaidDiagrams` to `true` in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`. This is off by default because diagram source is sent to a rendering service ([mermaid.ink](https://mermaid.ink) unless `mermaidServiceUrl` points at a compatible self-hosted service); when disabled (or if rendering fails) mermaid fences print as regular code blocks.
+2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks print as diagrams by default, rendered entirely in-process (nothing is sent over the network). Diagram types the built-in renderer does not support yet, and diagrams that fail to render, print as regular code blocks. Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"service"` to render via a remote [mermaid.ink](https://mermaid.ink)-compatible service instead (broader diagram-type support, but the diagram source is sent to `mermaidServiceUrl`, so it is opt-in). Note: a `WinPrint.config.json` written by an earlier version may pin `"renderMermaidDiagrams": false`; delete that line (or set it `true`) to get the default.
 
    ```json
        "markdownContentTypeEngineSettings": {
          "renderMermaidDiagrams": true,
+         "mermaidBackend": "builtin",
          "mermaidServiceUrl": "https://mermaid.ink"
        }
    ```

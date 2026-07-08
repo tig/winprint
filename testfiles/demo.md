@@ -184,7 +184,7 @@ And a regular expression, presented without defense:
 A: People who print source code. Both of them. Hi, Dave.
 
 **Q: Does it support Mermaid diagrams?**
-A: Yes. See below. Opt-in, because your diagrams are nobody's business until you say so.
+A: Yes. See below. Rendered right here in the app; your diagrams are nobody's business.
 
 **Q: Is printing dead?**
 A: Yes. This app is a seance.
@@ -196,8 +196,9 @@ technical decision I will die on.
 
 ## Mermaid, which WinPrint supported Real Soon Now (tm) and now just supports
 
-Turn on `renderMermaidDiagrams` and the fenced block below prints as an actual diagram; leave
-it off and it prints as code, exactly as before. The promissory note, paid:
+The fenced block below prints as an actual diagram, laid out and drawn in-process (no browser,
+no cloud); set `renderMermaidDiagrams` to `false` if you liked the code better. The promissory
+note, paid:
 
 ```mermaid
 graph LR
