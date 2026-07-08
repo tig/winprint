@@ -52,32 +52,39 @@ public sealed class PrintCommand : ICliCommand
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        if (options.Arguments.Count == 0)
-        {
-            return new CommandResult(CommandStatus.Error, null, "NoFiles",
-                "Specify at least one file to print, e.g. `wp print Program.cs`.");
-        }
-
-        bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
-        var output = new StringBuilder();
-        int totalSheets = 0;
-
         try
         {
-            foreach (string file in options.Arguments)
+            if (options.Arguments.Count == 0)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                totalSheets += await PrintOneAsync(file, options, whatIf, output).ConfigureAwait(false);
+                return new CommandResult(CommandStatus.Error, null, "NoFiles",
+                    "Specify at least one file to print, e.g. `wp print Program.cs`.");
             }
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
-        {
-            return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name, ex.Message);
-        }
 
-        string verb = whatIf ? "would print" : "printed";
-        output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
-        return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
+            bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
+            var output = new StringBuilder();
+            int totalSheets = 0;
+
+            try
+            {
+                foreach (string file in options.Arguments)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    totalSheets += await PrintOneAsync(file, options, whatIf, output).ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
+            {
+                return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name, ex.Message);
+            }
+
+            string verb = whatIf ? "would print" : "printed";
+            output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
+            return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
+        }
+        finally
+        {
+            HeadlessInlineTeardown.ReserveInlineRegion(app);
+        }
     }
 
     // Loads one file, applies the options, and either prints it or (for --what-if) counts its sheets.
