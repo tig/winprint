@@ -22,7 +22,9 @@ shows Windows and macOS **side by side**.
 show the source file and **zoom in/out** (no pan) → open **`./testfiles/demo.md`** through the
 File dialog (it renders as formatted **Markdown** — the "not just source code" beat) → page
 through it → switch the **Sheet Definition** to **Proportional 1-Up** (single-column reflow) → open
-the **Content Font** dialog and bump the size to **12pt** → page again → **quit** (Esc → *Don't
+the **Content Font** dialog and bump the size to **12pt** → page again → **End** (hold on the
+rendered **Mermaid diagram** on demo.md's last page — needs `renderMermaidDiagrams` enabled, see
+["Enabling the Mermaid beat"](#enabling-the-mermaid-beat)) → Home → **quit** (Esc → *Don't
 Save*). The exact keystroke choreography — button hotkeys (`Alt+F`/`Alt+N`), the Sheet-Definition
 dropdown pick, and the pixel-calibrated Content-Font-dialog clicks — lives in the `--keystrokes`
 string in `scripts/record-hero-gifs.sh`; keep it rich. To open `demo.md` robustly, the choreography
@@ -53,16 +55,39 @@ prompt — the hero answers *Don't Save*.)
    so the preview reflows to single-column prose with a proportional font. This is the "not
    just source code" beat — the same file and sheet the TUI hero uses.
 6. **Print to PDF and open** — print the current document to PDF, save it as
-   `winprintdemo.pdf`, open the result so the loop ends on real printed output.
+   `winprintdemo.pdf`, open the result so the loop ends on real printed output — **ending on the
+   last page's rendered Mermaid diagram** (needs `renderMermaidDiagrams` enabled, see
+   ["Enabling the Mermaid beat"](#enabling-the-mermaid-beat)).
    Windows (MCEC hero): select **Microsoft Print to PDF**, print, save the file, open in Edge.
    macOS (`capture-gui-hero-macos.py`): Cmd+P → **PDF** button in the native print panel →
    **Save as PDF…** → type the path → Return → `open` (Preview); capture the Preview window
-   for the PDF frames.
+   for the PDF frames (page 1 → Page Down → End, holding on the Mermaid page).
 7. **Hold** — linger on the final page so the loop reads cleanly.
 
 Both GUI producers drive the full choreography above (the macOS one was once a weak
 page/page/arrow baseline — don't regress it back). Settings toggles and file-open frames
 linger; the zoom/pan flourish stays fast.
+
+## Enabling the Mermaid beat
+
+`demo.md`'s Mermaid fence only renders as a live diagram when `renderMermaidDiagrams` is `true`
+in `markdownContentTypeEngineSettings` (off by default — the diagram source is sent to a remote
+rendering service, mermaid.ink unless `mermaidServiceUrl` says otherwise, so recording needs
+network). **Seed it before recording or the fence prints as a code block** and the End/last-page
+beats show code instead of a picture. On macOS/Linux winprint runs in **portable mode** — the
+config sits next to the executable, and each subject has its own:
+
+- **TUI (`wp`)**: `src/WinPrint.TUI/bin/Release/net10.0/WinPrint.config.json`
+- **Mac Catalyst GUI**: `WinPrint.app/Contents/MonoBundle/WinPrint.config.json` (inside the
+  built bundle)
+- **Windows (MCEC hero)**: the installed app's co-located config — see
+  [`docs/hero-gif-win.md`](hero-gif-win.md)
+
+Recipe: **run the subject once** (e.g. `wp print testfiles/demo.md --what-if`, or launch + quit
+the GUI) so it writes its full default config, then flip the flag
+(`"renderMermaidDiagrams": true`). Don't hand-author a partial config — the app expects the
+complete default document. The bundle config **survives incremental builds but not clean ones**
+(deleting `bin`/`obj` deletes it) — re-seed after every clean build.
 
 ## Regenerating the Windows GUI hero
 
@@ -79,19 +104,40 @@ hero — it recorded window-only frames without desktop/PDF context.
 Producer: `scripts/capture-gui-hero-macos.py` (there is no macOS equivalent of the
 `run-maui-app` skill — this script + `osascript`/`cliclick`/`screencapture` **is** the Mac
 harness). It drives the full spec above (load → toggle Line Numbers → toggle Landscape → fast
-zoom/pan/reset → open `README.md` as Markdown → **print to PDF → open in Preview** → hold),
-same sample/story as the Windows hero so the two sit side by side in the README. Needs
-`cliclick` (`brew install cliclick`) and an **interactive, unlocked** session with
-Screen-Recording + Accessibility permission.
+zoom/pan/reset → open `testfiles/demo.md` as Markdown + Proportional 1-Up → **print to PDF →
+open in Preview, ending on the Mermaid page** → hold), same sample/story as the Windows hero so
+the two sit side by side in the README. Needs `cliclick` (`brew install cliclick`) and an
+**interactive, unlocked** session with Screen-Recording + Accessibility permission.
 
 ```bash
-# 1. Build the Mac Catalyst app (arm64).
+# 1. CLEAN-build the Mac Catalyst app (arm64). Always clean first: a stale incremental
+#    Mono-AOT build can SIGABRT in load_aot_module at launch, and the capture then dies at
+#    window_rect() ("invalid literal for int() ... ''") because the app never gets a window.
+rm -rf src/WinPrint.Maui/bin src/WinPrint.Maui/obj
 dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Release \
   -f net10.0-maccatalyst -r maccatalyst-arm64 /p:CreatePackage=false /p:EnableCodeSigning=false
 
-# 2. Drive + capture + assemble the GIF (variable per-frame durations are baked in).
+# 2. Seed renderMermaidDiagrams (see "Enabling the Mermaid beat") — the clean build wiped it.
+
+# 3. Drive + capture + assemble the GIF (variable per-frame durations are baked in).
 python3 scripts/capture-gui-hero-macos.py --output docs/hero-gui-mac.gif
 ```
+
+**Pre-flight, every run (crash dialogs photobomb the GIF):** any abnormal winprint exit — a
+crash, or `pkill` of a still-running instance (the capture script leaves the app running when
+done, and the *next* run's cleanup pkills it) — queues a macOS **"winprint quit unexpectedly"**
+alert that floats over the app window and lands in **every captured frame**.
+`killall UserNotificationCenter` does **not** clear them — the process respawns and re-displays
+the queued alerts. Dismiss them by clicking, and quit any leftover instance *gracefully*:
+
+```bash
+osascript -e 'tell application "winprint" to quit'   # graceful — no dialog
+while osascript -e 'tell application "System Events" to tell process
+  "UserNotificationCenter" to click button "Ignore" of window 1' 2>/dev/null; do sleep 1; done
+```
+
+Then **verify the first captured frame** (`artifacts/hero/gui-frames-mac/00-loaded.png`) is
+dialog-free before accepting the GIF.
 
 ### macOS mechanics (the Mac analogs of the Windows gotchas — verify on a Mac)
 
@@ -118,8 +164,9 @@ the real screen), so there's no "force a present" dance — just keep the app **
 - **Open another file:** **Cmd+O** → File ▸ Open…, then **Cmd+Shift+G** for the go-to-folder
   sheet, **type the absolute path with `cliclick t:`**, **Return** (resolve), **Return** (open).
   Use `cliclick` to type — synthetic **Cmd+V doesn't land** in the go-to field, and an `osascript`
-  keystroke of the path loses characters to the `/` autocomplete. Open `README.md` so it renders
-  as Markdown (the "not just source code" beat).
+  keystroke of the path loses characters to the `/` autocomplete. Open `testfiles/demo.md` so it
+  renders as Markdown (the "not just source code" beat; chosen over `README.md`, which is now
+  gif-heavy — a wall of images).
 - **Capture just the window** with `screencapture -x -R<x,y,w,h>` using the window's points rect
   (`osascript … {position, size} of window 1`); `-R` outputs native (Retina ×2) pixels, no
   CGWindowID needed (pyobjc/Quartz isn't installed). Resize to the README hero width (1102) when
@@ -137,7 +184,11 @@ the real screen), so there's no "force a present" dance — just keep the app **
 ## Regenerating the TUI / headless-print heroes
 
 `scripts/record-hero-gifs.sh` regenerates the TUI and print heroes — **on macOS/Linux only**
-(it also invokes the macOS GUI capture when run on macOS).
+(it also invokes the macOS GUI capture when run on macOS). Before recording, seed
+`renderMermaidDiagrams` in `wp`'s co-located `WinPrint.config.json` (and, since the script also
+runs the GUI capture on macOS, in the app bundle's) — see
+["Enabling the Mermaid beat"](#enabling-the-mermaid-beat) — or the TUI hero's End beat shows a
+code block instead of the diagram.
 
 ### Theming the hero (`TUI_CONFIG`)
 
