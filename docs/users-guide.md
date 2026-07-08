@@ -41,6 +41,12 @@ Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-t
 wp print README.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
 ```
 
+Or skip the printer entirely; `--pdf` writes the PDF straight to a file on every platform (no printer, no driver, no save dialog):
+
+```bash
+wp print README.md --pdf readme.pdf --sheet "Proportional 1-Up"
+```
+
 Check the installed version:
 
 ```bash
@@ -66,6 +72,12 @@ wp print Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
 wp print *.cs --landscape
 wp print Program.cs --what-if
 ```
+
+`--printer` names an OS print queue, so to print **to a PDF file** point it at your platform's print-to-PDF target:
+
+- **Windows** — the built-in **Microsoft Print to PDF**; a Save-As dialog chooses the file.
+- **macOS** — install a virtual PDF printer once with [RWTS PDFwriter](https://github.com/rodyager/RWTS-PDFwriter): `brew install --cask rwts-pdfwriter`, then add it in **Printers & Scanners** (name it e.g. `CUPS-PDF`). Printed PDFs land in `/var/spool/pdfwriter/$USER/`. (`brew install cups-pdf` does **not** exist on macOS — that is a Linux package.)
+- **Linux** — `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu; the queue is named `PDF` — confirm with `lpstat -p`) or `sudo dnf install cups-pdf` (Fedora). Printed PDFs land in `~/PDF/`.
 
 Launch the GUI:
 
@@ -103,7 +115,7 @@ apply everywhere:
 | `--content-type` | `-e` | Content type engine / language override (e.g. `text/plain`, `text/html`, or a `<language>`). |
 
 Front ends add their own *appropriate* extras: the interactive TUI adds `--view`, `--width`,
-`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing); and the
+`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing) and `--pdf <file>` (write a PDF file instead of printing); and the
 GUI launches through the separate `wp gui` command. The `wp` command line also provides `--help`,
 `--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 

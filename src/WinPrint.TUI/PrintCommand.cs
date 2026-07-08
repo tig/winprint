@@ -4,6 +4,7 @@ using Terminal.Gui.Cli;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
+using WinPrint.Core.Printing;
 
 namespace WinPrint.TUI;
 
@@ -12,9 +13,11 @@ namespace WinPrint.TUI;
 ///     TUI. It loads each file and applies the shared print options through the same
 ///     <c>AppViewModel.ApplyOptions</c> / <see cref="PrintOrchestrator" /> path the interactive UI
 ///     uses, so headless output matches the preview. <c>--what-if</c> reports the sheet count without
-///     touching a printer.
+///     touching a printer; <c>--pdf &lt;file&gt;</c> writes a PDF file instead of printing (no printer
+///     involved on any platform; named <c>--pdf</c> because the host owns <c>--output</c> for
+///     redirecting a command's text output).
 /// </summary>
-public sealed class PrintCommand : ICliCommand
+public sealed class PrintCommand : IHeadlessCliCommand
 {
     /// <inheritdoc />
     public string PrimaryAlias => "print";
@@ -40,61 +43,81 @@ public sealed class PrintCommand : ICliCommand
     [
         .. WinPrintOptions.Shared.Select(o =>
             new CommandOptionDescriptor(o.Name, o.Short?.ToString(), o.ValueType, o.Help, false, null)),
-        new("what-if", "w", typeof(bool), "Report how many sheets would print, without printing.", false, null)
+        new("what-if", "w", typeof(bool), "Report how many sheets would print, without printing.", false, null),
+        new("pdf", null, typeof(string),
+            "Write the output to a PDF file instead of printing (no printer involved).", false, null)
     ];
 
     /// <inheritdoc />
-    public async Task<CommandResult> RunAsync(
+    public Task<CommandResult> RunAsync(
         IApplication app,
         string? initial,
         CommandRunOptions options,
         CancellationToken cancellationToken)
     {
+        return RunHeadlessAsync(options, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CommandResult> RunHeadlessAsync(
+        CommandRunOptions options,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(options);
+
+        if (options.Arguments.Count == 0)
+        {
+            return new CommandResult(CommandStatus.Error, null, "NoFiles",
+                "Specify at least one file to print, e.g. `wp print Program.cs`.");
+        }
+
+        bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
+        string? pdfPath = CommandOptionsBinder.GetString(options, "pdf");
+        if (pdfPath is not null)
+        {
+            if (CommandOptionsBinder.GetString(options, "printer") is not null)
+            {
+                return new CommandResult(CommandStatus.Error, null, "PdfAndPrinter",
+                    "--pdf writes a file instead of printing; it cannot be combined with --printer.");
+            }
+
+            if (options.Arguments.Count > 1)
+            {
+                return new CommandResult(CommandStatus.Error, null, "PdfOneFile",
+                    "--pdf writes one PDF; specify exactly one input file.");
+            }
+        }
+
+        var output = new StringBuilder();
+        int totalSheets = 0;
 
         try
         {
-            if (options.Arguments.Count == 0)
+            foreach (string file in options.Arguments)
             {
-                return new CommandResult(CommandStatus.Error, null, "NoFiles",
-                    "Specify at least one file to print, e.g. `wp print Program.cs`.");
+                cancellationToken.ThrowIfCancellationRequested();
+                totalSheets += await PrintOneAsync(file, options, whatIf, pdfPath, output).ConfigureAwait(false);
             }
-
-            bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
-            var output = new StringBuilder();
-            int totalSheets = 0;
-
-            try
-            {
-                foreach (string file in options.Arguments)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    totalSheets += await PrintOneAsync(file, options, whatIf, output).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
-            {
-                return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name,
-                    ex.Message);
-            }
-
-            string verb = whatIf ? "would print" : "printed";
-            output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
-            return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
         }
-        finally
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            HeadlessInlineTeardown.ReserveInlineRegion(app);
+            return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name, ex.Message);
         }
+
+        string verb = whatIf ? "would print" : "printed";
+        output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
+        return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
     }
 
-    // Loads one file, applies the options, and either prints it or (for --what-if) counts its sheets.
-    // Returns the number of sheets printed / that would print, and appends a per-file line to output.
+    // Loads one file, applies the options, and either prints it, writes it to a PDF (--pdf), or
+    // (for --what-if) counts its sheets. Returns the number of sheets printed / that would print,
+    // and appends a per-file line to output.
     private static async Task<int> PrintOneAsync(
-        string file, CommandRunOptions options, bool whatIf, StringBuilder output)
+        string file, CommandRunOptions options, bool whatIf, string? pdfPath, StringBuilder output)
     {
         var bound = CommandOptionsBinder.ToOptions(options, [file]);
-        var context = SettingsContext.Create(bound);
+        var context = SettingsContext.Create(bound,
+            pdfPath is null ? null : new PdfFilePrintService(pdfPath));
 
         if (!await context.App.LoadFileAsync(file).ConfigureAwait(false))
         {
@@ -114,7 +137,9 @@ public sealed class PrintCommand : ICliCommand
             throw new InvalidOperationException($"{file}: {result.Error ?? "print failed."}");
         }
 
-        output.AppendLine($"{file}: printed {result.SheetsPrinted} sheet(s).");
+        output.AppendLine(pdfPath is null
+            ? $"{file}: printed {result.SheetsPrinted} sheet(s)."
+            : $"{file}: wrote {result.SheetsPrinted} sheet(s) to {Path.GetFullPath(pdfPath)}.");
         return result.SheetsPrinted;
     }
 }

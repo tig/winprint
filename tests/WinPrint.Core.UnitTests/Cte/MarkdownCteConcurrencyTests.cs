@@ -54,9 +54,9 @@ public class MarkdownCteConcurrencyTests
         MarkdownCte cte = MakeCte();
         cte.RenderMermaidDiagrams = true;
         // The delay keeps every render parked on an await mid-build, maximizing overlap.
-        cte.MermaidRenderer = new DelayingMermaidRenderer(FakePng, delayMs: 25);
+        cte.MermaidRenderer = new DelayingMermaidRenderer(FakePng, 25);
 
-        string md = BuildDocument(paragraphs: 40);
+        string md = BuildDocument(40);
         Assert.True(await cte.SetDocumentAsync(md));
 
         int expected = await cte.RenderAsync(Dpi96, null);
