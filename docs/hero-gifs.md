@@ -47,14 +47,20 @@ prompt — the hero answers *Don't Save*.)
 4. **Zoom in → pan → reset** — zoom into the page (the zoom-% indicator should read e.g.
    `200%`), pan around, then return to fit. **Keep this part FAST** — short frame durations,
    no lingering — so it reads as a snappy flourish, not a slow crawl.
-5. **Open another file** — use the File button + Open dialog to load a *different* document
-   (the Windows producer opens `README.md`, which renders as formatted **Markdown** — a nice
-   "not just source code" beat).
-6. **Print to PDF and open** — Windows only (MCEC hero): select **Microsoft Print to PDF**, print,
-   save `winprintdemo.pdf`, open the PDF so the loop ends on a real document output.
+5. **Open `testfiles/demo.md` and switch to Proportional 1-Up** — open the
+   purpose-built Markdown showcase (`demo.md`: headings, lists, a table, code blocks, an
+   image, a Mermaid block), then change the Sheet Definition picker to **Proportional 1-Up**
+   so the preview reflows to single-column prose with a proportional font. This is the "not
+   just source code" beat — the same file and sheet the TUI hero uses.
+6. **Print to PDF and open** — print the current document to PDF, save it as
+   `winprintdemo.pdf`, open the result so the loop ends on real printed output.
+   Windows (MCEC hero): select **Microsoft Print to PDF**, print, save the file, open in Edge.
+   macOS (`capture-gui-hero-macos.py`): Cmd+P → **PDF** button in the native print panel →
+   **Save as PDF…** → type the path → Return → `open` (Preview); capture the Preview window
+   for the PDF frames.
 7. **Hold** — linger on the final page so the loop reads cleanly.
 
-Both GUI producers now drive the full choreography above (the macOS one was once a weak
+Both GUI producers drive the full choreography above (the macOS one was once a weak
 page/page/arrow baseline — don't regress it back). Settings toggles and file-open frames
 linger; the zoom/pan flourish stays fast.
 
@@ -73,9 +79,10 @@ hero — it recorded window-only frames without desktop/PDF context.
 Producer: `scripts/capture-gui-hero-macos.py` (there is no macOS equivalent of the
 `run-maui-app` skill — this script + `osascript`/`cliclick`/`screencapture` **is** the Mac
 harness). It drives the full spec above (load → toggle Line Numbers → toggle Landscape → fast
-zoom/pan/reset → open `README.md` as Markdown → hold), same sample/story as the Windows hero so
-the two sit side by side in the README. Needs `cliclick` (`brew install cliclick`) and an
-**interactive, unlocked** session with Screen-Recording + Accessibility permission.
+zoom/pan/reset → open `README.md` as Markdown → **print to PDF → open in Preview** → hold),
+same sample/story as the Windows hero so the two sit side by side in the README. Needs
+`cliclick` (`brew install cliclick`) and an **interactive, unlocked** session with
+Screen-Recording + Accessibility permission.
 
 ```bash
 # 1. Build the Mac Catalyst app (arm64).
@@ -117,6 +124,15 @@ the real screen), so there's no "force a present" dance — just keep the app **
   (`osascript … {position, size} of window 1`); `-R` outputs native (Retina ×2) pixels, no
   CGWindowID needed (pyobjc/Quartz isn't installed). Resize to the README hero width (1102) when
   assembling.
+- **Print to PDF:** **Cmd+P** → `UIPrintInteractionController.Present()` bridges to the native
+  **NSPrintPanel**. The panel may appear as a sheet on `window 1` or as a floating window
+  depending on macOS version. The script uses an AppleScript loop over all process windows to
+  find and click the **PDF** popup button, then selects **Save as PDF…**, types the path with
+  `cliclick t:`, and presses Return. After the PDF is written, `open <path>` launches Preview.
+  The Preview window bounds are read via System Events and captured with `screencapture -R` for
+  the PDF frames. Close Preview after capturing so its file lock doesn't block the next run's
+  delete of `winprintdemo.pdf`. The `--pdf-out` flag sets the destination (default:
+  `~/Documents/winprintdemo.pdf`).
 
 ## Regenerating the TUI / headless-print heroes
 
