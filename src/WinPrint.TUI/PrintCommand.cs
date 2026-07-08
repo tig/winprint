@@ -14,7 +14,7 @@ namespace WinPrint.TUI;
 ///     uses, so headless output matches the preview. <c>--what-if</c> reports the sheet count without
 ///     touching a printer.
 /// </summary>
-public sealed class PrintCommand : ICliCommand
+public sealed class PrintCommand : IHeadlessCliCommand
 {
     /// <inheritdoc />
     public string PrimaryAlias => "print";
@@ -44,48 +44,48 @@ public sealed class PrintCommand : ICliCommand
     ];
 
     /// <inheritdoc />
-    public async Task<CommandResult> RunAsync(
+    public Task<CommandResult> RunAsync(
         IApplication app,
         string? initial,
         CommandRunOptions options,
         CancellationToken cancellationToken)
     {
+        return RunHeadlessAsync(options, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CommandResult> RunHeadlessAsync(
+        CommandRunOptions options,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(options);
+
+        if (options.Arguments.Count == 0)
+        {
+            return new CommandResult(CommandStatus.Error, null, "NoFiles",
+                "Specify at least one file to print, e.g. `wp print Program.cs`.");
+        }
+
+        bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
+        var output = new StringBuilder();
+        int totalSheets = 0;
 
         try
         {
-            if (options.Arguments.Count == 0)
+            foreach (string file in options.Arguments)
             {
-                return new CommandResult(CommandStatus.Error, null, "NoFiles",
-                    "Specify at least one file to print, e.g. `wp print Program.cs`.");
+                cancellationToken.ThrowIfCancellationRequested();
+                totalSheets += await PrintOneAsync(file, options, whatIf, output).ConfigureAwait(false);
             }
-
-            bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
-            var output = new StringBuilder();
-            int totalSheets = 0;
-
-            try
-            {
-                foreach (string file in options.Arguments)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    totalSheets += await PrintOneAsync(file, options, whatIf, output).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
-            {
-                return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name,
-                    ex.Message);
-            }
-
-            string verb = whatIf ? "would print" : "printed";
-            output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
-            return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
         }
-        finally
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
-            HeadlessInlineTeardown.ReserveInlineRegion(app);
+            return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name, ex.Message);
         }
+
+        string verb = whatIf ? "would print" : "printed";
+        output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
+        return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
     }
 
     // Loads one file, applies the options, and either prints it or (for --what-if) counts its sheets.
