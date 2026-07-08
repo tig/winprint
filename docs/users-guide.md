@@ -221,7 +221,7 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting.
 
-2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks can be rendered as diagrams: set `renderMermaidDiagrams` to `true` in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`. This is off by default because diagram source is sent to a rendering service ([mermaid.ink](https://mermaid.ink) unless `mermaidServiceUrl` points at a compatible self-hosted service); when disabled — or if rendering fails — mermaid fences print as regular code blocks.
+2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks can be rendered as diagrams: set `renderMermaidDiagrams` to `true` in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`. This is off by default because diagram source is sent to a rendering service ([mermaid.ink](https://mermaid.ink) unless `mermaidServiceUrl` points at a compatible self-hosted service); when disabled (or if rendering fails) mermaid fences print as regular code blocks.
 
    ```json
        "markdownContentTypeEngineSettings": {

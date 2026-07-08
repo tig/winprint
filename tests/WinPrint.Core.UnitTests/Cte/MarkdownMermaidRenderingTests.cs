@@ -1,6 +1,7 @@
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.ContentTypeEngines;
 using WinPrint.Core.Models;
+using WinPrint.Core.Services;
 using WinPrint.Core.UnitTests.TestSupport;
 using Xunit;
 using Font = WinPrint.Core.Models.Font;
@@ -150,6 +151,35 @@ public class MarkdownMermaidRenderingTests
 
         Assert.Empty(stub.Diagrams);
         Assert.Empty(paint.DrawnImages);
+    }
+
+    [Fact]
+    public void CreateContentTypeEngine_AppliesPersistedMermaidSettings()
+    {
+        // Regression: the normal load path (SheetViewModel -> CreateContentTypeEngine -> registry)
+        // must pick up markdownContentTypeEngineSettings from WinPrint.config.json; before the
+        // ApplyPersistedEngineSettings wiring, only the never-called Create() factory did.
+        MarkdownCte persisted = WinPrintServices.Current.Settings.MarkdownContentTypeEngineSettings;
+        bool savedRender = persisted.RenderMermaidDiagrams;
+        string savedUrl = persisted.MermaidServiceUrl;
+        try
+        {
+            persisted.RenderMermaidDiagrams = true;
+            persisted.MermaidServiceUrl = "https://kroki.example.com";
+
+            (ContentTypeEngineBase? cte, string languageId, _) =
+                ContentTypeEngineBase.CreateContentTypeEngine("text/x-markdown");
+
+            MarkdownCte markdown = Assert.IsType<MarkdownCte>(cte);
+            Assert.Equal("text/x-markdown", languageId);
+            Assert.True(markdown.RenderMermaidDiagrams);
+            Assert.Equal("https://kroki.example.com", markdown.MermaidServiceUrl);
+        }
+        finally
+        {
+            persisted.RenderMermaidDiagrams = savedRender;
+            persisted.MermaidServiceUrl = savedUrl;
+        }
     }
 
     [Fact]

@@ -83,10 +83,10 @@ public class MarkdownCte : ContentTypeEngineBase
 
     /// <summary>
     ///     When false (the default), <c>```mermaid</c> fences render as plain code blocks. When true,
-    ///     each fence is rendered to an image via <see cref="MermaidRenderer" /> — by default the remote
-    ///     mermaid.ink-compatible service at <see cref="MermaidServiceUrl" />, which means the diagram
-    ///     source is sent to that service (off by default for the same reason as
-    ///     <see cref="HtmlCte.AllowRemoteResources" />).
+    ///     each fence is rendered to an image via <see cref="MermaidRenderer" /> (by default the remote
+    ///     mermaid.ink-compatible service at <see cref="MermaidServiceUrl" />), which means the diagram
+    ///     source is sent to that service; off by default for the same reason as
+    ///     <see cref="HtmlCte.AllowRemoteResources" />.
     /// </summary>
     public bool RenderMermaidDiagrams { get; set; }
 
@@ -96,13 +96,6 @@ public class MarkdownCte : ContentTypeEngineBase
     /// <summary>Diagram renderer override (tests / alternate backends); null uses <see cref="MermaidInkRenderer" />.</summary>
     [JsonIgnore]
     public IMermaidRenderer? MermaidRenderer { get; set; }
-
-    public static MarkdownCte Create()
-    {
-        var engine = new MarkdownCte();
-        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.MarkdownContentTypeEngineSettings);
-        return engine;
-    }
 
     public override void CopyPropertiesFrom(ModelBase? source)
     {
