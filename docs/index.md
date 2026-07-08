@@ -19,6 +19,12 @@ Advanced source code and text file printing for terminals (all platforms) and Wi
   <img height="330" alt="WinPrint GUI on macOS" src="hero-gui-mac.gif" />
 </p>
 
+### Markdown, printed properly
+
+![Markdown with mermaid diagrams in the print preview](mermaid.gif)
+
+*Markdown prints as a formatted document: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud).*
+
 ## Quick Start
 
 ```bash
@@ -48,7 +54,7 @@ wp gui
 
 * Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
-* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, and inline images).
+* Prints Markdown files as formatted documents: headings, lists, tables, blockquotes, code blocks, inline images, and mermaid diagrams rendered in-process.
 * Prints ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.

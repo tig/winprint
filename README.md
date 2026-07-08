@@ -26,7 +26,13 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 ### MacOS GUI
 
   <img height="330" alt="WinPrint GUI on macOS" src="docs/hero-gui-mac.gif" />
-  
+
+### Markdown, printed properly
+
+<img width="700" alt="Markdown with mermaid diagrams in the print preview" src="docs/mermaid.gif" />
+
+*Markdown prints as a formatted document: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud). Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per diagram type.*
+
 ## Installation
 
 ### Windows
@@ -77,7 +83,7 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 
 * Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
-* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, mermaid disgrams, and inline images).
+* Prints Markdown files as formatted documents: headings, lists, tables, blockquotes, code blocks, inline images, and mermaid diagrams rendered in-process.
 * Prints ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
