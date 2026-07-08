@@ -184,7 +184,7 @@ And a regular expression, presented without defense:
 A: People who print source code. Both of them. Hi, Dave.
 
 **Q: Does it support Mermaid diagrams?**
-A: Not *yet*. See below. It is on the list, right under "learn my lesson."
+A: Yes. See below. Opt-in, because your diagrams are nobody's business until you say so.
 
 **Q: Is printing dead?**
 A: Yes. This app is a seance.
@@ -194,10 +194,10 @@ A: Because I know C# well and it is awesome, and because no other modern languag
 can even SPELL "print". I tried Electron and Flutter. Both suck at printing. This is the one
 technical decision I will die on.
 
-## Mermaid, which WinPrint will support Real Soon Now (tm)
+## Mermaid, which WinPrint supported Real Soon Now (tm) and now just supports
 
-WinPrint does not render Mermaid diagrams *yet*, so a good renderer shows the fenced block as
-code and a great one will one day draw the picture. Consider this a promissory note:
+Turn on `renderMermaidDiagrams` and the fenced block below prints as an actual diagram; leave
+it off and it prints as code, exactly as before. The promissory note, paid:
 
 ```mermaid
 graph LR

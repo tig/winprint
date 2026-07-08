@@ -104,8 +104,9 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    the sheet explicitly: `click` the **Sheet Definition** `ComboBox` (top of the sidebar), then `click` the
    **Proportional 2-Up** `ListItem` in the dropdown. The preview reflows to prose with a proportional font --
    the "not just source code" beat. `demo.md` is a purpose-built Markdown showcase (~3 printed pages:
-   headings, lists, a table, syntax-highlighted code, an image, a Mermaid block WinPrint renders as code),
-   chosen over `README.md` (now gif-heavy, a wall of images). Dwell ~1.5 s.
+   headings, lists, a table, syntax-highlighted code, an image, and a Mermaid block rendered as a live
+   diagram -- set `renderMermaidDiagrams: true` in the subject's co-located `WinPrint.config.json` first, or
+   the fence prints as code), chosen over `README.md` (now gif-heavy, a wall of images). Dwell ~1.5 s.
 10. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Confirm the printer
     is Microsoft Print to PDF** -- WinPrint prints to `viewModel.SelectedPrinter`; if the machine default is
     something else, `query` the sidebar **Printer** `ComboBox`, `click` it, and `click` the **Microsoft Print
@@ -115,7 +116,13 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
 11. **Open, show, and scroll the printed PDF (final beat).** Open `winprintdemo.pdf` in the browser (the
     default handler is Edge) so the loop ends on a real document output; maximize it so the PDF fills the
     frame, click the page to focus it, then `key_pagedown` a few times to **scroll through the whole ~3-page
-    doc**, holding briefly at the end. Then **stop and write the GIF:**
+    doc**, holding at the end on the Mermaid diagram atop page 3. Edge is the flaky beat; drive it
+    deterministically: find its window with `windows { "process": "msedge", "window": "winprintdemo" }` (a
+    bare title filter can match WinPrint's own window), click **inside its reported bounds** and `win-up`,
+    then **re-query until the bounds confirm it is maximized** -- `key_pagedown` scrolls one *viewport*, so a
+    half-height window scrolls half-pages and the beat lands mid-document. Edge also reopens the PDF at the
+    last-read page with a "Pick up where you left off" popup: send `esc` to dismiss it and `ctrl-home` to
+    force page 1 before scrolling. Then **stop and write the GIF:**
     `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }` (absolute path -- a
     relative one lands in the controller's temp copy and is lost). Assert `result.frames` (~45) and
     `result.bytes` (~4-5 MB). After the stop, close the PDF **tab** with `ctrl-f4` (not the whole browser).
@@ -138,7 +145,8 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
 
 Spot-check keyframes (extract with the snippet in mcec's `hero-gif.md`). Confirm the story is legible: the
 2-up landscape load, the Line Numbers gutter toggling, the Landscape reflow to portrait and back, the
-`README.md` Markdown render, and the save-to-PDF dialog. It must sit convincingly beside `hero-gui-mac.gif`
+`demo.md` Markdown render, the save-to-PDF dialog, and the closing hold on the rendered Mermaid diagram in
+the browser. It must sit convincingly beside `hero-gui-mac.gif`
 in the README (same sample, same story, matched width). Commit `docs/hero-gui-win.gif` on the operator's
 say-so.
 

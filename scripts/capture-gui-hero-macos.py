@@ -381,6 +381,11 @@ def main() -> int:
                 osa('tell application "System Events" to tell process "Preview" to key code 121')
                 time.sleep(0.5)
                 shot_rect("pdf-page2", 1200, px, py, pw, ph)
+                # End on the last page: the rendered Mermaid diagram atop demo.md's final page —
+                # the beat the Windows hero also closes on (docs/hero-gif-win.md step 11).
+                osa('tell application "System Events" to tell process "Preview" to key code 119')
+                time.sleep(0.5)
+                shot_rect("pdf-mermaid", 1800, px, py, pw, ph)
                 # Close Preview so its file lock doesn't block the next run's delete.
                 run(["osascript", "-e", 'tell application "Preview" to close window 1'])
             else:

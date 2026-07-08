@@ -51,13 +51,6 @@ public class HtmlCte : ContentTypeEngineBase, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public static HtmlCte Create()
-    {
-        var content = new HtmlCte();
-        content.CopyPropertiesFrom(WinPrintServices.Current.Settings.HtmlContentTypeEngineSettings);
-        return content;
-    }
-
     public override void CopyPropertiesFrom(ModelBase? source)
     {
         base.CopyPropertiesFrom(source);

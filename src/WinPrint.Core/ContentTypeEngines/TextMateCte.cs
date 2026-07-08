@@ -41,13 +41,6 @@ public class TextMateCte : ContentTypeEngineBase, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public static TextMateCte Create()
-    {
-        var engine = new TextMateCte();
-        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.TextMateContentTypeEngineSettings);
-        return engine;
-    }
-
     public void Configure(string? contentType, string? language, string? filePath)
     {
         ContentType = contentType;

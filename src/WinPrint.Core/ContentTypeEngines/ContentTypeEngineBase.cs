@@ -221,6 +221,38 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
     public abstract void PaintPage(IGraphicsContext g, int pageNum);
 
     /// <summary>
+    ///     Applies the per-engine settings persisted in <see cref="Settings" /> (e.g.
+    ///     <c>markdownContentTypeEngineSettings</c> in <c>WinPrint.config.json</c>) to a freshly
+    ///     created engine. <see cref="ContentTypeEngineRegistry" /> factories produce bare instances,
+    ///     so every engine returned by <see cref="CreateContentTypeEngine" /> passes through here;
+    ///     otherwise user-configured engine settings would silently stay at their defaults.
+    /// </summary>
+    private static ContentTypeEngineBase? ApplyPersistedEngineSettings(ContentTypeEngineBase? cte)
+    {
+        Settings settings = WinPrintServices.Current.Settings;
+        switch (cte)
+        {
+            case MarkdownCte markdown:
+                markdown.CopyPropertiesFrom(settings.MarkdownContentTypeEngineSettings);
+                break;
+            case HtmlCte html:
+                html.CopyPropertiesFrom(settings.HtmlContentTypeEngineSettings);
+                break;
+            case AnsiCte ansi:
+                ansi.CopyPropertiesFrom(settings.AnsiContentTypeEngineSettings);
+                break;
+            case TextMateCte textMate:
+                textMate.CopyPropertiesFrom(settings.TextMateContentTypeEngineSettings);
+                break;
+            case TextCte text:
+                text.CopyPropertiesFrom(settings.TextContentTypeEngineSettings);
+                break;
+        }
+
+        return cte;
+    }
+
+    /// <summary>
     ///     Creates the appropriate Content Type Engine instance given a content type string.
     /// </summary>
     /// <param name="contentType"></param>
@@ -247,7 +279,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             languageId = cte.SupportedContentTypes[0];
             language = WinPrintServices.Current.FileTypeMapping.ContentTypes.FirstOrDefault(lang =>
                 lang.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))?.Title ?? languageId;
-            return (cte, languageId, language);
+            return (ApplyPersistedEngineSettings(cte), languageId, language);
         }
 
         //  {
@@ -273,7 +305,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             cte = GetDerivedClassesCollection().FirstOrDefault(c => c.SupportedContentTypes.Contains(extension.Id));
             if (cte != null)
             {
-                return (cte, extension.Id, extension.Title);
+                return (ApplyPersistedEngineSettings(cte), extension.Id, extension.Title);
             }
 
             // It is a language. Needs to be Syntax Highlighted. Use the default Syntax Highlighter CTE
@@ -326,7 +358,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
 
                 if (cte != null)
                 {
-                    return (cte, languageId,
+                    return (ApplyPersistedEngineSettings(cte), languageId,
                         WinPrintServices.Current.FileTypeMapping.ContentTypes.FirstOrDefault(l =>
                             l.Id.Equals(languageId, StringComparison.OrdinalIgnoreCase))!.Title);
                 }
@@ -358,7 +390,7 @@ public abstract class ContentTypeEngineBase : ModelBase, INotifyPropertyChanged
             //}
         }
 
-        return (cte, languageId, language);
+        return (ApplyPersistedEngineSettings(cte), languageId, language);
     }
 
     /// <summary>
