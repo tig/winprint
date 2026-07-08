@@ -32,9 +32,8 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     URLs are supported. Anything that fails to load (and inline images mixed with text) falls back
 ///     to alt text. When <see cref="RenderMermaidDiagrams" /> is enabled (the default),
 ///     <c>```mermaid</c> fences are rendered to images via <see cref="MermaidRenderer" /> (by default
-///     the in-process <see cref="MermaiderRenderer" />); set <see cref="MermaidBackend" /> to
-///     <c>service</c> for the remote mermaid.ink-compatible service at
-///     <see cref="MermaidServiceUrl" />. A diagram that fails to render falls back to a plain code
+///     the remote `service` at <see cref="MermaidServiceUrl" />); set <see cref="MermaidBackend" /> to
+///     <c>"builtin"</c> for the in-process Mermaider renderer. A diagram that fails to render falls back to a plain code
 ///     block.
 /// </summary>
 public class MarkdownCte : ContentTypeEngineBase
@@ -102,23 +101,24 @@ public class MarkdownCte : ContentTypeEngineBase
 
     /// <summary>
     ///     When true (the default), each <c>```mermaid</c> fence is rendered to an image via
-    ///     <see cref="MermaidRenderer" />; when false, fences render as plain code blocks. On by
-    ///     default because the default backend (<see cref="MermaiderRenderer" />) renders entirely
-    ///     in-process; nothing is sent anywhere unless <see cref="MermaidBackend" /> is switched to
-    ///     the remote service.
+    ///     <see cref="MermaidRenderer" />; when false, fences render as plain code blocks.
+    ///     The default backend is the remote <c>service</c> (mermaid.ink-compatible), which
+    ///     sends the diagram source over the network (same privacy consideration as
+    ///     <see cref="HtmlCte.AllowRemoteResources" />). Set to <c>false</c> to opt out entirely,
+    ///     or switch <see cref="MermaidBackend"/> to <c>"builtin"</c> for fully in-process rendering.
     /// </summary>
     public bool RenderMermaidDiagrams { get; set; } = true;
 
     /// <summary>
     ///     Selects the diagram backend when no <see cref="MermaidRenderer" /> is injected:
-    ///     <c>builtin</c> (the default) renders in-process via <see cref="MermaiderRenderer" />;
-    ///     <c>service</c> renders via the remote mermaid.ink-compatible service at
-    ///     <see cref="MermaidServiceUrl" />, which sends the diagram source to that service (the same
-    ///     consideration as <see cref="HtmlCte.AllowRemoteResources" />, so it is opt-in). The remote
-    ///     service supports more diagram types than the builtin renderer; builtin failures fall back
-    ///     to a code block, never silently to the network.
+    ///     <c>service</c> (the default) renders via the remote mermaid.ink-compatible service at
+    ///     <see cref="MermaidServiceUrl" /> (diagram source is sent; same privacy consideration as
+    ///     <see cref="HtmlCte.AllowRemoteResources" />); <c>builtin</c> renders in-process via
+    ///     <see cref="MermaiderRenderer" /> (private, but supports fewer types and some syntax
+    ///     variants are rejected). Unknown values safely fall back to <c>builtin</c> (never
+    ///     network). Failures from either backend fall back to a plain code block.
     /// </summary>
-    public string MermaidBackend { get; set; } = "builtin";
+    public string MermaidBackend { get; set; } = "service";
 
     /// <summary>Base URL of the mermaid.ink-compatible service used when <see cref="MermaidBackend" /> is <c>service</c>.</summary>
     public string MermaidServiceUrl { get; set; } = "https://mermaid.ink";
@@ -155,30 +155,26 @@ public class MarkdownCte : ContentTypeEngineBase
         }
 
         ArgumentNullException.ThrowIfNull(printerResolution);
+        int dpiX = printerResolution.X;
         int dpiY = printerResolution.Y;
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || printerResolution.X < 0 || dpiY < 0)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0)
         {
-            dpiY = 96;
+            dpiX = dpiY = 96;
         }
 
+        _dpiY = dpiY;
         // Fresh build instances: the previous render's lines/cache stay published (and safe to
         // paint) until this render completes — never mutate what PaintPage may be enumerating.
         _lines = [];
         _imageCache = new Dictionary<string, byte[]?>(StringComparer.Ordinal);
 
-        // GDI's Display page unit means 1/100" on a printer DC but device pixels on the reflow
-        // bitmap, and Point-unit fonts scale with the bitmap's DPI while Pixel-unit fonts do not.
-        // Resolve the default reflow context at 100 DPI so Point-font metrics come out 1:1 with
-        // the printer's Display units; measuring at the printer's DPI made reflow ~4% narrower
-        // than paint, which clipped line tails at the right margin ("...to catch regress").
-        IGraphicsContext g = ResolveMeasurementContext(100, 100, out IDisposable? owner);
-        _dpiY = g.IsDisplayUnit ? 100 : dpiY;
+        IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
         var fontCache = new Dictionary<string, IGraphicsFont>();
         try
         {
             g.SetTextRenderingMode(GraphicsTextRenderingMode);
             _baseSizePx = ContentSettings!.Font.Size / 72F * 96F;
-            _baseLineHeight = GetFont(g, fontCache, 1f, GraphicsFontStyle.Regular).GetHeight(_dpiY);
+            _baseLineHeight = GetFont(g, fontCache, 1f, GraphicsFontStyle.Regular).GetHeight(dpiY);
             _indentStep = _baseSizePx * 1.6f;
 
             if (PageSize.Height < _baseLineHeight)
@@ -674,10 +670,15 @@ public class MarkdownCte : ContentTypeEngineBase
                         continue;
                     }
 
+                    bool firstInCell = true;
                     foreach (MarkdownRun run in cellLines[c][k].Runs)
                     {
-                        // Cell wraps run at indent 0; rebase every run onto its column.
-                        run.X = edges[c] + pad + (run.X ?? 0f);
+                        if (firstInCell)
+                        {
+                            run.X = edges[c] + pad;
+                            firstInCell = false;
+                        }
+
                         rowLine.Runs.Add(run);
                     }
                 }
@@ -901,9 +902,10 @@ public class MarkdownCte : ContentTypeEngineBase
 
     /// <summary>
     ///     The renderer the preload uses: an injected <see cref="MermaidRenderer" /> wins; otherwise
-    ///     <see cref="MermaidBackend" /> picks the in-process <see cref="MermaiderRenderer" />
-    ///     (<c>builtin</c>, the default) or the remote <see cref="MermaidInkRenderer" /> (<c>service</c>).
-    ///     Unrecognized backend values fall back to builtin so a config typo never causes network I/O.
+    ///     <see cref="MermaidBackend" /> picks the remote <see cref="MermaidInkRenderer" />
+    ///     (<c>service</c>, the default) or the in-process <see cref="MermaiderRenderer" />
+    ///     (<c>builtin</c>). Unrecognized backend values fall back to builtin so a config typo
+    ///     never causes network I/O.
     /// </summary>
     internal IMermaidRenderer ResolveMermaidRenderer()
     {
@@ -1224,7 +1226,6 @@ public class MarkdownCte : ContentTypeEngineBase
                     continue; // drop leading space
                 }
 
-                tok.X = line.Indent + x;
                 line.Runs.Add(tok);
                 x += w;
                 maxHeight = Math.Max(maxHeight, h);
@@ -1259,7 +1260,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
                     string piece = remaining[..fit];
                     line.Runs.Add(new MarkdownRun
-                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color, X = line.Indent + x });
+                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color });
                     x += Measure(g, piece, font).Width;
                     maxHeight = Math.Max(maxHeight, h);
                     any = true;
@@ -1273,7 +1274,6 @@ public class MarkdownCte : ContentTypeEngineBase
                 continue;
             }
 
-            tok.X = line.Indent + x;
             line.Runs.Add(tok);
             x += w;
             maxHeight = Math.Max(maxHeight, h);
@@ -1328,11 +1328,7 @@ public class MarkdownCte : ContentTypeEngineBase
         string key = $"{scale:F3}|{(int)style}";
         if (!cache.TryGetValue(key, out IGraphicsFont? font))
         {
-            // Mirror PaintPage's font selection exactly — reflow and paint must agree on metrics.
-            // On a Display-unit target (GDI printing) size in Points; elsewhere in CSS pixels.
-            GraphicsFontUnit unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
-            float size = (g.IsDisplayUnit ? ContentSettings!.Font.Size : _baseSizePx) * scale;
-            font = g.CreateFont(ContentSettings!.Font.Family, size, style, unit);
+            font = g.CreateFont(ContentSettings!.Font.Family, _baseSizePx * scale, style, GraphicsFontUnit.Pixel);
             cache[key] = font;
         }
 

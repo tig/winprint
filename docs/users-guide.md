@@ -2,18 +2,19 @@
 
 ## Features
 
-* Beautifully Prints:
-  * Source code in hundreds of programming languages with syntax highlighting and line numbering.
-  * HTML files.
-  * Markdown files as formatted documents (headings, lists, blockquotes, code blocks, mermaid diagrams, and inline images).
-  * ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
-* Saves trees printing "multiple-pages-up" on one piece of paper.
+* Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
+* Prints HTML files.
+* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, and inline images).
+* Prints ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
+* Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
+* Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
+* `wp` provides a terminal UI on Windows, macOS, and Linux.
+* `wp gui` launches the GUI on Windows and macOS.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
-* Accurate print preview in the GUI *and* TUI.
-* `wp` provides a rich command line interface (CLI) on Windows, macOs, and Linux
 * Comprehensive logging.
+* Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
 
 ## Command Line Interface
 
@@ -28,18 +29,12 @@ wp [options] [file...]
 | Command | Description |
 |---------|-------------|
 | `wp file.cs` | Open a file in the TUI |
-| `wp` | Launch the TUI |
+| `wp` | Launch the TUI (terminal user interface) |
 | `wp print file.cs` | Print one or more files without opening the UI |
 | `wp gui` | Launch the graphical user interface on Windows/macOS |
 | `wp gui file.cs` | Launch the GUI with a file (and options) loaded |
 
 ### Examples
-
-Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-turn-markdown-into-a-pdf) for it in action). Markdown prints as a formatted document, with images, tables, syntax-highlighted code, and mermaid fences rendered as diagrams in-process:
-
-```bash
-wp print README.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
-```
 
 Check the installed version:
 
@@ -224,37 +219,23 @@ The **winprint** GUI can be used to change many Sheet Definition settings. All s
 
 **winprint** supports five types of files. Support for each is provided by a **winprint** Content Type Engine (CTE):
 
-### `TextMateCte`
+1. **`TextMateCte`** - This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting.
 
-This is the default CTE used for most text and source files. It uses bundled TextMate grammars for syntax highlighting.
-
-### `MarkdownCte`
-
-Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks print as diagrams by default, rendered entirely in-process (nothing is sent over the network). Diagram types the built-in renderer does not support yet, and diagrams that fail to render, print as regular code blocks. 
-
-Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"service"` to render via a remote [mermaid.ink](https://mermaid.ink)-compatible service instead (broader diagram-type support, but the diagram source is sent to `mermaidServiceUrl`, so it is opt-in).
+2. **`MarkdownCte`** - Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks are rendered as diagrams by default using the remote `mermaid.ink` service (diagram source is sent over the network; broadest compatibility). Unsupported types or render failures fall back to code blocks. Set `mermaidBackend: "builtin"` for the private in-process Mermaider renderer (supports fewer diagram types and has some syntax restrictions). See the support matrix in `testfiles/mermaid.md`.
 
    ```json
        "markdownContentTypeEngineSettings": {
          "renderMermaidDiagrams": true,
-         "mermaidBackend": "builtin",
+         "mermaidBackend": "service",
          "mermaidServiceUrl": "https://mermaid.ink"
        }
    ```
 
-### `AnsiCte`
+3. **`AnsiCte`** - Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures), reflowing them for the page.
 
-Decodes files containing `ANSI Escape Sequences` (`text/ansi`; e.g. `.ans`/`.ansi` ANSI-art and colorized console captures), reflowing them for the page.
+4. **`TextCte`** - This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\f` (form feed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
 
-### `TextCte`
-
-This CTE knows only how to print raw `text/plain` files. The format of the printed text can be changed (e.g. to turn off line numbers or use a different font). Lines that are too long for a page are wrapped at character boundaries. `\f` (form feed) characters can be made to cause following text to print on the next page (this is off by default). Settings for `text/plain` can be changed by editing the `textContentTypeEngineSettings` section or a Sheet Definition in `WinPrint.config.json`.
-
-### `HtmlCte`
-
-Renders HTML files (`text/html`; e.g. `.html`/`.htm`, as well as `.mhtml`/`.mht` web archives) by laying out the HTML/CSS. Any CSS specified inline in the HTML file will be honored. Local (document-relative) files, `data:` URIs, and MHTML-embedded resources always load; `http(s)` resources are only fetched when `AllowRemoteResources` is enabled. `text/html` does not support line numbers.
-
-### Overriding Default CTE selection
+5. **`HtmlCte`** - Renders HTML files (`text/html`; e.g. `.html`/`.htm`, as well as `.mhtml`/`.mht` web archives) by laying out the HTML/CSS. Any CSS specified inline in the HTML file will be honored. Local (document-relative) files, `data:` URIs, and MHTML-embedded resources always load; `http(s)` resources are only fetched when `AllowRemoteResources` is enabled. `text/html` does not support line numbers.
 
 When using **winprint** from the command line, the `--content-type` (`-e`) option can be used to specify the content type / CTE to use.
 
