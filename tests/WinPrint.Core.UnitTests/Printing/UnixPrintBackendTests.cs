@@ -107,4 +107,78 @@ public class UnixPrintBackendTests
         Assert.True(pdf.Length > 0);
         Assert.Equal("%PDF-", Encoding.ASCII.GetString(pdf, 0, 5));
     }
+
+    [Fact]
+    public void TryResolvePrinter_SystemDefault_WithNoQueues_FailsWithActionableMessage()
+    {
+        bool ok = LprClient.TryResolvePrinter(
+            LprClient.SystemDefaultPrinter, defaultPrinter: null, printers: [],
+            out string? resolved, out string? error);
+
+        Assert.False(ok);
+        Assert.Null(resolved);
+        Assert.Contains("--pdf", error);
+        Assert.Contains("No print destination", error);
+    }
+
+    [Fact]
+    public void TryResolvePrinter_SystemDefault_WithQueuesButNoDefault_ListsThem()
+    {
+        var printers = new List<PrinterInfo>
+        {
+            new() { Name = "PDF" },
+            new() { Name = "Office" },
+        };
+
+        bool ok = LprClient.TryResolvePrinter(
+            null, defaultPrinter: null, printers,
+            out string? resolved, out string? error);
+
+        Assert.False(ok);
+        Assert.Null(resolved);
+        Assert.Contains("PDF", error);
+        Assert.Contains("Office", error);
+        Assert.Contains("--printer", error);
+    }
+
+    [Fact]
+    public void TryResolvePrinter_SystemDefault_UsesSpoolerDefault()
+    {
+        bool ok = LprClient.TryResolvePrinter(
+            LprClient.SystemDefaultPrinter, defaultPrinter: "PDF", printers: [],
+            out string? resolved, out string? error);
+
+        Assert.True(ok);
+        Assert.Equal("PDF", resolved);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void TryResolvePrinter_NamedQueue_RejectsUnknownWhenListKnown()
+    {
+        var printers = new List<PrinterInfo> { new() { Name = "PDF" } };
+
+        bool ok = LprClient.TryResolvePrinter(
+            "NoSuchQueue", defaultPrinter: null, printers,
+            out string? resolved, out string? error);
+
+        Assert.False(ok);
+        Assert.Null(resolved);
+        Assert.Contains("Unknown printer", error);
+        Assert.Contains("PDF", error);
+    }
+
+    [Fact]
+    public void TryResolvePrinter_NamedQueue_AcceptedWhenListed()
+    {
+        var printers = new List<PrinterInfo> { new() { Name = "PDF" } };
+
+        bool ok = LprClient.TryResolvePrinter(
+            "PDF", defaultPrinter: null, printers,
+            out string? resolved, out string? error);
+
+        Assert.True(ok);
+        Assert.Equal("PDF", resolved);
+        Assert.Null(error);
+    }
 }

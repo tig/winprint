@@ -66,13 +66,19 @@ public sealed class LprClient : ILprClient
     public async Task<PrintJobResult> SubmitAsync(byte[] pdf, string? printerName, string documentName,
         int sheetCount, CancellationToken cancellationToken = default)
     {
-        var args = new List<string>();
-        if (!string.IsNullOrEmpty(printerName) &&
-            !string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase))
+        // CUPS/BSD `lpr` with no -P exits 0 even when there is no default destination — the job
+        // sits in the spool forever and the caller thinks it printed. Refuse that silent void.
+        if (!TryResolvePrinter(printerName, GetDefaultPrinter(), GetPrinters(), out string? resolvedPrinter,
+                out string? resolveError))
         {
-            args.Add("-P");
-            args.Add(printerName);
+            return PrintJobResult.Failed(resolveError!);
         }
+
+        var args = new List<string>
+        {
+            "-P",
+            resolvedPrinter!,
+        };
 
         if (!string.IsNullOrEmpty(documentName))
         {
@@ -124,6 +130,71 @@ public sealed class LprClient : ILprClient
             return PrintJobResult.Failed(
                 "Unable to launch 'lpr'. Install CUPS (e.g. the 'cups-client' package) to print on this platform.");
         }
+    }
+
+    /// <summary>
+    ///     Resolves <paramref name="printerName" /> to a concrete CUPS queue. System-default /
+    ///     empty means the spooler's default, which must actually exist — bare <c>lpr</c> otherwise
+    ///     exits 0 with nowhere for the job to go.
+    /// </summary>
+    /// <returns><see langword="true" /> when <paramref name="resolvedPrinter" /> is set; otherwise
+    ///     <paramref name="error" /> explains how to fix it.</returns>
+    internal static bool TryResolvePrinter(
+        string? printerName,
+        string? defaultPrinter,
+        IReadOnlyList<PrinterInfo> printers,
+        out string? resolvedPrinter,
+        out string? error)
+    {
+        bool useSystemDefault = string.IsNullOrEmpty(printerName) ||
+            string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase);
+
+        if (useSystemDefault)
+        {
+            if (!string.IsNullOrEmpty(defaultPrinter))
+            {
+                resolvedPrinter = defaultPrinter;
+                error = null;
+                return true;
+            }
+
+            resolvedPrinter = null;
+            if (printers.Count == 0)
+            {
+                error =
+                    "No print destination is configured. " +
+                    "Pass `--printer <name>` after adding a CUPS queue " +
+                    "(e.g. `sudo apt install printer-driver-cups-pdf` → queue `PDF` on Debian/Ubuntu), " +
+                    "or write a file with `wp print … --pdf out.pdf` (no printer needed).";
+            }
+            else
+            {
+                string names = string.Join(", ", printers.Select(p => p.Name));
+                error =
+                    "No default printer is set. " +
+                    $"Pass `--printer <name>` (available: {names}) " +
+                    "or write a file with `wp print … --pdf out.pdf`.";
+            }
+
+            return false;
+        }
+
+        // Named queue: if lpstat listed destinations, require a match (clearer than lpr's message).
+        // When the list is empty (lpstat failed / no rights), fall through and let lpr decide.
+        if (printers.Count > 0 &&
+            !printers.Any(p => string.Equals(p.Name, printerName, StringComparison.OrdinalIgnoreCase)))
+        {
+            string names = string.Join(", ", printers.Select(p => p.Name));
+            resolvedPrinter = null;
+            error =
+                $"Unknown printer '{printerName}'. " +
+                $"Available: {names}. Or write a file with `wp print … --pdf out.pdf`.";
+            return false;
+        }
+
+        resolvedPrinter = printerName;
+        error = null;
+        return true;
     }
 
     private static bool TryRun(string fileName, IReadOnlyList<string> args, byte[]? stdin, out string stdout,
