@@ -3,6 +3,7 @@
 ## Get Help
 
 * Read the [User's Guide](users-guide.md)
+* Linux / WSL printing (CUPS, cups-pdf, network printers): [Linux & WSL printing](linux.md)
 * Ask a question using [GitHub Issues](https://github.com/tig/winprint/issues).
 
 ## Submit bugs or Request Improvements

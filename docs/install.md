@@ -109,18 +109,21 @@ brew install kindel/winprint/wp
 
 ### Prerequisites
 
-For actual printing (not just previewing), you need a working CUPS setup:
+For actual printing (not just previewing), you need a working CUPS setup. The short version:
 
 ```bash
-# Debian/Ubuntu
-sudo apt install cups lpr
+# Debian/Ubuntu / WSL
+sudo apt install cups cups-client cups-bsd
 
 # Fedora/RHEL
 sudo dnf install cups
 
 # Verify CUPS is running
+lpstat -r
 lpstat -p
 ```
+
+Full guide — cups-pdf, network IPP printers (e.g. Brother), WSL vs Windows printers, and `wp print --pdf` vs `--printer` — is in **[Linux & WSL printing](linux.md)**.
 
 ### Upgrade
 

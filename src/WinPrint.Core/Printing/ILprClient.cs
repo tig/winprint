@@ -15,10 +15,17 @@ public interface ILprClient
     string? GetDefaultPrinter();
 
     /// <summary>
-    ///     Submits a PDF document to the spooler via <c>lpr</c> (written to the process's standard
-    ///     input to avoid temp-file lifetime races). When <paramref name="printerName" /> is null,
-    ///     empty, or the system-default placeholder, the destination is left to CUPS.
+    ///     Resolves <paramref name="printerName" /> to a concrete CUPS queue. Empty / null / the
+    ///     legacy system-default placeholder means the spooler's default, which must exist — bare
+    ///     <c>lpr</c> otherwise exits 0 with nowhere for the job to go.
     /// </summary>
-    Task<PrintJobResult> SubmitAsync(byte[] pdf, string? printerName, string documentName, int sheetCount,
+    PrinterDestinationResult ResolveDestination(string? printerName);
+
+    /// <summary>
+    ///     Submits a PDF document to the spooler via <c>lpr</c> (written to the process's standard
+    ///     input to avoid temp-file lifetime races). <paramref name="printerName" /> must be a
+    ///     concrete queue name (already resolved via <see cref="ResolveDestination" />).
+    /// </summary>
+    Task<PrintJobResult> SubmitAsync(byte[] pdf, string printerName, string documentName, int sheetCount,
         CancellationToken cancellationToken = default);
 }
