@@ -41,7 +41,7 @@ VelopackApp.Build().Run();
 ConfigurationManager.Enable(ConfigLocations.All);
 #pragma warning restore CS0618
 
-CliHost host = new(options =>
+WpCliHost host = new(options =>
 {
     options.ApplicationName = "wp";
     options.Version = AppHostInfo.DisplayVersion;
