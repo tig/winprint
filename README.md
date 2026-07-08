@@ -56,13 +56,14 @@ wp print mermaid.md --printer "CUPS-PDF" --sheet "Proportional 1-Up"
 ```
 
 ```bash
-# Linux — sudo apt install printer-driver-cups-pdf (the queue is named "PDF"); the PDF lands in ~/PDF/
+# Linux — sudo apt install printer-driver-cups-pdf (queue name "PDF" on Debian/Ubuntu;
+# confirm with lpstat -p; Fedora is often "Cups-PDF"). PDF lands in ~/PDF/
 wp print mermaid.md --printer "PDF" --sheet "Proportional 1-Up"
 ```
 
 <img width="700" alt="wp print turning mermaid.md into a PDF, then viewing it" src="docs/cli.gif" />
 
-*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer. The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF.*
+*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer. The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF. On Linux prefer `--pdf` when you only need a file — stock cups-pdf may re-encode through Ghostscript; mermaid rasters still survive.*
 
 ## Installation
 
