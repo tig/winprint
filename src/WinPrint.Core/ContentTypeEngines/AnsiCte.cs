@@ -46,13 +46,6 @@ public class AnsiCte : ContentTypeEngineBase, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public static AnsiCte Create()
-    {
-        var engine = new AnsiCte();
-        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.AnsiContentTypeEngineSettings);
-        return engine;
-    }
-
     private void Dispose(bool disposing)
     {
         if (_disposed)

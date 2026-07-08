@@ -177,8 +177,10 @@ CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
 `ContentTypeEngineBase`. They are discovered via an **explicit registry**
 (`ContentTypeEngineRegistry`, AOT/trim-safe explicit factories) — `GetDerivedClassesCollection`
 returns `ContentTypeEngineRegistry.CreateAll()`, and `CreateContentTypeEngine` then matches an
-engine by `SupportedContentTypes`. This replaced the old reflection scan (`GetTypes()` +
-`Activator.CreateInstance`); the static `Create()` factories have no production callers. Engines:
+engine by `SupportedContentTypes` and applies the per-engine settings persisted in
+`WinPrint.config.json` (e.g. `markdownContentTypeEngineSettings`) via
+`ApplyPersistedEngineSettings`. This replaced the old reflection scan (`GetTypes()` +
+`Activator.CreateInstance`) and the per-engine static `Create()` factories. Engines:
 - `TextCte` (`text/plain`), `MarkdownCte` (`text/x-markdown`, subclasses `TextCte` and
   flattens Markdown via Markdig), `TextMateCte` (syntax highlighting; the default),
   `AnsiCte` (`text/ansi`; decodes ANSI escape sequences via the vendored managed `libvt100`)
