@@ -249,7 +249,14 @@ public sealed class WpCliHost
         try
         {
             using IApplication app = Application.Create();
-            app.Init();
+            if (Environment.GetEnvironmentVariable("DisableRealDriverIO") == "1")
+            {
+                app.Init(DriverRegistry.Names.ANSI);
+            }
+            else
+            {
+                app.Init();
+            }
 
             return await command.RunAsync(app, runOptions.Initial, runOptions, cancellationToken);
         }

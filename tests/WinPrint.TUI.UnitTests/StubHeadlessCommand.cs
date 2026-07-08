@@ -17,6 +17,8 @@ internal sealed class StubHeadlessCommand : IHeadlessCliCommand
 
     public Type ResultType => typeof(void);
 
+    public bool AcceptsPositionalArgs => true;
+
     public IReadOnlyList<CommandOptionDescriptor> Options { get; } = [];
 
     public Task<CommandResult> RunAsync(
@@ -28,10 +30,13 @@ internal sealed class StubHeadlessCommand : IHeadlessCliCommand
         throw new InvalidOperationException("RunAsync should not run for headless commands.");
     }
 
+    public CommandRunOptions? LastOptions { get; private set; }
+
     public Task<CommandResult> RunHeadlessAsync(
         CommandRunOptions options,
         CancellationToken cancellationToken)
     {
+        LastOptions = options;
         return Task.FromResult(new CommandResult(CommandStatus.Ok, "headless-ok", null, null));
     }
 }
