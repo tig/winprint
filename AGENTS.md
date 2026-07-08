@@ -52,6 +52,25 @@ publishes as a GitHub *pre-release* (not "Latest"). A burned tag (release failed
 `Package <rid>` job fails, `Publish` / `winget` / `brew` are **skipped** and nothing ships, even
 though the overall run may look done — always confirm a real GitHub release + tap update exist.
 
+**Red release run? Triage before declaring the tag burned** (both bitten cutting v3.0.10):
+- **A failed run is NOT a burned tag until a re-run also fails.** `gh run rerun --failed
+  <run-id>` re-runs the failed `Package` legs and *resumes the skipped downstream jobs*
+  (`Publish`/`winget`/`brew`) from the **same tag** — v3.0.10 shipped completely this way. Only
+  a *deterministic* failure (fails identically on re-run) burns the tag and needs a patch bump.
+- **Known release flake:** `Package win-x64` can die in the Velopack smoke test
+  (`Test-WindowsVelopackShortcut.ps1`) with `Program 'wp.exe' failed to run:
+  StandardOutputEncoding is only supported when standard output is redirected`. That is an
+  intermittent **PowerShell** native-launch bug (oh-my-posh #1967, starship #6331) thrown in the
+  *parent* before `wp` code runs — not a product regression; re-run it. If it ever fails this way
+  **twice in a row**, then suspect the packaged `wp.exe` (e.g. PE subsystem flipped console→GUI
+  by the merged-publish dir) before blaming PowerShell.
+- **The back-merge workflow can fail at PR creation** with "GitHub Actions is not permitted to
+  create or approve pull requests" (repo/org Actions setting; it regressed mid-day 2026-07-06).
+  The workflow has already pushed `backmerge/vX.Y.Z` by then — recover with
+  `gh pr create --base develop --head backmerge/vX.Y.Z`, then merge. Durable fix: Settings →
+  Actions → General → Workflow permissions → allow PR creation. Don't skip the recovery:
+  `develop` drifting behind `main` is exactly what this workflow exists to prevent.
+
 **Windows code signing.** Windows installers are signed with **Azure Trusted Signing** via
 **GitHub OIDC** (no client secret). The full, reproducible setup lives in `scripts/`
 (`Azure.Config.ps1` = single source of truth, `SetupAzure.ps1` = idempotent one-shot creator,
@@ -89,6 +108,18 @@ artifacts in the tap:
   the `url` blocks (macOS has Clang; arm64 Linux source-builds). **Never declare a bottle tag without
   publishing + pour-testing its file** — a declared-but-missing bottle hard-fails that platform with no
   source fallback. (arm64 Linux bottle = follow-up; needs bottling on an arm64 runner.)
+  **Two hard-won gotchas (they left the tap stuck at 3.0.5 while releases reached 3.0.9 —
+  the bottle step crashed the v3.0.6/v3.0.8/v3.0.9 brew jobs deterministically; v3.0.7's was
+  skipped for unrelated reasons):** (1) the formula's `install` **must drop `wp.dbg`**
+  (`rm_f Dir["*.dbg"]`). Homebrew's Linux install *and* pour scan every ELF in the keg
+  (`load_tab` → `undeclared_runtime_dependencies` → `LinkageChecker`), and the vendored
+  `elftools` crashes — or worse, **hangs** — on that 48 MB AOT debug file (`undefined method
+  'header' for nil`) — the *actual* cause of the failed bottle job, not rpath relocation.
+  `wp` itself pours fine; the `.dbg` is useless to users anyway. (2) the bottle build is now
+  **best-effort**: it runs in an isolated subshell with `timeout`-bounded brew calls (a hang
+  would otherwise outlive the job and strand the tap anyway), and on any failure the job
+  publishes a **bottle-less** formula so the formula+cask tap push still lands. Never gate
+  the tap update on the (fragile) bottle again.
 - **Validate a cask by LOADING it, never `ruby -c`.** `ruby -c` checks Ruby *syntax* and happily
   passes invalid cask **DSL** (e.g. `conflicts_with formula:` — that key is cask-only-`cask:`), which
   once shipped a tap cask Homebrew couldn't parse and broke `brew install --cask` for everyone. The
@@ -127,8 +158,10 @@ CTEs live in `src/WinPrint.Core/ContentTypeEngines` and derive from
 `ContentTypeEngineBase`. They are discovered via an **explicit registry**
 (`ContentTypeEngineRegistry`, AOT/trim-safe explicit factories) — `GetDerivedClassesCollection`
 returns `ContentTypeEngineRegistry.CreateAll()`, and `CreateContentTypeEngine` then matches an
-engine by `SupportedContentTypes`. This replaced the old reflection scan (`GetTypes()` +
-`Activator.CreateInstance`); the static `Create()` factories have no production callers. Engines:
+engine by `SupportedContentTypes` and applies the per-engine settings persisted in
+`WinPrint.config.json` (e.g. `markdownContentTypeEngineSettings`) via
+`ApplyPersistedEngineSettings`. This replaced the old reflection scan (`GetTypes()` +
+`Activator.CreateInstance`) and the per-engine static `Create()` factories. Engines:
 - `TextCte` (`text/plain`), `MarkdownCte` (`text/x-markdown`, subclasses `TextCte` and
   flattens Markdown via Markdig), `TextMateCte` (syntax highlighting; the default),
   `AnsiCte` (`text/ansi`; decodes ANSI escape sequences via the vendored managed `libvt100`)

@@ -34,7 +34,12 @@ VelopackApp.Build().Run();
 // standard .tui config locations (~/.tui/config.json, ./.tui/wp.config.json, TUI_CONFIG), so
 // users — and the hero-GIF recorder, which themes wp via ./.tui/wp.config.json — couldn't
 // restyle the app.
+// TG 2.4.16+ marks ConfigurationManager [Obsolete] (CS0618) ahead of removal in favor of
+// TuiConfigurationBuilder / Microsoft.Extensions.Configuration; it still works. Suppress the
+// deprecation warning for now — migrating to TuiConfigurationBuilder is tracked as follow-up.
+#pragma warning disable CS0618 // Type or member is obsolete
 ConfigurationManager.Enable(ConfigLocations.All);
+#pragma warning restore CS0618
 
 CliHost host = new(options =>
 {

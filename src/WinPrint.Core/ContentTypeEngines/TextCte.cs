@@ -43,14 +43,6 @@ public class TextCte : ContentTypeEngineBase, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public static TextCte Create()
-    {
-        var engine = new TextCte();
-        // Populate it with the common settings
-        engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.TextContentTypeEngineSettings);
-        return engine;
-    }
-
     private void Dispose(bool disposing)
     {
         LogService.TraceMessage($"disposing: {disposing}");

@@ -19,15 +19,14 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 *Print (or dry-run with `--what-if`) straight from the shell — same sheet/printer options as the TUI and GUI.*
 
-### Graphical UI (`wp gui`)
+### Windows GUI
 
-<p>
   <img height="330" alt="WinPrint GUI on Windows" src="docs/hero-gui-win.gif" />
+
+### MacOS GUI
+
   <img height="330" alt="WinPrint GUI on macOS" src="docs/hero-gui-mac.gif" />
-</p>
-
-*The GUI on Windows (left) and macOS (right): visual print preview, settings, and `wp gui` to launch from the terminal.*
-
+  
 ## Installation
 
 ### Windows
@@ -40,7 +39,7 @@ winget install Kindel.WinPrint
 
 Or download the signed installer **`Kindel.WinPrint-win-x64-Setup.exe`** from the
 [latest release](https://github.com/tig/winprint/releases/latest) and run it. (On new releases
-SmartScreen may say it "isn't commonly downloaded" — that's a reputation check, not a signing
+SmartScreen may say it "isn't commonly downloaded"; that's a reputation check, not a signing
 problem; the publisher reads *Kindel, LLC*. See the [Installation Guide](https://tig.github.io/winprint/install.html#install-from-github-releases-download-the-installer).)
 
 ### macOS
@@ -78,17 +77,14 @@ You can also find **WinPrint** in the Start Menu (Windows) or via Spotlight (mac
 
 * Prints source code in hundreds of programming languages with syntax highlighting and line numbering.
 * Prints HTML files.
-* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, and inline images).
+* Prints Markdown files as formatted documents (headings, lists, blockquotes, code blocks, mermaid disgrams, and inline images).
 * Prints ANSI-encoded text and colorized console captures (`.ans`/`.ansi`), decoding ANSI escape sequences to color.
 * Prints "multiple-pages-up" on one piece of paper (saves trees!)
 * Complete control over page formatting options, including headers and footers, margins, fonts, page orientation, etc.
 * Headers and Footers support detailed file and print information macros with rich date/time formatting.
-* Simple and elegant graphical user interface with accurate print preview on Windows and macOS.
-* `wp` provides a terminal UI on Windows, macOS, and Linux.
-* `wp gui` launches the GUI on Windows and macOS.
 * Sheet Definitions make it easy to save settings for frequent print jobs.
 * Comprehensive logging.
-* Cross-platform TUI; Windows and macOS GUI; Linux GUI is deferred.
+* Cross-platform TUI; Windows and macOS GUI.
 
 ## Documentation
 
