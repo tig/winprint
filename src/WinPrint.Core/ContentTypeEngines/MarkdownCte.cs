@@ -91,6 +91,15 @@ public class MarkdownCte : ContentTypeEngineBase
     /// <summary>The last completed render's lines — the only list <see cref="PaintPage" /> enumerates.</summary>
     private List<MarkdownLine> _paintLines = [];
 
+    /// <summary>
+    ///     Serializes <see cref="RenderAsync" />: the build writes shared instance state (<see cref="_lines" />,
+    ///     <see cref="_imageCache" />, font metrics) across awaits (image/mermaid preloads), so a re-render
+    ///     started while one is in flight — e.g. the TUI's font dialog re-rendering while the sheet reload is
+    ///     still fetching a diagram — would interleave both builds into the same lists and publish a torn
+    ///     render. The paint/build split above protects paint-vs-render; this gate protects render-vs-render.
+    /// </summary>
+    private readonly SemaphoreSlim _renderGate = new(1, 1);
+
     private float _baseLineHeight;
     private float _baseSizePx;
     private int _dpiY = 96;
@@ -162,47 +171,57 @@ public class MarkdownCte : ContentTypeEngineBase
             dpiX = dpiY = 96;
         }
 
-        _dpiY = dpiY;
-        // Fresh build instances: the previous render's lines/cache stay published (and safe to
-        // paint) until this render completes — never mutate what PaintPage may be enumerating.
-        _lines = [];
-        _imageCache = new Dictionary<string, byte[]?>(StringComparer.Ordinal);
-
-        IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
-        var fontCache = new Dictionary<string, IGraphicsFont>();
+        // Serialize renders: see _renderGate. A queued render runs after the in-flight one and
+        // publishes last, so the final published state always reflects the latest settings.
+        await _renderGate.WaitAsync();
         try
         {
-            g.SetTextRenderingMode(GraphicsTextRenderingMode);
-            _baseSizePx = ContentSettings!.Font.Size / 72F * 96F;
-            _baseLineHeight = GetFont(g, fontCache, 1f, GraphicsFontStyle.Regular).GetHeight(dpiY);
-            _indentStep = _baseSizePx * 1.6f;
+            _dpiY = dpiY;
+            // Fresh build instances: the previous render's lines/cache stay published (and safe to
+            // paint) until this render completes — never mutate what PaintPage may be enumerating.
+            _lines = [];
+            _imageCache = new Dictionary<string, byte[]?>(StringComparer.Ordinal);
 
-            if (PageSize.Height < _baseLineHeight)
+            IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
+            var fontCache = new Dictionary<string, IGraphicsFont>();
+            try
             {
-                throw new InvalidOperationException(
-                    $"Line height ({_baseLineHeight:F2}) exceeds page height ({PageSize.Height:F2}).");
+                g.SetTextRenderingMode(GraphicsTextRenderingMode);
+                _baseSizePx = ContentSettings!.Font.Size / 72F * 96F;
+                _baseLineHeight = GetFont(g, fontCache, 1f, GraphicsFontStyle.Regular).GetHeight(dpiY);
+                _indentStep = _baseSizePx * 1.6f;
+
+                if (PageSize.Height < _baseLineHeight)
+                {
+                    throw new InvalidOperationException(
+                        $"Line height ({_baseLineHeight:F2}) exceeds page height ({PageSize.Height:F2}).");
+                }
+
+                MarkdownDocument ast = Markdown.Parse(Document, s_pipeline);
+                await PreloadImagesAsync(ast);
+                await PreloadMermaidDiagramsAsync(ast);
+                WalkBlocks(ast, g, fontCache, 0, 0);
+
+                _pageCount = Paginate();
+                // Publish for painting only now that the build is complete.
+                _paintLines = _lines;
+                _paintCache = _imageCache;
+                Log.Debug("Rendered {pages} Markdown pages from {lines} lines.", _pageCount, _lines.Count);
+                return await Task.FromResult(_pageCount);
             }
+            finally
+            {
+                foreach (IGraphicsFont f in fontCache.Values)
+                {
+                    f.Dispose();
+                }
 
-            MarkdownDocument ast = Markdown.Parse(Document, s_pipeline);
-            await PreloadImagesAsync(ast);
-            await PreloadMermaidDiagramsAsync(ast);
-            WalkBlocks(ast, g, fontCache, 0, 0);
-
-            _pageCount = Paginate();
-            // Publish for painting only now that the build is complete.
-            _paintLines = _lines;
-            _paintCache = _imageCache;
-            Log.Debug("Rendered {pages} Markdown pages from {lines} lines.", _pageCount, _lines.Count);
-            return await Task.FromResult(_pageCount);
+                owner?.Dispose();
+            }
         }
         finally
         {
-            foreach (IGraphicsFont f in fontCache.Values)
-            {
-                f.Dispose();
-            }
-
-            owner?.Dispose();
+            _renderGate.Release();
         }
     }
 
