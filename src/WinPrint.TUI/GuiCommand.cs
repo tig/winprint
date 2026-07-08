@@ -50,16 +50,23 @@ public sealed class GuiCommand : ICliCommand
 
         try
         {
-            GuiLauncher.Launch(BuildArguments(options));
-            return Task.FromResult(new CommandResult(CommandStatus.Ok, "Opened WinPrint GUI.", null, null));
+            try
+            {
+                GuiLauncher.Launch(BuildArguments(options));
+                return Task.FromResult(new CommandResult(CommandStatus.Ok, "Opened WinPrint GUI.", null, null));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
+            }
+            catch (Win32Exception ex)
+            {
+                return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
+            }
         }
-        catch (InvalidOperationException ex)
+        finally
         {
-            return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
-        }
-        catch (Win32Exception ex)
-        {
-            return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
+            HeadlessInlineTeardown.ReserveInlineRegion(app);
         }
     }
 
