@@ -40,6 +40,13 @@ public sealed class UnixPrintJob : IPrintJob
             return PrintJobResult.Succeeded(0);
         }
 
+        // Resolve before Skia render — no destination ⇒ fail fast without painting the document.
+        PrinterDestinationResult destination = _lprClient.ResolveDestination(_pageSetup.PrinterName);
+        if (!destination.Success)
+        {
+            return PrintJobResult.Failed(destination.Error!);
+        }
+
         byte[] pdf;
         try
         {
@@ -51,7 +58,7 @@ public sealed class UnixPrintJob : IPrintJob
         }
 
         return await _lprClient
-            .SubmitAsync(pdf, _pageSetup.PrinterName, _documentName, _pages.Count, cancellationToken)
+            .SubmitAsync(pdf, destination.PrinterName!, _documentName, _pages.Count, cancellationToken)
             .ConfigureAwait(false);
     }
 

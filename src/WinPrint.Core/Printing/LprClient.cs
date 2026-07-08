@@ -11,30 +11,18 @@ namespace WinPrint.Core.Printing;
 /// </summary>
 public sealed class LprClient : ILprClient
 {
-    /// <summary>Placeholder printer name meaning "let the spooler choose the default destination".</summary>
+    /// <summary>
+    ///     Legacy placeholder meaning "use the spooler default". Still recognized if persisted in
+    ///     settings; new code stores an empty name or a real queue instead.
+    /// </summary>
     public const string SystemDefaultPrinter = "(System Default)";
 
     public IReadOnlyList<PrinterInfo> GetPrinters()
     {
-        var printers = new List<PrinterInfo>();
         string? defaultPrinter = GetDefaultPrinter();
-
-        // `lpstat -a` lists destinations accepting jobs: "<name> accepting requests since ...".
-        if (!TryRun("lpstat", ["-a"], null, out string output, out _))
+        var printers = new List<PrinterInfo>();
+        foreach (string name in ListAcceptingQueueNames())
         {
-            return printers;
-        }
-
-        foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-        {
-            string trimmed = line.Trim();
-            int space = trimmed.IndexOf(' ');
-            string name = space > 0 ? trimmed[..space] : trimmed;
-            if (name.Length == 0)
-            {
-                continue;
-            }
-
             printers.Add(new PrinterInfo
             {
                 Name = name,
@@ -63,16 +51,72 @@ public sealed class LprClient : ILprClient
         return name.Length == 0 ? null : name;
     }
 
-    public async Task<PrintJobResult> SubmitAsync(byte[] pdf, string? printerName, string documentName,
+    public PrinterDestinationResult ResolveDestination(string? printerName)
+    {
+        if (IsSystemDefaultRequest(printerName))
+        {
+            // One `lpstat -d` only when we already have a default; list queues only for the error path.
+            string? defaultPrinter = GetDefaultPrinter();
+            if (!string.IsNullOrEmpty(defaultPrinter))
+            {
+                return PrinterDestinationResult.Ok(defaultPrinter);
+            }
+
+            return ResolveFromInputs(printerName, null, ListAcceptingQueueNames());
+        }
+
+        // Named queue: one `lpstat -a` for validation (skip if list empty / lpstat failed → let lpr decide).
+        return ResolveFromInputs(printerName, null, ListAcceptingQueueNames());
+    }
+
+    /// <summary>
+    ///     Pure destination policy (no process I/O). Used by <see cref="ResolveDestination" /> and tests.
+    /// </summary>
+    internal static PrinterDestinationResult ResolveFromInputs(
+        string? printerName,
+        string? defaultPrinter,
+        IReadOnlyList<string> queueNames)
+    {
+        if (IsSystemDefaultRequest(printerName))
+        {
+            if (!string.IsNullOrEmpty(defaultPrinter))
+            {
+                return PrinterDestinationResult.Ok(defaultPrinter);
+            }
+
+            if (queueNames.Count == 0)
+            {
+                return PrinterDestinationResult.Fail(
+                    "No print destination is configured. " +
+                    "Specify a printer, or write output to a PDF file instead of printing.");
+            }
+
+            string names = string.Join(", ", queueNames);
+            return PrinterDestinationResult.Fail(
+                "No default printer is set. " +
+                $"Specify a printer (available: {names}), or write output to a PDF file instead of printing.");
+        }
+
+        // Named queue: if we know the accepting set, require a match (clearer than lpr's message).
+        // When the list is empty (lpstat failed / no rights), fall through and let lpr decide.
+        if (queueNames.Count > 0 &&
+            !queueNames.Any(n => string.Equals(n, printerName, StringComparison.OrdinalIgnoreCase)))
+        {
+            string names = string.Join(", ", queueNames);
+            return PrinterDestinationResult.Fail(
+                $"Unknown printer '{printerName}'. Available: {names}. " +
+                "Or write output to a PDF file instead of printing.");
+        }
+
+        return PrinterDestinationResult.Ok(printerName!);
+    }
+
+    public async Task<PrintJobResult> SubmitAsync(byte[] pdf, string printerName, string documentName,
         int sheetCount, CancellationToken cancellationToken = default)
     {
-        var args = new List<string>();
-        if (!string.IsNullOrEmpty(printerName) &&
-            !string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase))
-        {
-            args.Add("-P");
-            args.Add(printerName);
-        }
+        ArgumentException.ThrowIfNullOrEmpty(printerName);
+
+        var args = new List<string> { "-P", printerName };
 
         if (!string.IsNullOrEmpty(documentName))
         {
@@ -124,6 +168,38 @@ public sealed class LprClient : ILprClient
             return PrintJobResult.Failed(
                 "Unable to launch 'lpr'. Install CUPS (e.g. the 'cups-client' package) to print on this platform.");
         }
+    }
+
+    private static bool IsSystemDefaultRequest(string? printerName)
+    {
+        return string.IsNullOrEmpty(printerName) ||
+               string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    ///     Queue names from <c>lpstat -a</c> only (no nested default lookup).
+    /// </summary>
+    private static List<string> ListAcceptingQueueNames()
+    {
+        var names = new List<string>();
+        // `lpstat -a` lists destinations accepting jobs: "<name> accepting requests since ...".
+        if (!TryRun("lpstat", ["-a"], null, out string output, out _))
+        {
+            return names;
+        }
+
+        foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string trimmed = line.Trim();
+            int space = trimmed.IndexOf(' ');
+            string name = space > 0 ? trimmed[..space] : trimmed;
+            if (name.Length > 0)
+            {
+                names.Add(name);
+            }
+        }
+
+        return names;
     }
 
     private static bool TryRun(string fileName, IReadOnlyList<string> args, byte[]? stdin, out string stdout,

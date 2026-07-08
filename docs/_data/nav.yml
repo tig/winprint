@@ -5,6 +5,8 @@
   url: install.html
 - title: User's Guide
   url: users-guide.html
+- title: Linux & WSL
+  url: linux.html
 - title: Support
   url: support.html
 - title: About & History

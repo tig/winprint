@@ -24,7 +24,9 @@ public sealed class UnixPrintService : IPrintService
 
     public PrintPageSetup GetDefaultPageSetup(string? printerName = null)
     {
-        string resolved = printerName ?? _lprClient.GetDefaultPrinter() ?? LprClient.SystemDefaultPrinter;
+        // Prefer an explicit name, else the CUPS default. Leave empty when neither exists — do not
+        // invent a fake "(System Default)" queue (bare lpr with no -P is a silent void).
+        string resolved = printerName ?? _lprClient.GetDefaultPrinter() ?? string.Empty;
 
         // US Letter defaults; CUPS applies the real media size from the destination's PPD at print time.
         return new PrintPageSetup

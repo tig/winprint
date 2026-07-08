@@ -128,10 +128,12 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     `result.bytes` (~4-5 MB). After the stop, close the PDF **tab** with `ctrl-f4` (not the whole browser).
 12. **Record the CLI showcase (`docs/cli.gif`).** Regenerate this **every time the Windows hero is
     regenerated** -- same controller session. It is the README's "How to turn Markdown into a PDF"
-    beat: `wp print` turning `testfiles/mermaid.md` (every diagram type the built-in renderer
-    supports, plus the gantt code-block fallback) into a PDF, from a real terminal. Needs a
-    **`net10.0-windows`-TFM `wp`** on PATH (`dotnet build src/WinPrint.TUI/WinPrint.TUI.csproj -f
-    net10.0-windows`; the portable `net10.0` build has no Windows print path and tries `lpr`).
+    beat: `wp print` turning `testfiles/mermaid.md` (every mermaid diagram type — flowchart,
+    sequence, class, ER, pie, gantt, … — as images via the default mermaid.ink backend; use
+    `mermaidBackend: "builtin"` only if you need the in-process path and its fallbacks) into a
+    PDF, from a real terminal. Needs a **`net10.0-windows`-TFM `wp`** on PATH (`dotnet build
+    src/WinPrint.TUI/WinPrint.TUI.csproj -f net10.0-windows`; the portable `net10.0` build has no
+    Windows print path and tries `lpr`).
     Setup, all **off-record**: create `~/wpdemo`, copy `testfiles/mermaid.md` in; Win+D; **Win+R ->
     `pwsh`** to open the terminal (find its window by `windows { "process": "WindowsTerminal" }` and
     match the **title** -- a title-only filter can match another wt instance, including the one
