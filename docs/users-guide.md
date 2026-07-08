@@ -35,10 +35,16 @@ wp [options] [file...]
 
 ### Examples
 
-Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-turn-markdown-into-a-pdf) for it in action). Markdown prints as a formatted document, with images, tables, syntax-highlighted code, and mermaid fences rendered as diagrams in-process:
+Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-turn-markdown-into-a-pdf) for it in action). Markdown prints as a formatted document, with images, tables, syntax-highlighted code, and mermaid fences rendered as diagrams:
 
 ```bash
 wp print README.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
+```
+
+Or skip the printer entirely; `--pdf` writes the PDF straight to a file on every platform (no printer, no driver, no save dialog):
+
+```bash
+wp print README.md --pdf readme.pdf --sheet "Proportional 1-Up"
 ```
 
 Check the installed version:
@@ -66,6 +72,12 @@ wp print Program.cs --printer "Microsoft Print to PDF" --sheet "Default 2-Up"
 wp print *.cs --landscape
 wp print Program.cs --what-if
 ```
+
+`--printer` names an OS print queue, so to print **to a PDF file** point it at your platform's print-to-PDF target:
+
+- **Windows** — the built-in **Microsoft Print to PDF**; a Save-As dialog chooses the file.
+- **macOS** — install a virtual PDF printer once with [RWTS PDFwriter](https://github.com/rodyager/RWTS-PDFwriter): `brew install --cask rwts-pdfwriter`, then add it in **Printers & Scanners** (name it e.g. `CUPS-PDF`). Printed PDFs land in `/var/spool/pdfwriter/$USER/`. (`brew install cups-pdf` does **not** exist on macOS — that is a Linux package.)
+- **Linux** — `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu; the queue is named `PDF` — confirm with `lpstat -p`) or `sudo dnf install cups-pdf` (Fedora). Printed PDFs land in `~/PDF/`.
 
 Launch the GUI:
 
@@ -103,7 +115,7 @@ apply everywhere:
 | `--content-type` | `-e` | Content type engine / language override (e.g. `text/plain`, `text/html`, or a `<language>`). |
 
 Front ends add their own *appropriate* extras: the interactive TUI adds `--view`, `--width`,
-`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing); and the
+`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing) and `--pdf <file>` (write a PDF file instead of printing); and the
 GUI launches through the separate `wp gui` command. The `wp` command line also provides `--help`,
 `--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 
@@ -230,14 +242,14 @@ This is the default CTE used for most text and source files. It uses bundled Tex
 
 ### `MarkdownCte`
 
-Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks print as diagrams by default, rendered entirely in-process (nothing is sent over the network). Diagram types the built-in renderer does not support yet, and diagrams that fail to render, print as regular code blocks. 
+Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks are rendered as diagrams by default using the remote `mermaid.ink` service (diagram source is sent over the network; broadest compatibility). Unsupported diagram types, and diagrams that fail to render, print as regular code blocks.
 
-Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"service"` to render via a remote [mermaid.ink](https://mermaid.ink)-compatible service instead (broader diagram-type support, but the diagram source is sent to `mermaidServiceUrl`, so it is opt-in).
+Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"builtin"` for the private in-process Mermaider renderer (nothing is sent over the network, but it supports fewer diagram types and has some syntax restrictions). See the support matrix in `testfiles/mermaid.md`.
 
    ```json
        "markdownContentTypeEngineSettings": {
          "renderMermaidDiagrams": true,
-         "mermaidBackend": "builtin",
+         "mermaidBackend": "service",
          "mermaidServiceUrl": "https://mermaid.ink"
        }
    ```

@@ -28,7 +28,7 @@ Here is a footnote, because BobAtk, the inventor of COM and my mentor, taught me
 
 ## Mermaid Diagrams
 
-The fenced block below prints as an actual diagram, laid out and drawn in-process (no browser, no cloud); set `renderMermaidDiagrams` to `false` if you liked the code better. The promissory note, paid:
+The fenced block below prints as an actual diagram using the default `mermaid.ink` service (or the in-process `builtin` backend if configured); set `renderMermaidDiagrams` to `false` if you liked the code better. The promissory note, paid:
 
 ```mermaid
 graph LR

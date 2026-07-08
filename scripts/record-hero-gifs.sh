@@ -72,10 +72,11 @@ dotnet_env=(--env "DOTNET_ROOT=$DOTNET_ROOT")
 # Put v1.11.2-sixel ahead of tuirec's bundled copy on PATH, or pass --agg-path.
 #
 # Choreography (mirrors the spec in docs/hero-gifs.md): open on SheetViewModel.cs → page + zoom in/out
-# (no pan) → open ./testfiles/demo.md via the File dialog → page 3× + Home → switch the Sheet Definition
-# to "Proportional 1-Up" → set Content Font to 12pt → page 5× → End (hold on the rendered Mermaid
-# diagram on demo.md's last page — needs renderMermaidDiagrams:true in wp's co-located config, see
-# docs/hero-gifs.md) → Home → quit (Esc → Don't Save).
+# (no pan) → open ./testfiles/demo.md via the File dialog (page 1 opens ON the rendered Mermaid
+# diagram — demo.md leads with it since #246, and renderMermaidDiagrams defaults to true) → page 3× +
+# Home (back to the diagram) → switch the Sheet Definition to "Proportional 1-Up" → set Content Font
+# to 12pt (each re-render re-lands on the diagram) → page 5× → End (last-page tour beat) → Home
+# (diagram once more) → quit (Esc → Don't Save).
 # Alt+F/Alt+N are button hotkeys; the Sheet-Definition dropdown is opened with `click:20:6` and
 # "Proportional 1-Up" (4th/last entry) picked at `click:15:10`; the Content-Font-dialog clicks are
 # pixel-calibrated to demo.md's chooser layout (Helvetica Neue current → Size dropdown at row 19, "12"
@@ -95,16 +96,16 @@ dotnet_env=(--env "DOTNET_ROOT=$DOTNET_ROOT")
 echo "Recording TUI hero → $out_dir/hero-tui.gif"
 "$tuirec" record \
   --binary "$wp" \
-  --args "$sample" \
+  --args "$sample,--sheet,Default 2-Up" \
   "${dotnet_env[@]}" \
   "${tui_theme_env[@]}" \
   --env "WP_FORCE_KITTY=1" \
   --cols 110 --rows 34 \
   --font-size 18 --line-height 1.25 \
-  --startup-delay 6000 \
+  --startup-delay 8500 \
   --select "2.." \
   --trim=false \
-  --keystrokes 'wait:1500,PageDown,wait:1200,+,wait:700,+,wait:700,+,wait:1300,0,wait:1300,Alt+F,wait:1600,click:30:25,wait:600,`demo.md`,wait:5500,doubleclick:16:9,wait:3800,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1300,Home,wait:1600,click:20:6,wait:1400,click:15:10,wait:4500,Alt+N,wait:2500,click:41:19,wait:1500,click:42:26,wait:1500,click:86:27,wait:6500,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1300,End,wait:2400,Home,wait:1700,Esc,wait:1700,Alt+D,wait:1300' \
+  --keystrokes 'wait:1500,PageDown,wait:1200,+,wait:700,+,wait:700,+,wait:1300,0,wait:1300,Alt+F,wait:1600,click:30:25,wait:600,`demo.md`,wait:5500,doubleclick:16:9,wait:5200,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1300,Home,wait:1600,click:20:6,wait:1400,click:15:10,wait:4500,Alt+N,wait:2500,click:41:19,wait:1500,click:42:26,wait:1500,click:86:27,wait:6500,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1100,PageDown,wait:1300,End,wait:2400,Home,wait:1700,Esc,wait:1700,Alt+D,wait:1300' \
   --drain 1500 \
   --speed 1.1 \
   --output "$out_dir/hero-tui.gif" \

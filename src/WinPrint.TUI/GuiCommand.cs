@@ -10,7 +10,7 @@ namespace WinPrint.TUI;
 ///     and shared print options to <c>winprint.exe</c> (which parses them with the same canonical
 ///     option names). So <c>wp gui ./testfiles/Program.cs</c> opens the GUI with that file loaded.
 /// </summary>
-public sealed class GuiCommand : ICliCommand
+public sealed class GuiCommand : IHeadlessCliCommand
 {
     /// <inheritdoc />
     public string PrimaryAlias => "gui";
@@ -43,6 +43,14 @@ public sealed class GuiCommand : ICliCommand
     public Task<CommandResult> RunAsync(
         IApplication app,
         string? initial,
+        CommandRunOptions options,
+        CancellationToken cancellationToken)
+    {
+        return RunHeadlessAsync(options, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<CommandResult> RunHeadlessAsync(
         CommandRunOptions options,
         CancellationToken cancellationToken)
     {
