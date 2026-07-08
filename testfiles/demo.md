@@ -22,37 +22,57 @@ strongly about), ***both at once*** (for the parts I felt strongly about AND nob
 `inline code` (for the parts that actually matter), and ~~strikethrough~~ (for the features I
 swore I would ship in 1994).
 
-Here is a footnote, because a printing app absolutely needs footnotes.[^1]
+Here is a footnote, because BobAtk, the inventor of COM and my mentor, taught me to use them effectively.[^1]
 
 [^1]: I added footnote support at 2am. Nobody asked. This is the whole story of WinPrint.
 
-## Lists, ordered and otherwise
+## Mermaid Diagrams
 
-Unordered, nested, mildly judgmental:
+The fenced block below prints as an actual diagram, laid out and drawn in-process (no browser, no cloud); set `renderMermaidDiagrams` to `false` if you liked the code better. The promissory note, paid:
+
+```mermaid
+graph LR
+    A[Have idea] --> B{Over-engineer it?}
+    B -->|Always| C[Add a feature]
+    C --> D[Nobody uses it]
+    D --> A
+    B -->|Never| E[Ship on time]
+    E -.->|has never happened| A
+```
+
+## Lists, ordered (IMO, all lists are ordered)
+
+Not numbered, nested, mildly judgmental:
 
 - Reasons to print source code
   - To read it on paper (romantic)
   - To spot the bug you could not see on screen (it works, annoyingly)
-  - To feel something
+  - To put in a box so the paper yellows over time (I still have the OG WinPrint source in a box somewhere)
 - Reasons not to
   - It is 2026
   - Trees
-  - Your color laser is out of cyan again
+  - Printers suck.
 
 Ordered, because sequence matters:
 
-1. Write a printing app.
-2. Over-engineer it.
+1. Write a printing app when printing matters (1989).
+2. Decided to rewrite it when printing still sorta matters (1993), but didn't finish.
+3. Really decide to rewrite it when printing no longer matters (2020).
+4. Over-engineer 2.0.
    1. Add a GUI with live print preview.
    2. Add headers and footers. With **macros**.
    3. Add a print preview *in the terminal*, because obviously.
-3. Ship it to the fourteen people who will love it.
+   4. Observe how only 14 people on the planet use it.
+5. Over-engineer 3.0 to prove 3 things in 2026.
+   1. Terminal.Gui kicks ass, espeically it's sixel/kitty graphics terminal support.
+   2. AI coding is the future.
+   3. People still don't print.
 
 A task list of my remaining life goals:
 
 - [x] Write WinPrint (1988)
 - [x] Rewrite WinPrint (2020)
-- [x] Rewrite it *again* as a TUI (do not ask)
+- [x] Rewrite it *again* as a TUI using AI (2026)
 - [ ] Learn my lesson
 
 ## A table nobody asked for
@@ -104,8 +124,7 @@ A little JSON, for the config file you will never open:
 
 ## A picture worth 154 versions
 
-Here is WinPrint 1.54, shareware, $25 by check, mailed from strangers who trusted the postal
-service more than the internet:
+Here is WinPrint 1.54, shareware, $25 by check, mailed from strangers who trusted the postal service more than the Internet:
 
 ![WinPrint 1.54, in all its Windows 3.1 glory](WinPrint154.png)
 
@@ -184,7 +203,7 @@ And a regular expression, presented without defense:
 A: People who print source code. Both of them. Hi, Dave.
 
 **Q: Does it support Mermaid diagrams?**
-A: Yes. See below. Opt-in, because your diagrams are nobody's business until you say so.
+A: Yes. See below. Rendered right here in the app; your diagrams are nobody's business.
 
 **Q: Is printing dead?**
 A: Yes. This app is a seance.
@@ -193,21 +212,6 @@ A: Yes. This app is a seance.
 A: Because I know C# well and it is awesome, and because no other modern language/framework
 can even SPELL "print". I tried Electron and Flutter. Both suck at printing. This is the one
 technical decision I will die on.
-
-## Mermaid, which WinPrint supported Real Soon Now (tm) and now just supports
-
-Turn on `renderMermaidDiagrams` and the fenced block below prints as an actual diagram; leave
-it off and it prints as code, exactly as before. The promissory note, paid:
-
-```mermaid
-graph LR
-    A[Have idea] --> B{Over-engineer it?}
-    B -->|Always| C[Add a feature]
-    C --> D[Nobody uses it]
-    D --> A
-    B -->|Never| E[Ship on time]
-    E -.->|has never happened| A
-```
 
 ## A very long list of fixed-pitch fonts I have loved
 
@@ -238,5 +242,4 @@ Autolink, no ceremony: <https://tig.github.io/mcec/>
 
 ***
 
-That is the tour. If any of it printed nicely, thank the fixed-pitch fonts. If it did not,
-that is a bug, and I will fix it at 2am for an audience of no one. Enjoy WinPrint 3.0!
+That is the tour. If any of it printed nicely, thank the fixed-pitch fonts. If it did not, that is a bug, and I will fix it at 2am for an audience of no one. Enjoy WinPrint 3.0!

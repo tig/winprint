@@ -27,7 +27,7 @@
        on a Mac (dev loop for the MacCatalyst preview/print path) needs the macOS natives
        too — Core only references them for non-Windows TFMs. Harmless on Windows/CI. -->
   <ItemGroup>
-    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.116.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.2" />
   </ItemGroup>
 
   <ItemGroup>
