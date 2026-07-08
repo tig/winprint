@@ -106,7 +106,7 @@ public class MarkdownCteTests
                 Font = new Font { Family = "Courier New", Size = 10 },
                 TabSpaces = 4
             },
-            MeasurementContext = new RecordingGraphicsContext(measureCharWidth),
+            MeasurementContext = new RecordingGraphicsContext(),
             PageSize = new System.Drawing.SizeF(pageWidth, 2000f)
         };
 
@@ -124,7 +124,7 @@ public class MarkdownCteTests
 
         Assert.All(
             paint.DrawnStrings.Where(s => !string.IsNullOrWhiteSpace(s.Text)),
-            s => Assert.True(s.X + (s.Text.Length * measureCharWidth) <= pageWidth + 0.5f,
+            s => Assert.True(s.X + s.Text.Length * measureCharWidth <= pageWidth + 0.5f,
                 $"'{s.Text}' painted at x={s.X} runs past the {pageWidth}px page width"));
     }
 }

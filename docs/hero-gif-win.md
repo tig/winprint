@@ -143,9 +143,12 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     `chars:` sends read as typing); handle the **Save Print Output As** dialog as in step 10, saving to
     `~/wpdemo/mermaid.pdf`; type `& 'C:\Program Files\Mozilla Firefox\firefox.exe' -kiosk .\mermaid.pdf`
     (kiosk = chromeless full-screen PDF; the default handler and Edge both bring popups/promos into
-    frame); `ctrl-home`, `key_pagedown` x4 (~1.4 s each), `ctrl-home`, hold ~1.8 s;
-    `record { "action": "stop", "file": "<winprint repo abs>\\docs\\cli.gif" }`. Expect ~50 frames /
-    ~4 MB. Tidy: kill firefox, `exit` the terminal, delete `~/wpdemo`.
+    frame); zoom out until the whole page fits (`Ctrl+Minus` x5, ~350 ms apart -- pdf.js steps ~10%
+    per press and re-renders lazily, so fast presses overshoot); `ctrl-home`, `key_pagedown` through
+    every page (~0.7 s each; whole-page zoom makes each press exactly one page), `ctrl-home`, then
+    close firefox **on-record** with `alt-f4` so the loop ends back at the terminal;
+    `record { "action": "stop", "file": "<winprint repo abs>\\docs\\cli.gif" }`. Expect ~40 frames /
+    ~4 MB. Tidy: `exit` the terminal, delete `~/wpdemo`.
 13. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
