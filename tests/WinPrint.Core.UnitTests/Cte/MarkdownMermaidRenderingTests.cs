@@ -83,7 +83,8 @@ public class MarkdownMermaidRenderingTests
     {
         var stub = new StubMermaidRenderer(FakePng);
         MarkdownCte cte = MakeCte(new RecordingGraphicsContext());
-        cte.MermaidRenderer = stub; // RenderMermaidDiagrams stays false (the default)
+        cte.RenderMermaidDiagrams = false; // explicit opt-out (rendering is on by default)
+        cte.MermaidRenderer = stub;
 
         RecordingGraphicsContext paint = await RenderAndPaintAsync(cte, MermaidDoc);
 
@@ -198,9 +199,12 @@ public class MarkdownMermaidRenderingTests
         MarkdownCte persisted = WinPrintServices.Current.Settings.MarkdownContentTypeEngineSettings;
         bool savedRender = persisted.RenderMermaidDiagrams;
         string savedUrl = persisted.MermaidServiceUrl;
+        string savedBackend = persisted.MermaidBackend;
         try
         {
-            persisted.RenderMermaidDiagrams = true;
+            // Non-default values on every axis so the copy is provable.
+            persisted.RenderMermaidDiagrams = false;
+            persisted.MermaidBackend = "service";
             persisted.MermaidServiceUrl = "https://kroki.example.com";
 
             (ContentTypeEngineBase? cte, string languageId, _) =
@@ -208,12 +212,14 @@ public class MarkdownMermaidRenderingTests
 
             MarkdownCte markdown = Assert.IsType<MarkdownCte>(cte);
             Assert.Equal("text/x-markdown", languageId);
-            Assert.True(markdown.RenderMermaidDiagrams);
+            Assert.False(markdown.RenderMermaidDiagrams);
+            Assert.Equal("service", markdown.MermaidBackend);
             Assert.Equal("https://kroki.example.com", markdown.MermaidServiceUrl);
         }
         finally
         {
             persisted.RenderMermaidDiagrams = savedRender;
+            persisted.MermaidBackend = savedBackend;
             persisted.MermaidServiceUrl = savedUrl;
         }
     }
@@ -224,7 +230,8 @@ public class MarkdownMermaidRenderingTests
         var stub = new StubMermaidRenderer(FakePng);
         var source = new MarkdownCte
         {
-            RenderMermaidDiagrams = true,
+            RenderMermaidDiagrams = false,
+            MermaidBackend = "service",
             MermaidServiceUrl = "https://kroki.example.com",
             MermaidRenderer = stub
         };
@@ -232,8 +239,59 @@ public class MarkdownMermaidRenderingTests
         var target = new MarkdownCte();
         target.CopyPropertiesFrom(source);
 
-        Assert.True(target.RenderMermaidDiagrams);
+        Assert.False(target.RenderMermaidDiagrams);
+        Assert.Equal("service", target.MermaidBackend);
         Assert.Equal("https://kroki.example.com", target.MermaidServiceUrl);
         Assert.Same(stub, target.MermaidRenderer);
+    }
+
+    [Fact]
+    public void Defaults_RenderOn_BuiltinBackend_NoNetworkRenderer()
+    {
+        // The shipped defaults: fences render, and they render IN-PROCESS. A default engine must
+        // never resolve to the network renderer.
+        var cte = new MarkdownCte();
+
+        Assert.True(cte.RenderMermaidDiagrams);
+        Assert.Equal("builtin", cte.MermaidBackend);
+        Assert.IsType<MermaiderRenderer>(cte.ResolveMermaidRenderer());
+    }
+
+    [Theory]
+    [InlineData("service")]
+    [InlineData("SERVICE")]
+    public void ResolveMermaidRenderer_ServiceBackend_UsesInkRenderer(string backend)
+    {
+        var cte = new MarkdownCte { MermaidBackend = backend };
+        Assert.IsType<MermaidInkRenderer>(cte.ResolveMermaidRenderer());
+    }
+
+    [Fact]
+    public void ResolveMermaidRenderer_UnknownBackend_FallsBackToBuiltin_NotNetwork()
+    {
+        var cte = new MarkdownCte { MermaidBackend = "mermade-up" };
+        Assert.IsType<MermaiderRenderer>(cte.ResolveMermaidRenderer());
+    }
+
+    [Fact]
+    public void ResolveMermaidRenderer_InjectedRendererWins()
+    {
+        var stub = new StubMermaidRenderer(FakePng);
+        var cte = new MarkdownCte { MermaidBackend = "service", MermaidRenderer = stub };
+        Assert.Same(stub, cte.ResolveMermaidRenderer());
+    }
+
+    [Fact]
+    public async Task DefaultPipeline_RendersFenceViaBuiltinRenderer()
+    {
+        // End to end with NO injected renderer and NO settings changes: the default pipeline
+        // (Mermaider parse/layout -> CSS-var inlining -> Svg.Skia raster) turns the fence into a
+        // real PNG and paints it as an image. Entirely in-process; safe for offline CI.
+        MarkdownCte cte = MakeCte(new RecordingGraphicsContext());
+
+        RecordingGraphicsContext paint = await RenderAndPaintAsync(cte, MermaidDoc);
+
+        Assert.Single(paint.DrawnImages);
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("graph", StringComparison.Ordinal));
     }
 }
