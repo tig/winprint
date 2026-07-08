@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Markdig;
 using Markdig.Extensions.Tables;
@@ -29,7 +30,10 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     GIFs render their first frame. Local files (resolved relative to
 ///     <see cref="ContentTypeEngineBase.SourceFileName" />), <c>data:</c> URIs, and <c>http(s)</c>
 ///     URLs are supported. Anything that fails to load (and inline images mixed with text) falls back
-///     to alt text.
+///     to alt text. When <see cref="RenderMermaidDiagrams" /> is enabled, <c>```mermaid</c> fences are
+///     rendered to images via <see cref="MermaidRenderer" /> (default: the mermaid.ink-compatible
+///     service at <see cref="MermaidServiceUrl" />); a diagram that fails to render falls back to a
+///     plain code block.
 /// </summary>
 public class MarkdownCte : ContentTypeEngineBase
 {
@@ -55,6 +59,9 @@ public class MarkdownCte : ContentTypeEngineBase
     /// <summary>Decoded image bytes keyed by source URL/path; null marks a load that failed (don't retry).</summary>
     private readonly Dictionary<string, byte[]?> _imageCache = new(StringComparer.Ordinal);
 
+    /// <summary>Prefix distinguishing rendered mermaid diagrams from image URLs in <see cref="_imageCache" />.</summary>
+    private const string MermaidCachePrefix = "mermaid:";
+
     private static readonly GraphicsColor TextColor = GraphicsColor.FromRgb(0x1d, 0x1d, 0x1f);
     private static readonly GraphicsColor LinkColor = GraphicsColor.FromRgb(0x0b, 0x57, 0xd0);
     private static readonly GraphicsColor CodeColor = GraphicsColor.FromRgb(0x37, 0x37, 0x37);
@@ -74,11 +81,38 @@ public class MarkdownCte : ContentTypeEngineBase
 
     public override string[] SupportedContentTypes => s_supportedContentTypes;
 
+    /// <summary>
+    ///     When false (the default), <c>```mermaid</c> fences render as plain code blocks. When true,
+    ///     each fence is rendered to an image via <see cref="MermaidRenderer" /> — by default the remote
+    ///     mermaid.ink-compatible service at <see cref="MermaidServiceUrl" />, which means the diagram
+    ///     source is sent to that service (off by default for the same reason as
+    ///     <see cref="HtmlCte.AllowRemoteResources" />).
+    /// </summary>
+    public bool RenderMermaidDiagrams { get; set; }
+
+    /// <summary>Base URL of the mermaid.ink-compatible service used when no <see cref="MermaidRenderer" /> is set.</summary>
+    public string MermaidServiceUrl { get; set; } = "https://mermaid.ink";
+
+    /// <summary>Diagram renderer override (tests / alternate backends); null uses <see cref="MermaidInkRenderer" />.</summary>
+    [JsonIgnore]
+    public IMermaidRenderer? MermaidRenderer { get; set; }
+
     public static MarkdownCte Create()
     {
         var engine = new MarkdownCte();
         engine.CopyPropertiesFrom(WinPrintServices.Current.Settings.MarkdownContentTypeEngineSettings);
         return engine;
+    }
+
+    public override void CopyPropertiesFrom(ModelBase? source)
+    {
+        base.CopyPropertiesFrom(source);
+        if (source is MarkdownCte src)
+        {
+            RenderMermaidDiagrams = src.RenderMermaidDiagrams;
+            MermaidServiceUrl = src.MermaidServiceUrl;
+            MermaidRenderer = src.MermaidRenderer;
+        }
     }
 
     public override async Task<bool> SetDocumentAsync(string doc)
@@ -125,6 +159,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
             MarkdownDocument ast = Markdown.Parse(Document, s_pipeline);
             await PreloadImagesAsync(ast);
+            await PreloadMermaidDiagramsAsync(ast);
             WalkBlocks(ast, g, fontCache, 0, 0);
 
             _pageCount = Paginate();
@@ -300,7 +335,10 @@ public class MarkdownCte : ContentTypeEngineBase
                 case QuoteBlock quote:
                     WalkBlocks(quote, g, fonts, indentLevel, quoteDepth + 1);
                     break;
-                case CodeBlock code: // covers FencedCodeBlock too
+                case FencedCodeBlock fence when TryGetRenderedMermaid(fence, out string mermaidKey):
+                    EmitImage(mermaidKey, "mermaid diagram", g, fonts, indentLevel, quoteDepth);
+                    break;
+                case CodeBlock code: // covers FencedCodeBlock too (incl. unrendered mermaid fences)
                     EmitCodeBlock(code, g, fonts, indentLevel, quoteDepth);
                     break;
                 case ThematicBreakBlock:
@@ -792,6 +830,89 @@ public class MarkdownCte : ContentTypeEngineBase
                 await PreloadImageUrlAsync(src);
             }
         }
+    }
+
+    // ---- mermaid ----------------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Renders every <c>```mermaid</c> fence to image bytes (via <see cref="MermaidRenderer" /> or
+    ///     the default <see cref="MermaidInkRenderer" />) into <see cref="_imageCache" />, keyed by
+    ///     <see cref="MermaidCachePrefix" /> + source so identical diagrams render once. No-op unless
+    ///     <see cref="RenderMermaidDiagrams" /> is enabled; a null result marks a failed render so the
+    ///     fence falls back to a plain code block.
+    /// </summary>
+    private async Task PreloadMermaidDiagramsAsync(MarkdownDocument ast)
+    {
+        if (!RenderMermaidDiagrams)
+        {
+            return;
+        }
+
+        IMermaidRenderer? renderer = null;
+        foreach (FencedCodeBlock fence in ast.Descendants<FencedCodeBlock>())
+        {
+            if (!IsMermaidFence(fence))
+            {
+                continue;
+            }
+
+            string diagram = GetFenceText(fence);
+            string key = MermaidCachePrefix + diagram;
+            if (diagram.Length == 0 || _imageCache.ContainsKey(key))
+            {
+                continue;
+            }
+
+            renderer ??= MermaidRenderer ?? new MermaidInkRenderer(MermaidServiceUrl);
+            _imageCache[key] = await renderer.RenderAsync(diagram);
+        }
+    }
+
+    /// <summary>
+    ///     True when <paramref name="fence" /> is a mermaid fence whose diagram rendered successfully
+    ///     during reflow; <paramref name="cacheKey" /> then locates the image bytes in the cache.
+    /// </summary>
+    private bool TryGetRenderedMermaid(FencedCodeBlock fence, out string cacheKey)
+    {
+        cacheKey = string.Empty;
+        if (!IsMermaidFence(fence))
+        {
+            return false;
+        }
+
+        string key = MermaidCachePrefix + GetFenceText(fence);
+        if (_imageCache.TryGetValue(key, out byte[]? bytes) && bytes is { Length: > 0 })
+        {
+            cacheKey = key;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>Matches the fence's language (the first word of its info string) against "mermaid".</summary>
+    private static bool IsMermaidFence(FencedCodeBlock fence)
+    {
+        ReadOnlySpan<char> info = fence.Info is null ? [] : fence.Info.AsSpan().Trim();
+        int end = info.IndexOfAny(' ', '\t');
+        ReadOnlySpan<char> language = end < 0 ? info : info[..end];
+        return language.Equals("mermaid", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetFenceText(CodeBlock code)
+    {
+        var sb = new StringBuilder();
+        for (int n = 0; n < code.Lines.Count; n++)
+        {
+            if (n > 0)
+            {
+                sb.Append('\n');
+            }
+
+            sb.Append(code.Lines.Lines[n].Slice.ToString());
+        }
+
+        return sb.ToString();
     }
 
     private async Task PreloadImageUrlAsync(string url)
