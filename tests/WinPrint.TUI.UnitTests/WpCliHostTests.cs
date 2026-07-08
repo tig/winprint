@@ -22,7 +22,7 @@ public class WpCliHostTests
     [Fact]
     public async Task HeadlessCommand_WritesResultWithoutTerminalGui()
     {
-        var host = CreateHost();
+        WpCliHost host = CreateHost();
         host.Registry.Register(new StubHeadlessCommand());
 
         var stdout = new StringWriter();
@@ -39,7 +39,7 @@ public class WpCliHostTests
     public async Task DefaultCommand_EmptyArgs_DispatchesRegisteredDefault()
     {
         var stub = new StubHeadlessCommand();
-        var host = CreateHost(options => options.DefaultCommand = "stub");
+        WpCliHost host = CreateHost(options => options.DefaultCommand = "stub");
         host.Registry.Register(stub);
 
         var stdout = new StringWriter();
@@ -56,7 +56,7 @@ public class WpCliHostTests
     public async Task DefaultCommand_UnknownAlias_ForwardsPositionalArgs()
     {
         var stub = new StubHeadlessCommand();
-        var host = CreateHost(options => options.DefaultCommand = "stub");
+        WpCliHost host = CreateHost(options => options.DefaultCommand = "stub");
         host.Registry.Register(stub);
 
         var stdout = new StringWriter();
@@ -72,7 +72,7 @@ public class WpCliHostTests
     public async Task DefaultCommand_ExplicitHelpFlag_WritesRootHelp()
     {
         var stub = new StubHeadlessCommand();
-        var host = CreateHost(options => options.DefaultCommand = "stub");
+        WpCliHost host = CreateHost(options => options.DefaultCommand = "stub");
         host.Registry.Register(stub);
 
         var stdout = new StringWriter();
@@ -88,7 +88,7 @@ public class WpCliHostTests
     [Fact]
     public async Task RootFlag_Version_WritesApplicationBanner()
     {
-        var host = CreateHost(options => options.Version = "1.2.3");
+        WpCliHost host = CreateHost(options => options.Version = "1.2.3");
 
         var stdout = new StringWriter();
         var stderr = new StringWriter();
@@ -103,7 +103,7 @@ public class WpCliHostTests
     [Fact]
     public async Task RootFlag_Help_WritesRootHelpMarkdown()
     {
-        var host = CreateHost(options => options.Version = "1.2.3");
+        WpCliHost host = CreateHost(options => options.Version = "1.2.3");
         host.Registry.Register(new StubHeadlessCommand());
 
         var stdout = new StringWriter();
@@ -120,7 +120,7 @@ public class WpCliHostTests
     public async Task ViewerCommand_Cat_RendersWithoutTerminalGuiSession()
     {
         var viewer = new StubViewerCommand();
-        var host = CreateHost();
+        WpCliHost host = CreateHost();
         host.Registry.Register(viewer);
 
         var stdout = new StringWriter();
@@ -137,7 +137,7 @@ public class WpCliHostTests
     [Fact]
     public async Task BuiltInHelp_Cat_RendersWithoutTerminalGuiSession()
     {
-        var host = CreateHost();
+        WpCliHost host = CreateHost();
 
         var stdout = new StringWriter();
         var stderr = new StringWriter();
@@ -155,7 +155,7 @@ public class WpCliHostTests
         Environment.SetEnvironmentVariable("DisableRealDriverIO", "1");
 
         var interactive = new StubInteractiveCommand();
-        var host = CreateHost();
+        WpCliHost host = CreateHost();
         host.Registry.Register(interactive);
 
         var stdout = new StringWriter();
