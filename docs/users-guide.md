@@ -41,6 +41,12 @@ Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-t
 wp print README.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
 ```
 
+Or skip the printer entirely; `--pdf` writes the PDF straight to a file on every platform (no printer, no driver, no save dialog):
+
+```bash
+wp print README.md --pdf readme.pdf --sheet "Proportional 1-Up"
+```
+
 Check the installed version:
 
 ```bash
@@ -103,7 +109,7 @@ apply everywhere:
 | `--content-type` | `-e` | Content type engine / language override (e.g. `text/plain`, `text/html`, or a `<language>`). |
 
 Front ends add their own *appropriate* extras: the interactive TUI adds `--view`, `--width`,
-`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing); and the
+`--height`; the `wp print` command adds `--what-if` (`-w`, count sheets without printing) and `--pdf <file>` (write a PDF file instead of printing); and the
 GUI launches through the separate `wp gui` command. The `wp` command line also provides `--help`,
 `--version`, `--opencli`, `--json`, `--output`, `--initial`, `--timeout`, and `--cat`.
 

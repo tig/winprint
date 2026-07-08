@@ -40,6 +40,12 @@ One command. Markdown goes in; a formatted, paginated PDF comes out: headings, l
 wp print mermaid.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
 ```
 
+No printer? `--pdf` writes the file directly, on every platform:
+
+```powershell
+wp print mermaid.md --pdf mermaid.pdf --sheet "Proportional 1-Up"
+```
+
 ![wp print turning mermaid.md into a PDF, then viewing it](cli.gif)
 
 ## Quick Start
