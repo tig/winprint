@@ -35,7 +35,7 @@ wp [options] [file...]
 
 ### Examples
 
-Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-turn-markdown-into-a-pdf) for it in action). Markdown prints as a formatted document, with images, tables, syntax-highlighted code, and mermaid fences rendered as diagrams in-process:
+Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-turn-markdown-into-a-pdf) for it in action). Markdown prints as a formatted document, with images, tables, syntax-highlighted code, and mermaid fences rendered as diagrams:
 
 ```bash
 wp print README.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
@@ -230,14 +230,14 @@ This is the default CTE used for most text and source files. It uses bundled Tex
 
 ### `MarkdownCte`
 
-Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks print as diagrams by default, rendered entirely in-process (nothing is sent over the network). Diagram types the built-in renderer does not support yet, and diagrams that fail to render, print as regular code blocks. 
+Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks are rendered as diagrams by default using the remote `mermaid.ink` service (diagram source is sent over the network; broadest compatibility). Unsupported diagram types, and diagrams that fail to render, print as regular code blocks.
 
-Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"service"` to render via a remote [mermaid.ink](https://mermaid.ink)-compatible service instead (broader diagram-type support, but the diagram source is sent to `mermaidServiceUrl`, so it is opt-in).
+Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"builtin"` for the private in-process Mermaider renderer (nothing is sent over the network, but it supports fewer diagram types and has some syntax restrictions). See the support matrix in `testfiles/mermaid.md`.
 
    ```json
        "markdownContentTypeEngineSettings": {
          "renderMermaidDiagrams": true,
-         "mermaidBackend": "builtin",
+         "mermaidBackend": "service",
          "mermaidServiceUrl": "https://mermaid.ink"
        }
    ```
