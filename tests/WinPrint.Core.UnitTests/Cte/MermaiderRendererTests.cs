@@ -56,11 +56,10 @@ public class MermaiderRendererTests
     [Fact]
     public async Task MermaidShowcase_RendersSupportedTypes_FallsBackForTheRest()
     {
-        // testfiles/mermaid.md is the grand tour: complex examples of every diagram type the
-        // builtin renderer supports (10 fences) plus gantt, which it does not (1 fence).
-        // Rendering it end to end with the real renderer must produce exactly one drawn image per
-        // supported fence and code text for the unsupported one; a Mermaider upgrade that adds or
-        // drops a type shows up here as a count change, deliberately.
+        // testfiles/mermaid.md is the grand tour + stress test. This run forces the
+        // `builtin` backend to exercise Mermaider + the fallback logic (13 images for
+        // supported types, code blocks for the rest). Useful as a benchmark for Mermaider
+        // upgrades and to prove fallback. (The application default backend is now "service".)
         string path = FindTestFile("mermaid.md");
         var cte = new MarkdownCte
         {
@@ -71,7 +70,8 @@ public class MermaiderRendererTests
             },
             MeasurementContext = new RecordingGraphicsContext(),
             PageSize = new System.Drawing.SizeF(600, 3000),
-            SourceFileName = path
+            SourceFileName = path,
+            MermaidBackend = "builtin" // Force the Mermaider path for this builtin-specific test
         };
 
         Assert.True(await cte.SetDocumentAsync(await File.ReadAllTextAsync(path)));
@@ -84,9 +84,11 @@ public class MermaiderRendererTests
             cte.PaintPage(paint, p);
         }
 
-        Assert.Equal(10, paint.DrawnImages.Count);
-        // The unsupported fence fell back to source on the page.
+        Assert.Equal(13, paint.DrawnImages.Count);
+        // Multiple unsupported fences (and syntax variants) must have fallen back to source text.
         Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("gantt", StringComparison.Ordinal));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("xychart", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("sankey", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string FindTestFile(string name)
