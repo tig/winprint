@@ -36,7 +36,7 @@ Advanced source code, html, markdown, and text file printing for terminals (all 
 
 ## How to turn Markdown into a PDF
 
-One command. Markdown goes in; a formatted, paginated PDF comes out: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud). Point `--printer` at any print-to-PDF queue — every platform has one:
+One command. Markdown goes in; a formatted, paginated PDF comes out: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams (via mermaid.ink by default, or fully in-process with the built-in renderer). Point `--printer` at any print-to-PDF queue — every platform has one:
 
 ```powershell
 # Windows — the built-in "Microsoft Print to PDF"

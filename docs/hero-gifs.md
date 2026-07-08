@@ -23,8 +23,8 @@ show the source file and **zoom in/out** (no pan) → open **`./testfiles/demo.m
 File dialog (it renders as formatted **Markdown** — the "not just source code" beat) → page
 through it → switch the **Sheet Definition** to **Proportional 1-Up** (single-column reflow) → open
 the **Content Font** dialog and bump the size to **12pt** → page again → **End** (hold on the
-rendered **Mermaid diagram** on demo.md's last page — on by default, see
-["The Mermaid beat"](#the-mermaid-beat-on-by-default--no-setup)) → Home → **quit** (Esc → *Don't
+rendered **Mermaid diagram** on demo.md's last page — on by default (via mermaid.ink), see
+["The Mermaid beat"](#the-mermaid-beat-on-by-default-via-mermaidink)) → Home → **quit** (Esc → *Don't
 Save*). The exact keystroke choreography — button hotkeys (`Alt+F`/`Alt+N`), the Sheet-Definition
 dropdown pick, and the pixel-calibrated Content-Font-dialog clicks — lives in the `--keystrokes`
 string in `scripts/record-hero-gifs.sh`; keep it rich. To open `demo.md` robustly, the choreography
@@ -56,8 +56,8 @@ prompt — the hero answers *Don't Save*.)
    just source code" beat — the same file and sheet the TUI hero uses.
 6. **Print to PDF and open** — print the current document to PDF, save it as
    `winprintdemo.pdf`, open the result so the loop ends on real printed output — **ending on the
-   last page's rendered Mermaid diagram** (on by default, see
-   ["The Mermaid beat"](#the-mermaid-beat-on-by-default--no-setup)).
+   last page's rendered Mermaid diagram** (on by default via mermaid.ink, see
+   ["The Mermaid beat"](#the-mermaid-beat-on-by-default-via-mermaidink)).
    Windows (MCEC hero): select **Microsoft Print to PDF**, print, save the file, open in Edge.
    macOS (`capture-gui-hero-macos.py`): Cmd+P → **PDF** button in the native print panel →
    **Save as PDF…** → type the path → Return → `open` (Preview); capture the Preview window
@@ -68,20 +68,20 @@ Both GUI producers drive the full choreography above (the macOS one was once a w
 page/page/arrow baseline — don't regress it back). Settings toggles and file-open frames
 linger; the zoom/pan flourish stays fast.
 
-## The Mermaid beat (on by default — no setup)
+## The Mermaid beat (on by default, via mermaid.ink)
 
-`demo.md`'s Mermaid fence renders as a live diagram **out of the box**. As of v3.1.1
-`renderMermaidDiagrams` defaults to `true` and `mermaidBackend` to `builtin`, so the fence is
-rendered to an image **in-process** by Mermaider (Svg.Skia) — **nothing is sent anywhere, and
-recording needs no network and no config seeding.** The End / last-page beats show the diagram
-with zero setup. *(This changed in 3.1.1; earlier releases defaulted the flag off and rendered via
-a remote mermaid.ink service, which is why older revisions of this doc told you to seed a config.)*
+`demo.md`'s Mermaid fence renders as a live diagram **by default** — `renderMermaidDiagrams`
+defaults to `true` — so the End / last-page beats show the diagram with **no config seeding**. But
+as of #243 the default `mermaidBackend` is **`service`**, which renders through the remote
+**mermaid.ink** service, so **recording needs network**. (An unsupported diagram type or a render
+failure falls back to a code block; a config typo safely falls back to the in-process renderer,
+never the network.)
 
-The only way the fence falls back to a code block is if someone has **disabled** it in a
-co-located `WinPrint.config.json` (`"renderMermaidDiagrams": false`) or switched
-`"mermaidBackend": "service"` (which posts to a mermaid.ink-compatible service and needs network).
-To restore the default, set `"renderMermaidDiagrams": true` and `"mermaidBackend": "builtin"`. In
-**portable mode** (macOS/Linux) that config sits next to each subject's executable:
+For an **offline / no-network** recording, switch to the in-process Mermaider renderer by setting
+`"mermaidBackend": "builtin"` in the subject's co-located `WinPrint.config.json` — it renders
+entirely in-process (Svg.Skia) but supports **fewer diagram types**, so confirm `demo.md`'s diagram
+still renders rather than falling back to code. In **portable mode** (macOS/Linux) that config sits
+next to each subject's executable:
 
 - **TUI (`wp`)**: `src/WinPrint.TUI/bin/Release/net10.0/WinPrint.config.json`
 - **Mac Catalyst GUI**: `WinPrint.app/Contents/MonoBundle/WinPrint.config.json` (inside the bundle)
@@ -116,7 +116,8 @@ rm -rf src/WinPrint.Maui/bin src/WinPrint.Maui/obj
 dotnet build src/WinPrint.Maui/WinPrint.Maui.csproj -c Release \
   -f net10.0-maccatalyst -r maccatalyst-arm64 /p:CreatePackage=false /p:EnableCodeSigning=false
 
-# 2. (Nothing to seed — Mermaid renders in-process by default; see "The Mermaid beat" above.)
+# 2. (No flag to seed — Mermaid is on by default via mermaid.ink, so recording needs network; set
+#    mermaidBackend=builtin to record offline. See "The Mermaid beat" above.)
 
 # 3. Drive + capture + assemble the GIF (variable per-frame durations are baked in).
 python3 scripts/capture-gui-hero-macos.py --output docs/hero-gui-mac.gif
@@ -183,8 +184,9 @@ the real screen), so there's no "force a present" dance — just keep the app **
 ## Regenerating the TUI / headless-print heroes
 
 `scripts/record-hero-gifs.sh` regenerates the TUI and print heroes — **on macOS/Linux only**
-(it also invokes the macOS GUI capture when run on macOS). The Mermaid beat needs no setup —
-it renders in-process by default (see ["The Mermaid beat"](#the-mermaid-beat-on-by-default--no-setup)).
+(it also invokes the macOS GUI capture when run on macOS). The Mermaid beat needs no flag seeding —
+it is on by default via mermaid.ink, so recording needs network (set `mermaidBackend=builtin` to
+record offline; see ["The Mermaid beat"](#the-mermaid-beat-on-by-default-via-mermaidink)).
 
 ### Theming the hero (`TUI_CONFIG`)
 
