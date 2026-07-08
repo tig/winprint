@@ -19,15 +19,14 @@ Human and AI Agent friendly print utility with syntax highlighting, multiple pag
 
 *Print (or dry-run with `--what-if`) straight from the shell — same sheet/printer options as the TUI and GUI.*
 
-### Graphical UI (`wp gui`)
+### Windows GUI
 
-<p>
   <img height="330" alt="WinPrint GUI on Windows" src="docs/hero-gui-win.gif" />
+
+### MacOS GUI
+
   <img height="330" alt="WinPrint GUI on macOS" src="docs/hero-gui-mac.gif" />
-</p>
-
-*The GUI on Windows (left) and macOS (right): visual print preview, settings, and `wp gui` to launch from the terminal.*
-
+  
 ## Installation
 
 ### Windows
