@@ -74,7 +74,8 @@ public sealed class PrintCommand : ICliCommand
             }
             catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
             {
-                return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name, ex.Message);
+                return new CommandResult(CommandStatus.Error, output.ToString().TrimEnd(), ex.GetType().Name,
+                    ex.Message);
             }
 
             string verb = whatIf ? "would print" : "printed";
