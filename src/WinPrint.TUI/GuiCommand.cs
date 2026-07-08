@@ -10,7 +10,7 @@ namespace WinPrint.TUI;
 ///     and shared print options to <c>winprint.exe</c> (which parses them with the same canonical
 ///     option names). So <c>wp gui ./testfiles/Program.cs</c> opens the GUI with that file loaded.
 /// </summary>
-public sealed class GuiCommand : ICliCommand
+public sealed class GuiCommand : IHeadlessCliCommand
 {
     /// <inheritdoc />
     public string PrimaryAlias => "gui";
@@ -46,27 +46,28 @@ public sealed class GuiCommand : ICliCommand
         CommandRunOptions options,
         CancellationToken cancellationToken)
     {
+        return RunHeadlessAsync(options, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<CommandResult> RunHeadlessAsync(
+        CommandRunOptions options,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(options);
 
         try
         {
-            try
-            {
-                GuiLauncher.Launch(BuildArguments(options));
-                return Task.FromResult(new CommandResult(CommandStatus.Ok, "Opened WinPrint GUI.", null, null));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
-            }
-            catch (Win32Exception ex)
-            {
-                return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
-            }
+            GuiLauncher.Launch(BuildArguments(options));
+            return Task.FromResult(new CommandResult(CommandStatus.Ok, "Opened WinPrint GUI.", null, null));
         }
-        finally
+        catch (InvalidOperationException ex)
         {
-            HeadlessInlineTeardown.ReserveInlineRegion(app);
+            return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
+        }
+        catch (Win32Exception ex)
+        {
+            return Task.FromResult(new CommandResult(CommandStatus.Error, null, ex.GetType().Name, ex.Message));
         }
     }
 
