@@ -71,7 +71,7 @@ public class MermaiderRendererTests
             MeasurementContext = new RecordingGraphicsContext(),
             PageSize = new System.Drawing.SizeF(600, 3000),
             SourceFileName = path,
-            MermaidBackend = "builtin"   // Force the Mermaider path for this builtin-specific test
+            MermaidBackend = "builtin" // Force the Mermaider path for this builtin-specific test
         };
 
         Assert.True(await cte.SetDocumentAsync(await File.ReadAllTextAsync(path)));
