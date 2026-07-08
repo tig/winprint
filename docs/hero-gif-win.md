@@ -126,7 +126,17 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }` (absolute path -- a
     relative one lands in the controller's temp copy and is lost). Assert `result.frames` (~45) and
     `result.bytes` (~4-5 MB). After the stop, close the PDF **tab** with `ctrl-f4` (not the whole browser).
-12. **Tidy.** Close WinPrint; tear down the controller.
+12. **Record the mermaid showcase (`docs/mermaid.gif`).** Regenerate this **every time the Windows
+    hero is regenerated** -- same session, same controller, right after step 11 while the subject is
+    still up. Open `testfiles/mermaid.md` (the grand tour: every diagram type the built-in renderer
+    supports, plus the gantt fallback) as in step 5, keep **Proportional 2-Up**, then:
+    `record { "action": "start", "x": WX-8, "y": WY-8, "width": WW+16, "height": WH+16, "fps": 2,
+    "maxWidth": 700 }`, dwell ~1.5 s on the first sheet, `focus` the preview, and `key_pagedown`
+    through every sheet (~1.6 s each; re-`query` nothing -- the count is on the status bar). Hold
+    ~1.5 s on the last sheet (the gantt fence printing as code is the honest ending), then
+    `record { "action": "stop", "file": "<winprint repo abs>\\docs\\mermaid.gif" }`. Expect ~25
+    frames / ~2 MB.
+13. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
 
