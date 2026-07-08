@@ -83,7 +83,7 @@ public sealed class WpCliHost
             return ExitCodes.UsageError;
         }
 
-        return await DispatchCommandAsync(args, (ICliCommand)command, cancellationToken, stdout, stderr);
+        return await DispatchCommandAsync(args, command, cancellationToken, stdout, stderr);
     }
 
     private async Task<int> RunWithDefaultCommandAsync(
@@ -135,8 +135,8 @@ public sealed class WpCliHost
         TextWriter stdout,
         TextWriter stderr)
     {
-        var stdoutIsConsole = ReferenceEquals(stdout, Console.Out);
-        var stderrIsConsole = ReferenceEquals(stderr, Console.Error);
+        bool stdoutIsConsole = ReferenceEquals(stdout, Console.Out);
+        bool stderrIsConsole = ReferenceEquals(stderr, Console.Error);
 
         if (runOptions.Initial is not null && !command.TryValidateInitial(runOptions.Initial, runOptions))
         {
@@ -242,7 +242,7 @@ public sealed class WpCliHost
         CommandRunOptions runOptions,
         CancellationToken cancellationToken)
     {
-        var useInline = command.Kind == CommandKind.Input && !runOptions.Fullscreen;
+        bool useInline = command.Kind == CommandKind.Input && !runOptions.Fullscreen;
         AppModel previousAppModel = Application.AppModel;
         Application.AppModel = useInline ? AppModel.Inline : AppModel.FullScreen;
 
@@ -264,8 +264,8 @@ public sealed class WpCliHost
         switch (rootFlag)
         {
             case ArgParser.RootFlag.Help:
-                var helpMarkdown = _helpProvider.GetRootHelp(Registry) ??
-                                   new MetadataHelpProvider().GetRootHelp(Registry) ?? string.Empty;
+                string helpMarkdown = _helpProvider.GetRootHelp(Registry) ??
+                                      new MetadataHelpProvider().GetRootHelp(Registry) ?? string.Empty;
                 MarkdownRenderer.RenderToAnsi(helpMarkdown, stdout);
                 break;
             case ArgParser.RootFlag.Version:
