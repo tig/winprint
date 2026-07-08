@@ -155,26 +155,30 @@ public class MarkdownCte : ContentTypeEngineBase
         }
 
         ArgumentNullException.ThrowIfNull(printerResolution);
-        int dpiX = printerResolution.X;
         int dpiY = printerResolution.Y;
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || dpiX < 0 || dpiY < 0)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || printerResolution.X < 0 || dpiY < 0)
         {
-            dpiX = dpiY = 96;
+            dpiY = 96;
         }
 
-        _dpiY = dpiY;
         // Fresh build instances: the previous render's lines/cache stay published (and safe to
         // paint) until this render completes — never mutate what PaintPage may be enumerating.
         _lines = [];
         _imageCache = new Dictionary<string, byte[]?>(StringComparer.Ordinal);
 
-        IGraphicsContext g = ResolveMeasurementContext(dpiX, dpiY, out IDisposable? owner);
+        // GDI's Display page unit means 1/100" on a printer DC but device pixels on the reflow
+        // bitmap, and Point-unit fonts scale with the bitmap's DPI while Pixel-unit fonts do not.
+        // Resolve the default reflow context at 100 DPI so Point-font metrics come out 1:1 with
+        // the printer's Display units; measuring at the printer's DPI made reflow ~4% narrower
+        // than paint, which clipped line tails at the right margin ("...to catch regress").
+        IGraphicsContext g = ResolveMeasurementContext(100, 100, out IDisposable? owner);
+        _dpiY = g.IsDisplayUnit ? 100 : dpiY;
         var fontCache = new Dictionary<string, IGraphicsFont>();
         try
         {
             g.SetTextRenderingMode(GraphicsTextRenderingMode);
             _baseSizePx = ContentSettings!.Font.Size / 72F * 96F;
-            _baseLineHeight = GetFont(g, fontCache, 1f, GraphicsFontStyle.Regular).GetHeight(dpiY);
+            _baseLineHeight = GetFont(g, fontCache, 1f, GraphicsFontStyle.Regular).GetHeight(_dpiY);
             _indentStep = _baseSizePx * 1.6f;
 
             if (PageSize.Height < _baseLineHeight)
@@ -670,15 +674,10 @@ public class MarkdownCte : ContentTypeEngineBase
                         continue;
                     }
 
-                    bool firstInCell = true;
                     foreach (MarkdownRun run in cellLines[c][k].Runs)
                     {
-                        if (firstInCell)
-                        {
-                            run.X = edges[c] + pad;
-                            firstInCell = false;
-                        }
-
+                        // Cell wraps run at indent 0; rebase every run onto its column.
+                        run.X = edges[c] + pad + (run.X ?? 0f);
                         rowLine.Runs.Add(run);
                     }
                 }
@@ -1225,6 +1224,7 @@ public class MarkdownCte : ContentTypeEngineBase
                     continue; // drop leading space
                 }
 
+                tok.X = line.Indent + x;
                 line.Runs.Add(tok);
                 x += w;
                 maxHeight = Math.Max(maxHeight, h);
@@ -1259,7 +1259,7 @@ public class MarkdownCte : ContentTypeEngineBase
 
                     string piece = remaining[..fit];
                     line.Runs.Add(new MarkdownRun
-                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color });
+                    { Text = piece, Scale = tok.Scale, Style = tok.Style, Color = tok.Color, X = line.Indent + x });
                     x += Measure(g, piece, font).Width;
                     maxHeight = Math.Max(maxHeight, h);
                     any = true;
@@ -1273,6 +1273,7 @@ public class MarkdownCte : ContentTypeEngineBase
                 continue;
             }
 
+            tok.X = line.Indent + x;
             line.Runs.Add(tok);
             x += w;
             maxHeight = Math.Max(maxHeight, h);
@@ -1327,7 +1328,11 @@ public class MarkdownCte : ContentTypeEngineBase
         string key = $"{scale:F3}|{(int)style}";
         if (!cache.TryGetValue(key, out IGraphicsFont? font))
         {
-            font = g.CreateFont(ContentSettings!.Font.Family, _baseSizePx * scale, style, GraphicsFontUnit.Pixel);
+            // Mirror PaintPage's font selection exactly — reflow and paint must agree on metrics.
+            // On a Display-unit target (GDI printing) size in Points; elsewhere in CSS pixels.
+            GraphicsFontUnit unit = g.IsDisplayUnit ? GraphicsFontUnit.Point : GraphicsFontUnit.Pixel;
+            float size = (g.IsDisplayUnit ? ContentSettings!.Font.Size : _baseSizePx) * scale;
+            font = g.CreateFont(ContentSettings!.Font.Family, size, style, unit);
             cache[key] = font;
         }
 

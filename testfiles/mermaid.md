@@ -12,15 +12,13 @@ The classic. Direction, shapes, edge labels, and two subgraphs, because nobody's
 pipeline fits in one box.
 
 ```mermaid
-flowchart TB
+flowchart LR
     subgraph authoring[Authoring]
         MD[write markdown] --> FENCE[add a mermaid fence]
     end
     subgraph printing[Printing]
-        PARSE{fence tagged mermaid?}
-        PARSE -->|yes| RENDER[render in-process]
+        PARSE{tagged mermaid?} -->|yes| RENDER[render in-process]
         PARSE -->|no| CODE[print as code]
-        RENDER -->|unsupported type| CODE
     end
     FENCE --> PARSE
     RENDER --> PAGE[ink on paper]
