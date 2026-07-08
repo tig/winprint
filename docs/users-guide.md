@@ -77,7 +77,7 @@ wp print Program.cs --what-if
 
 - **Windows** — the built-in **Microsoft Print to PDF**; a Save-As dialog chooses the file.
 - **macOS** — install a virtual PDF printer once with [RWTS PDFwriter](https://github.com/rodyager/RWTS-PDFwriter): `brew install --cask rwts-pdfwriter`, then add it in **Printers & Scanners** (name it e.g. `CUPS-PDF`). Printed PDFs land in `/var/spool/pdfwriter/$USER/`. (`brew install cups-pdf` does **not** exist on macOS — that is a Linux package.)
-- **Linux** — `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu; the queue is named **`PDF`** — confirm with `lpstat -p`) or `sudo dnf install cups-pdf` (Fedora; often **`Cups-PDF`**). Printed PDFs land in **`~/PDF/`** (or check `/etc/cups/cups-pdf.conf` `Out`). Verified end-to-end on Ubuntu 24.04: `wp print … --printer PDF` submits a Skia-rendered PDF via `lpr -P PDF` and a multi-page file appears in `~/PDF/`.
+- **Linux** — `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu; the queue is named **`PDF`** — confirm with `lpstat -p`) or `sudo dnf install cups-pdf` (Fedora; often **`Cups-PDF`**). Printed PDFs land in **`~/PDF/`** (or check `/etc/cups/cups-pdf.conf` `Out`). See **[Linux & WSL printing](linux.md)** for CUPS setup, network printers (IPP), and WSL notes.
 
 Prefer **`wp print … --pdf out.pdf`** when you want a file and do not need a real queue: it writes the Skia PDF straight to disk on every platform (no printer, no driver, no dialog). Stock cups-pdf with its PPD may run a PDF→PS→PDF filter chain (Ghostscript); mermaid diagrams are embedded rasters and survive that path, but for bit-identical Skia output use `--pdf`.
 
