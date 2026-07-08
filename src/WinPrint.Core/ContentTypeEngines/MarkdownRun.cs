@@ -28,8 +28,11 @@ public sealed class MarkdownRun
     public bool IsSpace { get; set; }
 
     /// <summary>
-    ///     Absolute x (pixels) to paint this run at, overriding the normal left-to-right flow. Used to
-    ///     place the first run of each table cell at its column; null means flow from the previous run.
+    ///     Absolute x (pixels) to paint this run at, stamped during reflow. Painting must not re-derive
+    ///     positions by re-measuring: paint-time metrics differ from reflow metrics (a Point-unit font
+    ///     on the printer DC vs the Pixel-unit reflow font), and the per-run drift accumulates until a
+    ///     line's tail is pushed past the right margin and clipped mid-word. Table cells rebase this
+    ///     onto their column edge; null means flow from the previous run (fallback only).
     /// </summary>
     public float? X { get; set; }
 }

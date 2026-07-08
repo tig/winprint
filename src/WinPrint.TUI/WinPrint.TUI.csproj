@@ -8,6 +8,12 @@
         <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
         <StripSymbols Condition="'$(RuntimeIdentifier)' != ''">true</StripSymbols>
         <InvariantGlobalization Condition="'$(RuntimeIdentifier)' != ''">true</InvariantGlobalization>
+        <!-- Svg.Skia's Svg.Model (the mermaid rasterizer, MermaiderRenderer) emits exactly two IL2026
+             trim warnings (TypeDescriptor.GetConverter in TransformsService/SvgGeometryService),
+             surfaced as one aggregate IL2104. Verified benign: an AOT-published render of a mermaid
+             diagram is pixel-identical to the JIT render. Keep them as visible warnings, not errors;
+             if an AOT mermaid render ever comes back blank/black, suspect this first. -->
+        <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2104</WarningsNotAsErrors>
         <AssemblyName>wp</AssemblyName>
         <RootNamespace>WinPrint.TUI</RootNamespace>
         <Description>winprint Terminal.Gui full-screen TUI front end (wp)</Description>

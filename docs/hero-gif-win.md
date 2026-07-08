@@ -104,9 +104,9 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
    the sheet explicitly: `click` the **Sheet Definition** `ComboBox` (top of the sidebar), then `click` the
    **Proportional 2-Up** `ListItem` in the dropdown. The preview reflows to prose with a proportional font --
    the "not just source code" beat. `demo.md` is a purpose-built Markdown showcase (~3 printed pages:
-   headings, lists, a table, syntax-highlighted code, an image, and a Mermaid block rendered as a live
-   diagram -- set `renderMermaidDiagrams: true` in the subject's co-located `WinPrint.config.json` first, or
-   the fence prints as code), chosen over `README.md` (now gif-heavy, a wall of images). Dwell ~1.5 s.
+   headings, lists, a table, syntax-highlighted code, an image, and a Mermaid block rendered in-process
+   as a live diagram -- on by default, no config needed), chosen over `README.md` (now gif-heavy, a wall
+   of images). Dwell ~1.5 s.
 10. **Print to PDF.** Delete any prior `%USERPROFILE%\Documents\winprintdemo.pdf` first. **Confirm the printer
     is Microsoft Print to PDF** -- WinPrint prints to `viewModel.SelectedPrinter`; if the machine default is
     something else, `query` the sidebar **Printer** `ComboBox`, `click` it, and `click` the **Microsoft Print
@@ -126,7 +126,30 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     `record { "action": "stop", "file": "<winprint repo abs>\\docs\\hero-gui-win.gif" }` (absolute path -- a
     relative one lands in the controller's temp copy and is lost). Assert `result.frames` (~45) and
     `result.bytes` (~4-5 MB). After the stop, close the PDF **tab** with `ctrl-f4` (not the whole browser).
-12. **Tidy.** Close WinPrint; tear down the controller.
+12. **Record the CLI showcase (`docs/cli.gif`).** Regenerate this **every time the Windows hero is
+    regenerated** -- same controller session. It is the README's "How to turn Markdown into a PDF"
+    beat: `wp print` turning `testfiles/mermaid.md` (every diagram type the built-in renderer
+    supports, plus the gantt code-block fallback) into a PDF, from a real terminal. Needs a
+    **`net10.0-windows`-TFM `wp`** on PATH (`dotnet build src/WinPrint.TUI/WinPrint.TUI.csproj -f
+    net10.0-windows`; the portable `net10.0` build has no Windows print path and tries `lpr`).
+    Setup, all **off-record**: create `~/wpdemo`, copy `testfiles/mermaid.md` in; Win+D; **Win+R ->
+    `pwsh`** to open the terminal (find its window by `windows { "process": "WindowsTerminal" }` and
+    match the **title** -- a title-only filter can match another wt instance, including the one
+    driving this session); position it non-maximized; type `cd ~/wpdemo`, put the wp build dir on
+    `$env:PATH`, one `Ctrl+Plus` font bump, `cls`, `ls`. Then Win+D again and restore/focus ONLY the
+    demo terminal (`focus`, not a bare click -- a coordinate click lands on whatever is on top).
+    **On-record** (full screen, `fps: 2`, `maxWidth: 700`):
+    type `wp print mermaid.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"` (chunked
+    `chars:` sends read as typing); handle the **Save Print Output As** dialog as in step 10, saving to
+    `~/wpdemo/mermaid.pdf`; type `& 'C:\Program Files\Mozilla Firefox\firefox.exe' -kiosk .\mermaid.pdf`
+    (kiosk = chromeless full-screen PDF; the default handler and Edge both bring popups/promos into
+    frame); zoom out until the whole page fits (`Ctrl+Minus` x5, ~350 ms apart -- pdf.js steps ~10%
+    per press and re-renders lazily, so fast presses overshoot); `ctrl-home`, `key_pagedown` through
+    every page (~0.7 s each; whole-page zoom makes each press exactly one page), `ctrl-home`, then
+    close firefox **on-record** with `alt-f4` so the loop ends back at the terminal;
+    `record { "action": "stop", "file": "<winprint repo abs>\\docs\\cli.gif" }`. Expect ~40 frames /
+    ~4 MB. Tidy: `exit` the terminal, delete `~/wpdemo`.
+13. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
 
