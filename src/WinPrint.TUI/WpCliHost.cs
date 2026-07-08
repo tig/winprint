@@ -83,7 +83,7 @@ public sealed class WpCliHost
             return ExitCodes.UsageError;
         }
 
-        return await DispatchCommandAsync(args, command, cancellationToken, stdout, stderr);
+        return await DispatchCommandAsync(args, (ICliCommand)command, cancellationToken, stdout, stderr);
     }
 
     private async Task<int> RunWithDefaultCommandAsync(
