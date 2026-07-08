@@ -11,30 +11,18 @@ namespace WinPrint.Core.Printing;
 /// </summary>
 public sealed class LprClient : ILprClient
 {
-    /// <summary>Placeholder printer name meaning "let the spooler choose the default destination".</summary>
+    /// <summary>
+    ///     Legacy placeholder meaning "use the spooler default". Still recognized if persisted in
+    ///     settings; new code stores an empty name or a real queue instead.
+    /// </summary>
     public const string SystemDefaultPrinter = "(System Default)";
 
     public IReadOnlyList<PrinterInfo> GetPrinters()
     {
-        var printers = new List<PrinterInfo>();
         string? defaultPrinter = GetDefaultPrinter();
-
-        // `lpstat -a` lists destinations accepting jobs: "<name> accepting requests since ...".
-        if (!TryRun("lpstat", ["-a"], null, out string output, out _))
+        var printers = new List<PrinterInfo>();
+        foreach (string name in ListAcceptingQueueNames())
         {
-            return printers;
-        }
-
-        foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-        {
-            string trimmed = line.Trim();
-            int space = trimmed.IndexOf(' ');
-            string name = space > 0 ? trimmed[..space] : trimmed;
-            if (name.Length == 0)
-            {
-                continue;
-            }
-
             printers.Add(new PrinterInfo
             {
                 Name = name,
@@ -63,22 +51,72 @@ public sealed class LprClient : ILprClient
         return name.Length == 0 ? null : name;
     }
 
-    public async Task<PrintJobResult> SubmitAsync(byte[] pdf, string? printerName, string documentName,
-        int sheetCount, CancellationToken cancellationToken = default)
+    public PrinterDestinationResult ResolveDestination(string? printerName)
     {
-        // CUPS/BSD `lpr` with no -P exits 0 even when there is no default destination — the job
-        // sits in the spool forever and the caller thinks it printed. Refuse that silent void.
-        if (!TryResolvePrinter(printerName, GetDefaultPrinter(), GetPrinters(), out string? resolvedPrinter,
-                out string? resolveError))
+        if (IsSystemDefaultRequest(printerName))
         {
-            return PrintJobResult.Failed(resolveError!);
+            // One `lpstat -d` only when we already have a default; list queues only for the error path.
+            string? defaultPrinter = GetDefaultPrinter();
+            if (!string.IsNullOrEmpty(defaultPrinter))
+            {
+                return PrinterDestinationResult.Ok(defaultPrinter);
+            }
+
+            return ResolveFromInputs(printerName, defaultPrinter: null, ListAcceptingQueueNames());
         }
 
-        var args = new List<string>
+        // Named queue: one `lpstat -a` for validation (skip if list empty / lpstat failed → let lpr decide).
+        return ResolveFromInputs(printerName, defaultPrinter: null, ListAcceptingQueueNames());
+    }
+
+    /// <summary>
+    ///     Pure destination policy (no process I/O). Used by <see cref="ResolveDestination" /> and tests.
+    /// </summary>
+    internal static PrinterDestinationResult ResolveFromInputs(
+        string? printerName,
+        string? defaultPrinter,
+        IReadOnlyList<string> queueNames)
+    {
+        if (IsSystemDefaultRequest(printerName))
         {
-            "-P",
-            resolvedPrinter!,
-        };
+            if (!string.IsNullOrEmpty(defaultPrinter))
+            {
+                return PrinterDestinationResult.Ok(defaultPrinter);
+            }
+
+            if (queueNames.Count == 0)
+            {
+                return PrinterDestinationResult.Fail(
+                    "No print destination is configured. " +
+                    "Specify a printer, or write output to a PDF file instead of printing.");
+            }
+
+            string names = string.Join(", ", queueNames);
+            return PrinterDestinationResult.Fail(
+                "No default printer is set. " +
+                $"Specify a printer (available: {names}), or write output to a PDF file instead of printing.");
+        }
+
+        // Named queue: if we know the accepting set, require a match (clearer than lpr's message).
+        // When the list is empty (lpstat failed / no rights), fall through and let lpr decide.
+        if (queueNames.Count > 0 &&
+            !queueNames.Any(n => string.Equals(n, printerName, StringComparison.OrdinalIgnoreCase)))
+        {
+            string names = string.Join(", ", queueNames);
+            return PrinterDestinationResult.Fail(
+                $"Unknown printer '{printerName}'. Available: {names}. " +
+                "Or write output to a PDF file instead of printing.");
+        }
+
+        return PrinterDestinationResult.Ok(printerName!);
+    }
+
+    public async Task<PrintJobResult> SubmitAsync(byte[] pdf, string printerName, string documentName,
+        int sheetCount, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(printerName);
+
+        var args = new List<string> { "-P", printerName };
 
         if (!string.IsNullOrEmpty(documentName))
         {
@@ -132,69 +170,36 @@ public sealed class LprClient : ILprClient
         }
     }
 
-    /// <summary>
-    ///     Resolves <paramref name="printerName" /> to a concrete CUPS queue. System-default /
-    ///     empty means the spooler's default, which must actually exist — bare <c>lpr</c> otherwise
-    ///     exits 0 with nowhere for the job to go.
-    /// </summary>
-    /// <returns><see langword="true" /> when <paramref name="resolvedPrinter" /> is set; otherwise
-    ///     <paramref name="error" /> explains how to fix it.</returns>
-    internal static bool TryResolvePrinter(
-        string? printerName,
-        string? defaultPrinter,
-        IReadOnlyList<PrinterInfo> printers,
-        out string? resolvedPrinter,
-        out string? error)
+    private static bool IsSystemDefaultRequest(string? printerName)
     {
-        bool useSystemDefault = string.IsNullOrEmpty(printerName) ||
+        return string.IsNullOrEmpty(printerName) ||
             string.Equals(printerName, SystemDefaultPrinter, StringComparison.OrdinalIgnoreCase);
+    }
 
-        if (useSystemDefault)
+    /// <summary>
+    ///     Queue names from <c>lpstat -a</c> only (no nested default lookup).
+    /// </summary>
+    private static List<string> ListAcceptingQueueNames()
+    {
+        var names = new List<string>();
+        // `lpstat -a` lists destinations accepting jobs: "<name> accepting requests since ...".
+        if (!TryRun("lpstat", ["-a"], null, out string output, out _))
         {
-            if (!string.IsNullOrEmpty(defaultPrinter))
-            {
-                resolvedPrinter = defaultPrinter;
-                error = null;
-                return true;
-            }
-
-            resolvedPrinter = null;
-            if (printers.Count == 0)
-            {
-                error =
-                    "No print destination is configured. " +
-                    "Pass `--printer <name>` after adding a CUPS queue " +
-                    "(e.g. `sudo apt install printer-driver-cups-pdf` → queue `PDF` on Debian/Ubuntu), " +
-                    "or write a file with `wp print … --pdf out.pdf` (no printer needed).";
-            }
-            else
-            {
-                string names = string.Join(", ", printers.Select(p => p.Name));
-                error =
-                    "No default printer is set. " +
-                    $"Pass `--printer <name>` (available: {names}) " +
-                    "or write a file with `wp print … --pdf out.pdf`.";
-            }
-
-            return false;
+            return names;
         }
 
-        // Named queue: if lpstat listed destinations, require a match (clearer than lpr's message).
-        // When the list is empty (lpstat failed / no rights), fall through and let lpr decide.
-        if (printers.Count > 0 &&
-            !printers.Any(p => string.Equals(p.Name, printerName, StringComparison.OrdinalIgnoreCase)))
+        foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            string names = string.Join(", ", printers.Select(p => p.Name));
-            resolvedPrinter = null;
-            error =
-                $"Unknown printer '{printerName}'. " +
-                $"Available: {names}. Or write a file with `wp print … --pdf out.pdf`.";
-            return false;
+            string trimmed = line.Trim();
+            int space = trimmed.IndexOf(' ');
+            string name = space > 0 ? trimmed[..space] : trimmed;
+            if (name.Length > 0)
+            {
+                names.Add(name);
+            }
         }
 
-        resolvedPrinter = printerName;
-        error = null;
-        return true;
+        return names;
     }
 
     private static bool TryRun(string fileName, IReadOnlyList<string> args, byte[]? stdin, out string stdout,

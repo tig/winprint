@@ -23,7 +23,7 @@ public class UnixPrintBackendTests
     [Fact]
     public async Task UnixPrintJob_RendersPdfAndSubmitsViaLpr()
     {
-        var lpr = new FakeLprClient();
+        var lpr = new FakeLprClient { DefaultPrinter = "Office" };
         var job = new UnixPrintJob(LetterSetup("Office"), "report.txt", lpr);
 
         job.Begin();
@@ -33,6 +33,7 @@ public class UnixPrintBackendTests
         PrintJobResult result = await job.EndAsync();
 
         Assert.True(result.Success);
+        Assert.Equal(1, lpr.ResolveCallCount);
         Assert.Equal(1, lpr.SubmitCallCount);
         Assert.Equal("Office", lpr.SubmittedPrinter);
         Assert.Equal("report.txt", lpr.SubmittedDocument);
@@ -52,14 +53,19 @@ public class UnixPrintBackendTests
 
         Assert.True(result.Success);
         Assert.Equal(0, result.SheetsPrinted);
+        Assert.Equal(0, lpr.ResolveCallCount);
         Assert.Equal(0, lpr.SubmitCallCount);
     }
 
     [Fact]
     public async Task UnixPrintJob_PropagatesLprFailure()
     {
-        var lpr = new FakeLprClient { Result = PrintJobResult.Failed("lpr: destination not found") };
-        var job = new UnixPrintJob(LetterSetup(), "doc", lpr);
+        var lpr = new FakeLprClient
+        {
+            DefaultPrinter = "PDF",
+            Result = PrintJobResult.Failed("lpr: destination not found"),
+        };
+        var job = new UnixPrintJob(LetterSetup("PDF"), "doc", lpr);
 
         job.Begin();
         job.PrintPage(1, (ctx, _) => ctx.DrawLine(ctx.BlackPen, 0, 0, 10, 10));
@@ -67,6 +73,38 @@ public class UnixPrintBackendTests
 
         Assert.False(result.Success);
         Assert.Contains("destination not found", result.Error);
+    }
+
+    [Fact]
+    public async Task UnixPrintJob_FailsBeforeSubmit_WhenNoDestination()
+    {
+        var lpr = new FakeLprClient { DefaultPrinter = null, Printers = [] };
+        var job = new UnixPrintJob(LetterSetup(string.Empty), "doc", lpr);
+
+        job.Begin();
+        // Action is never invoked — resolve fails before Skia render.
+        job.PrintPage(1, (_, _) => throw new InvalidOperationException("render should not run"));
+
+        PrintJobResult result = await job.EndAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("No print destination", result.Error);
+        Assert.Equal(1, lpr.ResolveCallCount);
+        Assert.Equal(0, lpr.SubmitCallCount);
+    }
+
+    [Fact]
+    public async Task UnixPrintJob_ResolvesSystemDefault_BeforeSubmit()
+    {
+        var lpr = new FakeLprClient { DefaultPrinter = "HomeLaser", Printers = [] };
+        var job = new UnixPrintJob(LetterSetup(string.Empty), "doc", lpr);
+
+        job.Begin();
+        job.PrintPage(1, (ctx, _) => ctx.DrawLine(ctx.BlackPen, 0, 0, 1, 1));
+        PrintJobResult result = await job.EndAsync();
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("HomeLaser", lpr.SubmittedPrinter);
     }
 
     [Fact]
@@ -80,6 +118,17 @@ public class UnixPrintBackendTests
         Assert.Equal("HomeLaser", setup.PrinterName);
         Assert.Equal(850, setup.PaperWidth);
         Assert.Equal(1100, setup.PaperHeight);
+    }
+
+    [Fact]
+    public void UnixPrintService_GetDefaultPageSetup_EmptyWhenNoDefault()
+    {
+        var lpr = new FakeLprClient { DefaultPrinter = null };
+        var service = new UnixPrintService(lpr);
+
+        PrintPageSetup setup = service.GetDefaultPageSetup();
+
+        Assert.Equal(string.Empty, setup.PrinterName);
     }
 
     [Fact]
@@ -109,76 +158,82 @@ public class UnixPrintBackendTests
     }
 
     [Fact]
-    public void TryResolvePrinter_SystemDefault_WithNoQueues_FailsWithActionableMessage()
+    public void ResolveFromInputs_SystemDefault_WithNoQueues_FailsWithActionableMessage()
     {
-        bool ok = LprClient.TryResolvePrinter(
-            LprClient.SystemDefaultPrinter, defaultPrinter: null, printers: [],
-            out string? resolved, out string? error);
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            LprClient.SystemDefaultPrinter, defaultPrinter: null, queueNames: []);
 
-        Assert.False(ok);
-        Assert.Null(resolved);
-        Assert.Contains("--pdf", error);
-        Assert.Contains("No print destination", error);
+        Assert.False(result.Success);
+        Assert.Null(result.PrinterName);
+        Assert.Contains("No print destination", result.Error);
+        Assert.Contains("PDF file", result.Error);
     }
 
     [Fact]
-    public void TryResolvePrinter_SystemDefault_WithQueuesButNoDefault_ListsThem()
+    public void ResolveFromInputs_SystemDefault_WithQueuesButNoDefault_ListsThem()
     {
-        var printers = new List<PrinterInfo>
-        {
-            new() { Name = "PDF" },
-            new() { Name = "Office" },
-        };
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            null, defaultPrinter: null, queueNames: ["PDF", "Office"]);
 
-        bool ok = LprClient.TryResolvePrinter(
-            null, defaultPrinter: null, printers,
-            out string? resolved, out string? error);
-
-        Assert.False(ok);
-        Assert.Null(resolved);
-        Assert.Contains("PDF", error);
-        Assert.Contains("Office", error);
-        Assert.Contains("--printer", error);
+        Assert.False(result.Success);
+        Assert.Null(result.PrinterName);
+        Assert.Contains("PDF", result.Error);
+        Assert.Contains("Office", result.Error);
+        Assert.Contains("Specify a printer", result.Error);
     }
 
     [Fact]
-    public void TryResolvePrinter_SystemDefault_UsesSpoolerDefault()
+    public void ResolveFromInputs_SystemDefault_UsesSpoolerDefault()
     {
-        bool ok = LprClient.TryResolvePrinter(
-            LprClient.SystemDefaultPrinter, defaultPrinter: "PDF", printers: [],
-            out string? resolved, out string? error);
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            LprClient.SystemDefaultPrinter, defaultPrinter: "PDF", queueNames: []);
 
-        Assert.True(ok);
-        Assert.Equal("PDF", resolved);
-        Assert.Null(error);
+        Assert.True(result.Success);
+        Assert.Equal("PDF", result.PrinterName);
+        Assert.Null(result.Error);
     }
 
     [Fact]
-    public void TryResolvePrinter_NamedQueue_RejectsUnknownWhenListKnown()
+    public void ResolveFromInputs_EmptyName_TreatedAsSystemDefault()
     {
-        var printers = new List<PrinterInfo> { new() { Name = "PDF" } };
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            string.Empty, defaultPrinter: "Brother", queueNames: []);
 
-        bool ok = LprClient.TryResolvePrinter(
-            "NoSuchQueue", defaultPrinter: null, printers,
-            out string? resolved, out string? error);
-
-        Assert.False(ok);
-        Assert.Null(resolved);
-        Assert.Contains("Unknown printer", error);
-        Assert.Contains("PDF", error);
+        Assert.True(result.Success);
+        Assert.Equal("Brother", result.PrinterName);
     }
 
     [Fact]
-    public void TryResolvePrinter_NamedQueue_AcceptedWhenListed()
+    public void ResolveFromInputs_NamedQueue_RejectsUnknownWhenListKnown()
     {
-        var printers = new List<PrinterInfo> { new() { Name = "PDF" } };
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            "NoSuchQueue", defaultPrinter: null, queueNames: ["PDF"]);
 
-        bool ok = LprClient.TryResolvePrinter(
-            "PDF", defaultPrinter: null, printers,
-            out string? resolved, out string? error);
+        Assert.False(result.Success);
+        Assert.Null(result.PrinterName);
+        Assert.Contains("Unknown printer", result.Error);
+        Assert.Contains("PDF", result.Error);
+    }
 
-        Assert.True(ok);
-        Assert.Equal("PDF", resolved);
-        Assert.Null(error);
+    [Fact]
+    public void ResolveFromInputs_NamedQueue_AcceptedWhenListed()
+    {
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            "PDF", defaultPrinter: null, queueNames: ["PDF"]);
+
+        Assert.True(result.Success);
+        Assert.Equal("PDF", result.PrinterName);
+        Assert.Null(result.Error);
+    }
+
+    [Fact]
+    public void ResolveFromInputs_NamedQueue_AcceptedWhenListUnknown()
+    {
+        // Empty list ⇒ lpstat failed; do not block — let lpr decide.
+        PrinterDestinationResult result = LprClient.ResolveFromInputs(
+            "MaybeExists", defaultPrinter: null, queueNames: []);
+
+        Assert.True(result.Success);
+        Assert.Equal("MaybeExists", result.PrinterName);
     }
 }

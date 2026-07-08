@@ -14,6 +14,7 @@ public sealed class FakeLprClient : ILprClient
     public string? SubmittedDocument { get; private set; }
     public int SubmittedSheetCount { get; private set; }
     public int SubmitCallCount { get; private set; }
+    public int ResolveCallCount { get; private set; }
 
     public IReadOnlyList<PrinterInfo> Printers { get; set; } = new List<PrinterInfo>();
     public string? DefaultPrinter { get; set; }
@@ -29,7 +30,16 @@ public sealed class FakeLprClient : ILprClient
         return DefaultPrinter;
     }
 
-    public Task<PrintJobResult> SubmitAsync(byte[] pdf, string? printerName, string documentName,
+    public PrinterDestinationResult ResolveDestination(string? printerName)
+    {
+        ResolveCallCount++;
+        return LprClient.ResolveFromInputs(
+            printerName,
+            DefaultPrinter,
+            Printers.Select(p => p.Name).ToList());
+    }
+
+    public Task<PrintJobResult> SubmitAsync(byte[] pdf, string printerName, string documentName,
         int sheetCount, CancellationToken cancellationToken = default)
     {
         SubmittedPdf = pdf;
