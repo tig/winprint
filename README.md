@@ -36,15 +36,33 @@ Advanced source code, html, markdown, and text file printing for terminals (all 
 
 ## How to turn Markdown into a PDF
 
-One command. Markdown goes in; a formatted, paginated PDF comes out: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams, entirely in-process (no browser, no cloud).
+One command, every platform. Markdown goes in; a formatted, paginated PDF comes out: headings, lists, tables, images, syntax-highlighted code, and ` ```mermaid ` fences rendered as real diagrams (via mermaid.ink by default, or fully in-process with the built-in renderer):
 
 ```powershell
+wp print mermaid.md --pdf mermaid.pdf --sheet "Proportional 1-Up"
+```
+
+Prefer a real print queue? Point `--printer` at any print-to-PDF queue instead:
+
+```powershell
+# Windows — the built-in "Microsoft Print to PDF"
 wp print mermaid.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
+```
+
+```bash
+# macOS — install a virtual PDF printer once (brew install --cask rwts-pdfwriter), add it in
+# Printers & Scanners named "CUPS-PDF"; the PDF lands in /var/spool/pdfwriter/$USER/
+wp print mermaid.md --printer "CUPS-PDF" --sheet "Proportional 1-Up"
+```
+
+```bash
+# Linux — sudo apt install printer-driver-cups-pdf (the queue is named "PDF"); the PDF lands in ~/PDF/
+wp print mermaid.md --printer "PDF" --sheet "Proportional 1-Up"
 ```
 
 <img width="700" alt="wp print turning mermaid.md into a PDF, then viewing it" src="docs/cli.gif" />
 
-*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer.*
+*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer. The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF.*
 
 ## Installation
 
