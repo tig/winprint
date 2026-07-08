@@ -19,6 +19,10 @@ macOS mechanics (see docs/hero-gifs.md):
     the bound CheckBox). MAUI Catalyst doesn't expose these via Accessibility, so
     we click window-relative coordinates (calibrated below).
   - Open a file: Cmd+O, then Cmd+Shift+G, paste the path, Return, Return.
+  - Sheet Definition picker: click at SHEET_PICKER offset to open the dropdown,
+    then click PROP_1UP_ITEM offset (22pt below) to select "Proportional 1-Up".
+    Both clicks use the live window origin so they survive window moves. Do NOT
+    call activate() between the two clicks — it would dismiss the open dropdown.
   - Print to PDF: Cmd+P opens the NSPrintPanel as a sheet on window 1.
       - PDF button:  menu button 1 of group 2 of splitter group 1 of sheet 1 of window 1
       - Save as PDF: menu item "Save as PDF…" of menu 1 of that menu button
@@ -49,6 +53,11 @@ APP = "winprint"
 # origin (read live) but assume the default window size.
 LANDSCAPE_LABEL = (65, 151)
 LINE_NUMBERS_LABEL = (77, 581)
+# Sheet Definition picker and dropdown item. Calibrated against the 1000×820
+# window: picker sits 108pt from the top; "Proportional 1-Up" is 22pt below it
+# (one menu-item row beneath the pre-selected "Proportional 2-Up" entry).
+SHEET_PICKER = (125, 108)
+PROP_1UP_ITEM = (125, 130)
 
 
 def run(cmd: list[str], check: bool = False) -> subprocess.CompletedProcess[str]:
@@ -125,6 +134,21 @@ def open_file(path: Path) -> None:
     time.sleep(1.0)
     key_code(36)                                # Return: open the selected file
     time.sleep(2.0)
+
+
+def switch_to_proportional_1up() -> None:
+    """Open the Sheet Definition picker and select Proportional 1-Up.
+
+    Both cliclick calls share the same window_rect() read so the second
+    click stays valid even if the window moved.  activate() is deliberately
+    NOT called between the two clicks — it would dismiss the open dropdown.
+    """
+    activate()
+    x, y, _, _ = window_rect()
+    run(["cliclick", "c:%d,%d" % (x + SHEET_PICKER[0], y + SHEET_PICKER[1])])
+    time.sleep(0.8)
+    run(["cliclick", "c:%d,%d" % (x + PROP_1UP_ITEM[0], y + PROP_1UP_ITEM[1])])
+    time.sleep(3.5)  # document re-renders after a sheet switch
 
 
 def capture_rect(path: Path, x: int, y: int, w: int, h: int) -> None:
@@ -248,7 +272,7 @@ def main() -> int:
         ),
     )
     ap.add_argument("--sample", type=Path, default=Path("src/WinPrint.Core/ViewModels/SheetViewModel.cs"))
-    ap.add_argument("--second-file", type=Path, default=Path("README.md"))
+    ap.add_argument("--second-file", type=Path, default=Path("testfiles/demo.md"))
     ap.add_argument(
         "--pdf-out",
         type=Path,
@@ -323,10 +347,16 @@ def main() -> int:
     key_code(123); key_code(126); shot("pan2", 300)   # Left, Up
     key_char("0"); shot("reset", 500)                 # fit
 
-    # Open a second, different document (README -> Markdown).
+    # Open testfiles/demo.md and switch to Proportional 1-Up — the "not just
+    # source code" beat (mirrors the TUI hero and the Windows hero).
     open_file(second)
-    shot("markdown", 1300)
-    key_code(121); shot("markdown2", 1100)            # Page Down through it
+    shot("demo-loaded", 1000)
+
+    switch_to_proportional_1up()
+    shot("prop1up", 1400)
+
+    focus_preview()
+    key_code(121); shot("prop1up2", 1200)             # Page Down through prose
 
     # Print to PDF and open — mirrors the Windows hero's final beat.
     print("Triggering print dialog…")

@@ -47,9 +47,11 @@ prompt — the hero answers *Don't Save*.)
 4. **Zoom in → pan → reset** — zoom into the page (the zoom-% indicator should read e.g.
    `200%`), pan around, then return to fit. **Keep this part FAST** — short frame durations,
    no lingering — so it reads as a snappy flourish, not a slow crawl.
-5. **Open another file** — use the File button + Open dialog to load a *different* document
-   (the Windows producer opens `README.md`, which renders as formatted **Markdown** — a nice
-   "not just source code" beat).
+5. **Open `testfiles/demo.md` and switch to Proportional 1-Up** — open the
+   purpose-built Markdown showcase (`demo.md`: headings, lists, a table, code blocks, an
+   image, a Mermaid block), then change the Sheet Definition picker to **Proportional 1-Up**
+   so the preview reflows to single-column prose with a proportional font. This is the "not
+   just source code" beat — the same file and sheet the TUI hero uses.
 6. **Print to PDF and open** — print the current document to PDF, save it as
    `winprintdemo.pdf`, open the result so the loop ends on real printed output.
    Windows (MCEC hero): select **Microsoft Print to PDF**, print, save the file, open in Edge.
