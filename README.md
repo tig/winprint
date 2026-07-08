@@ -56,7 +56,7 @@ wp print mermaid.md --printer "PDF" --sheet "Proportional 1-Up"
 
 <img width="700" alt="wp print turning mermaid.md into a PDF, then viewing it" src="docs/cli.gif" />
 
-*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer. The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF — see [`docs/hero-gifs.md`](docs/hero-gifs.md) for the one-time print-to-PDF setup on each platform.*
+*Shown: [`testfiles/mermaid.md`](testfiles/mermaid.md), one fence per mermaid diagram type, printed from the shell and opened in a viewer. The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF — see the [User's Guide](docs/users-guide.md#examples) for the one-time print-to-PDF setup on each platform.*
 
 ## Installation
 

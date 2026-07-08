@@ -54,7 +54,7 @@ wp print mermaid.md --printer "PDF" --sheet "Proportional 1-Up"
 
 ![wp print turning mermaid.md into a PDF, then viewing it](cli.gif)
 
-*The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF. See [hero-gifs.md](https://github.com/tig/winprint/blob/main/docs/hero-gifs.md) for the one-time print-to-PDF setup on each platform.*
+*The GIF is recorded on Windows; the macOS and Linux commands produce the same PDF. See the [User's Guide](users-guide.md#examples) for the one-time print-to-PDF setup on each platform.*
 
 ## Quick Start
 

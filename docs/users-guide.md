@@ -41,6 +41,12 @@ Turn Markdown into a PDF (the classic move; see [the overview](index.md#how-to-t
 wp print README.md --printer "Microsoft Print to PDF" --sheet "Proportional 1-Up"
 ```
 
+`--printer` names an OS print queue, so point it at your platform's **print-to-PDF** target:
+
+- **Windows** — the built-in **Microsoft Print to PDF** (shown above); a Save-As dialog chooses the file.
+- **macOS** — install a virtual PDF printer once with [RWTS PDFwriter](https://github.com/rodyager/RWTS-PDFwriter): `brew install --cask rwts-pdfwriter`, then add it in **Printers & Scanners** (name it e.g. `CUPS-PDF`). Printed PDFs land in `/var/spool/pdfwriter/$USER/`. (`brew install cups-pdf` does **not** exist on macOS — that is a Linux package.)
+- **Linux** — `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu; the queue is named `PDF` — confirm with `lpstat -p`) or `sudo dnf install cups-pdf` (Fedora). Printed PDFs land in `~/PDF/`.
+
 Check the installed version:
 
 ```bash
