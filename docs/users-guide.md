@@ -73,6 +73,12 @@ wp print *.cs --landscape
 wp print Program.cs --what-if
 ```
 
+`--printer` names an OS print queue, so to print **to a PDF file** point it at your platform's print-to-PDF target:
+
+- **Windows** — the built-in **Microsoft Print to PDF**; a Save-As dialog chooses the file.
+- **macOS** — install a virtual PDF printer once with [RWTS PDFwriter](https://github.com/rodyager/RWTS-PDFwriter): `brew install --cask rwts-pdfwriter`, then add it in **Printers & Scanners** (name it e.g. `CUPS-PDF`). Printed PDFs land in `/var/spool/pdfwriter/$USER/`. (`brew install cups-pdf` does **not** exist on macOS — that is a Linux package.)
+- **Linux** — `sudo apt install printer-driver-cups-pdf` (Debian/Ubuntu; the queue is named `PDF` — confirm with `lpstat -p`) or `sudo dnf install cups-pdf` (Fedora). Printed PDFs land in `~/PDF/`.
+
 Launch the GUI:
 
 ```bash
