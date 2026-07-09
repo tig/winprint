@@ -9,8 +9,8 @@ Screen-Recording and Accessibility permission for the terminal running this.
 
 Choreography (mirrors the Windows hero + the spec in docs/hero-gifs.md):
   load -> toggle Line Numbers off/on -> toggle Landscape off/on ->
-  focus + fast zoom-in/pan/reset -> open README.md (Markdown) ->
-  print to PDF -> open PDF in Preview -> hold.
+  focus + fast zoom-in/pan/reset -> open testfiles/demo.md (Markdown + Proportional 1-Up) ->
+  print to PDF -> open PDF in Preview (page 1 Mermaid -> Page Down -> End) -> hold.
 
 macOS mechanics (see docs/hero-gifs.md):
   - Zoom uses the plain TUI keys: `=`/`+` in, `-` out, `0` fit. Only claimed when
@@ -330,45 +330,45 @@ def main() -> int:
         frames.append((img, ms))
         print(f"captured {p.name} ({img.size[0]}x{img.size[1]})")
 
-    shot("loaded", 1200)
+    shot("loaded", 900)
 
     # Toggle Line Numbers off then on (preview loses/regains the gutter).
-    click_label(LINE_NUMBERS_LABEL); shot("linenums-off", 1000)
-    click_label(LINE_NUMBERS_LABEL); shot("linenums-on", 900)
+    click_label(LINE_NUMBERS_LABEL); shot("linenums-off", 800)
+    click_label(LINE_NUMBERS_LABEL); shot("linenums-on", 700)
 
     # Toggle Landscape off (reflow to 1-up portrait) then on (back to 2-up).
-    click_label(LANDSCAPE_LABEL); shot("portrait", 1100)
-    click_label(LANDSCAPE_LABEL); shot("landscape", 900)
+    click_label(LANDSCAPE_LABEL); shot("portrait", 900)
+    click_label(LANDSCAPE_LABEL); shot("landscape", 750)
 
     # Fast zoom-in / pan / reset flourish.
     focus_preview()
     key_char("="); key_char("="); key_char("="); shot("zoom", 350)
     key_code(124); key_code(125); shot("pan1", 300)   # Right, Down
     key_code(123); key_code(126); shot("pan2", 300)   # Left, Up
-    key_char("0"); shot("reset", 500)                 # fit
+    key_char("0"); shot("reset", 400)                 # fit
 
     # Open testfiles/demo.md and switch to Proportional 1-Up — the "not just
     # source code" beat (mirrors the TUI hero and the Windows hero).
     open_file(second)
-    shot("demo-loaded", 1000)
+    shot("demo-loaded", 800)
 
     switch_to_proportional_1up()
-    shot("prop1up", 1400)
+    shot("prop1up", 1200)
 
     focus_preview()
-    key_code(121); shot("prop1up2", 1200)             # Page Down through prose
+    key_code(121); shot("prop1up2", 1000)             # Page Down through prose
 
     # Print to PDF and open — mirrors the Windows hero's final beat.
     print("Triggering print dialog…")
     dialog_visible = trigger_print_dialog()
     if dialog_visible:
         # Capture one frame with the print sheet visible (proves printing is driven).
-        shot("print-dialog", 1200)
+        shot("print-dialog", 1000)
 
         pdf_ok = save_print_as_pdf(args.pdf_out)
         if pdf_ok:
             # App is back to its normal state after the sheets dismiss.
-            shot("printed", 1000)
+            shot("printed", 800)
 
             # Open the PDF in Preview and capture its window.
             preview_rect = open_pdf_in_preview(args.pdf_out)
@@ -376,16 +376,16 @@ def main() -> int:
                 run(["osascript", "-e", 'tell application "Preview" to activate'])
                 time.sleep(0.5)
                 px, py, pw, ph = preview_rect
-                shot_rect("pdf-page1", 1300, px, py, pw, ph)
+                shot_rect("pdf-page1", 1100, px, py, pw, ph)
                 # Page through the PDF to show the full printed output.
                 osa('tell application "System Events" to tell process "Preview" to key code 121')
                 time.sleep(0.5)
-                shot_rect("pdf-page2", 1200, px, py, pw, ph)
+                shot_rect("pdf-page2", 1000, px, py, pw, ph)
                 # End on the last page: the rendered Mermaid diagram atop demo.md's final page —
                 # the beat the Windows hero also closes on (docs/hero-gif-win.md step 11).
                 osa('tell application "System Events" to tell process "Preview" to key code 119')
                 time.sleep(0.5)
-                shot_rect("pdf-mermaid", 1800, px, py, pw, ph)
+                shot_rect("pdf-mermaid", 1600, px, py, pw, ph)
                 # Close Preview so its file lock doesn't block the next run's delete.
                 run(["osascript", "-e", 'tell application "Preview" to close window 1'])
             else:
@@ -397,7 +397,7 @@ def main() -> int:
 
     # Return focus to WinPrint for the final hold frame.
     activate()
-    shot("hold", 1600)
+    shot("hold", 1400)
 
     imgs = [f[0] for f in frames]
     durs = [f[1] for f in frames]
