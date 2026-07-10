@@ -1,10 +1,21 @@
 name: CI
 
 on:
+  # push is scoped to the same branches as pull_request (not '**'): a push to a branch with
+  # an open PR fires both events on the same commit, double-running the windows-latest/macos-26
+  # jobs below for no extra coverage. Pushes to a WIP feature branch with no PR yet now build
+  # nothing until a PR is opened — direct pushes to main/develop/v2.1 still get their own run.
   push:
-    branches: ['**']
+    branches: [main, develop, v2.1]
   pull_request:
     branches: [main, develop, v2.1]
+
+# Cancel a still-running CI run for the same PR/branch when a new commit lands, instead of
+# letting superseded windows-latest/macos-26 jobs run to completion — those two runner classes
+# are what GitHub actually charges for.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
