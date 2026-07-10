@@ -5,10 +5,16 @@ on:
   # an open PR fires both events on the same commit, double-running the windows-latest/macos-26
   # jobs below for no extra coverage. Pushes to a WIP feature branch with no PR yet now build
   # nothing until a PR is opened — direct pushes to main/develop/v2.1 still get their own run.
+  # paths-ignore skips the whole workflow when every changed file is docs/README — those never
+  # affect the build/test matrix. (Only skips if ALL changed files match; a PR mixing docs with
+  # code still runs CI.) GitHub Pages serves /docs via the legacy Jekyll builder tied to repo
+  # settings, not an Actions workflow, so this doesn't affect the docs site build either.
   push:
     branches: [main, develop, v2.1]
+    paths-ignore: &docs-only ['docs/**', 'README.md']
   pull_request:
     branches: [main, develop, v2.1]
+    paths-ignore: *docs-only
 
 # Cancel a still-running CI run for the same PR/branch when a new commit lands, instead of
 # letting superseded windows-latest/macos-26 jobs run to completion — those two runner classes
