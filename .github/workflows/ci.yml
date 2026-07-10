@@ -12,9 +12,11 @@ on:
 
 # Cancel a still-running CI run for the same PR/branch when a new commit lands, instead of
 # letting superseded windows-latest/macos-26 jobs run to completion — those two runner classes
-# are what GitHub actually charges for.
+# are what GitHub actually charges for. Keyed by PR number (not head_ref): two different forks
+# can share a branch name (e.g. both named "fix"), and head_ref alone would let one contributor's
+# push cancel another contributor's unrelated run.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
