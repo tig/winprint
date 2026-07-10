@@ -8,8 +8,10 @@ name: CodeQL
 on:
   push:
     branches: [develop, main]
+    paths-ignore: ['docs/**', 'README.md']
   pull_request:
     branches: [develop, main]
+    paths-ignore: ['docs/**', 'README.md']
   schedule:
     - cron: '41 4 * * 1' # weekly, Monday 04:41 UTC
 
