@@ -39,12 +39,14 @@ files, commit those changes — that *is* the fix; re-run until `git diff` is em
 solution gate over MAUI files is still verified by Windows CI. Code-style analyzers also enforce
 **one top-level type per file** (WPA0001) and **no nested types** (WPA0002).
 
-**CI mechanics & flakiness (don't mistake a flake for a real failure).** Every PR triggers
-CI **twice** (a `push` run and a `pull_request` run). `maui-ui-tests` (Appium) and the
-FlaUI / TUI-golden suites are **flaky**: the tell is the *same commit* passing in one of the
-two sibling runs and failing in the other. Before chasing such a failure, confirm it's not the
-flake; to clear it, `gh run rerun --failed <run-id>` — but you **can't** re-run a job while its
-sibling workflow is still in progress (it's rejected), so wait for both to settle first.
+**CI mechanics & flakiness (don't mistake a flake for a real failure).** CI's `push` trigger is
+scoped to `[main, develop, v2.1]` (not every branch), so a PR from a feature branch gets exactly
+**one** run per push (the `pull_request` event) — this used to be two (a `push` run plus a
+`pull_request` run on the same commit), which double-billed the `windows-latest`/`macos-26` jobs
+for no extra coverage; a `concurrency` group also cancels a run outright when a newer commit
+supersedes it. `maui-ui-tests` (Appium) and the FlaUI / TUI-golden suites are still **flaky** on
+their own — a red run can just mean re-run it (`gh run rerun --failed <run-id>`) before assuming a
+real regression.
 
 ## Remote (Claude Code on the web) environment
 Fresh Linux containers have no toolchain. `.claude/hooks/session-start.sh` (registered
