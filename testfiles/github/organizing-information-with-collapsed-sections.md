@@ -1,14 +1,15 @@
 # Organizing information with collapsed sections
 
-You can streamline your Markdown by creating a collapsed section with the <details> tag.
+You can streamline Markdown with a collapsed section using the `<details>` tag.
 
-## Creating a collapsed section
+> **How to read these fixtures:** for each feature you get (a) a fenced **source** code block,
+> (b) a **GitHub** screenshot of how GitHub renders it, and (c) the same Markdown **live** so
+> WinPrint can render it. Compare (b) and (c) to see what works and what does not yet.
 
-You can temporarily obscure sections of your Markdown by creating a collapsed section that the reader can choose to expand. For example, when you want to include technical details in an issue comment that may not be relevant or interesting to every reader, you can put those details in a collapsed section.
 
-Any Markdown within the `<details>` block will be collapsed until the reader expands the details.
+## Collapsed section
 
-Within the `<details>` block, use the `<summary>` tag to let readers know what is inside.
+**Source:**
 
 ````markdown
 <details>
@@ -28,15 +29,15 @@ You can add an image or a code block, too.
 </details>
 ````
 
-The Markdown inside the `<summary>` label will be collapsed by default:
+**GitHub (collapsed):**
 
-![Screenshot of the Markdown above on this page as rendered on GitHub, showing a right-facing arrow and the header "Tips for collapsed sections."](collapsed-section-view.png)
+![Screenshot of a collapsed details section with a right-facing arrow and summary text.](collapsed-section-view.png)
 
-After a reader expands the details, they look like this:
+**GitHub (expanded):**
 
-![Screenshot of the Markdown above on this page as rendered on GitHub. The collapsed section contains headers, text, images, and code blocks.](open-collapsed-section.png)
+![Screenshot of an expanded details section containing headers, text, and a code block.](open-collapsed-section.png)
 
-Here is a live collapsed section for WinPrint to exercise:
+**WinPrint (live):**
 
 <details>
 
@@ -54,21 +55,22 @@ You can add an image or a code block, too.
 
 </details>
 
-Optionally, to make the section display as open by default, add the `open` attribute to the `<details>` tag:
+## Open by default
+
+**Source:**
 
 ```html
 <details open>
-```
-
-<details open>
-
 <summary>This section starts open</summary>
 
-Printed documents cannot toggle open/closed, so engines may always expand details — or always show summary only. Either behavior is worth testing.
-
+Printed documents cannot toggle open/closed. Engines may always expand details, or show only the summary.
 </details>
+```
 
-## Further reading
+**WinPrint (live):**
 
-* [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
-* [Basic writing and formatting syntax](github.md)
+<details open>
+<summary>This section starts open</summary>
+
+Printed documents cannot toggle open/closed. Engines may always expand details, or show only the summary.
+</details>

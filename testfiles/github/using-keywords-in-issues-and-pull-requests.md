@@ -1,22 +1,26 @@
 # Using keywords in issues and pull requests
 
-Use keywords to link an issue and pull request or to mark an issue or pull request as a duplicate.
+Use keywords to link a pull request to an issue or to mark something as a duplicate.
+These are conversation semantics on GitHub; WinPrint will typically show them as plain text.
 
-## Linking a pull request to an issue
+> **How to read these fixtures:** for each feature you get (a) a fenced **source** code block,
+> (b) a **GitHub** screenshot of how GitHub renders it, and (c) the same Markdown **live** so
+> WinPrint can render it. Compare (b) and (c) to see what works and what does not yet.
 
-To link a pull request to an issue to show that a fix is in progress and to automatically close the issue when someone merges the pull request, type one of the following keywords followed by a reference to the issue. For example, `Closes #10` or `Fixes octo-org/octo-repo#100`.
 
-* close
-* closes
-* closed
-* fix
-* fixes
-* fixed
-* resolve
-* resolves
-* resolved
+## Linking a PR to an issue (auto-close keywords)
 
-Examples:
+**Source:**
+
+```markdown
+Closes #10
+
+Fixes octo-org/octo-repo#100
+
+Resolves #42
+```
+
+**WinPrint (live):**
 
 Closes #10
 
@@ -24,12 +28,16 @@ Fixes octo-org/octo-repo#100
 
 Resolves #42
 
-For more information, see [Linking a pull request to an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+Supported keywords: `close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`, `resolves`, `resolved`.
 
-## Marking an issue or pull request as a duplicate
+## Marking a duplicate
 
-To mark an issue or pull request as a duplicate, type "Duplicate of" followed by the issue or pull request number it duplicates in the body of a new comment. For more information, see [Marking issues or pull requests as a duplicate](https://docs.github.com/en/issues/tracking-your-work-with-issues/administering-issues/marking-issues-or-pull-requests-as-a-duplicate).
+**Source:**
 
-Example:
+```markdown
+Duplicate of #123
+```
+
+**WinPrint (live):**
 
 Duplicate of #123

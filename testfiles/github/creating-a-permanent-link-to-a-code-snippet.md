@@ -1,41 +1,52 @@
 # Creating a permanent link to a code snippet
 
 You can create a permanent link to a specific line or range of lines of code in a specific version of a file or pull request.
+Permalink *embeds* only unfurl in issue/PR comments — not in `.md` files.
 
-## Linking to code
+> **How to read these fixtures:** for each feature you get (a) a fenced **source** code block,
+> (b) a **GitHub** screenshot of how GitHub renders it, and (c) the same Markdown **live** so
+> WinPrint can render it. Compare (b) and (c) to see what works and what does not yet.
 
-This type of permanent link will render as a code snippet only in the repository it originated in. In other repositories, the permalink code snippet will render as a URL. This does not work in Markdown files, only in comments.
 
-![Screenshot of an issue comment. A code snippet has a header that lists the file name and line numbers, and a body that lists the code on those lines.](rendered-code-snippet.png)
+## Permalink in a comment (GitHub UI result)
 
-> [!TIP]
-> To create a permalink for an entire file, see [Getting permanent links to files](https://docs.github.com/en/repositories/working-with-files/using-files/getting-permanent-links-to-files).
+**Source:** (paste a blob permalink into a comment)
 
-1. On GitHub, navigate to the main page of the repository.
-2. Locate the code you'd like to link to:
-   * To link to code from a file, navigate to the file.
-   * To link to code from a pull request, navigate to the pull request and click **Files changed**. Then, browse to the file that contains the code you want to include in your comment, and click **View**.
-3. Choose whether to select a single line or a range.
+```text
+https://github.com/tig/winprint/blob/develop/src/WinPrint.Core/ContentTypeEngines/MarkdownCte.cs#L1-L20
+```
 
-   * To select a single line of code, click the line number to highlight the line.
-   * To select a range of code, click the number of the first line in the range to highlight the line of code. Then, hover over the last line of the code range, press <kbd>Shift</kbd>, and click the line number to highlight the range.
-4. To the left of the line or range of lines, open the line menu and click **Copy permalink**.
+**GitHub:**
 
-   ![Screenshot of a file, with 8 lines selected. To the left of the first selected line, a button labeled with a kebab icon is outlined in dark orange.](open-new-issue-specific-line.png)
-5. Navigate to the conversation where you want to link to the code snippet.
-6. Paste your permalink into a comment, and click **Comment**.
+![Screenshot of an issue comment with an embedded code snippet from a permalink.](rendered-code-snippet.png)
 
-Example permalink URL (renders as a snippet only in issue/PR comments in the same repo):
+**WinPrint (live):** (prints as a URL / link, not an embed)
 
 https://github.com/tig/winprint/blob/develop/src/WinPrint.Core/ContentTypeEngines/MarkdownCte.cs#L1-L20
 
-## Linking to Markdown
+## Selecting lines for a permalink
 
-You can link to specific lines in Markdown files by loading the Markdown file without Markdown rendering. To load a Markdown file without rendering, you can use the `?plain=1` parameter at the end of the URL for the file. For example, `github.com/<organization>/<repository>/blob/<commit_SHA>/README.md?plain=1`.
+**Source:** (GitHub UI — click line numbers, Copy permalink)
 
-You can link to a specific line in the Markdown file the same way you can in code. Append `#L` with the line number or numbers at the end of the URL. For example, `github.com/<organization>/<repository>/blob/<commit_SHA>/README.md?plain=1#L14` will highlight line 14 in the plain README.md file.
+```text
+1. Open a file on GitHub
+2. Click a line number (Shift+click for a range)
+3. Copy permalink from the line menu
+4. Paste into a comment
+```
 
-## Further reading
+**GitHub:**
 
-* [Creating an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-an-issue)
-* [Reviewing changes in pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests)
+![Screenshot of a file with lines selected and the line options menu.](open-new-issue-specific-line.png)
+
+## Plain Markdown line links
+
+**Source:**
+
+```markdown
+[README line 14 (plain)](https://github.com/tig/winprint/blob/develop/README.md?plain=1#L14)
+```
+
+**WinPrint (live):**
+
+[README line 14 (plain)](https://github.com/tig/winprint/blob/develop/README.md?plain=1#L14)

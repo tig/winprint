@@ -1,6 +1,12 @@
 # Working with advanced formatting
 
-Formatting like tables, syntax highlighting, and automatic linking allows you to arrange complex information clearly in your pull requests, issues, and comments.
+Formatting like tables, syntax highlighting, and automatic linking lets you arrange complex
+information clearly. These fixtures mirror GitHub's advanced-formatting chapters.
+
+> **How to read these fixtures:** for each feature you get (a) a fenced **source** code block,
+> (b) a **GitHub** screenshot of how GitHub renders it, and (c) the same Markdown **live** so
+> WinPrint can render it. Compare (b) and (c) to see what works and what does not yet.
+
 
 ## Chapters
 
@@ -15,4 +21,4 @@ Formatting like tables, syntax highlighting, and automatic linking allows you to
 * [Creating a permanent link to a code snippet](creating-a-permanent-link-to-a-code-snippet.md)
 * [Using keywords in issues and pull requests](using-keywords-in-issues-and-pull-requests.md)
 
-Also see the basic syntax fixture: [github.md](github.md).
+Basic syntax fixture: [github.md](github.md)

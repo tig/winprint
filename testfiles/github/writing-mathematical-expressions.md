@@ -1,40 +1,75 @@
 # Writing mathematical expressions
 
-Use Markdown to display mathematical expressions on GitHub.
+Use Markdown to display mathematical expressions on GitHub (MathJax).
 
-## About writing mathematical expressions
+> **How to read these fixtures:** for each feature you get (a) a fenced **source** code block,
+> (b) a **GitHub** screenshot of how GitHub renders it, and (c) the same Markdown **live** so
+> WinPrint can render it. Compare (b) and (c) to see what works and what does not yet.
 
-To enable clear communication of mathematical expressions, GitHub supports LaTeX formatted math within Markdown. For more information, see [LaTeX/Mathematics](http://en.wikibooks.org/wiki/LaTeX/Mathematics) in Wikibooks.
 
-GitHub's math rendering capability uses MathJax; an open source, JavaScript-based display engine. MathJax supports a wide range of LaTeX macros, and several useful accessibility extensions. For more information, see [the MathJax documentation](http://docs.mathjax.org/en/latest/input/tex/index.html#tex-and-latex-support) and [the MathJax Accessibility Extensions Documentation](https://mathjax.github.io/MathJax-a11y/docs/#reader-guide).
+## Inline math (`$…$`)
 
-Mathematical expressions rendering is available in GitHub Issues, GitHub Discussions, pull requests, wikis, and Markdown files.
+**Source:**
 
-## Writing inline expressions
+```markdown
+This sentence uses `$` delimiters to show math inline: $\sqrt{3x-1}+(1+x)^2$
+```
 
-There are two options for delimiting a math expression inline with your text. You can either surround the expression with dollar symbols (`$`), or start the expression with $` and end it with `$. The latter syntax is useful when the expression you are writing contains characters that overlap with markdown syntax. For more information, see [Basic writing and formatting syntax](github.md).
+**GitHub:**
+
+![Screenshot of rendered Markdown showing an inline mathematical expression.](inline-math-markdown-rendering.png)
+
+**WinPrint (live):**
 
 This sentence uses `$` delimiters to show math inline: $\sqrt{3x-1}+(1+x)^2$
 
-![Screenshot of rendered Markdown showing an inline mathematical expression: the square root of 3x minus 1 plus (1 plus x) squared.](inline-math-markdown-rendering.png)
+## Inline math (backtick form)
+
+**Source:**
+
+```markdown
+This sentence uses $\` and \`$ delimiters to show math inline: $`\sqrt{3x-1}+(1+x)^2`$
+```
+
+**GitHub:**
+
+![Screenshot of rendered Markdown showing inline math with backtick delimiters.](inline-backtick-math-markdown-rendering.png)
+
+**WinPrint (live):**
 
 This sentence uses $` and `$ delimiters to show math inline: $`\sqrt{3x-1}+(1+x)^2`$
 
-![Screenshot of rendered Markdown showing an inline mathematical expression with backtick syntax: the square root of 3x minus 1 plus (1 plus x) squared.](inline-backtick-math-markdown-rendering.png)
+## Block math (`$$…$$`)
 
-## Writing expressions as blocks
+**Source:**
 
-To add a math expression as a block, start a new line and delimit the expression with two dollar symbols `$$`.
+```markdown
+**The Cauchy-Schwarz Inequality**\
+$$\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)$$
+```
 
-> [!TIP]
-> If you're writing in an .md file, you will need to use specific formatting to create a line break, such as ending the line with a backslash as shown in the example below. For more information on line breaks in Markdown, see [Basic writing and formatting syntax](github.md#line-breaks).
+**GitHub:**
+
+![Screenshot of a block math expression for the Cauchy-Schwarz Inequality.](math-expression-as-a-block-rendering.png)
+
+**WinPrint (live):**
 
 **The Cauchy-Schwarz Inequality**\
 $$\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)$$
 
-![Screenshot of rendered Markdown showing a complex equation. Bold text reads "The Cauchy-Schwarz Inequality" above the formula for the inequality.](math-expression-as-a-block-rendering.png)
+## Block math (```math fence)
 
-Alternatively, you can use the ```math code block syntax to display a math expression as a block. With this syntax, you don't need to use `$$` delimiters. The following will render the same as above:
+**Source:**
+
+````markdown
+**The Cauchy-Schwarz Inequality**
+
+```math
+\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)
+```
+````
+
+**WinPrint (live):**
 
 **The Cauchy-Schwarz Inequality**
 
@@ -42,24 +77,34 @@ Alternatively, you can use the ```math code block syntax to display a math expre
 \left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)
 ```
 
-## Writing dollar signs in line with and within mathematical expressions
+## Dollar sign inside math
 
-To display a dollar sign as a character in the same line as a mathematical expression, you need to escape the non-delimiter `$` to ensure the line renders correctly.
+**Source:**
 
-* Within a math expression, add a `\` symbol before the explicit `$`.
+```markdown
+This expression uses `\$` to display a dollar sign: $`\sqrt{\$4}`$
+```
 
-  This expression uses `\$` to display a dollar sign: $`\sqrt{\$4}`$
+**GitHub:**
 
-  ![Screenshot of rendered Markdown showing how a backslash before a dollar sign displays the sign as part of a mathematical expression.](dollar-sign-within-math-expression.png)
+![Screenshot of a dollar sign inside a math expression.](dollar-sign-within-math-expression.png)
 
-* Outside a math expression, but on the same line, use span tags around the explicit `$`.
+**WinPrint (live):**
 
-  To split <span>$</span>100 in half, we calculate $100/2$
+This expression uses `\$` to display a dollar sign: $`\sqrt{\$4}`$
 
-  ![Screenshot of rendered Markdown showing how span tags around a dollar sign display the sign as inline text not as part of a mathematical equation.](dollar-sign-inline-math-expression.png)
+## Dollar sign outside math
 
-## Further reading
+**Source:**
 
-* [The MathJax website](http://mathjax.org)
-* [Getting started with writing and formatting on GitHub](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github)
-* [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
+```markdown
+To split <span>$</span>100 in half, we calculate $100/2$
+```
+
+**GitHub:**
+
+![Screenshot of a dollar sign as plain text next to math.](dollar-sign-inline-math-expression.png)
+
+**WinPrint (live):**
+
+To split <span>$</span>100 in half, we calculate $100/2$
