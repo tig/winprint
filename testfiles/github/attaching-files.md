@@ -1,0 +1,103 @@
+# Attaching files
+
+You can convey information by attaching a variety of file types to your issues and pull requests.
+
+> [!NOTE]
+> For public repositories, uploaded files can be accessed without authentication. In the case of private and internal repositories, only people with access to the repository can view the uploaded files.
+
+To attach a file to an issue or pull request conversation, drag and drop it into the comment box.
+Alternatively, you can use the paperclip control below the issue comment box to browse, select, and add a file from your computer.
+
+![Screenshot of the issue comment box. The "Attach files" icon is outlined in orange.](attach-file.png)
+
+For a pull request, you can also use the paperclip control in the formatting bar above the pull request comment box.
+
+![Screenshot of the pull request comment box. The "Attach files" icon is outlined in orange.](attach-file-pr.png)
+
+When you attach a file, it is uploaded immediately to GitHub and the text field is updated to show the anonymized URL for the file. For more information on anonymized URLs see [About anonymized URLs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-anonymized-urls).
+
+> [!NOTE]
+> In many browsers, you can copy-and-paste images directly into the box.
+
+The maximum file size is:
+
+* 10MB for images and gifs
+* 10MB for videos uploaded to a repository owned by a user or organization on a free GitHub plan
+* 100MB for videos uploaded to a repository owned by a user or organization on a paid GitHub plan
+* 25MB for all other files
+
+> [!NOTE]
+> To upload videos greater than 10MB to a repository owned by a user or organization on a paid GitHub plan, you must either be an organization member or outside collaborator, or be on a paid plan.
+
+## Supported file types
+
+The following image and media file types are supported in all contexts.
+
+### Image and media files
+
+* PNG (`.png`)
+* GIF (`.gif`)
+* JPEG (`.jpg`, `.jpeg`)
+* SVG (`.svg`)
+* Video (`.mp4`, `.mov`, `.webm`)
+
+  > [!NOTE]
+  > Video codec compatibility is browser specific, and it's possible that a video you upload to one browser is not viewable on another browser. At the moment we recommend using H.264 for greatest compatibility.
+
+## Additional file types
+
+The following file types are supported for uploads in issue comments, pull request comments, and discussion comments within repositories. This list of file types is also supported in organization discussions.
+
+### Documents
+
+* PDFs (`.pdf`)
+* Microsoft Office documents (`.docx`, `.pptx`, `.xlsx`, `.xls`, `.xlsm`)
+* OpenDocument formats (`.odt`, `.fodt`, `.ods`, `.fods`, `.odp`, `.fodp`, `.odg`, `.fodg`, `.odf`)
+* Rich text and word processing files (`.rtf`, `.doc`)
+
+### Text and data files
+
+* Plain text and markup (`.txt`, `.md`, `.copilotmd`)
+* Data and tabular files (`.csv`, `.tsv`, `.log`, `.json`, `.jsonc`)
+
+### Development and code files
+
+* C files (`.c`)
+* C# files (`.cs`)
+* C++ files (`.cpp`)
+* CSS files (`.css`)
+* Diagrams (`.drawio`)
+* Dump files (`.dmp`)
+* HTML files (`.html`, `.htm`)
+* Java files (`.java`)
+* JavaScript files (`.js`)
+* Jupyter notebooks (`.ipynb`)
+* Patch files (`.patch`)
+* PHP files (`.php`)
+* Profiling files (`.cpuprofile`)
+* Program database files (`.pdb`)
+* Python files (`.py`)
+* Shell scripts (`.sh`)
+* SQL files (`.sql`)
+* TypeScript files (`.ts`, `.tsx`)
+* XML files (`.xml`)
+* YAML files (`.yaml`, `.yml`)
+
+> [!NOTE]
+> If you use Linux and try to upload a `.patch` file, you will receive an error message. This is a known issue.
+
+### Archive and compressed files
+
+* Archives and packages (`.zip`, `.gz`, `.tgz`)
+
+### Communication and logs
+
+* Text and email files (`.debug`, `.msg`, `.eml`)
+
+### Images
+
+* Bitmap and TIFF images (`.bmp`, `.tif`, `.tiff`)
+
+### Audio
+
+* Audio files (`.mp3`, `.wav`)
