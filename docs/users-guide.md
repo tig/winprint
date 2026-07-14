@@ -244,14 +244,14 @@ This is the default CTE used for most text and source files. It uses bundled Tex
 
 ### `MarkdownCte`
 
-Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks are rendered as diagrams by default using the remote `mermaid.ink` service (diagram source is sent over the network; broadest compatibility). Unsupported diagram types, and diagrams that fail to render, print as regular code blocks.
+Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, including inline images. ` ```mermaid ` fenced code blocks are rendered as diagrams by default, entirely in-process via the Mermaider library — nothing is sent over the network, and every Mermaid diagram type except ZenUML is supported (as of Mermaider 0.9.0). Diagrams that fail to render print as regular code blocks.
 
-Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"builtin"` for the private in-process Mermaider renderer (nothing is sent over the network, but it supports fewer diagram types and has some syntax restrictions). See the support matrix in `testfiles/mermaid.md`.
+Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"service"` to render via the remote `mermaid.ink` service instead (full Mermaid.js fidelity, but the diagram source is sent over the network). See the support matrix in `testfiles/mermaid.md`.
 
    ```json
        "markdownContentTypeEngineSettings": {
          "renderMermaidDiagrams": true,
-         "mermaidBackend": "service",
+         "mermaidBackend": "builtin",
          "mermaidServiceUrl": "https://mermaid.ink"
        }
    ```

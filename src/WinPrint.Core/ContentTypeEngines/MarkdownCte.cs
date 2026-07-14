@@ -32,9 +32,9 @@ namespace WinPrint.Core.ContentTypeEngines;
 ///     URLs are supported. Anything that fails to load (and inline images mixed with text) falls back
 ///     to alt text. When <see cref="RenderMermaidDiagrams" /> is enabled (the default),
 ///     <c>```mermaid</c> fences are rendered to images via <see cref="MermaidRenderer" /> (by default
-///     the remote `service` at <see cref="MermaidServiceUrl" />); set <see cref="MermaidBackend" /> to
-///     <c>"builtin"</c> for the in-process Mermaider renderer. A diagram that fails to render falls back to a plain code
-///     block.
+///     the in-process Mermaider renderer); set <see cref="MermaidBackend" /> to <c>"service"</c> for
+///     the remote mermaid.ink-compatible service at <see cref="MermaidServiceUrl" />. A diagram that
+///     fails to render falls back to a plain code block.
 /// </summary>
 public class MarkdownCte : ContentTypeEngineBase
 {
@@ -111,23 +111,24 @@ public class MarkdownCte : ContentTypeEngineBase
     /// <summary>
     ///     When true (the default), each <c>```mermaid</c> fence is rendered to an image via
     ///     <see cref="MermaidRenderer" />; when false, fences render as plain code blocks.
-    ///     The default backend is the remote <c>service</c> (mermaid.ink-compatible), which
-    ///     sends the diagram source over the network (same privacy consideration as
-    ///     <see cref="HtmlCte.AllowRemoteResources" />). Set to <c>false</c> to opt out entirely,
-    ///     or switch <see cref="MermaidBackend"/> to <c>"builtin"</c> for fully in-process rendering.
+    ///     The default backend is the in-process <c>builtin</c> renderer (Mermaider), so nothing
+    ///     leaves the machine. Set to <c>false</c> to opt out entirely, or switch
+    ///     <see cref="MermaidBackend"/> to <c>"service"</c> for the remote mermaid.ink-compatible
+    ///     service (full Mermaid.js fidelity; sends diagram source over the network).
     /// </summary>
     public bool RenderMermaidDiagrams { get; set; } = true;
 
     /// <summary>
     ///     Selects the diagram backend when no <see cref="MermaidRenderer" /> is injected:
-    ///     <c>service</c> (the default) renders via the remote mermaid.ink-compatible service at
-    ///     <see cref="MermaidServiceUrl" /> (diagram source is sent; same privacy consideration as
-    ///     <see cref="HtmlCte.AllowRemoteResources" />); <c>builtin</c> renders in-process via
-    ///     <see cref="MermaiderRenderer" /> (private, but supports fewer types and some syntax
-    ///     variants are rejected). Unknown values safely fall back to <c>builtin</c> (never
-    ///     network). Failures from either backend fall back to a plain code block.
+    ///     <c>builtin</c> (the default) renders in-process via <see cref="MermaiderRenderer" />
+    ///     (private and fast; covers every Mermaid diagram type except ZenUML as of Mermaider
+    ///     0.9.0); <c>service</c> renders via the remote mermaid.ink-compatible service at
+    ///     <see cref="MermaidServiceUrl" /> (full Mermaid.js fidelity; diagram source is sent —
+    ///     same privacy consideration as <see cref="HtmlCte.AllowRemoteResources" />). Unknown
+    ///     values safely fall back to <c>builtin</c> (never network). Failures from either
+    ///     backend fall back to a plain code block.
     /// </summary>
-    public string MermaidBackend { get; set; } = "service";
+    public string MermaidBackend { get; set; } = "builtin";
 
     /// <summary>Base URL of the mermaid.ink-compatible service used when <see cref="MermaidBackend" /> is <c>service</c>.</summary>
     public string MermaidServiceUrl { get; set; } = "https://mermaid.ink";
@@ -926,9 +927,9 @@ public class MarkdownCte : ContentTypeEngineBase
 
     /// <summary>
     ///     The renderer the preload uses: an injected <see cref="MermaidRenderer" /> wins; otherwise
-    ///     <see cref="MermaidBackend" /> picks the remote <see cref="MermaidInkRenderer" />
-    ///     (<c>service</c>, the default) or the in-process <see cref="MermaiderRenderer" />
-    ///     (<c>builtin</c>). Unrecognized backend values fall back to builtin so a config typo
+    ///     <see cref="MermaidBackend" /> picks the in-process <see cref="MermaiderRenderer" />
+    ///     (<c>builtin</c>, the default) or the remote <see cref="MermaidInkRenderer" />
+    ///     (<c>service</c>). Unrecognized backend values fall back to builtin so a config typo
     ///     never causes network I/O.
     /// </summary>
     internal IMermaidRenderer ResolveMermaidRenderer()

@@ -72,9 +72,9 @@ linger; the zoom/pan flourish stays fast.
 ## The Mermaid beat
 
 `demo.md` leads with its Mermaid fence (since #246), so page 1 of every hero opens on the
-rendered diagram. `renderMermaidDiagrams` defaults to `true` with the `service` backend
-(mermaid.ink unless `mermaidServiceUrl` says otherwise — the diagram source goes over the
-network, so recording needs connectivity). The gotcha is a **stale co-located
+rendered diagram. `renderMermaidDiagrams` defaults to `true` with the in-process `builtin`
+backend (Mermaider — no network needed; only the opt-in `service` backend sends the diagram
+to mermaid.ink and needs connectivity). The gotcha is a **stale co-located
 `WinPrint.config.json`** pinning `renderMermaidDiagrams: false` from an earlier version — then
 the fence prints as a code block and the Mermaid beats show code instead of a picture. On
 macOS/Linux winprint runs in **portable mode** — the config sits next to the executable, and
