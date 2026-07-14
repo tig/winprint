@@ -20,7 +20,9 @@
 You can make text **bold** (for the parts nobody reads), *italic* (for the parts I felt
 strongly about), ***both at once*** (for the parts I felt strongly about AND nobody reads),
 `inline code` (for the parts that actually matter), and ~~strikethrough~~ (for the features I
-swore I would ship in 1994).
+swore I would ship in 1994). Also <sub>subscript</sub> (for chemical formulas and ego
+deflation), <sup>superscript</sup> (for footnotes that have not yet been invented), and
+<ins>underline</ins> (for the one emphasis style every style guide forbids).
 
 Here is a footnote, because BobAtk, the inventor of COM and my mentor, taught me to use them effectively.[^1]
 
@@ -28,7 +30,7 @@ Here is a footnote, because BobAtk, the inventor of COM and my mentor, taught me
 
 ## Mermaid Diagrams
 
-The fenced block below prints as an actual diagram using the default `mermaid.ink` service (or the in-process `builtin` backend if configured); set `renderMermaidDiagrams` to `false` if you liked the code better. The promissory note, paid:
+The fenced block below prints as an actual diagram, rendered entirely in-process by default (or by the remote `mermaid.ink` service if you opt into the `service` backend); set `renderMermaidDiagrams` to `false` if you liked the code better. The promissory note, paid:
 
 ```mermaid
 graph LR
@@ -237,8 +239,81 @@ lived on [CompuServe][cis], a website you have to be a certain age to remember.
 
 Autolink, no ceremony: <https://tig.github.io/mcec/>
 
+Section link to a heading in this very file: [jump to Mermaid](#mermaid-diagrams).
+
 [dotnet]: https://dotnet.microsoft.com/
 [cis]: https://en.wikipedia.org/wiki/CompuServe
+
+## Alerts (a.k.a. callouts, admonitions, or "please read this")
+
+GitHub's five flavors of "I am serious this time." On paper they are just fancy blockquotes
+until MarkdownCte grows a personality. Either way, here they are:
+
+> [!NOTE]
+> Useful information that users should know, even when skimming content. For example: this
+> demo file is longer than your print job budget.
+
+> [!TIP]
+> Helpful advice for doing things better or more easily. Tip: `wp print testfiles/demo.md`
+> is the whole product pitch.
+
+> [!IMPORTANT]
+> Key information users need to know to achieve their goal. Printing is optional. Reading
+> this file is also optional. Living well is harder.
+
+> [!WARNING]
+> Urgent info that needs immediate user attention to avoid problems. Do not feed the
+> macros after midnight.
+
+> [!CAUTION]
+> Advises about risks or negative outcomes of certain actions. Shipping a printing app in
+> 2026 may cause friends to ask questions you cannot answer.
+
+## Colors in backticks (GitHub issues/PRs only — we print them as code)
+
+The background color is `#ffffff` for light mode and `#000000` for dark mode. Also
+`#0969DA`, `rgb(9, 105, 218)`, and `hsl(212, 92%, 45%)` if your CTE ever learns to paint
+little swatches. Until then: pretty hex strings.
+
+## Mentions, issues, and emoji shortcodes
+
+@github/support What do you think about these updates?
+
+Issue-style refs that GitHub would autolink: #739, and a task that pretends to track work:
+
+- [x] #739
+- [ ] https://github.com/octo-org/octo-repo/issues/740
+- [ ] Add delight to the experience when all tasks are complete :tada:
+
+@octocat :+1: This PR looks great - it's ready to merge! :shipit:
+
+## Escaping Markdown (when you mean the asterisk)
+
+Let's rename \*our-new-project\* to \*our-old-project\*. Without the backslashes those would
+be italics. With them, they are just characters that refused to grow up.
+
+A task item that starts with a parenthesis has to escape too:
+
+- [ ] \(Optional) Open a followup issue
+
+## Hiding content with HTML comments
+
+The next line is an HTML comment. If you can read a secret here in the rendered output,
+something is wrong:
+
+<!-- This content will not appear in the rendered Markdown. Also: the macros know what you did. -->
+
+If the line above is blank in the printout, comments work. If you see the secret, file a bug
+and then burn the page.
+
+## Custom anchors and a hard line break
+
+<a name="demo-custom-anchor"></a>
+This paragraph has a custom HTML anchor (`demo-custom-anchor`) so section-link fans have
+something to aim at: [link to custom anchor](#demo-custom-anchor).
+
+Hard break after this line (backslash):\
+should land on its own line in `.md` files. Soft wraps elsewhere are a lifestyle choice.
 
 ***
 
