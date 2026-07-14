@@ -163,8 +163,9 @@ engine by `SupportedContentTypes` and applies the per-engine settings persisted 
 `ApplyPersistedEngineSettings`. This replaced the old reflection scan (`GetTypes()` +
 `Activator.CreateInstance`) and the per-engine static `Create()` factories. Engines:
 - `TextCte` (`text/plain`), `MarkdownCte` (`text/x-markdown`, subclasses `TextCte` and
-  flattens Markdown via Markdig; ```mermaid fences render in-process via Mermaider + Svg.Skia by
-  default, with `mermaidBackend: "service"` (mermaid.ink) or opt-in `builtin` via Mermaider), `TextMateCte` (syntax highlighting; the default),
+  flattens Markdown via Markdig; ```mermaid fences render in-process by default via Mermaider +
+  Svg.Skia — every diagram type except ZenUML as of Mermaider 0.9.0 — with opt-in
+  `mermaidBackend: "service"` for the remote mermaid.ink), `TextMateCte` (syntax highlighting; the default),
   `AnsiCte` (`text/ansi`; decodes ANSI escape sequences via the vendored managed `libvt100`)
   and `HtmlCte` (`text/html` plus `.mhtml`/`.mht`; lays out HTML/CSS via the managed HtmlRenderer,
   with `http(s)` assets gated behind `AllowRemoteResources`).

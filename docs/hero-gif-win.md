@@ -129,8 +129,8 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
 12. **Record the CLI showcase (`docs/cli.gif`).** Regenerate this **every time the Windows hero is
     regenerated** -- same controller session. It is the README's "How to turn Markdown into a PDF"
     beat: `wp print` turning `testfiles/mermaid.md` (every mermaid diagram type — flowchart,
-    sequence, class, ER, pie, gantt, … — as images via the default mermaid.ink backend; use
-    `mermaidBackend: "builtin"` only if you need the in-process path and its fallbacks) into a
+    sequence, class, ER, pie, gantt, … — as images via the default in-process builtin backend;
+    only the ZenUML fence falls back to a code block) into a
     PDF, from a real terminal. Needs a **`net10.0-windows`-TFM `wp`** on PATH (`dotnet build
     src/WinPrint.TUI/WinPrint.TUI.csproj -f net10.0-windows`; the portable `net10.0` build has no
     Windows print path and tries `lpr`).
