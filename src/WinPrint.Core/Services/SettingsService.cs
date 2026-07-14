@@ -142,7 +142,17 @@ public class SettingsService
     private Settings LoadSettings()
     {
         string json = File.ReadAllText(SettingsFileName);
-        return WinPrintJson.LoadSettingsWithDefaults(json);
+        Settings settings = WinPrintJson.LoadSettingsWithDefaults(json, out bool migrated);
+        if (migrated)
+        {
+            Log.Information(
+                "Settings file predates schema {schemaVersion}; migrating and rewriting {settingsFileName}.",
+                Settings.CurrentSchemaVersion, SettingsFileName);
+            // Preserve the watcher: SaveSettings with watchChanges=false would tear down an armed one.
+            SaveSettings(settings, watchChanges: _watcher is not null);
+        }
+
+        return settings;
     }
 
     /// <summary>

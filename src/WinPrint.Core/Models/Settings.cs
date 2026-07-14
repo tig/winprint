@@ -93,6 +93,22 @@ public class Settings : ModelBase
         }
     }
 
+    /// <summary>
+    ///     The settings format this file was written by; bump when a load-time migration is added.
+    ///     2 = <c>mermaidBackend</c> defaults to <c>builtin</c> (files written by 3.1.2–3.1.4 persisted
+    ///     the then-default <c>service</c>).
+    /// </summary>
+    public const int CurrentSchemaVersion = 2;
+
+    /// <summary>
+    ///     Format stamp for <c>WinPrint.config.json</c>: lets the loader run migrations exactly once for
+    ///     files written by older versions, whose persisted values can record an old default rather than
+    ///     a user's choice (see <c>WinPrintJson.MigrateLegacySettings</c>). Files without the field
+    ///     predate 3.2.0.
+    /// </summary>
+    [SafeForTelemetry]
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+
     [SafeForTelemetry] public string DefaultContentType { get; set; } = "text/plain";
 
     [SafeForTelemetry] public string DefaultCteClassName { get; set; } = ContentTypeEngineBase.DefaultCteClassName;
@@ -614,6 +630,7 @@ public class Settings : ModelBase
             : new WindowLocation(src.Location.X, src.Location.Y);
         Size = src.Size is null ? null : new WindowSize(src.Size.Width, src.Size.Height);
         WindowState = src.WindowState;
+        SchemaVersion = src.SchemaVersion;
         DefaultSheet = src.DefaultSheet;
         DefaultSheetByContentType.Clear();
         if (src.DefaultSheetByContentType is not null)

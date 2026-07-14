@@ -248,6 +248,8 @@ Renders Markdown files (`text/x-markdown`; e.g. `.md`) as formatted documents, i
 
 Options in the `markdownContentTypeEngineSettings` section of `WinPrint.config.json`: set `renderMermaidDiagrams` to `false` to always print fences as code, or set `mermaidBackend` to `"service"` to render via the remote `mermaid.ink` service instead (full Mermaid.js fidelity, but the diagram source is sent over the network). See the support matrix in `testfiles/mermaid.md`.
 
+Upgrading from 3.1.x: those versions wrote their then-default `"mermaidBackend": "service"` into the config file, so on first load WinPrint rewrites that leftover to `"builtin"` (and stamps the file with `schemaVersion`) — nothing is sent over the network unless you set `"service"` yourself afterwards, which then sticks.
+
    ```json
        "markdownContentTypeEngineSettings": {
          "renderMermaidDiagrams": true,
