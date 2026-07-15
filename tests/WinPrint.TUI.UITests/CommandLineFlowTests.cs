@@ -39,7 +39,9 @@ public class CommandLineFlowTests
         bool landscape = def.Landscape;
         try
         {
-            var context = SettingsContext.Create(SampleOptions());
+            // Inject a printer list so CLI --printer resolve succeeds on headless CI (#264).
+            IPrintService printers = new StubPrintService("Acme LaserMax");
+            var context = SettingsContext.Create(SampleOptions(), printers);
             AppViewModel app = context.App;
 
             Assert.Equal("report.cs", context.File);
