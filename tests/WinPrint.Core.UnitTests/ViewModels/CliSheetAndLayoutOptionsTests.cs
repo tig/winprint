@@ -93,17 +93,14 @@ public class CliSheetAndLayoutOptionsTests : TestServicesBase
     }
 
     [Fact]
-    public void ApplyOptions_FooterFontAndBorders()
+    public void ApplyOptions_FooterFontAndCompactBorders()
     {
         AppViewModel vm = CreateVm();
 
         vm.ApplyOptions(new Options
         {
             FooterFont = "Comic Sans MS, 10, bold",
-            FooterBorderTopOn = true,
-            FooterBorderBottomOff = true,
-            FooterBorderLeftOff = true,
-            FooterBorderRightOff = true
+            FooterBorders = "top"
         });
 
         Footer footer = vm.CurrentSheet!.Footer;
@@ -118,7 +115,7 @@ public class CliSheetAndLayoutOptionsTests : TestServicesBase
     }
 
     [Fact]
-    public void SelectSheet_AppliesSheetPrinterAndPaper()
+    public void SelectSheet_UserInitiated_AppliesSheetPrinterAndPaper()
     {
         AppViewModel vm = CreateVm();
         string key = vm.SheetKeys[0];
@@ -126,12 +123,11 @@ public class CliSheetAndLayoutOptionsTests : TestServicesBase
         sheet.Printer = "Envelope Printer";
         sheet.PaperSize = "Legal";
 
-        Assert.True(vm.SelectSheetByIndex(0));
+        Assert.True(vm.SelectSheetByIndex(0, userInitiated: true));
 
         Assert.Equal("Envelope Printer", vm.SelectedPrinter);
         Assert.Equal("Legal", vm.SelectedPaperSize);
         Assert.Equal("Legal", vm.CurrentPageSetup.PaperSizeName);
-        // Legal dimensions from PrinterChoices
         Assert.Equal(850, vm.CurrentPageSetup.PaperWidth);
         Assert.Equal(1400, vm.CurrentPageSetup.PaperHeight);
     }

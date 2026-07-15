@@ -60,8 +60,11 @@ public class PrintCommandValidationTests
                 CancellationToken.None);
 
             Assert.Equal(CommandStatus.Error, result.Status);
-            Assert.Contains("NotARealFile", result.ErrorMessage ?? "");
+            string err = result.ErrorMessage ?? "";
+            Assert.Contains("NotARealFile", err);
+            Assert.Contains("--printer", err);
             Assert.DoesNotContain("would print", result.Value as string ?? "");
+            Assert.DoesNotContain("Brother", err); // no vendor-name heuristic
         }
         finally
         {

@@ -34,22 +34,8 @@ public class WinPrintOptionsConsistencyTests
         ["footer-text"] = nameof(Options.FooterText),
         ["header-font"] = nameof(Options.HeaderFont),
         ["footer-font"] = nameof(Options.FooterFont),
-        ["header-border-top-on"] = nameof(Options.HeaderBorderTopOn),
-        ["header-border-top-off"] = nameof(Options.HeaderBorderTopOff),
-        ["header-border-bottom-on"] = nameof(Options.HeaderBorderBottomOn),
-        ["header-border-bottom-off"] = nameof(Options.HeaderBorderBottomOff),
-        ["header-border-left-on"] = nameof(Options.HeaderBorderLeftOn),
-        ["header-border-left-off"] = nameof(Options.HeaderBorderLeftOff),
-        ["header-border-right-on"] = nameof(Options.HeaderBorderRightOn),
-        ["header-border-right-off"] = nameof(Options.HeaderBorderRightOff),
-        ["footer-border-top-on"] = nameof(Options.FooterBorderTopOn),
-        ["footer-border-top-off"] = nameof(Options.FooterBorderTopOff),
-        ["footer-border-bottom-on"] = nameof(Options.FooterBorderBottomOn),
-        ["footer-border-bottom-off"] = nameof(Options.FooterBorderBottomOff),
-        ["footer-border-left-on"] = nameof(Options.FooterBorderLeftOn),
-        ["footer-border-left-off"] = nameof(Options.FooterBorderLeftOff),
-        ["footer-border-right-on"] = nameof(Options.FooterBorderRightOn),
-        ["footer-border-right-off"] = nameof(Options.FooterBorderRightOff)
+        ["header-borders"] = nameof(Options.HeaderBorders),
+        ["footer-borders"] = nameof(Options.FooterBorders)
     };
 
     [Fact]
@@ -91,7 +77,9 @@ public class WinPrintOptionsConsistencyTests
         Type expected = canonical.ValueType == typeof(bool) ? typeof(bool)
             : canonical.ValueType == typeof(int) ? typeof(int)
             : typeof(string);
-        Assert.Equal(expected, property.PropertyType);
+        // string? properties are still typeof(string) under reflection for reference types
+        Type actual = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+        Assert.Equal(expected, actual);
     }
 
     public static IEnumerable<object[]> SharedOptionNames =>

@@ -270,15 +270,19 @@ public sealed class AppViewModel : INotifyPropertyChanged
         _pageSetup.MarginLeft = sheetSettings.Margins.Left;
         _pageSetup.MarginRight = sheetSettings.Margins.Right;
 
-        // Sheet-bound printer / paper (#30). CLI --printer / --paper-size applied later still override.
-        if (!string.IsNullOrEmpty(sheetSettings.Printer))
+        // Sheet-bound printer / paper (#30): only on user-initiated selection so content-type
+        // auto sheet switches do not steal the active printer. CLI --printer still overrides after.
+        if (userInitiated)
         {
-            SetPrinterName(sheetSettings.Printer);
-        }
+            if (!string.IsNullOrEmpty(sheetSettings.Printer))
+            {
+                SetPrinterName(sheetSettings.Printer);
+            }
 
-        if (!string.IsNullOrEmpty(sheetSettings.PaperSize))
-        {
-            SetPaperSize(sheetSettings.PaperSize);
+            if (!string.IsNullOrEmpty(sheetSettings.PaperSize))
+            {
+                SetPaperSize(sheetSettings.PaperSize);
+            }
         }
 
         if (changed)
@@ -956,151 +960,47 @@ public sealed class AppViewModel : INotifyPropertyChanged
     // ----- Command-line options -----
 
     /// <summary>
-    ///     Applies <see cref="Options" /> to this view model. Shared by MAUI and TUI.
-    ///     Call <see cref="CliOptionsResolver.ResolveInPlace" /> first so <c>--printer</c> /
-    ///     <c>--paper-size</c> are already canonical (or rejected) at the CLI edge — this method
-    ///     does not re-validate against installed lists (#264).
+    ///     Applies <see cref="Options" /> via <see cref="CliOptionsApplier" />. Call
+    ///     <see cref="CliOptionsResolver.ResolveInPlace" /> first for printer/paper names.
     /// </summary>
-    /// <returns>The first file argument, or <c>null</c> if none was supplied.</returns>
     public string? ApplyOptions(Options options)
     {
-        if (options == null)
-        {
-            return null;
-        }
+        return CliOptionsApplier.Apply(this, options);
+    }
 
-        // Apply sheet first so subsequent overrides land on the right sheet.
-        if (!string.IsNullOrEmpty(options.Sheet))
-        {
-            if (SelectSheetByNameOrId(options.Sheet))
-            {
-                _sessionSheetLockedByOptions = true;
-                _sessionSheetLocked = true;
-                _transientContentTypeSheetSelection = false;
-            }
-        }
+    /// <summary>Marks the current sheet selection as locked by CLI <c>--sheet</c>.</summary>
+    public void LockSheetFromCliOptions()
+    {
+        _sessionSheetLockedByOptions = true;
+        _sessionSheetLocked = true;
+        _transientContentTypeSheetSelection = false;
+    }
 
-        // --landscape / --portrait. Suppress reflow until file load.
+    public void BeginSuppressReflow()
+    {
         _suppressReflow = true;
-        try
-        {
-            if (options.Landscape)
-            {
-                SetLandscape(true);
-            }
-            else if (options.Portrait)
-            {
-                SetLandscape(false);
-            }
-
-            if (!string.IsNullOrEmpty(options.Printer))
-            {
-                SetPrinterName(options.Printer);
-            }
-
-            if (!string.IsNullOrEmpty(options.PaperSize))
-            {
-                SetPaperSize(options.PaperSize);
-            }
-
-            // --from-sheet / --to-sheet print range (0 = default/all).
-            if (options.FromPage > 0)
-            {
-                _pageSetup.FromSheet = options.FromPage;
-            }
-
-            if (options.ToPage > 0)
-            {
-                _pageSetup.ToSheet = options.ToPage;
-            }
-
-            // #4 rows / columns (0 = leave sheet default)
-            if (options.Rows > 0)
-            {
-                SetRows(options.Rows);
-            }
-
-            if (options.Columns > 0)
-            {
-                SetColumns(options.Columns);
-            }
-
-            // #3 header / footer
-            ApplyHeaderFooterOptions(options);
-        }
-        finally
-        {
-            _suppressReflow = false;
-        }
-
-        return options.Files?.FirstOrDefault();
     }
 
-    private void ApplyHeaderFooterOptions(Options options)
+    public void EndSuppressReflow()
     {
-        if (options.HeaderOn)
-        {
-            SetHeaderEnabled(true);
-        }
-        else if (options.HeaderOff)
-        {
-            SetHeaderEnabled(false);
-        }
-
-        if (options.FooterOn)
-        {
-            SetFooterEnabled(true);
-        }
-        else if (options.FooterOff)
-        {
-            SetFooterEnabled(false);
-        }
-
-        if (options.HeaderText is not null)
-        {
-            SetHeaderText(options.HeaderText);
-        }
-
-        if (options.FooterText is not null)
-        {
-            SetFooterText(options.FooterText);
-        }
-
-        if (!string.IsNullOrEmpty(options.HeaderFont) && Font.TryParse(options.HeaderFont, out Font? headerFont))
-        {
-            SetHeaderFont(headerFont!);
-        }
-
-        if (!string.IsNullOrEmpty(options.FooterFont) && Font.TryParse(options.FooterFont, out Font? footerFont))
-        {
-            SetFooterFont(footerFont!);
-        }
-
-        ApplyBorderFlag(options.HeaderBorderTopOn, options.HeaderBorderTopOff, v => SetHeaderBorder(top: v));
-        ApplyBorderFlag(options.HeaderBorderBottomOn, options.HeaderBorderBottomOff, v => SetHeaderBorder(bottom: v));
-        ApplyBorderFlag(options.HeaderBorderLeftOn, options.HeaderBorderLeftOff, v => SetHeaderBorder(left: v));
-        ApplyBorderFlag(options.HeaderBorderRightOn, options.HeaderBorderRightOff, v => SetHeaderBorder(right: v));
-        ApplyBorderFlag(options.FooterBorderTopOn, options.FooterBorderTopOff, v => SetFooterBorder(top: v));
-        ApplyBorderFlag(options.FooterBorderBottomOn, options.FooterBorderBottomOff, v => SetFooterBorder(bottom: v));
-        ApplyBorderFlag(options.FooterBorderLeftOn, options.FooterBorderLeftOff, v => SetFooterBorder(left: v));
-        ApplyBorderFlag(options.FooterBorderRightOn, options.FooterBorderRightOff, v => SetFooterBorder(right: v));
+        _suppressReflow = false;
     }
 
-    private static void ApplyBorderFlag(bool on, bool off, Action<bool> set)
+    public void SetFromToSheets(int? fromSheet, int? toSheet)
     {
-        if (on)
+        if (fromSheet is > 0)
         {
-            set(true);
+            _pageSetup.FromSheet = fromSheet.Value;
         }
-        else if (off)
+
+        if (toSheet is > 0)
         {
-            set(false);
+            _pageSetup.ToSheet = toSheet.Value;
         }
     }
 
     public void SetHeaderFont(Font font)
     {
-        // Mutate the live sheet model; HeaderFooterViewModel listens to PropertyChanged.
         if (_currentSheet?.Header != null)
         {
             _currentSheet.Header.Font = font;
@@ -1119,44 +1019,31 @@ public sealed class AppViewModel : INotifyPropertyChanged
         PreviewInvalidated?.Invoke(this, EventArgs.Empty);
     }
 
-    public void SetHeaderBorder(bool? left = null, bool? top = null, bool? right = null, bool? bottom = null)
+    /// <summary>Sets all four header border sides from a compact <see cref="BorderSides" /> value.</summary>
+    public void SetHeaderBorders(BorderSides sides)
     {
-        ApplyBorders(_currentSheet?.Header, left, top, right, bottom);
+        ApplyBorderSides(_currentSheet?.Header, sides);
         PreviewInvalidated?.Invoke(this, EventArgs.Empty);
     }
 
-    public void SetFooterBorder(bool? left = null, bool? top = null, bool? right = null, bool? bottom = null)
+    /// <summary>Sets all four footer border sides from a compact <see cref="BorderSides" /> value.</summary>
+    public void SetFooterBorders(BorderSides sides)
     {
-        ApplyBorders(_currentSheet?.Footer, left, top, right, bottom);
+        ApplyBorderSides(_currentSheet?.Footer, sides);
         PreviewInvalidated?.Invoke(this, EventArgs.Empty);
     }
 
-    private static void ApplyBorders(HeaderFooter? sheet, bool? left, bool? top, bool? right, bool? bottom)
+    private static void ApplyBorderSides(HeaderFooter? sheet, BorderSides sides)
     {
         if (sheet is null)
         {
             return;
         }
 
-        if (left is bool l)
-        {
-            sheet.LeftBorder = l;
-        }
-
-        if (top is bool t)
-        {
-            sheet.TopBorder = t;
-        }
-
-        if (right is bool r)
-        {
-            sheet.RightBorder = r;
-        }
-
-        if (bottom is bool b)
-        {
-            sheet.BottomBorder = b;
-        }
+        sheet.LeftBorder = sides.HasFlag(BorderSides.Left);
+        sheet.TopBorder = sides.HasFlag(BorderSides.Top);
+        sheet.RightBorder = sides.HasFlag(BorderSides.Right);
+        sheet.BottomBorder = sides.HasFlag(BorderSides.Bottom);
     }
 
     // ----- Window state persistence -----

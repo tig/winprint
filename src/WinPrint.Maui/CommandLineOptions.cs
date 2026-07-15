@@ -74,22 +74,11 @@ public sealed class CommandLineOptions
     [Option("footer-font", HelpText = "Footer font, e.g. \"Comic Sans MS, 10, bold\".")]
     public string? FooterFont { get; set; }
 
-    [Option("header-border-top-on")] public bool HeaderBorderTopOn { get; set; }
-    [Option("header-border-top-off")] public bool HeaderBorderTopOff { get; set; }
-    [Option("header-border-bottom-on")] public bool HeaderBorderBottomOn { get; set; }
-    [Option("header-border-bottom-off")] public bool HeaderBorderBottomOff { get; set; }
-    [Option("header-border-left-on")] public bool HeaderBorderLeftOn { get; set; }
-    [Option("header-border-left-off")] public bool HeaderBorderLeftOff { get; set; }
-    [Option("header-border-right-on")] public bool HeaderBorderRightOn { get; set; }
-    [Option("header-border-right-off")] public bool HeaderBorderRightOff { get; set; }
-    [Option("footer-border-top-on")] public bool FooterBorderTopOn { get; set; }
-    [Option("footer-border-top-off")] public bool FooterBorderTopOff { get; set; }
-    [Option("footer-border-bottom-on")] public bool FooterBorderBottomOn { get; set; }
-    [Option("footer-border-bottom-off")] public bool FooterBorderBottomOff { get; set; }
-    [Option("footer-border-left-on")] public bool FooterBorderLeftOn { get; set; }
-    [Option("footer-border-left-off")] public bool FooterBorderLeftOff { get; set; }
-    [Option("footer-border-right-on")] public bool FooterBorderRightOn { get; set; }
-    [Option("footer-border-right-off")] public bool FooterBorderRightOff { get; set; }
+    [Option("header-borders", HelpText = "Header borders: none, all, or a list (e.g. top,bottom).")]
+    public string? HeaderBorders { get; set; }
+
+    [Option("footer-borders", HelpText = "Footer borders: none, all, or a list (e.g. top,bottom).")]
+    public string? FooterBorders { get; set; }
 
     [Option('v', "verbose", Default = false, HelpText = "Verbose console output (log is always verbose).")]
     public bool Verbose { get; set; }
@@ -138,22 +127,8 @@ public sealed class CommandLineOptions
         target.FooterText = FooterText;
         target.HeaderFont = HeaderFont;
         target.FooterFont = FooterFont;
-        target.HeaderBorderTopOn = HeaderBorderTopOn;
-        target.HeaderBorderTopOff = HeaderBorderTopOff;
-        target.HeaderBorderBottomOn = HeaderBorderBottomOn;
-        target.HeaderBorderBottomOff = HeaderBorderBottomOff;
-        target.HeaderBorderLeftOn = HeaderBorderLeftOn;
-        target.HeaderBorderLeftOff = HeaderBorderLeftOff;
-        target.HeaderBorderRightOn = HeaderBorderRightOn;
-        target.HeaderBorderRightOff = HeaderBorderRightOff;
-        target.FooterBorderTopOn = FooterBorderTopOn;
-        target.FooterBorderTopOff = FooterBorderTopOff;
-        target.FooterBorderBottomOn = FooterBorderBottomOn;
-        target.FooterBorderBottomOff = FooterBorderBottomOff;
-        target.FooterBorderLeftOn = FooterBorderLeftOn;
-        target.FooterBorderLeftOff = FooterBorderLeftOff;
-        target.FooterBorderRightOn = FooterBorderRightOn;
-        target.FooterBorderRightOff = FooterBorderRightOff;
+        target.HeaderBorders = HeaderBorders;
+        target.FooterBorders = FooterBorders;
         target.Verbose = Verbose;
         target.Debug = Debug;
         target.Gui = Gui;

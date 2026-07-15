@@ -116,12 +116,10 @@ public sealed class PrintCommand : IHeadlessCliCommand
         {
             if (!File.Exists(file))
             {
-                string hint = LooksLikePrinterName(file)
-                    ? " If you meant a printer, put a space before --printer" +
-                      " (e.g. `--to-sheet 2 --printer \"Brother Laser\"`)."
-                    : string.Empty;
                 return new CommandResult(CommandStatus.Error, null, "FileNotFound",
-                    $"File not found: '{file}'.{hint}");
+                    $"File not found: '{file}'. " +
+                    "If this was meant as a --printer value, check for a missing space before --printer " +
+                    "(e.g. `--to-sheet 2 --printer \"Name\"`).");
             }
         }
 
@@ -178,19 +176,5 @@ public sealed class PrintCommand : IHeadlessCliCommand
             ? $"{file}: printed {result.SheetsPrinted} sheet(s)."
             : $"{file}: wrote {result.SheetsPrinted} sheet(s) to {Path.GetFullPath(pdfPath)}.");
         return result.SheetsPrinted;
-    }
-
-    /// <summary>
-    ///     Heuristic: a "file" argument that never existed as a path and looks like a printer display
-    ///     name (contains "printer", or common vendor tokens) — usually a mis-parsed --printer value.
-    /// </summary>
-    private static bool LooksLikePrinterName(string path)
-    {
-        string name = Path.GetFileName(path);
-        return name.Contains("printer", StringComparison.OrdinalIgnoreCase)
-               || name.Contains("Brother", StringComparison.OrdinalIgnoreCase)
-               || name.Contains("Laser", StringComparison.OrdinalIgnoreCase)
-               || name.Contains("HP ", StringComparison.OrdinalIgnoreCase)
-               || name.Contains("Canon", StringComparison.OrdinalIgnoreCase);
     }
 }

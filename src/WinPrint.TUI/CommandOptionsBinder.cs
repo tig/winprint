@@ -35,22 +35,8 @@ internal static class CommandOptionsBinder
             FooterText = GetString(options, "footer-text"),
             HeaderFont = GetString(options, "header-font"),
             FooterFont = GetString(options, "footer-font"),
-            HeaderBorderTopOn = GetFlag(options, "header-border-top-on"),
-            HeaderBorderTopOff = GetFlag(options, "header-border-top-off"),
-            HeaderBorderBottomOn = GetFlag(options, "header-border-bottom-on"),
-            HeaderBorderBottomOff = GetFlag(options, "header-border-bottom-off"),
-            HeaderBorderLeftOn = GetFlag(options, "header-border-left-on"),
-            HeaderBorderLeftOff = GetFlag(options, "header-border-left-off"),
-            HeaderBorderRightOn = GetFlag(options, "header-border-right-on"),
-            HeaderBorderRightOff = GetFlag(options, "header-border-right-off"),
-            FooterBorderTopOn = GetFlag(options, "footer-border-top-on"),
-            FooterBorderTopOff = GetFlag(options, "footer-border-top-off"),
-            FooterBorderBottomOn = GetFlag(options, "footer-border-bottom-on"),
-            FooterBorderBottomOff = GetFlag(options, "footer-border-bottom-off"),
-            FooterBorderLeftOn = GetFlag(options, "footer-border-left-on"),
-            FooterBorderLeftOff = GetFlag(options, "footer-border-left-off"),
-            FooterBorderRightOn = GetFlag(options, "footer-border-right-on"),
-            FooterBorderRightOff = GetFlag(options, "footer-border-right-off")
+            HeaderBorders = GetString(options, "header-borders"),
+            FooterBorders = GetString(options, "footer-borders")
         };
     }
 

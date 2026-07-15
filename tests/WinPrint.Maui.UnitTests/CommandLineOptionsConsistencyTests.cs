@@ -32,22 +32,8 @@ public class CommandLineOptionsConsistencyTests
         ["footer-text"] = nameof(CommandLineOptions.FooterText),
         ["header-font"] = nameof(CommandLineOptions.HeaderFont),
         ["footer-font"] = nameof(CommandLineOptions.FooterFont),
-        ["header-border-top-on"] = nameof(CommandLineOptions.HeaderBorderTopOn),
-        ["header-border-top-off"] = nameof(CommandLineOptions.HeaderBorderTopOff),
-        ["header-border-bottom-on"] = nameof(CommandLineOptions.HeaderBorderBottomOn),
-        ["header-border-bottom-off"] = nameof(CommandLineOptions.HeaderBorderBottomOff),
-        ["header-border-left-on"] = nameof(CommandLineOptions.HeaderBorderLeftOn),
-        ["header-border-left-off"] = nameof(CommandLineOptions.HeaderBorderLeftOff),
-        ["header-border-right-on"] = nameof(CommandLineOptions.HeaderBorderRightOn),
-        ["header-border-right-off"] = nameof(CommandLineOptions.HeaderBorderRightOff),
-        ["footer-border-top-on"] = nameof(CommandLineOptions.FooterBorderTopOn),
-        ["footer-border-top-off"] = nameof(CommandLineOptions.FooterBorderTopOff),
-        ["footer-border-bottom-on"] = nameof(CommandLineOptions.FooterBorderBottomOn),
-        ["footer-border-bottom-off"] = nameof(CommandLineOptions.FooterBorderBottomOff),
-        ["footer-border-left-on"] = nameof(CommandLineOptions.FooterBorderLeftOn),
-        ["footer-border-left-off"] = nameof(CommandLineOptions.FooterBorderLeftOff),
-        ["footer-border-right-on"] = nameof(CommandLineOptions.FooterBorderRightOn),
-        ["footer-border-right-off"] = nameof(CommandLineOptions.FooterBorderRightOff)
+        ["header-borders"] = nameof(CommandLineOptions.HeaderBorders),
+        ["footer-borders"] = nameof(CommandLineOptions.FooterBorders)
     };
 
     [Theory]

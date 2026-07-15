@@ -44,7 +44,7 @@ public class Options : ModelBase
     [SafeForTelemetry]
     public int Columns { get; set; }
 
-    // #3 header / footer overrides (flags: only applied when true)
+    // #3 header / footer (compact: borders are "none"|"all"|"top,bottom")
     [SafeForTelemetry] public bool HeaderOn { get; set; }
     [SafeForTelemetry] public bool HeaderOff { get; set; }
     [SafeForTelemetry] public bool FooterOn { get; set; }
@@ -53,22 +53,12 @@ public class Options : ModelBase
     [SafeForTelemetry] public string? FooterText { get; set; }
     [SafeForTelemetry] public string? HeaderFont { get; set; }
     [SafeForTelemetry] public string? FooterFont { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderTopOn { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderTopOff { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderBottomOn { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderBottomOff { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderLeftOn { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderLeftOff { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderRightOn { get; set; }
-    [SafeForTelemetry] public bool HeaderBorderRightOff { get; set; }
-    [SafeForTelemetry] public bool FooterBorderTopOn { get; set; }
-    [SafeForTelemetry] public bool FooterBorderTopOff { get; set; }
-    [SafeForTelemetry] public bool FooterBorderBottomOn { get; set; }
-    [SafeForTelemetry] public bool FooterBorderBottomOff { get; set; }
-    [SafeForTelemetry] public bool FooterBorderLeftOn { get; set; }
-    [SafeForTelemetry] public bool FooterBorderLeftOff { get; set; }
-    [SafeForTelemetry] public bool FooterBorderRightOn { get; set; }
-    [SafeForTelemetry] public bool FooterBorderRightOff { get; set; }
+    /// <summary>When set, fully specifies header borders (e.g. <c>top,bottom</c>, <c>none</c>, <c>all</c>).</summary>
+    [SafeForTelemetry]
+    public string? HeaderBorders { get; set; }
+    /// <summary>When set, fully specifies footer borders (e.g. <c>top,bottom</c>, <c>none</c>, <c>all</c>).</summary>
+    [SafeForTelemetry]
+    public string? FooterBorders { get; set; }
 
     [SafeForTelemetry] public bool Verbose { get; set; }
 
@@ -103,22 +93,8 @@ public class Options : ModelBase
         FooterText = src.FooterText;
         HeaderFont = src.HeaderFont;
         FooterFont = src.FooterFont;
-        HeaderBorderTopOn = src.HeaderBorderTopOn;
-        HeaderBorderTopOff = src.HeaderBorderTopOff;
-        HeaderBorderBottomOn = src.HeaderBorderBottomOn;
-        HeaderBorderBottomOff = src.HeaderBorderBottomOff;
-        HeaderBorderLeftOn = src.HeaderBorderLeftOn;
-        HeaderBorderLeftOff = src.HeaderBorderLeftOff;
-        HeaderBorderRightOn = src.HeaderBorderRightOn;
-        HeaderBorderRightOff = src.HeaderBorderRightOff;
-        FooterBorderTopOn = src.FooterBorderTopOn;
-        FooterBorderTopOff = src.FooterBorderTopOff;
-        FooterBorderBottomOn = src.FooterBorderBottomOn;
-        FooterBorderBottomOff = src.FooterBorderBottomOff;
-        FooterBorderLeftOn = src.FooterBorderLeftOn;
-        FooterBorderLeftOff = src.FooterBorderLeftOff;
-        FooterBorderRightOn = src.FooterBorderRightOn;
-        FooterBorderRightOff = src.FooterBorderRightOff;
+        HeaderBorders = src.HeaderBorders;
+        FooterBorders = src.FooterBorders;
         Verbose = src.Verbose;
         Debug = src.Debug;
         Gui = src.Gui;
