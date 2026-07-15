@@ -72,6 +72,18 @@ public sealed class PrintCommand : IHeadlessCliCommand
                 "Specify at least one file to print, e.g. `wp print Program.cs`.");
         }
 
+        // Fail fast on bad option values (e.g. --to-sheet 2--printer) *before* expanding files or
+        // opening a printer — otherwise the first real file prints to the default (PDF) and the
+        // mis-parsed token is treated as a second file.
+        try
+        {
+            _ = CommandOptionsBinder.ToOptions(options, options.Arguments);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CommandResult(CommandStatus.Error, null, "BadOption", ex.Message);
+        }
+
         bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
         string? pdfPath = CommandOptionsBinder.GetString(options, "pdf");
         if (pdfPath is not null && CommandOptionsBinder.GetString(options, "printer") is not null)
@@ -79,9 +91,6 @@ public sealed class PrintCommand : IHeadlessCliCommand
             return new CommandResult(CommandStatus.Error, null, "PdfAndPrinter",
                 "--pdf writes a file instead of printing; it cannot be combined with --printer.");
         }
-
-        var output = new StringBuilder();
-        int totalSheets = 0;
 
         IReadOnlyList<string> files;
         try
@@ -100,6 +109,24 @@ public sealed class PrintCommand : IHeadlessCliCommand
             return new CommandResult(CommandStatus.Error, null, "PdfOneFile",
                 "--pdf writes one PDF; specify exactly one input file.");
         }
+
+        // Validate every path exists before printing any of them — avoids partial jobs that hit
+        // the default printer then die on a later bogus argument (mis-parsed --printer value).
+        foreach (string file in files)
+        {
+            if (!File.Exists(file))
+            {
+                string hint = LooksLikePrinterName(file)
+                    ? " If you meant a printer, put a space before --printer" +
+                      " (e.g. `--to-sheet 2 --printer \"Brother Laser\"`)."
+                    : string.Empty;
+                return new CommandResult(CommandStatus.Error, null, "FileNotFound",
+                    $"File not found: '{file}'.{hint}");
+            }
+        }
+
+        var output = new StringBuilder();
+        int totalSheets = 0;
 
         try
         {
@@ -151,5 +178,19 @@ public sealed class PrintCommand : IHeadlessCliCommand
             ? $"{file}: printed {result.SheetsPrinted} sheet(s)."
             : $"{file}: wrote {result.SheetsPrinted} sheet(s) to {Path.GetFullPath(pdfPath)}.");
         return result.SheetsPrinted;
+    }
+
+    /// <summary>
+    ///     Heuristic: a "file" argument that never existed as a path and looks like a printer display
+    ///     name (contains "printer", or common vendor tokens) — usually a mis-parsed --printer value.
+    /// </summary>
+    private static bool LooksLikePrinterName(string path)
+    {
+        string name = Path.GetFileName(path);
+        return name.Contains("printer", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Brother", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Laser", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("HP ", StringComparison.OrdinalIgnoreCase)
+               || name.Contains("Canon", StringComparison.OrdinalIgnoreCase);
     }
 }
