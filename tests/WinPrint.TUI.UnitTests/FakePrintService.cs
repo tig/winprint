@@ -28,7 +28,8 @@ public sealed class FakePrintService : IPrintService
 
     public PrintPageSetup GetDefaultPageSetup(string? printerName = null)
     {
-        return new PrintPageSetup { PrinterName = printerName ?? (_printers.Count > 0 ? _printers[0] : "Fake Printer") };
+        return new PrintPageSetup
+        { PrinterName = printerName ?? (_printers.Count > 0 ? _printers[0] : "Fake Printer") };
     }
 
     public PrintPageSetup ShowPrintDialog(PrintDialogOptions options, PrintPageSetup currentSetup)
