@@ -23,7 +23,19 @@ public class WinPrintOptionsConsistencyTests
         ["paper-size"] = nameof(Options.PaperSize),
         ["from-sheet"] = nameof(Options.FromPage),
         ["to-sheet"] = nameof(Options.ToPage),
-        ["content-type"] = nameof(Options.ContentType)
+        ["content-type"] = nameof(Options.ContentType),
+        ["rows"] = nameof(Options.Rows),
+        ["columns"] = nameof(Options.Columns),
+        ["header-on"] = nameof(Options.HeaderOn),
+        ["header-off"] = nameof(Options.HeaderOff),
+        ["footer-on"] = nameof(Options.FooterOn),
+        ["footer-off"] = nameof(Options.FooterOff),
+        ["header-text"] = nameof(Options.HeaderText),
+        ["footer-text"] = nameof(Options.FooterText),
+        ["header-font"] = nameof(Options.HeaderFont),
+        ["footer-font"] = nameof(Options.FooterFont),
+        ["header-borders"] = nameof(Options.HeaderBorders),
+        ["footer-borders"] = nameof(Options.FooterBorders)
     };
 
     [Fact]
@@ -65,7 +77,9 @@ public class WinPrintOptionsConsistencyTests
         Type expected = canonical.ValueType == typeof(bool) ? typeof(bool)
             : canonical.ValueType == typeof(int) ? typeof(int)
             : typeof(string);
-        Assert.Equal(expected, property.PropertyType);
+        // string? properties are still typeof(string) under reflection for reference types
+        Type actual = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+        Assert.Equal(expected, actual);
     }
 
     public static IEnumerable<object[]> SharedOptionNames =>

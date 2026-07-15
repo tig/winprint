@@ -428,7 +428,8 @@ public class Settings : ModelBase
         };
         sheet.Footer.VerticalPadding = 1;
 
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        // 0.33" (33 hundredths) — wide enough for printers that clip narrower defaults (#268).
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
 
         // Create default 1 Up sheet
@@ -476,7 +477,7 @@ public class Settings : ModelBase
         };
         sheet.Footer.VerticalPadding = 1;
 
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
 
         // Proportional 2-Up — sans-serif prose/HTML layout
@@ -487,7 +488,7 @@ public class Settings : ModelBase
             Rows = 1,
             Landscape = true,
             Padding = 3,
-            PageSeparator = true,
+            PageSeparator = false,
             ContentSettings = new ContentSettings
             {
                 Font = new Font
@@ -519,7 +520,7 @@ public class Settings : ModelBase
             Style = defaultHFFontStyle
         };
         sheet.Footer.VerticalPadding = 1;
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.ProportionalSheet2Up.ToString(), sheet);
 
         // Proportional 1-Up — sans-serif prose/HTML layout
@@ -562,7 +563,7 @@ public class Settings : ModelBase
             Style = defaultHFFontStyle
         };
         sheet.Footer.VerticalPadding = 1;
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.ProportionalSheet1Up.ToString(), sheet);
 
         settings.DefaultSheetByContentType = new Dictionary<string, string>

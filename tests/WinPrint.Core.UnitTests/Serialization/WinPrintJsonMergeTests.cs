@@ -34,7 +34,7 @@ public class WinPrintJsonMergeTests
             Assert.True(settings.Sheets.ContainsKey(sheetId));
             SheetSettings sheet = settings.Sheets[sheetId];
             Assert.Equal("Renamed Only", sheet.Name);
-            Assert.Equal(30, sheet.Margins.Left);
+            Assert.Equal(33, sheet.Margins.Left); // #268 default 0.33"
             Assert.True(sheet.Header.Enabled);
             Assert.True(sheet.Footer.Enabled);
         }

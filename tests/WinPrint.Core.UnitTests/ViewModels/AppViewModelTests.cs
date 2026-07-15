@@ -800,10 +800,8 @@ public class AppViewModelTests : TestServicesBase
             PaperSize = "Letter"
         };
 
-        string? file = vm.ApplyOptions(
-            options,
-            new[] { "FakePrinter", "OtherPrinter" },
-            new[] { "Letter", "A4" });
+        // Names are already resolved at the CLI edge before ApplyOptions.
+        string? file = vm.ApplyOptions(options);
 
         Assert.Null(file);
         Assert.Equal(targetSheet, vm.SheetNames[vm.SelectedSheetIndex]);
@@ -839,17 +837,26 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
-    public void ApplyOptions_IgnoresUnknownPrinter()
+    public void ApplyOptions_SetsPrinterNameWithoutResolving()
+    {
+        // Resolve happens at the CLI edge (CliOptionsResolver); ApplyOptions only applies.
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        vm.ApplyOptions(new Options { Printer = "Already-Resolved Name" });
+
+        Assert.Equal("Already-Resolved Name", vm.SelectedPrinter);
+    }
+
+    [Fact]
+    public void ApplyOptions_SetsPaperSizeWithoutListGate()
     {
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
-        vm.SelectedPrinter = "Existing";
 
-        vm.ApplyOptions(
-            new Options { Printer = "NotInList" },
-            new[] { "Existing" });
+        vm.ApplyOptions(new Options { PaperSize = "Legal" });
 
-        Assert.Equal("Existing", vm.SelectedPrinter);
+        Assert.Equal("Legal", vm.SelectedPaperSize);
     }
 
     [Fact]

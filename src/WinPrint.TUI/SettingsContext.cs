@@ -98,6 +98,10 @@ public sealed class SettingsContext
         var context = new SettingsContext(app, sheetVM, renderer, () => svc);
         if (options is not null)
         {
+            // CLI edge: resolve partial --printer before ApplyOptions (no list bypass) (#264).
+            // Paper list omitted — TUI has no per-printer paper enumeration.
+            IReadOnlyList<string> printerNames = [.. svc.GetAvailablePrinters().Select(p => p.Name)];
+            CliOptionsResolver.ResolveInPlace(options, printerNames);
             context.File = app.ApplyOptions(options);
         }
 

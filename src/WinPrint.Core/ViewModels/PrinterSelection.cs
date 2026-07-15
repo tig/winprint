@@ -76,4 +76,12 @@ public static class PrinterSelection
 
         return ResolvePaperSize(saved, fallback, available);
     }
+
+    /// <summary>
+    ///     Resolves a CLI <c>--printer</c> query. Delegates to <see cref="NamedChoiceResolver" /> (#264).
+    /// </summary>
+    public static NamedChoiceMatch ResolveCliPrinter(string? query, IReadOnlyList<string>? available)
+    {
+        return NamedChoiceResolver.Resolve(query, available, "printer");
+    }
 }

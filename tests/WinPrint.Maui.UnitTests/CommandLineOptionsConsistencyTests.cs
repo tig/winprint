@@ -21,7 +21,19 @@ public class CommandLineOptionsConsistencyTests
         ["paper-size"] = nameof(CommandLineOptions.PaperSize),
         ["from-sheet"] = nameof(CommandLineOptions.FromPage),
         ["to-sheet"] = nameof(CommandLineOptions.ToPage),
-        ["content-type"] = nameof(CommandLineOptions.ContentType)
+        ["content-type"] = nameof(CommandLineOptions.ContentType),
+        ["rows"] = nameof(CommandLineOptions.Rows),
+        ["columns"] = nameof(CommandLineOptions.Columns),
+        ["header-on"] = nameof(CommandLineOptions.HeaderOn),
+        ["header-off"] = nameof(CommandLineOptions.HeaderOff),
+        ["footer-on"] = nameof(CommandLineOptions.FooterOn),
+        ["footer-off"] = nameof(CommandLineOptions.FooterOff),
+        ["header-text"] = nameof(CommandLineOptions.HeaderText),
+        ["footer-text"] = nameof(CommandLineOptions.FooterText),
+        ["header-font"] = nameof(CommandLineOptions.HeaderFont),
+        ["footer-font"] = nameof(CommandLineOptions.FooterFont),
+        ["header-borders"] = nameof(CommandLineOptions.HeaderBorders),
+        ["footer-borders"] = nameof(CommandLineOptions.FooterBorders)
     };
 
     [Theory]

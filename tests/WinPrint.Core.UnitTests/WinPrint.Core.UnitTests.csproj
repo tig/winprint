@@ -32,6 +32,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WinPrint.Core\WinPrint.Core.csproj" />
+    <!-- System.Printing / PrintTicket for WindowsPrintTicketHelper tests (#267). -->
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\WinPrint.Maui\Platforms\Windows\WindowsPrintTicketHelper.cs"
+             Link="Linked\WindowsPrintTicketHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>

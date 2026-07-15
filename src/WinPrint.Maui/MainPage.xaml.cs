@@ -5,6 +5,7 @@ using Microsoft.UI.Windowing;
 using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
+using WinPrint.Core.ViewModels;
 using WinPrint.Maui.Services;
 using WinPrint.Maui.ViewModels;
 using WinPrint.Maui.Views;
@@ -513,7 +514,25 @@ public partial class MainPage : ContentPage
     private void ApplyCommandLineOptions()
     {
         Options options = WinPrintServices.Current.Options;
-        string? file = _viewModel.App.ApplyOptions(options, _viewModel.PrinterNames, _viewModel.PaperSizes);
+
+        try
+        {
+            // CLI edge: partial --printer / --paper-size resolve + fail-fast (#264).
+            CliOptionsResolver.ResolveInPlace(
+                options,
+                _viewModel.PrinterNames,
+                _viewModel.PaperSizes);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                await DisplayAlertAsync("Invalid option", ex.Message, "OK");
+            });
+            return;
+        }
+
+        string? file = _viewModel.App.ApplyOptions(options);
 
         // Treat startup overrides (e.g. --sheet/--landscape) as the baseline so they aren't mistaken
         // for user edits when prompting to save sheet-definition changes on exit.

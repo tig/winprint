@@ -13,6 +13,7 @@ public sealed class WindowsPrintJob : IPrintJob
 {
     private readonly PrintDocument _printDocument;
     private readonly List<(int PageNum, Action<IGraphicsContext, int> Render)> _pages = [];
+    private readonly QueryPageSettingsEventHandler _queryPageSettings;
     private int _pageIndex;
     private bool _disposed;
 
@@ -25,8 +26,6 @@ public sealed class WindowsPrintJob : IPrintJob
             _printDocument.PrinterSettings.PrinterName = pageSetup.PrinterName;
         }
 
-        _printDocument.DefaultPageSettings.Landscape = pageSetup.Landscape;
-
         foreach (PaperSize ps in _printDocument.PrinterSettings.PaperSizes)
         {
             if (string.Equals(ps.PaperName, pageSetup.PaperSizeName, StringComparison.OrdinalIgnoreCase))
@@ -35,6 +34,13 @@ public sealed class WindowsPrintJob : IPrintJob
                 break;
             }
         }
+
+        // Set Landscape *after* paper size: some drivers reset orientation when PaperSize is assigned.
+        // Re-apply on every QueryPageSettings so multi-page jobs stay landscape (#267).
+        bool landscape = pageSetup.Landscape;
+        _printDocument.DefaultPageSettings.Landscape = landscape;
+        _queryPageSettings = (_, e) => { e.PageSettings.Landscape = landscape; };
+        _printDocument.QueryPageSettings += _queryPageSettings;
 
         _printDocument.PrintPage += OnPrintPage;
     }
@@ -75,6 +81,7 @@ public sealed class WindowsPrintJob : IPrintJob
         if (!_disposed)
         {
             _printDocument.PrintPage -= OnPrintPage;
+            _printDocument.QueryPageSettings -= _queryPageSettings;
             _printDocument.Dispose();
             _disposed = true;
         }

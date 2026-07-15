@@ -27,4 +27,28 @@ public sealed class PrintPageSetup
 
     /// <summary>Last sheet to print; <c>0</c> means "through the last".</summary>
     public int ToSheet { get; set; }
+
+    /// <summary>
+    ///     Deep-enough value copy for cross-thread spool (STA) so the UI/page-setup object can
+    ///     mutate without racing the print job.
+    /// </summary>
+    public PrintPageSetup Clone()
+    {
+        return new PrintPageSetup
+        {
+            PrinterName = PrinterName,
+            PaperSizeName = PaperSizeName,
+            Landscape = Landscape,
+            MarginLeft = MarginLeft,
+            MarginTop = MarginTop,
+            MarginRight = MarginRight,
+            MarginBottom = MarginBottom,
+            PaperWidth = PaperWidth,
+            PaperHeight = PaperHeight,
+            DpiX = DpiX,
+            DpiY = DpiY,
+            FromSheet = FromSheet,
+            ToSheet = ToSheet
+        };
+    }
 }
