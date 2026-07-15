@@ -25,8 +25,6 @@ public sealed class WindowsPrintJob : IPrintJob
             _printDocument.PrinterSettings.PrinterName = pageSetup.PrinterName;
         }
 
-        _printDocument.DefaultPageSettings.Landscape = pageSetup.Landscape;
-
         foreach (PaperSize ps in _printDocument.PrinterSettings.PaperSizes)
         {
             if (string.Equals(ps.PaperName, pageSetup.PaperSizeName, StringComparison.OrdinalIgnoreCase))
@@ -35,6 +33,11 @@ public sealed class WindowsPrintJob : IPrintJob
                 break;
             }
         }
+
+        // Set Landscape *after* paper size: some drivers reset orientation when PaperSize is assigned.
+        // Re-apply on every QueryPageSettings so multi-page jobs stay landscape (#267).
+        _printDocument.DefaultPageSettings.Landscape = pageSetup.Landscape;
+        _printDocument.QueryPageSettings += (_, e) => { e.PageSettings.Landscape = pageSetup.Landscape; };
 
         _printDocument.PrintPage += OnPrintPage;
     }

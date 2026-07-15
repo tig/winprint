@@ -16,7 +16,8 @@ public class ProportionalSheetDefaultsTests
 
         SheetSettings proportional2Up = settings.Sheets[Uuid.ProportionalSheet2Up.ToString()];
         Assert.Equal("Proportional 2-Up", proportional2Up.Name);
-        Assert.True(proportional2Up.PageSeparator);
+        Assert.False(proportional2Up.PageSeparator); // #268 — off for proportional 2-up
+        Assert.Equal(33, proportional2Up.Margins.Left); // #268 — 0.33"
         Assert.Equal("{DateRevised:D}|{FileName}|{Language}", proportional2Up.Header.Text!);
         Assert.NotNull(proportional2Up.ContentSettings);
         Assert.False(proportional2Up.ContentSettings!.LineNumbers);
@@ -25,13 +26,17 @@ public class ProportionalSheetDefaultsTests
         SheetSettings proportional1Up = settings.Sheets[Uuid.ProportionalSheet1Up.ToString()];
         Assert.Equal("Proportional 1-Up", proportional1Up.Name);
         Assert.True(proportional1Up.PageSeparator);
+        Assert.Equal(33, proportional1Up.Margins.Left);
         Assert.Equal("{DateRevised:D}|{FileName}|{Language}", proportional1Up.Header.Text!);
 
         SheetSettings default2Up = settings.Sheets[Uuid.DefaultSheet.ToString()];
         Assert.Equal("{DateRevised:D}|{FileName}|Language: {Language}", default2Up.Header.Text!);
+        Assert.Equal(33, default2Up.Margins.Left);
+        Assert.Equal(33, default2Up.Margins.Right);
 
         SheetSettings default1Up = settings.Sheets[Uuid.DefaultSheet1Up.ToString()];
         Assert.Equal("{DateRevised:D}|{FileName}|Language: {Language}", default1Up.Header.Text!);
+        Assert.Equal(33, default1Up.Margins.Bottom);
     }
 
     [Fact]

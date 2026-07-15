@@ -76,4 +76,78 @@ public static class PrinterSelection
 
         return ResolvePaperSize(saved, fallback, available);
     }
+
+    /// <summary>
+    ///     Resolves a CLI <c>--printer</c> query against installed printer display names (#264).
+    ///     Matching order: exact (ordinal ignore-case) → unique prefix → unique substring.
+    ///     Ambiguous or missing matches return <see cref="PrinterCliMatch.Failed" /> with a message
+    ///     that lists candidates / available printers so the user can tighten the string.
+    /// </summary>
+    public static PrinterCliMatch ResolveCliPrinter(string? query, IReadOnlyList<string>? available)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return PrinterCliMatch.Failed("Printer name is empty. Pass --printer <name> or omit it for the default.");
+        }
+
+        if (available is null || available.Count == 0)
+        {
+            return PrinterCliMatch.Failed("No printers are available on this system.");
+        }
+
+        string needle = query.Trim();
+
+        // 1) Exact match (ordinal ignore-case).
+        foreach (string name in available)
+        {
+            if (string.Equals(name, needle, StringComparison.OrdinalIgnoreCase))
+            {
+                return PrinterCliMatch.Matched(name);
+            }
+        }
+
+        // 2) Prefix match.
+        string[] prefix = [.. available
+            .Where(name => name.StartsWith(needle, StringComparison.OrdinalIgnoreCase))];
+        if (prefix.Length == 1)
+        {
+            return PrinterCliMatch.Matched(prefix[0]);
+        }
+
+        if (prefix.Length > 1)
+        {
+            return PrinterCliMatch.Failed(FormatAmbiguous(needle, prefix));
+        }
+
+        // 3) Substring / contains match.
+        string[] contains = [.. available
+            .Where(name => name.Contains(needle, StringComparison.OrdinalIgnoreCase))];
+        if (contains.Length == 1)
+        {
+            return PrinterCliMatch.Matched(contains[0]);
+        }
+
+        if (contains.Length > 1)
+        {
+            return PrinterCliMatch.Failed(FormatAmbiguous(needle, contains));
+        }
+
+        return PrinterCliMatch.Failed(FormatNoMatch(needle, available));
+    }
+
+    private static string FormatAmbiguous(string query, IReadOnlyList<string> matches)
+    {
+        return
+            $"Printer '{query}' is ambiguous; matches: {string.Join(", ", matches)}. " +
+            "Pass a longer substring or the full printer name.";
+    }
+
+    private static string FormatNoMatch(string query, IReadOnlyList<string> available)
+    {
+        const int maxList = 12;
+        IEnumerable<string> shown = available.Count <= maxList ? available : available.Take(maxList);
+        string list = string.Join(", ", shown);
+        string suffix = available.Count > maxList ? $", … ({available.Count - maxList} more)" : string.Empty;
+        return $"No printer matched '{query}'. Available: {list}{suffix}.";
+    }
 }

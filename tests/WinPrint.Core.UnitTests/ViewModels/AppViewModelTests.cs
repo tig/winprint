@@ -839,17 +839,46 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
-    public void ApplyOptions_IgnoresUnknownPrinter()
+    public void ApplyOptions_UnknownPrinter_Throws()
     {
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
         vm.SelectedPrinter = "Existing";
 
-        vm.ApplyOptions(
-            new Options { Printer = "NotInList" },
-            new[] { "Existing" });
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            vm.ApplyOptions(
+                new Options { Printer = "NotInList" },
+                new[] { "Existing" }));
 
+        Assert.Contains("NotInList", ex.Message);
         Assert.Equal("Existing", vm.SelectedPrinter);
+    }
+
+    [Fact]
+    public void ApplyOptions_PartialPrinterName_ResolvesUniqueMatch()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        vm.ApplyOptions(
+            new Options { Printer = "Brother" },
+            new[] { "Microsoft Print to PDF", "Brother HL-L3230CDW series Printer" });
+
+        Assert.Equal("Brother HL-L3230CDW series Printer", vm.SelectedPrinter);
+    }
+
+    [Fact]
+    public void ApplyOptions_AmbiguousPrinter_Throws()
+    {
+        AppViewModel vm = CreateVm();
+        vm.LoadSheets();
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            vm.ApplyOptions(
+                new Options { Printer = "Brother" },
+                new[] { "Brother HL-L3230CDW series Printer", "Brother HL-L5000D" }));
+
+        Assert.Contains("ambiguous", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

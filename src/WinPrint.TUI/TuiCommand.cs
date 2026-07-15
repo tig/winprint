@@ -8,6 +8,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.TUI.Views;
 
@@ -163,7 +164,14 @@ public sealed class TuiCommand : IViewerCommand
             return ViewCatalog.Create(view);
         }
 
-        string? file = options.Arguments.Count > 0 ? options.Arguments[0] : null;
+        // Expand globs so `wp tui .\dir\*.md` works under PowerShell (#263); open the first match.
+        string? file = null;
+        if (options.Arguments.Count > 0)
+        {
+            IReadOnlyList<string> files = FileArgumentExpander.Expand(options.Arguments);
+            file = files.Count > 0 ? files[0] : null;
+        }
+
         return new MainView(context: SettingsContext.Create(
             CommandOptionsBinder.ToOptions(options, file is null ? null : [file])));
     }

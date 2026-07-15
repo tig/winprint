@@ -3,6 +3,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.Cli;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.Core.Printing;
 
@@ -91,9 +92,26 @@ public sealed class PrintCommand : IHeadlessCliCommand
         var output = new StringBuilder();
         int totalSheets = 0;
 
+        IReadOnlyList<string> files;
         try
         {
-            foreach (string file in options.Arguments)
+            // Expand shell globs here so PowerShell's literal `*.md` works the same as bash (#263).
+            files = FileArgumentExpander.Expand(options.Arguments);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CommandResult(CommandStatus.Error, null, "GlobExpand", ex.Message);
+        }
+
+        if (pdfPath is not null && files.Count > 1)
+        {
+            return new CommandResult(CommandStatus.Error, null, "PdfOneFile",
+                "--pdf writes one PDF; specify exactly one input file.");
+        }
+
+        try
+        {
+            foreach (string file in files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 totalSheets += await PrintOneAsync(file, options, whatIf, pdfPath, output).ConfigureAwait(false);
@@ -105,7 +123,7 @@ public sealed class PrintCommand : IHeadlessCliCommand
         }
 
         string verb = whatIf ? "would print" : "printed";
-        output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
+        output.Append($"{files.Count} file(s) {verb} {totalSheets} sheet(s).");
         return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
     }
 

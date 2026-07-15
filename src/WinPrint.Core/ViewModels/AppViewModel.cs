@@ -986,10 +986,27 @@ public sealed class AppViewModel : INotifyPropertyChanged
                 SetLandscape(false);
             }
 
-            if (!string.IsNullOrEmpty(options.Printer) &&
-                (availablePrinters == null || availablePrinters.Contains(options.Printer)))
+            // --printer: partial match against the installed list when one is supplied (#264).
+            // Fail fast on unknown/ambiguous names so we never silently keep sticky/default PDF.
+            if (!string.IsNullOrEmpty(options.Printer))
             {
-                SetPrinterName(options.Printer);
+                if (availablePrinters is not null)
+                {
+                    PrinterCliMatch match =
+                        PrinterSelection.ResolveCliPrinter(options.Printer, availablePrinters as IReadOnlyList<string>
+                            ?? availablePrinters.ToList());
+                    if (!match.Success)
+                    {
+                        throw new InvalidOperationException(match.Error ?? $"No printer matched '{options.Printer}'.");
+                    }
+
+                    SetPrinterName(match.Name);
+                }
+                else
+                {
+                    // No list to resolve against (tests / callers that skip enumeration) — use verbatim.
+                    SetPrinterName(options.Printer);
+                }
             }
 
             if (!string.IsNullOrEmpty(options.PaperSize) &&

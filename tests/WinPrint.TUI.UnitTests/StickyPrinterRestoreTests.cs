@@ -69,12 +69,56 @@ public class StickyPrinterRestoreTests
         try
         {
             settings.LastPrinter = "SavedPrinter";
-            var svc = new ConfigurablePrintService(["Other", "SavedPrinter"], "Other");
+            // CLI printer must be in the available list (#264 fail-fast); partial names also resolve.
+            var svc = new ConfigurablePrintService(["Other", "SavedPrinter", "CliPrinter"], "Other");
 
             var context = SettingsContext.Create(
                 new Options { Files = ["x.cs"], Printer = "CliPrinter" }, svc);
 
             Assert.Equal("CliPrinter", context.App.CurrentPageSetup.PrinterName);
+        }
+        finally
+        {
+            settings.LastPrinter = prevPrinter;
+        }
+    }
+
+    [Fact]
+    public void SettingsContext_CommandLinePartialPrinter_Resolves()
+    {
+        Settings settings = WinPrintServices.Current.Settings;
+        string? prevPrinter = settings.LastPrinter;
+        try
+        {
+            settings.LastPrinter = "SavedPrinter";
+            var svc = new ConfigurablePrintService(
+                ["SavedPrinter", "Brother HL-L3230CDW series Printer"], "SavedPrinter");
+
+            var context = SettingsContext.Create(
+                new Options { Files = ["x.cs"], Printer = "Brother" }, svc);
+
+            Assert.Equal("Brother HL-L3230CDW series Printer", context.App.CurrentPageSetup.PrinterName);
+        }
+        finally
+        {
+            settings.LastPrinter = prevPrinter;
+        }
+    }
+
+    [Fact]
+    public void SettingsContext_UnknownCommandLinePrinter_Throws()
+    {
+        Settings settings = WinPrintServices.Current.Settings;
+        string? prevPrinter = settings.LastPrinter;
+        try
+        {
+            settings.LastPrinter = "SavedPrinter";
+            var svc = new ConfigurablePrintService(["SavedPrinter"], "SavedPrinter");
+
+            InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+                SettingsContext.Create(new Options { Files = ["x.cs"], Printer = "NoSuch" }, svc));
+
+            Assert.Contains("NoSuch", ex.Message);
         }
         finally
         {

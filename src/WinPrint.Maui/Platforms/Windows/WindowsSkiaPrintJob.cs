@@ -70,20 +70,47 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
         int sheetCount = _pages.Count;
         string printerName = _pageSetup.PrinterName;
         string documentName = _documentName;
+        bool landscape = _pageSetup.Landscape;
+        int paperWidth = _pageSetup.PaperWidth;
+        int paperHeight = _pageSetup.PaperHeight;
 
         // Page dimensions in WPF device-independent units (1/96"), matching the landscape swap that
         // SkiaPageImageRenderer applied to the bitmaps.
-        double widthDip = (_pageSetup.Landscape ? _pageSetup.PaperHeight : _pageSetup.PaperWidth) / 100.0 * 96.0;
-        double heightDip = (_pageSetup.Landscape ? _pageSetup.PaperWidth : _pageSetup.PaperHeight) / 100.0 * 96.0;
+        double widthDip = (landscape ? paperHeight : paperWidth) / 100.0 * 96.0;
+        double heightDip = (landscape ? paperWidth : paperHeight) / 100.0 * 96.0;
 
         // Spool on a dedicated STA thread (required by WPF imaging / XpsDocumentWriter) off the UI
         // thread. StaTaskRunner guarantees the returned task always completes — even if Spool throws an
         // imaging/XAML exception outside Spool's own catch — and honours cancellation, so callers never
         // hang and can cancel a queued job before it submits.
         return StaTaskRunner.RunAsync(
-            () => Spool(pageImages, widthDip, heightDip, printerName, documentName, sheetCount),
+            () => Spool(pageImages, widthDip, heightDip, printerName, documentName, sheetCount, landscape,
+                paperWidth, paperHeight),
             ex => PrintJobResult.Failed(ex.Message),
             cancellationToken);
+    }
+
+    /// <summary>
+    ///     Applies page orientation (and media size when known) to a print ticket so physical printers
+    ///     honor landscape the same way PDF/media-size consumers do (#267).
+    /// </summary>
+    internal static void ApplyPageSetupToTicket(PrintTicket ticket, bool landscape, int paperWidthHundredths,
+        int paperHeightHundredths)
+    {
+        ArgumentNullException.ThrowIfNull(ticket);
+
+        ticket.PageOrientation = landscape
+            ? PageOrientation.Landscape
+            : PageOrientation.Portrait;
+
+        // Portrait media dimensions in DIPs (1/96"); drivers that key off media size stay consistent
+        // with PaperWidth/Height from PrintPageSetup (always portrait-named).
+        if (paperWidthHundredths > 0 && paperHeightHundredths > 0)
+        {
+            double widthDip = paperWidthHundredths / 100.0 * 96.0;
+            double heightDip = paperHeightHundredths / 100.0 * 96.0;
+            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.Unknown, widthDip, heightDip);
+        }
     }
 
     /// <summary>
@@ -91,7 +118,8 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
     ///     queue. Runs on the STA spooler thread.
     /// </summary>
     private static PrintJobResult Spool(IReadOnlyList<byte[]> pageImages, double widthDip, double heightDip,
-        string printerName, string documentName, int sheetCount)
+        string printerName, string documentName, int sheetCount, bool landscape, int paperWidthHundredths,
+        int paperHeightHundredths)
     {
         try
         {
@@ -132,8 +160,14 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
                 // Names the spooled job in the print queue (e.g. "MyFile.cs").
                 queue.CurrentJobSettings.Description = documentName;
 
+                // Physical drivers (Brother, etc.) key off PrintTicket orientation; FixedPage size alone
+                // is enough for Microsoft Print to PDF but not for most hardware queues (#267).
+                PrintTicket baseTicket = queue.UserPrintTicket ?? queue.DefaultPrintTicket;
+                PrintTicket ticket = baseTicket.Clone();
+                ApplyPageSetupToTicket(ticket, landscape, paperWidthHundredths, paperHeightHundredths);
+
                 XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
-                writer.Write(fixedDocument);
+                writer.Write(fixedDocument.DocumentPaginator, ticket);
 
                 return PrintJobResult.Succeeded(sheetCount);
             }

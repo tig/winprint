@@ -98,7 +98,9 @@ public sealed class SettingsContext
         var context = new SettingsContext(app, sheetVM, renderer, () => svc);
         if (options is not null)
         {
-            context.File = app.ApplyOptions(options);
+            // Pass the live printer list so --printer partial match + fail-fast apply (#264).
+            IList<string> printerNames = [.. svc.GetAvailablePrinters().Select(p => p.Name)];
+            context.File = app.ApplyOptions(options, printerNames);
         }
 
         // Treat any startup overrides (e.g. --sheet/--landscape) as the baseline so they aren't
