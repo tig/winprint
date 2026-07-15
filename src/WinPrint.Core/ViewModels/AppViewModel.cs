@@ -60,6 +60,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private bool _transientContentTypeSheetSelection;
 
     /// <summary>
+    ///     Last CLI options applied via <see cref="ApplyOptions" />. Re-applied after content-type
+    ///     sheet selection in <see cref="LoadFileAsync" /> so --header-off / --footer-text etc. are
+    ///     not wiped when markdown picks Proportional 2-Up.
+    /// </summary>
+    private Options? _cliOptions;
+
+    /// <summary>
     ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the preview/reflow
     ///     engine used by MAUI for live preview).
     /// </summary>
@@ -571,6 +578,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
             if (TrySelectSheetByGuid(sheetGuid, false))
             {
                 _transientContentTypeSheetSelection = true;
+                // Content-type sheet switch replaces the sheet after ApplyOptions ran — re-apply
+                // CLI header/footer/layout onto the newly selected definition (#3 regression).
+                ReapplyCliOptionsAfterSheetChange();
             }
         }
 
@@ -962,10 +972,26 @@ public sealed class AppViewModel : INotifyPropertyChanged
     /// <summary>
     ///     Applies <see cref="Options" /> via <see cref="CliOptionsApplier" />. Call
     ///     <see cref="CliOptionsResolver.ResolveInPlace" /> first for printer/paper names.
+    ///     Remembers <paramref name="options" /> so content-type sheet switches in
+    ///     <see cref="LoadFileAsync" /> can re-apply header/footer/layout overrides.
     /// </summary>
     public string? ApplyOptions(Options options)
     {
+        _cliOptions = options;
         return CliOptionsApplier.Apply(this, options);
+    }
+
+    /// <summary>
+    ///     Re-applies stored CLI options to the current sheet without re-selecting <c>--sheet</c>.
+    /// </summary>
+    public void ReapplyCliOptionsAfterSheetChange()
+    {
+        if (_cliOptions is null)
+        {
+            return;
+        }
+
+        CliOptionsApplier.ApplySheetLevelOverrides(this, _cliOptions);
     }
 
     /// <summary>Marks the current sheet selection as locked by CLI <c>--sheet</c>.</summary>

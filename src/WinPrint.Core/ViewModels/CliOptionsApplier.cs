@@ -16,8 +16,12 @@ public static class CliOptionsApplier
     ///     Applies print/layout/header-footer CLI options. Call
     ///     <see cref="CliOptionsResolver.ResolveInPlace" /> first for printer/paper names.
     /// </summary>
+    /// <param name="selectSheet">
+    ///     When <see langword="false" />, skips <c>--sheet</c> selection — used to re-apply overrides
+    ///     after <see cref="AppViewModel.LoadFileAsync" /> switches the sheet for content type.
+    /// </param>
     /// <returns>The first file argument, or <c>null</c>.</returns>
-    public static string? Apply(AppViewModel app, Options options)
+    public static string? Apply(AppViewModel app, Options options, bool selectSheet = true)
     {
         ArgumentNullException.ThrowIfNull(app);
         if (options is null)
@@ -26,13 +30,26 @@ public static class CliOptionsApplier
         }
 
         // Sheet first so subsequent overrides land on the right definition.
-        if (!string.IsNullOrEmpty(options.Sheet))
+        if (selectSheet && !string.IsNullOrEmpty(options.Sheet))
         {
             if (app.SelectSheetByNameOrId(options.Sheet))
             {
                 app.LockSheetFromCliOptions();
             }
         }
+
+        ApplySheetLevelOverrides(app, options);
+        return options.Files?.FirstOrDefault();
+    }
+
+    /// <summary>
+    ///     Applies orientation, printer, range, rows/columns, and header/footer onto the
+    ///     <em>current</em> sheet without re-selecting a sheet definition.
+    /// </summary>
+    public static void ApplySheetLevelOverrides(AppViewModel app, Options options)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        ArgumentNullException.ThrowIfNull(options);
 
         app.BeginSuppressReflow();
         try
@@ -81,8 +98,6 @@ public static class CliOptionsApplier
         {
             app.EndSuppressReflow();
         }
-
-        return options.Files?.FirstOrDefault();
     }
 
     private static void ApplyHeaderFooter(AppViewModel app, Options options)

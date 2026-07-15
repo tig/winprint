@@ -6,6 +6,7 @@ using WinPrint.Core.Abstractions;
 using WinPrint.Core.Models;
 using WinPrint.Core.Services;
 using WinPrint.Core.UnitTests.Services;
+using WinPrint.Core.UnitTests.TestSupport;
 using WinPrint.Core.ViewModels;
 using Xunit;
 using Xunit.Abstractions;
@@ -153,5 +154,48 @@ public class CliOptionsApplierTests : TestServicesBase
         vm.ApplyOptions(new Options { Rows = 2, Columns = 4 });
         Assert.Equal(2, vm.CurrentSheet!.Rows);
         Assert.Equal(4, vm.CurrentSheet.Columns);
+    }
+
+    [Fact]
+    public async Task LoadFile_ContentTypeSheetSwitch_PreservesCliHeaderFooter()
+    {
+        // Regression: ApplyOptions ran before LoadFileAsync; markdown then switched to Proportional
+        // 2-Up and wiped --header-off / --footer-text. Print path must re-apply after load.
+        AppViewModel vm = CreateVm();
+        vm.SheetViewModel!.MeasurementContext = new RecordingGraphicsContext();
+
+        string file = Path.Combine(Path.GetTempPath(), $"wp-hf-{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(file, "# Title\n\nHello.\n");
+        try
+        {
+            // Start on Default 2-Up (settings default), apply CLI HF, then open markdown.
+            Assert.Equal("Default 2-Up", vm.CurrentSheet!.Name);
+
+            vm.ApplyOptions(new Options
+            {
+                HeaderOff = true,
+                FooterOn = true,
+                FooterText = "{Page}"
+            });
+
+            Assert.True(await vm.LoadFileAsync(file));
+
+            // Content type should have moved to Proportional 2-Up (or equivalent markdown sheet).
+            Assert.Contains("Proportional", vm.CurrentSheet!.Name, StringComparison.OrdinalIgnoreCase);
+
+            Assert.False(vm.CurrentSheet.Header.Enabled);
+            Assert.True(vm.CurrentSheet.Footer.Enabled);
+            Assert.Equal("{Page}", vm.CurrentSheet.Footer.Text);
+
+            // Print pipeline copies CurrentSheet — same contract.
+            var copy = new SheetSettings();
+            copy.CopyPropertiesFrom(vm.CurrentSheet);
+            Assert.False(copy.Header.Enabled);
+            Assert.Equal("{Page}", copy.Footer.Text);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 }
