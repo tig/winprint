@@ -79,7 +79,7 @@ public class CliOptionsResolverTests
         // TUI has no per-printer paper enumeration — paper stays as typed when no list is supplied.
         var options = new Options { PaperSize = "CustomRoll" };
 
-        CliOptionsResolver.ResolveInPlace(options, Printers, null);
+        CliOptionsResolver.ResolveInPlace(options, Printers);
 
         Assert.Equal("CustomRoll", options.PaperSize);
     }

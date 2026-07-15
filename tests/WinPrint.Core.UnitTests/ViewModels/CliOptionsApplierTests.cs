@@ -123,7 +123,7 @@ public class CliOptionsApplierTests : TestServicesBase
         WinPrintServices.Current.Settings.Sheets[key].Printer = "Envelope Printer";
         WinPrintServices.Current.Settings.Sheets[key].PaperSize = "Legal";
 
-        Assert.True(vm.SelectSheetByIndex(0, true));
+        Assert.True(vm.SelectSheetByIndex(0));
 
         Assert.Equal("Envelope Printer", vm.SelectedPrinter);
         Assert.Equal("Legal", vm.SelectedPaperSize);

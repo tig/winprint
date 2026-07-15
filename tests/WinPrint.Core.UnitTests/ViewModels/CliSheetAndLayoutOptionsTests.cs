@@ -123,7 +123,7 @@ public class CliSheetAndLayoutOptionsTests : TestServicesBase
         sheet.Printer = "Envelope Printer";
         sheet.PaperSize = "Legal";
 
-        Assert.True(vm.SelectSheetByIndex(0, true));
+        Assert.True(vm.SelectSheetByIndex(0));
 
         Assert.Equal("Envelope Printer", vm.SelectedPrinter);
         Assert.Equal("Legal", vm.SelectedPaperSize);
