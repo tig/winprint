@@ -56,10 +56,11 @@ public class MermaiderRendererTests
     [Fact]
     public async Task MermaidShowcase_RendersSupportedTypes_FallsBackForTheRest()
     {
-        // testfiles/mermaid.md is the grand tour + stress test. This run forces the
-        // `builtin` backend to exercise Mermaider + the fallback logic (13 images for
-        // supported types, code blocks for the rest). Useful as a benchmark for Mermaider
-        // upgrades and to prove fallback. (The application default backend is now "service".)
+        // testfiles/mermaid.md is the grand tour + stress test: every diagram type Mermaider
+        // 0.9.0 supports (all of Mermaid.js except ZenUML, plus TreeView) renders as an image
+        // on the builtin backend (the shipped default); the deliberately unsupported ZenUML
+        // fence falls back to a code block. Useful as a benchmark for Mermaider upgrades and
+        // to prove fallback.
         string path = FindTestFile("mermaid.md");
         var cte = new MarkdownCte
         {
@@ -70,8 +71,7 @@ public class MermaiderRendererTests
             },
             MeasurementContext = new RecordingGraphicsContext(),
             PageSize = new System.Drawing.SizeF(600, 3000),
-            SourceFileName = path,
-            MermaidBackend = "builtin" // Force the Mermaider path for this builtin-specific test
+            SourceFileName = path
         };
 
         Assert.True(await cte.SetDocumentAsync(await File.ReadAllTextAsync(path)));
@@ -84,11 +84,14 @@ public class MermaiderRendererTests
             cte.PaintPage(paint, p);
         }
 
-        Assert.Equal(13, paint.DrawnImages.Count);
-        // Multiple unsupported fences (and syntax variants) must have fallen back to source text.
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("gantt", StringComparison.Ordinal));
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("xychart", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("sankey", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(27, paint.DrawnImages.Count);
+        // The one unsupported fence (ZenUML) must have fallen back to source text — and the
+        // formerly-unsupported types must NOT appear as source. (Match on strings that only
+        // exist inside fence bodies — the prose and the support-matrix table repeat the
+        // diagram keywords, so keyword matches would false-positive.)
+        Assert.Contains(paint.DrawnStrings, s => s.Text.Contains("OrderService.create()", StringComparison.Ordinal));
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("bar [500,", StringComparison.Ordinal));
+        Assert.DoesNotContain(paint.DrawnStrings, s => s.Text.Contains("A, B, 10", StringComparison.Ordinal));
     }
 
     private static string FindTestFile(string name)

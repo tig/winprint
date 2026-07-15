@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Terminal.Gui.App;
 using Terminal.Gui.Cli;
 using WinPrint.Core;
+using WinPrint.Core.Helpers;
 
 namespace WinPrint.TUI;
 
@@ -102,15 +103,14 @@ public sealed class GuiCommand : IHeadlessCliCommand
         return args;
     }
 
-    // Resolve each positional file argument to an absolute path against wp's working directory *before*
-    // forwarding it to the GUI. On macOS the GUI is launched via `open`, which starts the app through
-    // LaunchServices with its own working directory — NOT the one wp was invoked from — so a relative
-    // path like `./testfiles/MainForm.cpp` would otherwise be resolved against the wrong directory in the
-    // GUI and reported "not found". wp shares the user's shell CWD, so resolving here makes the path
-    // unambiguous; it's a harmless normalization on Windows (where the child already inherits wp's CWD).
+    // Expand globs (#263) then resolve each path to absolute against wp's CWD *before* forwarding to the
+    // GUI. On macOS the GUI is launched via `open` / LaunchServices with its own working directory —
+    // NOT the one wp was invoked from — so a relative path like `./testfiles/MainForm.cpp` would
+    // otherwise be resolved against the wrong directory. Harmless normalization on Windows.
     internal static IReadOnlyList<string> ResolveFileArguments(IReadOnlyList<string> arguments)
     {
-        return [.. arguments.Select(ResolveFileArgument)];
+        IReadOnlyList<string> expanded = FileArgumentExpander.Expand(arguments);
+        return [.. expanded.Select(ResolveFileArgument)];
     }
 
     private static string ResolveFileArgument(string argument)

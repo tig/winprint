@@ -3,6 +3,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.Cli;
 using WinPrint.Core;
 using WinPrint.Core.Abstractions;
+using WinPrint.Core.Helpers;
 using WinPrint.Core.Models;
 using WinPrint.Core.Printing;
 
@@ -71,20 +72,54 @@ public sealed class PrintCommand : IHeadlessCliCommand
                 "Specify at least one file to print, e.g. `wp print Program.cs`.");
         }
 
+        // Fail fast on bad option values (e.g. --to-sheet 2--printer) *before* expanding files or
+        // opening a printer — otherwise the first real file prints to the default (PDF) and the
+        // mis-parsed token is treated as a second file.
+        try
+        {
+            _ = CommandOptionsBinder.ToOptions(options, options.Arguments);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CommandResult(CommandStatus.Error, null, "BadOption", ex.Message);
+        }
+
         bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
         string? pdfPath = CommandOptionsBinder.GetString(options, "pdf");
-        if (pdfPath is not null)
+        if (pdfPath is not null && CommandOptionsBinder.GetString(options, "printer") is not null)
         {
-            if (CommandOptionsBinder.GetString(options, "printer") is not null)
-            {
-                return new CommandResult(CommandStatus.Error, null, "PdfAndPrinter",
-                    "--pdf writes a file instead of printing; it cannot be combined with --printer.");
-            }
+            return new CommandResult(CommandStatus.Error, null, "PdfAndPrinter",
+                "--pdf writes a file instead of printing; it cannot be combined with --printer.");
+        }
 
-            if (options.Arguments.Count > 1)
+        IReadOnlyList<string> files;
+        try
+        {
+            // Expand shell globs here so PowerShell's literal `*.md` works the same as bash (#263).
+            files = FileArgumentExpander.Expand(options.Arguments);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CommandResult(CommandStatus.Error, null, "GlobExpand", ex.Message);
+        }
+
+        // Count after expand so a single glob that matches many files is rejected for --pdf.
+        if (pdfPath is not null && files.Count > 1)
+        {
+            return new CommandResult(CommandStatus.Error, null, "PdfOneFile",
+                "--pdf writes one PDF; specify exactly one input file.");
+        }
+
+        // Validate every path exists before printing any of them — avoids partial jobs that hit
+        // the default printer then die on a later bogus argument (mis-parsed --printer value).
+        foreach (string file in files)
+        {
+            if (!File.Exists(file))
             {
-                return new CommandResult(CommandStatus.Error, null, "PdfOneFile",
-                    "--pdf writes one PDF; specify exactly one input file.");
+                return new CommandResult(CommandStatus.Error, null, "FileNotFound",
+                    $"File not found: '{file}'. " +
+                    "If this was meant as a --printer value, check for a missing space before --printer " +
+                    "(e.g. `--to-sheet 2 --printer \"Name\"`).");
             }
         }
 
@@ -93,7 +128,7 @@ public sealed class PrintCommand : IHeadlessCliCommand
 
         try
         {
-            foreach (string file in options.Arguments)
+            foreach (string file in files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 totalSheets += await PrintOneAsync(file, options, whatIf, pdfPath, output).ConfigureAwait(false);
@@ -105,7 +140,7 @@ public sealed class PrintCommand : IHeadlessCliCommand
         }
 
         string verb = whatIf ? "would print" : "printed";
-        output.Append($"{options.Arguments.Count} file(s) {verb} {totalSheets} sheet(s).");
+        output.Append($"{files.Count} file(s) {verb} {totalSheets} sheet(s).");
         return new CommandResult(CommandStatus.Ok, output.ToString().TrimEnd(), null, null);
     }
 

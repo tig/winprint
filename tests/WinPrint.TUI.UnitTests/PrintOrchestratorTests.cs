@@ -20,7 +20,8 @@ public class PrintOrchestratorTests
         var originalMargins = (PrintMargins)sheet.Margins.Clone();
         try
         {
-            var service = new FakePrintService();
+            // Printer must appear in the service list so CliOptionsResolver accepts --printer (#264).
+            var service = new FakePrintService("Test Printer");
             var context = SettingsContext.Create(new Options
             {
                 Files = [file],

@@ -2,26 +2,24 @@
 
 `demo.md` shows one diagram and calls it a day. This file is the **grand tour + stress test** for Mermaid rendering in WinPrint:
 
-*   Complex examples of **every diagram type the built-in renderer (Mermaider 0.8.0 + Svg.Skia) supports**.
+*   Complex examples of **every diagram type the built-in renderer (Mermaider 0.9.0 + Svg.Skia) supports** — which, as of 0.9.0, is every Mermaid diagram type except ZenUML, plus the Mermaider-only TreeView.
 *   Additional complexities, subgraphs, notes, styling, and edge cases for supported types.
-*   **Unsupported types** and syntax variants that the builtin cannot handle (they deliberately fall back to plain code blocks).
-*   Syntax that works in the full Mermaid spec but triggers parse limitations in Mermaider (e.g. `pie title ...` on the header line).
+*   Syntax variants that older Mermaider releases rejected (e.g. `pie title ...` on the header line) — kept as regression stress cases now that they parse.
+*   One deliberately **unsupported type** (ZenUML) that falls back to a plain code block.
 
 **Purpose**: stress the parsing/rendering pipeline, serve as a living benchmark (image count + visual output changes with Mermaider upgrades), and prove that the fallback chain *always* works cleanly. A fence that should render as an image produces exactly one `DrawnImage`; everything else produces source text in the output.
 
-The default backend is the remote `mermaid.ink` service (full Mermaid.js fidelity, sends diagram source). All valid fences should render as images by default.
-
-To use the private in-process renderer instead (no data leaves the machine, but fewer types + some syntax restrictions):
+The default backend is the private in-process `builtin` renderer (Mermaider): no data leaves the machine. To use the remote `mermaid.ink` service instead (full Mermaid.js fidelity, sends diagram source):
 
 ```json
 "markdownContentTypeEngineSettings": {
-    "mermaidBackend": "builtin"
+    "mermaidBackend": "service"
 }
 ```
 
 (You can also set `renderMermaidDiagrams: false` to disable Mermaid rendering entirely and always show source code blocks.)
 
-If a section below prints as source instead of a picture under the default backend, that is the documented fallback doing its job (or a deliberate syntax stress case). Know which before filing a bug.
+If a section below prints as source instead of a picture under the default backend, that is the documented fallback doing its job (or a deliberate stress case). Know which before filing a bug.
 
 ## Supported by builtin (Mermaider)
 
@@ -64,7 +62,7 @@ sequenceDiagram
     opt when using service backend
         R-->>W: PNG (full Mermaid.js via mermaid.ink)
     end
-    Note over W,R: builtin = private + fast<br/>service = broadest compatibility
+    Note over W,R: builtin = private + fast<br/>service = full Mermaid.js
     W-->>U: pages
 ```
 
@@ -173,8 +171,6 @@ quadrantChart
 
 ### Pie (header on its own line)
 
-The builtin renderer is particular about pie headers. Use this form for builtin.
-
 ```mermaid
 pie
     title Where the ink goes
@@ -217,42 +213,7 @@ venn-beta
     union TUI,GUI["WinPrint"]
 ```
 
-## Syntax stress cases (builtin limitations even on "supported" types)
-
-These use valid Mermaid syntax that the service backend (and official mermaid.js) accepts, but that the current Mermaider detector + parsers reject. They prove that fallback works even for types the library claims to support.
-
-### Pie with title on the same line as the keyword (very common form)
-
-```mermaid
-pie title Where the ink goes (compact header form)
-    "Diagrams" : 30
-    "Code blocks" : 45
-    "Regret" : 25
-```
-
-### Quadrant with title on header line
-
-```mermaid
-quadrantChart title Features by effort (compact)
-    x-axis Low effort --> High effort
-    y-axis Low glory --> High glory
-    quadrant-1 Do
-    Mermaid: [0.8, 0.9]
-```
-
-### Timeline with title on header line
-
-```mermaid
-timeline title The long road (compact)
-    1998 : WinSpit ships
-    2026 : Mermaid too
-```
-
-## Unsupported diagram types + advanced features (fallback with builtin)
-
-The following diagram types (or rich examples of them) are not implemented in Mermaider 0.8.0. With `mermaidBackend: "builtin"` they render as source code blocks. They are excellent for proving the fallback path and for comparing output between the two backends. (With the default service backend they should all render as images.)
-
-### Gantt (classic unsupported)
+### Gantt
 
 ```mermaid
 gantt
@@ -377,47 +338,115 @@ architecture-beta
     api:B --> disk:T
 ```
 
+### TreeView (beta, Mermaider extension)
+
+Not a Mermaid.js type (the service backend falls back for this one); Mermaider renders
+file-system-style trees from indentation or box-drawing characters.
+
+```mermaid
+treeView-beta
+    winprint/
+        src/
+            WinPrint.Core/
+            WinPrint.TUI/
+        testfiles/
+            mermaid.md
+        README.md
+```
+
+## Syntax stress cases (former builtin limitations, now regression guards)
+
+Mermaider releases before 0.9.0 rejected these very common header forms even though official
+mermaid.js accepts them; they used to prove the fallback path. As of 0.9.0 they parse and render.
+They stay here so a regression in title-on-header-line parsing shows up as a changed image count.
+
+### Pie with title on the same line as the keyword (very common form)
+
+```mermaid
+pie title Where the ink goes (compact header form)
+    "Diagrams" : 30
+    "Code blocks" : 45
+    "Regret" : 25
+```
+
+### Quadrant with title on header line
+
+```mermaid
+quadrantChart title Features by effort (compact)
+    x-axis Low effort --> High effort
+    y-axis Low glory --> High glory
+    quadrant-1 Do
+    Mermaid: [0.8, 0.9]
+```
+
+### Timeline with title on header line
+
+```mermaid
+timeline title The long road (compact)
+    1998 : WinSpit ships
+    2026 : Mermaid too
+```
+
+## Unsupported diagram types (fallback with builtin)
+
+As of Mermaider 0.9.0 exactly one Mermaid.js diagram type is not implemented: ZenUML. With
+`mermaidBackend: "builtin"` it renders as a source code block — the proof that the fallback
+chain still works. (mermaid.ink needs a ZenUML plugin server-side, so even the service backend
+may fall back on this one.)
+
+### ZenUML
+
+```mermaid
+zenuml
+    title Order Service
+    @Actor Client
+    Client->OrderService.create() {
+        return ok
+    }
+```
+
 ---
 
 **End of file.** The exact number of images you see depends on the active backend:
 
-*   Default (see code): service backend → all fences that are valid Mermaid should produce images.
-*   `mermaidBackend: "builtin"` → only the 13 types listed under "Supported by builtin", using compatible syntax.
+*   Default (`builtin`, Mermaider): 27 images — every fence above except ZenUML.
+*   `mermaidBackend: "service"` (mermaid.ink / full Mermaid.js): everything except TreeView (not a Mermaid.js type) and possibly ZenUML (plugin-dependent).
 
-The unit test `MermaiderRendererTests.MermaidShowcase_RendersSupportedTypes_FallsBackForTheRest` asserts 13 images when forcing the builtin path.
+The unit test `MermaiderRendererTests.MermaidShowcase_RendersSupportedTypes_FallsBackForTheRest` asserts 27 images on the builtin path.
 
 ## Mermaid Backend Support Matrix
 
-| Diagram Type          | Keyword(s)                          | Builtin (Mermaider 0.8.0)                          | Service (mermaid.ink / full Mermaid.js) | Notes / Caveats |
-|-----------------------|-------------------------------------|----------------------------------------------------|-----------------------------------------|-----------------|
-| Flowchart             | `flowchart` / `graph` (+ LR/TB/...) | Yes (incl. subgraphs, many shapes)                | Yes (full)                             | Best supported in builtin. |
-| Sequence              | `sequenceDiagram`                   | Yes (alt, opt, notes, participants, etc.)         | Yes (full)                             | Good coverage. |
-| State                 | `stateDiagram` / `stateDiagram-v2`  | Yes                                               | Yes                                    | — |
-| Class                 | `classDiagram`                      | Yes                                               | Yes                                    | — |
-| ER / Entity-Rel       | `erDiagram`                         | Yes                                               | Yes                                    | — |
-| Git Graph             | `gitGraph`                          | Yes                                               | Yes                                    | — |
-| Mindmap               | `mindmap`                           | Yes                                               | Yes                                    | — |
-| Pie                   | `pie` (+ optional `showData`)       | Yes **only if header on own line** (`pie\n title ...`) | Yes (full, including `pie title Foo` on same line) | Major syntax caveat in builtin. Common form falls back. |
-| Quadrant Chart        | `quadrantChart`                     | Yes **only if header on own line**                | Yes (full)                             | Same title-on-header limitation as pie. |
-| Timeline              | `timeline`                          | Yes **only if header on own line**                | Yes                                    | Same limitation. |
-| Radar                 | `radar` / `radar-beta`              | Yes                                               | Yes                                    | — |
-| Treemap               | `treemap` / `treemap-beta`          | Yes                                               | Yes                                    | — |
-| Venn                  | `venn` / `venn-beta`                | Yes                                               | Yes                                    | — |
-| Gantt                 | `gantt`                             | No                                                | Yes                                    | Classic fallback example. |
-| XY Chart              | `xychart` / `xychart-beta`          | No                                                | Yes                                    | — |
-| Sankey                | `sankey` / `sankey-beta`            | No                                                | Yes                                    | — |
-| User Journey          | `journey`                           | No                                                | Yes                                    | — |
-| Requirement           | `requirementDiagram` / `requirement`| No                                                | Yes                                    | — |
-| C4                    | `C4Context`, `C4Container`, ...     | No                                                | Yes                                    | — |
-| Kanban                | `kanban`                            | No                                                | Yes                                    | — |
-| Block                 | `block-beta`                        | No                                                | Yes                                    | — |
-| Packet                | `packet-beta`                       | No                                                | Yes                                    | — |
-| Architecture          | `architecture-beta`                 | No                                                | Yes (newer)                            | — |
-| Others (Wardley, etc.)| various                             | No                                                | Yes (when Mermaid.js supports)         | — |
+| Diagram Type          | Keyword(s)                          | Builtin (Mermaider 0.9.0)                | Service (mermaid.ink / full Mermaid.js) | Notes / Caveats |
+|-----------------------|-------------------------------------|------------------------------------------|-----------------------------------------|-----------------|
+| Flowchart             | `flowchart` / `graph` (+ LR/TB/...) | Yes (incl. subgraphs, many shapes)       | Yes (full)                             | — |
+| Sequence              | `sequenceDiagram`                   | Yes (alt, opt, notes, participants, etc.)| Yes (full)                             | — |
+| State                 | `stateDiagram` / `stateDiagram-v2`  | Yes                                      | Yes                                    | — |
+| Class                 | `classDiagram`                      | Yes                                      | Yes                                    | — |
+| ER / Entity-Rel       | `erDiagram`                         | Yes                                      | Yes                                    | — |
+| Git Graph             | `gitGraph`                          | Yes                                      | Yes                                    | — |
+| Mindmap               | `mindmap`                           | Yes                                      | Yes                                    | — |
+| Pie                   | `pie` (+ optional `showData`)       | Yes (incl. `pie title Foo` on one line)  | Yes                                    | Title-on-header-line parsed since 0.9.0. |
+| Quadrant Chart        | `quadrantChart`                     | Yes (incl. title on header line)         | Yes                                    | — |
+| Timeline              | `timeline`                          | Yes (incl. title on header line)         | Yes                                    | — |
+| Radar                 | `radar` / `radar-beta`              | Yes                                      | Yes                                    | — |
+| Treemap               | `treemap` / `treemap-beta`          | Yes                                      | Yes                                    | — |
+| Venn                  | `venn` / `venn-beta`                | Yes                                      | Yes                                    | — |
+| Gantt                 | `gantt`                             | Yes (since 0.9.0)                        | Yes                                    | — |
+| XY Chart              | `xychart` / `xychart-beta`          | Yes (since 0.9.0)                        | Yes                                    | — |
+| Sankey                | `sankey` / `sankey-beta`            | Yes (since 0.9.0)                        | Yes                                    | — |
+| User Journey          | `journey`                           | Yes (since 0.9.0)                        | Yes                                    | — |
+| Requirement           | `requirementDiagram` / `requirement`| Yes (since 0.9.0)                        | Yes                                    | — |
+| C4                    | `C4Context`, `C4Container`, ...     | Yes (since 0.9.0)                        | Yes                                    | — |
+| Kanban                | `kanban`                            | Yes (since 0.9.0)                        | Yes                                    | — |
+| Block                 | `block-beta`                        | Yes (since 0.9.0)                        | Yes                                    | — |
+| Packet                | `packet-beta`                       | Yes (since 0.9.0)                        | Yes                                    | — |
+| Architecture          | `architecture-beta`                 | Yes (since 0.9.0)                        | Yes (newer)                            | — |
+| TreeView              | `treeView-beta`                     | Yes (Mermaider extension)                | No (not a Mermaid.js type)             | Builtin-only. |
+| ZenUML                | `zenuml`                            | No                                       | Plugin-dependent                       | The one remaining fallback example. |
 
 **Key takeaways:**
-- Builtin currently implements the 13 types in Mermaider's `DiagramType` enum.
-- Even for supported types there are syntax limitations (title placement for pie/quadrant/timeline).
-- Service backend = (near) full fidelity to current Mermaid.js.
+- Builtin implements the 23 types in Mermaider's `DiagramType` enum — every Mermaid.js type except ZenUML, plus TreeView.
+- The old title-placement limitations for pie/quadrant/timeline are gone as of 0.9.0.
+- Service backend = (near) full fidelity to current Mermaid.js, at the cost of sending diagram source over the network.
 - WinPrint always falls back to a plain code block on any failure from either renderer. A typo in `mermaidBackend` safely falls back to builtin (never accidentally sends data).
 - `mermaid.md` + its unit test act as the living spec, benchmark, and proof that fallback works.

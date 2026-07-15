@@ -246,16 +246,16 @@ public class MarkdownMermaidRenderingTests
     }
 
     [Fact]
-    public void Defaults_RenderOn_ServiceBackend()
+    public void Defaults_RenderOn_BuiltinBackend()
     {
-        // The shipped defaults: fences render using the remote mermaid.ink service.
-        // (A typo/unknown value in MermaidBackend safely falls back to the builtin renderer
-        // instead of sending data over the network.)
+        // The shipped defaults: fences render in-process via Mermaider; nothing leaves the
+        // machine unless the user opts into the service backend. (A typo/unknown value in
+        // MermaidBackend also safely falls back to the builtin renderer.)
         var cte = new MarkdownCte();
 
         Assert.True(cte.RenderMermaidDiagrams);
-        Assert.Equal("service", cte.MermaidBackend);
-        Assert.IsType<MermaidInkRenderer>(cte.ResolveMermaidRenderer());
+        Assert.Equal("builtin", cte.MermaidBackend);
+        Assert.IsType<MermaiderRenderer>(cte.ResolveMermaidRenderer());
     }
 
     [Theory]
@@ -285,11 +285,10 @@ public class MarkdownMermaidRenderingTests
     [Fact]
     public async Task DefaultPipeline_RendersFenceViaBuiltinRenderer()
     {
-        // End to end using the builtin backend explicitly (Mermaider parse/layout ->
+        // End to end on the shipped defaults (builtin backend: Mermaider parse/layout ->
         // CSS-var inlining -> Svg.Skia raster). This exercises the in-process path and is
-        // safe for offline CI. (The shipped default backend is the remote service.)
+        // safe for offline CI.
         MarkdownCte cte = MakeCte(new RecordingGraphicsContext());
-        cte.MermaidBackend = "builtin";
 
         RecordingGraphicsContext paint = await RenderAndPaintAsync(cte, MermaidDoc);
 

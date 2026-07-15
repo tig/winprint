@@ -60,6 +60,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
     private bool _transientContentTypeSheetSelection;
 
     /// <summary>
+    ///     Last CLI options applied via <see cref="ApplyOptions" />. Re-applied after content-type
+    ///     sheet selection in <see cref="LoadFileAsync" /> so --header-off / --footer-text etc. are
+    ///     not wiped when markdown picks Proportional 2-Up.
+    /// </summary>
+    private Options? _cliOptions;
+
+    /// <summary>
     ///     Creates an app view model bound to a <see cref="SheetViewModel" /> (the preview/reflow
     ///     engine used by MAUI for live preview).
     /// </summary>
@@ -269,6 +276,21 @@ public sealed class AppViewModel : INotifyPropertyChanged
         _pageSetup.MarginBottom = sheetSettings.Margins.Bottom;
         _pageSetup.MarginLeft = sheetSettings.Margins.Left;
         _pageSetup.MarginRight = sheetSettings.Margins.Right;
+
+        // Sheet-bound printer / paper (#30): only on user-initiated selection so content-type
+        // auto sheet switches do not steal the active printer. CLI --printer still overrides after.
+        if (userInitiated)
+        {
+            if (!string.IsNullOrEmpty(sheetSettings.Printer))
+            {
+                SetPrinterName(sheetSettings.Printer);
+            }
+
+            if (!string.IsNullOrEmpty(sheetSettings.PaperSize))
+            {
+                SetPaperSize(sheetSettings.PaperSize);
+            }
+        }
 
         if (changed)
         {
@@ -556,6 +578,9 @@ public sealed class AppViewModel : INotifyPropertyChanged
             if (TrySelectSheetByGuid(sheetGuid, false))
             {
                 _transientContentTypeSheetSelection = true;
+                // Content-type sheet switch replaces the sheet after ApplyOptions ran — re-apply
+                // CLI header/footer/layout onto the newly selected definition (#3 regression).
+                ReapplyCliOptionsAfterSheetChange();
             }
         }
 
@@ -945,76 +970,106 @@ public sealed class AppViewModel : INotifyPropertyChanged
     // ----- Command-line options -----
 
     /// <summary>
-    ///     Applies <see cref="Options"/> parsed from the command line to this view model.
-    ///     Shared by the MAUI and TUI command-line option paths.
+    ///     Applies <see cref="Options" /> via <see cref="CliOptionsApplier" />. Call
+    ///     <see cref="CliOptionsResolver.ResolveInPlace" /> first for printer/paper names.
+    ///     Remembers <paramref name="options" /> so content-type sheet switches in
+    ///     <see cref="LoadFileAsync" /> can re-apply header/footer/layout overrides.
     /// </summary>
-    /// <param name="options">Parsed CLI options.</param>
-    /// <param name="availablePrinters">Printer names known to the platform (may be null).</param>
-    /// <param name="availablePaperSizes">Paper size names known to the platform (may be null).</param>
-    /// <returns>The first file argument, or <c>null</c> if none was supplied.</returns>
-    public string? ApplyOptions(
-        Options options,
-        IList<string>? availablePrinters = null,
-        IList<string>? availablePaperSizes = null)
+    public string? ApplyOptions(Options options)
     {
-        if (options == null)
+        _cliOptions = options;
+        return CliOptionsApplier.Apply(this, options);
+    }
+
+    /// <summary>
+    ///     Re-applies stored CLI options to the current sheet without re-selecting <c>--sheet</c>.
+    /// </summary>
+    public void ReapplyCliOptionsAfterSheetChange()
+    {
+        if (_cliOptions is null)
         {
-            return null;
+            return;
         }
 
-        // Apply sheet first so subsequent overrides land on the right sheet.
-        if (!string.IsNullOrEmpty(options.Sheet))
-        {
-            if (SelectSheetByNameOrId(options.Sheet))
-            {
-                _sessionSheetLockedByOptions = true;
-                _sessionSheetLocked = true;
-                _transientContentTypeSheetSelection = false;
-            }
-        }
+        CliOptionsApplier.ApplySheetLevelOverrides(this, _cliOptions);
+    }
 
-        // --landscape / --portrait. Suppress reflow until file load.
+    /// <summary>Marks the current sheet selection as locked by CLI <c>--sheet</c>.</summary>
+    public void LockSheetFromCliOptions()
+    {
+        _sessionSheetLockedByOptions = true;
+        _sessionSheetLocked = true;
+        _transientContentTypeSheetSelection = false;
+    }
+
+    public void BeginSuppressReflow()
+    {
         _suppressReflow = true;
-        try
+    }
+
+    public void EndSuppressReflow()
+    {
+        _suppressReflow = false;
+    }
+
+    public void SetFromToSheets(int? fromSheet, int? toSheet)
+    {
+        if (fromSheet is > 0)
         {
-            if (options.Landscape)
-            {
-                SetLandscape(true);
-            }
-            else if (options.Portrait)
-            {
-                SetLandscape(false);
-            }
-
-            if (!string.IsNullOrEmpty(options.Printer) &&
-                (availablePrinters == null || availablePrinters.Contains(options.Printer)))
-            {
-                SetPrinterName(options.Printer);
-            }
-
-            if (!string.IsNullOrEmpty(options.PaperSize) &&
-                (availablePaperSizes == null || availablePaperSizes.Contains(options.PaperSize)))
-            {
-                SetPaperSize(options.PaperSize);
-            }
-
-            // --from-sheet / --to-sheet print range (0 = default/all).
-            if (options.FromPage > 0)
-            {
-                _pageSetup.FromSheet = options.FromPage;
-            }
-
-            if (options.ToPage > 0)
-            {
-                _pageSetup.ToSheet = options.ToPage;
-            }
-        }
-        finally
-        {
-            _suppressReflow = false;
+            _pageSetup.FromSheet = fromSheet.Value;
         }
 
-        return options.Files?.FirstOrDefault();
+        if (toSheet is > 0)
+        {
+            _pageSetup.ToSheet = toSheet.Value;
+        }
+    }
+
+    public void SetHeaderFont(Font font)
+    {
+        if (_currentSheet?.Header != null)
+        {
+            _currentSheet.Header.Font = font;
+        }
+
+        PreviewInvalidated?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetFooterFont(Font font)
+    {
+        if (_currentSheet?.Footer != null)
+        {
+            _currentSheet.Footer.Font = font;
+        }
+
+        PreviewInvalidated?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Sets all four header border sides from a compact <see cref="BorderSides" /> value.</summary>
+    public void SetHeaderBorders(BorderSides sides)
+    {
+        ApplyBorderSides(_currentSheet?.Header, sides);
+        PreviewInvalidated?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Sets all four footer border sides from a compact <see cref="BorderSides" /> value.</summary>
+    public void SetFooterBorders(BorderSides sides)
+    {
+        ApplyBorderSides(_currentSheet?.Footer, sides);
+        PreviewInvalidated?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static void ApplyBorderSides(HeaderFooter? sheet, BorderSides sides)
+    {
+        if (sheet is null)
+        {
+            return;
+        }
+
+        sheet.LeftBorder = sides.HasFlag(BorderSides.Left);
+        sheet.TopBorder = sides.HasFlag(BorderSides.Top);
+        sheet.RightBorder = sides.HasFlag(BorderSides.Right);
+        sheet.BottomBorder = sides.HasFlag(BorderSides.Bottom);
     }
 
     // ----- Window state persistence -----

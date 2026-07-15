@@ -21,6 +21,8 @@ public class SheetSettings : ModelBase
     private string _name = "";
     private int _padding = 3;
     private bool _pageSeparator;
+    private string? _paperSize;
+    private string? _printer;
     private int _rows = 1;
 
     /// <summary>
@@ -31,6 +33,28 @@ public class SheetSettings : ModelBase
     {
         get => _name;
         set => SetField(ref _name, value);
+    }
+
+    /// <summary>
+    ///     Optional preferred printer for this sheet definition (#30). Applied when the sheet is
+    ///     selected; CLI <c>--printer</c> still overrides.
+    /// </summary>
+    [SafeForTelemetry]
+    public string? Printer
+    {
+        get => _printer;
+        set => SetField(ref _printer, value);
+    }
+
+    /// <summary>
+    ///     Optional preferred paper size for this sheet definition (#30). Applied when the sheet is
+    ///     selected; CLI <c>--paper-size</c> still overrides.
+    /// </summary>
+    [SafeForTelemetry]
+    public string? PaperSize
+    {
+        get => _paperSize;
+        set => SetField(ref _paperSize, value);
     }
 
     /// <summary>
@@ -136,6 +160,8 @@ public class SheetSettings : ModelBase
         Columns = src.Columns;
         Padding = src.Padding;
         PageSeparator = src.PageSeparator;
+        Printer = src.Printer;
+        PaperSize = src.PaperSize;
         ModelCopyHelpers.CopyMargins(Margins, src.Margins);
 
         if (src.ContentSettings is null)
@@ -161,6 +187,8 @@ public class SheetSettings : ModelBase
         TelemetryCollector.Add(dictionary, nameof(Columns), Columns);
         TelemetryCollector.Add(dictionary, nameof(Padding), Padding);
         TelemetryCollector.Add(dictionary, nameof(PageSeparator), PageSeparator);
+        TelemetryCollector.Add(dictionary, nameof(Printer), Printer);
+        TelemetryCollector.Add(dictionary, nameof(PaperSize), PaperSize);
         TelemetryCollector.Add(dictionary, nameof(Margins), Margins.ToString());
         if (ContentSettings is not null)
         {

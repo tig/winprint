@@ -36,6 +36,32 @@ public class Options : ModelBase
 
     [SafeForTelemetry] public string? ContentType { get; set; }
 
+    /// <summary>#4 — 0 means unset (leave sheet default).</summary>
+    [SafeForTelemetry]
+    public int Rows { get; set; }
+
+    /// <summary>#4 — 0 means unset (leave sheet default).</summary>
+    [SafeForTelemetry]
+    public int Columns { get; set; }
+
+    // #3 header / footer (compact: borders are "none"|"all"|"top,bottom")
+    [SafeForTelemetry] public bool HeaderOn { get; set; }
+    [SafeForTelemetry] public bool HeaderOff { get; set; }
+    [SafeForTelemetry] public bool FooterOn { get; set; }
+    [SafeForTelemetry] public bool FooterOff { get; set; }
+    [SafeForTelemetry] public string? HeaderText { get; set; }
+    [SafeForTelemetry] public string? FooterText { get; set; }
+    [SafeForTelemetry] public string? HeaderFont { get; set; }
+    [SafeForTelemetry] public string? FooterFont { get; set; }
+
+    /// <summary>When set, fully specifies header borders (e.g. <c>top,bottom</c>, <c>none</c>, <c>all</c>).</summary>
+    [SafeForTelemetry]
+    public string? HeaderBorders { get; set; }
+
+    /// <summary>When set, fully specifies footer borders (e.g. <c>top,bottom</c>, <c>none</c>, <c>all</c>).</summary>
+    [SafeForTelemetry]
+    public string? FooterBorders { get; set; }
+
     [SafeForTelemetry] public bool Verbose { get; set; }
 
     [SafeForTelemetry] public bool Debug { get; set; }
@@ -59,6 +85,18 @@ public class Options : ModelBase
         ToPage = src.ToPage;
         CountPages = src.CountPages;
         ContentType = src.ContentType;
+        Rows = src.Rows;
+        Columns = src.Columns;
+        HeaderOn = src.HeaderOn;
+        HeaderOff = src.HeaderOff;
+        FooterOn = src.FooterOn;
+        FooterOff = src.FooterOff;
+        HeaderText = src.HeaderText;
+        FooterText = src.FooterText;
+        HeaderFont = src.HeaderFont;
+        FooterFont = src.FooterFont;
+        HeaderBorders = src.HeaderBorders;
+        FooterBorders = src.FooterBorders;
         Verbose = src.Verbose;
         Debug = src.Debug;
         Gui = src.Gui;
@@ -77,6 +115,8 @@ public class Options : ModelBase
         TelemetryCollector.Add(dictionary, nameof(ToPage), ToPage);
         TelemetryCollector.Add(dictionary, nameof(CountPages), CountPages);
         TelemetryCollector.Add(dictionary, nameof(ContentType), ContentType);
+        TelemetryCollector.Add(dictionary, nameof(Rows), Rows);
+        TelemetryCollector.Add(dictionary, nameof(Columns), Columns);
         TelemetryCollector.Add(dictionary, nameof(Verbose), Verbose);
         TelemetryCollector.Add(dictionary, nameof(Debug), Debug);
         TelemetryCollector.Add(dictionary, nameof(Gui), Gui);

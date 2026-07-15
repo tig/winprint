@@ -93,6 +93,22 @@ public class Settings : ModelBase
         }
     }
 
+    /// <summary>
+    ///     The settings format this file was written by; bump when a load-time migration is added.
+    ///     2 = <c>mermaidBackend</c> defaults to <c>builtin</c> (files written by 3.1.2–3.1.4 persisted
+    ///     the then-default <c>service</c>).
+    /// </summary>
+    public const int CurrentSchemaVersion = 2;
+
+    /// <summary>
+    ///     Format stamp for <c>WinPrint.config.json</c>: lets the loader run migrations exactly once for
+    ///     files written by older versions, whose persisted values can record an old default rather than
+    ///     a user's choice (see <c>WinPrintJson.MigrateLegacySettings</c>). Files without the field
+    ///     predate 3.2.0.
+    /// </summary>
+    [SafeForTelemetry]
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+
     [SafeForTelemetry] public string DefaultContentType { get; set; } = "text/plain";
 
     [SafeForTelemetry] public string DefaultCteClassName { get; set; } = ContentTypeEngineBase.DefaultCteClassName;
@@ -412,7 +428,8 @@ public class Settings : ModelBase
         };
         sheet.Footer.VerticalPadding = 1;
 
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        // 0.33" (33 hundredths) — wide enough for printers that clip narrower defaults (#268).
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.DefaultSheet.ToString(), sheet);
 
         // Create default 1 Up sheet
@@ -460,7 +477,7 @@ public class Settings : ModelBase
         };
         sheet.Footer.VerticalPadding = 1;
 
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.DefaultSheet1Up.ToString(), sheet);
 
         // Proportional 2-Up — sans-serif prose/HTML layout
@@ -471,7 +488,7 @@ public class Settings : ModelBase
             Rows = 1,
             Landscape = true,
             Padding = 3,
-            PageSeparator = true,
+            PageSeparator = false,
             ContentSettings = new ContentSettings
             {
                 Font = new Font
@@ -503,7 +520,7 @@ public class Settings : ModelBase
             Style = defaultHFFontStyle
         };
         sheet.Footer.VerticalPadding = 1;
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.ProportionalSheet2Up.ToString(), sheet);
 
         // Proportional 1-Up — sans-serif prose/HTML layout
@@ -546,7 +563,7 @@ public class Settings : ModelBase
             Style = defaultHFFontStyle
         };
         sheet.Footer.VerticalPadding = 1;
-        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 30;
+        sheet.Margins.Left = sheet.Margins.Top = sheet.Margins.Right = sheet.Margins.Bottom = 33;
         settings.Sheets.Add(Uuid.ProportionalSheet1Up.ToString(), sheet);
 
         settings.DefaultSheetByContentType = new Dictionary<string, string>
@@ -614,6 +631,7 @@ public class Settings : ModelBase
             : new WindowLocation(src.Location.X, src.Location.Y);
         Size = src.Size is null ? null : new WindowSize(src.Size.Width, src.Size.Height);
         WindowState = src.WindowState;
+        SchemaVersion = src.SchemaVersion;
         DefaultSheet = src.DefaultSheet;
         DefaultSheetByContentType.Clear();
         if (src.DefaultSheetByContentType is not null)
