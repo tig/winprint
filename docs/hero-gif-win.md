@@ -146,12 +146,16 @@ mcec's `hero-gif.md`. Two WinPrint-specific input rules:
     a few seconds), then type `ls` so the new file is the visible payoff; type
     `& 'C:\Program Files\Mozilla Firefox\firefox.exe' -kiosk .\mermaid.pdf`
     (kiosk = chromeless full-screen PDF; the default handler and Edge both bring popups/promos into
-    frame); zoom out until the whole page fits (`Ctrl+Minus` x5, ~350 ms apart -- pdf.js steps ~10%
-    per press and re-renders lazily, so fast presses overshoot); `ctrl-home`, `key_pagedown` through
-    every page (~0.7 s each; whole-page zoom makes each press exactly one page), `ctrl-home`, then
-    close firefox **on-record** with `alt-f4` so the loop ends back at the terminal;
-    `record { "action": "stop", "file": "<winprint repo abs>\\docs\\cli.gif" }`. Expect ~40 frames /
-    ~4 MB. Tidy: `exit` the terminal, delete `~/wpdemo`.
+    frame); zoom out until the whole page fits (`Ctrl+Minus` enough times that one viewport ≈ one
+    sheet — pdf.js steps ~10% per press and re-renders lazily, so fast presses overshoot; the press
+    count is not fixed); `ctrl-home`, then `key_pagedown` through **every page** of the PDF
+    (~0.7 s each) — not a fixed N — until Firefox's page indicator reaches the last sheet
+    (`mermaid.md` is currently **24 sheets** under `Proportional 1-Up`; re-count with
+    `wp print mermaid.md --what-if --sheet "Proportional 1-Up"` when the doc changes), hold on the
+    last page, then `ctrl-home` and close firefox **on-record** with `alt-f4` so the loop ends back
+    at the terminal; `record { "action": "stop", "file": "<winprint repo abs>\\docs\\cli.gif" }`.
+    Expect ~60–70 frames / ~5 MB when paging all 24 sheets. Tidy: `exit` the terminal, delete
+    `~/wpdemo`.
 13. **Tidy.** Close WinPrint; tear down the controller.
 
 ## Gotchas (WinPrint-specific; the generic ones are in mcec's `hero-gif.md`)
