@@ -24,7 +24,33 @@ internal static class CommandOptionsBinder
             PaperSize = GetString(options, "paper-size"),
             FromPage = GetIntOrThrow(options, "from-sheet"),
             ToPage = GetIntOrThrow(options, "to-sheet"),
-            ContentType = GetString(options, "content-type")
+            ContentType = GetString(options, "content-type"),
+            Rows = GetIntOrThrow(options, "rows"),
+            Columns = GetIntOrThrow(options, "columns"),
+            HeaderOn = GetFlag(options, "header-on"),
+            HeaderOff = GetFlag(options, "header-off"),
+            FooterOn = GetFlag(options, "footer-on"),
+            FooterOff = GetFlag(options, "footer-off"),
+            HeaderText = GetString(options, "header-text"),
+            FooterText = GetString(options, "footer-text"),
+            HeaderFont = GetString(options, "header-font"),
+            FooterFont = GetString(options, "footer-font"),
+            HeaderBorderTopOn = GetFlag(options, "header-border-top-on"),
+            HeaderBorderTopOff = GetFlag(options, "header-border-top-off"),
+            HeaderBorderBottomOn = GetFlag(options, "header-border-bottom-on"),
+            HeaderBorderBottomOff = GetFlag(options, "header-border-bottom-off"),
+            HeaderBorderLeftOn = GetFlag(options, "header-border-left-on"),
+            HeaderBorderLeftOff = GetFlag(options, "header-border-left-off"),
+            HeaderBorderRightOn = GetFlag(options, "header-border-right-on"),
+            HeaderBorderRightOff = GetFlag(options, "header-border-right-off"),
+            FooterBorderTopOn = GetFlag(options, "footer-border-top-on"),
+            FooterBorderTopOff = GetFlag(options, "footer-border-top-off"),
+            FooterBorderBottomOn = GetFlag(options, "footer-border-bottom-on"),
+            FooterBorderBottomOff = GetFlag(options, "footer-border-bottom-off"),
+            FooterBorderLeftOn = GetFlag(options, "footer-border-left-on"),
+            FooterBorderLeftOff = GetFlag(options, "footer-border-left-off"),
+            FooterBorderRightOn = GetFlag(options, "footer-border-right-on"),
+            FooterBorderRightOff = GetFlag(options, "footer-border-right-off")
         };
     }
 
@@ -58,7 +84,7 @@ internal static class CommandOptionsBinder
 
         string hint = value.Contains("--", StringComparison.Ordinal)
             ? " A value that contains '--' usually means a missing space before the next flag" +
-              " (e.g. `--to-sheet 2 --printer …`)."
+              " (e.g. `--to-sheet 2 --printer \"Brother Laser\"`)."
             : string.Empty;
 
         throw new InvalidOperationException(

@@ -36,6 +36,40 @@ public class Options : ModelBase
 
     [SafeForTelemetry] public string? ContentType { get; set; }
 
+    /// <summary>#4 — 0 means unset (leave sheet default).</summary>
+    [SafeForTelemetry]
+    public int Rows { get; set; }
+
+    /// <summary>#4 — 0 means unset (leave sheet default).</summary>
+    [SafeForTelemetry]
+    public int Columns { get; set; }
+
+    // #3 header / footer overrides (flags: only applied when true)
+    [SafeForTelemetry] public bool HeaderOn { get; set; }
+    [SafeForTelemetry] public bool HeaderOff { get; set; }
+    [SafeForTelemetry] public bool FooterOn { get; set; }
+    [SafeForTelemetry] public bool FooterOff { get; set; }
+    [SafeForTelemetry] public string? HeaderText { get; set; }
+    [SafeForTelemetry] public string? FooterText { get; set; }
+    [SafeForTelemetry] public string? HeaderFont { get; set; }
+    [SafeForTelemetry] public string? FooterFont { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderTopOn { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderTopOff { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderBottomOn { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderBottomOff { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderLeftOn { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderLeftOff { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderRightOn { get; set; }
+    [SafeForTelemetry] public bool HeaderBorderRightOff { get; set; }
+    [SafeForTelemetry] public bool FooterBorderTopOn { get; set; }
+    [SafeForTelemetry] public bool FooterBorderTopOff { get; set; }
+    [SafeForTelemetry] public bool FooterBorderBottomOn { get; set; }
+    [SafeForTelemetry] public bool FooterBorderBottomOff { get; set; }
+    [SafeForTelemetry] public bool FooterBorderLeftOn { get; set; }
+    [SafeForTelemetry] public bool FooterBorderLeftOff { get; set; }
+    [SafeForTelemetry] public bool FooterBorderRightOn { get; set; }
+    [SafeForTelemetry] public bool FooterBorderRightOff { get; set; }
+
     [SafeForTelemetry] public bool Verbose { get; set; }
 
     [SafeForTelemetry] public bool Debug { get; set; }
@@ -59,6 +93,32 @@ public class Options : ModelBase
         ToPage = src.ToPage;
         CountPages = src.CountPages;
         ContentType = src.ContentType;
+        Rows = src.Rows;
+        Columns = src.Columns;
+        HeaderOn = src.HeaderOn;
+        HeaderOff = src.HeaderOff;
+        FooterOn = src.FooterOn;
+        FooterOff = src.FooterOff;
+        HeaderText = src.HeaderText;
+        FooterText = src.FooterText;
+        HeaderFont = src.HeaderFont;
+        FooterFont = src.FooterFont;
+        HeaderBorderTopOn = src.HeaderBorderTopOn;
+        HeaderBorderTopOff = src.HeaderBorderTopOff;
+        HeaderBorderBottomOn = src.HeaderBorderBottomOn;
+        HeaderBorderBottomOff = src.HeaderBorderBottomOff;
+        HeaderBorderLeftOn = src.HeaderBorderLeftOn;
+        HeaderBorderLeftOff = src.HeaderBorderLeftOff;
+        HeaderBorderRightOn = src.HeaderBorderRightOn;
+        HeaderBorderRightOff = src.HeaderBorderRightOff;
+        FooterBorderTopOn = src.FooterBorderTopOn;
+        FooterBorderTopOff = src.FooterBorderTopOff;
+        FooterBorderBottomOn = src.FooterBorderBottomOn;
+        FooterBorderBottomOff = src.FooterBorderBottomOff;
+        FooterBorderLeftOn = src.FooterBorderLeftOn;
+        FooterBorderLeftOff = src.FooterBorderLeftOff;
+        FooterBorderRightOn = src.FooterBorderRightOn;
+        FooterBorderRightOff = src.FooterBorderRightOff;
         Verbose = src.Verbose;
         Debug = src.Debug;
         Gui = src.Gui;
@@ -77,6 +137,8 @@ public class Options : ModelBase
         TelemetryCollector.Add(dictionary, nameof(ToPage), ToPage);
         TelemetryCollector.Add(dictionary, nameof(CountPages), CountPages);
         TelemetryCollector.Add(dictionary, nameof(ContentType), ContentType);
+        TelemetryCollector.Add(dictionary, nameof(Rows), Rows);
+        TelemetryCollector.Add(dictionary, nameof(Columns), Columns);
         TelemetryCollector.Add(dictionary, nameof(Verbose), Verbose);
         TelemetryCollector.Add(dictionary, nameof(Debug), Debug);
         TelemetryCollector.Add(dictionary, nameof(Gui), Gui);
