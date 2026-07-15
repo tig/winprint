@@ -53,9 +53,11 @@ public class Options : ModelBase
     [SafeForTelemetry] public string? FooterText { get; set; }
     [SafeForTelemetry] public string? HeaderFont { get; set; }
     [SafeForTelemetry] public string? FooterFont { get; set; }
+
     /// <summary>When set, fully specifies header borders (e.g. <c>top,bottom</c>, <c>none</c>, <c>all</c>).</summary>
     [SafeForTelemetry]
     public string? HeaderBorders { get; set; }
+
     /// <summary>When set, fully specifies footer borders (e.g. <c>top,bottom</c>, <c>none</c>, <c>all</c>).</summary>
     [SafeForTelemetry]
     public string? FooterBorders { get; set; }

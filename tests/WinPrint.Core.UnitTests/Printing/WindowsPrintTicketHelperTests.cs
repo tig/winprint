@@ -17,7 +17,7 @@ public class WindowsPrintTicketHelperTests
     {
         var ticket = new PrintTicket();
 
-        WindowsPrintTicketHelper.ApplyOrientation(ticket, landscape: true);
+        WindowsPrintTicketHelper.ApplyOrientation(ticket, true);
 
         Assert.Equal(PageOrientation.Landscape, ticket.PageOrientation);
     }
@@ -27,7 +27,7 @@ public class WindowsPrintTicketHelperTests
     {
         var ticket = new PrintTicket { PageOrientation = PageOrientation.Landscape };
 
-        WindowsPrintTicketHelper.ApplyOrientation(ticket, landscape: false);
+        WindowsPrintTicketHelper.ApplyOrientation(ticket, false);
 
         Assert.Equal(PageOrientation.Portrait, ticket.PageOrientation);
     }
@@ -38,7 +38,7 @@ public class WindowsPrintTicketHelperTests
         var ticket = new PrintTicket();
         PageMediaSize? before = ticket.PageMediaSize;
 
-        WindowsPrintTicketHelper.ApplyOrientation(ticket, landscape: true);
+        WindowsPrintTicketHelper.ApplyOrientation(ticket, true);
 
         // Orientation-only helper must not invent PageMediaSizeName.Unknown dimensions.
         Assert.Equal(before?.PageMediaSizeName, ticket.PageMediaSize?.PageMediaSizeName);

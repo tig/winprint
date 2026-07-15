@@ -38,7 +38,8 @@ public class PrintCommandValidationTests
                 CancellationToken.None);
 
             Assert.Equal(CommandStatus.Error, result.Status);
-            Assert.Contains("to-sheet", result.ErrorMessage ?? result.ErrorCode ?? "", StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("to-sheet", result.ErrorMessage ?? result.ErrorCode ?? "",
+                StringComparison.OrdinalIgnoreCase);
             // Must not report a successful what-if line for the real file.
             Assert.DoesNotContain("would print", result.Value as string ?? "");
         }

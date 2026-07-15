@@ -71,8 +71,8 @@ public class FileArgumentExpanderTests
         try
         {
             string pattern = Path.Combine(dir, "*.nope");
-            InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
-                () => FileArgumentExpander.Expand([pattern]));
+            InvalidOperationException ex =
+                Assert.Throws<InvalidOperationException>(() => FileArgumentExpander.Expand([pattern]));
 
             Assert.Contains("No files matched", ex.Message);
             Assert.Contains(pattern, ex.Message);

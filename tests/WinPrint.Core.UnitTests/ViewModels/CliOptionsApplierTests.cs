@@ -122,7 +122,7 @@ public class CliOptionsApplierTests : TestServicesBase
         WinPrintServices.Current.Settings.Sheets[key].Printer = "Envelope Printer";
         WinPrintServices.Current.Settings.Sheets[key].PaperSize = "Legal";
 
-        Assert.True(vm.SelectSheetByIndex(0, userInitiated: true));
+        Assert.True(vm.SelectSheetByIndex(0, true));
 
         Assert.Equal("Envelope Printer", vm.SelectedPrinter);
         Assert.Equal("Legal", vm.SelectedPaperSize);
@@ -140,7 +140,7 @@ public class CliOptionsApplierTests : TestServicesBase
         WinPrintServices.Current.Settings.Sheets[key].Printer = "Envelope Printer";
         WinPrintServices.Current.Settings.Sheets[key].PaperSize = "Legal";
 
-        Assert.True(vm.SelectSheetByIndex(0, userInitiated: false));
+        Assert.True(vm.SelectSheetByIndex(0, false));
 
         Assert.Equal("KeepMe", vm.SelectedPrinter);
         Assert.Equal("Letter", vm.SelectedPaperSize);

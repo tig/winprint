@@ -26,7 +26,7 @@ public class CommandOptionsBinderTests
     [Fact]
     public void ToOptions_ValidSheetRange_Parses()
     {
-        Options bound = CommandOptionsBinder.ToOptions(
+        var bound = CommandOptionsBinder.ToOptions(
             Run(("from-sheet", "1"), ("to-sheet", "2")),
             ["file.md"]);
 
@@ -37,7 +37,7 @@ public class CommandOptionsBinderTests
     [Fact]
     public void ToOptions_MissingSheetRange_DefaultsToZero()
     {
-        Options bound = CommandOptionsBinder.ToOptions(Run(), ["file.md"]);
+        var bound = CommandOptionsBinder.ToOptions(Run(), ["file.md"]);
 
         Assert.Equal(0, bound.FromPage);
         Assert.Equal(0, bound.ToPage);

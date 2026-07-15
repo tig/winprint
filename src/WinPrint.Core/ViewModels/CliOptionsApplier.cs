@@ -141,12 +141,12 @@ public static class CliOptionsApplier
 
         if (options.HeaderBorders is not null)
         {
-            ApplyBorders(app, header: true, options.HeaderBorders, "--header-borders");
+            ApplyBorders(app, true, options.HeaderBorders, "--header-borders");
         }
 
         if (options.FooterBorders is not null)
         {
-            ApplyBorders(app, header: false, options.FooterBorders, "--footer-borders");
+            ApplyBorders(app, false, options.FooterBorders, "--footer-borders");
         }
     }
 

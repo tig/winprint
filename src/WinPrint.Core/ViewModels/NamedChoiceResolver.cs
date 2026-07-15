@@ -35,8 +35,11 @@ public static class NamedChoiceResolver
             }
         }
 
-        string[] prefix = [.. available
-            .Where(name => name.StartsWith(needle, StringComparison.OrdinalIgnoreCase))];
+        string[] prefix =
+        [
+            .. available
+                .Where(name => name.StartsWith(needle, StringComparison.OrdinalIgnoreCase))
+        ];
         if (prefix.Length == 1)
         {
             return NamedChoiceMatch.Matched(prefix[0]);
@@ -47,8 +50,11 @@ public static class NamedChoiceResolver
             return NamedChoiceMatch.Failed(FormatAmbiguous(kindLabel, needle, prefix));
         }
 
-        string[] contains = [.. available
-            .Where(name => name.Contains(needle, StringComparison.OrdinalIgnoreCase))];
+        string[] contains =
+        [
+            .. available
+                .Where(name => name.Contains(needle, StringComparison.OrdinalIgnoreCase))
+        ];
         if (contains.Length == 1)
         {
             return NamedChoiceMatch.Matched(contains[0]);

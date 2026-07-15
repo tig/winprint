@@ -179,9 +179,10 @@ public class Font : ICloneable
         // Support "bold italic" / "Bold,Italic" as a single comma-split token ("bold italic").
         FontStyle combined = FontStyle.Regular;
         bool any = false;
-        foreach (string word in t.Split([' ', '|', '+'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        foreach (string word in t.Split([' ', '|', '+'],
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            if (Enum.TryParse(word, ignoreCase: true, out FontStyle one) && one != FontStyle.Regular)
+            if (Enum.TryParse(word, true, out FontStyle one) && one != FontStyle.Regular)
             {
                 combined |= one;
                 any = true;
