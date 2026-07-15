@@ -67,62 +67,30 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
             return Task.FromResult(PrintJobResult.Failed($"Failed to render document: {ex.Message}"));
         }
 
-        int sheetCount = _pages.Count;
-        string printerName = _pageSetup.PrinterName;
+        // Snapshot setup for the STA spool thread (no shared mutable page setup after enqueue).
+        PrintPageSetup setup = _pageSetup;
         string documentName = _documentName;
-        bool landscape = _pageSetup.Landscape;
-        int paperWidth = _pageSetup.PaperWidth;
-        int paperHeight = _pageSetup.PaperHeight;
+        int sheetCount = _pages.Count;
 
-        // Page dimensions in WPF device-independent units (1/96"), matching the landscape swap that
-        // SkiaPageImageRenderer applied to the bitmaps.
-        double widthDip = (landscape ? paperHeight : paperWidth) / 100.0 * 96.0;
-        double heightDip = (landscape ? paperWidth : paperHeight) / 100.0 * 96.0;
-
-        // Spool on a dedicated STA thread (required by WPF imaging / XpsDocumentWriter) off the UI
-        // thread. StaTaskRunner guarantees the returned task always completes — even if Spool throws an
-        // imaging/XAML exception outside Spool's own catch — and honours cancellation, so callers never
-        // hang and can cancel a queued job before it submits.
         return StaTaskRunner.RunAsync(
-            () => Spool(pageImages, widthDip, heightDip, printerName, documentName, sheetCount, landscape,
-                paperWidth, paperHeight),
+            () => Spool(pageImages, setup, documentName, sheetCount),
             ex => PrintJobResult.Failed(ex.Message),
             cancellationToken);
-    }
-
-    /// <summary>
-    ///     Applies page orientation (and media size when known) to a print ticket so physical printers
-    ///     honor landscape the same way PDF/media-size consumers do (#267).
-    /// </summary>
-    internal static void ApplyPageSetupToTicket(PrintTicket ticket, bool landscape, int paperWidthHundredths,
-        int paperHeightHundredths)
-    {
-        ArgumentNullException.ThrowIfNull(ticket);
-
-        ticket.PageOrientation = landscape
-            ? PageOrientation.Landscape
-            : PageOrientation.Portrait;
-
-        // Portrait media dimensions in DIPs (1/96"); drivers that key off media size stay consistent
-        // with PaperWidth/Height from PrintPageSetup (always portrait-named).
-        if (paperWidthHundredths > 0 && paperHeightHundredths > 0)
-        {
-            double widthDip = paperWidthHundredths / 100.0 * 96.0;
-            double heightDip = paperHeightHundredths / 100.0 * 96.0;
-            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.Unknown, widthDip, heightDip);
-        }
     }
 
     /// <summary>
     ///     Packages the page bitmaps into a <see cref="FixedDocument" /> and writes it to the print
     ///     queue. Runs on the STA spooler thread.
     /// </summary>
-    private static PrintJobResult Spool(IReadOnlyList<byte[]> pageImages, double widthDip, double heightDip,
-        string printerName, string documentName, int sheetCount, bool landscape, int paperWidthHundredths,
-        int paperHeightHundredths)
+    private static PrintJobResult Spool(IReadOnlyList<byte[]> pageImages, PrintPageSetup setup,
+        string documentName, int sheetCount)
     {
         try
         {
+            // Page dimensions in WPF DIPs (1/96"), matching the landscape swap Skia applied.
+            double widthDip = (setup.Landscape ? setup.PaperHeight : setup.PaperWidth) / 100.0 * 96.0;
+            double heightDip = (setup.Landscape ? setup.PaperWidth : setup.PaperHeight) / 100.0 * 96.0;
+
             var fixedDocument = new FixedDocument();
             fixedDocument.DocumentPaginator.PageSize = new System.Windows.Size(widthDip, heightDip);
 
@@ -148,23 +116,20 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
                 fixedDocument.Pages.Add(pageContent);
             }
 
-            // Only spin up a PrintServer when a specific printer was named; the default queue resolves
-            // without one. Dispose both so we don't leak spooler handles per job.
-            PrintServer? server = string.IsNullOrEmpty(printerName) ? null : new PrintServer();
+            PrintServer? server = string.IsNullOrEmpty(setup.PrinterName) ? null : new PrintServer();
             try
             {
                 using PrintQueue queue = server is null
                     ? LocalPrintServer.GetDefaultPrintQueue()
-                    : server.GetPrintQueue(printerName);
+                    : server.GetPrintQueue(setup.PrinterName);
 
-                // Names the spooled job in the print queue (e.g. "MyFile.cs").
                 queue.CurrentJobSettings.Description = documentName;
 
-                // Physical drivers (Brother, etc.) key off PrintTicket orientation; FixedPage size alone
-                // is enough for Microsoft Print to PDF but not for most hardware queues (#267).
+                // Physical drivers key off PrintTicket orientation; FixedPage size alone is enough
+                // for Microsoft Print to PDF but not for most hardware queues (#267).
                 PrintTicket baseTicket = queue.UserPrintTicket ?? queue.DefaultPrintTicket;
                 PrintTicket ticket = baseTicket.Clone();
-                ApplyPageSetupToTicket(ticket, landscape, paperWidthHundredths, paperHeightHundredths);
+                WindowsPrintTicketHelper.ApplyOrientation(ticket, setup.Landscape);
 
                 XpsDocumentWriter writer = PrintQueue.CreateXpsDocumentWriter(queue);
                 writer.Write(fixedDocument.DocumentPaginator, ticket);
@@ -185,8 +150,6 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
 
     private static BitmapImage LoadBitmap(byte[] png)
     {
-        // CacheOption.OnLoad decodes fully during EndInit, so the backing stream can be disposed
-        // immediately afterwards rather than leaked for the lifetime of the (large) image.
         using var stream = new MemoryStream(png);
         var source = new BitmapImage();
         source.BeginInit();

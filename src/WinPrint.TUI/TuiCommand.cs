@@ -164,13 +164,10 @@ public sealed class TuiCommand : IViewerCommand
             return ViewCatalog.Create(view);
         }
 
-        // Expand globs so `wp tui .\dir\*.md` works under PowerShell (#263); open the first match.
-        string? file = null;
-        if (options.Arguments.Count > 0)
-        {
-            IReadOnlyList<string> files = FileArgumentExpander.Expand(options.Arguments);
-            file = files.Count > 0 ? files[0] : null;
-        }
+        // Expand globs so `wp tui .\dir\*.md` works under PowerShell (#263). Exactly one file required.
+        string? file = options.Arguments.Count > 0
+            ? FileArgumentExpander.ExpandSingle(options.Arguments)
+            : null;
 
         return new MainView(context: SettingsContext.Create(
             CommandOptionsBinder.ToOptions(options, file is null ? null : [file])));

@@ -69,7 +69,7 @@ public class StickyPrinterRestoreTests
         try
         {
             settings.LastPrinter = "SavedPrinter";
-            // CLI printer must be in the available list (#264 fail-fast); partial names also resolve.
+            // CLI printer must be in the available list (#264 fail-fast via CliOptionsResolver).
             var svc = new ConfigurablePrintService(["Other", "SavedPrinter", "CliPrinter"], "Other");
 
             var context = SettingsContext.Create(

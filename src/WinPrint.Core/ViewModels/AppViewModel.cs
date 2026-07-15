@@ -945,17 +945,13 @@ public sealed class AppViewModel : INotifyPropertyChanged
     // ----- Command-line options -----
 
     /// <summary>
-    ///     Applies <see cref="Options"/> parsed from the command line to this view model.
-    ///     Shared by the MAUI and TUI command-line option paths.
+    ///     Applies <see cref="Options" /> to this view model. Shared by MAUI and TUI.
+    ///     Call <see cref="CliOptionsResolver.ResolveInPlace" /> first so <c>--printer</c> /
+    ///     <c>--paper-size</c> are already canonical (or rejected) at the CLI edge — this method
+    ///     does not re-validate against installed lists (#264).
     /// </summary>
-    /// <param name="options">Parsed CLI options.</param>
-    /// <param name="availablePrinters">Printer names known to the platform (may be null).</param>
-    /// <param name="availablePaperSizes">Paper size names known to the platform (may be null).</param>
     /// <returns>The first file argument, or <c>null</c> if none was supplied.</returns>
-    public string? ApplyOptions(
-        Options options,
-        IList<string>? availablePrinters = null,
-        IList<string>? availablePaperSizes = null)
+    public string? ApplyOptions(Options options)
     {
         if (options == null)
         {
@@ -986,31 +982,12 @@ public sealed class AppViewModel : INotifyPropertyChanged
                 SetLandscape(false);
             }
 
-            // --printer: partial match against the installed list when one is supplied (#264).
-            // Fail fast on unknown/ambiguous names so we never silently keep sticky/default PDF.
             if (!string.IsNullOrEmpty(options.Printer))
             {
-                if (availablePrinters is not null)
-                {
-                    PrinterCliMatch match =
-                        PrinterSelection.ResolveCliPrinter(options.Printer, availablePrinters as IReadOnlyList<string>
-                            ?? availablePrinters.ToList());
-                    if (!match.Success)
-                    {
-                        throw new InvalidOperationException(match.Error ?? $"No printer matched '{options.Printer}'.");
-                    }
-
-                    SetPrinterName(match.Name);
-                }
-                else
-                {
-                    // No list to resolve against (tests / callers that skip enumeration) — use verbatim.
-                    SetPrinterName(options.Printer);
-                }
+                SetPrinterName(options.Printer);
             }
 
-            if (!string.IsNullOrEmpty(options.PaperSize) &&
-                (availablePaperSizes == null || availablePaperSizes.Contains(options.PaperSize)))
+            if (!string.IsNullOrEmpty(options.PaperSize))
             {
                 SetPaperSize(options.PaperSize);
             }

@@ -74,19 +74,10 @@ public sealed class PrintCommand : IHeadlessCliCommand
 
         bool whatIf = CommandOptionsBinder.GetFlag(options, "what-if");
         string? pdfPath = CommandOptionsBinder.GetString(options, "pdf");
-        if (pdfPath is not null)
+        if (pdfPath is not null && CommandOptionsBinder.GetString(options, "printer") is not null)
         {
-            if (CommandOptionsBinder.GetString(options, "printer") is not null)
-            {
-                return new CommandResult(CommandStatus.Error, null, "PdfAndPrinter",
-                    "--pdf writes a file instead of printing; it cannot be combined with --printer.");
-            }
-
-            if (options.Arguments.Count > 1)
-            {
-                return new CommandResult(CommandStatus.Error, null, "PdfOneFile",
-                    "--pdf writes one PDF; specify exactly one input file.");
-            }
+            return new CommandResult(CommandStatus.Error, null, "PdfAndPrinter",
+                "--pdf writes a file instead of printing; it cannot be combined with --printer.");
         }
 
         var output = new StringBuilder();
@@ -103,6 +94,7 @@ public sealed class PrintCommand : IHeadlessCliCommand
             return new CommandResult(CommandStatus.Error, null, "GlobExpand", ex.Message);
         }
 
+        // Count after expand so a single glob that matches many files is rejected for --pdf.
         if (pdfPath is not null && files.Count > 1)
         {
             return new CommandResult(CommandStatus.Error, null, "PdfOneFile",

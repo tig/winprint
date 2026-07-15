@@ -800,10 +800,8 @@ public class AppViewModelTests : TestServicesBase
             PaperSize = "Letter"
         };
 
-        string? file = vm.ApplyOptions(
-            options,
-            new[] { "FakePrinter", "OtherPrinter" },
-            new[] { "Letter", "A4" });
+        // Names are already resolved at the CLI edge before ApplyOptions.
+        string? file = vm.ApplyOptions(options);
 
         Assert.Null(file);
         Assert.Equal(targetSheet, vm.SheetNames[vm.SelectedSheetIndex]);
@@ -839,46 +837,26 @@ public class AppViewModelTests : TestServicesBase
     }
 
     [Fact]
-    public void ApplyOptions_UnknownPrinter_Throws()
+    public void ApplyOptions_SetsPrinterNameWithoutResolving()
     {
+        // Resolve happens at the CLI edge (CliOptionsResolver); ApplyOptions only applies.
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
-        vm.SelectedPrinter = "Existing";
 
-        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
-            vm.ApplyOptions(
-                new Options { Printer = "NotInList" },
-                new[] { "Existing" }));
+        vm.ApplyOptions(new Options { Printer = "Already-Resolved Name" });
 
-        Assert.Contains("NotInList", ex.Message);
-        Assert.Equal("Existing", vm.SelectedPrinter);
+        Assert.Equal("Already-Resolved Name", vm.SelectedPrinter);
     }
 
     [Fact]
-    public void ApplyOptions_PartialPrinterName_ResolvesUniqueMatch()
+    public void ApplyOptions_SetsPaperSizeWithoutListGate()
     {
         AppViewModel vm = CreateVm();
         vm.LoadSheets();
 
-        vm.ApplyOptions(
-            new Options { Printer = "Brother" },
-            new[] { "Microsoft Print to PDF", "Brother HL-L3230CDW series Printer" });
+        vm.ApplyOptions(new Options { PaperSize = "Legal" });
 
-        Assert.Equal("Brother HL-L3230CDW series Printer", vm.SelectedPrinter);
-    }
-
-    [Fact]
-    public void ApplyOptions_AmbiguousPrinter_Throws()
-    {
-        AppViewModel vm = CreateVm();
-        vm.LoadSheets();
-
-        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
-            vm.ApplyOptions(
-                new Options { Printer = "Brother" },
-                new[] { "Brother HL-L3230CDW series Printer", "Brother HL-L5000D" }));
-
-        Assert.Contains("ambiguous", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Legal", vm.SelectedPaperSize);
     }
 
     [Fact]

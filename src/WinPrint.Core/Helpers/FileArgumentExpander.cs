@@ -39,6 +39,27 @@ public static class FileArgumentExpander
         return expanded;
     }
 
+    /// <summary>
+    ///     Expands arguments and requires exactly one resulting path (TUI opens a single file).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Zero or multiple files after expansion.</exception>
+    public static string ExpandSingle(IEnumerable<string> arguments, string? baseDirectory = null)
+    {
+        IReadOnlyList<string> expanded = Expand(arguments, baseDirectory);
+        if (expanded.Count == 0)
+        {
+            throw new InvalidOperationException("No files matched the given arguments.");
+        }
+
+        if (expanded.Count > 1)
+        {
+            throw new InvalidOperationException(
+                $"Matched {expanded.Count} files; specify exactly one file or a tighter pattern.");
+        }
+
+        return expanded[0];
+    }
+
     private static bool ContainsWildcard(string path)
     {
         return path.Contains('*', StringComparison.Ordinal) || path.Contains('?', StringComparison.Ordinal);
