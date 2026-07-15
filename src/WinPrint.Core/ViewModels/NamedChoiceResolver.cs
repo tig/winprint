@@ -68,20 +68,31 @@ public static class NamedChoiceResolver
         return NamedChoiceMatch.Failed(FormatNoMatch(kindLabel, needle, available));
     }
 
+    private const int MaxListedNames = 12;
+
     private static string FormatAmbiguous(string kindLabel, string query, IReadOnlyList<string> matches)
     {
         return
-            $"{Capitalize(kindLabel)} '{query}' is ambiguous; matches: {string.Join(", ", matches)}. " +
+            $"{Capitalize(kindLabel)} '{query}' is ambiguous; matches: {FormatNameList(matches)}. " +
             "Pass a longer substring or the full name.";
     }
 
     private static string FormatNoMatch(string kindLabel, string query, IReadOnlyList<string> available)
     {
-        const int maxList = 12;
-        IEnumerable<string> shown = available.Count <= maxList ? available : available.Take(maxList);
+        return $"No {kindLabel} matched '{query}'. Available: {FormatNameList(available)}.";
+    }
+
+    /// <summary>Shared truncation for ambiguous/no-match errors (max 12 names + count suffix).</summary>
+    private static string FormatNameList(IReadOnlyList<string> names)
+    {
+        IEnumerable<string> shown = names.Count <= MaxListedNames ? names : names.Take(MaxListedNames);
         string list = string.Join(", ", shown);
-        string suffix = available.Count > maxList ? $", … ({available.Count - maxList} more)" : string.Empty;
-        return $"No {kindLabel} matched '{query}'. Available: {list}{suffix}.";
+        if (names.Count > MaxListedNames)
+        {
+            list += $", … ({names.Count - MaxListedNames} more)";
+        }
+
+        return list;
     }
 
     private static string Capitalize(string kindLabel)

@@ -133,6 +133,58 @@ public class FileArgumentExpanderTests
         }
     }
 
+    [Fact]
+    public void NestedDirectoryWildcard_Expands()
+    {
+        // CR: src/*/*.cs style — wildcard before the final segment.
+        string root = CreateTempDir();
+        try
+        {
+            string a = Path.Combine(root, "a");
+            string b = Path.Combine(root, "b");
+            Directory.CreateDirectory(a);
+            Directory.CreateDirectory(b);
+            File.WriteAllText(Path.Combine(a, "one.md"), "1");
+            File.WriteAllText(Path.Combine(b, "two.md"), "2");
+            File.WriteAllText(Path.Combine(root, "skip.md"), "x"); // not nested
+
+            string pattern = Path.Combine(root, "*", "*.md");
+            IReadOnlyList<string> result = FileArgumentExpander.Expand([pattern]);
+
+            Assert.Equal(2, result.Count);
+            Assert.Contains(result, p => Path.GetFileName(p) == "one.md");
+            Assert.Contains(result, p => Path.GetFileName(p) == "two.md");
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void DoubleStar_RecursesSubdirectories()
+    {
+        string root = CreateTempDir();
+        try
+        {
+            string deep = Path.Combine(root, "x", "y");
+            Directory.CreateDirectory(deep);
+            File.WriteAllText(Path.Combine(deep, "deep.md"), "d");
+            File.WriteAllText(Path.Combine(root, "top.md"), "t");
+
+            string pattern = Path.Combine(root, "**", "*.md");
+            IReadOnlyList<string> result = FileArgumentExpander.Expand([pattern]);
+
+            Assert.Equal(2, result.Count);
+            Assert.Contains(result, p => Path.GetFileName(p) == "deep.md");
+            Assert.Contains(result, p => Path.GetFileName(p) == "top.md");
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
     private static string CreateTempDir()
     {
         string dir = Path.Combine(Path.GetTempPath(), "wp-glob-" + Guid.NewGuid().ToString("N"));

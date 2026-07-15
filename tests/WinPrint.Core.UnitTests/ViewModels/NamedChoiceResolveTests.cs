@@ -103,6 +103,20 @@ public class NamedChoiceResolveTests
     }
 
     [Fact]
+    public void Ambiguous_TruncatesLongMatchList()
+    {
+        // CR: FormatAmbiguous should match FormatNoMatch truncation (max 12 + "… N more").
+        string[] many = [.. Enumerable.Range(1, 20).Select(i => $"Printer{i:D2}")];
+        NamedChoiceMatch result = NamedChoiceResolver.Resolve("Printer", many, "printer");
+
+        Assert.False(result.Success);
+        Assert.Contains("ambiguous", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Printer01", result.Error);
+        Assert.Contains("8 more", result.Error); // 20 - 12
+        Assert.DoesNotContain("Printer20", result.Error);
+    }
+
+    [Fact]
     public void PaperSize_PartialMatch_Works()
     {
         NamedChoiceMatch result = NamedChoiceResolver.Resolve("leg", Papers, "paper size");

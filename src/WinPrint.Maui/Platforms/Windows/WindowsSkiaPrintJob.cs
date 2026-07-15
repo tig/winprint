@@ -67,8 +67,9 @@ public sealed class WindowsSkiaPrintJob : IPrintJob
             return Task.FromResult(PrintJobResult.Failed($"Failed to render document: {ex.Message}"));
         }
 
-        // Snapshot setup for the STA spool thread (no shared mutable page setup after enqueue).
-        PrintPageSetup setup = _pageSetup;
+        // Value snapshot for the STA spool thread — a bare reference assignment would race if the
+        // shared PrintPageSetup is mutated after render (printer/paper/orientation/margins).
+        PrintPageSetup setup = _pageSetup.Clone();
         string documentName = _documentName;
         int sheetCount = _pages.Count;
 
