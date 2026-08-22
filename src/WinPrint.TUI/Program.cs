@@ -30,16 +30,11 @@ AppDomain.CurrentDomain.UnhandledException += (_, e) =>
 
 VelopackApp.Build().Run();
 
-// Terminal.Gui's ConfigurationManager is opt-in; without this call wp silently ignores the
-// standard .tui config locations (~/.tui/config.json, ./.tui/wp.config.json, TUI_CONFIG), so
-// users — and the hero-GIF recorder, which themes wp via ./.tui/wp.config.json — couldn't
-// restyle the app.
-// TG 2.4.16+ marks ConfigurationManager [Obsolete] (CS0618) ahead of removal in favor of
-// TuiConfigurationBuilder / Microsoft.Extensions.Configuration; it still works. Suppress the
-// deprecation warning for now — migrating to TuiConfigurationBuilder is tracked as follow-up.
-#pragma warning disable CS0618 // Type or member is obsolete
-ConfigurationManager.Enable(ConfigLocations.All);
-#pragma warning restore CS0618
+// Terminal.Gui 2.5 dropped ConfigurationManager (PR 5416). Library defaults, ~/.tui, ./.tui,
+// and TUI_CONFIG are applied at assembly load via TuiConfigurationBuilder.Shared. Re-apply
+// with the wp app name so ./.tui/wp.config.json is discovered even when the entry assembly
+// isn't wp (xUnit testhost). Users and the hero-GIF recorder rely on those locations.
+new TuiConfigurationBuilder("wp").ApplyToStaticFacades();
 
 WpCliHost host = new(options =>
 {
