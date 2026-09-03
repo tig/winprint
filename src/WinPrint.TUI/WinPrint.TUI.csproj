@@ -27,7 +27,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui" Version="2.5.0" />
+        <!-- TEMP: public develop pin for TG 2.5 validation (tui-cs/Terminal.Gui#5630).
+             Swap to stable 2.5.x once that tag is on nuget.org. Do not pin 2.5.0; it is not published. -->
+        <PackageReference Include="Terminal.Gui" Version="2.5.0-develop.55" />
+        <!-- Editor#287 and cli#43 are still open; those packages have no 2.5.0-develop.55
+             release yet. Keep the last stables that restore from nuget.org. -->
         <PackageReference Include="Terminal.Gui.Cli" Version="0.3.0" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.5" />
         <PackageReference Include="Velopack" Version="1.1.1" />
