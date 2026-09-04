@@ -197,20 +197,21 @@ the diagram (see ["The Mermaid beat"](#the-mermaid-beat)).
 
 **The TUI hero must be recorded under the `Anders` theme.** This is the standard going
 forward — always regenerate the hero with `Anders`, never the default, so the hero stays
-visually consistent across regenerations. `wp` enables Terminal.Gui's `ConfigurationManager`
-(`ConfigLocations.All`, see `src/WinPrint.TUI/Program.cs`), which includes the **`TUI_CONFIG`
-environment variable** as a config source. `record-hero-gifs.sh` themes the app by passing it to
-tuirec:
+visually consistent across regenerations. `wp` applies Terminal.Gui's `TuiConfigurationBuilder`
+(see `src/WinPrint.TUI/Program.cs`), which includes the **`TUI_CONFIG` environment variable**
+as a config source. `record-hero-gifs.sh` themes the app by passing it to tuirec:
 
 ```bash
 --env 'TUI_CONFIG={"Theme":"Anders"}'
 ```
 
-**Gotcha — `TUI_CONFIG` holds the JSON *inline*, not a file path.** Terminal.Gui routes the env
-var's value through its JSON-*content* loader (`SourcesManager.cs`, the same `Load` overload used
-for `RuntimeConfig`), **not** the file-*path* loader that the `./.tui/…` and `~/.tui/…` locations
-use. So `TUI_CONFIG=/path/to/config.json` is parsed as JSON literally, fails, and is **silently
-ignored** — you must give it the JSON document itself (`TUI_CONFIG={"Theme":"Anders"}`).
+**Gotcha — `TUI_CONFIG` holds the JSON *inline*, not a file path.** Terminal.Gui 2.5+ routes the
+env var through `TuiConfigurationBuilder` as inline JSON (the same path as `RuntimeConfig`), **not**
+the file-*path* loader that the `./.tui/…` and `~/.tui/…` locations use. So
+`TUI_CONFIG=/path/to/config.json` is parsed as JSON literally, fails, and is **silently ignored** —
+you must give it the JSON document itself (`TUI_CONFIG={"Theme":"Anders"}`). Config JSON is nested
+MEC (`{ "Theme": "Anders" }`, `{ "Application": { "ForceDriver": "dotnet" } }`); dotted keys from
+2.4.x are skipped with a warning.
 
 We deliberately use the env var rather than a `./.tui/wp.config.json` file: a `.tui/` dir in the
 working directory **shows up in wp's Open-file dialog** and shifts the row the choreography
@@ -220,14 +221,14 @@ regenerating unless you are deliberately restyling every hero.
 
 (For a persistent, non-hero theme you can instead drop `{"Theme":"Anders"}` at `~/.tui/config.json`
 (user-wide) or `./.tui/wp.config.json` (per-directory) — those locations *are* file paths and can
-also carry other Terminal.Gui settings, e.g. `"Application.ForceDriver": "dotnet"`.)
+also carry other Terminal.Gui settings, e.g. `"Application": { "ForceDriver": "dotnet" }`.)
 
 **Windows cannot record the TUI hero.** Under tuirec's ConPTY, Terminal.Gui's default
 `windows` driver sees a console output handle without `ENABLE_VIRTUAL_TERMINAL_PROCESSING`
 and flags it `IsLegacyConsole`, which disables all raster graphics (Kitty/sixel) and
 truecolor — the preview pane records as a blank box. Even forcing the `dotnet` driver
-(`"Application.ForceDriver": "dotnet"` via wp's `.tui/wp.config.json`, honored now that wp
-enables Terminal.Gui's ConfigurationManager) restores truecolor and clears the legacy flag,
+(`"Application": { "ForceDriver": "dotnet" }` via wp's `.tui/wp.config.json`, honored because
+wp applies `TuiConfigurationBuilder`) restores truecolor and clears the legacy flag,
 but the Kitty image emission still never reaches the recorded output. The document loads and
 the settings panel renders fine — it's specifically the raster preview that's lost, which is
 the whole point of the hero. Record on macOS or Linux.

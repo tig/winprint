@@ -27,7 +27,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Terminal.Gui" Version="2.4.17" />
+        <PackageReference Include="Terminal.Gui" Version="2.5.0-beta.1" />
+        <!-- Editor and Cli have no public 2.5.0-beta.1 yet. Keep last nuget.org stables. -->
         <PackageReference Include="Terminal.Gui.Cli" Version="0.3.0" />
         <PackageReference Include="Terminal.Gui.Editor" Version="2.5.5" />
         <PackageReference Include="Velopack" Version="1.1.1" />

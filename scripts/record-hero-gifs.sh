@@ -44,9 +44,9 @@ mkdir -p "$out_dir"
 out_dir="$(cd "$out_dir" && pwd)"   # absolutize before the cd below so a relative out-dir arg still resolves
 
 # Theme the hero under Terminal.Gui's "Anders" theme (docs/hero-gifs.md, "Theming the hero"). wp
-# enables ConfigLocations.All (see Program.cs), which includes the TUI_CONFIG env var — and TG reads
-# that var's value as the JSON config *inline*, NOT as a path to a file (SourcesManager.cs routes it
-# through the JSON-content Load overload, same as RuntimeConfig). So we pass the theme JSON directly.
+# applies TuiConfigurationBuilder (see Program.cs), which includes the TUI_CONFIG env var — and TG
+# 2.5+ reads that var's value as nested JSON config *inline*, NOT as a path to a file. So we pass
+# the theme JSON directly.
 # This is deliberately NOT a ./.tui/ file: a config dir in the cwd shows up in wp's Open-file dialog
 # and shifts the row the choreography double-clicks. The env var themes the app while polluting
 # nothing on disk.
